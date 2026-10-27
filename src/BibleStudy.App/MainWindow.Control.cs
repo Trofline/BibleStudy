@@ -16,7 +16,7 @@ public partial class MainWindow
     {
         _control = new ControlServer(RunToolAsync, Path.Combine(_root, "control.json"));
         if (!_control.Start()) StatusText.Text = "Die KI-Schnittstelle konnte nicht gestartet werden (kein freier lokaler Port).";
-        Closing += (_, _) => _control?.Dispose();
+        Closed += (_, _) => _control?.Dispose();
     }
 
     // ---- argument helpers -------------------------------------------------------------------------------------------
@@ -136,6 +136,9 @@ public partial class MainWindow
                     source = HelloAoProvider.InterlinearAttribution,
                 };
             }
+
+            case "show_window": RestoreFromTray(); return new { ok = true, visible = IsVisible };
+            case "hide_window": Hide(); return new { ok = true, visible = IsVisible };
 
             case "navigate":
             {

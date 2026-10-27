@@ -33,7 +33,7 @@ public partial class MainWindow
         SpeakBtn.Click += (_, _) => ToggleSpeak();
         ExportBtn.Click += async (_, _) => await ExportAsync();
         ImportBtn.Click += async (_, _) => await ImportAsync();
-        Closing += (_, _) => _speech?.Dispose();
+        Closed += (_, _) => _speech?.Dispose();
     }
 
     // ---- original text ------------------------------------------------------------------------------------------------

@@ -64,9 +64,17 @@ public partial class MainWindow
             if (b.Maximized) WindowState = WindowState.Maximized;
         }
         if (_settings.StartMode == "Maximized") WindowState = WindowState.Maximized;
+        var startupDone = false;
         Opened += (_, _) =>
         {
-            if (_settings.StartMode == "Minimized") { if (_settings.Tray && _tray is not null) Hide(); else WindowState = WindowState.Minimized; }
+            if (startupDone) return;   // Opened fires on every Show(), e.g. when coming back from the tray
+            startupDone = true;
+            if (_settings.StartMode == "Minimized")
+            {
+                // hiding inside Opened leaves the window unable to show again; wait until it is fully up
+                if (_settings.Tray && _tray is not null) DispatcherTimer.RunOnce(Hide, TimeSpan.FromMilliseconds(400));
+                else WindowState = WindowState.Minimized;
+            }
             if (_settings.RestoreWindows && _settings.LastLayout is { Windows.Count: > 0 } last)
                 Dispatcher.UIThread.Post(() => OpenLayoutWindows(last), DispatcherPriority.Background);
         };
@@ -98,6 +106,13 @@ public partial class MainWindow
 
     // ---- tray ---------------------------------------------------------------------------------------------------------
 
+    void RestoreFromTray()
+    {
+        if (!IsVisible) Show();
+        if (WindowState == WindowState.Minimized) WindowState = WindowState.Normal;
+        Activate();
+    }
+
     void UpdateTray()
     {
         if (!_settings.Tray)
@@ -106,13 +121,13 @@ public partial class MainWindow
             return;
         }
         if (_tray is not null) return;
-        void Restore() { if (!IsVisible) this.Show(); if (WindowState == WindowState.Minimized) WindowState = WindowState.Normal; Activate(); }
+
         var menu = new NativeMenu();
-        var open = new NativeMenuItem("BibleStudy öffnen"); open.Click += (_, _) => Restore();
+        var open = new NativeMenuItem("BibleStudy öffnen"); open.Click += (_, _) => RestoreFromTray();
         var quit = new NativeMenuItem("Beenden"); quit.Click += (_, _) => { _exiting = true; Close(); };
         menu.Items.Add(open); menu.Items.Add(new NativeMenuItemSeparator()); menu.Items.Add(quit);
         _tray = new TrayIcon { Icon = Icon, ToolTipText = "BibleStudy", Menu = menu, IsVisible = true };
-        _tray.Clicked += (_, _) => Restore();
+        _tray.Clicked += (_, _) => RestoreFromTray();
         TrayIcon.SetIcons(Application.Current!, [_tray]);
     }
 

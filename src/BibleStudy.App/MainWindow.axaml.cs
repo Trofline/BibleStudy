@@ -157,7 +157,8 @@ public partial class MainWindow : Window
             if (e.Source == SideTabs && SideTabs.SelectedIndex == GuideTab) _ = ShowGuideAsync(_selected is int v ? new VerseRef(_curBook, _curChapter, v) : default);
         };
         StartControl();
-        Opened += async (_, _) => await InitAsync();
+        var initialised = false;
+        Opened += async (_, _) => { if (initialised) return; initialised = true; await InitAsync(); };
     }
 
     string BookName(string id) => _books.FirstOrDefault(b => b.Id == id)?.CommonName ?? id;
