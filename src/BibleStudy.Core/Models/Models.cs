@@ -15,12 +15,17 @@ public sealed record BookInfo(string Id, string Name, string CommonName, int Ord
 }
 
 /// <summary>Text fragment of a verse; WordsOfJesus marks red-letter text.</summary>
-public sealed record Segment(string Text, bool WordsOfJesus = false, IReadOnlyList<string>? Strongs = null);
+public sealed record Segment(string Text, bool WordsOfJesus = false, IReadOnlyList<string>? Strongs = null, int? NoteId = null);
 
 public sealed record Verse(int Number, IReadOnlyList<Segment> Segments)
 {
-    public string Text => string.Concat(Segments.Select(s => s.Text));
+    /// <summary>Plain text; a footnote marker stands where the source has no space, so it counts as one.</summary>
+    public string Text => System.Text.RegularExpressions.Regex.Replace(
+        string.Concat(Segments.Select(s => s.NoteId is null ? s.Text : " ")), @"\s+", " ").Trim();
 }
+
+/// <summary>A footnote of a chapter; referenced from verse segments by <see cref="Segment.NoteId"/>.</summary>
+public sealed record Footnote(int NoteId, int Verse, string Text);
 
 /// <summary>One entry of Strong's dictionary (original-language word study).</summary>
 public sealed record StrongsEntry(string Id, string Lemma, string Translit, string Pronunciation, string Definition, string KjvUsage, string Derivation);
@@ -31,7 +36,7 @@ public readonly record struct VerseRef(string Book, int Chapter, int Verse);
 /// <summary>Plain verse text for indexing.</summary>
 public sealed record VerseText(string BookId, int Chapter, int Number, string Text);
 
-public sealed record Chapter(string TranslationId, string BookId, int Number, IReadOnlyList<Verse> Verses);
+public sealed record Chapter(string TranslationId, string BookId, int Number, IReadOnlyList<Verse> Verses, IReadOnlyList<Footnote>? Footnotes = null);
 
 /// <summary>A cross reference target (EndVerse = Target.Verse for single verses) with its relevance score.</summary>
 public sealed record CrossRef(VerseRef Target, int EndVerse, int Score);

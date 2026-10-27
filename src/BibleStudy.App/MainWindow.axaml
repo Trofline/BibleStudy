@@ -2,7 +2,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:local="clr-namespace:BibleStudy.App"
         x:Class="BibleStudy.App.MainWindow"
-        Title="BibleStudy" Width="1280" Height="800" MinWidth="1040" MinHeight="560"
+        Title="BibleStudy" Width="1280" Height="800" MinWidth="1120" MinHeight="560"
         Background="{DynamicResource BsBackground}" Foreground="{DynamicResource BsText}">
     <Window.Resources>
         <DataTemplate x:Key="EntryTpl" x:DataType="local:Entry">
@@ -23,7 +23,18 @@
                                 IconSize="20" HorizontalAlignment="Center" VerticalAlignment="Center"
                                 TextElement.Foreground="{DynamicResource BsSurface}" />
                 </Border>
+                <StackPanel DockPanel.Dock="Left" Orientation="Horizontal" Spacing="2" Margin="0,0,14,0" VerticalAlignment="Center">
+                    <Button x:Name="BackBtn" Classes="tool" ToolTip.Tip="Zurück zur vorherigen Stelle">
+                        <local:Icon Data="M19 12H5 M12 19l-7-7 7-7" />
+                    </Button>
+                    <Button x:Name="HomeBtn" Classes="tool" ToolTip.Tip="Startseite: alle Bücher und Kapitel">
+                        <local:Icon Data="M3 9.5L12 3l9 6.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z" />
+                    </Button>
+                </StackPanel>
                 <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" Spacing="2" VerticalAlignment="Center">
+                    <ToggleButton x:Name="ReadBtn" Classes="tool" ToolTip.Tip="Dieses Kapitel als gelesen markieren">
+                        <local:Icon Data="M20 6L9 17l-5-5" />
+                    </ToggleButton>
                     <Button x:Name="ParallelBtn" Classes="tool" ToolTip.Tip="Weitere Übersetzung als Spalte daneben (max. 3)">
                         <local:Icon Data="M5 3h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z M12 3v18" />
                     </Button>
@@ -141,12 +152,80 @@
                         <ListBox x:Name="ConcList" ItemTemplate="{StaticResource EntryTpl}" ScrollViewer.HorizontalScrollBarVisibility="Disabled" />
                     </DockPanel>
                 </TabItem>
+                <TabItem ToolTip.Tip="Einstellungen">
+                    <TabItem.Header><local:Icon Data="M21 4h-7 M10 4H3 M21 12h-9 M8 12H3 M21 20h-5 M12 20H3 M14 2v4 M8 10v4 M16 18v4" /></TabItem.Header>
+                    <ScrollViewer Margin="16,14,4,12">
+                        <StackPanel Spacing="12" Margin="0,0,12,0">
+                            <TextBlock Classes="h2" Text="Einstellungen" />
+                            <StackPanel Spacing="4">
+                                <TextBlock Text="Design" FontWeight="SemiBold" />
+                                <ComboBox x:Name="ThemeBox" SelectedIndex="0" Width="200">
+                                    <ComboBoxItem Content="System" />
+                                    <ComboBoxItem Content="Hell" />
+                                    <ComboBoxItem Content="Dunkel" />
+                                </ComboBox>
+                            </StackPanel>
+                            <StackPanel Spacing="4">
+                                <TextBlock x:Name="FontLabel" Text="Schriftgröße" FontWeight="SemiBold" />
+                                <Slider x:Name="FontSlider" Minimum="14" Maximum="36" Value="22" TickFrequency="1" IsSnapToTickEnabled="True" />
+                            </StackPanel>
+                            <CheckBox x:Name="StartHomeCheck" Content="Beim Start die Startseite zeigen" />
+                            <CheckBox x:Name="AutoReadCheck" Content="Kapitel beim Weiterblättern (▶) als gelesen markieren" />
+                            <Border Height="1" Background="{DynamicResource BsBorder}" />
+                            <TextBlock Text="Offline" FontWeight="SemiBold" />
+                            <TextBlock x:Name="OfflineInfo" Classes="caption" TextWrapping="Wrap" />
+                            <Button x:Name="OfflineBtn" Content="Gewählte Übersetzung offline verfügbar machen" HorizontalAlignment="Left" />
+                            <TextBlock Classes="caption" TextWrapping="Wrap"
+                                       Text="Es werden nur Texte geladen, die die Quelle zur freien Nutzung anbietet; Lizenz und Namensnennung stehen unten in der Fußzeile. Die Daten liegen lokal und gehören dir." />
+                        </StackPanel>
+                    </ScrollViewer>
+                </TabItem>
+                <TabItem ToolTip.Tip="Hilfe">
+                    <TabItem.Header><local:Icon Data="M2 12a10 10 0 1 0 20 0a10 10 0 1 0-20 0z M9.1 9a3 3 0 0 1 5.8 1c0 2-3 3-3 3 M12 17h.01" /></TabItem.Header>
+                    <ScrollViewer Margin="16,14,4,12">
+                        <StackPanel Spacing="10" Margin="0,0,12,0">
+                            <TextBlock Classes="h2" Text="Hilfe" />
+                            <TextBlock FontWeight="SemiBold" Text="Lesen und Navigieren" />
+                            <TextBlock TextWrapping="Wrap" Text="Haus-Symbol: Startseite mit allen Büchern. Pfeil links: zurück zur vorherigen Stelle. Buch, Kapitel und Übersetzung wählst du oben; ◀ ▶ blättert Kapitel." />
+                            <TextBlock FontWeight="SemiBold" Text="Gelesen" />
+                            <TextBlock TextWrapping="Wrap" Text="Das Häkchen oben markiert das Kapitel als gelesen. Auf der Startseite zeigt ein Balken den Fortschritt je Buch. Im Kapitelraster: Rechtsklick oder Strg+Klick markiert einzelne Kapitel, die Knöpfe markieren ein ganzes Buch." />
+                            <TextBlock FontWeight="SemiBold" Text="Verse" />
+                            <TextBlock TextWrapping="Wrap" Text="Vers anklicken: Notiz, Lesezeichen und Querverweise beziehen sich darauf. Der Knopf „Parallel“ zeigt bis zu drei weitere Übersetzungen versgenau daneben." />
+                            <TextBlock FontWeight="SemiBold" Text="Wortstudie" />
+                            <TextBlock TextWrapping="Wrap" Text="Den Schalter „Wortstudie“ einschalten (nur Übersetzungen mit Strong-Nummern, z. B. KJV). Unterstrichene Wörter anklicken: Grundtextwort, Bedeutung, „Alle Vorkommen“ in der Konkordanz." />
+                            <TextBlock FontWeight="SemiBold" Text="Offline" />
+                            <TextBlock TextWrapping="Wrap" Text="Einstellungen → „Offline verfügbar machen“ lädt eine ganze Übersetzung. Bereits gelesene Kapitel sind automatisch offline lesbar." />
+                        </StackPanel>
+                    </ScrollViewer>
+                </TabItem>
+                <TabItem ToolTip.Tip="Info: Maße, Gewichte, Abkürzungen">
+                    <TabItem.Header><local:Icon Data="M2 12a10 10 0 1 0 20 0a10 10 0 1 0-20 0z M12 16v-4 M12 8h.01" /></TabItem.Header>
+                    <ScrollViewer Margin="16,14,4,12">
+                        <StackPanel Spacing="6" Margin="0,0,12,0">
+                            <TextBlock Classes="h2" Text="Info" />
+                            <TextBlock Classes="caption" TextWrapping="Wrap" Text="Richtwerte (ca.); die Angaben schwanken je nach Zeit und Region." />
+                            <TextBlock FontWeight="SemiBold" Margin="0,8,0,0" Text="Längenmaße" />
+                            <TextBlock TextWrapping="Wrap" Text="Fingerbreit ≈ 1,9 cm · Handbreit ≈ 7,5 cm · Spanne ≈ 22 cm · Elle ≈ 45 cm · Rute ≈ 2,7 m · Stadion ≈ 185 m · Sabbatweg ≈ 1 km (2000 Ellen)" />
+                            <TextBlock FontWeight="SemiBold" Margin="0,8,0,0" Text="Gewichte und Geld" />
+                            <TextBlock TextWrapping="Wrap" Text="Gera ≈ 0,57 g · Beka ≈ 5,7 g · Schekel ≈ 11,4 g · Mine ≈ 570 g (50 Schekel) · Talent ≈ 34 kg (3000 Schekel) · Denar = ein Tageslohn · Groschen/Quadrans = kleine Kupfermünze" />
+                            <TextBlock FontWeight="SemiBold" Margin="0,8,0,0" Text="Hohlmaße" />
+                            <TextBlock TextWrapping="Wrap" Text="Log ≈ 0,3 l · Hin ≈ 3,7 l · Epha/Bat ≈ 22 l · Homer/Kor ≈ 220 l · Gomer/Omer ≈ 2,2 l" />
+                            <TextBlock FontWeight="SemiBold" Margin="0,8,0,0" Text="Zeit" />
+                            <TextBlock TextWrapping="Wrap" Text="Der Tag beginnt am Abend. Nachtwachen: drei bis vier Abschnitte. Dritte Stunde ≈ 9 Uhr, sechste ≈ 12 Uhr, neunte ≈ 15 Uhr." />
+                            <TextBlock FontWeight="SemiBold" Margin="0,8,0,0" Text="Abkürzungen im Programm" />
+                            <TextBlock TextWrapping="Wrap" Text="G… = Strong-Nummer Griechisch, H… = Strong-Nummer Hebräisch · KJV/KJAV = King James Version · AT/NT = Altes/Neues Testament · CC BY(-SA) = Creative-Commons-Lizenz mit Namensnennung (und Weitergabe unter gleichen Bedingungen)" />
+                        </StackPanel>
+                    </ScrollViewer>
+                </TabItem>
             </TabControl>
         </Border>
 
         <!-- Reader -->
-        <ScrollViewer x:Name="ReaderScroll">
-            <StackPanel x:Name="ReaderPanel" Margin="0,36,0,80" HorizontalAlignment="Center" Spacing="2" />
-        </ScrollViewer>
+        <Grid>
+            <ScrollViewer x:Name="ReaderScroll">
+                <StackPanel x:Name="ReaderPanel" Margin="0,36,0,80" HorizontalAlignment="Center" Spacing="2" />
+            </ScrollViewer>
+            <local:HomeView x:Name="Home" IsVisible="False" Background="{DynamicResource BsBackground}" />
+        </Grid>
     </DockPanel>
 </Window>

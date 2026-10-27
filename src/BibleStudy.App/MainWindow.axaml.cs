@@ -1,4 +1,5 @@
 using Avalonia.Controls;
+using Avalonia.Controls.Primitives;
 using Avalonia.Controls.Documents;
 using Avalonia.Input;
 using Avalonia.Interactivity;
@@ -32,6 +33,14 @@ public partial class MainWindow : Window
     readonly StrongsDictionary _strongs;
     int _fontSize = 22;
     bool _singleColumn = true;
+    readonly string _root;
+    readonly string _settingsPath;
+    readonly AppSettings _settings;
+    HashSet<(string Book, int Chapter)> _read = [];
+    readonly List<(string Book, int Chapter)> _history = [];
+    string? _pendingTranslation;
+    bool _firstBooks = true;
+    bool _startupHome;
     readonly List<ExtraColumn> _extras = [];
     IReadOnlyList<string> _langs = [];
 
@@ -51,23 +60,47 @@ public partial class MainWindow : Window
     public MainWindow()
     {
         InitializeComponent();
-        var root = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "BibleStudy");
+        _root = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "BibleStudy");
         var http = new HttpClient();
-        _provider = _hello = new HelloAoProvider(http, Path.Combine(root, "cache"));
-        _strongs = new StrongsDictionary(http, Path.Combine(root, "cache"));
+        _provider = _hello = new HelloAoProvider(http, Path.Combine(_root, "cache"));
+        _strongs = new StrongsDictionary(http, Path.Combine(_root, "cache"));
+        _store = new UserStore(Path.Combine(_root, "user.db"));
+        _settingsPath = Path.Combine(_root, "settings.json");
+        _settings = AppSettings.Load(_settingsPath);
+        _read = _store.GetReadChapters();
+        _fontSize = _settings.FontSize;
+        _startupHome = _settings.StartOnHome;
+        FontSlider.Value = _fontSize;
+        FontLabel.Text = $"Schriftgröße: {_fontSize}";
+        StartHomeCheck.IsChecked = _settings.StartOnHome;
+        AutoReadCheck.IsChecked = _settings.AutoMarkRead;
+        ThemeBox.SelectedIndex = _settings.Theme switch { "Light" => 1, "Dark" => 2, _ => 0 };
+        ApplyTheme(ThemeBox.SelectedIndex);
+
+        ThemeBox.SelectionChanged += (_, _) => { ApplyTheme(ThemeBox.SelectedIndex); _settings.Theme = new[] { "Default", "Light", "Dark" }[Math.Max(0, ThemeBox.SelectedIndex)]; SaveSettings(); };
+        ThemeBtn.Click += (_, _) => ThemeBox.SelectedIndex = (ThemeBox.SelectedIndex + 1) % 3;
+        FontSlider.ValueChanged += async (_, e) =>
+        {
+            _fontSize = (int)e.NewValue; _settings.FontSize = _fontSize; FontLabel.Text = $"Schriftgröße: {_fontSize}";
+            await ShowChapterAsync(_selected);
+        };
+        FontMinusBtn.Click += (_, _) => FontSlider.Value = Math.Max(FontSlider.Minimum, FontSlider.Value - 1);
+        FontPlusBtn.Click += (_, _) => FontSlider.Value = Math.Min(FontSlider.Maximum, FontSlider.Value + 1);
+        StartHomeCheck.IsCheckedChanged += (_, _) => { _settings.StartOnHome = StartHomeCheck.IsChecked == true; SaveSettings(); };
+        AutoReadCheck.IsCheckedChanged += (_, _) => { _settings.AutoMarkRead = AutoReadCheck.IsChecked == true; SaveSettings(); };
+        OfflineBtn.Click += async (_, _) => await OfflineAsync();
+        SideTabs.SelectionChanged += (_, _) => { if (SideTabs.SelectedIndex == 6) UpdateOfflineInfo(); };
+        Closing += (_, _) => SaveSettings();
+
+        HomeBtn.Click += (_, _) => ShowHome();
+        BackBtn.Click += async (_, _) => await GoBackAsync();
+        ReadBtn.Click += (_, _) => SetRead(_curBook, [_curChapter], ReadBtn.IsChecked == true);
+        Home.ChapterChosen += async (book, chapter) => await GoToAsync(book, chapter);
+        Home.ReadChanged += SetRead;
+
         ActualThemeVariantChanged += (_, _) => Paint();
         ReaderScroll.SizeChanged += (_, _) => FitReader();
         StudyBtn.IsCheckedChanged += async (_, _) => await ShowChapterAsync(_selected);
-        FontMinusBtn.Click += async (_, _) => { _fontSize = Math.Max(13, _fontSize - 1); await ShowChapterAsync(_selected); };
-        FontPlusBtn.Click += async (_, _) => { _fontSize = Math.Min(34, _fontSize + 1); await ShowChapterAsync(_selected); };
-        ThemeBtn.Click += (_, _) =>
-        {
-            var app = Avalonia.Application.Current!;
-            app.RequestedThemeVariant = app.RequestedThemeVariant == Avalonia.Styling.ThemeVariant.Light ? Avalonia.Styling.ThemeVariant.Dark
-                : app.RequestedThemeVariant == Avalonia.Styling.ThemeVariant.Dark ? Avalonia.Styling.ThemeVariant.Default : Avalonia.Styling.ThemeVariant.Light;
-            StatusText.Text = "Design: " + app.RequestedThemeVariant;
-        };
-        _store = new UserStore(Path.Combine(root, "user.db"));
 
         LanguageBox.SelectionChanged += (_, _) => FillTranslations();
         TranslationBox.SelectionChanged += async (_, _) => await LoadBooksAsync();
@@ -77,11 +110,16 @@ public partial class MainWindow : Window
             ChapterBox.Maximum = b.NumberOfChapters;
             if (_loading) return;
             _loading = true; ChapterBox.Value = 1; _loading = false;
+            ShowReader();
             await ShowChapterAsync();
         };
-        ChapterBox.ValueChanged += async (_, _) => await ShowChapterAsync();
+        ChapterBox.ValueChanged += async (_, _) => { if (!_loading) ShowReader(); await ShowChapterAsync(); };
         PrevBtn.Click += (_, _) => ChapterBox.Value -= 1;
-        NextBtn.Click += (_, _) => ChapterBox.Value += 1;
+        NextBtn.Click += (_, _) =>
+        {
+            if (_settings.AutoMarkRead && _curBook != "") SetRead(_curBook, [_curChapter], true);
+            ChapterBox.Value += 1;
+        };
         BookmarkBtn.Click += (_, _) => ToggleBookmark();
         ParallelBtn.Click += (_, _) => AddColumn();
         NoteSaveBtn.Click += async (_, _) => await SaveNoteAsync(NoteEditor.Text ?? "");
@@ -102,7 +140,9 @@ public partial class MainWindow : Window
             _all = await _provider.GetTranslationsAsync();
             _langs = _all.Select(t => t.LanguageName).Where(l => l != "").Distinct().Order().ToList();
             LanguageBox.ItemsSource = _langs;
-            LanguageBox.SelectedItem = _langs.Contains("English") ? "English" : _langs.FirstOrDefault();
+            var wanted = _all.FirstOrDefault(t => t.Id == (_settings.TranslationId ?? "deu_elbbk")) ?? _all.FirstOrDefault(t => t.Id == "eng_kjv");
+            _pendingTranslation = wanted?.Id;
+            LanguageBox.SelectedItem = wanted?.LanguageName ?? _langs.FirstOrDefault();
         }
         catch (Exception ex) { StatusText.Text = "Fehler: " + ex.Message; }
     }
@@ -111,7 +151,79 @@ public partial class MainWindow : Window
     {
         var list = _all.Where(t => t.LanguageName == (string?)LanguageBox.SelectedItem).OrderBy(t => t.Name).ToList();
         TranslationBox.ItemsSource = list;
-        TranslationBox.SelectedItem = list.FirstOrDefault(t => t.Id == "eng_kjv") ?? list.FirstOrDefault();
+        TranslationBox.SelectedItem = list.FirstOrDefault(t => t.Id == _pendingTranslation) ?? list.FirstOrDefault(t => t.Id == "eng_kjv") ?? list.FirstOrDefault();
+        _pendingTranslation = null;
+    }
+
+    void ApplyTheme(int index) =>
+        Avalonia.Application.Current!.RequestedThemeVariant = index switch { 1 => Avalonia.Styling.ThemeVariant.Light, 2 => Avalonia.Styling.ThemeVariant.Dark, _ => Avalonia.Styling.ThemeVariant.Default };
+
+    void SaveSettings()
+    {
+        try { _settings.Save(_settingsPath); } catch (IOException) { /* settings are a convenience; never crash on save */ }
+    }
+
+    void ShowHome()
+    {
+        Home.Show(_books, _read, Home.OpenBook);
+        Home.IsVisible = true; ReaderScroll.IsVisible = false;
+    }
+
+    void ShowReader() { Home.IsVisible = false; ReaderScroll.IsVisible = true; }
+
+    async Task GoToAsync(string bookId, int chapter, int? verse = null)
+    {
+        var book = _books.FirstOrDefault(b => b.Id == bookId);
+        if (book is null) { StatusText.Text = "Buch in dieser Übersetzung nicht vorhanden."; return; }
+        _loading = true;
+        BookBox.SelectedItem = book;
+        ChapterBox.Value = chapter;
+        _loading = false;
+        ShowReader();
+        await ShowChapterAsync(verse);
+    }
+
+    async Task GoBackAsync()
+    {
+        if (Home.IsVisible) { ShowReader(); return; }
+        if (_history.Count < 2) return;
+        _history.RemoveAt(_history.Count - 1);
+        var (book, chapter) = _history[^1];
+        _history.RemoveAt(_history.Count - 1); // GoToAsync records it again
+        await GoToAsync(book, chapter);
+    }
+
+    void SetRead(string book, IReadOnlyList<int> chapters, bool read)
+    {
+        if (book == "") return;
+        _store.SetRead(book, chapters, read);
+        _read = _store.GetReadChapters();
+        if (Home.IsVisible) Home.Show(_books, _read, Home.OpenBook);
+        ReadBtn.IsChecked = _read.Contains((_curBook, _curChapter));
+    }
+
+    void UpdateOfflineInfo()
+    {
+        if (TranslationBox.SelectedItem is not TranslationInfo t) return;
+        var dir = Path.Combine(_root, "cache", "api", t.Id);
+        var count = Directory.Exists(dir)
+            ? Directory.EnumerateFiles(dir, "*.json", SearchOption.AllDirectories).Count(f => !f.EndsWith(".words.json") && Path.GetFileName(f) != "books.json") : 0;
+        var total = _books.Sum(b => b.NumberOfChapters);
+        OfflineInfo.Text = $"{t.Name}: {count} von {total} Kapiteln offline verfügbar. Lizenz: {(t.License.PublicDomain ? "gemeinfrei" : t.LicenseUrl)}.";
+    }
+
+    async Task OfflineAsync()
+    {
+        if (TranslationBox.SelectedItem is not TranslationInfo t || _building) return;
+        _building = true; OfflineBtn.IsEnabled = false;
+        try
+        {
+            var progress = new Progress<(int Done, int Total)>(p => OfflineInfo.Text = $"{t.ShortName}: {p.Done}/{p.Total} Kapitel geladen …");
+            await OfflineDownloader.DownloadAsync(_provider, t.Id, progress);
+            UpdateOfflineInfo();
+        }
+        catch (Exception ex) { OfflineInfo.Text = "Fehler: " + ex.Message; }
+        finally { _building = false; OfflineBtn.IsEnabled = true; }
     }
 
     async Task LoadBooksAsync()
@@ -120,13 +232,16 @@ public partial class MainWindow : Window
         try
         {
             _loading = true;
-            var prev = (BookBox.SelectedItem as BookInfo)?.Id;
+            var prev = (BookBox.SelectedItem as BookInfo)?.Id ?? _settings.BookId;
             _books = await _provider.GetBooksAsync(t.Id);
             BookBox.ItemsSource = _books;
             BookBox.SelectedItem = _books.FirstOrDefault(b => b.Id == prev) ?? _books.FirstOrDefault(b => b.Id == "JHN") ?? _books.FirstOrDefault();
+            if (_firstBooks) { ChapterBox.Value = Math.Max(1, _settings.Chapter); _firstBooks = false; }
         }
         catch (Exception ex) { StatusText.Text = "Fehler: " + ex.Message; }
         finally { _loading = false; }
+        if (Home.IsVisible) Home.Show(_books, _read, Home.OpenBook);
+        if (SideTabs.SelectedIndex == 6) UpdateOfflineInfo();
         RefreshLists();
         await ShowChapterAsync();
     }
@@ -165,11 +280,13 @@ public partial class MainWindow : Window
                     AddCell(head, i, new TextBlock { Text = cols[i].T.ShortName + (cols[i].C is null ? " (Kapitel nicht verfügbar)" : ""), FontWeight = FontWeight.Bold, Opacity = 0.7, Margin = new(8, 0, 12, 4) });
                 ReaderPanel.Children.Add(head);
             }
+            var notes = cols.Select(c => c.C?.Footnotes?.OrderBy(f => f.NoteId).Select((f, i) => (f.NoteId, Letter: NoteLetter(i), f.Text))
+                .ToDictionary(x => x.NoteId, x => (x.Letter, x.Text))).ToList();
             foreach (var num in cols.SelectMany(c => c.C?.Verses.Select(v => v.Number) ?? []).Distinct().Order())
             {
                 var row = NewRow(cols.Count);
                 for (var i = 0; i < cols.Count; i++)
-                    AddCell(row, i, VerseCell(cols[i].C?.Verses.FirstOrDefault(v => v.Number == num), num, cols[i].T, size, i == 0 && noted.Contains(num)));
+                    AddCell(row, i, VerseCell(cols[i].C?.Verses.FirstOrDefault(v => v.Number == num), num, cols[i].T, size, i == 0 && noted.Contains(num), notes[i]));
                 var box = new Border { Child = row, Padding = new(10, 3), CornerRadius = new(8), BorderThickness = new(3, 0, 0, 0), BorderBrush = Brushes.Transparent, Classes = { "verse" } };
                 var n = num;
                 box.AddHandler(PointerPressedEvent, (object? _, PointerPressedEventArgs e) => OnVersePressed(n, e), RoutingStrategies.Tunnel, handledEventsToo: true);
@@ -179,6 +296,11 @@ public partial class MainWindow : Window
             Paint();
             if (focusVerse is int fv && _verseBoxes.ContainsKey(fv)) { SelectVerse(fv); _verseBoxes[fv].BringIntoView(); }
             else ReaderScroll.Offset = default;
+
+            ReadBtn.IsChecked = _read.Contains((b.Id, number));
+            if (_history.Count == 0 || _history[^1] != (b.Id, number)) { _history.Add((b.Id, number)); if (_history.Count > 100) _history.RemoveAt(0); }
+            _settings.TranslationId = t.Id; _settings.BookId = b.Id; _settings.Chapter = number;
+            if (_startupHome) { _startupHome = false; ShowHome(); }
 
             StatusText.Text = string.Join("  |  ", cols.Select(c =>
                 $"{c.T.Name}: {(c.T.License.PublicDomain ? "gemeinfrei" : "Lizenz " + c.T.LicenseUrl)}, Namensnennung: {c.T.License.Attribution}")) + $" · Quelle: {_provider.Name}";
@@ -209,9 +331,11 @@ public partial class MainWindow : Window
     static readonly FontFamily ScriptureFont = UiSerif;
 
     /// <summary>Clickable word range inside a verse cell (for the word study).</summary>
-    sealed record WordSpan(int Start, int End, string[] Strongs, string Word);
+    sealed record WordSpan(int Start, int End, string[] Strongs, string Word, string? Note = null);
 
-    SelectableTextBlock VerseCell(Verse? v, int number, TranslationInfo t, int size, bool hasNote)
+    static string NoteLetter(int i) => i < 26 ? ((char)('a' + i)).ToString() : NoteLetter(i / 26 - 1) + NoteLetter(i % 26);
+
+    SelectableTextBlock VerseCell(Verse? v, int number, TranslationInfo t, int size, bool hasNote, IReadOnlyDictionary<int, (string Letter, string Text)>? notes)
     {
         var tb = new SelectableTextBlock
         {
@@ -233,6 +357,15 @@ public partial class MainWindow : Window
         Add(num);
         foreach (var s in v.Segments)
         {
+            if (s.NoteId is int nid)
+            {
+                if (notes is null || !notes.TryGetValue(nid, out var note)) { Add(new Run(" ")); continue; }
+                var marker = new Run(note.Letter + " ") { FontSize = size * 0.62, FontWeight = FontWeight.Bold, BaselineAlignment = BaselineAlignment.Superscript };
+                marker.Bind(TextElement.ForegroundProperty, this.GetResourceObservable("BsAccent"));
+                spans.Add(new WordSpan(pos, pos + marker.Text!.Length, [], note.Letter, note.Text));
+                Add(marker);
+                continue;
+            }
             var run = new Run(s.Text);
             if (s.WordsOfJesus) run.Bind(TextElement.ForegroundProperty, this.GetResourceObservable("BsJesus"));
             if (s.Strongs is { Count: > 0 })
@@ -250,10 +383,20 @@ public partial class MainWindow : Window
     void OnVersePressed(int verse, PointerPressedEventArgs e)
     {
         SelectVerse(verse);
-        if (StudyBtn.IsChecked != true || e.Source is not SelectableTextBlock { Tag: List<WordSpan> spans } tb) return;
+        if (e.Source is not SelectableTextBlock { Tag: List<WordSpan> spans } tb) return;
         var hit = tb.TextLayout.HitTestPoint(e.GetPosition(tb)).TextPosition;
         var span = spans.FirstOrDefault(s => hit >= s.Start && hit < s.End);
-        if (span is not null) _ = ShowStudyAsync(span);
+        if (span is null) return;
+        if (span.Note is not null) ShowFootnote(tb, span);
+        else if (StudyBtn.IsChecked == true) _ = ShowStudyAsync(span);
+    }
+
+    void ShowFootnote(Control anchor, WordSpan span)
+    {
+        var title = new TextBlock { Text = $"Fußnote {span.Word}", FontWeight = FontWeight.SemiBold };
+        title.Bind(TextBlock.ForegroundProperty, this.GetResourceObservable("BsAccent"));
+        var body = new TextBlock { Text = span.Note, TextWrapping = TextWrapping.Wrap, MaxWidth = 340 };
+        new Flyout { Content = new StackPanel { Spacing = 4, Children = { title, body } }, Placement = PlacementMode.Pointer }.ShowAt(anchor);
     }
 
     async Task ShowStudyAsync(WordSpan span)
@@ -463,12 +606,6 @@ public partial class MainWindow : Window
     {
         if (sender is not ListBox { SelectedItem: Entry entry } list) return;
         list.SelectedItem = null;
-        var book = _books.FirstOrDefault(b => b.Id == entry.Ref.Book);
-        if (book is null) { StatusText.Text = "Buch in dieser Übersetzung nicht vorhanden."; return; }
-        _loading = true;
-        BookBox.SelectedItem = book;
-        ChapterBox.Value = entry.Ref.Chapter;
-        _loading = false;
-        await ShowChapterAsync(entry.Ref.Verse);
+        await GoToAsync(entry.Ref.Book, entry.Ref.Chapter, entry.Ref.Verse);
     }
 }

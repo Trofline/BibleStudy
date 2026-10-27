@@ -23,6 +23,7 @@ public sealed partial class UserStore
             CREATE TABLE IF NOT EXISTS occ(translation TEXT, strong TEXT, book TEXT, chapter INT, verse INT, word TEXT);
             CREATE INDEX IF NOT EXISTS occ_idx ON occ(translation, strong);
             CREATE TABLE IF NOT EXISTS occ_done(translation TEXT PRIMARY KEY);
+            CREATE TABLE IF NOT EXISTS read_chapters(book TEXT, chapter INT, read_at TEXT, PRIMARY KEY(book,chapter));
             CREATE VIRTUAL TABLE IF NOT EXISTS fts USING fts5(text, translation UNINDEXED, book UNINDEXED, chapter UNINDEXED, verse UNINDEXED, tokenize='unicode61 remove_diacritics 2');
             """);
     }
@@ -76,6 +77,23 @@ public sealed partial class UserStore
             mark.Parameters.AddWithValue("$t", translationId);
             mark.ExecuteNonQuery();
         }
+        tx.Commit();
+    }
+
+    public HashSet<(string Book, int Chapter)> GetReadChapters() =>
+        Query("SELECT book,chapter FROM read_chapters", _ => { }, r => (r.GetString(0), r.GetInt32(1))).ToHashSet();
+
+    /// <summary>Marks chapters of one book as read (or unread) in one transaction.</summary>
+    public void SetRead(string book, IEnumerable<int> chapters, bool read)
+    {
+        using var con = Open();
+        using var tx = con.BeginTransaction();
+        using var cmd = con.CreateCommand();
+        cmd.CommandText = read ? "INSERT OR IGNORE INTO read_chapters VALUES($b,$c,$t)" : "DELETE FROM read_chapters WHERE book=$b AND chapter=$c";
+        cmd.Parameters.AddWithValue("$b", book);
+        var pc = cmd.Parameters.Add("$c", SqliteType.Integer);
+        if (read) cmd.Parameters.AddWithValue("$t", DateTime.UtcNow.ToString("o"));
+        foreach (var c in chapters) { pc.Value = c; cmd.ExecuteNonQuery(); }
         tx.Commit();
     }
 

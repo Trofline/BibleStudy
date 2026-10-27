@@ -52,3 +52,29 @@ public class ConcordanceStoreTests
         try { Directory.Delete(dir, true); } catch { }
     }
 }
+
+public class ReadingAndSettingsTests
+{
+    [Fact]
+    public void ReadChapters_MarkAndClearInBulk()
+    {
+        var dir = Path.Combine(Path.GetTempPath(), "bs_" + Guid.NewGuid().ToString("N"));
+        var s = new UserStore(Path.Combine(dir, "t.db"));
+        s.SetRead("GEN", [1, 2, 3], true);
+        s.SetRead("GEN", [2], false);
+        Assert.Equal([("GEN", 1), ("GEN", 3)], s.GetReadChapters().OrderBy(x => x.Chapter));
+        Microsoft.Data.Sqlite.SqliteConnection.ClearAllPools();
+        try { Directory.Delete(dir, true); } catch { }
+    }
+
+    [Fact]
+    public void Settings_RoundTrip_AndBrokenFileFallsBackToDefaults()
+    {
+        var path = Path.Combine(Path.GetTempPath(), "bs_" + Guid.NewGuid().ToString("N"), "settings.json");
+        new AppSettings { Theme = "Dark", FontSize = 26 }.Save(path);
+        Assert.Equal(26, AppSettings.Load(path).FontSize);
+        File.WriteAllText(path, "{ not json");
+        Assert.Equal(22, AppSettings.Load(path).FontSize);
+        Directory.Delete(Path.GetDirectoryName(path)!, true);
+    }
+}

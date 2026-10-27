@@ -38,7 +38,17 @@ public sealed class HelloAoProvider(HttpClient http, string cacheDir) : IBiblePr
     public async Task<Chapter> GetChapterAsync(string translationId, string bookId, int chapter, CancellationToken ct = default)
     {
         using var doc = await GetJsonAsync($"/api/{translationId}/{bookId}/{chapter}.json", ct);
-        return new Chapter(translationId, bookId, chapter, ParseVerses(doc.RootElement.GetProperty("chapter"), await TryGetWordsAsync(translationId, bookId, chapter, ct)));
+        var node = doc.RootElement.GetProperty("chapter");
+        return new Chapter(translationId, bookId, chapter, ParseVerses(node, await TryGetWordsAsync(translationId, bookId, chapter, ct)), ParseFootnotes(node));
+    }
+
+    static List<Footnote> ParseFootnotes(JsonElement chapter)
+    {
+        if (!chapter.TryGetProperty("footnotes", out var list) || list.ValueKind != JsonValueKind.Array) return [];
+        return list.EnumerateArray().Select(f => new Footnote(
+            f.GetProperty("noteId").GetInt32(),
+            f.TryGetProperty("reference", out var r) && r.TryGetProperty("verse", out var v) ? v.GetInt32() : 0,
+            Str(f, "text"))).ToList();
     }
 
     public const string CrossRefAttribution = "Querverweise © OpenBible.info, CC BY 4.0 (openbible.info/labs/cross-references)";
@@ -101,6 +111,7 @@ public sealed class HelloAoProvider(HttpClient http, string cacheDir) : IBiblePr
                 var partIndex = index++;
                 var partTags = tags.Where(t => t.Index == partIndex).ToList();
                 if (part.ValueKind == JsonValueKind.String) segs.AddRange(Split(part.GetString()!, false, partTags));
+                else if (part.TryGetProperty("noteId", out var note)) segs.Add(new Segment("", false, null, note.GetInt32()));
                 else if (part.TryGetProperty("text", out var tx))
                     segs.AddRange(Split(tx.GetString()!, part.TryGetProperty("wordsOfJesus", out var w) && w.ValueKind == JsonValueKind.True, partTags));
             }
