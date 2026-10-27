@@ -24,6 +24,9 @@ public partial class MainWindow
         GraphPane.OpenChapter += async (book, chapter) => await GoToAsync(book, chapter);
         GraphPane.CloseRequested += ShowReader;
         ThreadPane.Picked += ShowRefsFlyout;
+        ThreadPane.Jump += r => _ = GoToAsync(r.Target.Book, r.Target.Chapter, r.Target.Verse);
+        ThreadPane.BuildRequested += async () => await BuildGraphAsync();
+        ReaderScroll.ScrollChanged += (_, _) => UpdateThread();
         ReaderHost.SizeChanged += (_, _) => UpdateThread();
     }
 
@@ -155,30 +158,41 @@ public partial class MainWindow
 
     // ---- graph beside the text --------------------------------------------------------------------------------------
 
+    /// <summary>Threads of the verses that are visible right now (the graph is fixed beside the scrolling text).</summary>
     void UpdateThread()
     {
-        if (!ThreadPane.IsVisible || _chapterRefs is null) return;
-        var rows = new List<ThreadGraph.Row>();
-        foreach (var (verse, box) in _verseBoxes)
-        {
-            if (!_chapterRefs.TryGetValue(verse, out var refs) || refs.Count == 0) continue;
-            if (box.TranslatePoint(new Point(0, Math.Min(box.Bounds.Height / 2, 18)), ThreadPane) is not { } p) continue;
-            rows.Add(new ThreadGraph.Row(p.Y, verse, refs.GroupBy(r => r.Target.Book).Select(g => (g.Key, (IReadOnlyList<CrossRef>)g.ToList())).ToList()));
-        }
-        ThreadPane.SetData(rows, id => _books.FirstOrDefault(b => b.Id == id)?.Order ?? 999, BookName);
+        if (!ThreadPane.IsVisible) return;
+        var anchors = new List<ThreadGraph.Anchor>();
+        if (_chapterRefs is not null)
+            foreach (var (verse, box) in _verseBoxes)
+            {
+                if (!_chapterRefs.TryGetValue(verse, out var refs) || refs.Count == 0) continue;
+                if (box.TranslatePoint(new Point(0, Math.Min(box.Bounds.Height / 2, 18)), ThreadPane) is not { } p) continue;
+                if (p.Y < -4 || p.Y > ThreadPane.Bounds.Height + 4) continue;
+                anchors.Add(new ThreadGraph.Anchor(p.Y, verse, refs));
+            }
+        ThreadPane.SetData(_graph, _graph?.Index(_curBook, _curChapter) ?? -1, anchors, BookName);
     }
 
     void ShowThread(bool visible)
     {
-        ThreadPane.IsVisible = visible && _chapterRefs is not null;
-        if (ThreadPane.IsVisible) Dispatcher.UIThread.Post(UpdateThread, DispatcherPriority.Loaded);
+        ThreadPane.IsVisible = visible;
+        if (!visible) return;
+        if (_graph is null && CrossRefDataCached()) _ = BuildGraphAsync();
+        Dispatcher.UIThread.Post(UpdateThread, DispatcherPriority.Loaded);
+    }
+
+    bool CrossRefDataCached()
+    {
+        var dir = Path.Combine(_root, "cache", "api", "d", "open-cross-ref");
+        return Directory.Exists(dir) && Directory.EnumerateFiles(dir, "*.json", SearchOption.AllDirectories).Count() >= 1150;
     }
 
     // ---- full graph -------------------------------------------------------------------------------------------------
 
     async Task ShowGraphAsync()
     {
-        Home.IsVisible = false; ReaderScroll.IsVisible = false; GraphPane.IsVisible = true;
+        Home.IsVisible = false; ReaderHost.IsVisible = false; GraphPane.IsVisible = true;
         if (_graph is not null) { GraphPane.FocusChapter(_curBook, _curChapter); return; }
         var dir = Path.Combine(_root, "cache", "api", "d", "open-cross-ref");
         var cached = Directory.Exists(dir) ? Directory.EnumerateFiles(dir, "*.json", SearchOption.AllDirectories).Count() : 0;
@@ -191,9 +205,11 @@ public partial class MainWindow
         _graphBuilding = true;
         try
         {
-            var progress = new Progress<(int Done, int Total)>(p => GraphPane.ReportProgress(p.Done, p.Total));
+            var progress = new Progress<(int Done, int Total)>(p => { GraphPane.ReportProgress(p.Done, p.Total); StatusText.Text = $"Querverweise werden geladen … {p.Done}/{p.Total}"; });
             _graph = await Task.Run(() => CrossRefGraphBuilder.BuildAsync(_hello, progress));
             GraphPane.SetGraph(_graph, BookName);
+            StatusText.Text = "";
+            UpdateThread();
             GraphPane.FocusChapter(_curBook, _curChapter);
         }
         catch (Exception ex) { GraphPane.ShowBuildPrompt("Das Laden ist fehlgeschlagen: " + ex.Message); }

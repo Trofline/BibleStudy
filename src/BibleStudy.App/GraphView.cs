@@ -30,7 +30,7 @@ public sealed class GraphView : UserControl
     readonly Slider _countSlider = new() { Minimum = 4, Maximum = 40, Value = 14, Width = 140, TickFrequency = 1, IsSnapToTickEnabled = true };
     readonly TextBlock _countLabel = new() { Text = "Anzahl 14" };
     readonly ComboBox _bookBox = new() { Width = 170, IsVisible = false };
-    readonly Slider _arcSlider = new() { Minimum = 500, Maximum = 12000, Value = 6000, Width = 150, IsVisible = false };
+    readonly Slider _arcSlider = new() { Minimum = 10000, Maximum = 344000, Value = 150000, Width = 150, IsVisible = false };
     readonly TextBlock _hint = new() { FontSize = 12, VerticalAlignment = VerticalAlignment.Center };
     readonly TextBlock _detailTitle = new() { FontWeight = FontWeight.SemiBold, FontSize = 15 };
     readonly TextBlock _detailInfo = new() { FontSize = 12 };
@@ -92,7 +92,7 @@ public sealed class GraphView : UserControl
         _countSlider.ValueChanged += (_, _) => { _countLabel.Text = $"Anzahl {(int)_countSlider.Value}"; ResetNetwork(); };
         _arcSlider.ValueChanged += (_, _) => ReconfigureArcs();
         _bookBox.SelectionChanged += (_, _) => { if (!_loadingBooks) { _arcBook = _bookBox.SelectedIndex - 1; ReconfigureArcs(); } };
-        _resetBtn.Click += (_, _) => { if (IsArc) { _arcBook = -1; _bookBox.SelectedIndex = 0; _selected = -1; _detail.IsVisible = false; ReconfigureArcs(); } else ResetNetwork(); };
+        _resetBtn.Click += (_, _) => { if (IsArc) { _arc.ResetView(); _arcBook = -1; _bookBox.SelectedIndex = 0; _selected = -1; _detail.IsVisible = false; ReconfigureArcs(); } else ResetNetwork(); };
         _centerBtn.Click += (_, _) => { if (_selected >= 0) { _center = _selected; ResetNetwork(); } };
         _expandBtn.Click += (_, _) => { if (_selected >= 0 && _graph is not null) { _net.Expand(_graph, _selected, Direction, (int)_countSlider.Value); ShowDetail(_selected); } };
         _openBtn.Click += (_, _) => OpenNode(_selected);
@@ -390,125 +390,3 @@ sealed class NetworkCanvas : Control
     }
 }
 
-/// <summary>All chapters on one line in Bible order; arcs connect chapters that reference each other. The base layer is cached as a bitmap.</summary>
-sealed class ArcCanvas : Control
-{
-    public event Action<string>? Hovered;
-    public event Action<int>? Selected, BookPicked, Open;
-
-    CrossRefGraph? _g;
-    Func<string, string> _name = s => s;
-    readonly List<(StreamGeometry Geometry, GraphEdge Edge, double Strength)> _arcs = [];
-    RenderTargetBitmap? _cache;
-    int _filter = -1, _hover = -1, _selected = -1, _maxArcs;
-    bool _dirty = true;
-
-    public void Configure(CrossRefGraph g, int maxArcs, int bookFilter, Func<string, string> name)
-    {
-        _g = g; _name = name; _filter = bookFilter; _maxArcs = maxArcs; _dirty = true;
-        InvalidateVisual();
-    }
-
-    double X(int node) => 20 + (node + 0.5) / _g!.NodeCount * (Bounds.Width - 40);
-    double Baseline => Bounds.Height - 54;
-
-    protected override void OnSizeChanged(SizeChangedEventArgs e)
-    {
-        base.OnSizeChanged(e);
-        _dirty = true;
-    }
-
-    void BuildArcs()
-    {
-        _arcs.Clear();
-        var edges = (_filter < 0 ? _g!.Edges : _g!.Edges.Where(e => _g.BookIndexOf(e.From) == _filter || _g.BookIndexOf(e.To) == _filter)).Take(_maxArcs).ToList();
-        var maxW = Math.Max(1, edges.DefaultIfEmpty(new GraphEdge(0, 0, 1)).Max(e => e.Weight));
-        foreach (var e in edges.OrderBy(e => e.Weight)) // weak first, strong on top
-        {
-            double x1 = X(e.From), x2 = X(e.To), r = Math.Abs(x2 - x1) / 2;
-            var geometry = new StreamGeometry();
-            using (var ctx = geometry.Open())
-            {
-                ctx.BeginFigure(new Point(x1, Baseline), false);
-                ctx.ArcTo(new Point(x2, Baseline), new Size(Math.Max(r, 0.5), Math.Min(r * 1.1, Baseline - 40)), 0, false, x1 < x2 ? SweepDirection.Clockwise : SweepDirection.CounterClockwise);
-                ctx.EndFigure(false);
-            }
-            _arcs.Add((geometry, e, Math.Log(1 + e.Weight) / Math.Log(1 + maxW)));
-        }
-    }
-
-    /// <summary>Draws arcs and book bar into a bitmap once; hovering then only repaints the bitmap plus a few highlighted arcs.</summary>
-    void RebuildCache()
-    {
-        _dirty = false;
-        _cache?.Dispose(); _cache = null;
-        if (_g is null || Bounds.Width < 50 || Bounds.Height < 50) return;
-        BuildArcs();
-        var scale = TopLevel.GetTopLevel(this)?.RenderScaling ?? 1;
-        _cache = new RenderTargetBitmap(new PixelSize((int)(Bounds.Width * scale), (int)(Bounds.Height * scale)), new Vector(96 * scale, 96 * scale));
-        using var dc = _cache.CreateDrawingContext();
-        var muted = this.TryFindResource("BsMuted", ActualThemeVariant, out var m) && m is IBrush mb ? mb : Brushes.Gray;
-        foreach (var (geometry, edge, strength) in _arcs)
-        {
-            var color = HomeView.ColorOf(_g.At(edge.From).Book);
-            dc.DrawGeometry(null, new Pen(new SolidColorBrush(color, 0.07 + 0.42 * strength), 0.45 + 1.1 * strength), geometry);
-        }
-        var slot = (Bounds.Width - 40) / _g.NodeCount;
-        for (var b = 0; b < _g.Books.Count; b++)
-        {
-            var x1 = X(_g.BookStart(b)) - slot / 2;
-            var x2 = X(_g.BookStart(b) + _g.Books[b].Chapters - 1) + slot / 2;
-            dc.DrawRectangle(new SolidColorBrush(HomeView.ColorOf(_g.Books[b].Book), _filter < 0 || _filter == b ? 1 : 0.3), null, new Rect(x1, Baseline + 6, Math.Max(1, x2 - x1 - 1), 8));
-            if (x2 - x1 > 26)
-            {
-                var name = _name(_g.Books[b].Book);
-                var label = new FormattedText(name.Length <= 5 ? name : name[..4] + ".", CultureInfo.CurrentUICulture, FlowDirection.LeftToRight, Typeface.Default, 10, muted);
-                dc.DrawText(label, new Point(x1 + (x2 - x1 - label.Width) / 2, Baseline + 18));
-            }
-        }
-    }
-
-    public override void Render(DrawingContext dc)
-    {
-        dc.DrawRectangle(Brushes.Transparent, null, new Rect(Bounds.Size));
-        if (_g is null) return;
-        if (_dirty) RebuildCache();
-        if (_cache is not null) dc.DrawImage(_cache, new Rect(_cache.Size), new Rect(Bounds.Size));
-        var focus = _hover >= 0 ? _hover : _selected;
-        if (focus < 0) return;
-        var text = this.TryFindResource("BsText", ActualThemeVariant, out var t) && t is IBrush tb ? tb : Brushes.White;
-        foreach (var (geometry, edge, strength) in _arcs.Where(a => a.Edge.From == focus || a.Edge.To == focus))
-            dc.DrawGeometry(null, new Pen(text, 0.8 + 1.4 * strength), geometry);
-        dc.DrawLine(new Pen(text, 2), new Point(X(focus), Baseline + 2), new Point(X(focus), Baseline + 14));
-    }
-
-    int NodeAt(double x)
-    {
-        if (_g is null) return -1;
-        var i = (int)Math.Floor((x - 20) / (Bounds.Width - 40) * _g.NodeCount);
-        return i >= 0 && i < _g.NodeCount ? i : -1;
-    }
-
-    protected override void OnPointerMoved(PointerEventArgs e)
-    {
-        var node = NodeAt(e.GetPosition(this).X);
-        if (node == _hover) return;
-        _hover = node;
-        if (node < 0) Hovered?.Invoke("");
-        else { var c = _g!.At(node); Hovered?.Invoke($"{_name(c.Book)} {c.Chapter}"); }
-        InvalidateVisual();
-    }
-
-    protected override void OnPointerPressed(PointerPressedEventArgs e)
-    {
-        if (_g is null || !e.GetCurrentPoint(this).Properties.IsLeftButtonPressed) return;
-        var p = e.GetPosition(this);
-        var node = NodeAt(p.X);
-        if (node < 0) return;
-        if (e.ClickCount >= 2) { Open?.Invoke(node); return; }
-        if (p.Y > Baseline + 4) { BookPicked?.Invoke(_g.BookIndexOf(node)); return; }   // book bar: filter
-        _selected = node;
-        Selected?.Invoke(node);
-        InvalidateVisual();
-    }
-}

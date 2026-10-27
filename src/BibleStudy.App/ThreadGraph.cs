@@ -8,133 +8,154 @@ using BibleStudy.Core.Models;
 namespace BibleStudy.App;
 
 /// <summary>
-/// Graph beside the text: from each verse a thin band runs to the books its cross references point to.
-/// Book bars on the right are as tall as the number of references they receive from this chapter.
-/// Clicking a band or a bar reports the references behind it.
+/// Threads beside the text (design after trekhleb.dev/bible-cross-references, MIT): every cross reference of the visible verses
+/// is one fine bezier thread from its verse to the place it points to on a spine that holds the whole Bible, book by book.
+/// Threads take the color of the genre they land in. Hover highlights, a click on a thread jumps there, a click on a book lists its references.
 /// </summary>
 public sealed class ThreadGraph : Control
 {
-    public sealed record Row(double Y, int Verse, IReadOnlyList<(string Book, IReadOnlyList<CrossRef> Refs)> Targets);
+    public sealed record Anchor(double Y, int Verse, IReadOnlyList<CrossRef> Refs);
 
-    /// <summary>Title, references, and the click position inside this control.</summary>
+    public event Action<CrossRef>? Jump;
     public event Action<string, IReadOnlyList<CrossRef>, Point>? Picked;
+    public event Action? BuildRequested;
 
-    public const double GraphWidth = 340;
-    const double BarX = 222, BarWidth = 12, Gap = 4, MinBar = 14;
+    public const double GraphWidth = 360;
+    const double Gutter = 236, BarWidth = 8, Margin = 6;
+    static readonly IBrush Muted = new SolidColorBrush(Color.Parse("#9a9890"));
+    static readonly IBrush Text = new SolidColorBrush(Color.Parse("#ecebe6"));
 
-    sealed record Band(string Book, int Verse, IReadOnlyList<CrossRef> Refs, Point[] Samples, double Width);
+    sealed record Thread(double Y, double TargetY, int Genre, double Weight, CrossRef Ref, int BookIndex);
+    sealed record Segment(int Book, double Top, double Bottom, int Genre);
 
-    IReadOnlyList<Row> _rows = [];
-    Func<string, int> _order = _ => 0;
-    Func<string, string> _label = s => s;
-    readonly List<Band> _bands = [];
-    readonly Dictionary<string, (double Top, double Height)> _bars = [];
-    readonly Dictionary<string, List<CrossRef>> _bookRefs = [];
+    CrossRefGraph? _graph;
+    int _chapterNode = -1;
+    IReadOnlyList<Anchor> _anchors = [];
+    Func<string, string> _name = s => s;
+    readonly List<Thread> _threads = [];
+    readonly List<Segment> _segments = [];
     double _builtHeight = -1;
-    int _hoverBand = -1;
-    string? _hoverBar;
+    int _hoverThread = -1, _hoverBook = -1;
+    bool _dirty = true;
 
-    public void SetData(IReadOnlyList<Row> rows, Func<string, int> order, Func<string, string> label)
+    public void SetData(CrossRefGraph? graph, int chapterNode, IReadOnlyList<Anchor> anchors, Func<string, string> bookName)
     {
-        _rows = rows; _order = order; _label = label; _builtHeight = -1; _hoverBand = -1; _hoverBar = null;
+        _graph = graph; _chapterNode = chapterNode; _anchors = anchors; _name = bookName; _dirty = true;
         InvalidateVisual();
     }
 
     protected override Size MeasureOverride(Size availableSize) => new(GraphWidth, 0);
 
+    double YOf(double verse) => Margin + verse / _graph!.Links!.VerseCount * (Bounds.Height - 2 * Margin);
+
     void Build()
     {
-        _builtHeight = Bounds.Height;
-        _bands.Clear(); _bars.Clear(); _bookRefs.Clear();
-        if (_rows.Count == 0 || Bounds.Height < 60) return;
-        var totals = new Dictionary<string, int>();
-        foreach (var t in _rows.SelectMany(r => r.Targets))
+        _dirty = false; _builtHeight = Bounds.Height;
+        _threads.Clear(); _segments.Clear(); _hoverThread = -1; _hoverBook = -1;
+        var links = _graph?.Links;
+        if (links is null || Bounds.Height < 60) return;
+        var g = _graph!;
+        for (var b = 0; b < g.Books.Count; b++)
         {
-            totals[t.Book] = totals.GetValueOrDefault(t.Book) + t.Refs.Count;
-            if (!_bookRefs.TryGetValue(t.Book, out var list)) _bookRefs[t.Book] = list = [];
-            list.AddRange(t.Refs);
+            var first = g.BookStart(b); var last = first + g.Books[b].Chapters - 1;
+            _segments.Add(new Segment(b, YOf(links.ChapterStart(first)), YOf(links.ChapterStart(last) + links.ChapterVerseCount(last)), Math.Min(9, (int)BookCategories.Of(g.Books[b].Book))));
         }
-        var books = totals.Keys.OrderBy(_order).ToList();
-        var free = Math.Max(0, Bounds.Height - 8 - Gap * (books.Count - 1) - MinBar * books.Count);
-        var sum = totals.Values.Sum();
-        var y = 4.0;
-        foreach (var b in books) { var h = MinBar + free * totals[b] / sum; _bars[b] = (y, h); y += h + Gap; }
-
-        var used = new Dictionary<string, double>();
-        foreach (var row in _rows.OrderBy(r => r.Y))
-            foreach (var t in row.Targets.OrderBy(t => _order(t.Book)))
+        foreach (var anchor in _anchors)
+            foreach (var r in anchor.Refs)
             {
-                var (top, h) = _bars[t.Book];
-                var slot = h * t.Refs.Count / totals[t.Book];
-                var yt = top + used.GetValueOrDefault(t.Book) + slot / 2;
-                used[t.Book] = used.GetValueOrDefault(t.Book) + slot;
-                var samples = new Point[17];
-                for (var i = 0; i < samples.Length; i++)
-                {
-                    double s = i / 16.0, u = 1 - s;
-                    var x = 3 * u * s * s * (BarX * 0.45) + 3 * u * u * s * (BarX * 0.55) + s * s * s * BarX;
-                    samples[i] = new Point(x, u * u * u * row.Y + 3 * u * u * s * row.Y + 3 * u * s * s * yt + s * s * s * yt);
-                }
-                _bands.Add(new Band(t.Book, row.Verse, t.Refs, samples, Math.Clamp(slot * 0.45, 0.7, 2.2)));
+                var node = g.Index(r.Target.Book, r.Target.Chapter);
+                if (node < 0) continue;
+                var mid = (links.IndexOf(node, r.Target.Verse) + links.IndexOf(node, Math.Max(r.Target.Verse, r.EndVerse)) + 1) / 2.0;
+                _threads.Add(new Thread(anchor.Y, YOf(mid), links.VerseGenre[links.IndexOf(node, r.Target.Verse)], ArcRenderer.VoteWeight(r.Score), r, g.BookIndexOf(node)));
             }
+    }
+
+    static Point Bezier(double y, double ty, double s)
+    {
+        var bend = Gutter * 0.55; double u = 1 - s;
+        return new Point(3 * u * s * s * (Gutter - bend) + 3 * u * u * s * bend + s * s * s * (Gutter + 2), u * u * u * y + 3 * u * u * s * y + 3 * u * s * s * ty + s * s * s * ty);
     }
 
     public override void Render(DrawingContext dc)
     {
-        dc.DrawRectangle(Brushes.Transparent, null, new Rect(Bounds.Size)); // pointer input everywhere
-        if (Math.Abs(_builtHeight - Bounds.Height) > 0.5) Build();
-        if (_bands.Count == 0) return;
-        var muted = this.TryFindResource("BsMuted", ActualThemeVariant, out var m) && m is IBrush mb ? mb : Brushes.Gray;
-        var text = this.TryFindResource("BsText", ActualThemeVariant, out var t) && t is IBrush tb ? tb : Brushes.White;
-
-        foreach (var (book, (top, h)) in _bars)
+        dc.DrawRectangle(Brushes.Transparent, null, new Rect(Bounds.Size));
+        if (_graph?.Links is null)
         {
-            var hot = book == _hoverBar;
-            dc.DrawRectangle(new SolidColorBrush(HomeView.ColorOf(book)), hot ? new Pen(text, 1.5) : null, new RoundedRect(new Rect(BarX, top, BarWidth, h), 3));
-            var name = _label(book);
-            var label = new FormattedText($"{(name.Length > 11 ? name[..10] + "…" : name)} {_bookRefs[book].Count}", CultureInfo.CurrentUICulture, FlowDirection.LeftToRight, Typeface.Default, 11, hot ? text : muted);
-            dc.DrawText(label, new Point(BarX + BarWidth + 6, top + h / 2 - label.Height / 2));
+            var hint = new FormattedText("Querverweis-Daten laden ▸", CultureInfo.CurrentUICulture, FlowDirection.LeftToRight, Typeface.Default, 13, Text);
+            dc.DrawText(hint, new Point(24, 24));
+            return;
         }
+        if (_dirty || Math.Abs(_builtHeight - Bounds.Height) > 0.5) Build();
 
-        var dim = _hoverBand >= 0 || _hoverBar is not null;
+        var emphasized = _hoverThread >= 0 ? _threads[_hoverThread] : null;
+        var hasEmphasis = emphasized is not null || _hoverBook >= 0;
+        var barLeft = Gutter + 2;
         for (var pass = 0; pass < 2; pass++)
-            for (var i = 0; i < _bands.Count; i++)
+            for (var i = 0; i < _threads.Count; i++)
             {
-                var band = _bands[i];
-                var hot = i == _hoverBand || band.Book == _hoverBar;
-                if (hot != (pass == 1)) continue; // highlighted bands are drawn last
+                var t = _threads[i];
+                var hot = i == _hoverThread || t.BookIndex == _hoverBook;
+                if (hot != (pass == 1)) continue; // emphasized threads on top
+                var color = ArcRenderer.GenreColor(t.Genre);
+                var alpha = hot ? 0.95 : hasEmphasis ? 0.06 + 0.1 * t.Weight : 0.18 + 0.5 * t.Weight;
                 var geometry = new StreamGeometry();
                 using (var ctx = geometry.Open())
                 {
-                    ctx.BeginFigure(band.Samples[0], false);
-                    for (var k = 1; k < band.Samples.Length; k++) ctx.LineTo(band.Samples[k]);
+                    var bend = Gutter * 0.55;
+                    ctx.BeginFigure(new Point(0, t.Y), false);
+                    ctx.CubicBezierTo(new Point(bend, t.Y), new Point(Gutter - bend, t.TargetY), new Point(barLeft, t.TargetY));
                     ctx.EndFigure(false);
                 }
-                var alpha = hot ? 0.95 : dim ? 0.18 : 0.42;
-                dc.DrawGeometry(null, new Pen(new SolidColorBrush(HomeView.ColorOf(band.Book), alpha), band.Width + (hot ? 1.2 : 0)), geometry);
+                dc.DrawGeometry(null, new Pen(new SolidColorBrush(color, alpha), hot ? 1.6 : 1), geometry);
+                dc.DrawRectangle(new SolidColorBrush(color, alpha), null, new Rect(barLeft - 4, t.TargetY - 0.5, 4, 1));
             }
+
+        var labelX = barLeft + BarWidth + 5;
+        foreach (var s in _segments)
+            dc.DrawRectangle(new SolidColorBrush(ArcRenderer.GenreColor(s.Genre), s.Book % 2 == 0 ? 1 : 0.72), null, new Rect(barLeft, s.Top, BarWidth, Math.Max(0.5, s.Bottom - s.Top)));
+        foreach (var s in _segments)
+        {
+            var hot = s.Book == _hoverBook;
+            if (s.Bottom - s.Top < 10 && !hot) continue;
+            var full = _name(_graph.Books[s.Book].Book);
+            var label = new FormattedText(full, CultureInfo.CurrentUICulture, FlowDirection.LeftToRight, Typeface.Default, 10, hot ? Text : Muted);
+            if (label.Width > Bounds.Width - labelX - 2) label = new FormattedText(full.Length > 4 ? full[..3] + "." : full, CultureInfo.CurrentUICulture, FlowDirection.LeftToRight, Typeface.Default, 10, hot ? Text : Muted);
+            dc.DrawText(label, new Point(labelX, (s.Top + s.Bottom) / 2 - label.Height / 2));
+        }
+        if (_chapterNode >= 0)
+        {
+            var links = _graph.Links;
+            double top = YOf(links.ChapterStart(_chapterNode)) - 2, bottom = Math.Max(YOf(links.ChapterStart(_chapterNode) + links.ChapterVerseCount(_chapterNode)) + 2, top + 4), mid = (top + bottom) / 2;
+            dc.DrawRectangle(Text, null, new Rect(barLeft - 3, top, 2, bottom - top));
+            var arrow = new StreamGeometry();
+            using (var ctx = arrow.Open()) { ctx.BeginFigure(new Point(barLeft - 3, mid - 4), true); ctx.LineTo(new Point(barLeft - 8, mid)); ctx.LineTo(new Point(barLeft - 3, mid + 4)); ctx.EndFigure(true); }
+            dc.DrawGeometry(Text, null, arrow);
+        }
     }
 
-    int HitBand(Point p)
+    int HitThread(Point p)
     {
-        var best = -1; var bestDistance = 5.0;
-        for (var i = 0; i < _bands.Count; i++)
+        var best = -1; var bestDistance = 4.5;
+        for (var i = 0; i < _threads.Count; i++)
         {
-            var s = _bands[i].Samples;
-            for (var k = 0; k + 1 < s.Length; k++)
+            var t = _threads[i];
+            var previous = Bezier(t.Y, t.TargetY, 0);
+            for (var k = 1; k <= 14; k++)
             {
-                var d = DistanceToSegment(p, s[k], s[k + 1]);
+                var next = Bezier(t.Y, t.TargetY, k / 14.0);
+                var d = DistanceToSegment(p, previous, next);
                 if (d < bestDistance) { bestDistance = d; best = i; }
+                previous = next;
             }
         }
         return best;
     }
 
-    string? HitBar(Point p)
+    int HitBook(Point p)
     {
-        if (p.X < BarX - 2) return null;
-        foreach (var (book, (top, h)) in _bars) if (p.Y >= top && p.Y <= top + h) return book;
-        return null;
+        if (p.X < Gutter) return -1;
+        foreach (var s in _segments) if (p.Y >= s.Top - 1 && p.Y <= Math.Max(s.Bottom, s.Top + 3) + 1 && _threads.Any(t => t.BookIndex == s.Book)) return s.Book;
+        return -1;
     }
 
     static double DistanceToSegment(Point p, Point a, Point b)
@@ -147,26 +168,32 @@ public sealed class ThreadGraph : Control
 
     protected override void OnPointerMoved(PointerEventArgs e)
     {
+        if (_graph?.Links is null) return;
         var p = e.GetPosition(this);
-        var bar = HitBar(p);
-        var band = bar is null ? HitBand(p) : -1;
-        if (band == _hoverBand && bar == _hoverBar) return;
-        _hoverBand = band; _hoverBar = bar;
-        Cursor = band >= 0 || bar is not null ? new Cursor(StandardCursorType.Hand) : null;
+        var book = HitBook(p);
+        var thread = book >= 0 ? -1 : HitThread(p);
+        if (thread == _hoverThread && book == _hoverBook) return;
+        _hoverThread = thread; _hoverBook = book;
+        Cursor = thread >= 0 || book >= 0 ? new Cursor(StandardCursorType.Hand) : null;
         InvalidateVisual();
     }
 
     protected override void OnPointerExited(PointerEventArgs e)
     {
-        _hoverBand = -1; _hoverBar = null;
+        _hoverThread = -1; _hoverBook = -1;
         InvalidateVisual();
     }
 
     protected override void OnPointerPressed(PointerPressedEventArgs e)
     {
         if (!e.GetCurrentPoint(this).Properties.IsLeftButtonPressed) return;
+        if (_graph?.Links is null) { BuildRequested?.Invoke(); return; }
         var p = e.GetPosition(this);
-        if (HitBar(p) is { } bar) { Picked?.Invoke($"{_label(bar)} · alle Verweise aus diesem Kapitel", _bookRefs[bar], p); return; }
-        if (HitBand(p) is var i and >= 0) Picked?.Invoke($"Vers {_bands[i].Verse} → {_label(_bands[i].Book)}", _bands[i].Refs, p);
+        if (HitBook(p) is var b and >= 0)
+        {
+            Picked?.Invoke($"{_name(_graph.Books[b].Book)} · Verweise aus den sichtbaren Versen", _threads.Where(t => t.BookIndex == b).Select(t => t.Ref).ToList(), p);
+            return;
+        }
+        if (HitThread(p) is var i and >= 0) Jump?.Invoke(_threads[i].Ref);
     }
 }

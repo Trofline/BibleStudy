@@ -175,10 +175,10 @@ public partial class MainWindow : Window
     void ShowHome()
     {
         Home.Show(_books, _read, Home.OpenBook);
-        Home.IsVisible = true; ReaderScroll.IsVisible = false; GraphPane.IsVisible = false;
+        Home.IsVisible = true; ReaderHost.IsVisible = false; GraphPane.IsVisible = false;
     }
 
-    void ShowReader() { Home.IsVisible = false; GraphPane.IsVisible = false; ReaderScroll.IsVisible = true; OnReaderShown(); }
+    void ShowReader() { Home.IsVisible = false; GraphPane.IsVisible = false; ReaderHost.IsVisible = true; OnReaderShown(); }
 
     async Task GoToAsync(string bookId, int chapter, int? verse = null)
     {
@@ -534,7 +534,7 @@ public partial class MainWindow : Window
     {
         ReaderPanel.HorizontalAlignment = _singleColumn ? Avalonia.Layout.HorizontalAlignment.Center : Avalonia.Layout.HorizontalAlignment.Stretch;
         ReaderPanel.Margin = _singleColumn ? new(0, 36, 0, 80) : new(32, 28, 32, 80);
-        var reserve = _threadOn && _singleColumn ? ThreadGraph.GraphWidth + 32 : 0; // room for the graph beside the text
+        var reserve = 0.0;
         ReaderPanel.Width = _singleColumn ? Math.Clamp(ReaderScroll.Bounds.Width - 64 - reserve, 320, 760) : double.NaN;
     }
 

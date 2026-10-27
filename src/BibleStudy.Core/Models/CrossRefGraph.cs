@@ -20,6 +20,8 @@ public sealed class CrossRefGraph
     readonly List<(int Other, int Weight)>[] _out, _in;
 
     public int NodeCount { get; }
+    /// <summary>Verse-level links; set by the builder.</summary>
+    public VerseLinkSet? Links { get; set; }
     public IReadOnlyList<(string Book, int Chapters)> Books => _books;
     /// <summary>Strongest connections first.</summary>
     public IReadOnlyList<GraphEdge> Edges { get; }
@@ -82,6 +84,7 @@ public static class CrossRefGraphBuilder
         var skeleton = new CrossRefGraph(books, []);
         var jobs = books.SelectMany(b => Enumerable.Range(1, b.Chapters).Select(c => (b.Book, Chapter: c))).ToList();
         var results = new List<GraphEdge>[jobs.Count];
+        var rawResults = new List<RawLink>[jobs.Count];
         var done = 0;
         using var gate = new SemaphoreSlim(24);
         await Task.WhenAll(jobs.Select(async (job, i) =>
@@ -91,17 +94,87 @@ public static class CrossRefGraphBuilder
             {
                 var from = skeleton.Index(job.Book, job.Chapter);
                 var perTarget = new Dictionary<int, int>();
-                foreach (var refs in (await provider.GetChapterCrossRefsAsync(job.Book, job.Chapter, ct)).Values)
+                var raw = new List<RawLink>();
+                foreach (var (verse, refs) in await provider.GetChapterCrossRefsAsync(job.Book, job.Chapter, ct))
                     foreach (var r in refs)
                     {
                         var to = skeleton.Index(r.Target.Book, r.Target.Chapter);
-                        if (to >= 0) perTarget[to] = perTarget.GetValueOrDefault(to) + 1;
+                        if (to < 0) continue;
+                        perTarget[to] = perTarget.GetValueOrDefault(to) + 1;
+                        raw.Add(new RawLink(from, verse, to, r.Target.Verse, r.EndVerse, r.Score));
                     }
                 results[i] = perTarget.Select(kv => new GraphEdge(from, kv.Key, kv.Value)).ToList();
+                rawResults[i] = raw;
             }
-            catch (HttpRequestException) { results[i] = []; }
+            catch (HttpRequestException) { results[i] = []; rawResults[i] = []; }
             finally { gate.Release(); progress?.Report((Interlocked.Increment(ref done), jobs.Count)); }
         }));
-        return new CrossRefGraph(books, results.SelectMany(r => r));
+        var graph = new CrossRefGraph(books, results.SelectMany(r => r));
+        graph.Links = new VerseLinkSet(graph, rawResults.SelectMany(r => r ?? []).ToList());
+        return graph;
+    }
+}
+
+/// <summary>One verse-level cross reference before verse indexes are known.</summary>
+public readonly record struct RawLink(int SrcNode, int SrcVerse, int TgtNode, int TgtStart, int TgtEnd, int Votes);
+
+/// <summary>
+/// Every cross reference at verse level. Verses of the Bible are numbered 0..VerseCount-1 in canonical order
+/// (chapter sizes are taken from the verses that occur in the data). Used by the arc diagram and the thread view.
+/// </summary>
+public sealed class VerseLinkSet
+{
+    readonly int[] _chapterStart;
+    public int VerseCount { get; }
+    public int[] Src { get; }
+    public int[] TgtStart { get; }
+    public int[] TgtEnd { get; }
+    public int[] Votes { get; }
+    /// <summary>Genre ordinal (0..9, see <see cref="BookCategory"/>) of every verse.</summary>
+    public byte[] VerseGenre { get; }
+    /// <summary>Link ids, most voted first.</summary>
+    public int[] ByVotes { get; }
+
+    public int Count => Src.Length;
+
+    public VerseLinkSet(CrossRefGraph graph, IReadOnlyList<RawLink> raw)
+    {
+        var counts = new int[graph.NodeCount];
+        foreach (var l in raw)
+        {
+            counts[l.SrcNode] = Math.Max(counts[l.SrcNode], l.SrcVerse);
+            counts[l.TgtNode] = Math.Max(counts[l.TgtNode], Math.Max(l.TgtStart, l.TgtEnd));
+        }
+        _chapterStart = new int[graph.NodeCount + 1];
+        for (var i = 0; i < graph.NodeCount; i++) _chapterStart[i + 1] = _chapterStart[i] + Math.Max(1, counts[i]);
+        VerseCount = _chapterStart[^1];
+        VerseGenre = new byte[VerseCount];
+        for (var n = 0; n < graph.NodeCount; n++)
+        {
+            var genre = (byte)Math.Min(9, (int)BookCategories.Of(graph.Books[graph.BookIndexOf(n)].Book));
+            Array.Fill(VerseGenre, genre, _chapterStart[n], _chapterStart[n + 1] - _chapterStart[n]);
+        }
+        Src = new int[raw.Count]; TgtStart = new int[raw.Count]; TgtEnd = new int[raw.Count]; Votes = new int[raw.Count];
+        for (var i = 0; i < raw.Count; i++)
+        {
+            Src[i] = IndexOf(raw[i].SrcNode, raw[i].SrcVerse);
+            TgtStart[i] = IndexOf(raw[i].TgtNode, raw[i].TgtStart);
+            TgtEnd[i] = IndexOf(raw[i].TgtNode, Math.Max(raw[i].TgtStart, raw[i].TgtEnd));
+            Votes[i] = raw[i].Votes;
+        }
+        ByVotes = Enumerable.Range(0, raw.Count).OrderByDescending(i => Votes[i]).ToArray();
+    }
+
+    /// <summary>Verse index of verse <paramref name="verse"/> (1-based) in chapter node <paramref name="node"/>.</summary>
+    public int IndexOf(int node, int verse) => _chapterStart[node] + Math.Clamp(verse, 1, _chapterStart[node + 1] - _chapterStart[node]) - 1;
+
+    public int ChapterStart(int node) => _chapterStart[node];
+
+    public int ChapterVerseCount(int node) => _chapterStart[node + 1] - _chapterStart[node];
+
+    public int NodeOfVerse(int verse)
+    {
+        var i = Array.BinarySearch(_chapterStart, Math.Clamp(verse, 0, VerseCount - 1));
+        return Math.Min(i >= 0 ? i : ~i - 1, _chapterStart.Length - 2);
     }
 }

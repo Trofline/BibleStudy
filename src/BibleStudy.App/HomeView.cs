@@ -13,11 +13,11 @@ public sealed class HomeView : UserControl
 {
     internal static readonly Dictionary<BookCategory, Color> Colors = new()
     {
-        [BookCategory.Law] = Color.Parse("#D9A441"), [BookCategory.History] = Color.Parse("#D98B41"),
-        [BookCategory.Poetry] = Color.Parse("#D9644E"), [BookCategory.MajorProphets] = Color.Parse("#C95B8A"),
-        [BookCategory.MinorProphets] = Color.Parse("#9B6FC9"), [BookCategory.Gospels] = Color.Parse("#5FAF6B"),
-        [BookCategory.Acts] = Color.Parse("#4FA39A"), [BookCategory.Paul] = Color.Parse("#4A90C9"),
-        [BookCategory.General] = Color.Parse("#5B7FD9"), [BookCategory.Revelation] = Color.Parse("#8A6FD9"),
+        [BookCategory.Law] = Color.Parse("#eb568f"), [BookCategory.History] = Color.Parse("#cd4805"),
+        [BookCategory.Poetry] = Color.Parse("#b48f05"), [BookCategory.MajorProphets] = Color.Parse("#cd489d"),
+        [BookCategory.MinorProphets] = Color.Parse("#88a00d"), [BookCategory.Gospels] = Color.Parse("#17a7b4"),
+        [BookCategory.Acts] = Color.Parse("#119245"), [BookCategory.Paul] = Color.Parse("#0593e6"),
+        [BookCategory.General] = Color.Parse("#03ac8f"), [BookCategory.Revelation] = Color.Parse("#a06aec"),
         [BookCategory.Other] = Color.Parse("#8A8F98"),
     };
 

@@ -330,12 +330,12 @@
 
         <!-- Reader -->
         <Grid>
-            <ScrollViewer x:Name="ReaderScroll">
-                <Grid x:Name="ReaderHost" ColumnDefinitions="*,Auto">
+            <Grid x:Name="ReaderHost" ColumnDefinitions="*,Auto">
+                <ScrollViewer x:Name="ReaderScroll">
                     <StackPanel x:Name="ReaderPanel" Margin="0,36,0,80" HorizontalAlignment="Center" Spacing="2" />
-                    <local:ThreadGraph x:Name="ThreadPane" Grid.Column="1" IsVisible="False" Margin="0,36,16,80" />
-                </Grid>
-            </ScrollViewer>
+                </ScrollViewer>
+                <local:ThreadGraph x:Name="ThreadPane" Grid.Column="1" IsVisible="False" Margin="0,0,8,0" />
+            </Grid>
             <local:HomeView x:Name="Home" IsVisible="False" Background="{DynamicResource BsBackground}" />
             <local:GraphView x:Name="GraphPane" IsVisible="False" Background="{DynamicResource BsBackground}" />
         </Grid>
