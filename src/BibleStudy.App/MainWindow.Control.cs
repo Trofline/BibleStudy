@@ -90,6 +90,34 @@ public partial class MainWindow
                 return e is null ? Err($"No Strong's entry for '{id}'.") : new { id = e.Id, lemma = e.Lemma, transliteration = e.Translit, pronunciation = e.Pronunciation, derivation = e.Derivation, meaning = e.Definition, kjv = e.KjvUsage, source = StrongsDictionary.Attribution };
             }
             case "get_word_occurrences": return GetOccurrences(a);
+            case "list_documents":
+            {
+                var docs = _vault.GetDocuments(ArgStr(a, "query"), ArgStr(a, "tag"));
+                return new { count = docs.Count, documents = docs.Select(d => new { id = d.Id, title = d.Title, tags = d.Tags, template = d.IsTemplate, file = d.Path, preview = Shorten(d.Body.ReplaceLineEndings(" "), 120) }) };
+            }
+            case "get_document":
+            {
+                var d = ArgLong(a, "id") is long id ? _vault.GetDocuments().FirstOrDefault(x => x.Id == id) : ArgStr(a, "title") is { } t ? _vault.FindDocument(t) : null;
+                if (d is null) return Err("Document not found. Use list_documents.");
+                return new { id = d.Id, title = d.Title, body = d.Body, tags = d.Tags, file = d.Path, template = d.IsTemplate,
+                    verses = DocumentLinks.VerseRefs(d.Body).Select(Ref), linksTo = DocumentLinks.WikiLinks(d.Body) };
+            }
+            case "create_document":
+            {
+                var title = ArgStr(a, "title")?.Trim();
+                if (string.IsNullOrEmpty(title)) return Err("title is required");
+                if (_vault.FindDocument(title) is not null) return Err($"A document titled '{title}' exists. Use update_document.");
+                var id = _vault.AddDocument(title, ArgStr(a, "body") ?? "", null, false, ArgStrings(a, "tags") ?? []);
+                RefreshDocs();
+                return new { ok = true, id };
+            }
+            case "update_document":
+            {
+                if (ArgLong(a, "id") is not long id || _vault.GetDocuments().FirstOrDefault(x => x.Id == id) is not { } d) return Err("Unknown document id. Use list_documents.");
+                _vault.UpdateDocument(id, ArgStr(a, "title") ?? d.Title, ArgStr(a, "body") ?? d.Body, d.Path, d.IsTemplate, ArgStrings(a, "tags") ?? d.Tags);
+                RefreshDocs();
+                return new { ok = true };
+            }
             case "get_interlinear":
             {
                 var (_, book, err) = await ResolveAsync(a);

@@ -11,7 +11,7 @@ namespace BibleStudy.App;
 /// <summary>Vaults, highlights, collection (folders/tags), queue and to-dos.</summary>
 public partial class MainWindow
 {
-    const int SettingsTab = 11;
+    const int SettingsTab = 12;
     static readonly string[] PresetColors = ["#FFD54F", "#FFA95C", "#F26D6D", "#E983B8", "#B28DF0", "#6FA8F2", "#55C2C2", "#7ACB7A"];
 
     VaultStore _vault = null!;

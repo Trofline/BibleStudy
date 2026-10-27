@@ -142,6 +142,7 @@ public partial class MainWindow : Window
         InitStudy();
         InitStrongSearch();
         InitImport();
+        InitKnowledge();
         StartControl();
         Opened += async (_, _) => await InitAsync();
     }
@@ -183,10 +184,10 @@ public partial class MainWindow : Window
     void ShowHome()
     {
         Home.Show(_books, _read, Home.OpenBook);
-        Home.IsVisible = true; ReaderHost.IsVisible = false; GraphPane.IsVisible = false; MapPane.IsVisible = false;
+        Home.IsVisible = true; ReaderHost.IsVisible = false; GraphPane.IsVisible = false; MapPane.IsVisible = false; KnowledgePane.IsVisible = false;
     }
 
-    void ShowReader() { Home.IsVisible = false; GraphPane.IsVisible = false; MapPane.IsVisible = false; ReaderHost.IsVisible = true; OnReaderShown(); }
+    void ShowReader() { Home.IsVisible = false; GraphPane.IsVisible = false; MapPane.IsVisible = false; KnowledgePane.IsVisible = false; ReaderHost.IsVisible = true; OnReaderShown(); }
 
     async Task GoToAsync(string bookId, int chapter, int? verse = null)
     {
@@ -202,7 +203,7 @@ public partial class MainWindow : Window
 
     async Task GoBackAsync()
     {
-        if (Home.IsVisible || GraphPane.IsVisible || MapPane.IsVisible) { ShowReader(); return; }
+        if (Home.IsVisible || GraphPane.IsVisible || MapPane.IsVisible || KnowledgePane.IsVisible) { ShowReader(); return; }
         if (_history.Count < 2) return;
         _history.RemoveAt(_history.Count - 1);
         var (book, chapter) = _history[^1];

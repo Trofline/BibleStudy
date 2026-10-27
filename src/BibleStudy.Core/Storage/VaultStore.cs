@@ -9,6 +9,8 @@ public sealed record Folder(long Id, string Name)
     public override string ToString() => Name;
 }
 public sealed record QueueItem(long Id, VerseRef Ref, string Label);
+/// <summary>A note or linked file of the knowledge base. Notes have text; linked files have a path (and their text, if it could be read).</summary>
+public sealed record Document(long Id, string Title, string Body, string? Path, bool IsTemplate, DateTime Updated, IReadOnlyList<string> Tags);
 public sealed record TodoItem(long Id, string Text, bool Done, VerseRef? Ref);
 
 /// <summary>A highlighted word range (Start/End are offsets into the verse text of that translation) or a whole verse (Start = -1).</summary>
@@ -39,6 +41,8 @@ public sealed class VaultStore : SqliteDb
             CREATE INDEX IF NOT EXISTS marks_pos ON marks(book, chapter);
             CREATE TABLE IF NOT EXISTS mark_tags(mark_id INT, tag TEXT, PRIMARY KEY(mark_id, tag));
             CREATE TABLE IF NOT EXISTS queue(id INTEGER PRIMARY KEY, book TEXT, chapter INT, verse INT, label TEXT);
+            CREATE TABLE IF NOT EXISTS documents(id INTEGER PRIMARY KEY, title TEXT NOT NULL, body TEXT, path TEXT, template INT, created TEXT, updated TEXT);
+            CREATE TABLE IF NOT EXISTS doc_tags(doc_id INT, tag TEXT, PRIMARY KEY(doc_id, tag));
             CREATE TABLE IF NOT EXISTS todos(id INTEGER PRIMARY KEY, text TEXT, done INT, book TEXT, chapter INT, verse INT, created TEXT);
             """);
     }
@@ -227,6 +231,79 @@ public sealed class VaultStore : SqliteDb
 
     /// <summary>Writes a consistent copy of the whole vault to a new file (which must not exist yet).</summary>
     public void BackupTo(string path) => Exec("VACUUM INTO $p", c => c.Parameters.AddWithValue("$p", path));
+
+    // ---- documents (knowledge base) -----------------------------------------------------------------------------------
+
+    public long AddDocument(string title, string body, string? path, bool template, IEnumerable<string> tags)
+    {
+        using var con = Open();
+        using var tx = con.BeginTransaction();
+        using var cmd = con.CreateCommand();
+        cmd.CommandText = "INSERT INTO documents(title,body,path,template,created,updated) VALUES($t,$b,$p,$m,$n,$n); SELECT last_insert_rowid()";
+        cmd.Parameters.AddWithValue("$t", title.Trim()); cmd.Parameters.AddWithValue("$b", body);
+        cmd.Parameters.AddWithValue("$p", (object?)path ?? DBNull.Value); cmd.Parameters.AddWithValue("$m", template ? 1 : 0);
+        cmd.Parameters.AddWithValue("$n", DateTime.UtcNow.ToString("o"));
+        var id = (long)cmd.ExecuteScalar()!;
+        SetDocTags(con, id, tags);
+        tx.Commit();
+        return id;
+    }
+
+    public void UpdateDocument(long id, string title, string body, string? path, bool template, IEnumerable<string> tags)
+    {
+        using var con = Open();
+        using var tx = con.BeginTransaction();
+        using (var cmd = con.CreateCommand())
+        {
+            cmd.CommandText = "UPDATE documents SET title=$t, body=$b, path=$p, template=$m, updated=$n WHERE id=$i";
+            cmd.Parameters.AddWithValue("$t", title.Trim()); cmd.Parameters.AddWithValue("$b", body);
+            cmd.Parameters.AddWithValue("$p", (object?)path ?? DBNull.Value); cmd.Parameters.AddWithValue("$m", template ? 1 : 0);
+            cmd.Parameters.AddWithValue("$n", DateTime.UtcNow.ToString("o")); cmd.Parameters.AddWithValue("$i", id);
+            cmd.ExecuteNonQuery();
+        }
+        SetDocTags(con, id, tags);
+        tx.Commit();
+    }
+
+    public void DeleteDocument(long id)
+    {
+        Exec("DELETE FROM doc_tags WHERE doc_id=$i", c => c.Parameters.AddWithValue("$i", id));
+        Exec("DELETE FROM documents WHERE id=$i", c => c.Parameters.AddWithValue("$i", id));
+    }
+
+    /// <summary>Documents, newest change first; <paramref name="text"/> searches title, body and tags.</summary>
+    public List<Document> GetDocuments(string? text = null, string? tag = null, bool? templates = null)
+    {
+        var where = new List<string>();
+        if (!string.IsNullOrWhiteSpace(text)) where.Add("(title LIKE $q ESCAPE '\\' OR body LIKE $q ESCAPE '\\' OR id IN (SELECT doc_id FROM doc_tags WHERE tag LIKE $q ESCAPE '\\'))");
+        if (tag is not null) where.Add("id IN (SELECT doc_id FROM doc_tags WHERE tag=$g)");
+        if (templates is not null) where.Add("template=$m");
+        var tags = Query("SELECT doc_id,tag FROM doc_tags ORDER BY tag", _ => { }, r => (Id: r.GetInt64(0), Tag: r.GetString(1))).ToLookup(x => x.Id, x => x.Tag);
+        return Query($"SELECT id,title,body,path,template,updated FROM documents {(where.Count > 0 ? "WHERE " + string.Join(" AND ", where) : "")} ORDER BY updated DESC",
+            c =>
+            {
+                if (!string.IsNullOrWhiteSpace(text)) c.Parameters.AddWithValue("$q", "%" + text.Trim().Replace("\\", "\\\\").Replace("%", "\\%").Replace("_", "\\_") + "%");
+                if (tag is not null) c.Parameters.AddWithValue("$g", tag);
+                if (templates is not null) c.Parameters.AddWithValue("$m", templates.Value ? 1 : 0);
+            },
+            r => new Document(r.GetInt64(0), r.GetString(1), r.IsDBNull(2) ? "" : r.GetString(2), r.IsDBNull(3) ? null : r.GetString(3), r.GetInt32(4) != 0,
+                DateTime.TryParse(r.GetString(5), null, System.Globalization.DateTimeStyles.RoundtripKind, out var d) ? d : DateTime.MinValue, tags[r.GetInt64(0)].ToList()));
+    }
+
+    public Document? FindDocument(string title) =>
+        GetDocuments().FirstOrDefault(d => string.Equals(d.Title, title.Trim(), StringComparison.OrdinalIgnoreCase));
+
+    static void SetDocTags(SqliteConnection con, long id, IEnumerable<string> tags)
+    {
+        using (var del = con.CreateCommand()) { del.CommandText = "DELETE FROM doc_tags WHERE doc_id=$i"; del.Parameters.AddWithValue("$i", id); del.ExecuteNonQuery(); }
+        foreach (var tag in tags.Select(t => t.Trim()).Where(t => t.Length > 0).Distinct(StringComparer.OrdinalIgnoreCase))
+        {
+            using var ins = con.CreateCommand();
+            ins.CommandText = "INSERT OR IGNORE INTO doc_tags VALUES($i,$t)";
+            ins.Parameters.AddWithValue("$i", id); ins.Parameters.AddWithValue("$t", tag);
+            ins.ExecuteNonQuery();
+        }
+    }
 
     // ---- migration --------------------------------------------------------------------------------------------------
 

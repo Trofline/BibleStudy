@@ -14,7 +14,7 @@ Freie, quelloffene Bibelstudien-Software (C#, Avalonia). Nur Quellen mit freier 
 - [x] Markierungen innerhalb von Versen (Wörter) und ganze Verse, Farben (Vorschläge + eigene)
 - [x] Sammlung mit Notiz, Ordnern, Tags (Auto-Tag Buchname), Schnellsprung, Farbe ändern
 - [x] Warteschlange (Queue) und To-Do-Liste
-- [ ] Dokumente verlinken, eigene Wissensdatenbank
+- [x] Dokumente verlinken, eigene Wissensdatenbank
 
 ## Phase 3 – Claude-Anbindung
 - [x] MCP-Server (23 Werkzeuge): Claude kann lesen, suchen, markieren, navigieren, das Programm steuern
@@ -34,7 +34,7 @@ Freie, quelloffene Bibelstudien-Software (C#, Avalonia). Nur Quellen mit freier 
 - [x] Vorlesen (Windows-Stimmen)
 - [x] Export/Import (Vault + Einstellungen als ZIP)
 - [x] Karte (Orte des Kapitels oder Buches, Weg in Reihenfolge der Erwähnung)
-- [ ] Dokumente verlinken, eigene Wissensdatenbank
+- [x] Dokumente verlinken, eigene Wissensdatenbank
 
 ## Weitere Funktionen
 - [x] Strong-Suche (Nummer, Grundtextwort, Umschrift, englische Bedeutung)

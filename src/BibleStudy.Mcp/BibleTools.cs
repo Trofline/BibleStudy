@@ -47,6 +47,20 @@ public static class BibleTools
     [McpServerTool(Name = "get_interlinear"), Description("The original text of one verse word by word: Hebrew/Aramaic (Old Testament) or Greek (New Testament) with transliteration, English meaning, Strong's number and grammar. Use it to check how a translation renders the original.")]
     public static Task<string> GetInterlinear(AppClient app, string book, int chapter, int verse) => app.CallAsync("get_interlinear", new { book, chapter, verse });
 
+    // ---- knowledge base ---------------------------------------------------------------------------------------------
+
+    [McpServerTool(Name = "list_documents"), Description("Documents of the user's knowledge base (own notes and linked files) in the active vault; optional text query (title, body, tags) or tag.")]
+    public static Task<string> ListDocuments(AppClient app, string? query = null, string? tag = null) => app.CallAsync("list_documents", new { query, tag });
+
+    [McpServerTool(Name = "get_document"), Description("A document with its full text, the verses it mentions and the documents it links to ([[Title]]). Give id or title.")]
+    public static Task<string> GetDocument(AppClient app, long? id = null, string? title = null) => app.CallAsync("get_document", new { id, title });
+
+    [McpServerTool(Name = "create_document"), Description("Creates a note in the knowledge base. In the text, verse references like \"Joh 3,16\" become links and [[Other title]] links to another document.")]
+    public static Task<string> CreateDocument(AppClient app, string title, string body, string[]? tags = null) => app.CallAsync("create_document", new { title, body, tags });
+
+    [McpServerTool(Name = "update_document"), Description("Changes title, text or tags of a document (id from list_documents). Only given fields change.")]
+    public static Task<string> UpdateDocument(AppClient app, long id, string? title = null, string? body = null, string[]? tags = null) => app.CallAsync("update_document", new { id, title, body, tags });
+
     // ---- controlling the app ----------------------------------------------------------------------------------------
 
     [McpServerTool(Name = "navigate"), Description("Shows a chapter (and highlights a verse) in the app.")]

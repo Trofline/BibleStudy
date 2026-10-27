@@ -264,6 +264,54 @@
                         <ScrollViewer Grid.Row="2" MaxHeight="300" Margin="0,8,0,0"><StackPanel x:Name="StrongDetail" Spacing="8" /></ScrollViewer>
                     </Grid>
                 </TabItem>
+                <TabItem ToolTip.Tip="Wissen: Notizen, Dokumente, Verknüpfungen">
+                    <TabItem.Header><local:Icon Data="M4 3h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H4z M8 3v18 M12 8h4 M12 12h4" /></TabItem.Header>
+                    <Grid>
+                        <DockPanel x:Name="DocListPanel" Margin="16,14,12,12">
+                            <StackPanel DockPanel.Dock="Top" Spacing="8" Margin="0,0,0,8">
+                                <TextBlock Classes="h2" Text="Wissen" />
+                                <TextBox x:Name="DocSearchBox" Watermark="Dokumente durchsuchen (Titel, Text, Tags)" />
+                                <WrapPanel>
+                                    <Button x:Name="DocNewBtn" Content="Neue Notiz" Classes="accent" Margin="0,0,6,6" />
+                                    <Button x:Name="DocFromVerseBtn" Content="Aus Vers" Margin="0,0,6,6" ToolTip.Tip="Neue Notiz zum angeklickten Vers, mit dem Verstext" />
+                                    <Button x:Name="DocFileBtn" Content="Datei verknüpfen …" Margin="0,0,6,6" />
+                                    <Button x:Name="DocGraphBtn" Content="Wissensgraph" Margin="0,0,6,6" />
+                                </WrapPanel>
+                                <Border Classes="pill" HorizontalAlignment="Left">
+                                    <ComboBox x:Name="DocFilterBox" Width="240" SelectedIndex="0">
+                                        <ComboBoxItem Content="Alle Dokumente" />
+                                        <ComboBoxItem Content="Vorlagen" />
+                                        <ComboBoxItem Content="Erwähnen den angeklickten Vers" />
+                                    </ComboBox>
+                                </Border>
+                                <TextBlock x:Name="DocInfo" Classes="caption" TextWrapping="Wrap" />
+                            </StackPanel>
+                            <ListBox x:Name="DocList" ItemTemplate="{StaticResource EntryTpl}" ScrollViewer.HorizontalScrollBarVisibility="Disabled" />
+                        </DockPanel>
+                        <ScrollViewer x:Name="DocEditorPanel" IsVisible="False" Margin="16,14,4,12">
+                            <StackPanel Spacing="8" Margin="0,0,12,0">
+                                <Button x:Name="DocBackBtn" Content="← Liste" HorizontalAlignment="Left" />
+                                <TextBox x:Name="DocTitleBox" Watermark="Titel" FontSize="18" />
+                                <TextBox x:Name="DocBodyBox" AcceptsReturn="True" TextWrapping="Wrap" MinHeight="220" Watermark="Text. Verse wie „Joh 3,16“ werden zu Links, [[Titel]] verlinkt ein anderes Dokument." />
+                                <TextBox x:Name="DocTagsBox" Watermark="Tags, mit Komma getrennt" />
+                                <CheckBox x:Name="DocTemplateCheck" Content="Als Vorlage verwenden" />
+                                <TextBlock x:Name="DocPathText" Classes="caption" TextWrapping="Wrap" />
+                                <WrapPanel>
+                                    <Button x:Name="DocSaveBtn" Content="Speichern" Classes="accent" Margin="0,0,6,6" />
+                                    <Button x:Name="DocOpenFileBtn" Content="Datei öffnen" Margin="0,0,6,6" />
+                                    <Button x:Name="DocFromTemplateBtn" Content="Neu aus dieser Vorlage" Margin="0,0,6,6" />
+                                    <Button x:Name="DocDeleteBtn" Content="Löschen" Margin="0,0,6,6" />
+                                </WrapPanel>
+                                <TextBlock Text="Verse in diesem Dokument" FontWeight="SemiBold" />
+                                <WrapPanel x:Name="DocVerseChips" />
+                                <TextBlock Text="Verknüpft mit" FontWeight="SemiBold" />
+                                <WrapPanel x:Name="DocLinkChips" />
+                                <TextBlock Text="Erwähnt von" FontWeight="SemiBold" />
+                                <WrapPanel x:Name="DocBackChips" />
+                            </StackPanel>
+                        </ScrollViewer>
+                    </Grid>
+                </TabItem>
                 <TabItem ToolTip.Tip="KI-Assistent (Claude)">
                     <TabItem.Header><local:Icon Data="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9z M19 3v4 M17 5h4 M5 17v4 M3 19h4" /></TabItem.Header>
                     <Grid RowDefinitions="Auto,*,Auto" Margin="16,14,12,12">
@@ -404,6 +452,7 @@
             <local:HomeView x:Name="Home" IsVisible="False" Background="{DynamicResource BsBackground}" />
             <local:GraphView x:Name="GraphPane" IsVisible="False" Background="{DynamicResource BsBackground}" />
             <local:MapView x:Name="MapPane" IsVisible="False" Background="{DynamicResource BsBackground}" />
+            <local:KnowledgeView x:Name="KnowledgePane" IsVisible="False" Background="{DynamicResource BsBackground}" />
         </Grid>
     </DockPanel>
 </Window>

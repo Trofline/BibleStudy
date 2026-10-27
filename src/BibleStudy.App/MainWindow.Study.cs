@@ -17,7 +17,7 @@ namespace BibleStudy.App;
 /// <summary>Original text (interlinear), reading aloud, and backup of the vault.</summary>
 public partial class MainWindow
 {
-    const int GrundtextTab = 8, StrongTab = 9, AiTab = 10;
+    const int GrundtextTab = 8, StrongTab = 9, KnowledgeTab = 10, AiTab = 11;
 
     readonly Dictionary<(string Book, int Chapter), Dictionary<int, List<InterlinearWord>>> _interlinear = [];
     VerseRef? _grundtextRef;
