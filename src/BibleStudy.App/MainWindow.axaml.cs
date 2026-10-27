@@ -147,6 +147,8 @@ public partial class MainWindow : Window
         InitQol();
         InitNav();
         InitPickers();
+        InitKeys();
+        InitWindows();
         InitLibrary();
         ObsidianBtn.Click += async (_, _) => await ExportObsidianAsync();
         SideTabs.SelectionChanged += (_, e) =>
@@ -499,6 +501,7 @@ public partial class MainWindow : Window
             }
             catch (Exception ex) { StudyPanel.Children.Add(new TextBlock { Text = $"{id}: Wörterbuch nicht verfügbar ({ex.Message})", TextWrapping = TextWrapping.Wrap }); }
         }
+        await AddWordExtrasAsync(span);
         var note = new TextBlock { Text = StrongsDictionary.Attribution, FontSize = 11, TextWrapping = TextWrapping.Wrap };
         note.Bind(TextBlock.ForegroundProperty, this.GetResourceObservable("BsMuted"));
         StudyPanel.Children.Add(note);

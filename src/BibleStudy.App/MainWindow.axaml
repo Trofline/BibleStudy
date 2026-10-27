@@ -500,9 +500,27 @@
                                            Text="Es werden nur Texte geladen, die die Quelle zur freien Nutzung anbietet; Lizenz und Namensnennung stehen unten in der Fußzeile. Die Daten liegen lokal und gehören dir." />
                             </StackPanel></Border>
 
+                            <Border Classes="card"><StackPanel Spacing="8">
+                                <TextBlock Classes="eyebrow" Text="FENSTER UND LAYOUTS" />
+                                <TextBlock Classes="caption" TextWrapping="Wrap" Text="Jeden Bereich der Seitenleiste kannst du in ein eigenes Fenster auslagern (Knopf ⧉ neben den Reitern oder Strg+Umschalt+O) und frei verschieben, auch auf einen zweiten Monitor. Die Anordnung speicherst du als Layout und lädst sie jederzeit wieder." />
+                                <Button x:Name="PopOutDocsBtn" Content="Dokumente in eigenem Fenster öffnen" HorizontalAlignment="Left" />
+                                <Border Classes="pill" HorizontalAlignment="Left"><ComboBox x:Name="LayoutBox" Width="220" /></Border>
+                                <StackPanel Orientation="Horizontal" Spacing="6">
+                                    <Button x:Name="LayoutLoadBtn" Content="Laden" Classes="primary" />
+                                    <Button x:Name="LayoutDeleteBtn" Content="Löschen" />
+                                </StackPanel>
+                                <StackPanel Orientation="Horizontal" Spacing="6">
+                                    <TextBox x:Name="LayoutNameBox" Width="170" Watermark="Name für aktuelles Layout" />
+                                    <Button x:Name="LayoutSaveBtn" Content="Speichern" />
+                                </StackPanel>
+                                <TextBlock x:Name="LayoutInfo" Classes="caption" TextWrapping="Wrap" />
+                            </StackPanel></Border>
+
                             <Border Classes="card"><StackPanel Spacing="4">
                                 <TextBlock Classes="eyebrow" Text="TASTENKÜRZEL" />
-                                <TextBlock TextWrapping="Wrap" LineHeight="22" Text="Strg+K  Gehe zu Stelle oder suchen&#10;Strg+F  Suche öffnen&#10;Alt+←  Zurück · Alt+Pos1  Startseite&#10;Strg+← / →  Voriges / nächstes Kapitel&#10;Strg+R  Kapitel als gelesen markieren&#10;Strg+D  Vers speichern · Strg+Umschalt+C  Vers mit Stelle kopieren&#10;Strg++ / Strg+−  Schrift größer / kleiner · Strg+0  Standard&#10;Strg+B  Seitenleiste · Strg+T  Design wechseln&#10;F11  Fokus-Modus (nur Text)" />
+                                <TextBlock Classes="caption" TextWrapping="Wrap" Text="Klicke auf eine Kombination und drücke die neue Taste. Entf löscht eine Belegung, Esc bricht ab." />
+                                <StackPanel x:Name="KeysPanel" />
+                                <Button x:Name="ResetKeysBtn" Content="Alle auf Standard zurücksetzen" HorizontalAlignment="Left" Margin="0,6,0,0" />
                             </StackPanel></Border>
                         </StackPanel>
                     </ScrollViewer>

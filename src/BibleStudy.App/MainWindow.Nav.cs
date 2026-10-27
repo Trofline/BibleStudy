@@ -135,7 +135,11 @@ public partial class MainWindow
                 pill.Click += (_, _) => SideTabs.SelectedIndex = t.Index;
                 SubPills.Children.Add(pill);
             }
-        SubPills.IsVisible = group.Tabs.Length > 1;
+        var pop = new Button { Classes = { "ghost" }, Content = "⧉ Auslagern", FontSize = 12, Margin = new(6, 0, 0, 4), Height = 30 };
+        ToolTip.SetTip(pop, "Diesen Bereich in ein eigenes Fenster auslagern (verschiebbar, auch auf einen zweiten Monitor)");
+        pop.Click += (_, _) => PopOutTab(SideTabs.SelectedIndex);
+        SubPills.Children.Add(pop);
+        SubPills.IsVisible = true;
         if (_vaultBar is not null) _vaultBar.IsVisible = group.ShowVault;
         var hint = group.Tabs.FirstOrDefault(t => t.Index == current)?.Hint ?? "";
         if (group.ShowVault) hint += $"";

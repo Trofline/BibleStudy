@@ -150,33 +150,6 @@ public partial class MainWindow
 
     // ---- shortcuts ----------------------------------------------------------------------------------------------------
 
-    async void OnShortcut(object? sender, KeyEventArgs e)
-    {
-        var ctrl = e.KeyModifiers.HasFlag(KeyModifiers.Control);
-        var alt = e.KeyModifiers.HasFlag(KeyModifiers.Alt);
-        var shift = e.KeyModifiers.HasFlag(KeyModifiers.Shift);
-        var typing = TopLevel.GetTopLevel(this)?.FocusManager?.GetFocusedElement() is TextBox;
-        if (e.Key == Key.F11) { e.Handled = true; ToggleFocusMode(); return; }
-        if (alt && e.Key == Key.Left) { e.Handled = true; await GoBackAsync(); return; }
-        if (alt && e.Key == Key.Home) { e.Handled = true; ShowHome(); return; }
-        if (!ctrl) return;
-        switch (e.Key)
-        {
-            case Key.K: e.Handled = true; QuickJumpBox.Focus(); QuickJumpBox.SelectAll(); break;
-            case Key.F: e.Handled = true; SetPanelOpen(true); SideTabs.SelectedIndex = 0; SearchBox.Focus(); SearchBox.SelectAll(); break;
-            case Key.B: e.Handled = true; SetPanelOpen(!SidePanel.IsVisible); break;
-            case Key.T: e.Handled = true; ThemeBtn.RaiseEvent(new RoutedEventArgs(Button.ClickEvent)); break;
-            case Key.R when !typing: e.Handled = true; if (_curBook != "") SetRead(_curBook, [_curChapter], !_read.Contains((_curBook, _curChapter))); break;
-            case Key.D when !typing: e.Handled = true; ToggleBookmark(); break;
-            case Key.C when shift: e.Handled = true; await CopyVerseAsync(); break;
-            case Key.Left when !typing: e.Handled = true; if (ChapterBox.Value > ChapterBox.Minimum) ChapterBox.Value -= 1; break;
-            case Key.Right when !typing: e.Handled = true; ChapterBox.Value += 1; break;
-            case Key.OemPlus or Key.Add: e.Handled = true; FontPlusBtn.RaiseEvent(new RoutedEventArgs(Button.ClickEvent)); break;
-            case Key.OemMinus or Key.Subtract: e.Handled = true; FontMinusBtn.RaiseEvent(new RoutedEventArgs(Button.ClickEvent)); break;
-            case Key.D0 or Key.NumPad0: e.Handled = true; FontSlider.Value = 22; break;
-        }
-    }
-
     async Task CopyVerseAsync()
     {
         if (_selected is not int v || TopLevel.GetTopLevel(this)?.Clipboard is not { } clipboard) { StatusText.Text = "Erst einen Vers anklicken."; return; }

@@ -75,7 +75,7 @@ public partial class MainWindow
         else DocInfo.Text = $"{docs.Count} Dokument{(docs.Count == 1 ? "" : "e")}";
         DocList.ItemsSource = docs.Select(d =>
         {
-            var preview = d.Path is not null ? "Datei: " + System.IO.Path.GetFileName(d.Path) : Shorten(d.Body.ReplaceLineEndings(" ").Replace("#", "").Trim(), 90);
+            var preview = d.Path is not null ? "Datei: " + System.IO.Path.GetFileName(d.Path) : Shorten(d.Body.ReplaceLineEndings(" ").Replace("#", "").Replace("**", "").Replace("[[", "").Replace("]]", "").Trim(), 90);
             var tags = d.Tags.Count > 0 ? "  " + string.Join(" ", d.Tags.Select(t => "#" + t)) : "";
             return new Entry(default, $"{(d.IsTemplate ? "◇ " : "")}{d.Title}\n{preview}{tags}".TrimEnd('\n'), d.Id);
         }).ToList();

@@ -110,12 +110,40 @@ public partial class MainWindow
             }
             into.Children.Add(wrap);
         }
-        var panel = new StackPanel { Width = 640 };
-        Section(panel, "Altes Testament", _books.Where(b => BookCategories.IsOldTestament(BookCategories.Of(b.Id))));
-        Section(panel, "Neues Testament", _books.Where(b => BookCategories.IsNewTestament(BookCategories.Of(b.Id))));
-        Section(panel, "Weitere Bücher", _books.Where(b => BookCategories.Of(b.Id) == BookCategory.Other));
+        var search = new TextBox { Watermark = "Tippen zum Filtern, z. B. „Joh“ + Enter", Margin = new(0, 0, 0, 6) };
+        var tiles = new StackPanel();
+        List<BookInfo> shown = [];
+        void Fill()
+        {
+            tiles.Children.Clear(); shown.Clear();
+            var q = SearchQuery.Fold(search.Text?.Trim() ?? "", true).Replace(" ", "").Replace(".", "");
+            bool Match(BookInfo b) => q.Length == 0 || SearchQuery.Fold(b.CommonName + ShortBook(b) + b.Id, true).Replace(" ", "").Replace(".", "").Contains(q);
+            foreach (var (title, pred) in new (string, Func<BookInfo, bool>)[]
+            {
+                ("Altes Testament", b => BookCategories.IsOldTestament(BookCategories.Of(b.Id))),
+                ("Neues Testament", b => BookCategories.IsNewTestament(BookCategories.Of(b.Id))),
+                ("Weitere Bücher", b => BookCategories.Of(b.Id) == BookCategory.Other),
+            })
+            {
+                var list = _books.Where(pred).Where(Match).OrderBy(b => b.Order).ToList();
+                if (list.Count == 0) continue;
+                tiles.Children.Add(PickerHeading(title));
+                var wrap = new WrapPanel();
+                foreach (var b in list)
+                {
+                    var book = b; shown.Add(b);
+                    wrap.Children.Add(PickerTile(ShortBook(b), b.Id == current || (q.Length > 0 && shown.Count == 1), () => { BookBox.SelectedItem = book; flyout!.Hide(); }, 90, BookColorAt(_books, b.Id), 42, b.CommonName));
+                }
+                tiles.Children.Add(wrap);
+            }
+        }
+        search.TextChanged += (_, _) => Fill();
+        search.KeyDown += (_, e) => { if (e.Key == Avalonia.Input.Key.Enter && shown.Count > 0) { e.Handled = true; BookBox.SelectedItem = shown[0]; flyout!.Hide(); } };
+        Fill();
+        var panel = new StackPanel { Width = 640, Children = { search, tiles } };
         flyout = NewPickerFlyout(new ScrollViewer { Content = panel, MaxHeight = Math.Max(300, Bounds.Height - 130), HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled });
         flyout.ShowAt(BookBtn);
+        search.Focus();
     }
 
     // ---- chapters -----------------------------------------------------------------------------------------------------
@@ -128,6 +156,13 @@ public partial class MainWindow
         var color = BookColorAt(_books, book.Id);
         var panel = new StackPanel { Width = Math.Min(620, 70 + Math.Ceiling(Math.Sqrt(book.NumberOfChapters)) * 56) };
         panel.Children.Add(PickerHeading($"{book.CommonName} – Kapitel wählen"));
+        var number = new TextBox { Watermark = $"Nummer tippen (1–{book.NumberOfChapters}) + Enter", Margin = new(0, 0, 0, 8) };
+        number.KeyDown += (_, e) =>
+        {
+            if (e.Key != Avalonia.Input.Key.Enter || !int.TryParse(number.Text, out var n)) return;
+            e.Handled = true; ChapterBox.Value = Math.Clamp(n, 1, book.NumberOfChapters); flyout!.Hide();
+        };
+        panel.Children.Add(number);
         var wrap = new WrapPanel();
         for (var c = 1; c <= book.NumberOfChapters; c++)
         {
@@ -139,6 +174,7 @@ public partial class MainWindow
         panel.Children.Add(wrap);
         flyout = NewPickerFlyout(new ScrollViewer { Content = panel, MaxHeight = Math.Max(300, Bounds.Height - 130), HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled });
         flyout.ShowAt(ChapterBtn);
+        number.Focus();
     }
 
     // ---- language -----------------------------------------------------------------------------------------------------

@@ -3,6 +3,18 @@ using System.Text.Json;
 namespace BibleStudy.Core.Storage;
 
 /// <summary>User settings, stored as JSON next to the data (exportable by copying the file).</summary>
+/// <summary>Position and size of a detached panel window (Tab = index of the side panel tab).</summary>
+public sealed record WindowBounds(int X, int Y, int W, int H, bool Maximized) { public int Tab { get; set; } }
+
+/// <summary>A saved arrangement: side panel and detached windows.</summary>
+public sealed class LayoutPreset
+{
+    public bool SideOpen { get; set; } = true;
+    public double SideWidth { get; set; } = 430;
+    public int SideTab { get; set; }
+    public List<WindowBounds> Windows { get; set; } = [];
+}
+
 public sealed class AppSettings
 {
     public string Theme { get; set; } = "Default";      // Default | Light | Dark
@@ -37,6 +49,9 @@ public sealed class AppSettings
     public int SideTab { get; set; }
     public bool FocusMode { get; set; }
     public string Commentary { get; set; } = "matthew-henry";
+    public Dictionary<string, string> KeyBindings { get; set; } = [];
+    public Dictionary<string, WindowBounds> Windows { get; set; } = [];
+    public Dictionary<string, LayoutPreset> Layouts { get; set; } = [];
 
     static readonly JsonSerializerOptions Json = new() { WriteIndented = true };
 
