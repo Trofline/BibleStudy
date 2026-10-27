@@ -1,4 +1,4 @@
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using System.Net;
 using System.Text;
 using System.Text.Json;
@@ -60,15 +60,15 @@ public partial class MainWindow
 
         // choose / create
         var saved = _vault.GetDocuments(tag: "Predigt").Where(d => d.Body.Contains(SermonMark)).ToList();
-        var pick = new ComboBox { MinWidth = 220, PlaceholderText = saved.Count == 0 ? "Noch keine gespeicherte Predigt" : "Gespeicherte Predigt öffnen …", ItemsSource = saved.Select(d => d.Title).ToList() };
+        var pick = new ComboBox { MinWidth = 220, PlaceholderText = saved.Count == 0 ? L("Noch keine gespeicherte Predigt") : "Gespeicherte Predigt öffnen …", ItemsSource = saved.Select(d => d.Title).ToList() };
         pick.SelectionChanged += (_, _) =>
         {
             if (_sermonLoading || pick.SelectedIndex < 0) return;
             LoadSermon(saved[pick.SelectedIndex]);
         };
-        var neu = new Button { Content = "Neue Predigt" };
+        var neu = new Button { Content = L("Neue Predigt") };
         neu.Click += (_, _) => { _sermon = NewSermon(); _sermonDocId = null; BuildSermonUi(); };
-        SermonPanel.Children.Add(new TextBlock { Text = "PREDIGT-EDITOR", Classes = { "eyebrow" } });
+        SermonPanel.Children.Add(new TextBlock { Text = L("PREDIGT-EDITOR"), Classes = { "eyebrow" } });
         SermonPanel.Children.Add(new WrapPanel { Children = { new Border { Classes = { "pill" }, Child = pick, Margin = new(0, 0, 8, 4) }, neu } });
 
         // head fields
@@ -80,9 +80,9 @@ public partial class MainWindow
             SermonPanel.Children.Add(box);
             return box;
         }
-        Field("Titel", _sermon.Title, v => _sermon.Title = v, hint: "z. B. Treue im Exil");
+        Field("Titel", _sermon.Title, v => _sermon.Title = v, hint: L("z. B. Treue im Exil"));
         var passage = Field("Predigttext", _sermon.Passage, v => _sermon.Passage = v, hint: "z. B. Daniel 1,1–21");
-        var useCurrent = new Button { Content = "Aktuellen Vers als Predigttext", HorizontalAlignment = HorizontalAlignment.Left };
+        var useCurrent = new Button { Content = L("Aktuellen Vers als Predigttext"), HorizontalAlignment = HorizontalAlignment.Left };
         useCurrent.Click += (_, _) => passage.Text = _selected is int v ? $"{BookName(_curBook)} {_curChapter},{v}" : $"{BookName(_curBook)} {_curChapter}";
         SermonPanel.Children.Add(useCurrent);
         Field("Kernaussage (ein Satz)", _sermon.Message, v => _sermon.Message = v, multi: true, hint: "Was sollen alle mitnehmen?");
@@ -91,24 +91,24 @@ public partial class MainWindow
         void UpdateTotal()
         {
             var sum = _sermon.Sections.Sum(s => s.Minutes);
-            total.Text = $"Geplant: {sum} min von {_sermon.Minutes} min" + (sum > _sermon.Minutes ? $" – {sum - _sermon.Minutes} min zu viel" : sum < _sermon.Minutes ? $" – {_sermon.Minutes - sum} min frei" : " – passt genau");
+            total.Text = L("Geplant: {0} min von {1} min", sum, _sermon.Minutes) + (sum > _sermon.Minutes ? $" – {sum - _sermon.Minutes} min zu viel" : sum < _sermon.Minutes ? $" – {_sermon.Minutes - sum} min frei" : " – passt genau");
         }
         var goal = new NumericUpDown { Minimum = 5, Maximum = 180, Value = _sermon.Minutes, FormatString = "0", Width = 120, Increment = 5 };
         goal.ValueChanged += (_, _) => { _sermon.Minutes = (int)(goal.Value ?? 30); UpdateTotal(); };
-        SermonPanel.Children.Add(new StackPanel { Orientation = Orientation.Horizontal, Spacing = 8, Children = { new TextBlock { Text = "Zielzeit (min)", VerticalAlignment = VerticalAlignment.Center }, goal } });
+        SermonPanel.Children.Add(new StackPanel { Orientation = Orientation.Horizontal, Spacing = 8, Children = { new TextBlock { Text = L("Zielzeit (min)"), VerticalAlignment = VerticalAlignment.Center }, goal } });
         SermonPanel.Children.Add(total);
 
         // sections
-        SermonPanel.Children.Add(new TextBlock { Text = "GLIEDERUNG", Classes = { "eyebrow" }, Margin = new(0, 8, 0, 0) });
+        SermonPanel.Children.Add(new TextBlock { Text = L("GLIEDERUNG"), Classes = { "eyebrow" }, Margin = new(0, 8, 0, 0) });
         for (var i = 0; i < _sermon.Sections.Count; i++)
         {
             var sec = _sermon.Sections[i]; var idx = i;
-            var head = new TextBox { Text = sec.Heading, Watermark = "Überschrift", FontWeight = FontWeight.SemiBold };
+            var head = new TextBox { Text = sec.Heading, Watermark = L("Überschrift"), FontWeight = FontWeight.SemiBold };
             head.TextChanged += (_, _) => sec.Heading = head.Text ?? "";
             var min = new NumericUpDown { Minimum = 0, Maximum = 120, Value = sec.Minutes, FormatString = "0", Width = 100 };
-            ToolTip.SetTip(min, "Minuten für diesen Teil");
+            ToolTip.SetTip(min, L("Minuten für diesen Teil"));
             min.ValueChanged += (_, _) => { sec.Minutes = (int)(min.Value ?? 0); UpdateTotal(); };
-            var notes = new TextBox { Text = sec.Notes, AcceptsReturn = true, TextWrapping = TextWrapping.Wrap, MinHeight = 80, Watermark = "Gedanken, Erklärung, Beispiele …" };
+            var notes = new TextBox { Text = sec.Notes, AcceptsReturn = true, TextWrapping = TextWrapping.Wrap, MinHeight = 80, Watermark = L("Gedanken, Erklärung, Beispiele …") };
             notes.TextChanged += (_, _) => sec.Notes = notes.Text ?? "";
 
             var verses = new WrapPanel();
@@ -126,21 +126,21 @@ public partial class MainWindow
             }
             DrawVerses();
 
-            var addVerse = new Button { Content = "＋ Vers" };
-            ToolTip.SetTip(addVerse, "Den angeklickten Vers dieser Stelle zuordnen");
-            addVerse.Click += (_, _) => { if (_selected is int v) { var key = $"{_curBook}|{_curChapter}|{v}"; if (!sec.Verses.Contains(key)) sec.Verses.Add(key); DrawVerses(); } else StatusText.Text = "Klicke zuerst im Bibeltext einen Vers an."; };
-            var addText = new Button { Content = "＋ Verstext zitieren" };
-            ToolTip.SetTip(addText, "Fügt den angeklickten Vers als Zitat in die Notizen ein");
+            var addVerse = new Button { Content = L("＋ Vers") };
+            ToolTip.SetTip(addVerse, L("Den angeklickten Vers dieser Stelle zuordnen"));
+            addVerse.Click += (_, _) => { if (_selected is int v) { var key = $"{_curBook}|{_curChapter}|{v}"; if (!sec.Verses.Contains(key)) sec.Verses.Add(key); DrawVerses(); } else StatusText.Text = L("Klicke zuerst im Bibeltext einen Vers an."); };
+            var addText = new Button { Content = L("＋ Verstext zitieren") };
+            ToolTip.SetTip(addText, L("Fügt den angeklickten Vers als Zitat in die Notizen ein"));
             addText.Click += async (_, _) =>
             {
-                if (_selected is not int v || TranslationBox.SelectedItem is not TranslationInfo t) { StatusText.Text = "Klicke zuerst im Bibeltext einen Vers an."; return; }
+                if (_selected is not int v || TranslationBox.SelectedItem is not TranslationInfo t) { StatusText.Text = L("Klicke zuerst im Bibeltext einen Vers an."); return; }
                 var ch = await _provider.GetChapterAsync(t.Id, _curBook, _curChapter);
                 var text = ch.Verses.FirstOrDefault(x => x.Number == v)?.Text.Trim() ?? "";
                 var quote = $"„{text}“ ({BookName(_curBook)} {_curChapter},{v}, {t.ShortName})";
                 notes.Text = string.IsNullOrWhiteSpace(notes.Text) ? quote : notes.Text.TrimEnd() + "\n\n" + quote;
             };
             var up = new Button { Content = "▲", Classes = { "tool" }, Width = 30 }; var down = new Button { Content = "▼", Classes = { "tool" }, Width = 30 };
-            var remove = new Button { Content = "Teil löschen", Classes = { "tool" }, Width = double.NaN, Padding = new(10, 0) };
+            var remove = new Button { Content = L("Teil löschen"), Classes = { "tool" }, Width = double.NaN, Padding = new(10, 0) };
             up.Click += (_, _) => { if (idx > 0) { (_sermon.Sections[idx - 1], _sermon.Sections[idx]) = (_sermon.Sections[idx], _sermon.Sections[idx - 1]); BuildSermonUi(); } };
             down.Click += (_, _) => { if (idx < _sermon.Sections.Count - 1) { (_sermon.Sections[idx + 1], _sermon.Sections[idx]) = (_sermon.Sections[idx], _sermon.Sections[idx + 1]); BuildSermonUi(); } };
             remove.Click += (_, _) => { _sermon.Sections.RemoveAt(idx); BuildSermonUi(); };
@@ -154,18 +154,18 @@ public partial class MainWindow
                 Child = new StackPanel { Spacing = 6, Children = { top, notes, verses, new WrapPanel { Children = { addVerse, addText, remove } } } },
             });
         }
-        var addSection = new Button { Content = "＋ Teil hinzufügen", HorizontalAlignment = HorizontalAlignment.Left };
+        var addSection = new Button { Content = L("＋ Teil hinzufügen"), HorizontalAlignment = HorizontalAlignment.Left };
         addSection.Click += (_, _) => { _sermon.Sections.Add(new SermonSection { Heading = $"Punkt {_sermon.Sections.Count}", Minutes = 5 }); BuildSermonUi(); };
         SermonPanel.Children.Add(addSection);
         UpdateTotal();
 
         // save / export
-        var save = new Button { Content = "Speichern", Classes = { "primary" } };
+        var save = new Button { Content = L("Speichern"), Classes = { "primary" } };
         save.Click += (_, _) => SaveSermon();
-        var export = new Button { Content = "Als Handout (HTML) exportieren" };
+        var export = new Button { Content = L("Als Handout (HTML) exportieren") };
         export.Click += (_, _) => ExportSermon();
         SermonPanel.Children.Add(new WrapPanel { Margin = new(0, 8, 0, 0), Children = { save, export } });
-        SermonPanel.Children.Add(new TextBlock { Text = "Die Predigt wird als Dokument mit dem Tag „Predigt“ im aktuellen Vault gespeichert und ist dort auch durchsuchbar und verlinkbar.", Classes = { "caption" }, TextWrapping = TextWrapping.Wrap });
+        SermonPanel.Children.Add(new TextBlock { Text = L("Die Predigt wird als Dokument mit dem Tag „Predigt“ im aktuellen Vault gespeichert und ist dort auch durchsuchbar und verlinkbar."), Classes = { "caption" }, TextWrapping = TextWrapping.Wrap });
     }
 
     void LoadSermon(Document d)
@@ -179,9 +179,9 @@ public partial class MainWindow
             _sermon = JsonSerializer.Deserialize<SermonData>(json, SermonJson) ?? NewSermon();
             _sermonDocId = d.Id;
             _sermonLoading = true; BuildSermonUi(); _sermonLoading = false;
-            StatusText.Text = $"Predigt „{_sermon.Title}“ geöffnet.";
+            StatusText.Text = L("Predigt „{0}“ geöffnet.", _sermon.Title);
         }
-        catch (Exception ex) { StatusText.Text = "Predigt nicht lesbar: " + ex.Message; }
+        catch (Exception ex) { StatusText.Text = L("Predigt nicht lesbar: ") + ex.Message; }
     }
 
     string SermonMarkdown()
@@ -209,7 +209,7 @@ public partial class MainWindow
         if (_sermonDocId is long id && _vault.GetDocuments().Any(d => d.Id == id)) _vault.UpdateDocument(id, title, body, null, false, tags);
         else _sermonDocId = _vault.AddDocument(title, body, null, false, tags);
         RefreshDocs();
-        StatusText.Text = $"Gespeichert: {title}";
+        StatusText.Text = L("Gespeichert: {0}", title);
         BuildSermonUi();
     }
 
@@ -231,7 +231,7 @@ public partial class MainWindow
         var name = string.Concat((_sermon.Title.Length > 0 ? _sermon.Title : "Predigt").Select(c => Path.GetInvalidFileNameChars().Contains(c) ? '_' : c));
         var path = Path.Combine(dir, name + ".html");
         File.WriteAllText(path, sb.ToString(), new UTF8Encoding(false));
-        StatusText.Text = $"Handout gespeichert: {path}";
+        StatusText.Text = L("Handout gespeichert: {0}", path);
         try { Process.Start(new ProcessStartInfo(path) { UseShellExecute = true }); } catch { /* no default browser: the path is in the status line */ }
     }
 }

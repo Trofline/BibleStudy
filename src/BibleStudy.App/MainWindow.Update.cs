@@ -1,4 +1,4 @@
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using System.IO.Compression;
 using System.Text;
 using Avalonia;
@@ -23,12 +23,12 @@ public partial class MainWindow
 
     void InitUpdate()
     {
-        VersionText.Text = $"Version {AppPaths.Version} · " + (AppPaths.IsPortable ? $"Portable (Daten in {AppPaths.Root})" : AppPaths.IsInstalled ? "installiert" : "Entwicklungsversion") + $" · Daten: {AppPaths.Root}";
+        VersionText.Text = L("Version {0} · ", AppPaths.Version) + (AppPaths.IsPortable ? $"Portable (Daten in {AppPaths.Root})" : AppPaths.IsInstalled ? "installiert" : "Entwicklungsversion") + $" · Daten: {AppPaths.Root}";
         AutoUpdateCheck.IsChecked = _settings.AutoUpdate;
         AutoUpdateCheck.IsCheckedChanged += (_, _) => { _settings.AutoUpdate = AutoUpdateCheck.IsChecked == true; SaveSettings(); };
         CheckUpdateBtn.Click += async (_, _) => await CheckForUpdateAsync(manual: true);
         RemoveAppBtn.IsVisible = AppPaths.IsPortable || AppPaths.IsInstalled;
-        RemoveAppBtn.Content = AppPaths.IsPortable ? "Portable-Version entfernen …" : "Deinstallieren …";
+        RemoveAppBtn.Content = AppPaths.IsPortable ? L("Portable-Version entfernen …") : "Deinstallieren …";
         RemoveAppBtn.Click += async (_, _) => await RemoveProgramAsync();
         // once per start, a few seconds after launch so that the reader is up first
         if (_settings.AutoUpdate)
@@ -88,14 +88,14 @@ public partial class MainWindow
     {
         if (_updating) return;
         _updater ??= new Updater(_http);
-        UpdateStatus.Text = "Suche nach Updates …";
+        UpdateStatus.Text = L("Suche nach Updates …");
         UpdateInfo? info;
         try { info = await _updater.CheckAsync(AppPaths.Version, AppPaths.IsPortable); }
-        catch (Exception ex) { UpdateStatus.Text = manual ? "Update-Suche nicht möglich: " + ex.Message : ""; return; }
+        catch (Exception ex) { UpdateStatus.Text = manual ? L("Update-Suche nicht möglich: ") + ex.Message : ""; return; }
         _settings.LastUpdateCheck = DateTime.Today.ToString("yyyy-MM-dd"); SaveSettings();
-        if (info is null) { UpdateStatus.Text = manual ? $"Du hast die neueste Version ({AppPaths.Version})." : ""; return; }
+        if (info is null) { UpdateStatus.Text = manual ? L("Du hast die neueste Version ({0}).", AppPaths.Version) : ""; return; }
         if (!manual && _settings.SkippedVersion == info.Version) { UpdateStatus.Text = ""; return; }
-        UpdateStatus.Text = $"Neue Version {info.Version} verfügbar.";
+        UpdateStatus.Text = L("Neue Version {0} verfügbar.", info.Version);
 
         var canInstall = AppPaths.IsInstalled || AppPaths.IsPortable;
         var notes = info.Notes.Length > 600 ? info.Notes[..600] + " …" : info.Notes;
@@ -114,12 +114,12 @@ public partial class MainWindow
         _updating = true;
         try
         {
-            UpdateStatus.Text = "Sichere deine Daten …";
+            UpdateStatus.Text = L("Sichere deine Daten …");
             var backup = await Task.Run(() => BackupData("vor-Update-" + info.Version));
-            UpdateStatus.Text = $"Daten gesichert ({Path.GetFileName(backup)}). Lade Update …";
-            var progress = new Progress<double>(p => UpdateStatus.Text = $"Lade Update … {p:P0}");
+            UpdateStatus.Text = L("Daten gesichert ({0}). Lade Update …", Path.GetFileName(backup));
+            var progress = new Progress<double>(p => UpdateStatus.Text = L("Lade Update … {0:P0}", p));
             var file = await _updater!.DownloadAsync(info, progress);
-            UpdateStatus.Text = "Installiere – das Programm startet gleich neu …";
+            UpdateStatus.Text = L("Installiere – das Programm startet gleich neu …");
 
             if (AppPaths.IsPortable) StartPortableUpdate(file);
             else Process.Start(new ProcessStartInfo(file, $"--update --silent --wait-pid {Environment.ProcessId}") { UseShellExecute = true });
@@ -129,7 +129,7 @@ public partial class MainWindow
         catch (Exception ex)
         {
             _updating = false;
-            UpdateStatus.Text = "Update fehlgeschlagen, deine Daten sind unverändert: " + ex.Message;
+            UpdateStatus.Text = L("Update fehlgeschlagen, deine Daten sind unverändert: ") + ex.Message;
         }
     }
 
@@ -168,7 +168,7 @@ public partial class MainWindow
         var dir = AppPaths.ProgramDir;
         // safety: only ever delete a folder that really is a portable BibleStudy folder
         var looksRight = File.Exists(Path.Combine(dir, "BibleStudy.App.exe")) && File.Exists(Path.Combine(dir, "portable.flag")) && dir.Length > 12;
-        if (!looksRight) { UpdateStatus.Text = "Dieser Ordner sieht nicht wie eine Portable-Version aus – nichts wurde gelöscht."; return; }
+        if (!looksRight) { UpdateStatus.Text = L("Dieser Ordner sieht nicht wie eine Portable-Version aus – nichts wurde gelöscht."); return; }
 
         var keep = await AskAsync("Portable-Version entfernen", $"Der Ordner „{dir}“ mit dem Programm wird gelöscht.\n\nWas soll mit deiner Arbeit passieren (Vaults, Notizen, Dokumente, Markierungen, Einstellungen)?", "Daten behalten", "Daten löschen", "Abbrechen");
         if (keep is not (0 or 1)) return;
@@ -177,7 +177,7 @@ public partial class MainWindow
         {
             kept = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), $"BibleStudy-Daten-{DateTime.Now:yyyy-MM-dd_HHmm}");
             try { await Task.Run(() => CopyData(AppPaths.Root, kept)); }
-            catch (Exception ex) { UpdateStatus.Text = "Die Daten konnten nicht gesichert werden, es wurde nichts gelöscht: " + ex.Message; return; }
+            catch (Exception ex) { UpdateStatus.Text = L("Die Daten konnten nicht gesichert werden, es wurde nichts gelöscht: ") + ex.Message; return; }
         }
         else if (await AskAsync("Wirklich alles löschen?", "Deine Vaults, Notizen, Dokumente und Einstellungen werden unwiderruflich gelöscht.", "Doch behalten", "Alles löschen") != 1) return;
 

@@ -1,4 +1,4 @@
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Media;
@@ -42,7 +42,7 @@ public partial class MainWindow
                 item.Click += (_, _) => InsertIntoDoc($"[[{title}]]", null);
                 menu.Items.Add(item);
             }
-            if (menu.Items.Count == 0) menu.Items.Add(new MenuItem { Header = "Noch keine anderen Dokumente", IsEnabled = false });
+            if (menu.Items.Count == 0) menu.Items.Add(new MenuItem { Header = L("Noch keine anderen Dokumente"), IsEnabled = false });
             menu.ShowAt(DocInsertLinkBtn);
         };
         DocFromTemplateBtn.Click += (_, _) =>
@@ -69,10 +69,10 @@ public partial class MainWindow
         BuildDocTagChips();
         if (DocFilterBox.SelectedIndex == 2)
         {
-            if (_selected is int v) { var r = new VerseRef(_curBook, _curChapter, v); docs = docs.Where(d => DocumentLinks.VerseRefs(d.Body).Contains(r)).ToList(); DocInfo.Text = $"Dokumente, die {Label(r)} erwähnen: {docs.Count}"; }
-            else { docs = []; DocInfo.Text = "Erst einen Vers anklicken."; }
+            if (_selected is int v) { var r = new VerseRef(_curBook, _curChapter, v); docs = docs.Where(d => DocumentLinks.VerseRefs(d.Body).Contains(r)).ToList(); DocInfo.Text = L("Dokumente, die {0} erwähnen: {1}", Label(r), docs.Count); }
+            else { docs = []; DocInfo.Text = L("Erst einen Vers anklicken."); }
         }
-        else DocInfo.Text = $"{docs.Count} Dokument{(docs.Count == 1 ? "" : "e")}";
+        else DocInfo.Text = L("{0} Dokument{1}", docs.Count, (docs.Count == 1 ? "" : "e"));
         DocList.ItemsSource = docs.Select(d =>
         {
             var preview = d.Path is not null ? "Datei: " + System.IO.Path.GetFileName(d.Path) : Shorten(d.Body.ReplaceLineEndings(" ").Replace("#", "").Replace("**", "").Replace("[[", "").Replace("]]", "").Trim(), 90);
@@ -129,7 +129,7 @@ public partial class MainWindow
     {
         if (_doc is null) return;
         var title = DocTitleBox.Text?.Trim() ?? "";
-        if (title.Length == 0) { DocInfo.Text = ""; DocPathText.Text = "Bitte einen Titel eingeben."; return; }
+        if (title.Length == 0) { DocInfo.Text = ""; DocPathText.Text = L("Bitte einen Titel eingeben."); return; }
         var tags = (DocTagsBox.Text ?? "").Split(',', ';');
         var body = DocBodyBox.Text ?? "";
         var template = DocTemplateCheck.IsChecked == true;
@@ -172,7 +172,7 @@ public partial class MainWindow
 
     void NewDocumentFromVerse()
     {
-        if (_selected is not int v || _curChapterData is null) { DocInfo.Text = "Erst einen Vers anklicken."; return; }
+        if (_selected is not int v || _curChapterData is null) { DocInfo.Text = L("Erst einen Vers anklicken."); return; }
         var r = new VerseRef(_curBook, _curChapter, v);
         var translation = (TranslationBox.SelectedItem as TranslationInfo)?.ShortName ?? "";
         var body = $"## {Label(r)}\n\n> {VerseTextOf(v)}\n> ({translation})\n\nGedanken:\n\n";
@@ -181,7 +181,7 @@ public partial class MainWindow
 
     async Task LinkFileAsync()
     {
-        var files = await StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions { Title = "Datei verknüpfen", AllowMultiple = true });
+        var files = await StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions { Title = L("Datei verknüpfen"), AllowMultiple = true });
         foreach (var file in files)
         {
             if (file.TryGetLocalPath() is not { } path) continue;
@@ -192,15 +192,15 @@ public partial class MainWindow
             if (files.Count == 1) OpenDocument(_vault.GetDocuments().First(d => d.Id == id));
         }
         RefreshDocs();
-        DocInfo.Text = $"{files.Count} Datei(en) verknüpft. Die Dateien bleiben, wo sie sind; nur der Verweis wird gespeichert.";
+        DocInfo.Text = L("{0} Datei(en) verknüpft. Die Dateien bleiben, wo sie sind; nur der Verweis wird gespeichert.", files.Count);
     }
 
     void OpenLinkedFile()
     {
         if (_doc?.Path is not { } path) return;
-        if (!File.Exists(path)) { DocPathText.Text = "Die Datei wurde nicht gefunden: " + path; return; }
+        if (!File.Exists(path)) { DocPathText.Text = L("Die Datei wurde nicht gefunden: ") + path; return; }
         try { Process.Start(new ProcessStartInfo(path) { UseShellExecute = true }); }
-        catch (Exception ex) { DocPathText.Text = "Öffnen nicht möglich: " + ex.Message; }
+        catch (Exception ex) { DocPathText.Text = L("Öffnen nicht möglich: ") + ex.Message; }
     }
 
     // ---- knowledge graph ----------------------------------------------------------------------------------------------

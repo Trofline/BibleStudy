@@ -1,4 +1,4 @@
-using Avalonia.Controls;
+﻿using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Layout;
 using Avalonia.Media;
@@ -33,7 +33,7 @@ public partial class MainWindow
         Item(_doc is null ? "In offenes Dokument einfügen (kein Dokument offen)" : $"In „{Shorten(_doc.Title, 30)}“ einfügen",
              () => { Open(KnowledgeTab); InsertIntoDoc($"> {VerseTextOf(verse).Trim()}\n> — {Label(r)}\n\n", null); }, _doc is not null);
         Item("Zur Leseliste", () => AddToQueue([r]));
-        Item("Als Aufgabe merken", () => { _vault.AddTodo($"{Label(r)} studieren", r); RefreshTodos(); StatusText.Text = $"Aufgabe zu {Label(r)} angelegt."; });
+        Item("Als Aufgabe merken", () => { _vault.AddTodo($"{Label(r)} studieren", r); RefreshTodos(); StatusText.Text = L("Aufgabe zu {0} angelegt.", Label(r)); });
         menu.Items.Add(new Separator());
         Item("Querverweise", () => Open(4));
         Item("Grundtext Wort für Wort", () => { Open(GrundtextTab); _ = ShowGrundtextAsync(r); });
@@ -111,7 +111,7 @@ public partial class MainWindow
         xrefs.Children.Add(Muted("Lade …"));
         // original text
         GuidePanel.Children.Add(Eyebrow("Grundtext"));
-        var orig = new Button { Content = "Wort für Wort im Grundtext öffnen", HorizontalAlignment = HorizontalAlignment.Left };
+        var orig = new Button { Content = L("Wort für Wort im Grundtext öffnen"), HorizontalAlignment = HorizontalAlignment.Left };
         orig.Click += (_, _) => { SideTabs.SelectedIndex = GrundtextTab; _ = ShowGrundtextAsync(r); };
         GuidePanel.Children.Add(orig);
 

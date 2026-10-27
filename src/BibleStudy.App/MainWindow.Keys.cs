@@ -1,4 +1,4 @@
-using Avalonia.Controls;
+﻿using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Layout;
@@ -70,8 +70,8 @@ public partial class MainWindow
         {
             var action = a;
             var b = new Button { Content = Pretty(GestureOf(a)), MinWidth = 150, HorizontalContentAlignment = HorizontalAlignment.Center };
-            ToolTip.SetTip(b, "Klicken, dann die neue Tastenkombination drücken (Esc bricht ab, Entf löscht)");
-            b.Click += (_, _) => { _capturing = action.Id; b.Content = "Taste drücken …"; b.Focus(); };
+            ToolTip.SetTip(b, L("Klicken, dann die neue Tastenkombination drücken (Esc bricht ab, Entf löscht)"));
+            b.Click += (_, _) => { _capturing = action.Id; b.Content = L("Taste drücken …"); b.Focus(); };
             _keyButtons[a.Id] = b;
             var row = new DockPanel { Margin = new(0, 2) };
             DockPanel.SetDock(b, Dock.Right);

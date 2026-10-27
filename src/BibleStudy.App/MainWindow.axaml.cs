@@ -1,4 +1,4 @@
-using Avalonia;
+﻿using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
 using Avalonia.Controls.Documents;
@@ -83,7 +83,7 @@ public partial class MainWindow : Window
         _fontSize = _settings.FontSize;
         _startupHome = _settings.StartOnHome;
         FontSlider.Value = _fontSize;
-        FontLabel.Text = $"Schriftgröße: {_fontSize}";
+        FontLabel.Text = L("Schriftgröße: {0}", _fontSize);
         StartHomeCheck.IsChecked = _settings.StartOnHome;
         AutoReadCheck.IsChecked = _settings.AutoMarkRead;
         ThemeBox.SelectedIndex = _settings.Theme switch { "Light" => 1, "Dark" => 2, _ => 0 };
@@ -93,7 +93,7 @@ public partial class MainWindow : Window
         ThemeBtn.Click += (_, _) => ThemeBox.SelectedIndex = (ThemeBox.SelectedIndex + 1) % 3;
         FontSlider.ValueChanged += async (_, e) =>
         {
-            _fontSize = (int)e.NewValue; _settings.FontSize = _fontSize; FontLabel.Text = $"Schriftgröße: {_fontSize}";
+            _fontSize = (int)e.NewValue; _settings.FontSize = _fontSize; FontLabel.Text = L("Schriftgröße: {0}", _fontSize);
             await ShowChapterAsync(_selected);
         };
         FontMinusBtn.Click += (_, _) => FontSlider.Value = Math.Max(FontSlider.Minimum, FontSlider.Value - 1);
@@ -179,7 +179,7 @@ public partial class MainWindow : Window
         try
         {
             SplashWindow.Report(0.6, "Lade Übersetzungen …");
-            StatusText.Text = "Lade Übersetzungen …";
+            StatusText.Text = L("Lade Übersetzungen …");
             _all = await _provider.GetTranslationsAsync();
             _langs = _all.Select(t => t.LanguageName).Where(l => l != "").Distinct().Order().ToList();
             LanguageBox.ItemsSource = _langs;
@@ -188,7 +188,7 @@ public partial class MainWindow : Window
             SplashWindow.Report(0.75, "Lade Bücher …");
             LanguageBox.SelectedItem = wanted?.LanguageName ?? _langs.FirstOrDefault();
         }
-        catch (Exception ex) { StatusText.Text = "Fehler: " + ex.Message; }
+        catch (Exception ex) { StatusText.Text = L("Fehler: ") + ex.Message; }
     }
 
     void FillTranslations()
@@ -231,7 +231,7 @@ public partial class MainWindow : Window
     async Task GoToAsync(string bookId, int chapter, int? verse = null)
     {
         var book = _books.FirstOrDefault(b => b.Id == bookId);
-        if (book is null) { StatusText.Text = "Buch in dieser Übersetzung nicht vorhanden."; return; }
+        if (book is null) { StatusText.Text = L("Buch in dieser Übersetzung nicht vorhanden."); return; }
         _loading = true;
         BookBox.SelectedItem = book;
         ChapterBox.Value = chapter;
@@ -266,7 +266,7 @@ public partial class MainWindow : Window
         var count = Directory.Exists(dir)
             ? Directory.EnumerateFiles(dir, "*.json", SearchOption.AllDirectories).Count(f => !f.EndsWith(".words.json") && Path.GetFileName(f) != "books.json") : 0;
         var total = _books.Sum(b => b.NumberOfChapters);
-        OfflineInfo.Text = $"{t.Name}: {count} von {total} Kapiteln offline verfügbar. Lizenz: {(t.License.PublicDomain ? "gemeinfrei" : t.LicenseUrl)}.";
+        OfflineInfo.Text = L("{0}: {1} von {2} Kapiteln offline verfügbar. Lizenz: {3}.", t.Name, count, total, (t.License.PublicDomain ? "gemeinfrei" : t.LicenseUrl));
     }
 
     async Task OfflineAsync()
@@ -275,11 +275,11 @@ public partial class MainWindow : Window
         _building = true; OfflineBtn.IsEnabled = false;
         try
         {
-            var progress = new Progress<(int Done, int Total)>(p => OfflineInfo.Text = $"{t.ShortName}: {p.Done}/{p.Total} Kapitel geladen …");
+            var progress = new Progress<(int Done, int Total)>(p => OfflineInfo.Text = L("{0}: {1}/{2} Kapitel geladen …", t.ShortName, p.Done, p.Total));
             await OfflineDownloader.DownloadAsync(_provider, t.Id, progress);
             UpdateOfflineInfo();
         }
-        catch (Exception ex) { OfflineInfo.Text = "Fehler: " + ex.Message; }
+        catch (Exception ex) { OfflineInfo.Text = L("Fehler: ") + ex.Message; }
         finally { _building = false; OfflineBtn.IsEnabled = true; }
     }
 
@@ -295,7 +295,7 @@ public partial class MainWindow : Window
             BookBox.SelectedItem = _books.FirstOrDefault(b => b.Id == prev) ?? _books.FirstOrDefault(b => b.Id == "JHN") ?? _books.FirstOrDefault();
             if (_firstBooks) { ChapterBox.Value = Math.Max(1, _settings.Chapter); _firstBooks = false; }
         }
-        catch (Exception ex) { StatusText.Text = "Fehler: " + ex.Message; }
+        catch (Exception ex) { StatusText.Text = L("Fehler: ") + ex.Message; }
         finally { _loading = false; }
         if (Home.IsVisible) Home.Show(_books, _read, Home.OpenBook);
         if (SideTabs.SelectedIndex == SettingsTab) UpdateOfflineInfo();
@@ -371,7 +371,7 @@ public partial class MainWindow : Window
             StatusText.Text = string.Join("  |  ", cols.Select(c =>
                 $"{c.T.Name}: {(c.T.License.PublicDomain ? "gemeinfrei" : "Lizenz " + c.T.LicenseUrl)}, Namensnennung: {c.T.License.Attribution}")) + $" · Quelle: {_provider.Name}";
         }
-        catch (Exception ex) { StatusText.Text = "Kapitel nicht verfügbar: " + ex.Message; }
+        catch (Exception ex) { StatusText.Text = L("Kapitel nicht verfügbar: ") + ex.Message; }
         finally { SplashWindow.Done(); }
     }
 
@@ -493,7 +493,7 @@ public partial class MainWindow : Window
 
     void ShowFootnote(Control anchor, WordSpan span)
     {
-        var title = new TextBlock { Text = $"Fußnote {span.Word}", FontWeight = FontWeight.SemiBold };
+        var title = new TextBlock { Text = L("Fußnote {0}", span.Word), FontWeight = FontWeight.SemiBold };
         title.Bind(TextBlock.ForegroundProperty, this.GetResourceObservable("BsAccent"));
         var body = new TextBlock { Text = span.Note, TextWrapping = TextWrapping.Wrap, MaxWidth = 340 };
         new Flyout { Content = new StackPanel { Spacing = 4, Children = { title, body } }, Placement = PlacementMode.Pointer }.ShowAt(anchor);
@@ -508,15 +508,15 @@ public partial class MainWindow : Window
         {
             try
             {
-                StatusText.Text = "Lade Wörterbuch …";
+                StatusText.Text = L("Lade Wörterbuch …");
                 var e = await _strongs.LookupAsync(id);
-                StudyPanel.Children.Add(e is null ? new TextBlock { Text = id + ": kein Eintrag" } : StudyCard(e));
-                var all = new Button { Content = "Alle Vorkommen", HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Left };
+                StudyPanel.Children.Add(e is null ? new TextBlock { Text = id + L(": kein Eintrag") } : StudyCard(e));
+                var all = new Button { Content = L("Alle Vorkommen"), HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Left };
                 var conc = $"{id}  {e?.Lemma}  „{span.Word.Trim()}“";
                 all.Click += async (_, _) => await ShowConcordanceAsync(id, conc);
                 StudyPanel.Children.Add(all);
             }
-            catch (Exception ex) { StudyPanel.Children.Add(new TextBlock { Text = $"{id}: Wörterbuch nicht verfügbar ({ex.Message})", TextWrapping = TextWrapping.Wrap }); }
+            catch (Exception ex) { StudyPanel.Children.Add(new TextBlock { Text = L("{0}: Wörterbuch nicht verfügbar ({1})", id, ex.Message), TextWrapping = TextWrapping.Wrap }); }
         }
         await AddWordExtrasAsync(span);
         var note = new TextBlock { Text = StrongsDictionary.Attribution, FontSize = 11, TextWrapping = TextWrapping.Wrap };
@@ -553,7 +553,7 @@ public partial class MainWindow : Window
         var lang = new ComboBox { Width = 128, ItemsSource = _langs };
         var trans = new ComboBox { Width = 210 };
         var remove = new Button { Width = 32, Height = 32, Classes = { "tool" }, Content = new Icon { Data = Geometry.Parse("M18 6L6 18 M6 6l12 12"), IconSize = 16 } };
-        ToolTip.SetTip(remove, "Spalte entfernen");
+        ToolTip.SetTip(remove, L("Spalte entfernen"));
         var root = new Border
         {
             Classes = { "pill" }, Margin = new(16, 8, 0, 8),
@@ -616,7 +616,7 @@ public partial class MainWindow : Window
     {
         _selected = n; Paint();
         var r = new VerseRef(_curBook, _curChapter, n);
-        NoteTarget.Text = "Notiz zu " + Label(r);
+        NoteTarget.Text = L("Notiz zu ") + Label(r);
         NoteEditor.Text = _vault.GetNotes().FirstOrDefault(x => x.Ref == r)?.Text ?? "";
         _ = ShowXrefsAsync(r);
         if (TabActive(GrundtextTab)) _ = ShowGrundtextAsync(r);
@@ -630,7 +630,7 @@ public partial class MainWindow : Window
         try
         {
             var dir = _settings.XrefDirection;
-            XrefTitle.Text = "Querverweise zu " + Label(r) + " …";
+            XrefTitle.Text = L("Querverweise zu ") + Label(r) + " …";
             var refs = new List<CrossRef>();
             string? note = null;
             if (dir is "Out" or "Both") refs.AddRange((await _hello.GetCrossReferencesAsync(r.Book, r.Chapter, r.Verse)).Take(dir == "Both" ? 15 : 20));
@@ -646,12 +646,12 @@ public partial class MainWindow : Window
             if (_selected != r.Verse || _curBook != r.Book || _curChapter != r.Chapter) return; // user moved on
             _xrefs = refs;
             var kind = dir switch { "In" => "Eingehende", "Both" => "Ein- und ausgehende", _ => "Ausgehende" };
-            XrefTitle.Text = refs.Count == 0 ? $"Keine Querverweise zu {Label(r)}" : $"{kind} Querverweise zu {Label(r)}";
+            XrefTitle.Text = refs.Count == 0 ? L("Keine Querverweise zu {0}", Label(r)) : $"{kind} Querverweise zu {Label(r)}";
             if (note is not null) XrefTitle.Text += "\n" + note;
             XrefList.ItemsSource = refs.Zip(texts, (x, text) =>
                 new Entry(x.Target, $"{Label(x.Target)}{(x.EndVerse > x.Target.Verse ? "–" + x.EndVerse : "")}\n{text}")).ToList();
         }
-        catch (Exception ex) { XrefTitle.Text = "Querverweise nicht verfügbar: " + ex.Message; }
+        catch (Exception ex) { XrefTitle.Text = L("Querverweise nicht verfügbar: ") + ex.Message; }
     }
 
     /// <summary>Verses that point to <paramref name="r"/>, best voted first; null while the link data is not loaded.</summary>
@@ -694,7 +694,7 @@ public partial class MainWindow : Window
 
     async Task SaveNoteAsync(string text)
     {
-        if (_selected is not int v) { StatusText.Text = "Erst einen Vers anklicken."; return; }
+        if (_selected is not int v) { StatusText.Text = L("Erst einen Vers anklicken."); return; }
         _vault.SetNote(new VerseRef(_curBook, _curChapter, v), text);
         RefreshLists();
         await ShowChapterAsync(v);

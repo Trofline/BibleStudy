@@ -1,4 +1,4 @@
-using Avalonia;
+﻿using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Input.Platform;
@@ -44,8 +44,8 @@ public partial class MainWindow
         AiModelBox.LostFocus += (_, _) => { _settings.AiModel = AiModelBox.Text?.Trim() ?? ""; SaveSettings(); };
 
         var exe = ClaudeCli.FindExecutable();
-        AiCliInfo.Text = exe is null ? "Claude Code wurde nicht gefunden. Installiere es (claude.com/claude-code) und melde dich einmal an." : $"Claude Code gefunden: {exe}";
-        McpCommandBox.Text = $"claude mcp add biblestudy -- \"{McpExe}\"";
+        AiCliInfo.Text = exe is null ? L("Claude Code wurde nicht gefunden. Installiere es (claude.com/claude-code) und melde dich einmal an.") : $"Claude Code gefunden: {exe}";
+        McpCommandBox.Text = L("claude mcp add biblestudy -- \"{0}\"", McpExe);
         McpCopyBtn.Click += async (_, _) =>
         {
             if (TopLevel.GetTopLevel(this)?.Clipboard is { } clipboard) await clipboard.SetTextAsync(McpCommandBox.Text);
@@ -58,7 +58,7 @@ public partial class MainWindow
         var hint = new TextBlock
         {
             TextWrapping = TextWrapping.Wrap, FontSize = 13,
-            Text = "Beispiele:\n• Was sagt Johannes 1:1 im Grundtext, und wie wird λόγος sonst übersetzt?\n• Markiere in Johannes 3:16 das Wort „Liebe“ gelb und lege einen Ordner „Heil“ an.\n• Suche alle Verse zum Thema Sabbat und setze sie in die Warteschlange.",
+            Text = L("Beispiele:\n• Was sagt Johannes 1:1 im Grundtext, und wie wird λόγος sonst übersetzt?\n• Markiere in Johannes 3:16 das Wort „Liebe“ gelb und lege einen Ordner „Heil“ an.\n• Suche alle Verse zum Thema Sabbat und setze sie in die Warteschlange."),
         };
         hint.Bind(TextBlock.ForegroundProperty, this.GetResourceObservable("BsMuted"));
         AiMessages.Children.Add(hint);
@@ -95,16 +95,16 @@ public partial class MainWindow
         var text = AiInput.Text?.Trim();
         if (string.IsNullOrEmpty(text)) return;
         var exe = ClaudeCli.FindExecutable();
-        if (exe is null) { AiStatus.Text = "Claude Code wurde nicht gefunden (siehe Einstellungen)."; return; }
-        if (!File.Exists(McpExe)) { AiStatus.Text = "Der MCP-Server fehlt: " + McpExe; return; }
-        if (_control is null || _control.Port == 0) { AiStatus.Text = "Die lokale Steuer-Schnittstelle läuft nicht."; return; }
+        if (exe is null) { AiStatus.Text = L("Claude Code wurde nicht gefunden (siehe Einstellungen)."); return; }
+        if (!File.Exists(McpExe)) { AiStatus.Text = L("Der MCP-Server fehlt: ") + McpExe; return; }
+        if (_control is null || _control.Port == 0) { AiStatus.Text = L("Die lokale Steuer-Schnittstelle läuft nicht."); return; }
 
         if (AiMessages.Children.Count == 1 && AiMessages.Children[0] is TextBlock) AiMessages.Children.Clear(); // remove the hint
         AiInput.Text = "";
         AddUserMessage(text);
         _aiBusy = true; _aiStreamed = false; _aiCurrent = null;
-        AiSendBtn.Content = "Stopp";
-        AiStatus.Text = "Claude arbeitet …";
+        AiSendBtn.Content = L("Stopp");
+        AiStatus.Text = L("Claude arbeitet …");
         _aiCts = new CancellationTokenSource();
         var workDir = Path.Combine(_root, "ai");
         try
@@ -113,9 +113,9 @@ public partial class MainWindow
                 string.IsNullOrWhiteSpace(_settings.AiModel) ? null : _settings.AiModel,
                 ev => Dispatcher.UIThread.Post(() => OnClaudeEvent(ev)), _aiCts.Token);
         }
-        catch (OperationCanceledException) { AiStatus.Text = "Abgebrochen."; }
-        catch (Exception ex) { AiStatus.Text = "Fehler: " + ex.Message; }
-        finally { _aiBusy = false; AiSendBtn.Content = "Senden"; }
+        catch (OperationCanceledException) { AiStatus.Text = L("Abgebrochen."); }
+        catch (Exception ex) { AiStatus.Text = L("Fehler: ") + ex.Message; }
+        finally { _aiBusy = false; AiSendBtn.Content = L("Senden"); }
     }
 
     void OnClaudeEvent(ClaudeEvent ev)
@@ -130,12 +130,12 @@ public partial class MainWindow
             case ClaudeToolUse t:
                 _aiCurrent = null;
                 AddToolNote(t.Name);
-                AiStatus.Text = "Claude nutzt: " + t.Name.Replace("mcp__biblestudy__", "");
+                AiStatus.Text = L("Claude nutzt: ") + t.Name.Replace("mcp__biblestudy__", "");
                 break;
             case ClaudeResult r:
                 _aiSession = r.SessionId ?? _aiSession;
                 if (!_aiStreamed && r.Text.Length > 0) AddAssistantText().Text = r.Text;
-                AiStatus.Text = r.IsError ? "Fehler: " + r.Text : "";
+                AiStatus.Text = r.IsError ? L("Fehler: ") + r.Text : "";
                 _aiCurrent = null;
                 break;
         }

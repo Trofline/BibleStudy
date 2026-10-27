@@ -1,4 +1,4 @@
-using System.Text;
+﻿using System.Text;
 using Avalonia.Platform.Storage;
 using BibleStudy.Core.Models;
 using BibleStudy.Core.Storage;
@@ -19,15 +19,15 @@ public partial class MainWindow
 
     async Task ExportObsidianAsync()
     {
-        var picked = await StorageProvider.OpenFolderPickerAsync(new FolderPickerOpenOptions { Title = "Ordner für den Obsidian-Export wählen", AllowMultiple = false });
+        var picked = await StorageProvider.OpenFolderPickerAsync(new FolderPickerOpenOptions { Title = L("Ordner für den Obsidian-Export wählen"), AllowMultiple = false });
         if (picked.Count == 0 || picked[0].TryGetLocalPath() is not { } parent) return;
         try
         {
             var root = Path.Combine(parent, SafeFileName($"BibleStudy – {_vault.Name}"));
             var count = await Task.Run(() => WriteObsidian(root));
-            BackupInfo.Text = $"{count} Dateien geschrieben nach {root}. In Obsidian: „Ordner als Vault öffnen“.";
+            BackupInfo.Text = L("{0} Dateien geschrieben nach {1}. In Obsidian: „Ordner als Vault öffnen“.", count, root);
         }
-        catch (Exception ex) { BackupInfo.Text = "Export fehlgeschlagen: " + ex.Message; }
+        catch (Exception ex) { BackupInfo.Text = L("Export fehlgeschlagen: ") + ex.Message; }
     }
 
     int WriteObsidian(string root)

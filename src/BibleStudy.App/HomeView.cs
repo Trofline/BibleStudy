@@ -1,4 +1,4 @@
-using Avalonia;
+﻿using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
 using Avalonia.Controls.Documents;
@@ -115,7 +115,7 @@ public sealed class HomeView : UserControl
         var hero = new DockPanel { Margin = new(0, 0, 0, 4) };
         if (Resume is { } r)
         {
-            var go = new Button { Classes = { "primary" }, VerticalAlignment = VerticalAlignment.Center, Content = $"Weiterlesen: {r.Label}  →" };
+            var go = new Button { Classes = { "primary" }, VerticalAlignment = VerticalAlignment.Center, Content = L("Weiterlesen: {0}  →", r.Label) };
             go.Click += (_, _) => ChapterChosen?.Invoke(r.Book, r.Chapter);
             DockPanel.SetDock(go, Dock.Right);
             hero.Children.Add(go);
@@ -159,13 +159,13 @@ public sealed class HomeView : UserControl
         var head = new DockPanel { Margin = new(0, 0, 0, 8) };
         // One quiet menu instead of a loud button: marking a whole section is rare and should not be done by accident.
         var menu = new MenuFlyout();
-        var markAll = new MenuItem { Header = $"Alle {chapters} Kapitel als gelesen markieren" };
+        var markAll = new MenuItem { Header = L("Alle {0} Kapitel als gelesen markieren", chapters) };
         markAll.Click += (_, _) => { foreach (var b in list) ReadChanged?.Invoke(b.Id, Enumerable.Range(1, b.NumberOfChapters).ToList(), true); };
-        var clear = new MenuItem { Header = "Lesefortschritt dieses Abschnitts zurücksetzen" };
+        var clear = new MenuItem { Header = L("Lesefortschritt dieses Abschnitts zurücksetzen") };
         clear.Click += (_, _) => { foreach (var b in list) ReadChanged?.Invoke(b.Id, Enumerable.Range(1, b.NumberOfChapters).ToList(), false); };
         menu.Items.Add(markAll); menu.Items.Add(clear);
         var more = new Button { Classes = { "tool" }, Width = 32, Height = 32, Flyout = menu, Content = Ico("M5 12a1 1 0 1 0 2 0a1 1 0 1 0-2 0z M11 12a1 1 0 1 0 2 0a1 1 0 1 0-2 0z M17 12a1 1 0 1 0 2 0a1 1 0 1 0-2 0z", 18) };
-        ToolTip.SetTip(more, "Abschnitt: alles als gelesen markieren oder zurücksetzen");
+        ToolTip.SetTip(more, L("Abschnitt: alles als gelesen markieren oder zurücksetzen"));
         DockPanel.SetDock(more, Dock.Right);
         head.Children.Add(more);
         var meta = Caption($"{read} / {chapters} Kapitel");
@@ -207,7 +207,7 @@ public sealed class HomeView : UserControl
         Themed(tile, Border.BorderBrushProperty, "BsBorder");
         if (done) tile.Background = new SolidColorBrush(color, 0.10);
         else Themed(tile, Border.BackgroundProperty, "BsSurface");
-        ToolTip.SetTip(tile, $"{b.CommonName} · {count}/{b.NumberOfChapters} gelesen");
+        ToolTip.SetTip(tile, L("{0} · {1}/{2} gelesen", b.CommonName, count, b.NumberOfChapters));
         tile.PointerPressed += (_, e) => { if (e.GetCurrentPoint(tile).Properties.IsLeftButtonPressed) Show(_books, _read, b.Id); };
         return tile;
     }
@@ -220,7 +220,7 @@ public sealed class HomeView : UserControl
         var color = MainWindow.BookColorAt(_books, b.Id);
         var count = ReadCount(b);
 
-        var back = new Button { Classes = { "ghost" }, HorizontalAlignment = HorizontalAlignment.Left, Margin = new(-8, 0, 0, 10), Content = "←  Alle Bücher" };
+        var back = new Button { Classes = { "ghost" }, HorizontalAlignment = HorizontalAlignment.Left, Margin = new(-8, 0, 0, 10), Content = L("←  Alle Bücher") };
         back.Click += (_, _) => Show(_books, _read);
         panel.Children.Add(back);
 
@@ -230,9 +230,9 @@ public sealed class HomeView : UserControl
         panel.Children.Add(new Border { Margin = new(0, 8, 0, 0), Child = Bar(b.NumberOfChapters == 0 ? 0 : (double)count / b.NumberOfChapters, color, 6) });
 
         var actions = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 6, Margin = new(0, 12, 0, 16) };
-        var markAll = new Button { Content = "Alle Kapitel als gelesen markieren", IsEnabled = count < b.NumberOfChapters };
+        var markAll = new Button { Content = L("Alle Kapitel als gelesen markieren"), IsEnabled = count < b.NumberOfChapters };
         markAll.Click += (_, _) => ReadChanged?.Invoke(b.Id, chapters, true);
-        var clear = new Button { Classes = { "ghost" }, Content = "Zurücksetzen", IsEnabled = count > 0 };
+        var clear = new Button { Classes = { "ghost" }, Content = L("Zurücksetzen"), IsEnabled = count > 0 };
         clear.Click += (_, _) => ReadChanged?.Invoke(b.Id, chapters, false);
         actions.Children.Add(markAll); actions.Children.Add(clear);
         panel.Children.Add(actions);
@@ -255,7 +255,7 @@ public sealed class HomeView : UserControl
             var chip = new Border { Width = 58, Height = 48, Margin = new(0, 0, 8, 8), CornerRadius = new(12), BorderThickness = new(isNext ? 2 : 1), Cursor = new Cursor(StandardCursorType.Hand), Child = content, Classes = { "tile" } };
             Themed(chip, Border.BackgroundProperty, isRead ? "BsAccentSoft" : "BsSurface");
             Themed(chip, Border.BorderBrushProperty, isRead || isNext ? "BsAccent" : "BsBorder");
-            ToolTip.SetTip(chip, isNext ? $"Kapitel {c}: als Nächstes ungelesen" : $"Kapitel {c}{(isRead ? " · gelesen" : "")}");
+            ToolTip.SetTip(chip, isNext ? L("Kapitel {0}: als Nächstes ungelesen", c) : $"Kapitel {c}{(isRead ? " · gelesen" : "")}");
             var chapter = c;
             chip.PointerPressed += (_, e) =>
             {

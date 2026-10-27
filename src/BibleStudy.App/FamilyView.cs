@@ -1,4 +1,4 @@
-using System.Globalization;
+﻿using System.Globalization;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
@@ -16,7 +16,7 @@ public sealed class FamilyView : UserControl
     public Func<Task<IReadOnlyList<LexiconItem>>>? PeopleProvider { get; set; }
 
     readonly FamilyCanvas _canvas = new();
-    readonly TextBox _search = new() { Watermark = "Person suchen (englisch), z. B. David, Abraham, Ruth …", Width = 360 };
+    readonly TextBox _search = new() { Watermark = L("Person suchen (englisch), z. B. David, Abraham, Ruth …"), Width = 360 };
     readonly ListBox _suggest = new() { MaxHeight = 220, IsVisible = false };
     readonly NumericUpDown _up = new() { Minimum = 0, Maximum = 8, Value = 4, FormatString = "0", Width = 100 };
     readonly NumericUpDown _down = new() { Minimum = 0, Maximum = 6, Value = 3, FormatString = "0", Width = 100 };
@@ -32,13 +32,13 @@ public sealed class FamilyView : UserControl
     {
         _hint.Bind(TextBlock.ForegroundProperty, this.GetResourceObservable("BsMuted"));
         _source.Bind(TextBlock.ForegroundProperty, this.GetResourceObservable("BsMuted"));
-        _source.Text = "Stammbaum: Theographic Bible Metadata (CC BY-SA 4.0) – nicht alle Verwandtschaften sind überliefert.";
-        var back = new Button { Content = "← Zum Text", Margin = new(0, 0, 12, 0) };
+        _source.Text = L("Stammbaum: Theographic Bible Metadata (CC BY-SA 4.0) – nicht alle Verwandtschaften sind überliefert.");
+        var back = new Button { Content = L("← Zum Text"), Margin = new(0, 0, 12, 0) };
         back.Click += (_, _) => CloseRequested?.Invoke();
         var bar = new WrapPanel { Margin = new(16, 10, 16, 4) };
         void Add(Control c, double right = 8) { c.Margin = new(0, 0, right, 4); c.VerticalAlignment = VerticalAlignment.Center; bar.Children.Add(c); }
-        Add(back); Add(new TextBlock { Text = "Stammbaum", FontWeight = FontWeight.SemiBold }, 14); Add(_search, 14);
-        Add(new TextBlock { Text = "Generationen davor" }); Add(_up, 12); Add(new TextBlock { Text = "danach" }); Add(_down);
+        Add(back); Add(new TextBlock { Text = L("Stammbaum"), FontWeight = FontWeight.SemiBold }, 14); Add(_search, 14);
+        Add(new TextBlock { Text = L("Generationen davor") }); Add(_up, 12); Add(new TextBlock { Text = L("danach") }); Add(_down);
         _suggest.SelectionChanged += async (_, _) =>
         {
             if (_suggest.SelectedIndex is >= 0 and var i && i < _matches.Count) { var id = _matches[i].Id; _suggest.IsVisible = false; _search.Text = _matches[i].Name; await ShowAsync(id); }
@@ -68,10 +68,10 @@ public sealed class FamilyView : UserControl
     {
         if (_people.Count == 0 && PeopleProvider is not null)
         {
-            _hint.Text = "Personenverzeichnis wird geladen (einmalig, danach offline) …";
-            try { _people = await PeopleProvider(); } catch (Exception ex) { _hint.Text = "Nicht verfügbar: " + ex.Message; return; }
+            _hint.Text = L("Personenverzeichnis wird geladen (einmalig, danach offline) …");
+            try { _people = await PeopleProvider(); } catch (Exception ex) { _hint.Text = L("Nicht verfügbar: ") + ex.Message; return; }
         }
-        _hint.Text = "Tippe einen Namen ein. Ein Klick auf einen Kasten setzt die Person in die Mitte.";
+        _hint.Text = L("Tippe einen Namen ein. Ein Klick auf einen Kasten setzt die Person in die Mitte.");
         await ShowAsync(personId ?? (_rootId.Length > 0 ? _rootId : "david_994"));
     }
 
@@ -85,9 +85,9 @@ public sealed class FamilyView : UserControl
     {
         if (id.Length == 0) return;
         var gen = ++_generation; _rootId = id;
-        _hint.Text = "Lade Verwandtschaft …";
+        _hint.Text = L("Lade Verwandtschaft …");
         var root = await GetAsync(id);
-        if (root is null) { _hint.Text = "Person nicht gefunden."; return; }
+        if (root is null) { _hint.Text = L("Person nicht gefunden."); return; }
         // breadth-first: fetch each generation in parallel
         async Task Expand(IEnumerable<string> ids, int depth, bool up)
         {
@@ -104,7 +104,7 @@ public sealed class FamilyView : UserControl
         await Expand([id], (int)(_down.Value ?? 3), false);
         if (gen != _generation) return;
         _canvas.SetTree(Build(id, (int)(_up.Value ?? 4), true), Build(id, (int)(_down.Value ?? 3), false), id);
-        _hint.Text = $"{root.Name}{Years(root)} · {root.Parents.Count} Eltern, {root.Children.Count} Kinder, {root.Partners.Count} Partner überliefert";
+        _hint.Text = L("{0}{1} · {2} Eltern, {3} Kinder, {4} Partner überliefert", root.Name, Years(root), root.Parents.Count, root.Children.Count, root.Partners.Count);
     }
 
     static string Years(PersonNode n) => n.BirthYear is int b ? $" ({Y(b)}{(n.DeathYear is int d ? " – " + Y(d) : "")})" : "";

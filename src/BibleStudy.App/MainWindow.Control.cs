@@ -1,4 +1,4 @@
-using System.Text.Json;
+﻿using System.Text.Json;
 using System.Text.RegularExpressions;
 using Avalonia.Controls;
 using BibleStudy.Core.Models;
@@ -15,7 +15,7 @@ public partial class MainWindow
     void StartControl()
     {
         _control = new ControlServer(RunToolAsync, Path.Combine(_root, "control.json"));
-        if (!_control.Start()) StatusText.Text = "Die KI-Schnittstelle konnte nicht gestartet werden (kein freier lokaler Port).";
+        if (!_control.Start()) StatusText.Text = L("Die KI-Schnittstelle konnte nicht gestartet werden (kein freier lokaler Port).");
         Closed += (_, _) => _control?.Dispose();
     }
 

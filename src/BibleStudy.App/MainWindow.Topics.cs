@@ -1,4 +1,4 @@
-using Avalonia.Controls;
+﻿using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
 using Avalonia.Input;
 using Avalonia.Layout;
@@ -19,10 +19,10 @@ public partial class MainWindow
         var fly = new Flyout { Placement = PlacementMode.BottomEdgeAlignedLeft };
         var panel = new StackPanel { Spacing = 8, Width = 360 };
         fly.Content = panel;
-        var topic = new TextBox { Watermark = "Thema, z. B. Vergebung, Mut, Trost …", Text = SearchBox.Text };
+        var topic = new TextBox { Watermark = L("Thema, z. B. Vergebung, Mut, Trost …"), Text = SearchBox.Text };
         var chips = new WrapPanel();
         var info = new TextBlock { Classes = { "caption" }, TextWrapping = TextWrapping.Wrap };
-        var go = new Button { Content = "Stellen zum Thema suchen", Classes = { "primary" }, HorizontalAlignment = HorizontalAlignment.Stretch, IsEnabled = false };
+        var go = new Button { Content = L("Stellen zum Thema suchen"), Classes = { "primary" }, HorizontalAlignment = HorizontalAlignment.Stretch, IsEnabled = false };
         var selected = new List<string>(); var all = new List<string>();
 
         void Redraw()
@@ -39,8 +39,8 @@ public partial class MainWindow
         async Task Find()
         {
             var t = topic.Text?.Trim() ?? "";
-            if (t.Length < 2) { info.Text = "Gib ein Thema ein."; return; }
-            info.Text = "Suche verwandte Wörter …";
+            if (t.Length < 2) { info.Text = L("Gib ein Thema ein."); return; }
+            info.Text = L("Suche verwandte Wörter …");
             all.Clear(); selected.Clear();
             all.Add(t); selected.Add(t);
             var syn = await SynonymsAsync(t);
@@ -52,7 +52,7 @@ public partial class MainWindow
             Redraw();
         }
         topic.KeyDown += async (_, e) => { if (e.Key == Key.Enter) await Find(); };
-        var findBtn = new Button { Content = "Verwandte Wörter finden", HorizontalAlignment = HorizontalAlignment.Stretch };
+        var findBtn = new Button { Content = L("Verwandte Wörter finden"), HorizontalAlignment = HorizontalAlignment.Stretch };
         findBtn.Click += async (_, _) => await Find();
         go.Click += async (_, _) =>
         {
@@ -60,7 +60,7 @@ public partial class MainWindow
             fly.Hide();
             await SearchAsync();
         };
-        panel.Children.Add(new TextBlock { Text = "THEMENSUCHE", Classes = { "eyebrow" } });
+        panel.Children.Add(new TextBlock { Text = L("THEMENSUCHE"), Classes = { "eyebrow" } });
         panel.Children.Add(topic); panel.Children.Add(findBtn); panel.Children.Add(chips); panel.Children.Add(info); panel.Children.Add(go);
         fly.ShowAt(TopicBtn);
         Avalonia.Threading.Dispatcher.UIThread.Post(() => topic.Focus());

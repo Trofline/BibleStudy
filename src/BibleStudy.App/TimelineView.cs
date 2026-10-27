@@ -1,4 +1,4 @@
-using System.Globalization;
+﻿using System.Globalization;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
@@ -56,9 +56,9 @@ public sealed class TimelineView : UserControl
         _source.Bind(TextBlock.ForegroundProperty, this.GetResourceObservable("BsMuted"));
         _title.Bind(TextBlock.ForegroundProperty, this.GetResourceObservable("BsAccent"));
 
-        var back = new Button { Content = "← Zum Text", Margin = new(16, 10, 12, 6) };
+        var back = new Button { Content = L("← Zum Text"), Margin = new(16, 10, 12, 6) };
         back.Click += (_, _) => CloseRequested?.Invoke();
-        var head = new StackPanel { Orientation = Orientation.Horizontal, Children = { back, new TextBlock { Text = "Zeitleiste", FontWeight = FontWeight.SemiBold, VerticalAlignment = VerticalAlignment.Center } } };
+        var head = new StackPanel { Orientation = Orientation.Horizontal, Children = { back, new TextBlock { Text = L("Zeitleiste"), FontWeight = FontWeight.SemiBold, VerticalAlignment = VerticalAlignment.Center } } };
         for (var i = 0; i < Eras.Length; i++)
         {
             var k = i;
@@ -95,12 +95,12 @@ public sealed class TimelineView : UserControl
     {
         if (_all.Count == 0)
         {
-            _hint.Text = "Zeitleiste wird geladen (einmalig, danach offline) …";
+            _hint.Text = L("Zeitleiste wird geladen (einmalig, danach offline) …");
             try { _all = await EventsProvider!(); }
-            catch (Exception ex) { _hint.Text = "Zeitleiste nicht verfügbar: " + ex.Message; return; }
+            catch (Exception ex) { _hint.Text = L("Zeitleiste nicht verfügbar: ") + ex.Message; return; }
         }
         ApplyEra();
-        _hint.Text = "Ereignis in der Leiste oder in der Liste wählen: Personen, Stellen und Orte erscheinen rechts, die Orte auch auf der Karte.";
+        _hint.Text = L("Ereignis in der Leiste oder in der Liste wählen: Personen, Stellen und Orte erscheinen rechts, die Orte auch auf der Karte.");
         if (!_mapLoaded && MapProvider is not null)
         {
             try { _canvas.SetMap(await MapProvider()); _mapLoaded = true; } catch { /* map stays empty */ }
@@ -124,16 +124,16 @@ public sealed class TimelineView : UserControl
         _ruler.Selected = e;
         if (fromRuler) { var i = _shown.IndexOf(e); if (i >= 0) { _list.SelectedIndex = i; _list.ScrollIntoView(i); return; } }
         _title.Text = e.Name;
-        _meta.Text = $"{YearText(e.Year)} (Näherungswert)";
+        _meta.Text = L("{0} (Näherungswert)", YearText(e.Year));
         _chips.Children.Clear(); _people.Text = ""; _placesText.Text = "";
         _canvas.SetPlaces([]);
         try
         {
             var d = await DetailProvider!(e.Id);
             if (generation != _generation) return;
-            _meta.Text = $"{YearText(d.Year)} (Näherungswert){(d.Duration.Length > 0 ? " · Dauer " + d.Duration : "")}";
-            _people.Text = d.Participants.Count > 0 ? "Beteiligt: " + string.Join(", ", d.Participants.Select(p => p.Name)) : "";
-            _placesText.Text = d.Locations.Count > 0 ? "Orte: " + string.Join(", ", d.Locations.Select(p => p.Name)) : "";
+            _meta.Text = L("{0} (Näherungswert){1}", YearText(d.Year), (d.Duration.Length > 0 ? " · Dauer " + d.Duration : ""));
+            _people.Text = d.Participants.Count > 0 ? L("Beteiligt: ") + string.Join(", ", d.Participants.Select(p => p.Name)) : "";
+            _placesText.Text = d.Locations.Count > 0 ? L("Orte: ") + string.Join(", ", d.Locations.Select(p => p.Name)) : "";
             foreach (var (r, end) in d.References.Take(24))
             {
                 var label = $"{BookName?.Invoke(r.Book) ?? r.Book} {r.Chapter},{r.Verse}{(end > r.Verse ? "–" + end : "")}";
@@ -146,7 +146,7 @@ public sealed class TimelineView : UserControl
             if (generation != _generation) return;
             _canvas.SetPlaces(places);
         }
-        catch (Exception ex) { _meta.Text += " · Details nicht verfügbar: " + ex.Message; }
+        catch (Exception ex) { _meta.Text += L(" · Details nicht verfügbar: ") + ex.Message; }
     }
 
     /// <summary>Ruler over the time axis; every event is a tick, the chosen one is highlighted.</summary>

@@ -1,4 +1,4 @@
-using Avalonia;
+﻿using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Input.Platform;
@@ -37,21 +37,21 @@ public partial class MainWindow
         JesusRedCheck.IsChecked = _settings.JesusRed; JustifyCheck.IsChecked = _settings.Justify;
         AnimationsCheck.IsChecked = _settings.Animations; AnimationsCheck.IsCheckedChanged += (_, _) => { _settings.Animations = AnimationsCheck.IsChecked == true; SaveSettings(); };
         HeadingCheck.IsChecked = _settings.ChapterHeading; ScrollReadCheck.IsChecked = _settings.ScrollMarksRead;
-        LineLabel.Text = $"Zeilenabstand: {_settings.LineSpacing:0.0}"; WidthLabel.Text = $"Textbreite: {_settings.ReaderWidth}";
-        SpeakLabel.Text = $"Vorlesen: Geschwindigkeit {_settings.SpeakRate:+0;-0;normal}";
+        LineLabel.Text = L("Zeilenabstand: {0:0.0}", _settings.LineSpacing); WidthLabel.Text = L("Textbreite: {0}", _settings.ReaderWidth);
+        SpeakLabel.Text = L("Vorlesen: Geschwindigkeit {0:+0;-0;normal}", _settings.SpeakRate);
         BuildAccentPanel();
         ApplyAccent(_settings.Accent);
 
         async void Redraw() { if (_qolReady) { SaveSettings(); await ShowChapterAsync(_selected); } }
         FontBox.SelectionChanged += (_, _) => { if (FontBox.SelectedItem is string f) { _settings.ReaderFont = f; Redraw(); } };
-        LineSlider.ValueChanged += (_, e) => { _settings.LineSpacing = Math.Round(e.NewValue, 1); LineLabel.Text = $"Zeilenabstand: {_settings.LineSpacing:0.0}"; Redraw(); };
-        WidthSlider.ValueChanged += (_, e) => { _settings.ReaderWidth = (int)e.NewValue; WidthLabel.Text = $"Textbreite: {_settings.ReaderWidth}"; if (_qolReady) { FitReader(); SaveSettings(); } };
+        LineSlider.ValueChanged += (_, e) => { _settings.LineSpacing = Math.Round(e.NewValue, 1); LineLabel.Text = L("Zeilenabstand: {0:0.0}", _settings.LineSpacing); Redraw(); };
+        WidthSlider.ValueChanged += (_, e) => { _settings.ReaderWidth = (int)e.NewValue; WidthLabel.Text = L("Textbreite: {0}", _settings.ReaderWidth); if (_qolReady) { FitReader(); SaveSettings(); } };
         VerseNumberBox.SelectionChanged += (_, _) => { _settings.VerseNumbers = VerseNumberModes[Math.Max(0, VerseNumberBox.SelectedIndex)]; Redraw(); };
         JesusRedCheck.IsCheckedChanged += (_, _) => { _settings.JesusRed = JesusRedCheck.IsChecked == true; Redraw(); };
         JustifyCheck.IsCheckedChanged += (_, _) => { _settings.Justify = JustifyCheck.IsChecked == true; Redraw(); };
         HeadingCheck.IsCheckedChanged += (_, _) => { _settings.ChapterHeading = HeadingCheck.IsChecked == true; Redraw(); };
         ScrollReadCheck.IsCheckedChanged += (_, _) => { _settings.ScrollMarksRead = ScrollReadCheck.IsChecked == true; SaveSettings(); };
-        SpeakSlider.ValueChanged += (_, e) => { _settings.SpeakRate = (int)e.NewValue; SpeakLabel.Text = $"Vorlesen: Geschwindigkeit {_settings.SpeakRate:+0;-0;normal}"; SaveSettings(); };
+        SpeakSlider.ValueChanged += (_, e) => { _settings.SpeakRate = (int)e.NewValue; SpeakLabel.Text = L("Vorlesen: Geschwindigkeit {0:+0;-0;normal}", _settings.SpeakRate); SaveSettings(); };
         ClearHistoryBtn.Click += (_, _) => { _settings.SearchHistory.Clear(); SaveSettings(); RefreshSearchHistory(); };
         ResetSettingsBtn.Click += (_, _) =>
         {
@@ -153,11 +153,11 @@ public partial class MainWindow
 
     async Task CopyVerseAsync()
     {
-        if (_selected is not int v || TopLevel.GetTopLevel(this)?.Clipboard is not { } clipboard) { StatusText.Text = "Erst einen Vers anklicken."; return; }
+        if (_selected is not int v || TopLevel.GetTopLevel(this)?.Clipboard is not { } clipboard) { StatusText.Text = L("Erst einen Vers anklicken."); return; }
         var r = new VerseRef(_curBook, _curChapter, v);
         var tr = (TranslationBox.SelectedItem as TranslationInfo)?.ShortName ?? "";
         await clipboard.SetTextAsync($"„{VerseTextOf(v).Trim()}“ – {Label(r)} ({tr})");
-        StatusText.Text = $"{Label(r)} kopiert.";
+        StatusText.Text = L("{0} kopiert.", Label(r));
     }
 
     void ToggleFocusMode()
@@ -179,5 +179,5 @@ public partial class MainWindow
         }
     }
 
-    void UpdateTitle(string book, int chapter, string translation) => Title = $"{book} {chapter} · {translation} – BibleStudy";
+    void UpdateTitle(string book, int chapter, string translation) => Title = L("{0} {1} · {2} – BibleStudy", book, chapter, translation);
 }

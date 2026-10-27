@@ -1,4 +1,4 @@
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using System.IO.Compression;
 using Avalonia;
 using Avalonia.Controls;
@@ -23,7 +23,7 @@ sealed class UninstallWindow : Window
 
     public UninstallWindow(string[] args)
     {
-        Title = "BibleStudy deinstallieren"; Width = 560; SizeToContent = SizeToContent.Height; CanResize = false;
+        Title = L("BibleStudy deinstallieren"); Width = 560; SizeToContent = SizeToContent.Height; CanResize = false;
         WindowStartupLocation = WindowStartupLocation.CenterScreen;
         Content = _body;
         if (args.Contains("--silent")) { Opened += (_, _) => Finish(args.Contains("--delete-data")); return; }

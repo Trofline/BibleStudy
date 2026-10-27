@@ -1,4 +1,4 @@
-using Avalonia.Controls;
+﻿using Avalonia.Controls;
 using Avalonia.Media;
 using BibleStudy.Core.Models;
 using BibleStudy.Core.Providers;
@@ -27,7 +27,7 @@ public partial class MainWindow
             if (!_store.IsStrongsIndexed(t.Id))
             {
                 _building = true;
-                var progress = new Progress<(int Done, int Total)>(p => ConcInfo.Text = $"Einmalig: Konkordanz für {t.ShortName} wird aufgebaut … {p.Done}/{p.Total} Kapitel");
+                var progress = new Progress<(int Done, int Total)>(p => ConcInfo.Text = L("Einmalig: Konkordanz für {0} wird aufgebaut … {1}/{2} Kapitel", t.ShortName, p.Done, p.Total));
                 await ConcordanceBuilder.BuildAsync(_provider, _store, t.Id, progress);
             }
             _concOcc = _store.GetOccurrences(t.Id, strongId, ConcordanceLimit);
@@ -40,7 +40,7 @@ public partial class MainWindow
             }
             ShowConcordance(t);
         }
-        catch (Exception ex) { ConcInfo.Text = "Konkordanz nicht verfügbar: " + ex.Message; }
+        catch (Exception ex) { ConcInfo.Text = L("Konkordanz nicht verfügbar: ") + ex.Message; }
         finally { _building = false; }
     }
 
@@ -48,7 +48,7 @@ public partial class MainWindow
     {
         var all = _concOcc;
         var shown = all.Where(o => (_concForm is null || CleanWord(o.Word) == _concForm) && (_concBook is null || o.Ref.Book == _concBook)).ToList();
-        ConcInfo.Text = all.Count == 0 ? $"Keine Vorkommen in {t.ShortName}."
+        ConcInfo.Text = all.Count == 0 ? L("Keine Vorkommen in {0}.", t.ShortName)
             : $"{shown.Count}{(all.Count >= ConcordanceLimit ? "+" : "")} von {all.Count} Vorkommen in {t.ShortName}" + (_concVerses is null ? " · Verstexte erscheinen, sobald die Suche für diese Übersetzung einmal lief." : "");
 
         // renderings: how this word was translated, click to filter

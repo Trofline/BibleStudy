@@ -1,4 +1,4 @@
-using System.Globalization;
+﻿using System.Globalization;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
@@ -20,9 +20,9 @@ public sealed class MapView : UserControl
     public Func<string, int, Task<IReadOnlyList<MapPlace>>>? PlacesProvider { get; set; }
 
     readonly MapCanvas _canvas = new();
-    readonly ToggleButton _chapterBtn = new() { Content = "Kapitel", IsChecked = true };
-    readonly ToggleButton _bookBtn = new() { Content = "Ganzes Buch" };
-    readonly CheckBox _routeBox = new() { Content = "Weg in Reihenfolge der Erwähnung", IsChecked = true };
+    readonly ToggleButton _chapterBtn = new() { Content = L("Kapitel"), IsChecked = true };
+    readonly ToggleButton _bookBtn = new() { Content = L("Ganzes Buch") };
+    readonly CheckBox _routeBox = new() { Content = L("Weg in Reihenfolge der Erwähnung"), IsChecked = true };
     readonly TextBlock _title = new() { FontWeight = FontWeight.SemiBold, VerticalAlignment = VerticalAlignment.Center };
     readonly TextBlock _hint = new() { FontSize = 12, VerticalAlignment = VerticalAlignment.Center, TextTrimming = TextTrimming.CharacterEllipsis };
     readonly TextBlock _detailTitle = new() { FontWeight = FontWeight.SemiBold, FontSize = 15 };
@@ -45,7 +45,7 @@ public sealed class MapView : UserControl
         _detail.Bind(Border.BorderBrushProperty, this.GetResourceObservable("BsBorder"));
         _detail.Child = new StackPanel { Children = { _detailTitle, _detailInfo, _detailChips } };
 
-        var back = new Button { Content = "← Zum Text" };
+        var back = new Button { Content = L("← Zum Text") };
         back.Click += (_, _) => CloseRequested?.Invoke();
         var strip = new WrapPanel { Margin = new(16, 10, 16, 6) };
         void Add(Control c, double right = 10) { c.Margin = new(0, 0, right, 4); c.VerticalAlignment = VerticalAlignment.Center; strip.Children.Add(c); }
@@ -84,11 +84,11 @@ public sealed class MapView : UserControl
         {
             if (_map is null)
             {
-                _hint.Text = "Karte wird geladen (einmalig, danach offline) …";
+                _hint.Text = L("Karte wird geladen (einmalig, danach offline) …");
                 _map = await MapProvider!();
                 _canvas.SetMap(_map);
             }
-            _hint.Text = wholeBook ? "Orte des Buches werden geladen …" : "";
+            _hint.Text = wholeBook ? L("Orte des Buches werden geladen …") : "";
             _mentions.Clear();
             var places = new List<MapPlace>();
             var seen = new HashSet<string>();
@@ -110,9 +110,9 @@ public sealed class MapView : UserControl
                     if (seen.Add(place.Id)) places.Add(place);
                 }
             _canvas.SetPlaces(places);
-            _hint.Text = places.Count == 0 ? "Keine Orte mit Koordinaten in diesem Abschnitt." : $"{places.Count} Orte · Mausrad: zoomen · ziehen: verschieben · Ort anklicken: Stellen";
+            _hint.Text = places.Count == 0 ? L("Keine Orte mit Koordinaten in diesem Abschnitt.") : $"{places.Count} Orte · Mausrad: zoomen · ziehen: verschieben · Ort anklicken: Stellen";
         }
-        catch (Exception ex) { _hint.Text = "Karte nicht verfügbar: " + ex.Message; }
+        catch (Exception ex) { _hint.Text = L("Karte nicht verfügbar: ") + ex.Message; }
     }
 
     void ShowDetail(MapPlace? place)

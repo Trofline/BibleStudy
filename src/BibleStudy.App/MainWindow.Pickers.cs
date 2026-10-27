@@ -1,4 +1,4 @@
-using Avalonia;
+﻿using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
 using Avalonia.Layout;
@@ -110,7 +110,7 @@ public partial class MainWindow
             }
             into.Children.Add(wrap);
         }
-        var search = new TextBox { Watermark = "Tippen zum Filtern, z. B. „Joh“ + Enter", Margin = new(0, 0, 0, 6) };
+        var search = new TextBox { Watermark = L("Tippen zum Filtern, z. B. „Joh“ + Enter"), Margin = new(0, 0, 0, 6) };
         var tiles = new StackPanel();
         List<BookInfo> shown = [];
         void Fill()
@@ -156,7 +156,7 @@ public partial class MainWindow
         var color = BookColorAt(_books, book.Id);
         var panel = new StackPanel { Width = Math.Min(620, 70 + Math.Ceiling(Math.Sqrt(book.NumberOfChapters)) * 56) };
         panel.Children.Add(PickerHeading($"{book.CommonName} – Kapitel wählen"));
-        var number = new TextBox { Watermark = $"Nummer tippen (1–{book.NumberOfChapters}) + Enter", Margin = new(0, 0, 0, 8) };
+        var number = new TextBox { Watermark = L("Nummer tippen (1–{0}) + Enter", book.NumberOfChapters), Margin = new(0, 0, 0, 8) };
         number.KeyDown += (_, e) =>
         {
             if (e.Key != Avalonia.Input.Key.Enter || !int.TryParse(number.Text, out var n)) return;
@@ -185,7 +185,7 @@ public partial class MainWindow
         if (langs.Count == 0) return;
         Flyout? flyout = null;
         var current = LanguageBox.SelectedItem as string;
-        var search = new TextBox { Watermark = "Sprache suchen …", Margin = new(0, 0, 0, 10) };
+        var search = new TextBox { Watermark = L("Sprache suchen …"), Margin = new(0, 0, 0, 10) };
         var grid = new WrapPanel();
         void Fill()
         {

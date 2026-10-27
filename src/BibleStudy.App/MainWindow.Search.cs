@@ -1,4 +1,4 @@
-using System.Text.RegularExpressions;
+﻿using System.Text.RegularExpressions;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Layout;
@@ -118,7 +118,7 @@ public partial class MainWindow
                 {
                     var p = passages[0];
                     await GoToAsync(p.Book, p.Chapter, p.FromVerse);
-                    SearchInfo.Text = $"Aufgeschlagen: {BookName(p.Book)} {p.Chapter}{(p.FromVerse is int f ? "," + f : "")}";
+                    SearchInfo.Text = L("Aufgeschlagen: {0} {1}{2}", BookName(p.Book), p.Chapter, (p.FromVerse is int f ? "," + f : ""));
                     SearchList.ItemsSource = null; _hits = [];
                     return;
                 }
@@ -138,7 +138,7 @@ public partial class MainWindow
             // 3. full-text / lemma / Strong search
             if (!_store.IsIndexed(t.Id))
             {
-                SearchInfo.Text = $"Einmalig: {t.ShortName} wird für die Suche geladen und indexiert …";
+                SearchInfo.Text = L("Einmalig: {0} wird für die Suche geladen und indexiert …", t.ShortName);
                 var verses = await _provider.GetAllVersesAsync(t.Id);
                 await Task.Run(() => _store.Index(t.Id, verses));
                 _corpora.Remove(t.Id);
@@ -157,11 +157,11 @@ public partial class MainWindow
             {
                 if (!_store.IsStrongsIndexed(t.Id))
                 {
-                    if (_building) { SearchInfo.Text = "Die Konkordanz wird gerade aufgebaut – bitte kurz warten."; return; }
+                    if (_building) { SearchInfo.Text = L("Die Konkordanz wird gerade aufgebaut – bitte kurz warten."); return; }
                     _building = true;
                     try
                     {
-                        var progress = new Progress<(int Done, int Total)>(p => SearchInfo.Text = $"Einmalig: Strong-Index für {t.ShortName} wird aufgebaut … {p.Done}/{p.Total} Kapitel");
+                        var progress = new Progress<(int Done, int Total)>(p => SearchInfo.Text = L("Einmalig: Strong-Index für {0} wird aufgebaut … {1}/{2} Kapitel", t.ShortName, p.Done, p.Total));
                         await ConcordanceBuilder.BuildAsync(_provider, _store, t.Id, progress);
                     }
                     finally { _building = false; }
@@ -175,7 +175,7 @@ public partial class MainWindow
             _hits = outcome.Results.ToList();
             ShowHits(t);
         }
-        catch (Exception ex) { SearchInfo.Text = "Fehler: " + ex.Message; }
+        catch (Exception ex) { SearchInfo.Text = L("Fehler: ") + ex.Message; }
         finally { _searching = false; }
     }
 
@@ -184,7 +184,7 @@ public partial class MainWindow
         var list = CurrentHits().ToList();
         SearchList.ItemsSource = list.Take(ShownHits).Select(h => new Entry(h.Ref, $"{Label(h.Ref)}\n{h.Marked()}")).ToList();
         var words = list.Sum(h => h.Spans.Count);
-        SearchInfo.Text = _hits.Count == 0 ? $"Keine Treffer in {t.ShortName}."
+        SearchInfo.Text = _hits.Count == 0 ? L("Keine Treffer in {0}.", t.ShortName)
             : $"{list.Count} Verse · {words} Fundstellen in {t.ShortName}{(list.Count > ShownHits ? $" (erste {ShownHits} angezeigt)" : "")}";
         SearchQueueBtn.IsVisible = list.Count > 0;
 
@@ -200,7 +200,7 @@ public partial class MainWindow
                     Content = $"{(ShortBook(b))} {perBook[b.Id]}", Classes = { "tool" }, Width = double.NaN, Height = 24, Padding = new(7, 0),
                     FontSize = 11, Margin = new(0, 0, 4, 4), Background = active ? Res("BsAccentSoft") : null, BorderBrush = new SolidColorBrush(HomeView.ColorOf(b.Id)), BorderThickness = new(0, 0, 0, 2),
                 };
-                ToolTip.SetTip(chip, $"{b.CommonName}: {perBook[b.Id]} Verse");
+                ToolTip.SetTip(chip, L("{0}: {1} Verse", b.CommonName, perBook[b.Id]));
                 var id = b.Id;
                 chip.Click += (_, _) => { _hitBook = _hitBook == id ? null : id; ShowHits(t); };
                 SearchBooksPanel.Children.Add(chip);
@@ -228,7 +228,7 @@ public partial class MainWindow
         }
         _hits = [];
         SearchList.ItemsSource = entries;
-        SearchInfo.Text = $"{entries.Count} Verse aus {passages.Count} Stelle{(passages.Count == 1 ? "" : "n")}{(capped ? " (Maximum 150)" : "")} · {t.ShortName}";
+        SearchInfo.Text = L("{0} Verse aus {1} Stelle{2}{3} · {4}", entries.Count, passages.Count, (passages.Count == 1 ? "" : "n"), (capped ? " (Maximum 150)" : ""), t.ShortName);
         SearchQueueBtn.IsVisible = false;
         if (entries.Count > 0)
         {

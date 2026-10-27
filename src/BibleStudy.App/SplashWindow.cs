@@ -1,4 +1,4 @@
-using Avalonia;
+﻿using Avalonia;
 using Avalonia.Animation;
 using Avalonia.Animation.Easings;
 using Avalonia.Controls;
@@ -26,7 +26,7 @@ sealed class SplashWindow : Window
     const double From = 0.02, To = 0.97;
 
     readonly Border _fill = new() { Background = new SolidColorBrush(Color.Parse("#E3B65F")), CornerRadius = new(2) };
-    readonly TextBlock _text = new() { Text = "Starte …", FontSize = 12.5, Foreground = new SolidColorBrush(Color.Parse("#dfe4ee")), HorizontalAlignment = HorizontalAlignment.Center };
+    readonly TextBlock _text = new() { Text = L("Starte …"), FontSize = 12.5, Foreground = new SolidColorBrush(Color.Parse("#dfe4ee")), HorizontalAlignment = HorizontalAlignment.Center };
     readonly Image _logo;
     readonly DateTime _started = DateTime.UtcNow;
 
@@ -50,10 +50,10 @@ sealed class SplashWindow : Window
             Effect = new DropShadowEffect { BlurRadius = 22, OffsetX = 0, OffsetY = 4, Color = Colors.Black, Opacity = 0.75 },
         };
         panel.Children.Add(_logo);
-        panel.Children.Add(new TextBlock { Text = "BibleStudy", FontSize = 26, FontWeight = FontWeight.SemiBold, Foreground = new SolidColorBrush(Color.Parse("#f4f1e8")), HorizontalAlignment = HorizontalAlignment.Center });
+        panel.Children.Add(new TextBlock { Text = L("BibleStudy"), FontSize = 26, FontWeight = FontWeight.SemiBold, Foreground = new SolidColorBrush(Color.Parse("#f4f1e8")), HorizontalAlignment = HorizontalAlignment.Center });
         panel.Children.Add(track);
         panel.Children.Add(_text);
-        panel.Children.Add(new TextBlock { Text = "Version " + AppPaths.Version, FontSize = 11, Foreground = new SolidColorBrush(Color.Parse("#b8c0d0")), HorizontalAlignment = HorizontalAlignment.Center });
+        panel.Children.Add(new TextBlock { Text = L("Version ") + AppPaths.Version, FontSize = 11, Foreground = new SolidColorBrush(Color.Parse("#b8c0d0")), HorizontalAlignment = HorizontalAlignment.Center });
         Content = panel;
 
         Opened += (_, _) => StartAnimations(panel);
@@ -120,7 +120,7 @@ sealed class SplashWindow : Window
         _current = null;
         Dispatcher.UIThread.Post(() =>
         {
-            s._text.Text = "Fertig";
+            s._text.Text = L("Fertig");
             try
             {
                 if (ElementComposition.GetElementVisual(s._fill) is { } fill)

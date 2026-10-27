@@ -1,4 +1,4 @@
-using System.Globalization;
+﻿using System.Globalization;
 using System.IO.Compression;
 using System.Speech.Synthesis;
 using System.Text.Json;
@@ -43,21 +43,21 @@ public partial class MainWindow
         _grundtextRef = r;
         GrundtextPanel.Children.Clear();
         GrundtextCheckBtn.IsVisible = false;
-        GrundtextInfo.Text = $"{Label(r)} · lade …";
+        GrundtextInfo.Text = L("{0} · lade …", Label(r));
         try
         {
             if (!_interlinear.TryGetValue((r.Book, r.Chapter), out var chapter))
                 _interlinear[(r.Book, r.Chapter)] = chapter = await _hello.GetInterlinearAsync(r.Book, r.Chapter);
             if (_grundtextRef != r) return; // the user moved on
-            if (!chapter.TryGetValue(r.Verse, out var words) || words.Count == 0) { GrundtextInfo.Text = $"{Label(r)} · keine Grundtextdaten für diesen Vers."; return; }
+            if (!chapter.TryGetValue(r.Verse, out var words) || words.Count == 0) { GrundtextInfo.Text = L("{0} · keine Grundtextdaten für diesen Vers.", Label(r)); return; }
             var hebrew = words[0].IsHebrew;
             GrundtextPanel.FlowDirection = hebrew ? FlowDirection.RightToLeft : FlowDirection.LeftToRight;
             foreach (var w in words) GrundtextPanel.Children.Add(WordCell(w));
-            GrundtextInfo.Text = $"{Label(r)} · {(hebrew ? "Hebräisch (von rechts nach links)" : "Griechisch")}, {words.Count} Wörter. Wort anklicken: Wörterbuch.";
+            GrundtextInfo.Text = L("{0} · {1}, {2} Wörter. Wort anklicken: Wörterbuch.", Label(r), (hebrew ? "Hebräisch (von rechts nach links)" : "Griechisch"), words.Count);
             GrundtextSource.Text = HelloAoProvider.InterlinearAttribution + " · " + StrongsDictionary.Attribution;
             GrundtextCheckBtn.IsVisible = true;
         }
-        catch (Exception ex) { GrundtextInfo.Text = "Grundtext nicht verfügbar: " + ex.Message; }
+        catch (Exception ex) { GrundtextInfo.Text = L("Grundtext nicht verfügbar: ") + ex.Message; }
     }
 
     Control WordCell(InterlinearWord w)
@@ -96,18 +96,18 @@ public partial class MainWindow
         var head = new TextBlock { Text = $"{w.Text}  ·  {w.Translit}", FontSize = 20, FontFamily = UiSerif, TextWrapping = TextWrapping.Wrap, FlowDirection = FlowDirection.LeftToRight };
         head.Bind(TextBlock.ForegroundProperty, this.GetResourceObservable("BsAccent"));
         GrundtextDetail.Children.Add(head);
-        GrundtextDetail.Children.Add(new TextBlock { Text = $"Bedeutung hier: {(string.IsNullOrEmpty(w.Gloss) ? "–" : w.Gloss)}", TextWrapping = TextWrapping.Wrap });
-        GrundtextDetail.Children.Add(new TextBlock { Text = $"Grammatik: {(string.IsNullOrEmpty(w.ParsingFull) ? w.Parsing : w.ParsingFull)} ({w.Parsing})", TextWrapping = TextWrapping.Wrap });
+        GrundtextDetail.Children.Add(new TextBlock { Text = L("Bedeutung hier: {0}", (string.IsNullOrEmpty(w.Gloss) ? "–" : w.Gloss)), TextWrapping = TextWrapping.Wrap });
+        GrundtextDetail.Children.Add(new TextBlock { Text = L("Grammatik: {0} ({1})", (string.IsNullOrEmpty(w.ParsingFull) ? w.Parsing : w.ParsingFull), w.Parsing), TextWrapping = TextWrapping.Wrap });
         if (w.Strongs.Length > 1)
         {
             try
             {
                 if (await _strongs.LookupAsync(w.Strongs) is { } entry) GrundtextDetail.Children.Add(StudyCard(entry));
             }
-            catch (Exception ex) { GrundtextDetail.Children.Add(new TextBlock { Text = "Wörterbuch nicht verfügbar: " + ex.Message, TextWrapping = TextWrapping.Wrap }); }
-            var occurrences = new Button { Content = "Alle Vorkommen", Margin = new(0, 0, 8, 0) };
+            catch (Exception ex) { GrundtextDetail.Children.Add(new TextBlock { Text = L("Wörterbuch nicht verfügbar: ") + ex.Message, TextWrapping = TextWrapping.Wrap }); }
+            var occurrences = new Button { Content = L("Alle Vorkommen"), Margin = new(0, 0, 8, 0) };
             occurrences.Click += async (_, _) => await ShowConcordanceAsync(w.Strongs, $"{w.Strongs}  {w.Text}");
-            var deeper = new Button { Content = "Mit Claude vertiefen", Classes = { "primary" } };
+            var deeper = new Button { Content = L("Mit Claude vertiefen"), Classes = { "primary" } };
             deeper.Click += async (_, _) => await AskClaudeAboutWordAsync(w);
             GrundtextDetail.Children.Add(new StackPanel { Orientation = Avalonia.Layout.Orientation.Horizontal, Children = { occurrences, deeper } });
         }
@@ -118,7 +118,7 @@ public partial class MainWindow
         if (_grundtextRef is not { } r) return;
         var t = TranslationBox.SelectedItem as TranslationInfo;
         SideTabs.SelectedIndex = AiTab;
-        AiInput.Text = $"Analysiere das Wort „{w.Text}“ ({w.Translit}, {w.Strongs}, {w.ParsingFull}) in {Label(r)} genauer: Bedeutungsspektrum, Grammatik und ihre Bedeutung hier, wie das Wort an anderen Stellen verwendet und übersetzt wird " +
+        AiInput.Text = L("Analysiere das Wort „{0}“ ({1}, {2}, {3}) in {4} genauer: Bedeutungsspektrum, Grammatik und ihre Bedeutung hier, wie das Wort an anderen Stellen verwendet und übersetzt wird ", w.Text, w.Translit, w.Strongs, w.ParsingFull, Label(r)) +
                        $"(nutze get_strongs und get_word_occurrences mit eng_kjv) und ob {t?.Name} es hier treffend wiedergibt (get_passage, translation={t?.Id}). Genau und knapp.";
         await AiSendOrStopAsync();
     }
@@ -140,16 +140,16 @@ public partial class MainWindow
     {
         var query = StrongSearchBox.Text ?? "";
         if (string.IsNullOrWhiteSpace(query)) return;
-        StrongInfo.Text = "Suche …";
+        StrongInfo.Text = L("Suche …");
         try
         {
             _strongResults = (await _strongs.SearchAsync(query)).ToList();
             StrongList.ItemsSource = _strongResults.Select(e => new Entry(default, $"{e.Id}  {e.Lemma}  ({e.Translit})\n{Shorten((e.Definition.Length > 0 ? e.Definition : e.KjvUsage).Trim(), 90)}")).ToList();
-            StrongInfo.Text = _strongResults.Count == 0 ? "Nichts gefunden." : $"{_strongResults.Count} Treffer{(_strongResults.Count >= 60 ? " (erste 60)" : "")} · Treffer anklicken für Details";
+            StrongInfo.Text = _strongResults.Count == 0 ? L("Nichts gefunden.") : $"{_strongResults.Count} Treffer{(_strongResults.Count >= 60 ? " (erste 60)" : "")} · Treffer anklicken für Details";
             StrongDetail.Children.Clear();
             if (_strongResults.Count == 1) await ShowStrongDetailAsync(_strongResults[0]);
         }
-        catch (Exception ex) { StrongInfo.Text = "Wörterbuch nicht verfügbar: " + ex.Message; }
+        catch (Exception ex) { StrongInfo.Text = L("Wörterbuch nicht verfügbar: ") + ex.Message; }
     }
 
     Task ShowStrongDetailAsync(StrongsEntry e)
@@ -157,13 +157,13 @@ public partial class MainWindow
         StrongDetail.Children.Clear();
         StrongDetail.Children.Add(StudyCard(e));
         var padded = $"{e.Id[0]}{int.Parse(e.Id[1..]):D4}";
-        var occurrences = new Button { Content = "Alle Vorkommen", Margin = new(0, 0, 8, 0) };
+        var occurrences = new Button { Content = L("Alle Vorkommen"), Margin = new(0, 0, 8, 0) };
         occurrences.Click += async (_, _) => await ShowConcordanceAsync(padded, $"{e.Id}  {e.Lemma}");
-        var deeper = new Button { Content = "Mit Claude vertiefen" };
+        var deeper = new Button { Content = L("Mit Claude vertiefen") };
         deeper.Click += async (_, _) =>
         {
             SideTabs.SelectedIndex = AiTab;
-            AiInput.Text = $"Erkläre {e.Id} ({e.Lemma}, {e.Translit}) ausführlich: Bedeutungsspektrum, wichtige Stellen (get_word_occurrences mit eng_kjv) und wie es sich zu verwandten Wörtern verhält. Zitiere Verse nur aus den Werkzeugen.";
+            AiInput.Text = L("Erkläre {0} ({1}, {2}) ausführlich: Bedeutungsspektrum, wichtige Stellen (get_word_occurrences mit eng_kjv) und wie es sich zu verwandten Wörtern verhält. Zitiere Verse nur aus den Werkzeugen.", e.Id, e.Lemma, e.Translit);
             await AiSendOrStopAsync();
         };
         StrongDetail.Children.Add(new StackPanel { Orientation = Avalonia.Layout.Orientation.Horizontal, Children = { occurrences, deeper } });
@@ -175,7 +175,7 @@ public partial class MainWindow
         if (_grundtextRef is not { } r) return;
         var t = TranslationBox.SelectedItem as TranslationInfo;
         SideTabs.SelectedIndex = AiTab;
-        AiInput.Text = $"Prüfe Wort für Wort, ob die Übersetzung {t?.Name} ({t?.Id}) in {Label(r)} den Grundtext richtig und vollständig wiedergibt. " +
+        AiInput.Text = L("Prüfe Wort für Wort, ob die Übersetzung {0} ({1}) in {2} den Grundtext richtig und vollständig wiedergibt. ", t?.Name, t?.Id, Label(r)) +
                        $"Nutze get_interlinear und get_passage (translation={t?.Id}) und bei Bedarf get_strongs. Nenne Abweichungen, Nuancen und mögliche andere Wiedergaben, genau und knapp.";
         await AiSendOrStopAsync();
     }
@@ -184,7 +184,7 @@ public partial class MainWindow
 
     void ToggleSpeak()
     {
-        if (!OperatingSystem.IsWindows()) { StatusText.Text = "Vorlesen ist derzeit nur unter Windows verfügbar."; SpeakBtn.IsChecked = false; return; }
+        if (!OperatingSystem.IsWindows()) { StatusText.Text = L("Vorlesen ist derzeit nur unter Windows verfügbar."); SpeakBtn.IsChecked = false; return; }
         if (_speech is { State: SynthesizerState.Speaking }) { _speech.SpeakAsyncCancelAll(); SpeakBtn.IsChecked = false; return; }
         if (_curChapterData is null || TranslationBox.SelectedItem is not TranslationInfo t) { SpeakBtn.IsChecked = false; return; }
         var verses = _selected is int v ? _curChapterData.Verses.Where(x => x.Number == v) : _curChapterData.Verses;
@@ -199,11 +199,11 @@ public partial class MainWindow
             var culture = CultureInfo.GetCultures(CultureTypes.NeutralCultures).FirstOrDefault(c => c.ThreeLetterISOLanguageName == t.Language || c.Name == t.Language);
             if (culture is not null)
                 try { _speech.SelectVoiceByHints(VoiceGender.NotSet, VoiceAge.NotSet, 0, culture); }
-                catch (ArgumentException) { StatusText.Text = $"Keine Windows-Stimme für {t.LanguageName} installiert; es wird die Standardstimme genutzt."; }
+                catch (ArgumentException) { StatusText.Text = L("Keine Windows-Stimme für {0} installiert; es wird die Standardstimme genutzt.", t.LanguageName); }
             _speech.SpeakAsync(text);
             SpeakBtn.IsChecked = true;
         }
-        catch (Exception ex) { StatusText.Text = "Vorlesen nicht möglich: " + ex.Message; SpeakBtn.IsChecked = false; }
+        catch (Exception ex) { StatusText.Text = L("Vorlesen nicht möglich: ") + ex.Message; SpeakBtn.IsChecked = false; }
     }
 
     void OnSpeakCompleted(object? sender, SpeakCompletedEventArgs e) => Avalonia.Threading.Dispatcher.UIThread.Post(() => SpeakBtn.IsChecked = false);
@@ -214,7 +214,7 @@ public partial class MainWindow
     {
         var file = await StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
         {
-            Title = "Vault exportieren", SuggestedFileName = $"BibleStudy-{_vault.Name}-{DateTime.Now:yyyyMMdd}.zip",
+            Title = L("Vault exportieren"), SuggestedFileName = $"BibleStudy-{_vault.Name}-{DateTime.Now:yyyyMMdd}.zip",
             FileTypeChoices = [new FilePickerFileType("ZIP-Archiv") { Patterns = ["*.zip"] }],
         });
         if (file?.TryGetLocalPath() is not { } path) return;
@@ -232,9 +232,9 @@ public partial class MainWindow
                 using var writer = new StreamWriter(info.Open());
                 writer.Write($"BibleStudy vault \"{_vault.Name}\", exported {DateTime.Now:yyyy-MM-dd HH:mm}");
             }
-            BackupInfo.Text = $"Exportiert nach {path}";
+            BackupInfo.Text = L("Exportiert nach {0}", path);
         }
-        catch (Exception ex) { BackupInfo.Text = "Export fehlgeschlagen: " + ex.Message; }
+        catch (Exception ex) { BackupInfo.Text = L("Export fehlgeschlagen: ") + ex.Message; }
         finally { try { File.Delete(snapshot); } catch (IOException) { } }
     }
 
@@ -242,7 +242,7 @@ public partial class MainWindow
     {
         var files = await StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
         {
-            Title = "Vault importieren", AllowMultiple = false, FileTypeFilter = [new FilePickerFileType("ZIP-Archiv") { Patterns = ["*.zip"] }],
+            Title = L("Vault importieren"), AllowMultiple = false, FileTypeFilter = [new FilePickerFileType("ZIP-Archiv") { Patterns = ["*.zip"] }],
         });
         if (files.Count == 0 || files[0].TryGetLocalPath() is not { } path) return;
         try
@@ -265,8 +265,8 @@ public partial class MainWindow
                 }
             }
             await SwitchVaultAsync(name);
-            BackupInfo.Text = $"Importiert als neuer Vault „{name}“.";
+            BackupInfo.Text = L("Importiert als neuer Vault „{0}“.", name);
         }
-        catch (Exception ex) { BackupInfo.Text = "Import fehlgeschlagen: " + ex.Message; }
+        catch (Exception ex) { BackupInfo.Text = L("Import fehlgeschlagen: ") + ex.Message; }
     }
 }

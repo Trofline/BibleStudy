@@ -1,4 +1,4 @@
-using Avalonia;
+﻿using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Layout;
@@ -56,7 +56,7 @@ public partial class MainWindow
     async Task CreateVaultAsync()
     {
         var name = NewVaultBox.Text?.Trim() ?? "";
-        if (name.Length == 0 || name.IndexOfAny(Path.GetInvalidFileNameChars()) >= 0) { VaultInfo.Text = "Ungültiger Name (keine Sonderzeichen wie \\ / : * ? \" < > |)."; return; }
+        if (name.Length == 0 || name.IndexOfAny(Path.GetInvalidFileNameChars()) >= 0) { VaultInfo.Text = L("Ungültiger Name (keine Sonderzeichen wie \\ / : * ? \" < > |)."); return; }
         NewVaultBox.Text = "";
         await SwitchVaultAsync(name);
     }
@@ -68,7 +68,7 @@ public partial class MainWindow
         VaultBox.SelectedItem = _vault.Name;
         if (VaultQuickBox is not null) { VaultQuickBox.ItemsSource = VaultNames(); VaultQuickBox.SelectedItem = _vault.Name; }
         _vaultUiLoading = false;
-        VaultInfo.Text = $"Aktiver Vault: {_vault.Name}";
+        VaultInfo.Text = L("Aktiver Vault: {0}", _vault.Name);
         if (VaultTopText is not null) VaultTopText.Text = _vault.Name;
     }
 
@@ -132,7 +132,7 @@ public partial class MainWindow
         QueueNextBtn.Click += async (_, _) => await QueueNextAsync();
         QueueAddBtn.Click += (_, _) =>
         {
-            if (_selected is int v) AddToQueue([new VerseRef(_curBook, _curChapter, v)]); else StatusText.Text = "Erst einen Vers anklicken.";
+            if (_selected is int v) AddToQueue([new VerseRef(_curBook, _curChapter, v)]); else StatusText.Text = L("Erst einen Vers anklicken.");
         };
         QueueRemoveBtn.Click += (_, _) => { if (QueueList.SelectedItem is Entry { Id: long id }) { _vault.RemoveFromQueue(id); RefreshQueue(); } };
         QueueClearBtn.Click += (_, _) => { _vault.ClearQueue(); RefreshQueue(); };
@@ -186,7 +186,7 @@ public partial class MainWindow
         var text = cell.RawText[start..end];
         if (string.IsNullOrWhiteSpace(text)) return;
         _selection = (cell.Verse, cell.TranslationId, start, end, text);
-        StatusText.Text = $"Ausgewählt: „{Shorten(text, 60)}“ · Farbe über den Marker-Knopf wählen";
+        StatusText.Text = L("Ausgewählt: „{0}“ · Farbe über den Marker-Knopf wählen", Shorten(text, 60));
     }
 
     async Task ApplyColorAsync(string hex)
@@ -210,7 +210,7 @@ public partial class MainWindow
             foreach (var m in _chapterMarks.Where(m => m.WholeVerse && m.Ref.Verse == v)) _vault.DeleteMark(m.Id);
             _vault.AddMark(Mark.AnyTranslation, r, -1, -1, VerseTextOf(v), hex, "", null, AutoTags(r));
         }
-        else { StatusText.Text = "Erst Text auswählen oder einen Vers anklicken."; return; }
+        else { StatusText.Text = L("Erst Text auswählen oder einen Vers anklicken."); return; }
         RefreshCollection();
         await ShowChapterAsync(_selected);
     }
@@ -221,7 +221,7 @@ public partial class MainWindow
             ? _chapterMarks.Where(m => !m.WholeVerse && m.Ref.Verse == s.Verse && m.TranslationId == s.TranslationId && m.Start < s.End && m.End > s.Start)
             : _selected is int v ? _chapterMarks.Where(m => m.Ref.Verse == v) : [];
         var list = victims.ToList();
-        if (list.Count == 0) { StatusText.Text = "Nichts zum Entfernen ausgewählt."; return; }
+        if (list.Count == 0) { StatusText.Text = L("Nichts zum Entfernen ausgewählt."); return; }
         foreach (var m in list) _vault.DeleteMark(m.Id);
         _selection = null;
         RefreshCollection();
@@ -231,7 +231,7 @@ public partial class MainWindow
     /// <summary>Quick save of the whole clicked verse in the default color; again removes it.</summary>
     void ToggleBookmark()
     {
-        if (_selected is not int v) { StatusText.Text = "Erst einen Vers anklicken."; return; }
+        if (_selected is not int v) { StatusText.Text = L("Erst einen Vers anklicken."); return; }
         var existing = _chapterMarks.Where(m => m.WholeVerse && m.Ref.Verse == v).ToList();
         if (existing.Count > 0) foreach (var m in existing) _vault.DeleteMark(m.Id);
         else
@@ -274,9 +274,9 @@ public partial class MainWindow
         void Update() => preview.Background = new SolidColorBrush(Avalonia.Media.Color.Parse(Current()));
         sr.ValueChanged += (_, _) => Update(); sg.ValueChanged += (_, _) => Update(); sb.ValueChanged += (_, _) => Update();
         Update();
-        var panel = new StackPanel { IsVisible = startOpen, Spacing = 2, Children = { new TextBlock { Text = "Rot · Grün · Blau", Classes = { "caption" } }, sr, sg, sb, preview } };
-        var open = new Button { Content = "＋ Eigene Farbe …", IsVisible = !startOpen };
-        var apply = new Button { Content = "Farbe verwenden und speichern", Classes = { "primary" }, IsVisible = startOpen };
+        var panel = new StackPanel { IsVisible = startOpen, Spacing = 2, Children = { new TextBlock { Text = L("Rot · Grün · Blau"), Classes = { "caption" } }, sr, sg, sb, preview } };
+        var open = new Button { Content = L("＋ Eigene Farbe …"), IsVisible = !startOpen };
+        var apply = new Button { Content = L("Farbe verwenden und speichern"), Classes = { "primary" }, IsVisible = startOpen };
         open.Click += (_, _) => { panel.IsVisible = true; apply.IsVisible = true; open.IsVisible = false; };
         apply.Click += (_, _) =>
         {
@@ -301,7 +301,7 @@ public partial class MainWindow
         foreach (var hex in PresetColors.Concat(_settings.CustomColors)) swatches.Children.Add(Swatch(hex, Pick));
         var picker = BuildRgbPicker(Pick, out var custom, out var apply);
         var error = new TextBlock { Classes = { "caption" } };
-        var remove = new Button { Content = "Markierung entfernen" };
+        var remove = new Button { Content = L("Markierung entfernen") };
         remove.Click += (_, _) => { flyout.Hide(); _ = RemoveMarksAsync(); };
         flyout.Content = new StackPanel
         {
@@ -465,22 +465,22 @@ public partial class MainWindow
         var list = refs.ToList();
         _vault.AddToQueue(list.Select(r => (r, Label(r))));
         RefreshQueue();
-        QueueInfo.Text = $"{list.Count} hinzugefügt · {_vault.GetQueue().Count} auf der Leseliste";
+        QueueInfo.Text = L("{0} hinzugefügt · {1} auf der Leseliste", list.Count, _vault.GetQueue().Count);
     }
 
     void RefreshQueue()
     {
         var items = _vault.GetQueue();
         QueueList.ItemsSource = items.Select(q => new Entry(q.Ref, q.Label, q.Id)).ToList();
-        QueueInfo.Text = items.Count == 0 ? "Die Leseliste ist leer. Füge Verse über „Vers hinzufügen“ hinzu oder schicke Suchergebnisse und Querverweise hierher; „Nächster“ springt dann der Reihe nach durch." : $"{items.Count} Verse auf der Leseliste";
+        QueueInfo.Text = items.Count == 0 ? L("Die Leseliste ist leer. Füge Verse über „Vers hinzufügen“ hinzu oder schicke Suchergebnisse und Querverweise hierher; „Nächster“ springt dann der Reihe nach durch.") : $"{items.Count} Verse auf der Leseliste";
     }
 
     async Task QueueNextAsync()
     {
-        if (_vault.GetQueue().FirstOrDefault() is not { } first) { QueueInfo.Text = "Die Leseliste ist leer."; return; }
+        if (_vault.GetQueue().FirstOrDefault() is not { } first) { QueueInfo.Text = L("Die Leseliste ist leer."); return; }
         _vault.RemoveFromQueue(first.Id);
         RefreshQueue();
-        QueueInfo.Text = $"Jetzt: {first.Label} · noch {_vault.GetQueue().Count} offen";
+        QueueInfo.Text = L("Jetzt: {0} · noch {1} offen", first.Label, _vault.GetQueue().Count);
         await GoToAsync(first.Ref.Book, first.Ref.Chapter, first.Ref.Verse);
     }
 
@@ -499,7 +499,7 @@ public partial class MainWindow
     void RefreshTodos()
     {
         TodoPanel.Children.Clear();
-        if (_vault.GetTodos().Count == 0) TodoPanel.Children.Add(new TextBlock { Text = "Noch keine Aufgaben. Schreibe oben eine hinein, z. B. „Römer 8 vergleichen“; auf Wunsch hängt sie den angeklickten Vers an.", TextWrapping = TextWrapping.Wrap, Opacity = 0.65, Margin = new(2, 8) });
+        if (_vault.GetTodos().Count == 0) TodoPanel.Children.Add(new TextBlock { Text = L("Noch keine Aufgaben. Schreibe oben eine hinein, z. B. „Römer 8 vergleichen“; auf Wunsch hängt sie den angeklickten Vers an."), TextWrapping = TextWrapping.Wrap, Opacity = 0.65, Margin = new(2, 8) });
         foreach (var t in _vault.GetTodos())
         {
             var id = t.Id;
@@ -507,7 +507,7 @@ public partial class MainWindow
             var check = new CheckBox { IsChecked = t.Done, Content = label, VerticalAlignment = VerticalAlignment.Center };
             check.IsCheckedChanged += (_, _) => { _vault.SetTodoDone(id, check.IsChecked == true); RefreshTodos(); };
             var delete = new Button { Classes = { "tool" }, Width = 28, Height = 28, Content = new Icon { Data = Geometry.Parse("M18 6L6 18 M6 6l12 12"), IconSize = 14 } };
-            ToolTip.SetTip(delete, "Aufgabe löschen");
+            ToolTip.SetTip(delete, L("Aufgabe löschen"));
             delete.Click += (_, _) => { _vault.DeleteTodo(id); RefreshTodos(); };
             var row = new DockPanel();
             DockPanel.SetDock(delete, Dock.Right);

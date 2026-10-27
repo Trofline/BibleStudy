@@ -1,4 +1,4 @@
-using Avalonia;
+﻿using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Media;
@@ -151,14 +151,14 @@ public partial class MainWindow
 
     void SetAutostart(bool on)
     {
-        if (!OperatingSystem.IsWindows()) { StatusText.Text = "Autostart wird derzeit nur unter Windows unterstützt."; return; }
+        if (!OperatingSystem.IsWindows()) { StatusText.Text = L("Autostart wird derzeit nur unter Windows unterstützt."); return; }
         try
         {
             using var k = Microsoft.Win32.Registry.CurrentUser.OpenSubKey(RunKey, writable: true);
             if (on && Environment.ProcessPath is { } exe && !exe.EndsWith("dotnet.exe", StringComparison.OrdinalIgnoreCase)) k?.SetValue("BibleStudy", $"\"{exe}\"");
-            else if (on) { StatusText.Text = "Autostart geht nur mit der fertig gebauten Programmdatei (BibleStudy.exe), nicht beim Start über „dotnet run“."; StartWithWindowsCheck.IsChecked = false; }
+            else if (on) { StatusText.Text = L("Autostart geht nur mit der fertig gebauten Programmdatei (BibleStudy.exe), nicht beim Start über „dotnet run“."); StartWithWindowsCheck.IsChecked = false; }
             else k?.DeleteValue("BibleStudy", throwOnMissingValue: false);
         }
-        catch (Exception ex) { StatusText.Text = "Autostart nicht änderbar: " + ex.Message; }
+        catch (Exception ex) { StatusText.Text = L("Autostart nicht änderbar: ") + ex.Message; }
     }
 }

@@ -1,4 +1,4 @@
-using Avalonia;
+﻿using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Media;
@@ -106,11 +106,11 @@ public partial class MainWindow
             var kjv = _all.FirstOrDefault(x => x.Id == "eng_kjv");
             if (kjv is not null && !_extras.Any(e => e.Translation?.Id == kjv.Id) && _extras.Count < MaxExtras)
             {
-                StatusText.Text = $"Wortstudie: {t.ShortName} hat keine Strong-Nummern. Die KJV wurde als Spalte hinzugefügt; dort sind die Wörter anklickbar.";
+                StatusText.Text = L("Wortstudie: {0} hat keine Strong-Nummern. Die KJV wurde als Spalte hinzugefügt; dort sind die Wörter anklickbar.", t.ShortName);
                 AddColumn(kjv);
                 return;
             }
-            StatusText.Text = $"Wortstudie: {t.ShortName} hat keine Strong-Nummern. Nutze eine Spalte mit KJV (Parallel +).";
+            StatusText.Text = L("Wortstudie: {0} hat keine Strong-Nummern. Nutze eine Spalte mit KJV (Parallel +).", t.ShortName);
         }
         await ShowChapterAsync(_selected);
     }
@@ -132,8 +132,8 @@ public partial class MainWindow
     void ShowViewFlyout()
     {
         var flyout = new Flyout { Placement = PlacementMode.BottomEdgeAlignedRight };
-        var inText = new CheckBox { Content = "Querverweise im Text", IsChecked = _xrefInText };
-        var thread = new CheckBox { Content = "Graph neben dem Text (eine Spalte)", IsChecked = _threadOn };
+        var inText = new CheckBox { Content = L("Querverweise im Text"), IsChecked = _xrefInText };
+        var thread = new CheckBox { Content = L("Graph neben dem Text (eine Spalte)"), IsChecked = _threadOn };
         inText.IsCheckedChanged += async (_, _) =>
         {
             _xrefInText = inText.IsChecked == true; _settings.XrefInText = _xrefInText; SaveSettings();
@@ -241,7 +241,7 @@ public partial class MainWindow
         _graphBuilding = true;
         try
         {
-            var progress = new Progress<(int Done, int Total)>(p => { GraphPane.ReportProgress(p.Done, p.Total); StatusText.Text = $"Querverweise werden geladen … {p.Done}/{p.Total}"; });
+            var progress = new Progress<(int Done, int Total)>(p => { GraphPane.ReportProgress(p.Done, p.Total); StatusText.Text = L("Querverweise werden geladen … {0}/{1}", p.Done, p.Total); });
             _graph = await Task.Run(() => CrossRefGraphBuilder.BuildAsync(_hello, progress));
             GraphPane.SetGraph(_graph, BookName);
             StatusText.Text = "";

@@ -1,4 +1,4 @@
-using Avalonia;
+﻿using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Layout;
@@ -23,12 +23,12 @@ public partial class MainWindow
     void BuildPrayerUi()
     {
         PrayerPanel.Children.Clear();
-        PrayerPanel.Children.Add(new TextBlock { Text = "GEBETSLISTE", Classes = { "eyebrow" } });
+        PrayerPanel.Children.Add(new TextBlock { Text = L("GEBETSLISTE"), Classes = { "eyebrow" } });
 
-        var box = new TextBox { Watermark = "Wofür möchtest du beten oder danken?", AcceptsReturn = true, TextWrapping = TextWrapping.Wrap, MinHeight = 64 };
-        var withVerse = new CheckBox { Content = _selected is int v ? $"Mit {BookName(_curBook)} {_curChapter},{v} verbinden" : "Mit dem angeklickten Vers verbinden", IsChecked = _prayerWithVerse && _selected is not null, IsEnabled = _selected is not null };
+        var box = new TextBox { Watermark = L("Wofür möchtest du beten oder danken?"), AcceptsReturn = true, TextWrapping = TextWrapping.Wrap, MinHeight = 64 };
+        var withVerse = new CheckBox { Content = _selected is int v ? L("Mit {0} {1},{2} verbinden", BookName(_curBook), _curChapter, v) : "Mit dem angeklickten Vers verbinden", IsChecked = _prayerWithVerse && _selected is not null, IsEnabled = _selected is not null };
         withVerse.IsCheckedChanged += (_, _) => _prayerWithVerse = withVerse.IsChecked == true;
-        var add = new Button { Content = "Anliegen hinzufügen", Classes = { "primary" }, HorizontalAlignment = HorizontalAlignment.Left };
+        var add = new Button { Content = L("Anliegen hinzufügen"), Classes = { "primary" }, HorizontalAlignment = HorizontalAlignment.Left };
         void Commit()
         {
             var text = box.Text?.Trim() ?? "";
@@ -44,13 +44,13 @@ public partial class MainWindow
         var open = all.Where(p => p.Answered is null).ToList();
         var done = all.Where(p => p.Answered is not null).ToList();
 
-        PrayerPanel.Children.Add(new TextBlock { Text = $"OFFEN ({open.Count})", Classes = { "eyebrow" }, Margin = new(0, 10, 0, 0) });
-        if (open.Count == 0) PrayerPanel.Children.Add(new TextBlock { Text = "Noch keine Anliegen. Schreibe oben das erste auf; Strg+Enter fügt es hinzu.", Classes = { "caption" }, TextWrapping = TextWrapping.Wrap });
+        PrayerPanel.Children.Add(new TextBlock { Text = L("OFFEN ({0})", open.Count), Classes = { "eyebrow" }, Margin = new(0, 10, 0, 0) });
+        if (open.Count == 0) PrayerPanel.Children.Add(new TextBlock { Text = L("Noch keine Anliegen. Schreibe oben das erste auf; Strg+Enter fügt es hinzu."), Classes = { "caption" }, TextWrapping = TextWrapping.Wrap });
         foreach (var p in open) PrayerPanel.Children.Add(PrayerCard(p));
 
         if (done.Count > 0)
         {
-            PrayerPanel.Children.Add(new TextBlock { Text = $"ERHÖRT UND ERLEDIGT ({done.Count})", Classes = { "eyebrow" }, Margin = new(0, 10, 0, 0) });
+            PrayerPanel.Children.Add(new TextBlock { Text = L("ERHÖRT UND ERLEDIGT ({0})", done.Count), Classes = { "eyebrow" }, Margin = new(0, 10, 0, 0) });
             foreach (var p in done) PrayerPanel.Children.Add(PrayerCard(p));
         }
     }
@@ -61,7 +61,7 @@ public partial class MainWindow
         var text = new TextBlock { Text = p.Text, TextWrapping = TextWrapping.Wrap, Opacity = isDone ? 0.7 : 1 };
         var meta = new TextBlock
         {
-            Text = isDone ? $"Aufgeschrieben {p.Created:dd.MM.yyyy} · erhört {p.Answered:dd.MM.yyyy}" : $"Aufgeschrieben {p.Created:dd.MM.yyyy} ({Ago(p.Created)})",
+            Text = isDone ? L("Aufgeschrieben {0:dd.MM.yyyy} · erhört {1:dd.MM.yyyy}", p.Created, p.Answered) : $"Aufgeschrieben {p.Created:dd.MM.yyyy} ({Ago(p.Created)})",
             Classes = { "caption" },
         };
         var row = new WrapPanel();
@@ -71,17 +71,17 @@ public partial class MainWindow
             row.Children.Add(chip);
         }
         var panel = new StackPanel { Spacing = 4, Children = { text, meta, row } };
-        if (isDone && p.Note.Length > 0) panel.Children.Insert(2, new TextBlock { Text = "Notiz: " + p.Note, TextWrapping = TextWrapping.Wrap, FontStyle = FontStyle.Italic });
+        if (isDone && p.Note.Length > 0) panel.Children.Insert(2, new TextBlock { Text = L("Notiz: ") + p.Note, TextWrapping = TextWrapping.Wrap, FontStyle = FontStyle.Italic });
 
         var actions = new WrapPanel { Margin = new(0, 4, 0, 0) };
         if (!isDone)
         {
-            var answered = new Button { Content = "✓ Erhört" };
+            var answered = new Button { Content = L("✓ Erhört") };
             answered.Click += (_, _) =>
             {
-                var note = new TextBox { Watermark = "Wie wurde das Gebet erhört? (optional)", AcceptsReturn = true, TextWrapping = TextWrapping.Wrap, MinHeight = 56, Width = 300 };
-                var save = new Button { Content = "Als erhört speichern", Classes = { "primary" }, Margin = new(0, 6, 0, 0) };
-                var fly = new Flyout { Content = new StackPanel { Children = { new TextBlock { Text = "Gebet erhört", FontWeight = FontWeight.SemiBold, Margin = new(0, 0, 0, 6) }, note, save } } };
+                var note = new TextBox { Watermark = L("Wie wurde das Gebet erhört? (optional)"), AcceptsReturn = true, TextWrapping = TextWrapping.Wrap, MinHeight = 56, Width = 300 };
+                var save = new Button { Content = L("Als erhört speichern"), Classes = { "primary" }, Margin = new(0, 6, 0, 0) };
+                var fly = new Flyout { Content = new StackPanel { Children = { new TextBlock { Text = L("Gebet erhört"), FontWeight = FontWeight.SemiBold, Margin = new(0, 0, 0, 6) }, note, save } } };
                 save.Click += (_, _) => { _vault.SetPrayerAnswered(p.Id, true, note.Text?.Trim() ?? ""); fly.Hide(); BuildPrayerUi(); };
                 fly.ShowAt(answered);
             };
@@ -89,15 +89,15 @@ public partial class MainWindow
         }
         else
         {
-            var reopen = new Button { Content = "Wieder öffnen" };
+            var reopen = new Button { Content = L("Wieder öffnen") };
             reopen.Click += (_, _) => { _vault.SetPrayerAnswered(p.Id, false); BuildPrayerUi(); };
             actions.Children.Add(reopen);
         }
-        var del = new Button { Content = "Löschen", Classes = { "tool" }, Width = double.NaN, Padding = new(10, 0) };
+        var del = new Button { Content = L("Löschen"), Classes = { "tool" }, Width = double.NaN, Padding = new(10, 0) };
         del.Click += (_, _) =>
         {
-            var yes = new Button { Content = "Wirklich löschen", Classes = { "primary" } };
-            var fly = new Flyout { Content = new StackPanel { Spacing = 6, Children = { new TextBlock { Text = "Dieses Anliegen endgültig löschen?" }, yes } } };
+            var yes = new Button { Content = L("Wirklich löschen"), Classes = { "primary" } };
+            var fly = new Flyout { Content = new StackPanel { Spacing = 6, Children = { new TextBlock { Text = L("Dieses Anliegen endgültig löschen?") }, yes } } };
             yes.Click += (_, _) => { _vault.DeletePrayer(p.Id); fly.Hide(); BuildPrayerUi(); };
             fly.ShowAt(del);
         };

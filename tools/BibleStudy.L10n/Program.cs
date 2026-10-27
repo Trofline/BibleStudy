@@ -13,6 +13,7 @@ var src = args.Length > 1 ? Path.GetFullPath(args[1]) : Directory.GetCurrentDire
 switch (cmd)
 {
     case "wrap": Wrap(src); break;
+    case "wrapfiles": WrapFiles(src, args.Skip(2).ToArray()); break;
     case "list": List(src, args.Skip(2).ToArray()); break;
     case "keys": foreach (var k in Extractor.AllKeys(src).Order()) Console.WriteLine(k.Replace("\n", "\\n")); break;
     case "check": Check(src, args.Length > 2 ? args[2] : ""); break;
@@ -106,4 +107,56 @@ static void Check(string src, string langDir)
         var unused = map.Keys.Where(k => !k.StartsWith('@') && !keys.Contains(k)).ToList();
         Console.WriteLine($"{code}: {missing.Count} missing, {unused.Count} unused");
     }
+}
+
+static bool UiLike(string staticText)
+{
+    var c = staticText;
+    if (c.Length < 2 || !Extractor.HasLetters(c)) return false;
+    if (Regex.IsMatch(c, @"^[MmLlHhVvCcSsZzAa0-9 .,\-]+$")) return false;                 // svg path data
+    if (Regex.IsMatch(c.Trim(), @"^[A-Za-z0-9]+(\+[A-Za-z0-9]+)+\+?$") || c is "Ctrl+" or "Alt+" or "Shift+") return false;   // key gestures
+    if (c.Contains("\p{") || c.Contains("(?<") || c.StartsWith('^') || c.Contains("://") || c.StartsWith("avares") || c.StartsWith('#') || c.StartsWith('<') || c.StartsWith("</")) return false;
+    if (Regex.IsMatch(c, @"^\s*(SELECT|INSERT|UPDATE|DELETE|CREATE|PRAGMA|ALTER|DROP|WITH|VACUUM)\b", RegexOptions.IgnoreCase)) return false;
+    if (Regex.IsMatch(c, @"^[A-Za-z0-9_.\-/\:*|=;,]+$")) return false;                    // identifiers, paths, ids (no spaces, no umlauts)
+    return true;
+}
+
+static void WrapFiles(string src, string[] names)
+{
+    int wrapped = 0;
+    foreach (var file in SourceFiles(src))
+    {
+        if (!names.Any(n => Path.GetFileName(file).Equals(n, StringComparison.OrdinalIgnoreCase))) continue;
+        var text = File.ReadAllText(file);
+        var sb = new StringBuilder(); var pos = 0; var changed = 0;
+        foreach (var l in Extractor.Lex(text))
+        {
+            if (l.Raw || l.Verbatim || IsAlreadyWrapped(text, l.Start)) continue;
+            // string in a const declaration or a case label cannot be a method call
+            var lineStart = text.LastIndexOf('\n', Math.Max(0, l.Start - 1)) + 1;
+            var prefix = text[lineStart..l.Start];
+            if (Regex.IsMatch(prefix, @"\bconst\b|\bcase\s*$|\bnameof\b")) continue;
+            string replacement;
+            if (l.Interpolated)
+            {
+                var split = Extractor.SplitInterpolated(l.Content);
+                if (split is null) continue;
+                var (fmt, a) = split.Value;
+                var stat = Regex.Replace(fmt, @"\{\d+[^}]*\}", "");
+                if (!UiLike(stat)) continue;
+                replacement = $"L(\"{fmt}\"" + string.Concat(a.Select(x => ", " + x)) + ")";
+            }
+            else
+            {
+                if (!UiLike(l.Content)) continue;
+                replacement = $"L(\"{l.Content}\")";
+            }
+            sb.Append(text, pos, l.Start - pos).Append(replacement); pos = l.End; changed++;
+        }
+        if (changed == 0) continue;
+        sb.Append(text, pos, text.Length - pos);
+        File.WriteAllText(file, sb.ToString(), new UTF8Encoding(true));
+        wrapped += changed; Console.WriteLine($"{Path.GetFileName(file)}: {changed}");
+    }
+    Console.WriteLine($"wrapped {wrapped} more texts");
 }

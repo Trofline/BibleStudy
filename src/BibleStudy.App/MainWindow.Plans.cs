@@ -1,4 +1,4 @@
-using Avalonia;
+﻿using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Layout;
 using Avalonia.Media;
@@ -42,16 +42,16 @@ public partial class MainWindow
     void BuildPlanUi()
     {
         PlanPanel.Children.Clear();
-        if (_books.Count == 0) { PlanPanel.Children.Add(new TextBlock { Text = "Bücher werden noch geladen …", Classes = { "caption" } }); return; }
-        PlanPanel.Children.Add(new TextBlock { Text = "LESEPLÄNE", Classes = { "eyebrow" } });
+        if (_books.Count == 0) { PlanPanel.Children.Add(new TextBlock { Text = L("Bücher werden noch geladen …"), Classes = { "caption" } }); return; }
+        PlanPanel.Children.Add(new TextBlock { Text = L("LESEPLÄNE"), Classes = { "eyebrow" } });
         var plan = Plans.FirstOrDefault(p => p.Id == _settings.PlanId);
         if (plan is null || !DateTime.TryParse(_settings.PlanStart, System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.None, out var start))
         {
-            PlanPanel.Children.Add(new TextBlock { Text = "Wähle einen Plan. Er verteilt die Kapitel gleichmäßig auf die Tage; gelesen ist ein Kapitel, sobald du es als „Gelesen“ markierst – egal wo du liest.", TextWrapping = TextWrapping.Wrap, Classes = { "caption" } });
+            PlanPanel.Children.Add(new TextBlock { Text = L("Wähle einen Plan. Er verteilt die Kapitel gleichmäßig auf die Tage; gelesen ist ein Kapitel, sobald du es als „Gelesen“ markierst – egal wo du liest."), TextWrapping = TextWrapping.Wrap, Classes = { "caption" } });
             foreach (var p in Plans)
             {
                 var pl = p;
-                var btn = new Button { HorizontalAlignment = HorizontalAlignment.Stretch, HorizontalContentAlignment = HorizontalAlignment.Left, Padding = new(14, 10), Content = new StackPanel { Children = { new TextBlock { Text = p.Name, FontWeight = FontWeight.SemiBold }, new TextBlock { Text = $"{p.About} · {p.Days} Tage", Classes = { "caption" } } } } };
+                var btn = new Button { HorizontalAlignment = HorizontalAlignment.Stretch, HorizontalContentAlignment = HorizontalAlignment.Left, Padding = new(14, 10), Content = new StackPanel { Children = { new TextBlock { Text = p.Name, FontWeight = FontWeight.SemiBold }, new TextBlock { Text = L("{0} · {1} Tage", p.About, p.Days), Classes = { "caption" } } } } };
                 btn.Click += (_, _) => { _settings.PlanId = pl.Id; _settings.PlanStart = DateTime.Today.ToString("yyyy-MM-dd"); _settings.PlanDoneDays = []; _planDayShown = 0; SaveSettings(); BuildPlanUi(); };
                 PlanPanel.Children.Add(btn);
             }
@@ -70,7 +70,7 @@ public partial class MainWindow
         PlanPanel.Children.Add(new ProgressBar { Minimum = 0, Maximum = Math.Max(1, all.Count), Value = readCount, Height = 8 });
         PlanPanel.Children.Add(new TextBlock
         {
-            Text = $"{readCount} von {all.Count} Kapiteln gelesen ({100 * readCount / Math.Max(1, all.Count)} %) · Tag {Math.Min(today, plan.Days)} von {plan.Days} · "
+            Text = L("{0} von {1} Kapiteln gelesen ({2} %) · Tag {3} von {4} · ", readCount, all.Count, 100 * readCount / Math.Max(1, all.Count), Math.Min(today, plan.Days), plan.Days)
                  + (today > plan.Days ? "Plan abgeschlossen oder überfällig" : behind == 0 ? "im Plan" : $"{behind} Kapitel im Rückstand") + $" · Serie: {PlanStreak()} Tage",
             Classes = { "caption" }, TextWrapping = TextWrapping.Wrap,
         });
@@ -81,7 +81,7 @@ public partial class MainWindow
         next.Click += (_, _) => { _planDayShown = Math.Min(plan.Days, day + 1); BuildPlanUi(); };
         DockPanel.SetDock(prev, Dock.Left); DockPanel.SetDock(next, Dock.Right);
         nav.Children.Add(prev); nav.Children.Add(next);
-        nav.Children.Add(new TextBlock { Text = $"Tag {day}" + (day == Math.Min(today, plan.Days) ? " (heute)" : "") + $" · {start.AddDays(day - 1):dd.MM.yyyy}", HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Center, FontWeight = FontWeight.SemiBold });
+        nav.Children.Add(new TextBlock { Text = L("Tag {0}", day) + (day == Math.Min(today, plan.Days) ? " (heute)" : "") + $" · {start.AddDays(day - 1):dd.MM.yyyy}", HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Center, FontWeight = FontWeight.SemiBold });
         PlanPanel.Children.Add(nav);
 
         var chapters = PlanDay(plan, day);
@@ -98,7 +98,7 @@ public partial class MainWindow
         PlanPanel.Children.Add(list);
 
         var allDone = chapters.All(c => _read.Contains(c));
-        var finish = new Button { Content = allDone ? "Tag erledigt ✓" : "Alle Kapitel dieses Tages als gelesen markieren", Classes = { "primary" }, HorizontalAlignment = HorizontalAlignment.Stretch };
+        var finish = new Button { Content = allDone ? L("Tag erledigt ✓") : "Alle Kapitel dieses Tages als gelesen markieren", Classes = { "primary" }, HorizontalAlignment = HorizontalAlignment.Stretch };
         finish.Click += (_, _) =>
         {
             foreach (var g in chapters.GroupBy(c => c.Book)) SetRead(g.Key, g.Select(c => c.Chapter).ToList(), true);
@@ -108,7 +108,7 @@ public partial class MainWindow
         };
         PlanPanel.Children.Add(finish);
 
-        var reset = new Button { Content = "Plan beenden / anderen wählen", HorizontalAlignment = HorizontalAlignment.Left };
+        var reset = new Button { Content = L("Plan beenden / anderen wählen"), HorizontalAlignment = HorizontalAlignment.Left };
         reset.Click += (_, _) => { _settings.PlanId = null; _settings.PlanStart = null; _planDayShown = 0; SaveSettings(); BuildPlanUi(); };
         PlanPanel.Children.Add(reset);
     }

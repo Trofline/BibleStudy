@@ -1,4 +1,4 @@
-using Avalonia.Platform.Storage;
+﻿using Avalonia.Platform.Storage;
 using BibleStudy.Core.Import;
 using BibleStudy.Core.Models;
 
@@ -28,7 +28,7 @@ public partial class MainWindow
         if (_importing) return;
         var files = await StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
         {
-            Title = "Bibeldatei wählen", AllowMultiple = false,
+            Title = L("Bibeldatei wählen"), AllowMultiple = false,
             FileTypeFilter = [new FilePickerFileType("Bibeldateien") { Patterns = ["*.bblx", "*.xml", "*.html", "*.htm"] }],
         });
         if (files.Count == 0 || files[0].TryGetLocalPath() is not { } path) return;
@@ -43,18 +43,18 @@ public partial class MainWindow
         var progress = new Progress<string>(m => ImportBibleInfo.Text = m);
         try
         {
-            ImportBibleInfo.Text = "Datei wird gelesen …";
+            ImportBibleInfo.Text = L("Datei wird gelesen …");
             var bible = await Task.Run(() => BibleImporters.Read(path, language, progress));
             if (bible.Verses.Count == 0) throw new InvalidDataException("Keine Verse gefunden.");
-            ImportBibleInfo.Text = $"{bible.Verses.Count} Verse gelesen, werden gespeichert …";
+            ImportBibleInfo.Text = L("{0} Verse gelesen, werden gespeichert …", bible.Verses.Count);
             var id = await Task.Run(() => _local.Save(bible));
             _store.ForgetTranslation(id); _corpora.Remove(id); _strongIndexes.Remove(id);   // text changed: rebuild search index and concordance on demand
             await RefreshLocalBibleBoxAsync();
             await ReloadTranslationsAsync(id);
-            ImportBibleInfo.Text = $"„{bible.Name}“ importiert: {bible.Verses.Count} Verse, {bible.Footnotes.Count} Fußnoten. Sie steht jetzt in der Übersetzungsliste ({bible.ShortName}).";
+            ImportBibleInfo.Text = L("„{0}“ importiert: {1} Verse, {2} Fußnoten. Sie steht jetzt in der Übersetzungsliste ({3}).", bible.Name, bible.Verses.Count, bible.Footnotes.Count, bible.ShortName);
             return ImportBibleInfo.Text;
         }
-        catch (Exception ex) { ImportBibleInfo.Text = "Import fehlgeschlagen: " + ex.Message; return ImportBibleInfo.Text; }
+        catch (Exception ex) { ImportBibleInfo.Text = L("Import fehlgeschlagen: ") + ex.Message; return ImportBibleInfo.Text; }
         finally { _importing = false; ImportBibleBtn.IsEnabled = true; }
     }
 
@@ -63,7 +63,7 @@ public partial class MainWindow
         if (LocalBibleBox.SelectedItem is not TranslationInfo t) return;
         _local.Remove(t.Id);
         await RefreshLocalBibleBoxAsync();
-        ImportBibleInfo.Text = $"„{t.Name}“ wurde aus der Anwendung entfernt (deine Originaldatei bleibt unberührt).";
+        ImportBibleInfo.Text = L("„{0}“ wurde aus der Anwendung entfernt (deine Originaldatei bleibt unberührt).", t.Name);
         await ReloadTranslationsAsync(null);
     }
 

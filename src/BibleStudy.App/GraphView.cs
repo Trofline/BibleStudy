@@ -1,4 +1,4 @@
-using System.Globalization;
+﻿using System.Globalization;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
@@ -24,11 +24,11 @@ public sealed class GraphView : UserControl
 
     readonly NetworkCanvas _net = new();
     readonly ArcCanvas _arc = new();
-    readonly ToggleButton _netBtn = new() { Content = "Netzwerk", IsChecked = true };
-    readonly ToggleButton _arcBtn = new() { Content = "Bogen" };
+    readonly ToggleButton _netBtn = new() { Content = L("Netzwerk"), IsChecked = true };
+    readonly ToggleButton _arcBtn = new() { Content = L("Bogen") };
     readonly ComboBox _dirBox = new() { ItemsSource = new[] { "Von hier", "Hierher", "Beide" }, SelectedIndex = 2, Width = 110 };
     readonly Slider _countSlider = new() { Minimum = 4, Maximum = 40, Value = 14, Width = 140, TickFrequency = 1, IsSnapToTickEnabled = true };
-    readonly TextBlock _countLabel = new() { Text = "Anzahl 14" };
+    readonly TextBlock _countLabel = new() { Text = L("Anzahl 14") };
     readonly ComboBox _bookBox = new() { Width = 170, IsVisible = false };
     readonly Slider _arcSlider = new() { Minimum = 10000, Maximum = 344000, Value = 90000, Width = 150, IsVisible = false };
     readonly TextBlock _hint = new() { FontSize = 12, VerticalAlignment = VerticalAlignment.Center, TextTrimming = TextTrimming.CharacterEllipsis };
@@ -36,15 +36,15 @@ public sealed class GraphView : UserControl
     readonly TextBlock _detailInfo = new() { FontSize = 12 };
     readonly WrapPanel _detailChips = new();
     readonly WrapPanel _detailActions = new();
-    readonly Button _expandBtn = new() { Content = "Erweitern" };
-    readonly Button _centerBtn = new() { Content = "Als Zentrum" };
-    readonly Button _openBtn = new() { Content = "Im Text öffnen" };
-    readonly Button _resetBtn = new() { Content = "Zurücksetzen" };
+    readonly Button _expandBtn = new() { Content = L("Erweitern") };
+    readonly Button _centerBtn = new() { Content = L("Als Zentrum") };
+    readonly Button _openBtn = new() { Content = L("Im Text öffnen") };
+    readonly Button _resetBtn = new() { Content = L("Zurücksetzen") };
     readonly Border _detail = new() { CornerRadius = new(12), Padding = new(14, 10), Margin = new(16, 0, 16, 8), IsVisible = false };
     readonly StackPanel _buildPanel = new() { Spacing = 10, HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Center, MaxWidth = 460 };
     readonly TextBlock _buildText = new() { TextWrapping = TextWrapping.Wrap };
     readonly ProgressBar _progress = new() { Minimum = 0, Maximum = 1, IsVisible = false };
-    readonly Button _buildBtn = new() { Content = "Querverweis-Daten laden", HorizontalAlignment = HorizontalAlignment.Left };
+    readonly Button _buildBtn = new() { Content = L("Querverweis-Daten laden"), HorizontalAlignment = HorizontalAlignment.Left };
     bool _loadingBooks;
 
     public GraphView()
@@ -55,11 +55,11 @@ public sealed class GraphView : UserControl
         _detail.Bind(Border.BackgroundProperty, this.GetResourceObservable("BsSurface"));
         _detail.Bind(Border.BorderBrushProperty, this.GetResourceObservable("BsBorder"));
         _detail.BorderThickness = new(1);
-        _buildText.Text = "Für den Graphen werden einmalig die Querverweise aller Kapitel geladen (etwa 1.200 kleine Dateien, danach offline). Quelle: OpenBible.info, CC BY 4.0.";
+        _buildText.Text = L("Für den Graphen werden einmalig die Querverweise aller Kapitel geladen (etwa 1.200 kleine Dateien, danach offline). Quelle: OpenBible.info, CC BY 4.0.");
         _buildBtn.Click += (_, _) => { _buildBtn.IsEnabled = false; _progress.IsVisible = true; BuildRequested?.Invoke(); };
         _buildPanel.Children.Add(_buildText); _buildPanel.Children.Add(_buildBtn); _buildPanel.Children.Add(_progress);
 
-        var back = new Button { Content = "← Zum Text" };
+        var back = new Button { Content = L("← Zum Text") };
         back.Click += (_, _) => CloseRequested?.Invoke();
         var strip = new WrapPanel { Margin = new(16, 10, 16, 6) };
         void Add(Control c, double right = 10) { c.Margin = new(0, 0, right, 4); c.VerticalAlignment = VerticalAlignment.Center; strip.Children.Add(c); }
@@ -90,7 +90,7 @@ public sealed class GraphView : UserControl
         _netBtn.Click += (_, _) => SetMode(arc: false);
         _arcBtn.Click += (_, _) => SetMode(arc: true);
         _dirBox.SelectionChanged += (_, _) => ResetNetwork();
-        _countSlider.ValueChanged += (_, _) => { _countLabel.Text = $"Anzahl {(int)_countSlider.Value}"; ResetNetwork(); };
+        _countSlider.ValueChanged += (_, _) => { _countLabel.Text = L("Anzahl {0}", (int)_countSlider.Value); ResetNetwork(); };
         _arcSlider.ValueChanged += (_, _) => ReconfigureArcs();
         _bookBox.SelectionChanged += (_, _) => { if (!_loadingBooks) { _arcBook = _bookBox.SelectedIndex - 1; ReconfigureArcs(); } };
         _resetBtn.Click += (_, _) => { if (IsArc) { _arc.ResetView(); _arcBook = -1; _bookBox.SelectedIndex = 0; _selected = -1; _detail.IsVisible = false; ReconfigureArcs(); } else ResetNetwork(); };
@@ -125,7 +125,7 @@ public sealed class GraphView : UserControl
         _dirBox.IsVisible = _countSlider.IsVisible = _countLabel.IsVisible = !arc;
         _bookBox.IsVisible = _arcSlider.IsVisible = arc;
         _selected = -1; _detail.IsVisible = false;
-        _hint.Text = arc ? "Kapitel anklicken: Verbindungen. Buchleiste anklicken: filtern." : "Knoten anklicken: Details · Mausrad: zoomen · ziehen: verschieben";
+        _hint.Text = arc ? L("Kapitel anklicken: Verbindungen. Buchleiste anklicken: filtern.") : "Knoten anklicken: Details · Mausrad: zoomen · ziehen: verschieben";
         if (_graph is not null) { if (arc) ReconfigureArcs(); else ResetNetwork(); }
     }
 
@@ -152,7 +152,7 @@ public sealed class GraphView : UserControl
     {
         _buildPanel.IsVisible = true; _progress.IsVisible = true; _buildBtn.IsEnabled = false;
         _progress.Maximum = total; _progress.Value = done;
-        _buildText.Text = $"Lade Querverweise … {done}/{total} Kapitel";
+        _buildText.Text = L("Lade Querverweise … {0}/{1} Kapitel", done, total);
     }
 
     public void FocusChapter(string book, int chapter)
@@ -186,12 +186,12 @@ public sealed class GraphView : UserControl
         var outgoing = _graph.Neighbors(node, EdgeDirection.Outgoing);
         var incoming = _graph.Neighbors(node, EdgeDirection.Incoming);
         _detailTitle.Text = NodeName(node);
-        _detailInfo.Text = $"{outgoing.Sum(n => n.Weight)} Verweise von hier · {incoming.Sum(n => n.Weight)} Verweise hierher";
+        _detailInfo.Text = L("{0} Verweise von hier · {1} Verweise hierher", outgoing.Sum(n => n.Weight), incoming.Sum(n => n.Weight));
         _detailChips.Children.Clear();
         foreach (var (other, weight) in _graph.Neighbors(node, EdgeDirection.Both).Take(10))
         {
             var chip = new Button { Content = $"{NodeName(other)} ({weight})", FontSize = 12, Padding = new(8, 2), Margin = new(0, 6, 6, 0) };
-            ToolTip.SetTip(chip, "Im Text öffnen");
+            ToolTip.SetTip(chip, L("Im Text öffnen"));
             var target = other;
             chip.Click += (_, _) => OpenNode(target);
             _detailChips.Children.Add(chip);

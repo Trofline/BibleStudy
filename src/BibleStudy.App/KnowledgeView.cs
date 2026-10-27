@@ -1,4 +1,4 @@
-using System.Globalization;
+﻿using System.Globalization;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
@@ -22,7 +22,7 @@ public sealed class KnowledgeView : UserControl
     public KnowledgeView()
     {
         _hint.Bind(TextBlock.ForegroundProperty, this.GetResourceObservable("BsMuted"));
-        var back = new Button { Content = "← Zum Text" };
+        var back = new Button { Content = L("← Zum Text") };
         back.Click += (_, _) => CloseRequested?.Invoke();
         var strip = new WrapPanel { Margin = new(16, 10, 16, 6) };
         back.Margin = new(0, 0, 16, 4);
@@ -46,7 +46,7 @@ public sealed class KnowledgeView : UserControl
     public void SetData(IReadOnlyList<KnowledgeNode> nodes, IReadOnlyList<(int A, int B)> edges)
     {
         _canvas.SetData(nodes, edges);
-        _hint.Text = nodes.Count == 0 ? "Noch keine Dokumente. Lege im Reiter „Wissen“ Notizen an." : $"{nodes.Count} Knoten · Klick: Details · Doppelklick: öffnen · Mausrad: zoomen · ziehen: verschieben";
+        _hint.Text = nodes.Count == 0 ? L("Noch keine Dokumente. Lege im Reiter „Wissen“ Notizen an.") : $"{nodes.Count} Knoten · Klick: Details · Doppelklick: öffnen · Mausrad: zoomen · ziehen: verschieben";
     }
 }
 

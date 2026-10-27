@@ -1,4 +1,4 @@
-using Avalonia;
+﻿using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Layout;
@@ -49,7 +49,7 @@ public partial class MainWindow
         {
             if (_commentaries.Count == 0)
             {
-                CommentaryInfo.Text = "Lade Kommentarliste …";
+                CommentaryInfo.Text = L("Lade Kommentarliste …");
                 _commentaries = await _hello.GetCommentariesAsync();
                 _libraryLoading = true;
                 CommentaryBox.ItemsSource = _commentaries;
@@ -61,7 +61,7 @@ public partial class MainWindow
             {
                 _shownCommentary = (c.Id, _curBook, _curChapter);
                 CommentaryPanel.Children.Clear(); _commentaryCards.Clear();
-                CommentaryInfo.Text = $"Lade {c.Name} zu {BookName(_curBook)} {_curChapter} …";
+                CommentaryInfo.Text = L("Lade {0} zu {1} {2} …", c.Name, BookName(_curBook), _curChapter);
                 var chapter = await _hello.GetCommentaryAsync(c.Id, _curBook, _curChapter);
                 if (_shownCommentary != (c.Id, _curBook, _curChapter)) return;
                 CommentaryInfo.Text = chapter is null || (chapter.Notes.Count == 0 && chapter.Introduction.Length == 0)
@@ -69,20 +69,20 @@ public partial class MainWindow
                     : $"{c.Name} zu {BookName(_curBook)} {_curChapter} · {(c.LicenseUrl.Contains("publicdomain") ? "gemeinfrei" : "Lizenz " + c.LicenseUrl)} · Englisch";
                 if (chapter is null) return;
                 if (chapter.Introduction.Length > 0)
-                    CommentaryPanel.Children.Add(new Expander { Header = "Einleitung", HorizontalAlignment = HorizontalAlignment.Stretch, Content = new SelectableTextBlock { Text = chapter.Introduction, TextWrapping = TextWrapping.Wrap } });
+                    CommentaryPanel.Children.Add(new Expander { Header = L("Einleitung"), HorizontalAlignment = HorizontalAlignment.Stretch, Content = new SelectableTextBlock { Text = chapter.Introduction, TextWrapping = TextWrapping.Wrap } });
                 foreach (var note in chapter.Notes) CommentaryPanel.Children.Add(CommentaryCard(c, note));
             }
             HighlightCommentary();
         }
-        catch (Exception ex) { CommentaryInfo.Text = "Kommentar nicht verfügbar: " + ex.Message; }
+        catch (Exception ex) { CommentaryInfo.Text = L("Kommentar nicht verfügbar: ") + ex.Message; }
     }
 
     Border CommentaryCard(CommentaryInfo c, CommentaryNote note)
     {
         var r = new VerseRef(_curBook, _curChapter, note.Verse);
-        var go = new Button { Classes = { "ghost" }, Padding = new(0), Content = $"Vers {note.Verse}", FontWeight = FontWeight.SemiBold, Foreground = Res("BsAccent") };
+        var go = new Button { Classes = { "ghost" }, Padding = new(0), Content = L("Vers {0}", note.Verse), FontWeight = FontWeight.SemiBold, Foreground = Res("BsAccent") };
         go.Click += async (_, _) => await GoToAsync(r.Book, r.Chapter, r.Verse);
-        var cite = new Button { Classes = { "ghost" }, Content = "In Dokument zitieren", FontSize = 12 };
+        var cite = new Button { Classes = { "ghost" }, Content = L("In Dokument zitieren"), FontSize = 12 };
         cite.Click += (_, _) => CiteIntoDocument($"> {note.Text.Replace("\n\n", "\n>\n> ")}\n> — {c.Name} zu {Label(r)}\n\n", $"{c.Name}: {Label(r)}", r);
         var head = new DockPanel { Children = { cite, go } };
         DockPanel.SetDock(cite, Dock.Right);
@@ -119,9 +119,9 @@ public partial class MainWindow
         {
             if (_lexIndex is null)
             {
-                LexInfo.Text = "Lade Lexikon (einmalig) …";
+                LexInfo.Text = L("Lade Lexikon (einmalig) …");
                 _lexIndex = await _hello.GetLexiconIndexAsync();
-                LexInfo.Text = $"{_lexIndex.Count(x => x.Kind == "people")} Personen und {_lexIndex.Count(x => x.Kind == "places")} Orte · Texte englisch · {HelloAoProvider.LexiconAttribution}";
+                LexInfo.Text = L("{0} Personen und {1} Orte · Texte englisch · {2}", _lexIndex.Count(x => x.Kind == "people"), _lexIndex.Count(x => x.Kind == "places"), HelloAoProvider.LexiconAttribution);
             }
             if (_curBook != "" && _lexChapter != (_curBook, _curChapter))
             {
@@ -129,18 +129,18 @@ public partial class MainWindow
                 LexChapterChips.Children.Clear();
                 var items = await _hello.GetChapterLexiconAsync(_curBook, _curChapter);
                 if (_lexChapter != (_curBook, _curChapter)) return;
-                LexChapterChips.Children.Add(new TextBlock { Text = $"In {BookName(_curBook)} {_curChapter}:", Classes = { "caption" }, VerticalAlignment = VerticalAlignment.Center, Margin = new(0, 0, 6, 4) });
+                LexChapterChips.Children.Add(new TextBlock { Text = L("In {0} {1}:", BookName(_curBook), _curChapter), Classes = { "caption" }, VerticalAlignment = VerticalAlignment.Center, Margin = new(0, 0, 6, 4) });
                 foreach (var (item, _) in items.Take(40))
                 {
                     var it = item;
                     LexChapterChips.Children.Add(FilterChip((item.Kind == "places" ? "📍 " : "") + item.Name, false, null, () => _ = ShowLexEntryAsync(it)));
                 }
-                if (items.Count == 0) LexChapterChips.Children.Add(new TextBlock { Text = "keine Einträge", Classes = { "caption" } });
+                if (items.Count == 0) LexChapterChips.Children.Add(new TextBlock { Text = L("keine Einträge"), Classes = { "caption" } });
             }
             if (string.IsNullOrWhiteSpace(LexSearchBox.Text) && LexPanel.Children.Count == 0)
-                LexPanel.Children.Add(new TextBlock { Text = "Suche oben nach einer Person oder einem Ort, oder klicke auf einen Namen aus dem aktuellen Kapitel.", Classes = { "caption" }, TextWrapping = TextWrapping.Wrap });
+                LexPanel.Children.Add(new TextBlock { Text = L("Suche oben nach einer Person oder einem Ort, oder klicke auf einen Namen aus dem aktuellen Kapitel."), Classes = { "caption" }, TextWrapping = TextWrapping.Wrap });
         }
-        catch (Exception ex) { LexInfo.Text = "Lexikon nicht verfügbar: " + ex.Message; }
+        catch (Exception ex) { LexInfo.Text = L("Lexikon nicht verfügbar: ") + ex.Message; }
     }
 
     async Task LexSearchAsync()
@@ -155,17 +155,17 @@ public partial class MainWindow
         {
             var item = h;
             var b = new Button { Classes = { "ghost" }, HorizontalAlignment = HorizontalAlignment.Stretch, HorizontalContentAlignment = HorizontalAlignment.Left,
-                Content = $"{(h.Kind == "places" ? "📍" : "👤")}  {h.Name}   ·   {h.References} Stellen" };
+                Content = L("{0}  {1}   ·   {2} Stellen", (h.Kind == "places" ? "📍" : "👤"), h.Name, h.References) };
             b.Click += async (_, _) => await ShowLexEntryAsync(item);
             LexPanel.Children.Add(b);
         }
-        if (hits.Count == 0) LexPanel.Children.Add(new TextBlock { Text = "Nichts gefunden. Die Namen sind englisch (z. B. Nebuchadnezzar, Jerusalem, Moses).", Classes = { "caption" }, TextWrapping = TextWrapping.Wrap });
+        if (hits.Count == 0) LexPanel.Children.Add(new TextBlock { Text = L("Nichts gefunden. Die Namen sind englisch (z. B. Nebuchadnezzar, Jerusalem, Moses)."), Classes = { "caption" }, TextWrapping = TextWrapping.Wrap });
     }
 
     async Task ShowLexEntryAsync(LexiconItem item)
     {
         LexPanel.Children.Clear();
-        LexPanel.Children.Add(new TextBlock { Text = "Lade …", Classes = { "caption" } });
+        LexPanel.Children.Add(new TextBlock { Text = L("Lade …"), Classes = { "caption" } });
         try
         {
             var e = await _hello.GetLexiconEntryAsync(item.Kind, item.Id);
@@ -175,8 +175,8 @@ public partial class MainWindow
             var kind = e.Kind == "places" ? "Ort" + (e.FeatureType.Length > 0 ? $" ({e.FeatureType})" : "") : "Person";
             LexPanel.Children.Add(new TextBlock { Text = kind + (e.AlsoCalled.Count > 0 ? " · auch: " + string.Join(", ", e.AlsoCalled) : ""), Classes = { "caption" } });
             var text = string.Join("\n\n", e.Description);
-            LexPanel.Children.Add(text.Length > 0 ? new SelectableTextBlock { Text = text, TextWrapping = TextWrapping.Wrap, LineHeight = 21 } : new TextBlock { Text = "Kein Lexikontext vorhanden.", Classes = { "caption" } });
-            var cite = new Button { Content = "In Dokument zitieren", HorizontalAlignment = HorizontalAlignment.Left };
+            LexPanel.Children.Add(text.Length > 0 ? new SelectableTextBlock { Text = text, TextWrapping = TextWrapping.Wrap, LineHeight = 21 } : new TextBlock { Text = L("Kein Lexikontext vorhanden."), Classes = { "caption" } });
+            var cite = new Button { Content = L("In Dokument zitieren"), HorizontalAlignment = HorizontalAlignment.Left };
             cite.Click += (_, _) => CiteIntoDocument($"> {text.Replace("\n\n", "\n>\n> ")}\n> — Lexikon (Easton/Theographic): {e.Name}\n\n", $"Lexikon: {e.Name}", null);
             LexPanel.Children.Add(cite);
             if (e.Related.Count > 0)
@@ -196,10 +196,10 @@ public partial class MainWindow
                     refs.Children.Add(FilterChip($"{ShortBookId(r.Book)} {r.Chapter},{r.Verse}", false, HomeView.ColorOf(r.Book), () => _ = GoToAsync(x.Book, x.Chapter, x.Verse), Label(r)));
                 }
                 LexPanel.Children.Add(refs);
-                if (e.References.Count > 80) LexPanel.Children.Add(new TextBlock { Text = $"… und {e.References.Count - 80} weitere", Classes = { "caption" } });
+                if (e.References.Count > 80) LexPanel.Children.Add(new TextBlock { Text = L("… und {0} weitere", e.References.Count - 80), Classes = { "caption" } });
             }
         }
-        catch (Exception ex) { LexPanel.Children.Clear(); LexPanel.Children.Add(new TextBlock { Text = "Eintrag nicht verfügbar: " + ex.Message, TextWrapping = TextWrapping.Wrap }); }
+        catch (Exception ex) { LexPanel.Children.Clear(); LexPanel.Children.Add(new TextBlock { Text = L("Eintrag nicht verfügbar: ") + ex.Message, TextWrapping = TextWrapping.Wrap }); }
     }
 
     string ShortBookId(string id) => _books.FirstOrDefault(b => b.Id == id) is { } b ? ShortBook(b) : id;

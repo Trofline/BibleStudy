@@ -1,4 +1,4 @@
-using Avalonia;
+﻿using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
 using Avalonia.Input;
@@ -107,12 +107,12 @@ public partial class MainWindow
 
         if (side)
         {
-            var back = new Button { Content = "Zurück in die Leiste holen", HorizontalAlignment = HorizontalAlignment.Left, Classes = { "primary" } };
+            var back = new Button { Content = L("Zurück in die Leiste holen"), HorizontalAlignment = HorizontalAlignment.Left, Classes = { "primary" } };
             back.Click += (_, _) => d.Win?.Close();
             items[0].Item1.Content = new StackPanel
             {
                 Margin = new(16, 24), Spacing = 10,
-                Children = { new TextBlock { Text = "Dieser Bereich ist ausgelagert.", FontWeight = FontWeight.SemiBold }, new TextBlock { Text = "Ziehe das Fenster zurück auf die Leiste, oder klicke:", Classes = { "caption" }, TextWrapping = TextWrapping.Wrap }, back },
+                Children = { new TextBlock { Text = L("Dieser Bereich ist ausgelagert."), FontWeight = FontWeight.SemiBold }, new TextBlock { Text = L("Ziehe das Fenster zurück auf die Leiste, oder klicke:"), Classes = { "caption" }, TextWrapping = TextWrapping.Wrap }, back },
             };
         }
         Select(indices.Contains(startIndex) ? startIndex : indices[0]);
@@ -183,14 +183,14 @@ public partial class MainWindow
         }
         // "+" opens a new tab, like in a browser or the Explorer
         var plus = new Button { Classes = { "tool" }, Width = 30, Height = 30, VerticalAlignment = VerticalAlignment.Center, Margin = new(4, 0, 0, 2), Content = new Icon { Data = Geometry.Parse("M12 5v14 M5 12h14"), IconSize = 14 } };
-        ToolTip.SetTip(plus, "Neuer Reiter");
+        ToolTip.SetTip(plus, L("Neuer Reiter"));
         plus.Click += (_, _) =>
         {
             var menu = new MenuFlyout();
             foreach (var name in new[] { "Bücher", "Dokumente", "Predigt", "Planen", "Mehr" })
             {
                 var g = NavGroups.First(x => x.Name == name);
-                var item = new MenuItem { Header = name == "Mehr" ? "Einstellungen" : name, IsEnabled = !_windows.ContainsKey("group:" + name) };
+                var item = new MenuItem { Header = name == L("Mehr") ? "Einstellungen" : name, IsEnabled = !_windows.ContainsKey("group:" + name) };
                 item.Click += (_, _) => OpenWork(g, name == "Mehr" ? SettingsTab : null);
                 menu.Items.Add(item);
             }
@@ -208,7 +208,7 @@ public partial class MainWindow
         row.Children.Add(new TextBlock { Text = label + (windowed ? "  ⧉" : ""), VerticalAlignment = VerticalAlignment.Center });
         var b = new Button { Classes = { "wtab" }, Content = row };
         b.Classes.Set("active", active);
-        ToolTip.SetTip(b, key is null ? "Zurück zum Bibeltext" : windowed ? "Liegt in einem eigenen Fenster – klicken holt es nach vorn" : "Klicken wechselt hierher. Nach unten ziehen macht ein eigenes Fenster daraus.");
+        ToolTip.SetTip(b, key is null ? L("Zurück zum Bibeltext") : windowed ? "Liegt in einem eigenen Fenster – klicken holt es nach vorn" : "Klicken wechselt hierher. Nach unten ziehen macht ein eigenes Fenster daraus.");
         if (closable)
         {
             var x = new Button { Classes = { "tool" }, Width = 22, Height = 22, Padding = new(0), Content = new Icon { Data = Geometry.Parse("M18 6L6 18 M6 6l12 12"), IconSize = 12 } };
@@ -267,7 +267,7 @@ public partial class MainWindow
         var saved = _settings.Windows.TryGetValue(d.Key, out var s) && s.W > 0 ? s : null;
         var win = new Window
         {
-            Title = $"BibleStudy – {d.Title}", Width = saved?.W ?? (d.Items.Count > 1 ? 640 : 520), Height = saved?.H ?? 800, MinWidth = 320, MinHeight = 240,
+            Title = L("BibleStudy – {0}", d.Title), Width = saved?.W ?? (d.Items.Count > 1 ? 640 : 520), Height = saved?.H ?? 800, MinWidth = 320, MinHeight = 240,
             Background = Res("BsSurface"), Content = d.Panel, Icon = Icon,
             WindowStartupLocation = saved is null && at is null ? WindowStartupLocation.CenterOwner : WindowStartupLocation.Manual,
         };
@@ -358,7 +358,7 @@ public partial class MainWindow
     void SetActiveLayout(string? name)
     {
         _settings.ActiveLayout = name; SaveSettings();
-        ToolTip.SetTip(LayoutTopBtn, name is null ? "Layouts: Anordnung speichern und laden" : $"Layouts – aktiv: {name}");
+        ToolTip.SetTip(LayoutTopBtn, name is null ? L("Layouts: Anordnung speichern und laden") : $"Layouts – aktiv: {name}");
     }
 
     static readonly string[] BuiltInLayouts = ["Lesen", "Studium", "Schreiben"];
@@ -378,7 +378,7 @@ public partial class MainWindow
         _settings.Layouts[name] = CaptureLayout();
         SetActiveLayout(name);
         RefreshLayoutBox(name);
-        StatusText.Text = $"Layout „{name}“ gespeichert: Leiste, Breite, Reiter und offene Fenster mit Position.";
+        StatusText.Text = L("Layout „{0}“ gespeichert: Leiste, Breite, Reiter und offene Fenster mit Position.", name);
     }
 
     /// <summary>Layout panel: all layouts as a list (click = load), a name field to save the current arrangement as a new layout.</summary>
@@ -387,39 +387,39 @@ public partial class MainWindow
         var fly = new Flyout { Placement = PlacementMode.BottomEdgeAlignedRight };
         var panel = new StackPanel { Spacing = 6, Width = 300 };
         fly.Content = panel;
-        var name = new TextBox { Watermark = "Name, z. B. „Predigtvorbereitung“" };
+        var name = new TextBox { Watermark = L("Name, z. B. „Predigtvorbereitung“") };
         var info = new TextBlock { Classes = { "caption" }, TextWrapping = TextWrapping.Wrap };
 
         void Fill()
         {
             panel.Children.Clear();
-            panel.Children.Add(new TextBlock { Text = "LAYOUTS", Classes = { "eyebrow" } });
-            panel.Children.Add(new TextBlock { Text = "Ein Layout merkt sich Seitenleiste, Reiter und Fenster mit Position. Klick lädt es.", Classes = { "caption" }, TextWrapping = TextWrapping.Wrap });
+            panel.Children.Add(new TextBlock { Text = L("LAYOUTS"), Classes = { "eyebrow" } });
+            panel.Children.Add(new TextBlock { Text = L("Ein Layout merkt sich Seitenleiste, Reiter und Fenster mit Position. Klick lädt es."), Classes = { "caption" }, TextWrapping = TextWrapping.Wrap });
             foreach (var n0 in BuiltInLayouts.Concat(_settings.Layouts.Keys.Except(BuiltInLayouts).Order()))
             {
                 var n = n0; var custom = _settings.Layouts.ContainsKey(n);
                 var load = new Button { Classes = { "seg" }, HorizontalAlignment = HorizontalAlignment.Stretch, HorizontalContentAlignment = HorizontalAlignment.Left, Content = (n == _settings.ActiveLayout ? "✓  " : "     ") + n };
                 load.Classes.Set("active", n == _settings.ActiveLayout);
-                load.Click += (_, _) => { ApplyLayout(FindLayout(n)!, n); StatusText.Text = $"Layout „{n}“ geladen."; Fill(); };
+                load.Click += (_, _) => { ApplyLayout(FindLayout(n)!, n); StatusText.Text = L("Layout „{0}“ geladen.", n); Fill(); };
                 var row = new DockPanel();
                 if (custom)
                 {
                     var del = new Button { Classes = { "tool" }, Width = 28, Height = 28, Content = new Icon { Data = Geometry.Parse("M18 6L6 18 M6 6l12 12"), IconSize = 13 } };
-                    ToolTip.SetTip(del, "Layout löschen");
+                    ToolTip.SetTip(del, L("Layout löschen"));
                     del.Click += (_, _) => { _settings.Layouts.Remove(n); if (_settings.ActiveLayout == n) SetActiveLayout(null); else SaveSettings(); RefreshLayoutBox(); Fill(); };
                     DockPanel.SetDock(del, Dock.Right); row.Children.Add(del);
                     var over = new Button { Classes = { "tool" }, Width = 28, Height = 28, Content = new Icon { Data = Geometry.Parse("M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z M17 21v-8H7v8 M7 3v5h8"), IconSize = 13 } };
-                    ToolTip.SetTip(over, "Mit der aktuellen Anordnung überschreiben");
-                    over.Click += (_, _) => { SaveLayoutAs(n); info.Text = $"„{n}“ überschrieben."; Fill(); };
+                    ToolTip.SetTip(over, L("Mit der aktuellen Anordnung überschreiben"));
+                    over.Click += (_, _) => { SaveLayoutAs(n); info.Text = L("„{0}“ überschrieben.", n); Fill(); };
                     DockPanel.SetDock(over, Dock.Right); row.Children.Add(over);
                 }
                 row.Children.Add(load);
                 panel.Children.Add(row);
             }
             panel.Children.Add(new Separator());
-            panel.Children.Add(new TextBlock { Text = "NEUES LAYOUT SPEICHERN", Classes = { "eyebrow" } });
+            panel.Children.Add(new TextBlock { Text = L("NEUES LAYOUT SPEICHERN"), Classes = { "eyebrow" } });
             panel.Children.Add(name);
-            var save = new Button { Content = "Als neues Layout speichern", Classes = { "primary" }, HorizontalAlignment = HorizontalAlignment.Stretch };
+            var save = new Button { Content = L("Als neues Layout speichern"), Classes = { "primary" }, HorizontalAlignment = HorizontalAlignment.Stretch };
             save.Click += (_, _) => Commit();
             panel.Children.Add(save);
             panel.Children.Add(info);
@@ -428,11 +428,11 @@ public partial class MainWindow
         void Commit()
         {
             var n = name.Text?.Trim() ?? "";
-            if (n.Length == 0) { info.Text = "Gib dem Layout einen Namen."; return; }
-            if (BuiltInLayouts.Contains(n)) { info.Text = "Diesen Namen tragen schon eingebaute Layouts – wähle einen anderen."; return; }
+            if (n.Length == 0) { info.Text = L("Gib dem Layout einen Namen."); return; }
+            if (BuiltInLayouts.Contains(n)) { info.Text = L("Diesen Namen tragen schon eingebaute Layouts – wähle einen anderen."); return; }
             var existed = _settings.Layouts.ContainsKey(n);
             SaveLayoutAs(n); name.Text = ""; Fill();
-            info.Text = existed ? $"„{n}“ überschrieben." : $"Neues Layout „{n}“ gespeichert.";
+            info.Text = existed ? L("„{0}“ überschrieben.", n) : $"Neues Layout „{n}“ gespeichert.";
         }
         name.KeyDown += (_, e) => { if (e.Key == Key.Enter) Commit(); };
         Fill();
@@ -455,20 +455,20 @@ public partial class MainWindow
         {
             var name = LayoutBox.SelectedItem as string;
             var preset = name is null ? null : FindLayout(name);
-            if (preset is null) { LayoutInfo.Text = "Wähle zuerst ein Layout."; return; }
-            ApplyLayout(preset, name); LayoutInfo.Text = $"Layout „{name}“ geladen.";
+            if (preset is null) { LayoutInfo.Text = L("Wähle zuerst ein Layout."); return; }
+            ApplyLayout(preset, name); LayoutInfo.Text = L("Layout „{0}“ geladen.", name);
         };
         LayoutSaveBtn.Click += (_, _) =>
         {
             var name = LayoutNameBox.Text?.Trim() ?? "";
-            if (name.Length == 0) { LayoutInfo.Text = "Gib dem Layout einen Namen."; return; }
-            if (BuiltInLayouts.Contains(name)) { LayoutInfo.Text = "Diesen Namen tragen schon eingebaute Layouts."; return; }
-            LayoutNameBox.Text = ""; SaveLayoutAs(name); LayoutInfo.Text = $"Layout „{name}“ gespeichert (neues Layout).";
+            if (name.Length == 0) { LayoutInfo.Text = L("Gib dem Layout einen Namen."); return; }
+            if (BuiltInLayouts.Contains(name)) { LayoutInfo.Text = L("Diesen Namen tragen schon eingebaute Layouts."); return; }
+            LayoutNameBox.Text = ""; SaveLayoutAs(name); LayoutInfo.Text = L("Layout „{0}“ gespeichert (neues Layout).", name);
         };
         LayoutDeleteBtn.Click += (_, _) =>
         {
-            if (LayoutBox.SelectedItem is string n && _settings.Layouts.Remove(n)) { if (_settings.ActiveLayout == n) SetActiveLayout(null); SaveSettings(); RefreshLayoutBox(); LayoutInfo.Text = $"Layout „{n}“ gelöscht."; }
-            else LayoutInfo.Text = "Eingebaute Layouts lassen sich nicht löschen.";
+            if (LayoutBox.SelectedItem is string n && _settings.Layouts.Remove(n)) { if (_settings.ActiveLayout == n) SetActiveLayout(null); SaveSettings(); RefreshLayoutBox(); LayoutInfo.Text = L("Layout „{0}“ gelöscht.", n); }
+            else LayoutInfo.Text = L("Eingebaute Layouts lassen sich nicht löschen.");
         };
     }
 
