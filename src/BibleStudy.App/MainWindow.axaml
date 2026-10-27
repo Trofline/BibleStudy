@@ -2,7 +2,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:local="clr-namespace:BibleStudy.App"
         x:Class="BibleStudy.App.MainWindow"
-        Title="BibleStudy" Width="1280" Height="800" MinWidth="1120" MinHeight="560"
+        Title="BibleStudy" Width="1280" Height="800" MinWidth="1180" MinHeight="560"
         Background="{DynamicResource BsBackground}" Foreground="{DynamicResource BsText}">
     <Window.Resources>
         <DataTemplate x:Key="EntryTpl" x:DataType="local:Entry">
@@ -38,6 +38,12 @@
                     <ToggleButton x:Name="ReadBtn" Classes="tool" ToolTip.Tip="Dieses Kapitel als gelesen markieren">
                         <local:Icon Data="M20 6L9 17l-5-5" />
                     </ToggleButton>
+                    <Button x:Name="ViewBtn" Classes="tool" ToolTip.Tip="Ansicht: Querverweise im Text, Graph neben dem Text">
+                        <local:Icon Data="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z M9 12a3 3 0 1 0 6 0a3 3 0 1 0-6 0z" />
+                    </Button>
+                    <Button x:Name="GraphBtn" Classes="tool" ToolTip.Tip="Querverweis-Graph (Netzwerk und Bogen)">
+                        <local:Icon Data="M5 12a2 2 0 1 0 4 0a2 2 0 1 0-4 0z M15 5a2 2 0 1 0 4 0a2 2 0 1 0-4 0z M15 19a2 2 0 1 0 4 0a2 2 0 1 0-4 0z M8.7 11l6.6-4.9 M8.7 13l6.6 4.9" />
+                    </Button>
                     <Button x:Name="ParallelBtn" Classes="tool" ToolTip.Tip="Weitere Übersetzung als Spalte daneben (max. 3)">
                         <local:Icon Data="M5 3h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z M12 3v18" />
                     </Button>
@@ -318,9 +324,13 @@
         <!-- Reader -->
         <Grid>
             <ScrollViewer x:Name="ReaderScroll">
-                <StackPanel x:Name="ReaderPanel" Margin="0,36,0,80" HorizontalAlignment="Center" Spacing="2" />
+                <Grid x:Name="ReaderHost" ColumnDefinitions="*,Auto">
+                    <StackPanel x:Name="ReaderPanel" Margin="0,36,0,80" HorizontalAlignment="Center" Spacing="2" />
+                    <local:ThreadGraph x:Name="ThreadPane" Grid.Column="1" IsVisible="False" Margin="0,36,16,80" />
+                </Grid>
             </ScrollViewer>
             <local:HomeView x:Name="Home" IsVisible="False" Background="{DynamicResource BsBackground}" />
+            <local:GraphView x:Name="GraphPane" IsVisible="False" Background="{DynamicResource BsBackground}" />
         </Grid>
     </DockPanel>
 </Window>

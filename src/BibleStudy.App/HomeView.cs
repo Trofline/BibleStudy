@@ -11,7 +11,7 @@ namespace BibleStudy.App;
 /// <summary>Start page: all books grouped by testament with reading progress; drill down to a chapter grid.</summary>
 public sealed class HomeView : UserControl
 {
-    static readonly Dictionary<BookCategory, Color> Colors = new()
+    internal static readonly Dictionary<BookCategory, Color> Colors = new()
     {
         [BookCategory.Law] = Color.Parse("#D9A441"), [BookCategory.History] = Color.Parse("#D98B41"),
         [BookCategory.Poetry] = Color.Parse("#D9644E"), [BookCategory.MajorProphets] = Color.Parse("#C95B8A"),
@@ -20,6 +20,8 @@ public sealed class HomeView : UserControl
         [BookCategory.General] = Color.Parse("#5B7FD9"), [BookCategory.Revelation] = Color.Parse("#8A6FD9"),
         [BookCategory.Other] = Color.Parse("#8A8F98"),
     };
+
+    internal static Color ColorOf(string bookId) => Colors[BookCategories.Of(bookId)];
 
     /// <summary>Raised when a chapter is picked (book id, chapter).</summary>
     public event Action<string, int>? ChapterChosen;

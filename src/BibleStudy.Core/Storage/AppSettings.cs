@@ -18,6 +18,8 @@ public sealed class AppSettings
     public List<string> CustomColors { get; set; } = [];
     public string AiContext { get; set; } = "Standpunkt: adventistisch; die Bibel allein ist Maßstab (keine kirchliche oder päpstliche Autorität).";
     public string AiModel { get; set; } = "";
+    public bool XrefInText { get; set; }
+    public bool ThreadGraph { get; set; }
 
     static readonly JsonSerializerOptions Json = new() { WriteIndented = true };
 

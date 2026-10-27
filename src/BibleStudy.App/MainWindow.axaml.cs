@@ -132,6 +132,7 @@ public partial class MainWindow : Window
         foreach (var list in new[] { SearchList, NoteList, XrefList, ConcList }) list.SelectionChanged += OnEntryPicked;
         InitVault();
         InitAi();
+        InitGraph();
         StartControl();
         Opened += async (_, _) => await InitAsync();
     }
@@ -173,10 +174,10 @@ public partial class MainWindow : Window
     void ShowHome()
     {
         Home.Show(_books, _read, Home.OpenBook);
-        Home.IsVisible = true; ReaderScroll.IsVisible = false;
+        Home.IsVisible = true; ReaderScroll.IsVisible = false; GraphPane.IsVisible = false;
     }
 
-    void ShowReader() { Home.IsVisible = false; ReaderScroll.IsVisible = true; }
+    void ShowReader() { Home.IsVisible = false; GraphPane.IsVisible = false; ReaderScroll.IsVisible = true; }
 
     async Task GoToAsync(string bookId, int chapter, int? verse = null)
     {
@@ -192,7 +193,7 @@ public partial class MainWindow : Window
 
     async Task GoBackAsync()
     {
-        if (Home.IsVisible) { ShowReader(); return; }
+        if (Home.IsVisible || GraphPane.IsVisible) { ShowReader(); return; }
         if (_history.Count < 2) return;
         _history.RemoveAt(_history.Count - 1);
         var (book, chapter) = _history[^1];
@@ -290,13 +291,14 @@ public partial class MainWindow : Window
             }
             var notes = cols.Select(c => c.C?.Footnotes?.OrderBy(f => f.NoteId).Select((f, i) => (f.NoteId, Letter: NoteLetter(i), f.Text))
                 .ToDictionary(x => x.NoteId, x => (x.Letter, x.Text))).ToList();
+            await LoadChapterRefsAsync(b.Id, number);
             foreach (var num in cols.SelectMany(c => c.C?.Verses.Select(v => v.Number) ?? []).Distinct().Order())
             {
                 var row = NewRow(cols.Count);
                 for (var i = 0; i < cols.Count; i++)
                     AddCell(row, i, VerseCell(cols[i].C?.Verses.FirstOrDefault(v => v.Number == num), num, cols[i].T, size, i == 0 && noted.Contains(num), notes[i],
                         _chapterMarks.Where(m => m.Ref.Verse == num && !m.WholeVerse && m.TranslationId == cols[i].T.Id).ToList()));
-                var box = new Border { Child = row, Padding = new(10, 3), CornerRadius = new(8), BorderThickness = new(3, 0, 0, 0), BorderBrush = Brushes.Transparent, Classes = { "verse" } };
+                var box = new Border { Child = XrefChips(num, t.Id) is { } chips ? new StackPanel { Children = { row, chips } } : row, Padding = new(10, 3), CornerRadius = new(8), BorderThickness = new(3, 0, 0, 0), BorderBrush = Brushes.Transparent, Classes = { "verse" } };
                 var n = num;
                 box.AddHandler(PointerPressedEvent, (object? _, PointerPressedEventArgs e) => OnVersePressed(n, e), RoutingStrategies.Tunnel, handledEventsToo: true);
                 box.AddHandler(PointerReleasedEvent, (object? _, PointerReleasedEventArgs e) => CaptureSelection(e), RoutingStrategies.Tunnel, handledEventsToo: true);
@@ -304,6 +306,7 @@ public partial class MainWindow : Window
                 ReaderPanel.Children.Add(box);
             }
             Paint();
+            ShowThread(_threadOn && cols.Count == 1);
             if (focusVerse is int fv && _verseBoxes.ContainsKey(fv)) { SelectVerse(fv); _verseBoxes[fv].BringIntoView(); }
             else ReaderScroll.Offset = default;
 
@@ -530,7 +533,8 @@ public partial class MainWindow : Window
     {
         ReaderPanel.HorizontalAlignment = _singleColumn ? Avalonia.Layout.HorizontalAlignment.Center : Avalonia.Layout.HorizontalAlignment.Stretch;
         ReaderPanel.Margin = _singleColumn ? new(0, 36, 0, 80) : new(32, 28, 32, 80);
-        ReaderPanel.Width = _singleColumn ? Math.Clamp(ReaderScroll.Bounds.Width - 64, 320, 760) : double.NaN;
+        var reserve = _threadOn && _singleColumn ? ThreadGraph.GraphWidth + 32 : 0; // room for the graph beside the text
+        ReaderPanel.Width = _singleColumn ? Math.Clamp(ReaderScroll.Bounds.Width - 64 - reserve, 320, 760) : double.NaN;
     }
 
     void SelectVerse(int n)

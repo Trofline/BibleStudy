@@ -113,3 +113,37 @@ public class ReadingAndSettingsTests
         Directory.Delete(Path.GetDirectoryName(path)!, true);
     }
 }
+
+public class CrossRefGraphTests
+{
+    static CrossRefGraph Sample() => new([("GEN", 3), ("EXO", 2)], [new(0, 3, 5), new(3, 0, 2), new(1, 3, 9), new(1, 1, 4), new(0, 4, 1), new(0, 99, 7)]);
+
+    [Fact]
+    public void Indexing_MapsChaptersToNodesAndBack()
+    {
+        var g = Sample();
+        Assert.Equal(5, g.NodeCount);
+        Assert.Equal(3, g.Index("EXO", 1));
+        Assert.Equal(-1, g.Index("EXO", 3)); Assert.Equal(-1, g.Index("XXX", 1));
+        Assert.Equal(new ChapterId("EXO", 2), g.At(4));
+        Assert.Equal(new ChapterId("GEN", 3), g.At(2));
+    }
+
+    [Fact]
+    public void Edges_AreSortedAndInvalidOnesDropped()
+    {
+        var g = Sample();
+        Assert.Equal([9, 5, 2, 1], g.Edges.Select(e => e.Weight));   // self loop (1->1) and out-of-range (0->99) removed
+        Assert.Equal(5, g.Weight(0, 3, EdgeDirection.Outgoing));
+        Assert.Equal(2, g.Weight(0, 3, EdgeDirection.Incoming));
+        Assert.Equal(7, g.Weight(0, 3, EdgeDirection.Both));
+    }
+
+    [Fact]
+    public void Neighbors_MergeDirectionsStrongestFirst()
+    {
+        var g = Sample();
+        Assert.Equal([(3, 7), (4, 1)], g.Neighbors(0, EdgeDirection.Both));
+        Assert.Equal([(3, 2)], g.Neighbors(0, EdgeDirection.Incoming).Where(n => n.Other == 3));
+    }
+}

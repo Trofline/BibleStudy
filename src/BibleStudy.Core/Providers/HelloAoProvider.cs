@@ -54,20 +54,30 @@ public sealed class HelloAoProvider(HttpClient http, string cacheDir) : IBiblePr
     public const string CrossRefAttribution = "Querverweise © OpenBible.info, CC BY 4.0 (openbible.info/labs/cross-references)";
 
     /// <summary>Cross references of one verse, best first (dataset "open-cross-ref").</summary>
-    public async Task<IReadOnlyList<CrossRef>> GetCrossReferencesAsync(string book, int chapter, int verse, CancellationToken ct = default)
+    public async Task<IReadOnlyList<CrossRef>> GetCrossReferencesAsync(string book, int chapter, int verse, CancellationToken ct = default) =>
+        (await GetChapterCrossRefsAsync(book, chapter, ct)).GetValueOrDefault(verse) ?? [];
+
+    /// <summary>Cross references of all verses of a chapter, by verse number, best first.</summary>
+    public async Task<Dictionary<int, List<CrossRef>>> GetChapterCrossRefsAsync(string book, int chapter, CancellationToken ct = default)
     {
         using var doc = await GetJsonAsync($"/api/d/open-cross-ref/{book}/{chapter}.json", ct);
+        var result = new Dictionary<int, List<CrossRef>>();
         foreach (var item in doc.RootElement.GetProperty("chapter").GetProperty("content").EnumerateArray())
-        {
-            if (item.GetProperty("verse").GetInt32() != verse) continue;
-            return item.GetProperty("references").EnumerateArray().Select(r =>
+            result[item.GetProperty("verse").GetInt32()] = item.GetProperty("references").EnumerateArray().Select(r =>
             {
                 var v = r.GetProperty("verse").GetInt32();
                 return new CrossRef(new VerseRef(Str(r, "book"), r.GetProperty("chapter").GetInt32(), v),
                     r.TryGetProperty("endVerse", out var e) ? e.GetInt32() : v, r.TryGetProperty("score", out var s) ? s.GetInt32() : 0);
             }).OrderByDescending(r => r.Score).ToList();
-        }
-        return [];
+        return result;
+    }
+
+    /// <summary>Books of the cross-reference dataset with their chapter counts, in Bible order.</summary>
+    public async Task<IReadOnlyList<(string Book, int Chapters)>> GetCrossRefBooksAsync(CancellationToken ct = default)
+    {
+        using var doc = await GetJsonAsync("/api/d/open-cross-ref/books.json", ct);
+        return doc.RootElement.GetProperty("books").EnumerateArray().OrderBy(b => b.GetProperty("order").GetInt32())
+            .Select(b => (Str(b, "id"), b.GetProperty("numberOfChapters").GetInt32())).ToList();
     }
 
     /// <summary>Per-word Strong's tags; only some translations have them, so a miss is remembered per session.</summary>

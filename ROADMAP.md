@@ -21,7 +21,10 @@ Freie, quelloffene Bibelstudien-Software (C#, Avalonia). Nur Quellen mit freier 
 - [x] KI-Fenster über die lokale Claude-Installation (Abo, kein API-Schlüssel)
 
 ## Phase 4 – Querverweise & Visualisierung
-- Querverweise im Text, Graph neben dem Text, Netzwerk-Graph, Bogen-Ansicht
+- [x] Querverweise im Text (Chips unter den Versen, Vorschau beim Überfahren)
+- [x] Graph neben dem Text (Fäden von jedem Vers zu den Büchern)
+- [x] Netzwerk-Graph mit Einstellungen (Richtung, Knotenzahl, Zentrum wechseln)
+- [x] Bogen-Ansicht der ganzen Bibel (Buchfilter, Stärke)
 - [x] Fußnoten anklickbar
 
 ## Phase 5 – Studium
