@@ -39,7 +39,7 @@ public partial class MainWindow
     bool _revertingTab;
     bool _exiting;
 
-    static readonly string[] WorkTabs = ["Bücher", "Dokumente", "Planen"];
+    static readonly string[] WorkTabs = ["Bücher", "Dokumente", "Predigt", "Planen"];
 
     NavGroup? GroupOf(int tabIndex) => NavGroups.FirstOrDefault(g => g.Tabs.Any(t => t.Index == tabIndex));
 
@@ -59,6 +59,7 @@ public partial class MainWindow
         else if (index == SettingsTab) UpdateOfflineInfo();
         else if (index == KnowledgeTab) RefreshDocs();
         else if (index == PlanTab) BuildPlanUi();
+        else if (index == SermonTab && (_sermonVault != _vault.Name || SermonPanel.Children.Count == 0)) BuildSermonUi();
     }
 
     // ---- building a work area ------------------------------------------------------------------------------------------
@@ -185,7 +186,7 @@ public partial class MainWindow
         plus.Click += (_, _) =>
         {
             var menu = new MenuFlyout();
-            foreach (var name in new[] { "Bücher", "Dokumente", "Planen", "Mehr" })
+            foreach (var name in new[] { "Bücher", "Dokumente", "Predigt", "Planen", "Mehr" })
             {
                 var g = NavGroups.First(x => x.Name == name);
                 var item = new MenuItem { Header = name == "Mehr" ? "Einstellungen" : name, IsEnabled = !_windows.ContainsKey("group:" + name) };

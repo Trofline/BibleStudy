@@ -635,6 +635,9 @@
                 <TabItem Header="Lesepläne">
                     <ScrollViewer><StackPanel x:Name="PlanPanel" Spacing="10" Margin="16,10,12,16" /></ScrollViewer>
                 </TabItem>
+                <TabItem Header="Predigt">
+                    <ScrollViewer><StackPanel x:Name="SermonPanel" Spacing="6" Margin="16,10,12,16" /></ScrollViewer>
+                </TabItem>
             </TabControl>
             </DockPanel>
         </Border>

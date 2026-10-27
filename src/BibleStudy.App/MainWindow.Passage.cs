@@ -120,13 +120,29 @@ public partial class MainWindow
         var rows = await compareTask;
         if (version != _guideVersion) return;
         compare.Children.Clear();
+        // words that differ from the open translation are colored (only where the texts are alike enough to compare)
+        var baseText = "";
+        try { if (current is not null) baseText = (await _provider.GetChapterAsync(current.Id, r.Book, r.Chapter)).Verses.FirstOrDefault(x => x.Number == r.Verse)?.Text ?? ""; } catch { /* no highlight */ }
+        static string Norm(string w) => new string(w.Where(char.IsLetterOrDigit).ToArray()).ToLowerInvariant();
+        var baseWords = baseText.Split([' ', ' '], StringSplitOptions.RemoveEmptyEntries).Select(Norm).Where(w => w.Length > 0).ToHashSet();
+        var marked = false;
         foreach (var (name, verseText) in rows)
         {
             var tb = new TextBlock { TextWrapping = TextWrapping.Wrap };
             tb.Inlines!.Add(new Avalonia.Controls.Documents.Run(name + "  ") { FontWeight = FontWeight.SemiBold, Foreground = Res("BsAccent") });
-            tb.Inlines.Add(new Avalonia.Controls.Documents.Run(verseText));
+            var tokens = verseText.Split(' ');
+            var same = tokens.Count(t => baseWords.Contains(Norm(t)));
+            var comparable = baseWords.Count > 0 && same >= Math.Max(2, tokens.Length / 4);
+            for (var i = 0; i < tokens.Length; i++)
+            {
+                var differs = comparable && Norm(tokens[i]).Length > 0 && !baseWords.Contains(Norm(tokens[i]));
+                var run = new Avalonia.Controls.Documents.Run(tokens[i] + (i < tokens.Length - 1 ? " " : ""));
+                if (differs) { run.Foreground = Res("BsAccent"); run.TextDecorations = TextDecorations.Underline; marked = true; }
+                tb.Inlines.Add(run);
+            }
             compare.Children.Add(tb);
         }
+        if (marked && current is not null) compare.Children.Add(Muted($"Farbig und unterstrichen: Wörter, die in {current.ShortName} anders lauten."));
         if (rows.Count == 0) compare.Children.Add(Muted("Keine weitere Übersetzung erreichbar (offline?)."));
         var xr = await xrefTask;
         if (version != _guideVersion) return;

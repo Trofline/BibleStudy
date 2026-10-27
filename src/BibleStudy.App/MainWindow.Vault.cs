@@ -46,8 +46,9 @@ public partial class MainWindow
         _vault = OpenVault(name);
         _settings.Vault = name; SaveSettings();
         _read = _vault.GetReadChapters();
-        CloseEditor(); CloseDocument(); RefreshLists(); RefreshDocs(); RefreshQueue(); RefreshTodos(); RefreshVaultUi();
+        _sermonVault = null; CloseEditor(); CloseDocument(); RefreshLists(); RefreshDocs(); RefreshQueue(); RefreshTodos(); RefreshVaultUi();
         if (_windows.TryGetValue("group:Dokumente", out var docs)) docs.SelectAction?.Invoke(docs.Current);
+        if (_windows.TryGetValue("group:Predigt", out var sermon)) sermon.SelectAction?.Invoke(sermon.Current);
         if (Home.IsVisible) Home.Show(_books, _read, Home.OpenBook);
         await ShowChapterAsync(_selected);
     }

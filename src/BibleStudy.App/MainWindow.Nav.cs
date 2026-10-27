@@ -42,6 +42,10 @@ public partial class MainWindow
             new(KnowledgeTab, "Schreiben", "Eigene Texte und verknüpfte Dateien. Verse wie „Joh 3,16“ und [[Titel]] werden zu Links."),
             new(1, "Ordner", "Deine Ordner mit Dokumenten (📄) und markierten Versen. Klick öffnet das Dokument bzw. springt zur Stelle. ⋯ legt Ordner und Dokumente an."),
         ], Windowed: true),
+        new("Predigt", "M4 21h16 M6 21V8l6-5 6 5v13 M12 3v5 M10 21v-5h4v5",
+        [
+            new(SermonTab, "Predigt-Editor", "Predigt vorbereiten: Text, Kernaussage, Gliederung mit Versen, Notizen und Zeitplan; Export als Handout."),
+        ], Windowed: true),
         new("Planen", "M10 12h11 M10 18h11 M10 6h11 M4 10h2 M4 6h1v4 M6 18H4c0-1 2-2 2-3s-1-1.5-2-1",
         [
             new(6, "Leseliste", "Verse, die du der Reihe nach durchgehen willst."),

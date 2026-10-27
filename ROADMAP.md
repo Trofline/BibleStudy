@@ -48,3 +48,13 @@ Freie, quelloffene Bibelstudien-Software (C#, Avalonia). Nur Quellen mit freier 
 - [x] Einstellungen: Akzentfarbe, Schriftart, Zeilenabstand, Textbreite, Versnummern, Blocksatz, Worte Jesu, Lesen-am-Ende-markieren, Vorlesetempo
 - [x] Gehe-zu (Strg+K), Tastenkürzel, Fokus-Modus, Vers kopieren, Fenstertitel
 - [x] Konkordanz mit Verstexten, Wiedergaben-Filter und Buchverteilung
+
+## Phase 6 – Studium und Planung (neu)
+- [x] Reiter wie im Explorer (Bücher, Dokumente, Predigt, Planen, Einstellungen), herausziehen = loses Fenster, zurückziehen = einrasten
+- [x] Layouts (Desktops) mit Liste, neu speichern, überschreiben, löschen
+- [x] Themensuche (verwandte Wörter über OpenThesaurus, Suche nach Grundformen)
+- [x] Zeitleiste der Bibel mit gekoppelter Karte (Theographic)
+- [x] Lesepläne mit Fortschritt und Serie (aus „Gelesen“-Markierungen)
+- [x] Predigt-Editor (Gliederung, Verse, Zeitplan, Export als Handout)
+- [x] Übersetzungsvergleich mit hervorgehobenen Unterschieden
+- [x] Quellen und Lizenzen im Programm, MIT-Lizenz, THIRD-PARTY-NOTICES, Release-Skript
