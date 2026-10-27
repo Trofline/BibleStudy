@@ -24,6 +24,8 @@ sealed class ArcCanvas : Control
     static readonly string[] GenreNames =
         ["Gesetz", "Geschichtsbücher", "Poesie und Weisheit", "Große Propheten", "Kleine Propheten", "Evangelien", "Apostelgeschichte", "Paulusbriefe", "Katholische Briefe", "Offenbarung"];
 
+    public ArcCanvas() => ClipToBounds = true;
+
     CrossRefGraph? _g;
     VerseLinkSet? _links;
     Func<string, string> _name = s => s;

@@ -91,6 +91,20 @@ public sealed class HelloAoProvider(HttpClient http, string cacheDir) : IBiblePr
 
     public const string InterlinearAttribution = "Interlinear: Berean Standard Bible Interlinear (bereanbible.com), gemeinfrei";
 
+    public const string PlacesAttribution = "Orte: Theographic Bible Metadata (CC BY-SA 4.0)";
+
+    /// <summary>Places with coordinates mentioned in a chapter, in order of their first verse.</summary>
+    public async Task<IReadOnlyList<MapPlace>> GetChapterPlacesAsync(string book, int chapter, CancellationToken ct = default)
+    {
+        using var doc = await GetJsonAsync($"/api/d/theographic/{book}/{chapter}.json", ct);
+        if (!doc.RootElement.GetProperty("chapter").TryGetProperty("places", out var places)) return [];
+        return places.EnumerateArray()
+            .Where(p => p.TryGetProperty("latitude", out var lat) && lat.ValueKind == JsonValueKind.Number && p.TryGetProperty("longitude", out var lon) && lon.ValueKind == JsonValueKind.Number)
+            .Select(p => new MapPlace(Str(p, "id"), Str(p, "name"), Str(p, "featureType"), p.GetProperty("latitude").GetDouble(), p.GetProperty("longitude").GetDouble(),
+                p.TryGetProperty("verses", out var v) ? v.EnumerateArray().Select(x => x.GetInt32()).ToList() : []))
+            .OrderBy(p => p.Verses.DefaultIfEmpty(int.MaxValue).Min()).ToList();
+    }
+
     /// <summary>Books of the cross-reference dataset with their chapter counts, in Bible order.</summary>
     public async Task<IReadOnlyList<(string Book, int Chapters)>> GetCrossRefBooksAsync(CancellationToken ct = default)
     {

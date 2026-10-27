@@ -7,6 +7,7 @@ using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Media;
 using Avalonia.Platform.Storage;
+using BibleStudy.Core.Import;
 using BibleStudy.Core.Models;
 using BibleStudy.Core.Providers;
 using BibleStudy.Core.Storage;
@@ -16,7 +17,7 @@ namespace BibleStudy.App;
 /// <summary>Original text (interlinear), reading aloud, and backup of the vault.</summary>
 public partial class MainWindow
 {
-    const int GrundtextTab = 8, AiTab = 9;
+    const int GrundtextTab = 8, StrongTab = 9, AiTab = 10;
 
     readonly Dictionary<(string Book, int Chapter), Dictionary<int, List<InterlinearWord>>> _interlinear = [];
     VerseRef? _grundtextRef;
@@ -75,11 +76,98 @@ public partial class MainWindow
         };
         cell.Bind(Border.BackgroundProperty, this.GetResourceObservable("BsSurface2"));
         ToolTip.SetTip(cell, string.IsNullOrEmpty(w.ParsingFull) ? w.Parsing : w.ParsingFull);
-        cell.PointerPressed += (_, e) =>
+        cell.PointerPressed += async (_, e) =>
         {
-            if (e.GetCurrentPoint(cell).Properties.IsLeftButtonPressed && w.Strongs.Length > 1) _ = ShowStudyAsync(new WordSpan(0, 0, [w.Strongs], string.IsNullOrEmpty(w.Gloss) ? w.Translit : w.Gloss));
+            if (!e.GetCurrentPoint(cell).Properties.IsLeftButtonPressed) return;
+            foreach (var other in GrundtextPanel.Children.OfType<Border>()) other.ClearValue(Border.BorderBrushProperty);
+            cell.BorderThickness = new(1.5);
+            cell.Bind(Border.BorderBrushProperty, this.GetResourceObservable("BsAccent"));
+            await ShowGrundtextDetailAsync(w);
         };
+        cell.BorderThickness = new(1.5); // reserve the space of the selection frame
+        cell.BorderBrush = Brushes.Transparent;
         return cell;
+    }
+
+    /// <summary>Detail view of one original word: grammar, dictionary entry, and ways to dig deeper.</summary>
+    async Task ShowGrundtextDetailAsync(InterlinearWord w)
+    {
+        GrundtextDetail.Children.Clear();
+        var head = new TextBlock { Text = $"{w.Text}  ·  {w.Translit}", FontSize = 20, FontFamily = UiSerif, TextWrapping = TextWrapping.Wrap, FlowDirection = FlowDirection.LeftToRight };
+        head.Bind(TextBlock.ForegroundProperty, this.GetResourceObservable("BsAccent"));
+        GrundtextDetail.Children.Add(head);
+        GrundtextDetail.Children.Add(new TextBlock { Text = $"Bedeutung hier: {(string.IsNullOrEmpty(w.Gloss) ? "–" : w.Gloss)}", TextWrapping = TextWrapping.Wrap });
+        GrundtextDetail.Children.Add(new TextBlock { Text = $"Grammatik: {(string.IsNullOrEmpty(w.ParsingFull) ? w.Parsing : w.ParsingFull)} ({w.Parsing})", TextWrapping = TextWrapping.Wrap });
+        if (w.Strongs.Length > 1)
+        {
+            try
+            {
+                if (await _strongs.LookupAsync(w.Strongs) is { } entry) GrundtextDetail.Children.Add(StudyCard(entry));
+            }
+            catch (Exception ex) { GrundtextDetail.Children.Add(new TextBlock { Text = "Wörterbuch nicht verfügbar: " + ex.Message, TextWrapping = TextWrapping.Wrap }); }
+            var occurrences = new Button { Content = "Alle Vorkommen", Margin = new(0, 0, 8, 0) };
+            occurrences.Click += async (_, _) => await ShowConcordanceAsync(w.Strongs, $"{w.Strongs}  {w.Text}");
+            var deeper = new Button { Content = "Mit Claude vertiefen", Classes = { "accent" } };
+            deeper.Click += async (_, _) => await AskClaudeAboutWordAsync(w);
+            GrundtextDetail.Children.Add(new StackPanel { Orientation = Avalonia.Layout.Orientation.Horizontal, Children = { occurrences, deeper } });
+        }
+    }
+
+    async Task AskClaudeAboutWordAsync(InterlinearWord w)
+    {
+        if (_grundtextRef is not { } r) return;
+        var t = TranslationBox.SelectedItem as TranslationInfo;
+        SideTabs.SelectedIndex = AiTab;
+        AiInput.Text = $"Analysiere das Wort „{w.Text}“ ({w.Translit}, {w.Strongs}, {w.ParsingFull}) in {Label(r)} genauer: Bedeutungsspektrum, Grammatik und ihre Bedeutung hier, wie das Wort an anderen Stellen verwendet und übersetzt wird " +
+                       $"(nutze get_strongs und get_word_occurrences mit eng_kjv) und ob {t?.Name} es hier treffend wiedergibt (get_passage, translation={t?.Id}). Genau und knapp.";
+        await AiSendOrStopAsync();
+    }
+
+    // ---- Strong's search ----------------------------------------------------------------------------------------------
+
+    List<StrongsEntry> _strongResults = [];
+
+    void InitStrongSearch()
+    {
+        StrongSearchBox.KeyDown += async (_, e) => { if (e.Key == Key.Enter) await SearchStrongAsync(); };
+        StrongList.SelectionChanged += async (_, _) =>
+        {
+            if (StrongList.SelectedIndex is var i and >= 0 && i < _strongResults.Count) await ShowStrongDetailAsync(_strongResults[i]);
+        };
+    }
+
+    async Task SearchStrongAsync()
+    {
+        var query = StrongSearchBox.Text ?? "";
+        if (string.IsNullOrWhiteSpace(query)) return;
+        StrongInfo.Text = "Suche …";
+        try
+        {
+            _strongResults = (await _strongs.SearchAsync(query)).ToList();
+            StrongList.ItemsSource = _strongResults.Select(e => new Entry(default, $"{e.Id}  {e.Lemma}  ({e.Translit})\n{Shorten((e.Definition.Length > 0 ? e.Definition : e.KjvUsage).Trim(), 90)}")).ToList();
+            StrongInfo.Text = _strongResults.Count == 0 ? "Nichts gefunden." : $"{_strongResults.Count} Treffer{(_strongResults.Count >= 60 ? " (erste 60)" : "")} · Treffer anklicken für Details";
+            StrongDetail.Children.Clear();
+            if (_strongResults.Count == 1) await ShowStrongDetailAsync(_strongResults[0]);
+        }
+        catch (Exception ex) { StrongInfo.Text = "Wörterbuch nicht verfügbar: " + ex.Message; }
+    }
+
+    Task ShowStrongDetailAsync(StrongsEntry e)
+    {
+        StrongDetail.Children.Clear();
+        StrongDetail.Children.Add(StudyCard(e));
+        var padded = $"{e.Id[0]}{int.Parse(e.Id[1..]):D4}";
+        var occurrences = new Button { Content = "Alle Vorkommen", Margin = new(0, 0, 8, 0) };
+        occurrences.Click += async (_, _) => await ShowConcordanceAsync(padded, $"{e.Id}  {e.Lemma}");
+        var deeper = new Button { Content = "Mit Claude vertiefen" };
+        deeper.Click += async (_, _) =>
+        {
+            SideTabs.SelectedIndex = AiTab;
+            AiInput.Text = $"Erkläre {e.Id} ({e.Lemma}, {e.Translit}) ausführlich: Bedeutungsspektrum, wichtige Stellen (get_word_occurrences mit eng_kjv) und wie es sich zu verwandten Wörtern verhält. Zitiere Verse nur aus den Werkzeugen.";
+            await AiSendOrStopAsync();
+        };
+        StrongDetail.Children.Add(new StackPanel { Orientation = Avalonia.Layout.Orientation.Horizontal, Children = { occurrences, deeper } });
+        return Task.CompletedTask;
     }
 
     async Task AskClaudeToCheckAsync()

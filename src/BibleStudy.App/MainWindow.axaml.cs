@@ -4,6 +4,7 @@ using Avalonia.Controls.Documents;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Media;
+using BibleStudy.Core.Import;
 using BibleStudy.Core.Models;
 using BibleStudy.Core.Providers;
 using BibleStudy.Core.Storage;
@@ -31,6 +32,8 @@ public partial class MainWindow : Window
     const int MaxExtras = 3;
     const int ConcordanceLimit = 3000;
     readonly HelloAoProvider _hello;
+    readonly LocalBibleStore _local;
+    readonly HttpClient _http;
     bool _building;
     readonly StrongsDictionary _strongs;
     int _fontSize = 22;
@@ -64,8 +67,10 @@ public partial class MainWindow : Window
     {
         InitializeComponent();
         _root = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "BibleStudy");
-        var http = new HttpClient();
-        _provider = _hello = new HelloAoProvider(http, Path.Combine(_root, "cache"));
+        var http = _http = new HttpClient();
+        _hello = new HelloAoProvider(http, Path.Combine(_root, "cache"));
+        _local = new LocalBibleStore(Path.Combine(_root, "local.db"));
+        _provider = new CompositeProvider(_hello, _local);
         _strongs = new StrongsDictionary(http, Path.Combine(_root, "cache"));
         _store = new UserStore(Path.Combine(_root, "user.db"));
         _settingsPath = Path.Combine(_root, "settings.json");
@@ -135,6 +140,8 @@ public partial class MainWindow : Window
         InitGraph();
         InitPanel();
         InitStudy();
+        InitStrongSearch();
+        InitImport();
         StartControl();
         Opened += async (_, _) => await InitAsync();
     }
@@ -176,10 +183,10 @@ public partial class MainWindow : Window
     void ShowHome()
     {
         Home.Show(_books, _read, Home.OpenBook);
-        Home.IsVisible = true; ReaderHost.IsVisible = false; GraphPane.IsVisible = false;
+        Home.IsVisible = true; ReaderHost.IsVisible = false; GraphPane.IsVisible = false; MapPane.IsVisible = false;
     }
 
-    void ShowReader() { Home.IsVisible = false; GraphPane.IsVisible = false; ReaderHost.IsVisible = true; OnReaderShown(); }
+    void ShowReader() { Home.IsVisible = false; GraphPane.IsVisible = false; MapPane.IsVisible = false; ReaderHost.IsVisible = true; OnReaderShown(); }
 
     async Task GoToAsync(string bookId, int chapter, int? verse = null)
     {
@@ -195,7 +202,7 @@ public partial class MainWindow : Window
 
     async Task GoBackAsync()
     {
-        if (Home.IsVisible || GraphPane.IsVisible) { ShowReader(); return; }
+        if (Home.IsVisible || GraphPane.IsVisible || MapPane.IsVisible) { ShowReader(); return; }
         if (_history.Count < 2) return;
         _history.RemoveAt(_history.Count - 1);
         var (book, chapter) = _history[^1];

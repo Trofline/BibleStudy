@@ -26,6 +26,55 @@ public sealed class StrongsDictionary(HttpClient http, string cacheDir)
         catch { lock (_loaded) _loaded.Remove(lang); throw; }
     }
 
+    /// <summary>
+    /// Finds entries by number ("G3056", "h1", "3056") or by text: Hebrew/Greek lemma, transliteration or an English word of the
+    /// definition. Accents and vowel points are ignored. Best matches first.
+    /// </summary>
+    public async Task<IReadOnlyList<StrongsEntry>> SearchAsync(string query, int limit = 60, CancellationToken ct = default)
+    {
+        query = query.Trim();
+        if (query.Length == 0) return [];
+        var number = System.Text.RegularExpressions.Regex.Match(query, @"^([GgHh])?\s*0*(\d{1,4})$");
+        if (number.Success)
+        {
+            var letters = number.Groups[1].Success ? [char.ToUpperInvariant(number.Groups[1].Value[0])] : new[] { 'G', 'H' };
+            var found = new List<StrongsEntry>();
+            foreach (var l in letters) if (await LookupAsync($"{l}{number.Groups[2].Value}", ct) is { } e) found.Add(e);
+            return found;
+        }
+        var needle = Fold(query);
+        var scored = new List<(int Score, StrongsEntry Entry)>();
+        foreach (var lang in new[] { 'G', 'H' })
+        {
+            Task<Dictionary<int, StrongsEntry>> task;
+            lock (_loaded) task = _loaded.TryGetValue(lang, out var t) ? t : _loaded[lang] = LoadAsync(lang, ct);
+            foreach (var e in (await task).Values)
+            {
+                int score;
+                if (Fold(e.Lemma) == needle || Fold(e.Translit) == needle) score = 0;
+                else if (Fold(e.Lemma).StartsWith(needle) || Fold(e.Translit).StartsWith(needle)) score = 1;
+                else if (WordIn(e.KjvUsage, needle)) score = 2;
+                else if (WordIn(e.Definition, needle)) score = 3;
+                else if (Fold(e.Lemma).Contains(needle) || Fold(e.Translit).Contains(needle)) score = 4;
+                else continue;
+                scored.Add((score, e));
+            }
+        }
+        return scored.OrderBy(s => s.Score).ThenBy(s => s.Entry.Id.Length).ThenBy(s => s.Entry.Id).Take(limit).Select(s => s.Entry).ToList();
+    }
+
+    static bool WordIn(string text, string foldedNeedle) => text.Length > 0 && Fold(text).Contains(foldedNeedle);
+
+    /// <summary>Lower case without accents, breathing marks or vowel points, so "λογος" finds "λόγος".</summary>
+    static string Fold(string s)
+    {
+        var normalized = s.Normalize(System.Text.NormalizationForm.FormD);
+        var sb = new System.Text.StringBuilder(normalized.Length);
+        foreach (var c in normalized)
+            if (System.Globalization.CharUnicodeInfo.GetUnicodeCategory(c) != System.Globalization.UnicodeCategory.NonSpacingMark) sb.Append(char.ToLowerInvariant(c));
+        return sb.ToString();
+    }
+
     async Task<Dictionary<int, StrongsEntry>> LoadAsync(char lang, CancellationToken ct)
     {
         var (path, name) = lang == 'G' ? ("greek/strongs-greek-dictionary.js", "greek.js") : ("hebrew/strongs-hebrew-dictionary.js", "hebrew.js");

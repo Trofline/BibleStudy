@@ -21,3 +21,23 @@ public class StrongsTests
         Assert.Equal("a deity", d[2316].Definition);
     }
 }
+
+public class StrongsSearchTests
+{
+    [Fact]
+    public async Task Search_ByNumberLemmaAndMeaning_IgnoringAccents()
+    {
+        var dir = Path.Combine(Path.GetTempPath(), "bs_" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(Path.Combine(dir, "strongs"));
+        File.WriteAllText(Path.Combine(dir, "strongs", "greek.js"),
+            "var strongsGreekDictionary = {\"G26\":{\"lemma\":\"ἀγάπη\",\"translit\":\"agápē\",\"strongs_def\":\" love\",\"kjv_def\":\"charity, love\",\"derivation\":\"\"},\"G3056\":{\"lemma\":\"λόγος\",\"translit\":\"lógos\",\"strongs_def\":\" a word\",\"kjv_def\":\"word\",\"derivation\":\"\"}};");
+        File.WriteAllText(Path.Combine(dir, "strongs", "hebrew.js"), "var strongsHebrewDictionary = {\"H157\":{\"lemma\":\"אָהַב\",\"xlit\":\"ʼâhab\",\"strongs_def\":\"to have affection\",\"kjv_def\":\"love\",\"derivation\":\"\"}};");
+        var d = new StrongsDictionary(new HttpClient(), dir);
+        Assert.Equal("G3056", Assert.Single(await d.SearchAsync("G3056")).Id);
+        Assert.Equal("G3056", (await d.SearchAsync("λογος"))[0].Id);       // no accents typed
+        Assert.Equal("G26", (await d.SearchAsync("agape"))[0].Id);
+        Assert.Contains(await d.SearchAsync("love"), e => e.Id == "H157");   // English meaning, both languages
+        Assert.Equal(2, (await d.SearchAsync("love")).Count);
+        Assert.Empty(await d.SearchAsync("zzzz"));
+    }
+}

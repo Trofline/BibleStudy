@@ -3,6 +3,7 @@ using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Media;
 using Avalonia.Threading;
+using BibleStudy.Core.Import;
 using BibleStudy.Core.Models;
 
 namespace BibleStudy.App;
@@ -14,8 +15,27 @@ public partial class MainWindow
     bool _graphBuilding, _xrefInText, _threadOn;
     Dictionary<int, List<CrossRef>>? _chapterRefs;
 
+    WorldMap? _worldMap;
+
+    void InitMap()
+    {
+        MapBtn.Click += async (_, _) => await ShowMapAsync();
+        MapPane.CloseRequested += ShowReader;
+        MapPane.MapProvider = async () => _worldMap ??= await WorldMap.LoadAsync(_http, Path.Combine(_root, "cache"));
+        MapPane.PlacesProvider = (book, chapter) => _hello.GetChapterPlacesAsync(book, chapter);
+        MapPane.OpenVerse += async (book, chapter, verse) => await GoToAsync(book, chapter, verse);
+    }
+
+    async Task ShowMapAsync()
+    {
+        Home.IsVisible = false; ReaderHost.IsVisible = false; GraphPane.IsVisible = false; MapPane.IsVisible = true;
+        var chapters = _books.FirstOrDefault(b => b.Id == _curBook)?.NumberOfChapters ?? 1;
+        await MapPane.OpenAsync(_curBook, BookName(_curBook), _curChapter, chapters);
+    }
+
     void InitGraph()
     {
+        InitMap();
         _xrefInText = _settings.XrefInText;
         _threadOn = _settings.ThreadGraph;
         ViewBtn.Click += (_, _) => ShowViewFlyout();
@@ -44,12 +64,23 @@ public partial class MainWindow
         SidePanel.Width = Math.Clamp(_settings.SideWidth, 300, 760);
         SetPanelOpen(_settings.SideOpen);
         PanelBtn.Click += (_, _) => SetPanelOpen(PanelBtn.IsChecked == true);
-        SideSplitter.DragDelta += (_, e) =>
+        // Drag the left edge of the panel: wider to the left, narrower to the right.
+        double? dragFrom = null; var startWidth = 0.0;
+        SideSplitter.PointerPressed += (_, e) =>
         {
-            SidePanel.Width = Math.Clamp(SidePanel.Width - e.Vector.X, 300, 760);
+            if (!e.GetCurrentPoint(this).Properties.IsLeftButtonPressed) return;
+            dragFrom = e.GetPosition(this).X; startWidth = SidePanel.Width;
+            e.Pointer.Capture(SideSplitter);
+        };
+        SideSplitter.PointerMoved += (_, e) =>
+        {
+            if (dragFrom is not double from) return;
+            SidePanel.Width = Math.Clamp(startWidth - (e.GetPosition(this).X - from), 300, Math.Max(300, Bounds.Width - 420));
             _settings.SideWidth = SidePanel.Width;
         };
-        SideSplitter.DragCompleted += (_, _) => SaveSettings();
+        SideSplitter.PointerReleased += (_, e) => { if (dragFrom is null) return; dragFrom = null; e.Pointer.Capture(null); SaveSettings(); };
+        SideSplitter.PointerEntered += (_, _) => SideSplitter.Background = Res("BsBorder") ?? Brushes.Gray;
+        SideSplitter.PointerExited += (_, _) => { if (dragFrom is null) SideSplitter.Background = Brushes.Transparent; };
     }
 
     void SetPanelOpen(bool open)
@@ -65,7 +96,10 @@ public partial class MainWindow
     /// <summary>Strong's numbers exist only in some translations; otherwise the KJV is added as a column so the study still works.</summary>
     async Task OnStudyToggledAsync()
     {
-        if (StudyBtn.IsChecked == true && TranslationBox.SelectedItem is TranslationInfo t && !_hello.MayHaveStrongs(t.Id))
+        var hasStrongs = TranslationBox.SelectedItem is TranslationInfo cur && (LocalBibleStore.Owns(cur.Id)
+            ? _curChapterData?.Verses.Any(v => v.Segments.Any(s => s.Strongs is { Count: > 0 })) ?? false
+            : _hello.MayHaveStrongs(cur.Id));
+        if (StudyBtn.IsChecked == true && TranslationBox.SelectedItem is TranslationInfo t && !hasStrongs)
         {
             var kjv = _all.FirstOrDefault(x => x.Id == "eng_kjv");
             if (kjv is not null && !_extras.Any(e => e.Translation?.Id == kjv.Id) && _extras.Count < MaxExtras)
@@ -192,7 +226,7 @@ public partial class MainWindow
 
     async Task ShowGraphAsync()
     {
-        Home.IsVisible = false; ReaderHost.IsVisible = false; GraphPane.IsVisible = true;
+        Home.IsVisible = false; ReaderHost.IsVisible = false; MapPane.IsVisible = false; GraphPane.IsVisible = true;
         if (_graph is not null) { GraphPane.FocusChapter(_curBook, _curChapter); return; }
         var dir = Path.Combine(_root, "cache", "api", "d", "open-cross-ref");
         var cached = Directory.Exists(dir) ? Directory.EnumerateFiles(dir, "*.json", SearchOption.AllDirectories).Count() : 0;

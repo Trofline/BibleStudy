@@ -45,6 +45,9 @@
                     <Button x:Name="GraphBtn" Classes="tool" ToolTip.Tip="Querverweis-Graph (Netzwerk und Bogen)">
                         <local:Icon Data="M5 12a2 2 0 1 0 4 0a2 2 0 1 0-4 0z M15 5a2 2 0 1 0 4 0a2 2 0 1 0-4 0z M15 19a2 2 0 1 0 4 0a2 2 0 1 0-4 0z M8.7 11l6.6-4.9 M8.7 13l6.6 4.9" />
                     </Button>
+                    <Button x:Name="MapBtn" Classes="tool" ToolTip.Tip="Karte: Orte des Kapitels oder Buches">
+                        <local:Icon Data="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0z M9 10a3 3 0 1 0 6 0a3 3 0 1 0-6 0z" />
+                    </Button>
                     <Button x:Name="ParallelBtn" Classes="tool" ToolTip.Tip="Weitere Übersetzung als Spalte daneben (max. 3)">
                         <local:Icon Data="M5 3h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z M12 3v18" />
                     </Button>
@@ -102,9 +105,9 @@
         <WrapPanel x:Name="ParallelBar" DockPanel.Dock="Top" IsVisible="False" Background="{DynamicResource BsSurface}" />
 
         <!-- Footer: license information of the shown translations -->
-        <Border DockPanel.Dock="Bottom" Padding="16,6" Background="{DynamicResource BsSurface}"
+        <Border DockPanel.Dock="Bottom" Padding="16,6" Height="32" Background="{DynamicResource BsSurface}"
                 BorderBrush="{DynamicResource BsBorder}" BorderThickness="0,1,0,0">
-            <TextBlock x:Name="StatusText" Classes="caption" TextWrapping="Wrap" />
+            <TextBlock x:Name="StatusText" Classes="caption" TextTrimming="CharacterEllipsis" ToolTip.Tip="{Binding #StatusText.Text}" />
         </Border>
 
         <!-- Side panel with icon rail -->
@@ -243,10 +246,23 @@
                         <ScrollViewer>
                             <StackPanel Spacing="10" Margin="0,0,8,0">
                                 <WrapPanel x:Name="GrundtextPanel" />
+                                <StackPanel x:Name="GrundtextDetail" Spacing="8" />
                                 <TextBlock x:Name="GrundtextSource" Classes="caption" TextWrapping="Wrap" />
                             </StackPanel>
                         </ScrollViewer>
                     </DockPanel>
+                </TabItem>
+                <TabItem ToolTip.Tip="Strong-Nummern suchen">
+                    <TabItem.Header><local:Icon Data="M4 9h16 M4 15h16 M10 3L8 21 M16 3l-2 18" /></TabItem.Header>
+                    <Grid RowDefinitions="Auto,*,Auto" Margin="16,14,12,12">
+                        <StackPanel Spacing="8" Margin="0,0,0,8">
+                            <TextBlock Classes="h2" Text="Strong-Suche" />
+                            <TextBox x:Name="StrongSearchBox" Watermark="G3056, H1, λόγος, agape, love …  (Enter)" />
+                            <TextBlock x:Name="StrongInfo" Classes="caption" TextWrapping="Wrap" Text="Nummer, Grundtextwort, Umschrift oder englische Bedeutung. Akzente sind egal." />
+                        </StackPanel>
+                        <ListBox x:Name="StrongList" Grid.Row="1" ItemTemplate="{StaticResource EntryTpl}" ScrollViewer.HorizontalScrollBarVisibility="Disabled" />
+                        <ScrollViewer Grid.Row="2" MaxHeight="300" Margin="0,8,0,0"><StackPanel x:Name="StrongDetail" Spacing="8" /></ScrollViewer>
+                    </Grid>
                 </TabItem>
                 <TabItem ToolTip.Tip="KI-Assistent (Claude)">
                     <TabItem.Header><local:Icon Data="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9z M19 3v4 M17 5h4 M5 17v4 M3 19h4" /></TabItem.Header>
@@ -315,6 +331,19 @@
                             </StackPanel>
                             <TextBlock x:Name="BackupInfo" Classes="caption" TextWrapping="Wrap" />
                             <Border Height="1" Background="{DynamicResource BsBorder}" />
+                            <TextBlock Text="Eigene Übersetzung importieren" FontWeight="SemiBold" />
+                            <TextBlock Classes="caption" TextWrapping="Wrap"
+                                       Text="Für Bibeltexte, die du rechtmäßig besitzt und die nicht frei verfügbar sind (z. B. die Elberfelder Edition CSV). Unterstützt: e-Sword-Module (.bblx), Zefania-XML und die Offline-HTML der CSV-Bibel (mit Strong-Nummern und Fußnoten). Der Text bleibt nur auf diesem Rechner und dient deiner privaten Nutzung; gib ihn nicht weiter und lege ihn nicht in ein öffentliches Repository." />
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <TextBox x:Name="ImportLangBox" Width="70" Text="de" Watermark="Sprache" ToolTip.Tip="Sprachcode der Datei, z. B. de oder en (bei der CSV-Datei automatisch Deutsch)" />
+                                <Button x:Name="ImportBibleBtn" Content="Datei wählen …" />
+                            </StackPanel>
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <Border Classes="pill"><ComboBox x:Name="LocalBibleBox" Width="200" PlaceholderText="Importierte Übersetzungen" /></Border>
+                                <Button x:Name="RemoveBibleBtn" Content="Entfernen" />
+                            </StackPanel>
+                            <TextBlock x:Name="ImportBibleInfo" Classes="caption" TextWrapping="Wrap" />
+                            <Border Height="1" Background="{DynamicResource BsBorder}" />
                             <TextBlock Text="Offline" FontWeight="SemiBold" />
                             <TextBlock x:Name="OfflineInfo" Classes="caption" TextWrapping="Wrap" />
                             <Button x:Name="OfflineBtn" Content="Gewählte Übersetzung offline verfügbar machen" HorizontalAlignment="Left" />
@@ -362,7 +391,7 @@
                 </TabItem>
             </TabControl>
         </Border>
-        <Thumb x:Name="SideSplitter" DockPanel.Dock="Right" Width="6" Background="Transparent" Cursor="SizeWestEast" />
+        <Border x:Name="SideSplitter" DockPanel.Dock="Right" Width="8" Background="Transparent" Cursor="SizeWestEast" />
 
         <!-- Reader -->
         <Grid>
@@ -374,6 +403,7 @@
             </Grid>
             <local:HomeView x:Name="Home" IsVisible="False" Background="{DynamicResource BsBackground}" />
             <local:GraphView x:Name="GraphPane" IsVisible="False" Background="{DynamicResource BsBackground}" />
+            <local:MapView x:Name="MapPane" IsVisible="False" Background="{DynamicResource BsBackground}" />
         </Grid>
     </DockPanel>
 </Window>

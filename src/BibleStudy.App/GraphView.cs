@@ -31,7 +31,7 @@ public sealed class GraphView : UserControl
     readonly TextBlock _countLabel = new() { Text = "Anzahl 14" };
     readonly ComboBox _bookBox = new() { Width = 170, IsVisible = false };
     readonly Slider _arcSlider = new() { Minimum = 10000, Maximum = 344000, Value = 150000, Width = 150, IsVisible = false };
-    readonly TextBlock _hint = new() { FontSize = 12, VerticalAlignment = VerticalAlignment.Center };
+    readonly TextBlock _hint = new() { FontSize = 12, VerticalAlignment = VerticalAlignment.Center, TextTrimming = TextTrimming.CharacterEllipsis };
     readonly TextBlock _detailTitle = new() { FontWeight = FontWeight.SemiBold, FontSize = 15 };
     readonly TextBlock _detailInfo = new() { FontSize = 12 };
     readonly WrapPanel _detailChips = new();
@@ -63,7 +63,7 @@ public sealed class GraphView : UserControl
         back.Click += (_, _) => CloseRequested?.Invoke();
         var strip = new WrapPanel { Margin = new(16, 10, 16, 6) };
         void Add(Control c, double right = 10) { c.Margin = new(0, 0, right, 4); c.VerticalAlignment = VerticalAlignment.Center; strip.Children.Add(c); }
-        Add(back, 16); Add(_netBtn, 4); Add(_arcBtn, 16); Add(_dirBox); Add(_countLabel, 6); Add(_countSlider, 14); Add(_bookBox); Add(_arcSlider, 14); Add(_resetBtn); Add(_hint);
+        Add(back, 16); Add(_netBtn, 4); Add(_arcBtn, 16); Add(_dirBox); Add(_countLabel, 6); Add(_countSlider, 14); Add(_bookBox); Add(_arcSlider, 14); Add(_resetBtn);
 
         _detailActions.Children.Add(_centerBtn); _detailActions.Children.Add(_expandBtn); _detailActions.Children.Add(_openBtn);
         foreach (var b in _detailActions.Children) b.Margin = new(0, 6, 8, 0);
@@ -82,8 +82,9 @@ public sealed class GraphView : UserControl
         }
         var bottom = new StackPanel { Children = { _detail, legend } };
         var dock = new DockPanel();
-        DockPanel.SetDock(strip, Dock.Top); DockPanel.SetDock(bottom, Dock.Bottom);
-        dock.Children.Add(strip); dock.Children.Add(bottom); dock.Children.Add(host);
+        var hintRow = new Border { Height = 24, Padding = new(16, 0), Child = _hint };
+        DockPanel.SetDock(strip, Dock.Top); DockPanel.SetDock(hintRow, Dock.Top); DockPanel.SetDock(bottom, Dock.Bottom);
+        dock.Children.Add(strip); dock.Children.Add(hintRow); dock.Children.Add(bottom); dock.Children.Add(host);
         Content = dock;
 
         _netBtn.Click += (_, _) => SetMode(arc: false);
@@ -205,6 +206,8 @@ sealed class NetworkCanvas : Control
 {
     public event Action<int>? Selected, Open;
     public event Action<string>? Hovered;
+
+    public NetworkCanvas() => ClipToBounds = true;
 
     CrossRefGraph? _g;
     List<int> _nodes = [];

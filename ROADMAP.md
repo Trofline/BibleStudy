@@ -33,5 +33,10 @@ Freie, quelloffene Bibelstudien-Software (C#, Avalonia). Nur Quellen mit freier 
 - [x] Erweiterte Suche (Wendungen, ODER, Ausschluss, Bereich AT/NT/Buch)
 - [x] Vorlesen (Windows-Stimmen)
 - [x] Export/Import (Vault + Einstellungen als ZIP)
-- [ ] Karte (Orte, Wege)
+- [x] Karte (Orte des Kapitels oder Buches, Weg in Reihenfolge der Erwähnung)
 - [ ] Dokumente verlinken, eigene Wissensdatenbank
+
+## Weitere Funktionen
+- [x] Strong-Suche (Nummer, Grundtextwort, Umschrift, englische Bedeutung)
+- [x] Grundtext: einzelnes Wort mit Details, Wörterbuch und Claude-Vertiefung
+- [x] Eigene Übersetzungen importieren (e-Sword .bblx, Zefania XML, Offline-HTML der CSV-Bibel), nur lokal und privat
