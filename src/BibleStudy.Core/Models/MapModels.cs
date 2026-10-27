@@ -60,3 +60,9 @@ public sealed class WorldMap
         return result;
     }
 }
+
+/// <summary>An event of the Bible's timeline (year: negative = BC).</summary>
+public sealed record TimelineEvent(string Id, string Name, int Year, int References);
+
+public sealed record EventDetail(string Id, string Name, int Year, string Duration, IReadOnlyList<(string Id, string Name)> Participants,
+    IReadOnlyList<(string Id, string Name)> Locations, IReadOnlyList<(VerseRef Ref, int EndVerse)> References);

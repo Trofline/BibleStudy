@@ -223,7 +223,7 @@ public partial class MainWindow
             foreach (var tag in d.Tags)
                 edges.Add((from, Node("t:" + tag, () => new KnowledgeNode("tag", "#" + tag, tag, Color.Parse("#9a9890")))));
         }
-        Home.IsVisible = false; ReaderHost.IsVisible = false; GraphPane.IsVisible = false; MapPane.IsVisible = false; KnowledgePane.IsVisible = true;
+        Home.IsVisible = false; ReaderHost.IsVisible = false; GraphPane.IsVisible = false; MapPane.IsVisible = false; TimelinePane.IsVisible = false; KnowledgePane.IsVisible = true;
         KnowledgePane.SetData(nodes, edges);
     }
 }

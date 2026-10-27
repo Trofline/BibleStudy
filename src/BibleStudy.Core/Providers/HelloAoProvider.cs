@@ -265,6 +265,40 @@ public sealed class HelloAoProvider(HttpClient http, string cacheDir) : IBiblePr
         return result;
     }
 
+
+    // ---- timeline (Theographic: events with dates, people, places and passages) --------------------------------------------
+
+    public const string TimelineAttribution = "Zeitleiste: Theographic Bible Metadata (CC BY-SA 4.0); Datierungen sind Näherungswerte";
+
+    public async Task<IReadOnlyList<TimelineEvent>> GetTimelineAsync(CancellationToken ct = default)
+    {
+        using var doc = await GetJsonAsync("/api/d/theographic/events.json", ct);
+        return doc.RootElement.GetProperty("events").EnumerateArray()
+            .Where(e => int.TryParse(Str(e, "startDate"), out _))
+            .Select(e => new TimelineEvent(Str(e, "id"), Str(e, "name"), int.Parse(Str(e, "startDate")), e.TryGetProperty("numberOfReferences", out var r) ? r.GetInt32() : 0))
+            .OrderBy(e => e.Year).ThenBy(e => e.Name).ToList();
+    }
+
+    public async Task<EventDetail> GetEventAsync(string id, CancellationToken ct = default)
+    {
+        using var doc = await GetJsonAsync($"/api/d/theographic/events/{id}.json", ct);
+        var e = doc.RootElement.GetProperty("event");
+        static List<(string, string)> Named(JsonElement e, string name) =>
+            e.TryGetProperty(name, out var v) && v.ValueKind == JsonValueKind.Array ? v.EnumerateArray().Select(x => (Str(x, "id"), Str(x, "name"))).ToList() : [];
+        var refs = e.TryGetProperty("references", out var r) && r.ValueKind == JsonValueKind.Array
+            ? r.EnumerateArray().Select(x => (new VerseRef(Str(x, "book"), x.GetProperty("chapter").GetInt32(), x.TryGetProperty("verse", out var v) ? v.GetInt32() : 1), x.TryGetProperty("endVerse", out var ev) ? ev.GetInt32() : 0)).ToList() : [];
+        int.TryParse(Str(e, "startDate"), out var year);
+        return new EventDetail(Str(e, "id"), Str(e, "name"), year, Str(e, "duration"), Named(e, "participants"), Named(e, "locations"), refs);
+    }
+
+    public async Task<MapPlace?> GetPlaceAsync(string id, CancellationToken ct = default)
+    {
+        using var doc = await GetJsonAsync($"/api/d/theographic/places/{id}.json", ct);
+        var p = doc.RootElement.GetProperty("place");
+        if (!(p.TryGetProperty("latitude", out var lat) && lat.ValueKind == JsonValueKind.Number && p.TryGetProperty("longitude", out var lon) && lon.ValueKind == JsonValueKind.Number)) return null;
+        return new MapPlace(Str(p, "id"), Str(p, "name"), Str(p, "featureType"), lat.GetDouble(), lon.GetDouble(), []);
+    }
+
     static string Str(JsonElement e, string name) =>
         e.TryGetProperty(name, out var v) && v.ValueKind == JsonValueKind.String ? v.GetString()! : "";
 

@@ -132,6 +132,9 @@
                         <Button x:Name="MapBtn" Classes="toolx" ToolTip.Tip="Karte: Orte des Kapitels oder Buches">
                             <StackPanel Orientation="Horizontal" Spacing="6"><local:Icon Data="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0z M9 10a3 3 0 1 0 6 0a3 3 0 1 0-6 0z" IconSize="17" VerticalAlignment="Center" /><TextBlock Text="Karte" VerticalAlignment="Center" /></StackPanel>
                         </Button>
+                        <Button x:Name="TimelineBtn" Classes="toolx" ToolTip.Tip="Zeitleiste der Bibel mit Karte">
+                            <StackPanel Orientation="Horizontal" Spacing="6"><local:Icon Data="M3 12h18 M6 8v8 M12 5v14 M18 9v6" IconSize="17" VerticalAlignment="Center" /><TextBlock Text="Zeitleiste" VerticalAlignment="Center" /></StackPanel>
+                        </Button>
                         <Button x:Name="ParallelBtn" Classes="toolx" ToolTip.Tip="Weitere Übersetzung als Spalte daneben (max. 3)">
                             <StackPanel Orientation="Horizontal" Spacing="6"><local:Icon Data="M5 3h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z M12 3v18" IconSize="17" VerticalAlignment="Center" /><TextBlock Text="Parallel" VerticalAlignment="Center" /></StackPanel>
                         </Button>
@@ -194,6 +197,7 @@
                                 </Border>
                                 <CheckBox x:Name="SearchExactCheck" Content="Ganze Wörter" Margin="0,0,8,4" ToolTip.Tip="Sonst finden Wortanfänge auch Endungen (lieb → liebe, lieben)" />
                                 <ToggleButton x:Name="SearchHelpBtn" Classes="pillbtn" Margin="0,0,0,4" Content="Suchhilfe" FontSize="12.5" ToolTip.Tip="Alle Suchmöglichkeiten mit Beispielen" />
+                                <Button x:Name="TopicBtn" Classes="seg" Margin="8,0,0,4" Content="Themensuche" ToolTip.Tip="Ein Thema (z. B. Vergebung) mit verwandten Wörtern im ganzen Text suchen" />
                             </WrapPanel>
                             <Border x:Name="SearchHelp" IsVisible="False" Classes="card">
                                 <StackPanel x:Name="SearchHelpList" Spacing="6" />
@@ -644,6 +648,7 @@
             <local:HomeView x:Name="Home" IsVisible="False" Background="{DynamicResource BsBackground}" />
             <local:GraphView x:Name="GraphPane" IsVisible="False" Background="{DynamicResource BsBackground}" />
             <local:MapView x:Name="MapPane" IsVisible="False" Background="{DynamicResource BsBackground}" />
+            <local:TimelineView x:Name="TimelinePane" IsVisible="False" Background="{DynamicResource BsBackground}" />
             <local:KnowledgeView x:Name="KnowledgePane" IsVisible="False" Background="{DynamicResource BsBackground}" />
             <Grid x:Name="WorkHost" IsVisible="False" Background="{DynamicResource BsSurface}" />
         </Grid>

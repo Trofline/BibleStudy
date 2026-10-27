@@ -188,7 +188,7 @@ sealed class MapCanvas : Control
         if (_places.Count == 0 || Bounds.Width < 50) return;
         double minX = _places.Min(p => p.Longitude), maxX = _places.Max(p => p.Longitude), minY = _places.Min(p => MercY(p.Latitude)), maxY = _places.Max(p => MercY(p.Latitude));
         _cx = (minX + maxX) / 2; _cy = (minY + maxY) / 2;
-        var spanX = Math.Max(maxX - minX, 0.5) * 1.35; var spanY = Math.Max(maxY - minY, 0.5) * 1.35;
+        var spanX = Math.Max(maxX - minX, 4) * 1.35; var spanY = Math.Max(maxY - minY, 4) * 1.35;
         _scale = Math.Clamp(Math.Min(Bounds.Width / spanX, Bounds.Height / spanY), 4, 250);
     }
 
