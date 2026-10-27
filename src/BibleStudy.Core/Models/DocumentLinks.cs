@@ -27,6 +27,9 @@ public static partial class DocumentLinks
         return result;
     }
 
+    /// <summary>USFM id for a book name or abbreviation (German or English), or null.</summary>
+    public static string? BookId(string name) => Names.Value.TryGetValue(Normalize(name), out var id) ? id : null;
+
     static string Normalize(string name)
     {
         var folded = name.Normalize(NormalizationForm.FormD);

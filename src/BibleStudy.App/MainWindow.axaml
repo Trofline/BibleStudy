@@ -11,70 +11,46 @@
                     <Border Width="10" Height="10" CornerRadius="5" VerticalAlignment="Center" IsVisible="{Binding HasColor}" Background="{Binding ColorBrush}" />
                     <TextBlock Text="{Binding Title}" FontWeight="SemiBold" Foreground="{DynamicResource BsAccent}" TextWrapping="Wrap" />
                 </StackPanel>
-                <TextBlock Text="{Binding Body}" IsVisible="{Binding HasBody}" TextWrapping="Wrap" Opacity="0.85" />
+                <local:MarkedBlock Marked="{Binding Body}" IsVisible="{Binding HasBody}" TextWrapping="Wrap" Opacity="0.9" />
             </StackPanel>
         </DataTemplate>
     </Window.Resources>
 
     <DockPanel>
-        <!-- Top bar -->
-        <Border DockPanel.Dock="Top" Padding="16,10" Background="{DynamicResource BsSurface}"
+        <!-- Top bar: where am I (navigation) -->
+        <Border x:Name="TopBar" DockPanel.Dock="Top" Padding="16,0" Height="60" Background="{DynamicResource BsSurface}"
                 BorderBrush="{DynamicResource BsBorder}" BorderThickness="0,0,0,1">
-            <DockPanel>
-                <Border DockPanel.Dock="Left" Width="36" Height="36" CornerRadius="11" Margin="0,0,18,0" Background="{DynamicResource BsAccent}">
-                    <local:Icon Data="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"
-                                IconSize="20" HorizontalAlignment="Center" VerticalAlignment="Center"
-                                TextElement.Foreground="{DynamicResource BsSurface}" />
-                </Border>
-                <StackPanel DockPanel.Dock="Left" Orientation="Horizontal" Spacing="2" Margin="0,0,14,0" VerticalAlignment="Center">
-                    <Button x:Name="BackBtn" Classes="tool" ToolTip.Tip="Zurück zur vorherigen Stelle">
+            <DockPanel VerticalAlignment="Center">
+                <StackPanel DockPanel.Dock="Left" Orientation="Horizontal" Spacing="10" Margin="0,0,18,0" VerticalAlignment="Center">
+                    <Border Width="34" Height="34" CornerRadius="10" Background="{DynamicResource BsAccent}">
+                        <local:Icon Data="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"
+                                    IconSize="19" HorizontalAlignment="Center" VerticalAlignment="Center"
+                                    TextElement.Foreground="{DynamicResource BsSurface}" />
+                    </Border>
+                    <TextBlock Text="BibleStudy" Classes="h2" FontSize="21" VerticalAlignment="Center" />
+                </StackPanel>
+                <StackPanel DockPanel.Dock="Left" Orientation="Horizontal" Spacing="2" Margin="0,0,18,0" VerticalAlignment="Center">
+                    <Button x:Name="BackBtn" Classes="tool" ToolTip.Tip="Zurück zur vorherigen Stelle (Alt+←)">
                         <local:Icon Data="M19 12H5 M12 19l-7-7 7-7" />
                     </Button>
-                    <Button x:Name="HomeBtn" Classes="tool" ToolTip.Tip="Startseite: alle Bücher und Kapitel">
+                    <Button x:Name="HomeBtn" Classes="tool" ToolTip.Tip="Startseite: alle Bücher und Kapitel (Alt+Pos1)">
                         <local:Icon Data="M3 9.5L12 3l9 6.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z" />
                     </Button>
                 </StackPanel>
-                <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
-                    <Border Classes="pill"><StackPanel Orientation="Horizontal" Spacing="2">
-                    <ToggleButton x:Name="ReadBtn" Classes="tool" ToolTip.Tip="Dieses Kapitel als gelesen markieren">
-                        <local:Icon Data="M20 6L9 17l-5-5" />
-                    </ToggleButton>
-                    <Button x:Name="ViewBtn" Classes="tool" ToolTip.Tip="Ansicht: Querverweise im Text, Graph neben dem Text">
-                        <local:Icon Data="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z M9 12a3 3 0 1 0 6 0a3 3 0 1 0-6 0z" />
-                    </Button>
-                    <Button x:Name="GraphBtn" Classes="tool" ToolTip.Tip="Querverweis-Graph (Netzwerk und Bogen)">
-                        <local:Icon Data="M5 12a2 2 0 1 0 4 0a2 2 0 1 0-4 0z M15 5a2 2 0 1 0 4 0a2 2 0 1 0-4 0z M15 19a2 2 0 1 0 4 0a2 2 0 1 0-4 0z M8.7 11l6.6-4.9 M8.7 13l6.6 4.9" />
-                    </Button>
-                    <Button x:Name="MapBtn" Classes="tool" ToolTip.Tip="Karte: Orte des Kapitels oder Buches">
-                        <local:Icon Data="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0z M9 10a3 3 0 1 0 6 0a3 3 0 1 0-6 0z" />
-                    </Button>
-                    <Button x:Name="ParallelBtn" Classes="tool" ToolTip.Tip="Weitere Übersetzung als Spalte daneben (max. 3)">
-                        <local:Icon Data="M5 3h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z M12 3v18" />
-                    </Button>
-                    <ToggleButton x:Name="StudyBtn" Classes="tool" ToolTip.Tip="Wortstudie: Wörter mit Strong-Nummer antippen">
-                        <local:Icon Data="m5 8 6 6 M4 14l6-6 2-3 M2 5h12 M7 2h1 m22 22-5-10-5 10 M14 18h6" />
-                    </ToggleButton>
-                    <ToggleButton x:Name="SpeakBtn" Classes="tool" ToolTip.Tip="Vorlesen: angeklickten Vers oder das ganze Kapitel">
-                        <local:Icon Data="M11 5L6 9H2v6h4l5 4z M15.5 8.5a5 5 0 0 1 0 7 M19 5a10 10 0 0 1 0 14" />
-                    </ToggleButton>
-                    <Button x:Name="MarkBtn" Classes="tool" ToolTip.Tip="Markieren: markierten Text oder Vers einfärben">
-                        <local:Icon Data="m9 11-6 6v3h9l3-3 M22 12l-4.6 4.6a2 2 0 0 1-2.8 0l-5.2-5.2a2 2 0 0 1 0-2.8L14 4" />
-                    </Button>
-                    <Button x:Name="BookmarkBtn" Classes="tool" ToolTip.Tip="Ganzen Vers speichern / entfernen (Standardfarbe)">
-                        <local:Icon Data="M19 21l-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" />
-                    </Button>
-                    </StackPanel></Border>
-                    <Border Classes="pill"><StackPanel Orientation="Horizontal" Spacing="2">
-                    <Button x:Name="FontMinusBtn" IsVisible="False" Classes="tool" Content="A−" FontSize="13" FontWeight="SemiBold" ToolTip.Tip="Schrift kleiner" />
-                    <Button x:Name="FontPlusBtn" IsVisible="False" Classes="tool" Content="A+" FontSize="15" FontWeight="SemiBold" ToolTip.Tip="Schrift größer" />
-                    <Button x:Name="ThemeBtn" Classes="tool" ToolTip.Tip="Hell / Dunkel / System wechseln">
+                <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" Spacing="2" VerticalAlignment="Center" Margin="10,0,0,0">
+                    <Button x:Name="ThemeBtn" Classes="tool" ToolTip.Tip="Hell / Dunkel / System wechseln (Strg+T)">
                         <local:Icon Data="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9z" />
                     </Button>
-                    </StackPanel></Border>
-                    <ToggleButton x:Name="PanelBtn" Classes="tool" IsChecked="True" ToolTip.Tip="Seitenleiste ein- und ausblenden (Rand ziehen ändert die Breite)">
+                    <ToggleButton x:Name="PanelBtn" Classes="tool" IsChecked="True" ToolTip.Tip="Seitenleiste ein- und ausblenden (Strg+B); Rand ziehen ändert die Breite">
                         <local:Icon Data="M5 3h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z M15 3v18" />
                     </ToggleButton>
                 </StackPanel>
+                <Border DockPanel.Dock="Right" Classes="pill" Margin="10,0,0,0" VerticalAlignment="Center" ToolTip.Tip="Bibelstelle öffnen (Joh 3,16) oder suchen (Strg+K)">
+                    <StackPanel Orientation="Horizontal" Margin="8,0,0,0">
+                        <local:Icon Data="M13 2L3 14h9l-1 8 10-12h-9z" IconSize="16" VerticalAlignment="Center" Opacity="0.7" />
+                        <TextBox x:Name="QuickJumpBox" Width="190" MinHeight="32" Watermark="Gehe zu … (Strg+K)" BorderThickness="0" Background="Transparent" />
+                    </StackPanel>
+                </Border>
                 <StackPanel Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
                     <Border Classes="pill">
                         <StackPanel Orientation="Horizontal">
@@ -87,12 +63,12 @@
                         <StackPanel Orientation="Horizontal">
                             <ComboBox x:Name="BookBox" Width="125" PlaceholderText="Buch" />
                             <Rectangle Classes="sep" />
-                            <Button x:Name="PrevBtn" Classes="tool" Width="32" Height="32" ToolTip.Tip="Voriges Kapitel">
+                            <Button x:Name="PrevBtn" Classes="tool" Width="32" Height="32" ToolTip.Tip="Voriges Kapitel (Strg+←)">
                                 <local:Icon Data="M15 18l-6-6 6-6" />
                             </Button>
                             <NumericUpDown x:Name="ChapterBox" Width="52" Minimum="1" Value="1" FormatString="0" ShowButtonSpinner="False"
                                            Background="Transparent" BorderThickness="0" HorizontalContentAlignment="Center" MinHeight="32" />
-                            <Button x:Name="NextBtn" Classes="tool" Width="32" Height="32" ToolTip.Tip="Nächstes Kapitel">
+                            <Button x:Name="NextBtn" Classes="tool" Width="32" Height="32" ToolTip.Tip="Nächstes Kapitel (Strg+→)">
                                 <local:Icon Data="M9 18l6-6-6-6" />
                             </Button>
                         </StackPanel>
@@ -119,17 +95,26 @@
                     <DockPanel Margin="16,14,12,12">
                         <StackPanel DockPanel.Dock="Top" Spacing="8" Margin="0,0,0,8">
                             <TextBlock Classes="h2" Text="Suche" />
-                            <TextBox x:Name="SearchBox" Watermark="Suchbegriffe, Enter zum Suchen" />
-                            <Border Classes="pill" HorizontalAlignment="Left">
-                                <ComboBox x:Name="SearchScopeBox" Width="220" SelectedIndex="0">
-                                    <ComboBoxItem Content="Ganze Bibel" />
-                                    <ComboBoxItem Content="Altes Testament" />
-                                    <ComboBoxItem Content="Neues Testament" />
-                                    <ComboBoxItem Content="Aktuelles Buch" />
-                                </ComboBox>
+                            <Grid ColumnDefinitions="*,Auto">
+                                <TextBox x:Name="SearchBox" Watermark="Wort, „Wendung“, L=Grundform, G3056, Joh 3,16 …" />
+                                <Button x:Name="SearchGoBtn" Grid.Column="1" Classes="tool" Margin="6,0,0,0" ToolTip.Tip="Suchen (Enter)">
+                                    <local:Icon Data="M3 11a8 8 0 1 0 16 0a8 8 0 1 0-16 0z M21 21l-4.3-4.3" />
+                                </Button>
+                            </Grid>
+                            <WrapPanel>
+                                <Border Classes="pill" Margin="0,0,8,4">
+                                    <ComboBox x:Name="SearchScopeBox" Width="170" SelectedIndex="0" />
+                                </Border>
+                                <CheckBox x:Name="SearchExactCheck" Content="Ganze Wörter" Margin="0,0,8,4" ToolTip.Tip="Sonst finden Wortanfänge auch Endungen (lieb → liebe, lieben)" />
+                                <ToggleButton x:Name="SearchHelpBtn" Classes="tool" Width="NaN" Padding="10,0" Height="32" Margin="0,0,0,4" Content="Suchhilfe" FontSize="12" ToolTip.Tip="Alle Suchmöglichkeiten mit Beispielen" />
+                            </WrapPanel>
+                            <Border x:Name="SearchHelp" IsVisible="False" Classes="card">
+                                <StackPanel x:Name="SearchHelpList" Spacing="6" />
                             </Border>
-                            <TextBlock Classes="caption" TextWrapping="Wrap" Text="Mehrere Wörter: alle müssen vorkommen. „genaue Wendung“ in Anführungszeichen, ODER zwischen Wörtern, -Wort schließt aus. Wortanfänge finden Endungen (lieb → liebe, lieben)." />
+                            <WrapPanel x:Name="SearchHistoryPanel" />
                             <TextBlock x:Name="SearchInfo" Classes="caption" TextWrapping="Wrap" />
+                            <WrapPanel x:Name="SearchBooksPanel" />
+                            <Button x:Name="SearchQueueBtn" IsVisible="False" Content="Alle Treffer in die Warteschlange" HorizontalAlignment="Left" />
                         </StackPanel>
                         <ListBox x:Name="SearchList" ItemTemplate="{StaticResource EntryTpl}" ScrollViewer.HorizontalScrollBarVisibility="Disabled" />
                     </DockPanel>
@@ -204,6 +189,8 @@
                             <TextBlock Classes="h2" Text="Konkordanz" />
                             <TextBlock x:Name="ConcTitle" FontWeight="SemiBold" TextWrapping="Wrap" Text="In der Wortstudie „Alle Vorkommen“ wählen" />
                             <TextBlock x:Name="ConcInfo" Classes="caption" TextWrapping="Wrap" />
+                            <WrapPanel x:Name="ConcForms" Margin="0,4,0,0" />
+                            <WrapPanel x:Name="ConcBooks" />
                         </StackPanel>
                         <ListBox x:Name="ConcList" ItemTemplate="{StaticResource EntryTpl}" ScrollViewer.HorizontalScrollBarVisibility="Disabled" />
                     </DockPanel>
@@ -332,71 +319,120 @@
                     <ScrollViewer Margin="16,14,4,12">
                         <StackPanel Spacing="12" Margin="0,0,12,0">
                             <TextBlock Classes="h2" Text="Einstellungen" />
-                            <StackPanel Spacing="4">
-                                <TextBlock Text="Design" FontWeight="SemiBold" />
-                                <Border Classes="pill" HorizontalAlignment="Left">
-                                    <ComboBox x:Name="ThemeBox" SelectedIndex="0" Width="200">
-                                        <ComboBoxItem Content="System" />
-                                        <ComboBoxItem Content="Hell" />
-                                        <ComboBoxItem Content="Dunkel" />
-                                    </ComboBox>
-                                </Border>
-                            </StackPanel>
-                            <StackPanel Spacing="4">
-                                <TextBlock x:Name="FontLabel" Text="Schriftgröße" FontWeight="SemiBold" />
-                                <Slider x:Name="FontSlider" Minimum="14" Maximum="36" Value="22" TickFrequency="1" IsSnapToTickEnabled="True" />
-                            </StackPanel>
-                            <CheckBox x:Name="StartHomeCheck" Content="Beim Start die Startseite zeigen" />
-                            <CheckBox x:Name="AutoReadCheck" Content="Kapitel beim Weiterblättern (▶) als gelesen markieren" />
-                            <Border Height="1" Background="{DynamicResource BsBorder}" />
-                            <TextBlock Text="Vault" FontWeight="SemiBold" />
-                            <TextBlock Classes="caption" TextWrapping="Wrap" Text="Ein Vault enthält deine persönlichen Daten: Markierungen, Ordner, Tags, Notizen, Warteschlange, To-Dos, Lesefortschritt. Jeder Vault ist eine einzelne Datei." />
-                            <Border Classes="pill" HorizontalAlignment="Left"><ComboBox x:Name="VaultBox" Width="220" /></Border>
-                            <StackPanel Orientation="Horizontal" Spacing="6">
-                                <TextBox x:Name="NewVaultBox" Width="170" Watermark="Name des neuen Vaults" />
-                                <Button x:Name="NewVaultBtn" Content="Anlegen" />
-                            </StackPanel>
-                            <TextBlock x:Name="VaultInfo" Classes="caption" TextWrapping="Wrap" />
-                            <TextBlock Text="Standard-Markierfarbe" FontWeight="SemiBold" />
-                            <WrapPanel x:Name="DefaultColorPanel" />
-                            <CheckBox x:Name="AutoTagCheck" Content="Beim Speichern den Buchnamen als Tag vergeben" />
-                            <Border Height="1" Background="{DynamicResource BsBorder}" />
-                            <TextBlock Text="KI und MCP" FontWeight="SemiBold" />
-                            <TextBlock Classes="caption" TextWrapping="Wrap" Text="Das KI-Fenster nutzt deine lokal installierte Claude-Code-App mit deiner Anmeldung: kein API-Schlüssel, keine API-Kosten durch das Programm. Claude sieht nur die Bibel-Werkzeuge dieses Programms." />
-                            <TextBlock x:Name="AiCliInfo" Classes="caption" TextWrapping="Wrap" />
-                            <TextBlock Text="Hintergrund für Claude (frei änderbar)" />
-                            <TextBox x:Name="AiContextBox" AcceptsReturn="True" TextWrapping="Wrap" Height="80" />
-                            <TextBox x:Name="AiModelBox" Watermark="Modell (leer = deine Standardeinstellung), z. B. sonnet" />
-                            <TextBlock Text="MCP-Server für andere Programme (z. B. Claude Code)" />
-                            <TextBox x:Name="McpCommandBox" IsReadOnly="True" TextWrapping="Wrap" />
-                            <Button x:Name="McpCopyBtn" Content="Befehl kopieren" HorizontalAlignment="Left" />
-                            <Border Height="1" Background="{DynamicResource BsBorder}" />
-                            <TextBlock Text="Sicherung" FontWeight="SemiBold" />
-                            <TextBlock Classes="caption" TextWrapping="Wrap" Text="Exportiert den aktiven Vault (Markierungen, Ordner, Tags, Notizen, Warteschlange, To-Dos, Lesefortschritt) und deine Einstellungen als eine ZIP-Datei. Beim Import entsteht ein neuer Vault." />
-                            <StackPanel Orientation="Horizontal" Spacing="8">
-                                <Button x:Name="ExportBtn" Content="Exportieren …" />
-                                <Button x:Name="ImportBtn" Content="Importieren …" />
-                            </StackPanel>
-                            <TextBlock x:Name="BackupInfo" Classes="caption" TextWrapping="Wrap" />
-                            <Border Height="1" Background="{DynamicResource BsBorder}" />
-                            <TextBlock Text="Eigene Übersetzung importieren" FontWeight="SemiBold" />
-                            <TextBlock Classes="caption" TextWrapping="Wrap"
-                                       Text="Für Bibeltexte, die du rechtmäßig besitzt und die nicht frei verfügbar sind (z. B. die Elberfelder Edition CSV). Unterstützt: e-Sword-Module (.bblx), Zefania-XML und die Offline-HTML der CSV-Bibel (mit Strong-Nummern und Fußnoten). Der Text bleibt nur auf diesem Rechner und dient deiner privaten Nutzung; gib ihn nicht weiter und lege ihn nicht in ein öffentliches Repository." />
-                            <StackPanel Orientation="Horizontal" Spacing="8">
-                                <TextBox x:Name="ImportLangBox" Width="70" Text="de" Watermark="Sprache" ToolTip.Tip="Sprachcode der Datei, z. B. de oder en (bei der CSV-Datei automatisch Deutsch)" />
-                                <Button x:Name="ImportBibleBtn" Content="Datei wählen …" />
-                            </StackPanel>
-                            <StackPanel Orientation="Horizontal" Spacing="8">
-                                <Border Classes="pill"><ComboBox x:Name="LocalBibleBox" Width="200" PlaceholderText="Importierte Übersetzungen" /></Border>
-                                <Button x:Name="RemoveBibleBtn" Content="Entfernen" />
-                            </StackPanel>
-                            <TextBlock x:Name="ImportBibleInfo" Classes="caption" TextWrapping="Wrap" />
-                            <Border Height="1" Background="{DynamicResource BsBorder}" />
-                            <TextBlock Text="Offline" FontWeight="SemiBold" />
-                            <TextBlock x:Name="OfflineInfo" Classes="caption" TextWrapping="Wrap" />
-                            <Button x:Name="OfflineBtn" Content="Gewählte Übersetzung offline verfügbar machen" HorizontalAlignment="Left" />
-                            <TextBlock Classes="caption" TextWrapping="Wrap"
-                                       Text="Es werden nur Texte geladen, die die Quelle zur freien Nutzung anbietet; Lizenz und Namensnennung stehen unten in der Fußzeile. Die Daten liegen lokal und gehören dir." />
+
+                            <Border Classes="card"><StackPanel Spacing="10">
+                                <TextBlock Classes="eyebrow" Text="DARSTELLUNG" />
+                                <Grid ColumnDefinitions="110,*" RowDefinitions="Auto,Auto" >
+                                    <TextBlock Text="Design" VerticalAlignment="Center" />
+                                    <Border Classes="pill" Grid.Column="1" HorizontalAlignment="Left">
+                                        <ComboBox x:Name="ThemeBox" SelectedIndex="0" Width="180">
+                                            <ComboBoxItem Content="System" />
+                                            <ComboBoxItem Content="Hell" />
+                                            <ComboBoxItem Content="Dunkel" />
+                                        </ComboBox>
+                                    </Border>
+                                    <TextBlock Grid.Row="1" Text="Akzentfarbe" VerticalAlignment="Center" Margin="0,8,0,0" />
+                                    <WrapPanel x:Name="AccentPanel" Grid.Row="1" Grid.Column="1" Margin="0,8,0,0" />
+                                </Grid>
+                                <TextBlock x:Name="FontLabel" Text="Schriftgröße" />
+                                <Slider x:Name="FontSlider" Minimum="14" Maximum="40" Value="22" TickFrequency="1" IsSnapToTickEnabled="True" />
+                                <TextBlock x:Name="LineLabel" Text="Zeilenabstand" />
+                                <Slider x:Name="LineSlider" Minimum="1.2" Maximum="2.4" Value="1.7" TickFrequency="0.1" IsSnapToTickEnabled="True" />
+                                <TextBlock x:Name="WidthLabel" Text="Textbreite" />
+                                <Slider x:Name="WidthSlider" Minimum="480" Maximum="1100" Value="760" TickFrequency="20" IsSnapToTickEnabled="True" />
+                                <Grid ColumnDefinitions="110,*" RowDefinitions="Auto,Auto" >
+                                    <TextBlock Text="Schriftart" VerticalAlignment="Center" />
+                                    <Border Classes="pill" Grid.Column="1" HorizontalAlignment="Left"><ComboBox x:Name="FontBox" Width="180" /></Border>
+                                    <TextBlock Grid.Row="1" Text="Versnummern" VerticalAlignment="Center" Margin="0,8,0,0" />
+                                    <Border Classes="pill" Grid.Row="1" Grid.Column="1" HorizontalAlignment="Left" Margin="0,8,0,0">
+                                        <ComboBox x:Name="VerseNumberBox" Width="180" SelectedIndex="0">
+                                            <ComboBoxItem Content="Klein, hochgestellt" />
+                                            <ComboBoxItem Content="Normal im Text" />
+                                            <ComboBoxItem Content="Ausblenden" />
+                                        </ComboBox>
+                                    </Border>
+                                </Grid>
+                                <CheckBox x:Name="JesusRedCheck" Content="Worte Jesu farbig hervorheben" />
+                                <CheckBox x:Name="JustifyCheck" Content="Blocksatz" />
+                                <CheckBox x:Name="HeadingCheck" Content="Großes Kapitel-Kopfstück (sonst schlicht)" />
+                            </StackPanel></Border>
+
+                            <Border Classes="card"><StackPanel Spacing="8">
+                                <TextBlock Classes="eyebrow" Text="LESEN UND VERHALTEN" />
+                                <CheckBox x:Name="StartHomeCheck" Content="Beim Start die Startseite zeigen" />
+                                <CheckBox x:Name="AutoReadCheck" Content="Kapitel beim Weiterblättern (▶) als gelesen markieren" />
+                                <CheckBox x:Name="ScrollReadCheck" Content="Kapitel als gelesen markieren, wenn ich bis zum Ende gescrollt habe" />
+                                <CheckBox x:Name="AutoTagCheck" Content="Beim Speichern den Buchnamen als Tag vergeben" />
+                                <TextBlock Text="Standard-Markierfarbe" Margin="0,4,0,0" />
+                                <WrapPanel x:Name="DefaultColorPanel" />
+                                <TextBlock x:Name="SpeakLabel" Text="Vorlesen: Geschwindigkeit" Margin="0,4,0,0" />
+                                <Slider x:Name="SpeakSlider" Minimum="-5" Maximum="5" Value="0" TickFrequency="1" IsSnapToTickEnabled="True" />
+                                <StackPanel Orientation="Horizontal" Spacing="8" Margin="0,4,0,0">
+                                    <Button x:Name="ClearHistoryBtn" Content="Suchverlauf löschen" />
+                                    <Button x:Name="ResetSettingsBtn" Content="Darstellung zurücksetzen" />
+                                </StackPanel>
+                            </StackPanel></Border>
+
+                            <Border Classes="card"><StackPanel Spacing="8">
+                                <TextBlock Classes="eyebrow" Text="VAULT" />
+                                <TextBlock Classes="caption" TextWrapping="Wrap" Text="Ein Vault enthält deine persönlichen Daten: Markierungen, Ordner, Tags, Notizen, Dokumente, Warteschlange, To-Dos, Lesefortschritt. Jeder Vault ist eine einzelne Datei." />
+                                <Border Classes="pill" HorizontalAlignment="Left"><ComboBox x:Name="VaultBox" Width="220" /></Border>
+                                <StackPanel Orientation="Horizontal" Spacing="6">
+                                    <TextBox x:Name="NewVaultBox" Width="170" Watermark="Name des neuen Vaults" />
+                                    <Button x:Name="NewVaultBtn" Content="Anlegen" />
+                                </StackPanel>
+                                <TextBlock x:Name="VaultInfo" Classes="caption" TextWrapping="Wrap" />
+                            </StackPanel></Border>
+
+                            <Border Classes="card"><StackPanel Spacing="8">
+                                <TextBlock Classes="eyebrow" Text="KI UND MCP" />
+                                <TextBlock Classes="caption" TextWrapping="Wrap" Text="Das KI-Fenster nutzt deine lokal installierte Claude-Code-App mit deiner Anmeldung: kein API-Schlüssel, keine API-Kosten durch das Programm. Claude sieht nur die Bibel-Werkzeuge dieses Programms." />
+                                <TextBlock x:Name="AiCliInfo" Classes="caption" TextWrapping="Wrap" />
+                                <TextBlock Text="Hintergrund für Claude (frei änderbar)" />
+                                <TextBox x:Name="AiContextBox" AcceptsReturn="True" TextWrapping="Wrap" Height="80" />
+                                <TextBox x:Name="AiModelBox" Watermark="Modell (leer = deine Standardeinstellung), z. B. sonnet" />
+                                <TextBlock Text="MCP-Server für andere Programme (z. B. Claude Code)" />
+                                <TextBox x:Name="McpCommandBox" IsReadOnly="True" TextWrapping="Wrap" />
+                                <Button x:Name="McpCopyBtn" Content="Befehl kopieren" HorizontalAlignment="Left" />
+                            </StackPanel></Border>
+
+                            <Border Classes="card"><StackPanel Spacing="8">
+                                <TextBlock Classes="eyebrow" Text="SICHERUNG" />
+                                <TextBlock Classes="caption" TextWrapping="Wrap" Text="Exportiert den aktiven Vault (Markierungen, Ordner, Tags, Notizen, Dokumente, Warteschlange, To-Dos, Lesefortschritt) und deine Einstellungen als eine ZIP-Datei. Beim Import entsteht ein neuer Vault." />
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <Button x:Name="ExportBtn" Content="Exportieren …" />
+                                    <Button x:Name="ImportBtn" Content="Importieren …" />
+                                </StackPanel>
+                                <TextBlock x:Name="BackupInfo" Classes="caption" TextWrapping="Wrap" />
+                            </StackPanel></Border>
+
+                            <Border Classes="card"><StackPanel Spacing="8">
+                                <TextBlock Classes="eyebrow" Text="EIGENE ÜBERSETZUNG IMPORTIEREN" />
+                                <TextBlock Classes="caption" TextWrapping="Wrap"
+                                           Text="Für Bibeltexte, die du rechtmäßig besitzt und die nicht frei verfügbar sind (z. B. die Elberfelder Edition CSV). Unterstützt: e-Sword-Module (.bblx), Zefania-XML und die Offline-HTML der CSV-Bibel (mit Strong-Nummern und Fußnoten). Der Text bleibt nur auf diesem Rechner und dient deiner privaten Nutzung; gib ihn nicht weiter und lege ihn nicht in ein öffentliches Repository." />
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <TextBox x:Name="ImportLangBox" Width="70" Text="de" Watermark="Sprache" ToolTip.Tip="Sprachcode der Datei, z. B. de oder en (bei der CSV-Datei automatisch Deutsch)" />
+                                    <Button x:Name="ImportBibleBtn" Content="Datei wählen …" />
+                                </StackPanel>
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <Border Classes="pill"><ComboBox x:Name="LocalBibleBox" Width="200" PlaceholderText="Importierte Übersetzungen" /></Border>
+                                    <Button x:Name="RemoveBibleBtn" Content="Entfernen" />
+                                </StackPanel>
+                                <TextBlock x:Name="ImportBibleInfo" Classes="caption" TextWrapping="Wrap" />
+                            </StackPanel></Border>
+
+                            <Border Classes="card"><StackPanel Spacing="8">
+                                <TextBlock Classes="eyebrow" Text="OFFLINE" />
+                                <TextBlock x:Name="OfflineInfo" Classes="caption" TextWrapping="Wrap" />
+                                <Button x:Name="OfflineBtn" Content="Gewählte Übersetzung offline verfügbar machen" HorizontalAlignment="Left" />
+                                <TextBlock Classes="caption" TextWrapping="Wrap"
+                                           Text="Es werden nur Texte geladen, die die Quelle zur freien Nutzung anbietet; Lizenz und Namensnennung stehen unten in der Fußzeile. Die Daten liegen lokal und gehören dir." />
+                            </StackPanel></Border>
+
+                            <Border Classes="card"><StackPanel Spacing="4">
+                                <TextBlock Classes="eyebrow" Text="TASTENKÜRZEL" />
+                                <TextBlock TextWrapping="Wrap" LineHeight="22" Text="Strg+K  Gehe zu Stelle oder suchen&#10;Strg+F  Suche öffnen&#10;Alt+←  Zurück · Alt+Pos1  Startseite&#10;Strg+← / →  Voriges / nächstes Kapitel&#10;Strg+R  Kapitel als gelesen markieren&#10;Strg+D  Vers speichern · Strg+Umschalt+C  Vers mit Stelle kopieren&#10;Strg++ / Strg+−  Schrift größer / kleiner · Strg+0  Standard&#10;Strg+B  Seitenleiste · Strg+T  Design wechseln&#10;F11  Fokus-Modus (nur Text)" />
+                            </StackPanel></Border>
                         </StackPanel>
                     </ScrollViewer>
                 </TabItem>
@@ -413,6 +449,10 @@
                             <TextBlock TextWrapping="Wrap" Text="Vers anklicken: Notiz, Lesezeichen und Querverweise beziehen sich darauf. Der Knopf „Parallel“ zeigt bis zu drei weitere Übersetzungen versgenau daneben." />
                             <TextBlock FontWeight="SemiBold" Text="Wortstudie" />
                             <TextBlock TextWrapping="Wrap" Text="Den Schalter „Wortstudie“ einschalten (nur Übersetzungen mit Strong-Nummern, z. B. KJV). Unterstrichene Wörter anklicken: Grundtextwort, Bedeutung, „Alle Vorkommen“ in der Konkordanz." />
+                            <TextBlock FontWeight="SemiBold" Text="Suche" />
+                            <TextBlock TextWrapping="Wrap" Text="Wörter, „Wendungen“, Gnade / Wahrheit (ODER), Gnade -Wahrheit (ausschließen), Klammern, L=Grundform, Platzhalter *, Strong-Nummern (G3056, H8392=Arche), Bibelstellen (Joh 3,16; Mt 14,13-21) und griechische/hebräische Wörter. Der Knopf „Suchhilfe“ in der Suche zeigt alle Beispiele zum Anklicken; die Buchkürzel unter dem Ergebnis grenzen die Treffer ein." />
+                            <TextBlock FontWeight="SemiBold" Text="Schnell navigieren" />
+                            <TextBlock TextWrapping="Wrap" Text="Strg+K öffnet „Gehe zu“: „Röm 8,28“ springt dorthin, ein Buchname öffnet das Buch, alles andere startet die Suche. Alle Tastenkürzel stehen unter Einstellungen." />
                             <TextBlock FontWeight="SemiBold" Text="Offline" />
                             <TextBlock TextWrapping="Wrap" Text="Einstellungen → „Offline verfügbar machen“ lädt eine ganze Übersetzung. Bereits gelesene Kapitel sind automatisch offline lesbar." />
                         </StackPanel>
@@ -443,11 +483,59 @@
 
         <!-- Reader -->
         <Grid>
-            <Grid x:Name="ReaderHost" ColumnDefinitions="*,Auto">
-                <ScrollViewer x:Name="ReaderScroll">
+            <Grid x:Name="ReaderHost" RowDefinitions="Auto,*" ColumnDefinitions="*,Auto">
+                <!-- Reading toolbar: what can I do with this chapter -->
+                <Border x:Name="ReadBar" Grid.ColumnSpan="2" Padding="20,8" BorderBrush="{DynamicResource BsBorder}" BorderThickness="0,0,0,1">
+                    <DockPanel>
+                        <ToggleButton x:Name="ReadBtn" DockPanel.Dock="Left" Classes="pillbtn" ToolTip.Tip="Dieses Kapitel als gelesen markieren (Strg+R)">
+                            <StackPanel Orientation="Horizontal" Spacing="7">
+                                <local:Icon Data="M20 6L9 17l-5-5" IconSize="16" />
+                                <TextBlock Text="Gelesen" FontSize="13" FontWeight="Medium" VerticalAlignment="Center" />
+                            </StackPanel>
+                        </ToggleButton>
+                        <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" Spacing="8">
+                            <Border Classes="pill"><StackPanel Orientation="Horizontal">
+                                <Button x:Name="ViewBtn" Classes="tool" ToolTip.Tip="Ansicht: Querverweise im Text, Graph neben dem Text">
+                                    <local:Icon Data="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z M9 12a3 3 0 1 0 6 0a3 3 0 1 0-6 0z" />
+                                </Button>
+                                <Button x:Name="GraphBtn" Classes="tool" ToolTip.Tip="Querverweis-Graph (Netzwerk und Bogen)">
+                                    <local:Icon Data="M5 12a2 2 0 1 0 4 0a2 2 0 1 0-4 0z M15 5a2 2 0 1 0 4 0a2 2 0 1 0-4 0z M15 19a2 2 0 1 0 4 0a2 2 0 1 0-4 0z M8.7 11l6.6-4.9 M8.7 13l6.6 4.9" />
+                                </Button>
+                                <Button x:Name="MapBtn" Classes="tool" ToolTip.Tip="Karte: Orte des Kapitels oder Buches">
+                                    <local:Icon Data="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0z M9 10a3 3 0 1 0 6 0a3 3 0 1 0-6 0z" />
+                                </Button>
+                                <Button x:Name="ParallelBtn" Classes="tool" ToolTip.Tip="Weitere Übersetzung als Spalte daneben (max. 3)">
+                                    <local:Icon Data="M5 3h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z M12 3v18" />
+                                </Button>
+                            </StackPanel></Border>
+                            <Border Classes="pill"><StackPanel Orientation="Horizontal">
+                                <ToggleButton x:Name="StudyBtn" Classes="tool" ToolTip.Tip="Wortstudie: Wörter mit Strong-Nummer antippen">
+                                    <local:Icon Data="m5 8 6 6 M4 14l6-6 2-3 M2 5h12 M7 2h1 m22 22-5-10-5 10 M14 18h6" />
+                                </ToggleButton>
+                                <ToggleButton x:Name="SpeakBtn" Classes="tool" ToolTip.Tip="Vorlesen: angeklickten Vers oder das ganze Kapitel">
+                                    <local:Icon Data="M11 5L6 9H2v6h4l5 4z M15.5 8.5a5 5 0 0 1 0 7 M19 5a10 10 0 0 1 0 14" />
+                                </ToggleButton>
+                            </StackPanel></Border>
+                            <Border Classes="pill"><StackPanel Orientation="Horizontal">
+                                <Button x:Name="MarkBtn" Classes="tool" ToolTip.Tip="Markieren: markierten Text oder Vers einfärben">
+                                    <local:Icon Data="m9 11-6 6v3h9l3-3 M22 12l-4.6 4.6a2 2 0 0 1-2.8 0l-5.2-5.2a2 2 0 0 1 0-2.8L14 4" />
+                                </Button>
+                                <Button x:Name="BookmarkBtn" Classes="tool" ToolTip.Tip="Ganzen Vers speichern / entfernen (Strg+D)">
+                                    <local:Icon Data="M19 21l-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" />
+                                </Button>
+                            </StackPanel></Border>
+                            <Border Classes="pill"><StackPanel Orientation="Horizontal">
+                                <Button x:Name="FontMinusBtn" Classes="tool" Content="A−" FontSize="13" FontWeight="SemiBold" ToolTip.Tip="Schrift kleiner (Strg+−)" />
+                                <Button x:Name="FontPlusBtn" Classes="tool" Content="A+" FontSize="15" FontWeight="SemiBold" ToolTip.Tip="Schrift größer (Strg++)" />
+                            </StackPanel></Border>
+                        </StackPanel>
+                        <Border />
+                    </DockPanel>
+                </Border>
+                <ScrollViewer x:Name="ReaderScroll" Grid.Row="1">
                     <StackPanel x:Name="ReaderPanel" Margin="0,36,0,80" HorizontalAlignment="Center" Spacing="2" />
                 </ScrollViewer>
-                <local:ThreadGraph x:Name="ThreadPane" Grid.Column="1" IsVisible="False" Margin="0,0,8,0" />
+                <local:ThreadGraph x:Name="ThreadPane" Grid.Row="1" Grid.Column="1" IsVisible="False" Margin="0,0,8,0" />
             </Grid>
             <local:HomeView x:Name="Home" IsVisible="False" Background="{DynamicResource BsBackground}" />
             <local:GraphView x:Name="GraphPane" IsVisible="False" Background="{DynamicResource BsBackground}" />

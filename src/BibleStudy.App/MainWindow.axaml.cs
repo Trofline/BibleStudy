@@ -133,7 +133,7 @@ public partial class MainWindow : Window
         ParallelBtn.Click += (_, _) => AddColumn();
         NoteSaveBtn.Click += async (_, _) => await SaveNoteAsync(NoteEditor.Text ?? "");
         NoteDeleteBtn.Click += async (_, _) => { NoteEditor.Text = ""; await SaveNoteAsync(""); };
-        SearchBox.KeyDown += async (_, e) => { if (e.Key == Key.Enter) await SearchAsync(); };
+        InitSearch();
         foreach (var list in new[] { SearchList, NoteList, XrefList, ConcList }) list.SelectionChanged += OnEntryPicked;
         InitVault();
         InitAi();
@@ -143,6 +143,7 @@ public partial class MainWindow : Window
         InitStrongSearch();
         InitImport();
         InitKnowledge();
+        InitQol();
         StartControl();
         Opened += async (_, _) => await InitAsync();
     }
@@ -183,6 +184,7 @@ public partial class MainWindow : Window
 
     void ShowHome()
     {
+        Home.Resume = _curBook == "" ? null : (_curBook, _curChapter, $"{BookName(_curBook)} {_curChapter}");
         Home.Show(_books, _read, Home.OpenBook);
         Home.IsVisible = true; ReaderHost.IsVisible = false; GraphPane.IsVisible = false; MapPane.IsVisible = false; KnowledgePane.IsVisible = false;
     }
@@ -288,9 +290,9 @@ public partial class MainWindow : Window
             FitReader();
             var kicker = new TextBlock { Text = b.CommonName.ToUpperInvariant(), FontSize = 13, FontWeight = FontWeight.SemiBold, LetterSpacing = 3, Margin = new(8, 0, 0, 0) };
             kicker.Bind(TextBlock.ForegroundProperty, this.GetResourceObservable("BsMuted"));
-            var numeral = new TextBlock { Text = ch.Number.ToString(), FontSize = 64, FontFamily = UiSerif, FontWeight = FontWeight.SemiBold, Margin = new(8, 0, 0, 14) };
+            var numeral = new TextBlock { Text = _settings.ChapterHeading ? ch.Number.ToString() : $"{b.CommonName} {ch.Number}", FontSize = _settings.ChapterHeading ? 64 : 30, FontFamily = UiSerif, FontWeight = FontWeight.SemiBold, Margin = new(8, 0, 0, 14) };
             numeral.Bind(TextBlock.ForegroundProperty, this.GetResourceObservable("BsAccent"));
-            ReaderPanel.Children.Add(kicker);
+            if (_settings.ChapterHeading) ReaderPanel.Children.Add(kicker);
             ReaderPanel.Children.Add(numeral);
             if (cols.Count > 1)
             {
@@ -323,6 +325,7 @@ public partial class MainWindow : Window
             ReadBtn.IsChecked = _read.Contains((b.Id, number));
             if (_history.Count == 0 || _history[^1] != (b.Id, number)) { _history.Add((b.Id, number)); if (_history.Count > 100) _history.RemoveAt(0); }
             _settings.TranslationId = t.Id; _settings.BookId = b.Id; _settings.Chapter = number;
+            UpdateTitle(b.CommonName, number, t.ShortName);
             if (_startupHome) { _startupHome = false; ShowHome(); }
 
             StatusText.Text = string.Join("  |  ", cols.Select(c =>
@@ -351,7 +354,11 @@ public partial class MainWindow : Window
 
     // Crimson Text (SIL OFL) is bundled; system serif fonts cover Greek/Hebrew glyphs it lacks.
     static readonly FontFamily UiSerif = new("avares://BibleStudy.App/Assets/Fonts#Crimson Text, Cambria, Georgia, serif");
-    static readonly FontFamily ScriptureFont = UiSerif;
+    FontFamily ScriptureFont => _settings.ReaderFont switch
+    {
+        "Crimson Text" => UiSerif,
+        var name => new FontFamily(name + ", Cambria, Georgia, serif"),
+    };
 
     /// <summary>Clickable word range inside a verse cell (for the word study).</summary>
     sealed record WordSpan(int Start, int End, string[] Strongs, string Word, string? Note = null);
@@ -368,7 +375,8 @@ public partial class MainWindow : Window
     {
         var tb = new SelectableTextBlock
         {
-            TextWrapping = TextWrapping.Wrap, FontSize = size, LineHeight = size * 1.7, Margin = new(0, 0, 12, 0),
+            TextWrapping = TextWrapping.Wrap, FontSize = size, LineHeight = size * _settings.LineSpacing, Margin = new(0, 0, 12, 0),
+            TextAlignment = _settings.Justify ? TextAlignment.Justify : TextAlignment.Left,
             FontFamily = ScriptureFont,
             FlowDirection = t.TextDirection == "rtl" ? FlowDirection.RightToLeft : FlowDirection.LeftToRight,
         };
@@ -383,7 +391,8 @@ public partial class MainWindow : Window
             tb.Inlines!.Add(run);
             pos += run.Text!.Length;
         }
-        var num = new Run(number + (hasNote ? "✎" : "") + " ") { FontSize = 14, FontWeight = FontWeight.Bold, BaselineAlignment = BaselineAlignment.Top };
+        var numSize = _settings.VerseNumbers == "Normal" ? size * 0.8 : 14;
+        var num = new Run(_settings.VerseNumbers == "Hidden" ? (hasNote ? "✎ " : "") : number + (hasNote ? "✎" : "") + " ") { FontSize = numSize, FontWeight = FontWeight.Bold, BaselineAlignment = _settings.VerseNumbers == "Normal" ? BaselineAlignment.Baseline : BaselineAlignment.Top };
         num.Bind(TextElement.ForegroundProperty, this.GetResourceObservable("BsVerseNumber"));
         Add(num);
         foreach (var s in v.Segments)
@@ -406,7 +415,7 @@ public partial class MainWindow : Window
                 var piece = s.Text[points[i]..points[i + 1]];
                 var from = raw + points[i];
                 var run = new Run(piece);
-                if (s.WordsOfJesus) run.Bind(TextElement.ForegroundProperty, this.GetResourceObservable("BsJesus"));
+                if (s.WordsOfJesus && _settings.JesusRed) run.Bind(TextElement.ForegroundProperty, this.GetResourceObservable("BsJesus"));
                 if (marks.FirstOrDefault(m => m.Start <= from && m.End >= from + piece.Length) is { } mark) run.Background = HighlightBrush(mark.Color);
                 if (s.Strongs is { Count: > 0 })
                 {
@@ -544,7 +553,7 @@ public partial class MainWindow : Window
         ReaderPanel.HorizontalAlignment = _singleColumn ? Avalonia.Layout.HorizontalAlignment.Center : Avalonia.Layout.HorizontalAlignment.Stretch;
         ReaderPanel.Margin = _singleColumn ? new(0, 36, 0, 80) : new(32, 28, 32, 80);
         var reserve = 0.0;
-        ReaderPanel.Width = _singleColumn ? Math.Clamp(ReaderScroll.Bounds.Width - 64 - reserve, 320, 760) : double.NaN;
+        ReaderPanel.Width = _singleColumn ? Math.Clamp(ReaderScroll.Bounds.Width - 64 - reserve, 320, _settings.ReaderWidth) : double.NaN;
     }
 
     void SelectVerse(int n)
@@ -585,31 +594,6 @@ public partial class MainWindow : Window
         catch { return ""; }
     }
 
-    async Task ShowConcordanceAsync(string strongId, string title)
-    {
-        if (TranslationBox.SelectedItem is not TranslationInfo t || _building) return;
-        SideTabs.SelectedIndex = 5;
-        ConcTitle.Text = title;
-        ConcList.ItemsSource = null;
-        try
-        {
-            if (!_store.IsStrongsIndexed(t.Id))
-            {
-                _building = true;
-                var progress = new Progress<(int Done, int Total)>(p => ConcInfo.Text = $"Einmalig: Konkordanz für {t.ShortName} wird aufgebaut … {p.Done}/{p.Total} Kapitel");
-                await ConcordanceBuilder.BuildAsync(_provider, _store, t.Id, progress);
-            }
-            var occ = _store.GetOccurrences(t.Id, strongId, ConcordanceLimit);
-            var renderings = occ.GroupBy(o => o.Word.Trim('.', ',', ';', ':', '!', '?', '(', ')').ToLowerInvariant())
-                .OrderByDescending(g => g.Count()).Take(8).Select(g => $"{g.Key} ({g.Count()})");
-            ConcInfo.Text = occ.Count == 0 ? $"Keine Vorkommen in {t.ShortName}."
-                : $"{occ.Count}{(occ.Count >= ConcordanceLimit ? "+" : "")}× in {t.ShortName}. Wiedergaben: {string.Join(", ", renderings)}";
-            ConcList.ItemsSource = occ.Select(o => new Entry(o.Ref, $"{Label(o.Ref)} · {o.Word.Trim()}")).ToList();
-        }
-        catch (Exception ex) { ConcInfo.Text = "Konkordanz nicht verfügbar: " + ex.Message; }
-        finally { _building = false; }
-    }
-
     async Task SaveNoteAsync(string text)
     {
         if (_selected is not int v) { StatusText.Text = "Erst einen Vers anklicken."; return; }
@@ -626,31 +610,6 @@ public partial class MainWindow : Window
             var t = n.Text.ReplaceLineEndings(" ");
             return new Entry(n.Ref, $"{Label(n.Ref)}\n{(t.Length > 100 ? t[..100] + "…" : t)}");
         }).ToList();
-    }
-
-    async Task SearchAsync()
-    {
-        if (TranslationBox.SelectedItem is not TranslationInfo t || string.IsNullOrWhiteSpace(SearchBox.Text)) return;
-        try
-        {
-            if (!_store.IsIndexed(t.Id))
-            {
-                SearchInfo.Text = $"Einmalig: {t.ShortName} wird für die Suche geladen und indexiert …";
-                var verses = await _provider.GetAllVersesAsync(t.Id);
-                await Task.Run(() => _store.Index(t.Id, verses));
-            }
-            IReadOnlyCollection<string>? scope = SearchScopeBox.SelectedIndex switch
-            {
-                1 => _books.Where(b => BookCategories.IsOldTestament(BookCategories.Of(b.Id))).Select(b => b.Id).ToList(),
-                2 => _books.Where(b => BookCategories.IsNewTestament(BookCategories.Of(b.Id))).Select(b => b.Id).ToList(),
-                3 => [_curBook],
-                _ => null,
-            };
-            var hits = _store.Search(t.Id, SearchBox.Text, 200, scope);
-            SearchList.ItemsSource = hits.Select(h => new Entry(h.Ref, $"{Label(h.Ref)}\n{h.Snippet}")).ToList();
-            SearchInfo.Text = hits.Count == 0 ? "Keine Treffer." : $"{hits.Count}{(hits.Count >= 200 ? "+" : "")} Treffer in {t.ShortName}";
-        }
-        catch (Exception ex) { SearchInfo.Text = "Fehler: " + ex.Message; }
     }
 
     async void OnEntryPicked(object? sender, SelectionChangedEventArgs e)

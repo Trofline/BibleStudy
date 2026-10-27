@@ -40,3 +40,11 @@ Freie, quelloffene Bibelstudien-Software (C#, Avalonia). Nur Quellen mit freier 
 - [x] Strong-Suche (Nummer, Grundtextwort, Umschrift, englische Bedeutung)
 - [x] Grundtext: einzelnes Wort mit Details, Wörterbuch und Claude-Vertiefung
 - [x] Eigene Übersetzungen importieren (e-Sword .bblx, Zefania XML, Offline-HTML der CSV-Bibel), nur lokal und privat
+
+## Phase 7: Suche, Design, Komfort
+- [x] Suche nach csv-bibel-Syntax (ODER, Minus, Klammern, Wendungen, Lemma, Platzhalter, Strong, Strong=Wort, Bibelstellen, Verslisten, Grundtextwörter)
+- [x] Trefferverteilung pro Buch, Suchhilfe, Suchverlauf, Treffer in die Warteschlange
+- [x] Neues Layout: Navigationsleiste, Lese-Werkzeugleiste, Startseite mit Weiterlesen, Abschnittsmenü statt Alles-gelesen-Knopf
+- [x] Einstellungen: Akzentfarbe, Schriftart, Zeilenabstand, Textbreite, Versnummern, Blocksatz, Worte Jesu, Lesen-am-Ende-markieren, Vorlesetempo
+- [x] Gehe-zu (Strg+K), Tastenkürzel, Fokus-Modus, Vers kopieren, Fenstertitel
+- [x] Konkordanz mit Verstexten, Wiedergaben-Filter und Buchverteilung

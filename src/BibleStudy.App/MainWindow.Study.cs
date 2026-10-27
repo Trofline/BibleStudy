@@ -193,6 +193,7 @@ public partial class MainWindow
         try
         {
             _speech ??= new SpeechSynthesizer();
+            _speech.Rate = Math.Clamp(_settings.SpeakRate, -10, 10);
             _speech.SpeakCompleted -= OnSpeakCompleted;
             _speech.SpeakCompleted += OnSpeakCompleted;
             var culture = CultureInfo.GetCultures(CultureTypes.NeutralCultures).FirstOrDefault(c => c.ThreeLetterISOLanguageName == t.Language || c.Name == t.Language);

@@ -21,6 +21,11 @@
                     <SolidColorBrush x:Key="BsAccentSoft" Color="#F0DFBF" />
                     <SolidColorBrush x:Key="BsVerseNumber" Color="#A0651C" />
                     <SolidColorBrush x:Key="BsJesus" Color="#A8281F" />
+                    <SolidColorBrush x:Key="BsAccentFg" Color="#FFFCF6" />
+                    <SolidColorBrush x:Key="TabItemHeaderBackgroundSelected" Color="#F0DFBF" />
+                    <SolidColorBrush x:Key="TabItemHeaderBackgroundSelectedPointerOver" Color="#F0DFBF" />
+                    <SolidColorBrush x:Key="TabItemHeaderBackgroundUnselectedPointerOver" Color="#E8DFCB" />
+                    <SolidColorBrush x:Key="TabItemHeaderSelectedPipeFill" Color="Transparent" />
                     <!-- Fluent control overrides -->
                     <SolidColorBrush x:Key="ComboBoxBackground" Color="Transparent" />
                     <SolidColorBrush x:Key="ComboBoxBackgroundPointerOver" Color="#E8DFCB" />
@@ -34,7 +39,6 @@
                     <SolidColorBrush x:Key="TabItemHeaderForegroundUnselectedPointerOver" Color="#24201A" />
                     <SolidColorBrush x:Key="TabItemHeaderForegroundSelected" Color="#8A4F0F" />
                     <SolidColorBrush x:Key="TabItemHeaderForegroundSelectedPointerOver" Color="#8A4F0F" />
-                    <SolidColorBrush x:Key="TabItemHeaderSelectedPipeFill" Color="#8A4F0F" />
                 </ResourceDictionary>
                 <ResourceDictionary x:Key="Dark">
                     <SolidColorBrush x:Key="BsBackground" Color="#0F1216" />
@@ -48,6 +52,11 @@
                     <SolidColorBrush x:Key="BsAccentSoft" Color="#3A3120" />
                     <SolidColorBrush x:Key="BsVerseNumber" Color="#D9A94F" />
                     <SolidColorBrush x:Key="BsJesus" Color="#FF9A8F" />
+                    <SolidColorBrush x:Key="BsAccentFg" Color="#161A20" />
+                    <SolidColorBrush x:Key="TabItemHeaderBackgroundSelected" Color="#3A3120" />
+                    <SolidColorBrush x:Key="TabItemHeaderBackgroundSelectedPointerOver" Color="#3A3120" />
+                    <SolidColorBrush x:Key="TabItemHeaderBackgroundUnselectedPointerOver" Color="#2A323D" />
+                    <SolidColorBrush x:Key="TabItemHeaderSelectedPipeFill" Color="Transparent" />
                     <SolidColorBrush x:Key="ComboBoxBackground" Color="Transparent" />
                     <SolidColorBrush x:Key="ComboBoxBackgroundPointerOver" Color="#2A323D" />
                     <SolidColorBrush x:Key="ComboBoxBackgroundPressed" Color="#2A323D" />
@@ -60,7 +69,6 @@
                     <SolidColorBrush x:Key="TabItemHeaderForegroundUnselectedPointerOver" Color="#ECE7DA" />
                     <SolidColorBrush x:Key="TabItemHeaderForegroundSelected" Color="#E3B65F" />
                     <SolidColorBrush x:Key="TabItemHeaderForegroundSelectedPointerOver" Color="#E3B65F" />
-                    <SolidColorBrush x:Key="TabItemHeaderSelectedPipeFill" Color="#E3B65F" />
                 </ResourceDictionary>
             </ResourceDictionary.ThemeDictionaries>
         </ResourceDictionary>
@@ -103,7 +111,88 @@
             <Setter Property="Margin" Value="2,0" />
         </Style>
 
+        <!-- Default buttons: quiet, rounded, readable -->
+        <Style Selector="Button:not(.tool):not(.pillbtn):not(.accent):not(.ghost)">
+            <Setter Property="Background" Value="{DynamicResource BsSurface2}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource BsBorder}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="10" />
+            <Setter Property="Padding" Value="14,7" />
+            <Setter Property="FontWeight" Value="Medium" />
+        </Style>
+        <Style Selector="Button:not(.tool):not(.pillbtn):not(.accent):not(.ghost):pointerover /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="{DynamicResource BsHover}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource BsBorder}" />
+        </Style>
+        <Style Selector="Button.accent">
+            <Setter Property="Background" Value="{DynamicResource BsAccent}" />
+            <Setter Property="Foreground" Value="{DynamicResource BsAccentFg}" />
+            <Setter Property="CornerRadius" Value="10" />
+            <Setter Property="Padding" Value="18,8" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+        </Style>
+        <Style Selector="Button.accent:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="{DynamicResource BsAccent}" />
+            <Setter Property="Foreground" Value="{DynamicResource BsAccentFg}" />
+            <Setter Property="Opacity" Value="0.88" />
+        </Style>
+        <Style Selector="Button.ghost">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="CornerRadius" Value="8" />
+            <Setter Property="Padding" Value="8,4" />
+            <Setter Property="Foreground" Value="{DynamicResource BsMuted}" />
+        </Style>
+        <Style Selector="Button.ghost:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="{DynamicResource BsHover}" />
+            <Setter Property="Foreground" Value="{DynamicResource BsText}" />
+        </Style>
+        <!-- Labelled toggle in the reading toolbar -->
+        <Style Selector="ToggleButton.pillbtn">
+            <Setter Property="Height" Value="34" />
+            <Setter Property="Padding" Value="12,0" />
+            <Setter Property="CornerRadius" Value="12" />
+            <Setter Property="Background" Value="{DynamicResource BsSurface2}" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Foreground" Value="{DynamicResource BsMuted}" />
+        </Style>
+        <Style Selector="ToggleButton.pillbtn:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="{DynamicResource BsHover}" />
+            <Setter Property="Foreground" Value="{DynamicResource BsText}" />
+        </Style>
+        <Style Selector="ToggleButton.pillbtn:checked /template/ ContentPresenter#PART_ContentPresenter, ToggleButton.pillbtn:checked:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="{DynamicResource BsAccentSoft}" />
+            <Setter Property="Foreground" Value="{DynamicResource BsAccent}" />
+        </Style>
+
+        <!-- Cards, inputs -->
+        <Style Selector="Border.card">
+            <Setter Property="Background" Value="{DynamicResource BsSurface2}" />
+            <Setter Property="CornerRadius" Value="14" />
+            <Setter Property="Padding" Value="14" />
+            <Setter Property="BorderBrush" Value="{DynamicResource BsBorder}" />
+            <Setter Property="BorderThickness" Value="1" />
+        </Style>
+        <Style Selector="TextBox">
+            <Setter Property="CornerRadius" Value="10" />
+            <Setter Property="MinHeight" Value="36" />
+            <Setter Property="Padding" Value="10,7" />
+        </Style>
+        <Style Selector="CheckBox">
+            <Setter Property="Margin" Value="0,2" />
+        </Style>
+
         <!-- Text roles -->
+        <Style Selector="TextBlock.eyebrow">
+            <Setter Property="FontSize" Value="11" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="LetterSpacing" Value="1.6" />
+            <Setter Property="Foreground" Value="{DynamicResource BsMuted}" />
+        </Style>
+        <Style Selector="TextBlock.h3">
+            <Setter Property="FontSize" Value="15" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+        </Style>
         <Style Selector="TextBlock.h2">
             <Setter Property="FontFamily" Value="{DynamicResource UiSerif}" />
             <Setter Property="FontSize" Value="24" />
@@ -116,8 +205,10 @@
 
         <!-- Side rail tabs -->
         <Style Selector="TabItem">
-            <Setter Property="MinWidth" Value="46" />
-            <Setter Property="MinHeight" Value="46" />
+            <Setter Property="MinWidth" Value="42" />
+            <Setter Property="MinHeight" Value="42" />
+            <Setter Property="Margin" Value="4,2" />
+            <Setter Property="CornerRadius" Value="12" />
             <Setter Property="Padding" Value="0" />
             <Setter Property="HorizontalContentAlignment" Value="Center" />
             <Setter Property="VerticalContentAlignment" Value="Center" />
@@ -135,6 +226,11 @@
             <Setter Property="CornerRadius" Value="10" />
             <Setter Property="Padding" Value="10,8" />
             <Setter Property="Margin" Value="0,1" />
+        </Style>
+
+        <!-- Tiles on the start page -->
+        <Style Selector="Border.tile:pointerover">
+            <Setter Property="Opacity" Value="0.82" />
         </Style>
 
         <!-- Verse rows in the reader -->

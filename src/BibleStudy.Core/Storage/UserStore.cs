@@ -89,6 +89,15 @@ public sealed partial class UserStore : SqliteDb
             c => { c.Parameters.AddWithValue("$t", translationId); c.Parameters.AddWithValue("$s", strong); c.Parameters.AddWithValue("$n", limit); },
             r => new StrongsOccurrence(strong, new VerseRef(r.GetString(0), r.GetInt32(1), r.GetInt32(2)), r.GetString(3)));
 
+    /// <summary>Every verse of an indexed translation in Bible order (for the search engine).</summary>
+    public List<(VerseRef Ref, string Text)> GetCorpus(string translationId) =>
+        Query("SELECT book,chapter,verse,text FROM fts WHERE translation=$t ORDER BY rowid", c => c.Parameters.AddWithValue("$t", translationId),
+            r => (new VerseRef(r.GetString(0), r.GetInt32(1), r.GetInt32(2)), r.GetString(3)));
+
+    public List<StrongsOccurrence> GetAllOccurrences(string translationId) =>
+        Query("SELECT strong,book,chapter,verse,word FROM occ WHERE translation=$t", c => c.Parameters.AddWithValue("$t", translationId),
+            r => new StrongsOccurrence(r.GetString(0), new VerseRef(r.GetString(1), r.GetInt32(2), r.GetInt32(3)), r.GetString(4)));
+
     /// <summary>All words must occur (prefix match). Snippet marks hits with « ».</summary>
     public List<SearchHit> Search(string translationId, string text, int limit = 200, IReadOnlyCollection<string>? books = null)
     {
