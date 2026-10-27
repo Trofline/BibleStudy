@@ -147,3 +147,35 @@ public class CrossRefGraphTests
         Assert.Equal([(3, 2)], g.Neighbors(0, EdgeDirection.Incoming).Where(n => n.Other == 3));
     }
 }
+
+public class SearchSyntaxTests
+{
+    [Theory]
+    [InlineData("liebe gott", "\"liebe\"* \"gott\"*")]
+    [InlineData("\"im anfang\" gott", "\"im anfang\" \"gott\"*")]
+    [InlineData("glaube OR hoffnung", "\"glaube\"* OR \"hoffnung\"*")]
+    [InlineData("liebe -hass", "(\"liebe\"*) NOT (\"hass\"*)")]
+    public void BuildFtsQuery_SupportsPhrasesOrAndExclusion(string input, string expected) =>
+        Assert.Equal(expected, UserStore.BuildFtsQuery(input));
+
+    [Fact]
+    public void BuildFtsQuery_NothingPositive_ReturnsNull()
+    {
+        Assert.Null(UserStore.BuildFtsQuery("-hass"));
+        Assert.Null(UserStore.BuildFtsQuery("  ; \" \""));
+    }
+
+    [Fact]
+    public void Search_RespectsBookFilterAndExclusion()
+    {
+        var dir = Path.Combine(Path.GetTempPath(), "bs_" + Guid.NewGuid().ToString("N"));
+        var s = new UserStore(Path.Combine(dir, "t.db"));
+        s.Index("kjv", [new("GEN", 1, 1, "In the beginning God created"), new("JHN", 1, 1, "In the beginning was the Word"), new("JHN", 3, 16, "God so loved the world")]);
+        Assert.Equal(2, s.Search("kjv", "beginning").Count);
+        Assert.Single(s.Search("kjv", "beginning", books: ["JHN"]));
+        Assert.Single(s.Search("kjv", "\"loved the\""));
+        Assert.Single(s.Search("kjv", "god -word -loved"));
+        Microsoft.Data.Sqlite.SqliteConnection.ClearAllPools();
+        try { Directory.Delete(dir, true); } catch { }
+    }
+}

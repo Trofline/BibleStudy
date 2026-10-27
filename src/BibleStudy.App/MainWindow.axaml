@@ -51,6 +51,9 @@
                     <ToggleButton x:Name="StudyBtn" Classes="tool" ToolTip.Tip="Wortstudie: Wörter mit Strong-Nummer antippen">
                         <local:Icon Data="m5 8 6 6 M4 14l6-6 2-3 M2 5h12 M7 2h1 m22 22-5-10-5 10 M14 18h6" />
                     </ToggleButton>
+                    <ToggleButton x:Name="SpeakBtn" Classes="tool" ToolTip.Tip="Vorlesen: angeklickten Vers oder das ganze Kapitel">
+                        <local:Icon Data="M11 5L6 9H2v6h4l5 4z M15.5 8.5a5 5 0 0 1 0 7 M19 5a10 10 0 0 1 0 14" />
+                    </ToggleButton>
                     <Button x:Name="MarkBtn" Classes="tool" ToolTip.Tip="Markieren: markierten Text oder Vers einfärben">
                         <local:Icon Data="m9 11-6 6v3h9l3-3 M22 12l-4.6 4.6a2 2 0 0 1-2.8 0l-5.2-5.2a2 2 0 0 1 0-2.8L14 4" />
                     </Button>
@@ -114,6 +117,15 @@
                         <StackPanel DockPanel.Dock="Top" Spacing="8" Margin="0,0,0,8">
                             <TextBlock Classes="h2" Text="Suche" />
                             <TextBox x:Name="SearchBox" Watermark="Suchbegriffe, Enter zum Suchen" />
+                            <Border Classes="pill" HorizontalAlignment="Left">
+                                <ComboBox x:Name="SearchScopeBox" Width="220" SelectedIndex="0">
+                                    <ComboBoxItem Content="Ganze Bibel" />
+                                    <ComboBoxItem Content="Altes Testament" />
+                                    <ComboBoxItem Content="Neues Testament" />
+                                    <ComboBoxItem Content="Aktuelles Buch" />
+                                </ComboBox>
+                            </Border>
+                            <TextBlock Classes="caption" TextWrapping="Wrap" Text="Mehrere Wörter: alle müssen vorkommen. „genaue Wendung“ in Anführungszeichen, ODER zwischen Wörtern, -Wort schließt aus. Wortanfänge finden Endungen (lieb → liebe, lieben)." />
                             <TextBlock x:Name="SearchInfo" Classes="caption" TextWrapping="Wrap" />
                         </StackPanel>
                         <ListBox x:Name="SearchList" ItemTemplate="{StaticResource EntryTpl}" ScrollViewer.HorizontalScrollBarVisibility="Disabled" />
@@ -220,6 +232,22 @@
                         <ScrollViewer><StackPanel x:Name="TodoPanel" Spacing="4" Margin="0,0,8,0" /></ScrollViewer>
                     </DockPanel>
                 </TabItem>
+                <TabItem ToolTip.Tip="Grundtext: Hebräisch / Griechisch, Wort für Wort">
+                    <TabItem.Header><local:Icon Data="M4 7V4h16v3 M9 20h6 M12 4v16" /></TabItem.Header>
+                    <DockPanel Margin="16,14,12,12">
+                        <StackPanel DockPanel.Dock="Top" Spacing="6" Margin="0,0,0,8">
+                            <TextBlock Classes="h2" Text="Grundtext" />
+                            <TextBlock x:Name="GrundtextInfo" Classes="caption" TextWrapping="Wrap" Text="Vers anklicken, um das Original Wort für Wort zu sehen." />
+                            <Button x:Name="GrundtextCheckBtn" Content="Übersetzung mit Claude prüfen" HorizontalAlignment="Left" IsVisible="False" />
+                        </StackPanel>
+                        <ScrollViewer>
+                            <StackPanel Spacing="10" Margin="0,0,8,0">
+                                <WrapPanel x:Name="GrundtextPanel" />
+                                <TextBlock x:Name="GrundtextSource" Classes="caption" TextWrapping="Wrap" />
+                            </StackPanel>
+                        </ScrollViewer>
+                    </DockPanel>
+                </TabItem>
                 <TabItem ToolTip.Tip="KI-Assistent (Claude)">
                     <TabItem.Header><local:Icon Data="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9z M19 3v4 M17 5h4 M5 17v4 M3 19h4" /></TabItem.Header>
                     <Grid RowDefinitions="Auto,*,Auto" Margin="16,14,12,12">
@@ -278,6 +306,14 @@
                             <TextBlock Text="MCP-Server für andere Programme (z. B. Claude Code)" />
                             <TextBox x:Name="McpCommandBox" IsReadOnly="True" TextWrapping="Wrap" />
                             <Button x:Name="McpCopyBtn" Content="Befehl kopieren" HorizontalAlignment="Left" />
+                            <Border Height="1" Background="{DynamicResource BsBorder}" />
+                            <TextBlock Text="Sicherung" FontWeight="SemiBold" />
+                            <TextBlock Classes="caption" TextWrapping="Wrap" Text="Exportiert den aktiven Vault (Markierungen, Ordner, Tags, Notizen, Warteschlange, To-Dos, Lesefortschritt) und deine Einstellungen als eine ZIP-Datei. Beim Import entsteht ein neuer Vault." />
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <Button x:Name="ExportBtn" Content="Exportieren …" />
+                                <Button x:Name="ImportBtn" Content="Importieren …" />
+                            </StackPanel>
+                            <TextBlock x:Name="BackupInfo" Classes="caption" TextWrapping="Wrap" />
                             <Border Height="1" Background="{DynamicResource BsBorder}" />
                             <TextBlock Text="Offline" FontWeight="SemiBold" />
                             <TextBlock x:Name="OfflineInfo" Classes="caption" TextWrapping="Wrap" />

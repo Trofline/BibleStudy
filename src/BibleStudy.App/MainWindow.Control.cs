@@ -90,6 +90,20 @@ public partial class MainWindow
                 return e is null ? Err($"No Strong's entry for '{id}'.") : new { id = e.Id, lemma = e.Lemma, transliteration = e.Translit, pronunciation = e.Pronunciation, derivation = e.Derivation, meaning = e.Definition, kjv = e.KjvUsage, source = StrongsDictionary.Attribution };
             }
             case "get_word_occurrences": return GetOccurrences(a);
+            case "get_interlinear":
+            {
+                var (_, book, err) = await ResolveAsync(a);
+                if (err is not null || book is null) return err ?? Err("book is required");
+                var chapter = ArgInt(a, "chapter") ?? 1; var verse = ArgInt(a, "verse") ?? 1;
+                var words = (await _hello.GetInterlinearAsync(book.Id, chapter)).GetValueOrDefault(verse);
+                if (words is null || words.Count == 0) return Err($"No original-text data for {book.Id} {chapter}:{verse}.");
+                return new
+                {
+                    reference = $"{book.Id} {chapter}:{verse}", language = words[0].IsHebrew ? "Hebrew/Aramaic (right to left)" : "Greek",
+                    words = words.Select(w => new { original = w.Text, transliteration = w.Translit, meaning = w.Gloss, strongs = w.Strongs, grammar = w.ParsingFull }),
+                    source = HelloAoProvider.InterlinearAttribution,
+                };
+            }
 
             case "navigate":
             {

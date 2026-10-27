@@ -44,6 +44,9 @@ public static class BibleTools
     public static Task<string> GetWordOccurrences(AppClient app, string strongs_id, [Description(Tr)] string? translation = null, int? limit = null)
         => app.CallAsync("get_word_occurrences", new { strongs_id, translation, limit });
 
+    [McpServerTool(Name = "get_interlinear"), Description("The original text of one verse word by word: Hebrew/Aramaic (Old Testament) or Greek (New Testament) with transliteration, English meaning, Strong's number and grammar. Use it to check how a translation renders the original.")]
+    public static Task<string> GetInterlinear(AppClient app, string book, int chapter, int verse) => app.CallAsync("get_interlinear", new { book, chapter, verse });
+
     // ---- controlling the app ----------------------------------------------------------------------------------------
 
     [McpServerTool(Name = "navigate"), Description("Shows a chapter (and highlights a verse) in the app.")]

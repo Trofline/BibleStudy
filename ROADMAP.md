@@ -28,7 +28,10 @@ Freie, quelloffene Bibelstudien-Software (C#, Avalonia). Nur Quellen mit freier 
 - [x] Fußnoten anklickbar
 
 ## Phase 5 – Studium
-- Wort-/Satzprüfung Hebräisch/Griechisch (Interlinear, Lexikon)
-- Erweiterte Suche, Parallelansicht synchronisiert (inkl. Grundtext)
-- Vorlesen, Karte (Orte, Wege)
-- Export/Import (Einstellungen, Verse, Vaults)
+- [x] Grundtext Wort für Wort (Hebräisch/Griechisch, Umschrift, Grammatik, Bedeutung) mit Wörterbuch und Claude-Prüfung
+- [x] MCP-Werkzeug get_interlinear
+- [x] Erweiterte Suche (Wendungen, ODER, Ausschluss, Bereich AT/NT/Buch)
+- [x] Vorlesen (Windows-Stimmen)
+- [x] Export/Import (Vault + Einstellungen als ZIP)
+- [ ] Karte (Orte, Wege)
+- [ ] Dokumente verlinken, eigene Wissensdatenbank

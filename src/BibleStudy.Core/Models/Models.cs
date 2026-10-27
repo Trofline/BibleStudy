@@ -27,6 +27,12 @@ public sealed record Verse(int Number, IReadOnlyList<Segment> Segments)
 /// <summary>A footnote of a chapter; referenced from verse segments by <see cref="Segment.NoteId"/>.</summary>
 public sealed record Footnote(int NoteId, int Verse, string Text);
 
+/// <summary>One word of the original text with transliteration, grammar and the English meaning (Berean interlinear, public domain).</summary>
+public sealed record InterlinearWord(int Position, string Language, string Text, string Translit, string Parsing, string ParsingFull, string Strongs, string Gloss)
+{
+    public bool IsHebrew => Language == "hebrew";
+}
+
 /// <summary>One entry of Strong's dictionary (original-language word study).</summary>
 public sealed record StrongsEntry(string Id, string Lemma, string Translit, string Pronunciation, string Definition, string KjvUsage, string Derivation);
 

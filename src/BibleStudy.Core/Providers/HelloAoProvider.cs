@@ -72,6 +72,25 @@ public sealed class HelloAoProvider(HttpClient http, string cacheDir) : IBiblePr
         return result;
     }
 
+    /// <summary>
+    /// Original-language words of a chapter by verse (dataset "bsb-interlinear"): Greek for the New Testament, Hebrew/Aramaic for the Old.
+    /// </summary>
+    public async Task<Dictionary<int, List<InterlinearWord>>> GetInterlinearAsync(string book, int chapter, CancellationToken ct = default)
+    {
+        using var doc = await GetJsonAsync($"/api/d/bsb-interlinear/{book}/{chapter}.json", ct);
+        var result = new Dictionary<int, List<InterlinearWord>>();
+        foreach (var verse in doc.RootElement.GetProperty("chapter").GetProperty("content").EnumerateArray())
+        {
+            if (!verse.TryGetProperty("words", out var words)) continue;
+            result[verse.GetProperty("verse").GetInt32()] = words.EnumerateArray().Select(w => new InterlinearWord(
+                w.TryGetProperty("pos", out var p) ? p.GetInt32() : 0, Str(w, "language"), Str(w, "text"), Str(w, "transliteration"),
+                Str(w, "parsing"), Str(w, "parsingFull"), Str(w, "strongs"), Str(w, "gloss"))).OrderBy(w => w.Position).ToList();
+        }
+        return result;
+    }
+
+    public const string InterlinearAttribution = "Interlinear: Berean Standard Bible Interlinear (bereanbible.com), gemeinfrei";
+
     /// <summary>Books of the cross-reference dataset with their chapter counts, in Bible order.</summary>
     public async Task<IReadOnlyList<(string Book, int Chapters)>> GetCrossRefBooksAsync(CancellationToken ct = default)
     {

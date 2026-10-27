@@ -134,6 +134,7 @@ public partial class MainWindow : Window
         InitAi();
         InitGraph();
         InitPanel();
+        InitStudy();
         StartControl();
         Opened += async (_, _) => await InitAsync();
     }
@@ -545,6 +546,7 @@ public partial class MainWindow : Window
         NoteTarget.Text = "Notiz zu " + Label(r);
         NoteEditor.Text = _vault.GetNotes().FirstOrDefault(x => x.Ref == r)?.Text ?? "";
         _ = ShowXrefsAsync(r);
+        if (SideTabs.SelectedIndex == GrundtextTab) _ = ShowGrundtextAsync(r);
     }
 
     async Task ShowXrefsAsync(VerseRef r)
@@ -629,7 +631,14 @@ public partial class MainWindow : Window
                 var verses = await _provider.GetAllVersesAsync(t.Id);
                 await Task.Run(() => _store.Index(t.Id, verses));
             }
-            var hits = _store.Search(t.Id, SearchBox.Text);
+            IReadOnlyCollection<string>? scope = SearchScopeBox.SelectedIndex switch
+            {
+                1 => _books.Where(b => BookCategories.IsOldTestament(BookCategories.Of(b.Id))).Select(b => b.Id).ToList(),
+                2 => _books.Where(b => BookCategories.IsNewTestament(BookCategories.Of(b.Id))).Select(b => b.Id).ToList(),
+                3 => [_curBook],
+                _ => null,
+            };
+            var hits = _store.Search(t.Id, SearchBox.Text, 200, scope);
             SearchList.ItemsSource = hits.Select(h => new Entry(h.Ref, $"{Label(h.Ref)}\n{h.Snippet}")).ToList();
             SearchInfo.Text = hits.Count == 0 ? "Keine Treffer." : $"{hits.Count}{(hits.Count >= 200 ? "+" : "")} Treffer in {t.ShortName}";
         }

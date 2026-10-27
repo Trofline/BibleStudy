@@ -90,14 +90,49 @@ public sealed partial class UserStore : SqliteDb
             r => new StrongsOccurrence(strong, new VerseRef(r.GetString(0), r.GetInt32(1), r.GetInt32(2)), r.GetString(3)));
 
     /// <summary>All words must occur (prefix match). Snippet marks hits with « ».</summary>
-    public List<SearchHit> Search(string translationId, string text, int limit = 200)
+    public List<SearchHit> Search(string translationId, string text, int limit = 200, IReadOnlyCollection<string>? books = null)
     {
-        var terms = Words().Matches(text).Select(m => $"\"{m.Value}\"*").ToList();
-        if (terms.Count == 0) return [];
-        return Query("SELECT book,chapter,verse,snippet(fts,0,'«','»','…',24) FROM fts WHERE fts MATCH $q AND translation=$t LIMIT $n",
-            c => { c.Parameters.AddWithValue("$q", string.Join(' ', terms)); c.Parameters.AddWithValue("$t", translationId); c.Parameters.AddWithValue("$n", limit); },
+        var query = BuildFtsQuery(text);
+        if (query is null) return [];
+        var filter = books is { Count: > 0 } ? $" AND book IN ({string.Join(',', books.Select((_, i) => "$b" + i))})" : "";
+        return Query($"SELECT book,chapter,verse,snippet(fts,0,'«','»','…',24) FROM fts WHERE fts MATCH $q AND translation=$t{filter} LIMIT $n",
+            c =>
+            {
+                c.Parameters.AddWithValue("$q", query); c.Parameters.AddWithValue("$t", translationId); c.Parameters.AddWithValue("$n", limit);
+                if (books is not null) { var i = 0; foreach (var b in books) c.Parameters.AddWithValue("$b" + i++, b); }
+            },
             r => new SearchHit(new VerseRef(r.GetString(0), r.GetInt32(1), r.GetInt32(2)), r.GetString(3)));
     }
+
+    /// <summary>
+    /// Turns user input into an FTS5 query: words are AND-ed and match word beginnings, "quoted text" is an exact phrase,
+    /// OR between words alternates, a leading minus excludes a word. Returns null when there is nothing positive to search for.
+    /// </summary>
+    public static string? BuildFtsQuery(string input)
+    {
+        var positives = new List<string>();
+        var negatives = new List<string>();
+        var useOr = false;
+        foreach (Match m in Tokens().Matches(input))
+        {
+            if (m.Groups["phrase"].Success)
+            {
+                var words = Words().Matches(m.Groups["phrase"].Value).Select(w => w.Value).ToList();
+                if (words.Count > 0) positives.Add($"\"{string.Join(' ', words)}\"");
+            }
+            else if (m.Groups["neg"].Success) { if (Words().Match(m.Groups["neg"].Value) is { Success: true } w) negatives.Add($"\"{w.Value}\"*"); }
+            else if (m.Groups["or"].Success) useOr = true;
+            else if (Words().Match(m.Groups["word"].Value) is { Success: true } word) positives.Add($"\"{word.Value}\"*");
+        }
+        if (positives.Count == 0) return null;
+        var query = string.Join(useOr ? " OR " : " ", positives);
+        if (negatives.Count > 0) query = $"({query}) NOT ({string.Join(" OR ", negatives)})";
+        return query;
+    }
+
+    [GeneratedRegex("""
+        "(?<phrase>[^"]*)"|-(?<neg>[\p{L}\p{N}]+)|(?<or>\bOR\b|\bODER\b)|(?<word>[\p{L}\p{N}]+)
+        """)] private static partial Regex Tokens();
 
     [GeneratedRegex(@"[\p{L}\p{N}]+")] private static partial Regex Words();
 

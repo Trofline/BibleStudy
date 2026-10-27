@@ -225,6 +225,9 @@ public sealed class VaultStore : SqliteDb
 
     public void DeleteTodo(long id) => Exec("DELETE FROM todos WHERE id=$i", c => c.Parameters.AddWithValue("$i", id));
 
+    /// <summary>Writes a consistent copy of the whole vault to a new file (which must not exist yet).</summary>
+    public void BackupTo(string path) => Exec("VACUUM INTO $p", c => c.Parameters.AddWithValue("$p", path));
+
     // ---- migration --------------------------------------------------------------------------------------------------
 
     /// <summary>Takes over bookmarks (as whole-verse marks), notes and reading progress of the pre-vault database.</summary>
