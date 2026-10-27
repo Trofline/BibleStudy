@@ -463,10 +463,11 @@
                             <Border Classes="card"><StackPanel Spacing="8">
                                 <TextBlock Classes="eyebrow" Text="SICHERUNG" />
                                 <TextBlock Classes="caption" TextWrapping="Wrap" Text="Exportiert den aktiven Vault (Markierungen, Ordner, Tags, Notizen, Dokumente, Leseliste, Aufgaben, Lesefortschritt) und deine Einstellungen als eine ZIP-Datei. Beim Import entsteht ein neuer Vault." />
-                                <StackPanel Orientation="Horizontal" Spacing="8">
-                                    <Button x:Name="ExportBtn" Content="Exportieren …" />
-                                    <Button x:Name="ImportBtn" Content="Importieren …" />
-                                </StackPanel>
+                                <WrapPanel>
+                                    <Button x:Name="ExportBtn" Content="Exportieren …" Margin="0,0,6,6" />
+                                    <Button x:Name="ImportBtn" Content="Importieren …" Margin="0,0,6,6" />
+                                    <Button x:Name="ObsidianBtn" Content="Als Obsidian-Vault exportieren …" ToolTip.Tip="Schreibt Dokumente, Markierungen, Notizen, Leseliste und Aufgaben als Markdown-Ordner, den Obsidian direkt öffnet" />
+                                </WrapPanel>
                                 <TextBlock x:Name="BackupInfo" Classes="caption" TextWrapping="Wrap" />
                             </StackPanel></Border>
 
@@ -537,6 +538,11 @@
                             <TextBlock FontWeight="SemiBold" Margin="0,8,0,0" Text="Abkürzungen im Programm" />
                             <TextBlock TextWrapping="Wrap" Text="G… = Strong-Nummer Griechisch, H… = Strong-Nummer Hebräisch · KJV/KJAV = King James Version · AT/NT = Altes/Neues Testament · CC BY(-SA) = Creative-Commons-Lizenz mit Namensnennung (und Weitergabe unter gleichen Bedingungen)" />
                         </StackPanel>
+                    </ScrollViewer>
+                </TabItem>
+                <TabItem ToolTip.Tip="Vers-Übersicht">
+                    <ScrollViewer Margin="16,8,4,12">
+                        <StackPanel x:Name="GuidePanel" Spacing="10" Margin="0,0,12,0" />
                     </ScrollViewer>
                 </TabItem>
             </TabControl>

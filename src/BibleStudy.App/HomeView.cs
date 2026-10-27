@@ -36,6 +36,9 @@ public sealed class HomeView : UserControl
     /// <summary>Where the user last read; shown as a "continue" button.</summary>
     public (string Book, int Chapter, string Label)? Resume { get; set; }
 
+    /// <summary>Recently edited documents and marks: (kind, title, detail, open).</summary>
+    public IReadOnlyList<(string Kind, string Title, string Detail, Action Open)> Recent { get; set; } = [];
+
     IReadOnlyList<BookInfo> _books = [];
     HashSet<(string, int)> _read = [];
     string? _openBook;
@@ -120,6 +123,25 @@ public sealed class HomeView : UserControl
         hero.Children.Add(new StackPanel { Children = { Heading("Bibel", 46, "BsAccent"), Caption($"{read} von {total} Kapiteln gelesen · {(total == 0 ? 0 : 100 * read / total)} %", 13) } });
         panel.Children.Add(hero);
         panel.Children.Add(new Border { Margin = new(0, 6, 0, 0), Child = Bar(total == 0 ? 0 : (double)read / total, accent, 6) });
+        if (Recent.Count > 0)
+        {
+            panel.Children.Add(new Border { Height = 18 });
+            panel.Children.Add(Heading("Weiterarbeiten", 22));
+            var wrap = new WrapPanel { Margin = new(0, 8, 0, 0) };
+            foreach (var (kind, title, detail, open) in Recent)
+            {
+                var kindText = Themed(new TextBlock { Text = kind.ToUpperInvariant(), FontSize = 10, FontWeight = FontWeight.SemiBold, LetterSpacing = 1.2 }, TextBlock.ForegroundProperty, "BsAccent");
+                var titleText = new TextBlock { Text = title, FontWeight = FontWeight.SemiBold, TextTrimming = TextTrimming.CharacterEllipsis };
+                var detailText = Caption(detail); detailText.MaxHeight = 34; detailText.TextTrimming = TextTrimming.CharacterEllipsis;
+                var card = new Border { Width = 220, Height = 92, Margin = new(0, 0, 10, 10), Padding = new(12, 10), CornerRadius = new(12), BorderThickness = new(1), Cursor = new Cursor(StandardCursorType.Hand), Classes = { "tile" },
+                    Child = new StackPanel { Spacing = 3, Children = { kindText, titleText, detailText } } };
+                Themed(card, Border.BackgroundProperty, "BsSurface"); Themed(card, Border.BorderBrushProperty, "BsBorder");
+                var o = open;
+                card.PointerPressed += (_, e) => { if (e.GetCurrentPoint(card).Properties.IsLeftButtonPressed) o(); };
+                wrap.Children.Add(card);
+            }
+            panel.Children.Add(wrap);
+        }
 
         Section(panel, "Altes Testament", _books.Where(b => BookCategories.IsOldTestament(BookCategories.Of(b.Id))));
         Section(panel, "Neues Testament", _books.Where(b => BookCategories.IsNewTestament(BookCategories.Of(b.Id))));

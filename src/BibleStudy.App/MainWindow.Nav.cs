@@ -22,6 +22,7 @@ public partial class MainWindow
         ]),
         new("Studieren", "M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z",
         [
+            new(GuideTab, "Übersicht", "Alles zum angeklickten Vers: deine Notizen, Markierungen und Dokumente, andere Übersetzungen, Querverweise. Tipp: Rechtsklick auf einen Vers."),
             new(3, "Wort", "Schalte oben „Wortstudie“ ein und tippe ein unterstrichenes Wort an: Bedeutung im Urtext."),
             new(GrundtextTab, "Grundtext", "Der angeklickte Vers im Original, Wort für Wort mit Bedeutung."),
             new(4, "Querverweise", "Verse, die mit dem angeklickten Vers zusammenhängen."),

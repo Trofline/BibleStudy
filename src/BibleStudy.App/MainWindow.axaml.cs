@@ -146,6 +146,11 @@ public partial class MainWindow : Window
         InitKnowledge();
         InitQol();
         InitNav();
+        ObsidianBtn.Click += async (_, _) => await ExportObsidianAsync();
+        SideTabs.SelectionChanged += (_, e) =>
+        {
+            if (e.Source == SideTabs && SideTabs.SelectedIndex == GuideTab) _ = ShowGuideAsync(_selected is int v ? new VerseRef(_curBook, _curChapter, v) : default);
+        };
         StartControl();
         Opened += async (_, _) => await InitAsync();
     }
@@ -187,6 +192,18 @@ public partial class MainWindow : Window
     void ShowHome()
     {
         Home.Resume = _curBook == "" ? null : (_curBook, _curChapter, $"{BookName(_curBook)} {_curChapter}");
+        var recent = new List<(string, string, string, Action)>();
+        foreach (var d in _vault.GetDocuments().OrderByDescending(d => d.Updated).Take(4))
+        {
+            var doc = d;
+            recent.Add(("Dokument", d.Title, Shorten(string.Join(" ", d.Body.Split((char)10).Where(l => !l.TrimStart().StartsWith("#") && !l.StartsWith("**Quelle")).Take(6)).Trim(), 80), () => { SetPanelOpen(true); SideTabs.SelectedIndex = KnowledgeTab; OpenDocument(doc); }));
+        }
+        foreach (var m in _vault.GetMarks().OrderByDescending(m => m.Id).Take(4))
+        {
+            var mark = m;
+            recent.Add(("Markierung", Label(m.Ref), m.Note.Length > 0 ? Shorten(m.Note.ReplaceLineEndings(" "), 80) : Shorten(m.Text, 80), () => _ = GoToAsync(mark.Ref.Book, mark.Ref.Chapter, mark.Ref.Verse)));
+        }
+        Home.Recent = recent;
         Home.Show(_books, _read, Home.OpenBook);
         Home.IsVisible = true; ReaderHost.IsVisible = false; GraphPane.IsVisible = false; MapPane.IsVisible = false; KnowledgePane.IsVisible = false;
     }
@@ -440,6 +457,10 @@ public partial class MainWindow : Window
     void OnVersePressed(int verse, PointerPressedEventArgs e)
     {
         SelectVerse(verse);
+        if (e.GetCurrentPoint(this).Properties.IsRightButtonPressed && _verseBoxes.TryGetValue(verse, out var anchor))
+        {
+            e.Handled = true; ShowVerseMenu(verse, anchor); return;
+        }
         if (e.Source is not SelectableTextBlock { Tag: CellInfo cell } tb) return;
         var hit = tb.TextLayout.HitTestPoint(e.GetPosition(tb)).TextPosition;
         var span = cell.Spans.FirstOrDefault(s => hit >= s.Start && hit < s.End);
@@ -576,6 +597,7 @@ public partial class MainWindow : Window
         NoteEditor.Text = _vault.GetNotes().FirstOrDefault(x => x.Ref == r)?.Text ?? "";
         _ = ShowXrefsAsync(r);
         if (SideTabs.SelectedIndex == GrundtextTab) _ = ShowGrundtextAsync(r);
+        if (SideTabs.SelectedIndex == GuideTab) _ = ShowGuideAsync(r);
     }
 
     async Task ShowXrefsAsync(VerseRef r)
