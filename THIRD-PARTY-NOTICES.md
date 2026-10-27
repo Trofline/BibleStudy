@@ -36,4 +36,4 @@ are marked as "local import, private use only", and are never uploaded or redist
 
 ## Names
 
-"Logos", "e-Sword", "Obsidian" and other product names belong to their owners. BibleStudy is not affiliated with them.
+"Obsidian" and other product names belong to their owners. BibleStudy is not affiliated with them.
