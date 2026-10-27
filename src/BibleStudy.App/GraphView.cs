@@ -30,7 +30,7 @@ public sealed class GraphView : UserControl
     readonly Slider _countSlider = new() { Minimum = 4, Maximum = 40, Value = 14, Width = 140, TickFrequency = 1, IsSnapToTickEnabled = true };
     readonly TextBlock _countLabel = new() { Text = "Anzahl 14" };
     readonly ComboBox _bookBox = new() { Width = 170, IsVisible = false };
-    readonly Slider _arcSlider = new() { Minimum = 10000, Maximum = 344000, Value = 150000, Width = 150, IsVisible = false };
+    readonly Slider _arcSlider = new() { Minimum = 10000, Maximum = 344000, Value = 90000, Width = 150, IsVisible = false };
     readonly TextBlock _hint = new() { FontSize = 12, VerticalAlignment = VerticalAlignment.Center, TextTrimming = TextTrimming.CharacterEllipsis };
     readonly TextBlock _detailTitle = new() { FontWeight = FontWeight.SemiBold, FontSize = 15 };
     readonly TextBlock _detailInfo = new() { FontSize = 12 };

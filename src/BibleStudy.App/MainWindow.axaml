@@ -3,7 +3,7 @@
         xmlns:local="clr-namespace:BibleStudy.App"
         x:Class="BibleStudy.App.MainWindow"
         Title="BibleStudy" Width="1280" Height="800" MinWidth="1180" MinHeight="560"
-        Background="{DynamicResource BsBackground}" Foreground="{DynamicResource BsText}">
+        Background="{DynamicResource BsBackground}" Foreground="{DynamicResource BsText}" WindowDecorations="BorderOnly">
     <Window.Resources>
         <DataTemplate x:Key="EntryTpl" x:DataType="local:Entry">
             <StackPanel Spacing="2">
@@ -18,7 +18,7 @@
 
     <DockPanel>
         <!-- Top bar: where am I (navigation) -->
-        <Border x:Name="TopBar" DockPanel.Dock="Top" Padding="16,0" Height="60" Background="{DynamicResource BsSurface}"
+        <Border x:Name="TopBar" DockPanel.Dock="Top" Padding="16,0,0,0" Height="60" Background="{DynamicResource BsSurface}"
                 BorderBrush="{DynamicResource BsBorder}" BorderThickness="0,0,0,1">
             <DockPanel VerticalAlignment="Center">
                 <StackPanel DockPanel.Dock="Left" Orientation="Horizontal" Spacing="10" Margin="0,0,18,0" VerticalAlignment="Center">
@@ -37,12 +37,23 @@
                         <local:Icon Data="M3 9.5L12 3l9 6.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z" />
                     </Button>
                 </StackPanel>
+                <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Stretch" Margin="10,0,0,0">
+                    <Button x:Name="MinBtn" Classes="caption" ToolTip.Tip="Minimieren"><local:Icon Data="M5 12h14" IconSize="15" /></Button>
+                    <Button x:Name="MaxBtn" Classes="caption" ToolTip.Tip="Maximieren / Wiederherstellen"><local:Icon Data="M5 5h14v14H5z" IconSize="14" /></Button>
+                    <Button x:Name="CloseBtn" Classes="caption close" ToolTip.Tip="Schließen"><local:Icon Data="M18 6L6 18 M6 6l12 12" IconSize="15" /></Button>
+                </StackPanel>
                 <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" Spacing="2" VerticalAlignment="Center" Margin="10,0,0,0">
                     <Button x:Name="VaultTopBtn" Classes="ghost" Margin="0,0,6,0" ToolTip.Tip="Aktiver Vault (deine Mappe mit Markierungen, Notizen, Dokumenten). Klicken zum Wechseln.">
                         <StackPanel Orientation="Horizontal" Spacing="7">
                             <local:Icon Data="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.7-.9l-.8-1.2A2 2 0 0 0 7.9 3H4a2 2 0 0 0-2 2v13c0 1.1.9 2 2 2z" IconSize="16" VerticalAlignment="Center" />
                             <TextBlock x:Name="VaultTopText" FontSize="12.5" FontWeight="Medium" VerticalAlignment="Center" MaxWidth="110" TextTrimming="CharacterEllipsis" />
                         </StackPanel>
+                    </Button>
+                    <Button x:Name="LayoutTopBtn" Classes="tool" ToolTip.Tip="Layouts: Anordnung der Fenster speichern und laden (wie „Desktop“)">
+                        <local:Icon Data="M3 3h7v9H3z M14 3h7v5h-7z M14 12h7v9h-7z M3 16h7v5H3z" />
+                    </Button>
+                    <Button x:Name="SettingsTopBtn" Classes="tool" ToolTip.Tip="Einstellungen, Hilfe, Info">
+                        <local:Icon Data="M21 4h-7 M10 4H3 M21 12h-9 M8 12H3 M21 20h-5 M12 20H3 M14 2v4 M8 10v4 M16 18v4" />
                     </Button>
                     <Button x:Name="ThemeBtn" Classes="tool" ToolTip.Tip="Hell / Dunkel / System wechseln (Strg+T)">
                         <local:Icon Data="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9z" />
@@ -98,6 +109,17 @@
                         <TextBlock Text="Gelesen" FontSize="13" FontWeight="Medium" VerticalAlignment="Center" />
                     </StackPanel>
                 </ToggleButton>
+                <Border DockPanel.Dock="Left" Classes="pill" Margin="8,0,0,0" VerticalAlignment="Center"><StackPanel Orientation="Horizontal">
+                    <Button x:Name="BooksWinBtn" Classes="toolx" ToolTip.Tip="Kommentare und Lexikon in eigenem Fenster">
+                        <StackPanel Orientation="Horizontal" Spacing="6"><local:Icon Data="M4 19.5A2.5 2.5 0 0 1 6.5 17H20 M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" IconSize="17" VerticalAlignment="Center" /><TextBlock Text="Bücher" VerticalAlignment="Center" /></StackPanel>
+                    </Button>
+                    <Button x:Name="DocsWinBtn" Classes="toolx" ToolTip.Tip="Dokumente schreiben und ordnen in eigenem Fenster (Strg+Umschalt+D)">
+                        <StackPanel Orientation="Horizontal" Spacing="6"><local:Icon Data="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z M14 2v6h6 M8 13h8 M8 17h8" IconSize="17" VerticalAlignment="Center" /><TextBlock Text="Dokumente" VerticalAlignment="Center" /></StackPanel>
+                    </Button>
+                    <Button x:Name="PlanWinBtn" Classes="toolx" ToolTip.Tip="Leseliste und Aufgaben in eigenem Fenster">
+                        <StackPanel Orientation="Horizontal" Spacing="6"><local:Icon Data="M10 12h11 M10 18h11 M10 6h11 M4 10h2 M4 6h1v4" IconSize="17" VerticalAlignment="Center" /><TextBlock Text="Planen" VerticalAlignment="Center" /></StackPanel>
+                    </Button>
+                </StackPanel></Border>
                 <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
                     <Border Classes="pill"><StackPanel Orientation="Horizontal">
                         <Button x:Name="FontMinusBtn" Classes="tool" Width="32" Content="A−" FontSize="13" FontWeight="SemiBold" ToolTip.Tip="Schrift kleiner (Strg+−)" />
@@ -248,6 +270,11 @@
                     <DockPanel Margin="16,14,12,12">
                         <StackPanel DockPanel.Dock="Top" Spacing="4" Margin="0,0,0,8">
                             <Button x:Name="XrefQueueBtn" Content="Alle zur Leseliste" HorizontalAlignment="Left" ToolTip.Tip="Die gezeigten Querverweise nacheinander abarbeiten" />
+                            <WrapPanel>
+                                <Button x:Name="XrefOutBtn" Classes="seg" Content="Ausgehend" ToolTip.Tip="Verse, auf die dieser Vers verweist" />
+                                <Button x:Name="XrefInBtn" Classes="seg" Content="Eingehend" ToolTip.Tip="Verse, die auf diesen Vers verweisen" />
+                                <Button x:Name="XrefBothBtn" Classes="seg" Content="Beides" />
+                            </WrapPanel>
                             <TextBlock x:Name="XrefTitle" FontWeight="SemiBold" TextWrapping="Wrap" Text="Vers anklicken, um Querverweise zu sehen" />
                             <TextBlock Classes="caption" Text="Quelle: OpenBible.info, CC BY 4.0" />
                         </StackPanel>
@@ -498,6 +525,21 @@
                                 <Button x:Name="OfflineBtn" Content="Gewählte Übersetzung offline verfügbar machen" HorizontalAlignment="Left" />
                                 <TextBlock Classes="caption" TextWrapping="Wrap"
                                            Text="Es werden nur Texte geladen, die die Quelle zur freien Nutzung anbietet; Lizenz und Namensnennung stehen unten in der Fußzeile. Die Daten liegen lokal und gehören dir." />
+                            </StackPanel></Border>
+
+                            <Border Classes="card"><StackPanel Spacing="8">
+                                <TextBlock Classes="eyebrow" Text="PROGRAMM UND START" />
+                                <CheckBox x:Name="StartWithWindowsCheck" Content="Mit Windows starten" />
+                                <StackPanel Orientation="Horizontal" Spacing="10">
+                                    <TextBlock Text="Beim Start" VerticalAlignment="Center" />
+                                    <Border Classes="pill"><ComboBox x:Name="StartModeBox" Width="160" SelectedIndex="0">
+                                        <ComboBoxItem Content="Normal" /><ComboBoxItem Content="Maximiert" /><ComboBoxItem Content="Minimiert" />
+                                    </ComboBox></Border>
+                                </StackPanel>
+                                <CheckBox x:Name="TrayCheck" Content="Symbol im Infobereich (System-Tray) anzeigen" />
+                                <CheckBox x:Name="CloseToTrayCheck" Content="Beim Schließen in den Infobereich minimieren (Beenden über Rechtsklick auf das Symbol)" />
+                                <CheckBox x:Name="RememberWindowCheck" Content="Fensterposition und -größe merken" />
+                                <CheckBox x:Name="RestoreWindowsCheck" Content="Geöffnete Fenster (Dokumente, Bücher …) beim Start wiederherstellen" />
                             </StackPanel></Border>
 
                             <Border Classes="card"><StackPanel Spacing="8">

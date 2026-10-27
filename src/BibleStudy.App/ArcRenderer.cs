@@ -35,7 +35,7 @@ static class ArcRenderer
     public static byte[] Render(VerseLinkSet links, int[] ids, double viewStart, double viewEnd, Layout layout, CancellationToken ct)
     {
         int w = layout.Width, h = layout.Height;
-        var workers = Math.Clamp(Environment.ProcessorCount, 1, 8);
+        var workers = Math.Clamp(Environment.ProcessorCount, 1, 6);
         var buffers = new float[workers][];
         Parallel.For(0, workers, new ParallelOptions { MaxDegreeOfParallelism = workers, CancellationToken = ct }, worker =>
         {

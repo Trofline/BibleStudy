@@ -164,8 +164,18 @@ public partial class MainWindow
         _settings.FocusMode = !_settings.FocusMode;
         var focus = _settings.FocusMode;
         TopBar.IsVisible = !focus; ReadBar.IsVisible = !focus && ReaderHost.IsVisible;
-        if (focus) { SidePanel.IsVisible = SideSplitter.IsVisible = false; WindowState = WindowState.FullScreen; }
-        else { WindowState = WindowState.Normal; SetPanelOpen(_settings.SideOpen); }
+        if (focus)
+        {
+            _preFocus = (WindowState, SidePanel.IsVisible);
+            SidePanel.IsVisible = SideSplitter.IsVisible = false; WindowState = WindowState.FullScreen;
+        }
+        else
+        {
+            var (state, sideOpen) = _preFocus ?? (WindowState.Normal, _settings.SideOpen);
+            _preFocus = null;
+            WindowState = state;
+            SetPanelOpen(sideOpen);
+        }
     }
 
     void UpdateTitle(string book, int chapter, string translation) => Title = $"{book} {chapter} · {translation} – BibleStudy";

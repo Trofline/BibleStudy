@@ -11,7 +11,7 @@ namespace BibleStudy.App;
 public partial class MainWindow
 {
     sealed record NavTab(int Index, string Label, string Hint);
-    sealed record NavGroup(string Name, string Icon, NavTab[] Tabs, bool ShowVault = false);
+    sealed record NavGroup(string Name, string Icon, NavTab[] Tabs, bool ShowVault = false, bool Windowed = false);
 
     static readonly NavGroup[] NavGroups =
     [
@@ -32,21 +32,21 @@ public partial class MainWindow
         [
             new(CommentaryTab, "Kommentare", "Freie Bibelkommentare (Matthew Henry, Jamieson-Fausset-Brown, Keil-Delitzsch, Tyndale u. a.) zum aktuellen Kapitel; der angeklickte Vers wird hervorgehoben."),
             new(LexiconTab, "Lexikon", "Bibellexikon zu Personen und Orten (Easton's Bible Dictionary über Theographic). Oben stehen die Namen des aktuellen Kapitels."),
-        ]),
+        ], Windowed: true),
         new("Notizen", "M12 20h9 M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z",
         [
             new(2, "Notizen", "Schreibe eine kurze Notiz zum angeklickten Vers. Darunter stehen alle deine Notizen; Klick springt zur Stelle."),
-        ], ShowVault: true),
+        ]),
         new("Dokumente", "M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z M14 2v6h6 M8 13h8 M8 17h8",
         [
             new(KnowledgeTab, "Schreiben", "Eigene Texte und verknüpfte Dateien. Verse wie „Joh 3,16“ und [[Titel]] werden zu Links."),
             new(1, "Ordner", "Deine Ordner mit Dokumenten (📄) und markierten Versen. Klick öffnet das Dokument bzw. springt zur Stelle. ⋯ legt Ordner und Dokumente an."),
-        ], ShowVault: true),
+        ], Windowed: true),
         new("Planen", "M10 12h11 M10 18h11 M10 6h11 M4 10h2 M4 6h1v4 M6 18H4c0-1 2-2 2-3s-1-1.5-2-1",
         [
             new(6, "Leseliste", "Verse, die du der Reihe nach durchgehen willst."),
             new(7, "Aufgaben", "Deine Aufgaben fürs Studium, auf Wunsch mit Vers."),
-        ], ShowVault: true),
+        ], Windowed: true),
         new("KI", "M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9z M19 3v4 M17 5h4 M5 17v4 M3 19h4",
         [
             new(AiTab, "Claude", "Dein lokaler Claude-Assistent. Er liest die Bibel über die Werkzeuge dieses Programms."),
@@ -56,7 +56,7 @@ public partial class MainWindow
             new(SettingsTab, "Einstellungen", "Aussehen, Verhalten, Vault, Sicherung, eigene Übersetzungen."),
             new(13, "Hilfe", "So funktioniert das Programm."),
             new(14, "Maße & Info", "Maße, Gewichte und Abkürzungen aus der Bibel."),
-        ]),
+        ], Windowed: true),
     ];
 
     ComboBox? VaultQuickBox;
@@ -100,22 +100,51 @@ public partial class MainWindow
     void InitNav()
     {
         BuildVaultBar();
-        foreach (var group in NavGroups)
+        foreach (var group in NavGroups.Where(g => !g.Windowed))
         {
             var g = group;
             var icon = new Icon { Data = Geometry.Parse(g.Icon), IconSize = 22, HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center };
             var label = new TextBlock { Text = g.Name, FontSize = 11, FontWeight = FontWeight.Medium, HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center };
             var button = new Button { Classes = { "rail" }, Tag = g, Content = new StackPanel { Spacing = 4, Children = { icon, label } } };
             ToolTip.SetTip(button, g.Tabs.Length > 1 ? string.Join(" · ", g.Tabs.Select(t => t.Label)) : g.Tabs[0].Hint);
+            // drag a tab out of the side panel = its own window
+            Avalonia.Point? dragFrom = null; var dragged = false;
+            button.PointerPressed += (_, e) => { if (e.GetCurrentPoint(button).Properties.IsLeftButtonPressed) { dragFrom = e.GetPosition(this); dragged = false; } };
+            button.PointerReleased += (_, _) => dragFrom = null;
+            button.PointerMoved += (_, e) =>
+            {
+                if (dragFrom is not { } from || dragged) return;
+                var pos = e.GetPosition(this);
+                if (Math.Abs(pos.X - from.X) + Math.Abs(pos.Y - from.Y) < 40 || SidePanel.Bounds.Contains(pos)) return;
+                dragged = true; dragFrom = null; e.Pointer.Capture(null);
+                var idx = g.Tabs.Any(t => t.Index == SideTabs.SelectedIndex) ? SideTabs.SelectedIndex : g.Tabs[0].Index;
+                PopOutTab(idx, this.PointToScreen(pos) - new PixelPoint(120, 20));
+            };
             button.Click += (_, _) =>
             {
+                if (dragged) { dragged = false; return; }
                 SetPanelOpen(true);
                 if (!g.Tabs.Any(t => t.Index == SideTabs.SelectedIndex)) SideTabs.SelectedIndex = g.Tabs[0].Index;
                 SyncNav();
             };
             Rail.Children.Add(button);
         }
-        SideTabs.SelectionChanged += (_, e) => { if (e.Source == SideTabs) SyncNav(); };
+        SideTabs.SelectionChanged += (_, e) =>
+        {
+            if (e.Source != SideTabs || _revertingTab) return;
+            // work areas open as their own window; the side panel keeps showing what it showed
+            if (GroupOf(SideTabs.SelectedIndex) is { Windowed: true } wg)
+            {
+                var idx = SideTabs.SelectedIndex;
+                _revertingTab = true; SideTabs.SelectedIndex = _lastSideIndex; _revertingTab = false;
+                OpenGroupWindow(wg, idx);
+                return;
+            }
+            _lastSideIndex = SideTabs.SelectedIndex;
+            SyncNav();
+        };
+        if (GroupOf(SideTabs.SelectedIndex) is { Windowed: true }) SideTabs.SelectedIndex = 0;
+        _lastSideIndex = SideTabs.SelectedIndex;
         SyncNav();
     }
 
@@ -135,14 +164,10 @@ public partial class MainWindow
                 pill.Click += (_, _) => SideTabs.SelectedIndex = t.Index;
                 SubPills.Children.Add(pill);
             }
-        var pop = new Button { Classes = { "ghost" }, Content = "⧉ Auslagern", FontSize = 12, Margin = new(6, 0, 0, 4), Height = 30 };
-        ToolTip.SetTip(pop, "Diesen Bereich in ein eigenes Fenster auslagern (verschiebbar, auch auf einen zweiten Monitor)");
-        pop.Click += (_, _) => PopOutTab(SideTabs.SelectedIndex);
-        SubPills.Children.Add(pop);
-        SubPills.IsVisible = true;
+        SubPills.IsVisible = group.Tabs.Length > 1;
         if (_vaultBar is not null) _vaultBar.IsVisible = group.ShowVault;
         var hint = group.Tabs.FirstOrDefault(t => t.Index == current)?.Hint ?? "";
         if (group.ShowVault) hint += $"";
-        SubHint.Text = hint;
+        SubHint.Text = hint + (group.Windowed ? "" : "  Tipp: Das Symbol links aus der Leiste ziehen = eigenes Fenster.");
     }
 }

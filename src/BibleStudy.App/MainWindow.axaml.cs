@@ -100,7 +100,6 @@ public partial class MainWindow : Window
         AutoReadCheck.IsCheckedChanged += (_, _) => { _settings.AutoMarkRead = AutoReadCheck.IsChecked == true; SaveSettings(); };
         OfflineBtn.Click += async (_, _) => await OfflineAsync();
         SideTabs.SelectionChanged += (_, _) => { if (SideTabs.SelectedIndex == SettingsTab) UpdateOfflineInfo(); };
-        Closing += (_, _) => SaveSettings();
 
         HomeBtn.Click += (_, _) => ShowHome();
         BackBtn.Click += async (_, _) => await GoBackAsync();
@@ -149,6 +148,8 @@ public partial class MainWindow : Window
         InitPickers();
         InitKeys();
         InitWindows();
+        InitShell();
+        InitXrefDirection();
         InitLibrary();
         ObsidianBtn.Click += async (_, _) => await ExportObsidianAsync();
         SideTabs.SelectionChanged += (_, e) =>
@@ -607,21 +608,61 @@ public partial class MainWindow : Window
         LibraryFollowReader();
     }
 
+    /// <summary>Cross references of a verse: outgoing (it points to them), incoming (they point to it) or both.</summary>
     async Task ShowXrefsAsync(VerseRef r)
     {
         try
         {
+            var dir = _settings.XrefDirection;
             XrefTitle.Text = "Querverweise zu " + Label(r) + " …";
-            var refs = (await _hello.GetCrossReferencesAsync(r.Book, r.Chapter, r.Verse)).Take(20).ToList();
+            var refs = new List<CrossRef>();
+            string? note = null;
+            if (dir is "Out" or "Both") refs.AddRange((await _hello.GetCrossReferencesAsync(r.Book, r.Chapter, r.Verse)).Take(dir == "Both" ? 15 : 20));
+            if (dir is "In" or "Both")
+            {
+                var incoming = IncomingRefs(r);
+                if (incoming is null) note = "Eingehende Verweise brauchen den Verweis-Datensatz (344 000 Verse). Er wird einmal geladen und lokal gespeichert: Knopf „Graph“ oben.";
+                else refs.AddRange(incoming.Take(dir == "Both" ? 15 : 20));
+            }
+            refs = refs.GroupBy(x => x.Target).Select(g => g.First()).ToList();
             if (TranslationBox.SelectedItem is not TranslationInfo t) return;
             var texts = await Task.WhenAll(refs.Select(x => VerseTextAsync(t.Id, x)));
             if (_selected != r.Verse || _curBook != r.Book || _curChapter != r.Chapter) return; // user moved on
             _xrefs = refs;
-            XrefTitle.Text = refs.Count == 0 ? $"Keine Querverweise zu {Label(r)}" : $"Querverweise zu {Label(r)}";
+            var kind = dir switch { "In" => "Eingehende", "Both" => "Ein- und ausgehende", _ => "Ausgehende" };
+            XrefTitle.Text = refs.Count == 0 ? $"Keine Querverweise zu {Label(r)}" : $"{kind} Querverweise zu {Label(r)}";
+            if (note is not null) XrefTitle.Text += "\n" + note;
             XrefList.ItemsSource = refs.Zip(texts, (x, text) =>
                 new Entry(x.Target, $"{Label(x.Target)}{(x.EndVerse > x.Target.Verse ? "–" + x.EndVerse : "")}\n{text}")).ToList();
         }
         catch (Exception ex) { XrefTitle.Text = "Querverweise nicht verfügbar: " + ex.Message; }
+    }
+
+    /// <summary>Verses that point to <paramref name="r"/>, best voted first; null while the link data is not loaded.</summary>
+    List<CrossRef>? IncomingRefs(VerseRef r)
+    {
+        if (_graph?.Links is not { } links) return null;
+        var node = _graph.Index(r.Book, r.Chapter);
+        if (node < 0) return [];
+        var v = links.IndexOf(node, r.Verse);
+        var result = new List<CrossRef>();
+        foreach (var i in links.ByVotes)
+        {
+            if (v < links.TgtStart[i] || v > links.TgtEnd[i]) continue;
+            var sn = links.NodeOfVerse(links.Src[i]);
+            var id = _graph.At(sn);
+            result.Add(new CrossRef(new VerseRef(id.Book, id.Chapter, links.Src[i] - links.ChapterStart(sn) + 1), links.Src[i] - links.ChapterStart(sn) + 1, links.Votes[i]));
+            if (result.Count >= 40) break;
+        }
+        return result;
+    }
+
+    void InitXrefDirection()
+    {
+        void Mark() { XrefOutBtn.Classes.Set("active", _settings.XrefDirection == "Out"); XrefInBtn.Classes.Set("active", _settings.XrefDirection == "In"); XrefBothBtn.Classes.Set("active", _settings.XrefDirection == "Both"); }
+        void Set(string d) { _settings.XrefDirection = d; SaveSettings(); Mark(); if (_selected is int v) _ = ShowXrefsAsync(new VerseRef(_curBook, _curChapter, v)); }
+        XrefOutBtn.Click += (_, _) => Set("Out"); XrefInBtn.Click += (_, _) => Set("In"); XrefBothBtn.Click += (_, _) => Set("Both");
+        Mark();
     }
 
     async Task<string> VerseTextAsync(string translationId, CrossRef x)

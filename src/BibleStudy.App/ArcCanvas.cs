@@ -30,7 +30,7 @@ sealed class ArcCanvas : Control
     VerseLinkSet? _links;
     Func<string, string> _name = s => s;
     int[] _ids = [];
-    int _count = 150_000, _filter = -1, _hoverNode = -1, _selectedNode = -1;
+    int _count = 90_000, _filter = -1, _hoverNode = -1, _selectedNode = -1;
     double _vs, _ve, _bmpVs, _bmpVe;
     WriteableBitmap? _bmp;
     CancellationTokenSource? _cts;
@@ -85,7 +85,9 @@ sealed class ArcCanvas : Control
         _cts?.Cancel();
         var cts = _cts = new CancellationTokenSource();
         var scale = TopLevel.GetTopLevel(this)?.RenderScaling ?? 1;
-        var layout = new ArcRenderer.Layout((int)(Bounds.Width * scale), (int)(Bounds.Height * scale), scale);
+        // The glow is soft anyway: render at about half the pixels (about 3x faster, much less memory) and let the GPU scale it up.
+        const double quality = 0.55;
+        var layout = new ArcRenderer.Layout(Math.Max(64, (int)(Bounds.Width * scale * quality)), Math.Max(64, (int)(Bounds.Height * scale * quality)), scale * quality);
         var links = _links; var ids = _ids; double vs = _vs, ve = _ve;
         _ = Task.Run(async () =>
         {

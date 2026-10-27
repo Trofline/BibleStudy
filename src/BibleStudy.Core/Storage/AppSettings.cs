@@ -4,7 +4,7 @@ namespace BibleStudy.Core.Storage;
 
 /// <summary>User settings, stored as JSON next to the data (exportable by copying the file).</summary>
 /// <summary>Position and size of a detached panel window (Tab = index of the side panel tab).</summary>
-public sealed record WindowBounds(int X, int Y, int W, int H, bool Maximized) { public int Tab { get; set; } }
+public sealed record WindowBounds(int X, int Y, int W, int H, bool Maximized) { public string Key { get; set; } = ""; }
 
 /// <summary>A saved arrangement: side panel and detached windows.</summary>
 public sealed class LayoutPreset
@@ -52,6 +52,14 @@ public sealed class AppSettings
     public Dictionary<string, string> KeyBindings { get; set; } = [];
     public Dictionary<string, WindowBounds> Windows { get; set; } = [];
     public Dictionary<string, LayoutPreset> Layouts { get; set; } = [];
+    public LayoutPreset? LastLayout { get; set; }
+    public WindowBounds? WindowBounds { get; set; }
+    public string XrefDirection { get; set; } = "Out";   // Out | In | Both
+    public bool Tray { get; set; }
+    public bool CloseToTray { get; set; }
+    public bool RememberWindow { get; set; } = true;
+    public bool RestoreWindows { get; set; } = true;
+    public string StartMode { get; set; } = "Normal";   // Normal | Maximized | Minimized
 
     static readonly JsonSerializerOptions Json = new() { WriteIndented = true };
 
