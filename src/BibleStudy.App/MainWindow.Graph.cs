@@ -85,7 +85,9 @@ public partial class MainWindow
 
     void SetPanelOpen(bool open)
     {
+        var opening = open && !SidePanel.IsVisible;
         SidePanel.IsVisible = SideSplitter.IsVisible = open;
+        if (opening) AnimateIn(SidePanel, 48, 0);
         PanelBtn.IsChecked = open;
         _settings.SideOpen = open;
         SaveSettings();

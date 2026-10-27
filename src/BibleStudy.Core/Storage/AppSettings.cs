@@ -55,6 +55,7 @@ public sealed class AppSettings
     public Dictionary<string, LayoutPreset> Layouts { get; set; } = [];
     public LayoutPreset? LastLayout { get; set; }
     public string? ActiveLayout { get; set; }               // name of the layout the user loaded or saved last
+    public bool Animations { get; set; } = true;
     public WindowBounds? WindowBounds { get; set; }
     public string XrefDirection { get; set; } = "Out";   // Out | In | Both
     public bool Tray { get; set; }

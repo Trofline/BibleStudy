@@ -100,7 +100,7 @@
         </Border>
 
         <!-- Work tabs like in a browser: click = switch in place, drag out = loose window, drag the window back = snaps in -->
-        <Border x:Name="TabBar" DockPanel.Dock="Top" Padding="16,6,16,6" Background="{DynamicResource BsSurface}"
+        <Border x:Name="TabBar" DockPanel.Dock="Top" Padding="16,6,16,0" Background="{DynamicResource BsSurface}"
                 BorderBrush="{DynamicResource BsBorder}" BorderThickness="0,0,0,1">
             <StackPanel x:Name="TabStrip" Orientation="Horizontal" Spacing="4" />
         </Border>
@@ -446,6 +446,7 @@
                                 </Grid>
                                 <CheckBox x:Name="JesusRedCheck" Content="Worte Jesu farbig hervorheben" />
                                 <CheckBox x:Name="JustifyCheck" Content="Blocksatz" />
+                                <CheckBox x:Name="AnimationsCheck" Content="Animationen (Seitenleiste, Reiter, Kapitel gleiten sanft ein)" />
                                 <CheckBox x:Name="HeadingCheck" Content="Großes Kapitel-Kopfstück (sonst schlicht)" />
                             </StackPanel></Border>
 

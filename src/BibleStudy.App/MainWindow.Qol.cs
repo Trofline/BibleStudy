@@ -35,6 +35,7 @@ public partial class MainWindow
         LineSlider.Value = _settings.LineSpacing; WidthSlider.Value = _settings.ReaderWidth; SpeakSlider.Value = _settings.SpeakRate;
         VerseNumberBox.SelectedIndex = Math.Max(0, Array.IndexOf(VerseNumberModes, _settings.VerseNumbers));
         JesusRedCheck.IsChecked = _settings.JesusRed; JustifyCheck.IsChecked = _settings.Justify;
+        AnimationsCheck.IsChecked = _settings.Animations; AnimationsCheck.IsCheckedChanged += (_, _) => { _settings.Animations = AnimationsCheck.IsChecked == true; SaveSettings(); };
         HeadingCheck.IsChecked = _settings.ChapterHeading; ScrollReadCheck.IsChecked = _settings.ScrollMarksRead;
         LineLabel.Text = $"Zeilenabstand: {_settings.LineSpacing:0.0}"; WidthLabel.Text = $"Textbreite: {_settings.ReaderWidth}";
         SpeakLabel.Text = $"Vorlesen: Geschwindigkeit {_settings.SpeakRate:+0;-0;normal}";

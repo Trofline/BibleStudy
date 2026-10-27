@@ -154,8 +154,10 @@ public partial class MainWindow
     void ShowWork(string? key)
     {
         if (key is not null && !(_windows.TryGetValue(key, out var d) && d.Win is null)) key = null;
+        var before = _activeWork;
         _activeWork = key;
         foreach (var w in _windows.Values.Where(w => w.Win is null)) w.Panel.IsVisible = w.Key == key;
+        if (key is not null && key != before && _windows.TryGetValue(key, out var fresh)) AnimateIn(fresh.Panel);
         WorkHost.IsVisible = key is not null;
         UpdateReadBar();
         RebuildTabStrip();
@@ -170,8 +172,27 @@ public partial class MainWindow
     {
         TabStrip.Children.Clear();
         TabStrip.Children.Add(MakeTab("Lesen", null, "M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"));
-        foreach (var name in WorkTabs) { var g = NavGroups.First(x => x.Name == name); TabStrip.Children.Add(MakeTab(g.Name, "group:" + g.Name, g.Icon)); }
-        if (_windows.ContainsKey("group:Mehr")) TabStrip.Children.Add(MakeTab("Einstellungen", "group:Mehr", NavGroups.First(x => x.Name == "Mehr").Icon, closable: true));
+        foreach (var d in _windows.Values.Where(w => !w.Side).ToList())
+        {
+            var g = NavGroups.First(x => "group:" + x.Name == d.Key);
+            TabStrip.Children.Add(MakeTab(d.Title, d.Key, g.Icon, closable: true));
+        }
+        // "+" opens a new tab, like in a browser or the Explorer
+        var plus = new Button { Classes = { "tool" }, Width = 30, Height = 30, VerticalAlignment = VerticalAlignment.Center, Margin = new(4, 0, 0, 2), Content = new Icon { Data = Geometry.Parse("M12 5v14 M5 12h14"), IconSize = 14 } };
+        ToolTip.SetTip(plus, "Neuer Reiter");
+        plus.Click += (_, _) =>
+        {
+            var menu = new MenuFlyout();
+            foreach (var name in new[] { "Bücher", "Dokumente", "Planen", "Mehr" })
+            {
+                var g = NavGroups.First(x => x.Name == name);
+                var item = new MenuItem { Header = name == "Mehr" ? "Einstellungen" : name, IsEnabled = !_windows.ContainsKey("group:" + name) };
+                item.Click += (_, _) => OpenWork(g, name == "Mehr" ? SettingsTab : null);
+                menu.Items.Add(item);
+            }
+            menu.ShowAt(plus);
+        };
+        TabStrip.Children.Add(plus);
     }
 
     Button MakeTab(string label, string? key, string icon, bool closable = false)
@@ -181,7 +202,7 @@ public partial class MainWindow
         var row = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 7 };
         row.Children.Add(new Icon { Data = Geometry.Parse(icon), IconSize = 16, VerticalAlignment = VerticalAlignment.Center });
         row.Children.Add(new TextBlock { Text = label + (windowed ? "  ⧉" : ""), VerticalAlignment = VerticalAlignment.Center });
-        var b = new Button { Classes = { "seg" }, Content = row, Padding = new(12, 6) };
+        var b = new Button { Classes = { "wtab" }, Content = row };
         b.Classes.Set("active", active);
         ToolTip.SetTip(b, key is null ? "Zurück zum Bibeltext" : windowed ? "Liegt in einem eigenen Fenster – klicken holt es nach vorn" : "Klicken wechselt hierher. Nach unten ziehen macht ein eigenes Fenster daraus.");
         if (closable)
@@ -398,7 +419,7 @@ public partial class MainWindow
         PopOutDocsBtn.Click += (_, _) => OpenWork(NavGroups.First(g => g.Name == "Dokumente"));
         // anything else that takes over the main area ends the work tab
         foreach (var pane in new Control[] { Home, GraphPane, MapPane, KnowledgePane })
-            pane.PropertyChanged += (_, e) => { if (e.Property == IsVisibleProperty && pane.IsVisible && _activeWork is not null) ShowWork(null); };
+            pane.PropertyChanged += (_, e) => { { if (e.Property != IsVisibleProperty || !pane.IsVisible) return; AnimateIn(pane); if (_activeWork is not null) ShowWork(null); } };
         WorkHost.PropertyChanged += (_, e) => { if (e.Property == IsVisibleProperty) UpdateReadBar(); };
         RebuildTabStrip();
         SetActiveLayout(_settings.ActiveLayout);

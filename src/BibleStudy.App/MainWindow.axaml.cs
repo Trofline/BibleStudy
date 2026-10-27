@@ -310,6 +310,7 @@ public partial class MainWindow : Window
             var size = cols.Count > 2 ? _fontSize - 3 : _fontSize;
 
             ReaderPanel.Children.Clear(); _verseBoxes.Clear();
+            if (_animKey != $"{_curBook}{_curChapter}") { _animKey = $"{_curBook}{_curChapter}"; AnimateIn(ReaderPanel); }
             _singleColumn = cols.Count == 1;
             FitReader();
             var kicker = new TextBlock { Text = b.CommonName.ToUpperInvariant(), FontSize = 13, FontWeight = FontWeight.SemiBold, LetterSpacing = 3, Margin = new(8, 0, 0, 0) };
