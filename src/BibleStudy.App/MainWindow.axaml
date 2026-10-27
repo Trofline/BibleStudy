@@ -451,6 +451,8 @@
                                 <CheckBox x:Name="JustifyCheck" Content="Blocksatz" />
                                 <CheckBox x:Name="AnimationsCheck" Content="Animationen (Seitenleiste, Reiter, Kapitel gleiten sanft ein)" />
                                 <CheckBox x:Name="HeadingCheck" Content="Großes Kapitel-Kopfstück (sonst schlicht)" />
+                                <TextBlock Classes="caption" Text="Programmsymbol (Fenster, Taskleiste, Titelleiste, Startbild)" />
+                                <WrapPanel x:Name="LogoPanel" />
                             </StackPanel></Border>
 
                             <Border Classes="card"><StackPanel Spacing="8">
@@ -470,6 +472,44 @@
                             </StackPanel></Border>
 
                             <Border Classes="card"><StackPanel Spacing="8">
+                                <TextBlock Classes="eyebrow" Text="FENSTER UND LAYOUTS" />
+                                <TextBlock Classes="caption" TextWrapping="Wrap" Text="Jeden Bereich der Seitenleiste kannst du in ein eigenes Fenster auslagern (Knopf ⧉ neben den Reitern oder Strg+Umschalt+O) und frei verschieben, auch auf einen zweiten Monitor. Die Anordnung speicherst du als Layout und lädst sie jederzeit wieder." />
+                                <Button x:Name="PopOutDocsBtn" Content="Dokumente öffnen" HorizontalAlignment="Left" />
+                                <Border Classes="pill" HorizontalAlignment="Left"><ComboBox x:Name="LayoutBox" Width="220" /></Border>
+                                <StackPanel Orientation="Horizontal" Spacing="6">
+                                    <Button x:Name="LayoutLoadBtn" Content="Laden" Classes="primary" />
+                                    <Button x:Name="LayoutDeleteBtn" Content="Löschen" />
+                                </StackPanel>
+                                <StackPanel Orientation="Horizontal" Spacing="6">
+                                    <TextBox x:Name="LayoutNameBox" Width="170" Watermark="Name für aktuelles Layout" />
+                                    <Button x:Name="LayoutSaveBtn" Content="Speichern" />
+                                </StackPanel>
+                                <TextBlock x:Name="LayoutInfo" Classes="caption" TextWrapping="Wrap" />
+                            </StackPanel></Border>
+
+                            <Border Classes="card"><StackPanel Spacing="4">
+                                <TextBlock Classes="eyebrow" Text="TASTENKÜRZEL" />
+                                <TextBlock Classes="caption" TextWrapping="Wrap" Text="Klicke auf eine Kombination und drücke die neue Taste. Entf löscht eine Belegung, Esc bricht ab." />
+                                <StackPanel x:Name="KeysPanel" />
+                                <Button x:Name="ResetKeysBtn" Content="Alle auf Standard zurücksetzen" HorizontalAlignment="Left" Margin="0,6,0,0" />
+                            </StackPanel></Border>
+
+                            <Border Classes="card"><StackPanel Spacing="8">
+                                <TextBlock Classes="eyebrow" Text="PROGRAMM UND START" />
+                                <CheckBox x:Name="StartWithWindowsCheck" Content="Mit Windows starten" />
+                                <StackPanel Orientation="Horizontal" Spacing="10">
+                                    <TextBlock Text="Beim Start" VerticalAlignment="Center" />
+                                    <Border Classes="pill"><ComboBox x:Name="StartModeBox" Width="160" SelectedIndex="0">
+                                        <ComboBoxItem Content="Normal" /><ComboBoxItem Content="Maximiert" /><ComboBoxItem Content="Minimiert" />
+                                    </ComboBox></Border>
+                                </StackPanel>
+                                <CheckBox x:Name="TrayCheck" Content="Symbol im Infobereich (System-Tray) anzeigen" />
+                                <CheckBox x:Name="CloseToTrayCheck" Content="Beim Schließen in den Infobereich minimieren (Beenden über Rechtsklick auf das Symbol)" />
+                                <CheckBox x:Name="RememberWindowCheck" Content="Fensterposition und -größe merken" />
+                                <CheckBox x:Name="RestoreWindowsCheck" Content="Geöffnete Fenster (Dokumente, Bücher …) beim Start wiederherstellen" />
+                            </StackPanel></Border>
+
+                            <Border Classes="card"><StackPanel Spacing="8">
                                 <TextBlock Classes="eyebrow" Text="VAULT" />
                                 <TextBlock Classes="caption" TextWrapping="Wrap" Text="Ein Vault ist wie eine eigene Mappe für ein Studienprojekt: Markierungen, Notizen, Dokumente, Leseliste, Aufgaben und dein Lesefortschritt gehören immer zu genau einem Vault. Du kannst mehrere anlegen (z. B. „Predigt“ und „Privat“) und hier wechseln. Jeder Vault ist eine einzelne Datei." />
                                 <Border Classes="pill" HorizontalAlignment="Left"><ComboBox x:Name="VaultBox" Width="220" /></Border>
@@ -478,30 +518,6 @@
                                     <Button x:Name="NewVaultBtn" Content="Anlegen" />
                                 </StackPanel>
                                 <TextBlock x:Name="VaultInfo" Classes="caption" TextWrapping="Wrap" />
-                            </StackPanel></Border>
-
-                            <Border Classes="card"><StackPanel Spacing="8">
-                                <TextBlock Classes="eyebrow" Text="KI UND MCP" />
-                                <TextBlock Classes="caption" TextWrapping="Wrap" Text="Das KI-Fenster nutzt deine lokal installierte Claude-Code-App mit deiner Anmeldung: kein API-Schlüssel, keine API-Kosten durch das Programm. Claude sieht nur die Bibel-Werkzeuge dieses Programms." />
-                                <TextBlock x:Name="AiCliInfo" Classes="caption" TextWrapping="Wrap" />
-                                <TextBlock Text="Hintergrund für Claude (frei änderbar)" />
-                                <TextBox x:Name="AiContextBox" AcceptsReturn="True" TextWrapping="Wrap" Height="80" />
-                                <TextBox x:Name="AiModelBox" Watermark="Modell (leer = deine Standardeinstellung), z. B. sonnet" />
-                                <TextBlock Text="MCP-Server für andere Programme (z. B. Claude Code)" />
-                                <TextBox x:Name="McpCommandBox" IsReadOnly="True" TextWrapping="Wrap" />
-                                <Button x:Name="McpCopyBtn" Content="Befehl kopieren" HorizontalAlignment="Left" />
-                            </StackPanel></Border>
-
-                            <Border Classes="card"><StackPanel Spacing="8">
-                                <TextBlock Classes="eyebrow" Text="SICHERUNG" />
-                                <TextBlock Classes="caption" TextWrapping="Wrap" Text="Exportiert den aktiven Vault (Markierungen, Ordner, Tags, Notizen, Dokumente, Leseliste, Aufgaben, Lesefortschritt) und deine Einstellungen als eine ZIP-Datei. Beim Import entsteht ein neuer Vault." />
-                                <WrapPanel>
-                                    <Button x:Name="ExportBtn" Content="Exportieren …" Margin="0,0,6,6" />
-                                    <Button x:Name="ImportBtn" Content="Importieren …" Margin="0,0,6,6" />
-                                    <Button x:Name="ObsidianBtn" Content="Als Obsidian-Vault exportieren …" ToolTip.Tip="Schreibt Dokumente, Markierungen, Notizen, Leseliste und Aufgaben als Markdown-Ordner, den Obsidian direkt öffnet" />
-                                    <Button x:Name="LicensesBtn" Content="Quellen und Lizenzen …" ToolTip.Tip="Woher alle Texte und Daten stammen und unter welcher Lizenz sie stehen" />
-                                </WrapPanel>
-                                <TextBlock x:Name="BackupInfo" Classes="caption" TextWrapping="Wrap" />
                             </StackPanel></Border>
 
                             <Border Classes="card"><StackPanel Spacing="8">
@@ -528,54 +544,38 @@
                             </StackPanel></Border>
 
                             <Border Classes="card"><StackPanel Spacing="8">
-                                <TextBlock Classes="eyebrow" Text="PROGRAMM UND START" />
-                                <CheckBox x:Name="StartWithWindowsCheck" Content="Mit Windows starten" />
-                                <StackPanel Orientation="Horizontal" Spacing="10">
-                                    <TextBlock Text="Beim Start" VerticalAlignment="Center" />
-                                    <Border Classes="pill"><ComboBox x:Name="StartModeBox" Width="160" SelectedIndex="0">
-                                        <ComboBoxItem Content="Normal" /><ComboBoxItem Content="Maximiert" /><ComboBoxItem Content="Minimiert" />
-                                    </ComboBox></Border>
-                                </StackPanel>
-                                <CheckBox x:Name="TrayCheck" Content="Symbol im Infobereich (System-Tray) anzeigen" />
-                                <CheckBox x:Name="CloseToTrayCheck" Content="Beim Schließen in den Infobereich minimieren (Beenden über Rechtsklick auf das Symbol)" />
-                                <CheckBox x:Name="RememberWindowCheck" Content="Fensterposition und -größe merken" />
-                                <CheckBox x:Name="RestoreWindowsCheck" Content="Geöffnete Fenster (Dokumente, Bücher …) beim Start wiederherstellen" />
+                                <TextBlock Classes="eyebrow" Text="SICHERUNG" />
+                                <TextBlock Classes="caption" TextWrapping="Wrap" Text="Exportiert den aktiven Vault (Markierungen, Ordner, Tags, Notizen, Dokumente, Leseliste, Aufgaben, Lesefortschritt) und deine Einstellungen als eine ZIP-Datei. Beim Import entsteht ein neuer Vault." />
+                                <WrapPanel>
+                                    <Button x:Name="ExportBtn" Content="Exportieren …" Margin="0,0,6,6" />
+                                    <Button x:Name="ImportBtn" Content="Importieren …" Margin="0,0,6,6" />
+                                    <Button x:Name="ObsidianBtn" Content="Als Obsidian-Vault exportieren …" ToolTip.Tip="Schreibt Dokumente, Markierungen, Notizen, Leseliste und Aufgaben als Markdown-Ordner, den Obsidian direkt öffnet" />
+                                    <Button x:Name="LicensesBtn" Content="Quellen und Lizenzen …" ToolTip.Tip="Woher alle Texte und Daten stammen und unter welcher Lizenz sie stehen" />
+                                </WrapPanel>
+                                <TextBlock x:Name="BackupInfo" Classes="caption" TextWrapping="Wrap" />
+                            </StackPanel></Border>
+
+                            <Border Classes="card"><StackPanel Spacing="8">
+                                <TextBlock Classes="eyebrow" Text="KI UND MCP" />
+                                <TextBlock Classes="caption" TextWrapping="Wrap" Text="Das KI-Fenster nutzt deine lokal installierte Claude-Code-App mit deiner Anmeldung: kein API-Schlüssel, keine API-Kosten durch das Programm. Claude sieht nur die Bibel-Werkzeuge dieses Programms." />
+                                <TextBlock x:Name="AiCliInfo" Classes="caption" TextWrapping="Wrap" />
+                                <TextBlock Text="Hintergrund für Claude (frei änderbar)" />
+                                <TextBox x:Name="AiContextBox" AcceptsReturn="True" TextWrapping="Wrap" Height="80" />
+                                <TextBox x:Name="AiModelBox" Watermark="Modell (leer = deine Standardeinstellung), z. B. sonnet" />
+                                <TextBlock Text="MCP-Server für andere Programme (z. B. Claude Code)" />
+                                <TextBox x:Name="McpCommandBox" IsReadOnly="True" TextWrapping="Wrap" />
+                                <Button x:Name="McpCopyBtn" Content="Befehl kopieren" HorizontalAlignment="Left" />
                             </StackPanel></Border>
 
                             <Border Classes="card"><StackPanel Spacing="8">
                                 <TextBlock Classes="eyebrow" Text="UPDATES UND PROGRAMM" />
                                 <TextBlock x:Name="VersionText" Classes="caption" TextWrapping="Wrap" />
-                                <TextBlock Classes="caption" Text="Programmsymbol (Fenster, Taskleiste, Titelleiste, Startbild)" />
-                                <WrapPanel x:Name="LogoPanel" />
-                                <CheckBox x:Name="AutoUpdateCheck" Content="Einmal täglich nach Updates suchen (eine Anfrage an GitHub, es werden keine Daten gesendet)" />
+                                <CheckBox x:Name="AutoUpdateCheck" Content="Bei jedem Start nach Updates suchen (eine Anfrage an GitHub, es werden keine Daten gesendet)" />
                                 <WrapPanel>
                                     <Button x:Name="CheckUpdateBtn" Content="Jetzt nach Updates suchen" Margin="0,0,6,6" />
                                     <Button x:Name="RemoveAppBtn" Content="Programm entfernen …" Margin="0,0,6,6" IsVisible="False" />
                                 </WrapPanel>
                                 <TextBlock x:Name="UpdateStatus" Classes="caption" TextWrapping="Wrap" />
-                            </StackPanel></Border>
-
-                            <Border Classes="card"><StackPanel Spacing="8">
-                                <TextBlock Classes="eyebrow" Text="FENSTER UND LAYOUTS" />
-                                <TextBlock Classes="caption" TextWrapping="Wrap" Text="Jeden Bereich der Seitenleiste kannst du in ein eigenes Fenster auslagern (Knopf ⧉ neben den Reitern oder Strg+Umschalt+O) und frei verschieben, auch auf einen zweiten Monitor. Die Anordnung speicherst du als Layout und lädst sie jederzeit wieder." />
-                                <Button x:Name="PopOutDocsBtn" Content="Dokumente öffnen" HorizontalAlignment="Left" />
-                                <Border Classes="pill" HorizontalAlignment="Left"><ComboBox x:Name="LayoutBox" Width="220" /></Border>
-                                <StackPanel Orientation="Horizontal" Spacing="6">
-                                    <Button x:Name="LayoutLoadBtn" Content="Laden" Classes="primary" />
-                                    <Button x:Name="LayoutDeleteBtn" Content="Löschen" />
-                                </StackPanel>
-                                <StackPanel Orientation="Horizontal" Spacing="6">
-                                    <TextBox x:Name="LayoutNameBox" Width="170" Watermark="Name für aktuelles Layout" />
-                                    <Button x:Name="LayoutSaveBtn" Content="Speichern" />
-                                </StackPanel>
-                                <TextBlock x:Name="LayoutInfo" Classes="caption" TextWrapping="Wrap" />
-                            </StackPanel></Border>
-
-                            <Border Classes="card"><StackPanel Spacing="4">
-                                <TextBlock Classes="eyebrow" Text="TASTENKÜRZEL" />
-                                <TextBlock Classes="caption" TextWrapping="Wrap" Text="Klicke auf eine Kombination und drücke die neue Taste. Entf löscht eine Belegung, Esc bricht ab." />
-                                <StackPanel x:Name="KeysPanel" />
-                                <Button x:Name="ResetKeysBtn" Content="Alle auf Standard zurücksetzen" HorizontalAlignment="Left" Margin="0,6,0,0" />
                             </StackPanel></Border>
                         </StackPanel>
                     </ScrollViewer>

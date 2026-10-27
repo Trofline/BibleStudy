@@ -30,8 +30,8 @@ public partial class MainWindow
         RemoveAppBtn.IsVisible = AppPaths.IsPortable || AppPaths.IsInstalled;
         RemoveAppBtn.Content = AppPaths.IsPortable ? "Portable-Version entfernen …" : "Deinstallieren …";
         RemoveAppBtn.Click += async (_, _) => await RemoveProgramAsync();
-        // once a day, a few seconds after start so that the reader is up first
-        if (_settings.AutoUpdate && _settings.LastUpdateCheck != DateTime.Today.ToString("yyyy-MM-dd"))
+        // once per start, a few seconds after launch so that the reader is up first
+        if (_settings.AutoUpdate)
             DispatcherTimer.RunOnce(async () => await CheckForUpdateAsync(manual: false), TimeSpan.FromSeconds(10));
     }
 
