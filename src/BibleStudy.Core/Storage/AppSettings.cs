@@ -56,6 +56,9 @@ public sealed class AppSettings
     public LayoutPreset? LastLayout { get; set; }
     public string? ActiveLayout { get; set; }               // name of the layout the user loaded or saved last
     public bool Animations { get; set; } = true;
+    public bool AutoUpdate { get; set; } = true;
+    public string? LastUpdateCheck { get; set; }
+    public string? SkippedVersion { get; set; }
     public string? PlanId { get; set; }
     public string? PlanStart { get; set; }
     public List<string> PlanDoneDays { get; set; } = [];

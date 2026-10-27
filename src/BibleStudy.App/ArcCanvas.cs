@@ -126,7 +126,7 @@ sealed class ArcCanvas : Control
 
     static string DiskPath(string key)
     {
-        var dir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "BibleStudy", "arc-cache");
+        var dir = Path.Combine(BibleStudy.Core.AppPaths.Root, "arc-cache");
         Directory.CreateDirectory(dir);
         var hash = Convert.ToHexString(System.Security.Cryptography.SHA1.HashData(System.Text.Encoding.UTF8.GetBytes(key)))[..16];
         return Path.Combine(dir, hash + ".bin");

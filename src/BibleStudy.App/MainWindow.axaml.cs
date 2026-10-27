@@ -67,7 +67,7 @@ public partial class MainWindow : Window
     public MainWindow()
     {
         InitializeComponent();
-        _root = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "BibleStudy");
+        _root = BibleStudy.Core.AppPaths.Root;
         var http = _http = new HttpClient();
         _hello = new HelloAoProvider(http, Path.Combine(_root, "cache"));
         _local = new LocalBibleStore(Path.Combine(_root, "local.db"));
@@ -154,6 +154,7 @@ public partial class MainWindow : Window
         InitTopics();
         InitTimeline();
         InitFamily();
+        InitUpdate();
         InitLibrary();
         ObsidianBtn.Click += async (_, _) => await ExportObsidianAsync();
         SideTabs.SelectionChanged += (_, e) =>

@@ -6,7 +6,16 @@ public sealed class AppClient
 {
     static readonly HttpClient Http = new() { Timeout = TimeSpan.FromMinutes(5) };
 
-    static string InfoPath => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "BibleStudy", "control.json");
+    /// <summary>Portable installs keep their data next to the program (this server sits in its "mcp" subfolder).</summary>
+    static string InfoPath
+    {
+        get
+        {
+            var app = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, ".."));
+            return File.Exists(Path.Combine(app, "portable.flag")) ? Path.Combine(app, "Data", "control.json")
+                : Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "BibleStudy", "control.json");
+        }
+    }
 
     static string Error(string message) => JsonSerializer.Serialize(new { error = message });
 

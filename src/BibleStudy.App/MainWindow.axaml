@@ -547,6 +547,17 @@
                             </StackPanel></Border>
 
                             <Border Classes="card"><StackPanel Spacing="8">
+                                <TextBlock Classes="eyebrow" Text="UPDATES UND PROGRAMM" />
+                                <TextBlock x:Name="VersionText" Classes="caption" TextWrapping="Wrap" />
+                                <CheckBox x:Name="AutoUpdateCheck" Content="Einmal täglich nach Updates suchen (eine Anfrage an GitHub, es werden keine Daten gesendet)" />
+                                <WrapPanel>
+                                    <Button x:Name="CheckUpdateBtn" Content="Jetzt nach Updates suchen" Margin="0,0,6,6" />
+                                    <Button x:Name="RemoveAppBtn" Content="Programm entfernen …" Margin="0,0,6,6" IsVisible="False" />
+                                </WrapPanel>
+                                <TextBlock x:Name="UpdateStatus" Classes="caption" TextWrapping="Wrap" />
+                            </StackPanel></Border>
+
+                            <Border Classes="card"><StackPanel Spacing="8">
                                 <TextBlock Classes="eyebrow" Text="FENSTER UND LAYOUTS" />
                                 <TextBlock Classes="caption" TextWrapping="Wrap" Text="Jeden Bereich der Seitenleiste kannst du in ein eigenes Fenster auslagern (Knopf ⧉ neben den Reitern oder Strg+Umschalt+O) und frei verschieben, auch auf einen zweiten Monitor. Die Anordnung speicherst du als Layout und lädst sie jederzeit wieder." />
                                 <Button x:Name="PopOutDocsBtn" Content="Dokumente öffnen" HorizontalAlignment="Left" />
