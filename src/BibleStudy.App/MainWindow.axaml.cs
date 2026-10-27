@@ -11,8 +11,18 @@ namespace BibleStudy.App;
 
 public sealed record Entry(VerseRef Ref, string Display);
 
+/// <summary>An additional translation shown next to the main one.</summary>
+public sealed record ExtraColumn(ComboBox Lang, ComboBox Trans, Control Root)
+{
+    public TranslationInfo? Translation => Trans.SelectedItem as TranslationInfo;
+}
+
 public partial class MainWindow : Window
 {
+    const int MaxExtras = 3;
+    readonly List<ExtraColumn> _extras = [];
+    IReadOnlyList<string> _langs = [];
+
     static readonly IBrush MarkBrush = new SolidColorBrush(Color.FromArgb(50, 255, 190, 0));
     static readonly IBrush SelectBrush = new SolidColorBrush(Color.FromArgb(60, 70, 130, 200));
 
@@ -48,6 +58,7 @@ public partial class MainWindow : Window
         PrevBtn.Click += (_, _) => ChapterBox.Value -= 1;
         NextBtn.Click += (_, _) => ChapterBox.Value += 1;
         BookmarkBtn.Click += (_, _) => ToggleBookmark();
+        ParallelBtn.Click += (_, _) => AddColumn();
         NoteSaveBtn.Click += async (_, _) => await SaveNoteAsync(NoteEditor.Text ?? "");
         NoteDeleteBtn.Click += async (_, _) => { NoteEditor.Text = ""; await SaveNoteAsync(""); };
         SearchBox.KeyDown += async (_, e) => { if (e.Key == Key.Enter) await SearchAsync(); };
@@ -64,9 +75,9 @@ public partial class MainWindow : Window
         {
             StatusText.Text = "Lade Übersetzungen …";
             _all = await _provider.GetTranslationsAsync();
-            var langs = _all.Select(t => t.LanguageName).Where(l => l != "").Distinct().Order().ToList();
-            LanguageBox.ItemsSource = langs;
-            LanguageBox.SelectedItem = langs.Contains("English") ? "English" : langs.FirstOrDefault();
+            _langs = _all.Select(t => t.LanguageName).Where(l => l != "").Distinct().Order().ToList();
+            LanguageBox.ItemsSource = _langs;
+            LanguageBox.SelectedItem = _langs.Contains("English") ? "English" : _langs.FirstOrDefault();
         }
         catch (Exception ex) { StatusText.Text = "Fehler: " + ex.Message; }
     }
@@ -88,7 +99,6 @@ public partial class MainWindow : Window
             _books = await _provider.GetBooksAsync(t.Id);
             BookBox.ItemsSource = _books;
             BookBox.SelectedItem = _books.FirstOrDefault(b => b.Id == prev) ?? _books.FirstOrDefault(b => b.Id == "JHN") ?? _books.FirstOrDefault();
-            FlowDirection = t.TextDirection == "rtl" ? FlowDirection.RightToLeft : FlowDirection.LeftToRight;
         }
         catch (Exception ex) { StatusText.Text = "Fehler: " + ex.Message; }
         finally { _loading = false; }
@@ -101,21 +111,36 @@ public partial class MainWindow : Window
         if (_loading || TranslationBox.SelectedItem is not TranslationInfo t || BookBox.SelectedItem is not BookInfo b) return;
         try
         {
-            var ch = await _provider.GetChapterAsync(t.Id, b.Id, (int)(ChapterBox.Value ?? 1));
+            var number = (int)(ChapterBox.Value ?? 1);
+            var extraTs = _extras.Select(e => e.Translation).OfType<TranslationInfo>().ToList();
+            var primaryTask = _provider.GetChapterAsync(t.Id, b.Id, number);
+            var extraTasks = extraTs.Select(c => TryAsync(_provider.GetChapterAsync(c.Id, b.Id, number))).ToList();
+            var ch = await primaryTask;
+            var cols = new List<(TranslationInfo T, Chapter? C)> { (t, ch) };
+            cols.AddRange(extraTs.Zip(await Task.WhenAll(extraTasks), (c, x) => (c, x)));
+
             _curBook = b.Id; _curChapter = ch.Number; _selected = null;
             _marked = _store.GetBookmarks().Where(r => r.Book == _curBook && r.Chapter == _curChapter).Select(r => r.Verse).ToHashSet();
             var noted = _store.GetNotes().Where(n => n.Ref.Book == _curBook && n.Ref.Chapter == _curChapter).Select(n => n.Ref.Verse).ToHashSet();
+            var size = cols.Count > 2 ? 16 : 19;
 
             ReaderPanel.Children.Clear(); _verseBoxes.Clear();
+            ReaderPanel.MaxWidth = cols.Count == 1 ? 780 : double.PositiveInfinity;
             ReaderPanel.Children.Add(new TextBlock { Text = $"{b.CommonName} {ch.Number}", FontSize = 28, FontWeight = FontWeight.SemiBold, Margin = new(0, 0, 0, 12) });
-            foreach (var v in ch.Verses)
+            if (cols.Count > 1)
             {
-                var tb = new SelectableTextBlock { TextWrapping = TextWrapping.Wrap, FontSize = 19, LineHeight = 32 };
-                tb.Inlines!.Add(new Run(v.Number + (noted.Contains(v.Number) ? "✎" : "") + " ") { FontSize = 12, FontWeight = FontWeight.Bold, BaselineAlignment = BaselineAlignment.Top, Foreground = Brushes.SteelBlue });
-                foreach (var s in v.Segments)
-                    tb.Inlines.Add(new Run(s.Text + " ") { Foreground = s.WordsOfJesus ? Brushes.IndianRed : null });
-                var box = new Border { Child = tb, Padding = new(8, 2), CornerRadius = new(6) };
-                var n = v.Number;
+                var head = NewRow(cols.Count);
+                for (var i = 0; i < cols.Count; i++)
+                    AddCell(head, i, new TextBlock { Text = cols[i].T.ShortName + (cols[i].C is null ? " (Kapitel nicht verfügbar)" : ""), FontWeight = FontWeight.Bold, Opacity = 0.7, Margin = new(8, 0, 12, 4) });
+                ReaderPanel.Children.Add(head);
+            }
+            foreach (var num in cols.SelectMany(c => c.C?.Verses.Select(v => v.Number) ?? []).Distinct().Order())
+            {
+                var row = NewRow(cols.Count);
+                for (var i = 0; i < cols.Count; i++)
+                    AddCell(row, i, VerseCell(cols[i].C?.Verses.FirstOrDefault(v => v.Number == num), num, cols[i].T, size, i == 0 && noted.Contains(num)));
+                var box = new Border { Child = row, Padding = new(8, 2), CornerRadius = new(6) };
+                var n = num;
                 box.AddHandler(PointerPressedEvent, (object? _, PointerPressedEventArgs _) => SelectVerse(n), RoutingStrategies.Bubble | RoutingStrategies.Tunnel, handledEventsToo: true);
                 _verseBoxes[n] = box;
                 ReaderPanel.Children.Add(box);
@@ -124,10 +149,68 @@ public partial class MainWindow : Window
             if (focusVerse is int fv && _verseBoxes.ContainsKey(fv)) { SelectVerse(fv); _verseBoxes[fv].BringIntoView(); }
             else ReaderScroll.Offset = default;
 
-            var l = t.License;
-            StatusText.Text = $"{t.Name} · {(l.PublicDomain ? "Gemeinfrei" : "Lizenz: " + t.LicenseUrl)} · Namensnennung: {l.Attribution} · Quelle: {_provider.Name}";
+            StatusText.Text = string.Join("  |  ", cols.Select(c =>
+                $"{c.T.Name}: {(c.T.License.PublicDomain ? "gemeinfrei" : "Lizenz " + c.T.LicenseUrl)}, Namensnennung: {c.T.License.Attribution}")) + $" · Quelle: {_provider.Name}";
         }
         catch (Exception ex) { StatusText.Text = "Kapitel nicht verfügbar: " + ex.Message; }
+    }
+
+    static async Task<Chapter?> TryAsync(Task<Chapter> task)
+    {
+        try { return await task; } catch { return null; }
+    }
+
+    static Grid NewRow(int columns)
+    {
+        var g = new Grid();
+        for (var i = 0; i < columns; i++) g.ColumnDefinitions.Add(new ColumnDefinition(1, GridUnitType.Star));
+        return g;
+    }
+
+    static void AddCell(Grid row, int column, Control cell)
+    {
+        Grid.SetColumn(cell, column);
+        row.Children.Add(cell);
+    }
+
+    static SelectableTextBlock VerseCell(Verse? v, int number, TranslationInfo t, int size, bool hasNote)
+    {
+        var tb = new SelectableTextBlock
+        {
+            TextWrapping = TextWrapping.Wrap, FontSize = size, LineHeight = size * 1.7, Margin = new(0, 0, 12, 0),
+            FlowDirection = t.TextDirection == "rtl" ? FlowDirection.RightToLeft : FlowDirection.LeftToRight,
+        };
+        if (v is null) return tb;
+        tb.Inlines!.Add(new Run(number + (hasNote ? "✎" : "") + " ") { FontSize = 12, FontWeight = FontWeight.Bold, BaselineAlignment = BaselineAlignment.Top, Foreground = Brushes.SteelBlue });
+        foreach (var s in v.Segments)
+            tb.Inlines.Add(new Run(s.Text + " ") { Foreground = s.WordsOfJesus ? Brushes.IndianRed : null });
+        return tb;
+    }
+
+    void AddColumn()
+    {
+        if (_extras.Count >= MaxExtras || _langs.Count == 0) return;
+        var lang = new ComboBox { Width = 140, Margin = new(0, 0, 4, 0), ItemsSource = _langs };
+        var trans = new ComboBox { Width = 230, Margin = new(0, 0, 4, 0) };
+        var remove = new Button { Content = "✕" };
+        var root = new StackPanel { Orientation = Avalonia.Layout.Orientation.Horizontal, Margin = new(0, 0, 12, 0), Children = { lang, trans, remove } };
+        var col = new ExtraColumn(lang, trans, root);
+
+        lang.SelectionChanged += (_, _) =>
+        {
+            var list = _all.Where(x => x.LanguageName == (string?)lang.SelectedItem).OrderBy(x => x.Name).ToList();
+            var main = (TranslationBox.SelectedItem as TranslationInfo)?.Id;
+            trans.ItemsSource = list;
+            trans.SelectedItem = list.FirstOrDefault(x => x.Id != main) ?? list.FirstOrDefault();
+        };
+        trans.SelectionChanged += async (_, _) => await ShowChapterAsync(_selected);
+        remove.Click += async (_, _) =>
+        {
+            _extras.Remove(col); ParallelBar.Children.Remove(root);
+            await ShowChapterAsync(_selected);
+        };
+        _extras.Add(col); ParallelBar.Children.Add(root);
+        lang.SelectedItem = LanguageBox.SelectedItem;
     }
 
     void Paint()

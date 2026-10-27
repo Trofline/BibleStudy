@@ -16,8 +16,10 @@
             <NumericUpDown x:Name="ChapterBox" Width="110" Minimum="1" Value="1" FormatString="0" Margin="0,0,8,0" />
             <Button x:Name="PrevBtn" Content="◀" Margin="0,0,4,0" />
             <Button x:Name="NextBtn" Content="▶" Margin="0,0,16,0" />
-            <Button x:Name="BookmarkBtn" Content="🔖 Lesezeichen" ToolTip.Tip="Angeklickten Vers merken / entfernen" />
+            <Button x:Name="BookmarkBtn" Content="🔖 Lesezeichen" Margin="0,0,8,0" ToolTip.Tip="Angeklickten Vers merken / entfernen" />
+            <Button x:Name="ParallelBtn" Content="＋ Parallel" ToolTip.Tip="Weitere Übersetzung als Spalte daneben anzeigen (max. 3)" />
         </WrapPanel>
+        <WrapPanel x:Name="ParallelBar" DockPanel.Dock="Top" Margin="12,0,12,8" />
         <Border DockPanel.Dock="Bottom" Padding="12,6" BorderThickness="0,1,0,0" BorderBrush="#33888888">
             <TextBlock x:Name="StatusText" FontSize="12" Opacity="0.7" TextWrapping="Wrap" />
         </Border>
