@@ -22,7 +22,7 @@
                 BorderBrush="{DynamicResource BsBorder}" BorderThickness="0,0,0,1">
             <DockPanel VerticalAlignment="Center">
                 <StackPanel DockPanel.Dock="Left" Orientation="Horizontal" Spacing="10" Margin="0,0,18,0" VerticalAlignment="Center">
-                    <Image Source="avares://BibleStudy.App/Assets/app.png" Width="36" Height="36" RenderOptions.BitmapInterpolationMode="HighQuality" />
+                    <Image x:Name="LogoImage" Source="avares://BibleStudy.App/Assets/app.png" Width="36" Height="36" RenderOptions.BitmapInterpolationMode="HighQuality" />
                     <TextBlock Text="BibleStudy" Classes="h2" FontSize="21" VerticalAlignment="Center" />
                 </StackPanel>
                 <StackPanel DockPanel.Dock="Left" Orientation="Horizontal" Spacing="2" Margin="0,0,18,0" VerticalAlignment="Center">
@@ -545,6 +545,8 @@
                             <Border Classes="card"><StackPanel Spacing="8">
                                 <TextBlock Classes="eyebrow" Text="UPDATES UND PROGRAMM" />
                                 <TextBlock x:Name="VersionText" Classes="caption" TextWrapping="Wrap" />
+                                <TextBlock Classes="caption" Text="Programmsymbol (Fenster, Taskleiste, Titelleiste, Startbild)" />
+                                <WrapPanel x:Name="LogoPanel" />
                                 <CheckBox x:Name="AutoUpdateCheck" Content="Einmal täglich nach Updates suchen (eine Anfrage an GitHub, es werden keine Daten gesendet)" />
                                 <WrapPanel>
                                     <Button x:Name="CheckUpdateBtn" Content="Jetzt nach Updates suchen" Margin="0,0,6,6" />

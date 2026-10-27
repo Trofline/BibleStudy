@@ -66,6 +66,7 @@ public partial class MainWindow : Window
 
     public MainWindow()
     {
+        SplashWindow.Report(0.2, "Baue die Oberfläche …");
         InitializeComponent();
         _root = BibleStudy.Core.AppPaths.Root;
         var http = _http = new HttpClient();
@@ -155,6 +156,7 @@ public partial class MainWindow : Window
         InitTimeline();
         InitFamily();
         InitUpdate();
+        InitLogo();
         InitLibrary();
         ObsidianBtn.Click += async (_, _) => await ExportObsidianAsync();
         SideTabs.SelectionChanged += (_, e) =>
@@ -163,6 +165,7 @@ public partial class MainWindow : Window
         };
         StartControl();
         var initialised = false;
+        SplashWindow.Report(0.5, "Bereite Werkzeuge vor …");
         Opened += async (_, _) => { if (initialised) return; initialised = true; await InitAsync(); };
     }
 
@@ -173,12 +176,14 @@ public partial class MainWindow : Window
     {
         try
         {
+            SplashWindow.Report(0.6, "Lade Übersetzungen …");
             StatusText.Text = "Lade Übersetzungen …";
             _all = await _provider.GetTranslationsAsync();
             _langs = _all.Select(t => t.LanguageName).Where(l => l != "").Distinct().Order().ToList();
             LanguageBox.ItemsSource = _langs;
             var wanted = _all.FirstOrDefault(t => t.Id == (_settings.TranslationId ?? "deu_elbbk")) ?? _all.FirstOrDefault(t => t.Id == "eng_kjv");
             _pendingTranslation = wanted?.Id;
+            SplashWindow.Report(0.75, "Lade Bücher …");
             LanguageBox.SelectedItem = wanted?.LanguageName ?? _langs.FirstOrDefault();
         }
         catch (Exception ex) { StatusText.Text = "Fehler: " + ex.Message; }
@@ -299,6 +304,7 @@ public partial class MainWindow : Window
     async Task ShowChapterAsync(int? focusVerse = null)
     {
         if (_loading || TranslationBox.SelectedItem is not TranslationInfo t || BookBox.SelectedItem is not BookInfo b) return;
+        SplashWindow.Report(0.88, "Öffne Kapitel …");
         try
         {
             var number = (int)(ChapterBox.Value ?? 1);
@@ -364,6 +370,7 @@ public partial class MainWindow : Window
                 $"{c.T.Name}: {(c.T.License.PublicDomain ? "gemeinfrei" : "Lizenz " + c.T.LicenseUrl)}, Namensnennung: {c.T.License.Attribution}")) + $" · Quelle: {_provider.Name}";
         }
         catch (Exception ex) { StatusText.Text = "Kapitel nicht verfügbar: " + ex.Message; }
+        finally { SplashWindow.Done(); }
     }
 
     static async Task<Chapter?> TryAsync(Task<Chapter> task)

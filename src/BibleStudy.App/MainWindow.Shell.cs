@@ -16,11 +16,13 @@ public partial class MainWindow
     (WindowState State, bool SideOpen)? _preFocus;
 
     /// <summary>The book logo as a bitmap, used for the window, the taskbar and the tray.</summary>
-    static WindowIcon MakeIcon()
+    static string LogoAsset(string logo) => logo == "Circle" ? "app-circle.png" : "app.png";
+
+    static WindowIcon MakeIcon(string logo)
     {
         try
         {
-            using var s = AssetLoader.Open(new Uri("avares://BibleStudy.App/Assets/app.png"));
+            using var s = AssetLoader.Open(new Uri("avares://BibleStudy.App/Assets/" + LogoAsset(logo)));
             return new WindowIcon(new Bitmap(s));
         }
         catch { /* fall back to the drawn icon below */ }
@@ -38,7 +40,7 @@ public partial class MainWindow
 
     void InitShell()
     {
-        Icon = MakeIcon();
+        Icon = MakeIcon(_settings.Logo);
         // settings controls
         StartWithWindowsCheck.IsChecked = AutostartEnabled();
         TrayCheck.IsChecked = _settings.Tray; CloseToTrayCheck.IsChecked = _settings.CloseToTray;
