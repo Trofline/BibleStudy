@@ -12,6 +12,7 @@ public sealed record QueueItem(long Id, VerseRef Ref, string Label);
 /// <summary>A note or linked file of the knowledge base. Notes have text; linked files have a path (and their text, if it could be read).</summary>
 public sealed record Document(long Id, string Title, string Body, string? Path, bool IsTemplate, DateTime Updated, IReadOnlyList<string> Tags, long? FolderId = null);
 public sealed record TodoItem(long Id, string Text, bool Done, VerseRef? Ref);
+public sealed record Prayer(long Id, string Text, VerseRef? Ref, DateTime Created, DateTime? Answered, string Note);
 
 /// <summary>A highlighted word range (Start/End are offsets into the verse text of that translation) or a whole verse (Start = -1).</summary>
 public sealed record Mark(long Id, string TranslationId, VerseRef Ref, int Start, int End, string Text, string Color, string Note,
@@ -44,6 +45,7 @@ public sealed class VaultStore : SqliteDb
             CREATE TABLE IF NOT EXISTS documents(id INTEGER PRIMARY KEY, title TEXT NOT NULL, body TEXT, path TEXT, template INT, created TEXT, updated TEXT);
             CREATE TABLE IF NOT EXISTS doc_tags(doc_id INT, tag TEXT, PRIMARY KEY(doc_id, tag));
             CREATE TABLE IF NOT EXISTS todos(id INTEGER PRIMARY KEY, text TEXT, done INT, book TEXT, chapter INT, verse INT, created TEXT);
+            CREATE TABLE IF NOT EXISTS prayers(id INTEGER PRIMARY KEY, text TEXT, book TEXT, chapter INT, verse INT, created TEXT, answered TEXT, note TEXT);
             """);
         // documents can live in the same folders as marks (added later; older vaults are migrated here)
         if (Query("SELECT 1 FROM pragma_table_info('documents') WHERE name='folder_id'", _ => { }, _ => 1).Count == 0)
@@ -231,6 +233,33 @@ public sealed class VaultStore : SqliteDb
         Exec("UPDATE todos SET done=$d WHERE id=$i", c => { c.Parameters.AddWithValue("$d", done ? 1 : 0); c.Parameters.AddWithValue("$i", id); });
 
     public void DeleteTodo(long id) => Exec("DELETE FROM todos WHERE id=$i", c => c.Parameters.AddWithValue("$i", id));
+
+
+    // ---- prayer list --------------------------------------------------------------------------------------------------
+
+    public List<Prayer> GetPrayers() =>
+        Query("SELECT id,text,book,chapter,verse,created,answered,note FROM prayers ORDER BY (answered IS NOT NULL), id DESC", _ => { },
+            r => new Prayer(r.GetInt64(0), r.GetString(1), r.IsDBNull(2) ? null : new VerseRef(r.GetString(2), r.GetInt32(3), r.GetInt32(4)),
+                DateTime.TryParse(r.GetString(5), null, System.Globalization.DateTimeStyles.RoundtripKind, out var c) ? c.ToLocalTime() : DateTime.Now,
+                r.IsDBNull(6) || !DateTime.TryParse(r.GetString(6), null, System.Globalization.DateTimeStyles.RoundtripKind, out var a) ? null : a.ToLocalTime(),
+                r.IsDBNull(7) ? "" : r.GetString(7)));
+
+    public void AddPrayer(string text, VerseRef? r) =>
+        Exec("INSERT INTO prayers(text,book,chapter,verse,created) VALUES($x,$b,$c,$v,$t)", c =>
+        {
+            c.Parameters.AddWithValue("$x", text.Trim());
+            c.Parameters.AddWithValue("$b", r is { } v ? v.Book : DBNull.Value); c.Parameters.AddWithValue("$c", r is { } v2 ? v2.Chapter : DBNull.Value);
+            c.Parameters.AddWithValue("$v", r is { } v3 ? v3.Verse : DBNull.Value); c.Parameters.AddWithValue("$t", DateTime.UtcNow.ToString("o"));
+        });
+
+    public void SetPrayerAnswered(long id, bool answered, string note = "") =>
+        Exec("UPDATE prayers SET answered=$a, note=$n WHERE id=$i", c =>
+        {
+            c.Parameters.AddWithValue("$a", answered ? DateTime.UtcNow.ToString("o") : DBNull.Value);
+            c.Parameters.AddWithValue("$n", note); c.Parameters.AddWithValue("$i", id);
+        });
+
+    public void DeletePrayer(long id) => Exec("DELETE FROM prayers WHERE id=$i", c => c.Parameters.AddWithValue("$i", id));
 
     /// <summary>Writes a consistent copy of the whole vault to a new file (which must not exist yet).</summary>
     public void BackupTo(string path) => Exec("VACUUM INTO $p", c => c.Parameters.AddWithValue("$p", path));

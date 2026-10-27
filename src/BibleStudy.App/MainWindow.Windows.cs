@@ -59,6 +59,7 @@ public partial class MainWindow
         else if (index == SettingsTab) UpdateOfflineInfo();
         else if (index == KnowledgeTab) RefreshDocs();
         else if (index == PlanTab) BuildPlanUi();
+        else if (index == PrayerTab) BuildPrayerUi();
         else if (index == SermonTab && (_sermonVault != _vault.Name || SermonPanel.Children.Count == 0)) BuildSermonUi();
     }
 

@@ -641,6 +641,9 @@
                 <TabItem Header="Predigt">
                     <ScrollViewer><StackPanel x:Name="SermonPanel" Spacing="6" Margin="16,10,12,16" /></ScrollViewer>
                 </TabItem>
+                <TabItem Header="Gebete">
+                    <ScrollViewer><StackPanel x:Name="PrayerPanel" Spacing="8" Margin="16,10,12,16" /></ScrollViewer>
+                </TabItem>
             </TabControl>
             </DockPanel>
         </Border>
