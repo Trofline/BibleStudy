@@ -28,9 +28,14 @@ public partial class MainWindow
             new(4, "Querverweise", "Verse, die mit dem angeklickten Vers zusammenhängen."),
             new(5, "Vorkommen", "Alle Stellen, an denen ein Wort (Strong-Nummer) vorkommt, mit Verstext."),
         ]),
+        new("Bücher", "M4 19.5A2.5 2.5 0 0 1 6.5 17H20 M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z",
+        [
+            new(CommentaryTab, "Kommentare", "Freie Bibelkommentare (Matthew Henry, Jamieson-Fausset-Brown, Keil-Delitzsch, Tyndale u. a.) zum aktuellen Kapitel; der angeklickte Vers wird hervorgehoben."),
+            new(LexiconTab, "Lexikon", "Bibellexikon zu Personen und Orten (Easton's Bible Dictionary über Theographic). Oben stehen die Namen des aktuellen Kapitels."),
+        ]),
         new("Sammlung", "M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.7-.9l-.8-1.2A2 2 0 0 0 7.9 3H4a2 2 0 0 0-2 2v13c0 1.1.9 2 2 2z",
         [
-            new(1, "Markierungen", "Farbig markierte Verse und Wörter, sortiert in Ordnern (Fächern). Klick auf eine Markierung springt zur Stelle."),
+            new(1, "Ordner", "Deine Ordner mit Dokumenten (📄) und markierten Versen. Klick öffnet das Dokument bzw. springt zur Stelle. ⋯ legt Ordner und Dokumente an."),
             new(2, "Notizen", "Deine kurzen Notizen zu einzelnen Versen."),
             new(KnowledgeTab, "Dokumente", "Eigene Texte und verknüpfte Dateien. Verse wie „Joh 3,16“ und [[Titel]] werden zu Links."),
             new(6, "Leseliste", "Verse, die du der Reihe nach durchgehen willst."),

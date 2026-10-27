@@ -146,6 +146,7 @@ public partial class MainWindow : Window
         InitKnowledge();
         InitQol();
         InitNav();
+        InitLibrary();
         ObsidianBtn.Click += async (_, _) => await ExportObsidianAsync();
         SideTabs.SelectionChanged += (_, e) =>
         {
@@ -345,6 +346,7 @@ public partial class MainWindow : Window
             if (_history.Count == 0 || _history[^1] != (b.Id, number)) { _history.Add((b.Id, number)); if (_history.Count > 100) _history.RemoveAt(0); }
             _settings.TranslationId = t.Id; _settings.BookId = b.Id; _settings.Chapter = number;
             UpdateTitle(b.CommonName, number, t.ShortName);
+            LibraryFollowReader();
             if (_startupHome) { _startupHome = false; ShowHome(); }
 
             StatusText.Text = string.Join("  |  ", cols.Select(c =>
@@ -598,6 +600,7 @@ public partial class MainWindow : Window
         _ = ShowXrefsAsync(r);
         if (SideTabs.SelectedIndex == GrundtextTab) _ = ShowGrundtextAsync(r);
         if (SideTabs.SelectedIndex == GuideTab) _ = ShowGuideAsync(r);
+        LibraryFollowReader();
     }
 
     async Task ShowXrefsAsync(VerseRef r)

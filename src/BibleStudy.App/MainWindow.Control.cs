@@ -109,14 +109,16 @@ public partial class MainWindow
                 var title = ArgStr(a, "title")?.Trim();
                 if (string.IsNullOrEmpty(title)) return Err("title is required");
                 if (_vault.FindDocument(title) is not null) return Err($"A document titled '{title}' exists. Use update_document.");
-                var id = _vault.AddDocument(title, ArgStr(a, "body") ?? "", ArgStr(a, "path"), false, ArgStrings(a, "tags") ?? []);
+                var id = _vault.AddDocument(title, ArgStr(a, "body") ?? "", ArgStr(a, "path"), false, ArgStrings(a, "tags") ?? [], FolderId(ArgStr(a, "folder"), create: true));
+                RefreshCollection();
                 RefreshDocs();
                 return new { ok = true, id };
             }
             case "update_document":
             {
                 if (ArgLong(a, "id") is not long id || _vault.GetDocuments().FirstOrDefault(x => x.Id == id) is not { } d) return Err("Unknown document id. Use list_documents.");
-                _vault.UpdateDocument(id, ArgStr(a, "title") ?? d.Title, ArgStr(a, "body") ?? d.Body, ArgStr(a, "path") ?? d.Path, d.IsTemplate, ArgStrings(a, "tags") ?? d.Tags);
+                _vault.UpdateDocument(id, ArgStr(a, "title") ?? d.Title, ArgStr(a, "body") ?? d.Body, ArgStr(a, "path") ?? d.Path, d.IsTemplate, ArgStrings(a, "tags") ?? d.Tags, ArgStr(a, "folder") is { } fn ? FolderId(fn, create: true) : d.FolderId);
+                RefreshCollection();
                 RefreshDocs();
                 return new { ok = true };
             }

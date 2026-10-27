@@ -10,7 +10,7 @@ public sealed record Folder(long Id, string Name)
 }
 public sealed record QueueItem(long Id, VerseRef Ref, string Label);
 /// <summary>A note or linked file of the knowledge base. Notes have text; linked files have a path (and their text, if it could be read).</summary>
-public sealed record Document(long Id, string Title, string Body, string? Path, bool IsTemplate, DateTime Updated, IReadOnlyList<string> Tags);
+public sealed record Document(long Id, string Title, string Body, string? Path, bool IsTemplate, DateTime Updated, IReadOnlyList<string> Tags, long? FolderId = null);
 public sealed record TodoItem(long Id, string Text, bool Done, VerseRef? Ref);
 
 /// <summary>A highlighted word range (Start/End are offsets into the verse text of that translation) or a whole verse (Start = -1).</summary>
@@ -45,6 +45,9 @@ public sealed class VaultStore : SqliteDb
             CREATE TABLE IF NOT EXISTS doc_tags(doc_id INT, tag TEXT, PRIMARY KEY(doc_id, tag));
             CREATE TABLE IF NOT EXISTS todos(id INTEGER PRIMARY KEY, text TEXT, done INT, book TEXT, chapter INT, verse INT, created TEXT);
             """);
+        // documents can live in the same folders as marks (added later; older vaults are migrated here)
+        if (Query("SELECT 1 FROM pragma_table_info('documents') WHERE name='folder_id'", _ => { }, _ => 1).Count == 0)
+            Exec("ALTER TABLE documents ADD COLUMN folder_id INT");
     }
 
     // ---- reading progress -------------------------------------------------------------------------------------------
@@ -234,12 +237,13 @@ public sealed class VaultStore : SqliteDb
 
     // ---- documents (knowledge base) -----------------------------------------------------------------------------------
 
-    public long AddDocument(string title, string body, string? path, bool template, IEnumerable<string> tags)
+    public long AddDocument(string title, string body, string? path, bool template, IEnumerable<string> tags, long? folderId = null)
     {
         using var con = Open();
         using var tx = con.BeginTransaction();
         using var cmd = con.CreateCommand();
-        cmd.CommandText = "INSERT INTO documents(title,body,path,template,created,updated) VALUES($t,$b,$p,$m,$n,$n); SELECT last_insert_rowid()";
+        cmd.CommandText = "INSERT INTO documents(title,body,path,template,created,updated,folder_id) VALUES($t,$b,$p,$m,$n,$n,$f); SELECT last_insert_rowid()";
+        cmd.Parameters.AddWithValue("$f", (object?)folderId ?? DBNull.Value);
         cmd.Parameters.AddWithValue("$t", title.Trim()); cmd.Parameters.AddWithValue("$b", body);
         cmd.Parameters.AddWithValue("$p", (object?)path ?? DBNull.Value); cmd.Parameters.AddWithValue("$m", template ? 1 : 0);
         cmd.Parameters.AddWithValue("$n", DateTime.UtcNow.ToString("o"));
@@ -249,13 +253,14 @@ public sealed class VaultStore : SqliteDb
         return id;
     }
 
-    public void UpdateDocument(long id, string title, string body, string? path, bool template, IEnumerable<string> tags)
+    public void UpdateDocument(long id, string title, string body, string? path, bool template, IEnumerable<string> tags, long? folderId = null)
     {
         using var con = Open();
         using var tx = con.BeginTransaction();
         using (var cmd = con.CreateCommand())
         {
-            cmd.CommandText = "UPDATE documents SET title=$t, body=$b, path=$p, template=$m, updated=$n WHERE id=$i";
+            cmd.CommandText = "UPDATE documents SET title=$t, body=$b, path=$p, template=$m, updated=$n, folder_id=$f WHERE id=$i";
+            cmd.Parameters.AddWithValue("$f", (object?)folderId ?? DBNull.Value);
             cmd.Parameters.AddWithValue("$t", title.Trim()); cmd.Parameters.AddWithValue("$b", body);
             cmd.Parameters.AddWithValue("$p", (object?)path ?? DBNull.Value); cmd.Parameters.AddWithValue("$m", template ? 1 : 0);
             cmd.Parameters.AddWithValue("$n", DateTime.UtcNow.ToString("o")); cmd.Parameters.AddWithValue("$i", id);
@@ -279,7 +284,7 @@ public sealed class VaultStore : SqliteDb
         if (tag is not null) where.Add("id IN (SELECT doc_id FROM doc_tags WHERE tag=$g)");
         if (templates is not null) where.Add("template=$m");
         var tags = Query("SELECT doc_id,tag FROM doc_tags ORDER BY tag", _ => { }, r => (Id: r.GetInt64(0), Tag: r.GetString(1))).ToLookup(x => x.Id, x => x.Tag);
-        return Query($"SELECT id,title,body,path,template,updated FROM documents {(where.Count > 0 ? "WHERE " + string.Join(" AND ", where) : "")} ORDER BY updated DESC",
+        return Query($"SELECT id,title,body,path,template,updated,folder_id FROM documents {(where.Count > 0 ? "WHERE " + string.Join(" AND ", where) : "")} ORDER BY updated DESC",
             c =>
             {
                 if (!string.IsNullOrWhiteSpace(text)) c.Parameters.AddWithValue("$q", "%" + text.Trim().Replace("\\", "\\\\").Replace("%", "\\%").Replace("_", "\\_") + "%");
@@ -287,7 +292,7 @@ public sealed class VaultStore : SqliteDb
                 if (templates is not null) c.Parameters.AddWithValue("$m", templates.Value ? 1 : 0);
             },
             r => new Document(r.GetInt64(0), r.GetString(1), r.IsDBNull(2) ? "" : r.GetString(2), r.IsDBNull(3) ? null : r.GetString(3), r.GetInt32(4) != 0,
-                DateTime.TryParse(r.GetString(5), null, System.Globalization.DateTimeStyles.RoundtripKind, out var d) ? d : DateTime.MinValue, tags[r.GetInt64(0)].ToList()));
+                DateTime.TryParse(r.GetString(5), null, System.Globalization.DateTimeStyles.RoundtripKind, out var d) ? d : DateTime.MinValue, tags[r.GetInt64(0)].ToList(), r.IsDBNull(6) ? null : r.GetInt64(6)));
     }
 
     public Document? FindDocument(string title) =>

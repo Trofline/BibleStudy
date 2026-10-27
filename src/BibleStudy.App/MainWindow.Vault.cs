@@ -89,6 +89,12 @@ public partial class MainWindow
         MarksList.SelectionChanged += async (_, _) =>
         {
             if (MarksList.SelectedItem is not Entry { Id: long id } e) return;
+            if (id >= DocRowBase)   // document row: open it
+            {
+                MarksList.SelectedItem = null;
+                if (_vault.GetDocuments().FirstOrDefault(d => d.Id == id - DocRowBase) is { } doc) { SideTabs.SelectedIndex = KnowledgeTab; OpenDocument(doc); }
+                return;
+            }
             if (id < 0)   // folder row: fold in or out
             {
                 var fid = -1 - id; _foldersTouched = true;
@@ -103,6 +109,12 @@ public partial class MainWindow
         void AddItem(string text, Action act) { var i = new MenuItem { Header = text }; i.Click += (_, _) => act(); more.Items.Add(i); }
         AddItem("Alle Ordner aufklappen", () => { _foldersTouched = true; foreach (var f in _vault.GetFolders()) _openFolders.Add(f.Id); _openFolders.Add(0); ApplyCollectionFilter(); });
         AddItem("Alle Ordner zuklappen", () => { _foldersTouched = true; _openFolders.Clear(); ApplyCollectionFilter(); });
+        AddItem("Neues Dokument im gewählten Ordner", () =>
+        {
+            _newDocFolder = (FolderFilterBox.SelectedItem as Folder)?.Id;
+            SideTabs.SelectedIndex = KnowledgeTab;
+            OpenDocument(new Document(0, "", "", null, false, DateTime.Now, [], _newDocFolder));
+        });
         AddItem("Neuer Ordner …", () => { NewFolderBox.IsVisible = true; NewFolderBox.Focus(); });
         AddItem("Gewählten Ordner löschen", () => { if (DeleteFolderBtn.IsVisible) DeleteFolderBtn.RaiseEvent(new Avalonia.Interactivity.RoutedEventArgs(Button.ClickEvent)); });
         MarksMoreBtn.Flyout = more;
@@ -348,15 +360,25 @@ public partial class MainWindow
         var detail = MarksDetailBtn.IsChecked == true;
         var folders = _vault.GetFolders().OrderBy(f => f.Name, Comparer<string>.Create(NaturalCompare)).ToList();
         var rows = new List<Entry>();
+        var tagFilter = TagFilterBox.SelectedIndex > 0 ? TagFilterBox.SelectedItem as string : null;
+        var docs = _vault.GetDocuments(tag: tagFilter)
+            .Where(d => FolderFilterBox.SelectedIndex == 1 ? d.FolderId is null : folder is null || d.FolderId == folder).ToList();
         // few folders: start expanded; many: collapsed (until the user decides)
         if (!_foldersTouched) { _openFolders.Clear(); if (folders.Count <= 3 || folder is not null) foreach (var f in folders) _openFolders.Add(f.Id); _openFolders.Add(0); }
         foreach (var (id, name) in folders.Select(f => (f.Id, f.Name)).Append((0L, "Ohne Ordner")))
         {
             var inFolder = marks.Where(m => (m.FolderId ?? 0) == id).OrderBy(m => BookOrder(m.Ref.Book)).ThenBy(m => m.Ref.Chapter).ThenBy(m => m.Ref.Verse).ToList();
-            if (inFolder.Count == 0) continue;
+            var folderDocs = docs.Where(d => (d.FolderId ?? 0) == id).OrderBy(d => d.Title, Comparer<string>.Create(NaturalCompare)).ToList();
+            if (inFolder.Count == 0 && folderDocs.Count == 0) continue;
             var open = _openFolders.Contains(id);
-            rows.Add(new Entry(default, $"{(open ? "▾" : "▸")}  {name}   ·   {inFolder.Count}", -1 - id, null));
+            var counts = string.Join(" · ", new[] { folderDocs.Count > 0 ? $"{folderDocs.Count} Dok." : null, inFolder.Count > 0 ? $"{inFolder.Count} Verse" : null }.OfType<string>());
+            rows.Add(new Entry(default, $"{(open ? "▾" : "▸")}  {name}   ·   {counts}", -1 - id, null));
             if (!open) continue;
+            foreach (var d in folderDocs)
+            {
+                var preview = string.Join(" ", d.Body.Split((char)10).Where(l => !l.TrimStart().StartsWith('#') && !l.StartsWith("**Quelle")).Take(4)).Trim();
+                rows.Add(new Entry(default, detail ? $"📄  {d.Title}\n{Shorten(preview, 120)}" : $"📄  {d.Title}", DocRowBase + d.Id, null));
+            }
             for (var i = 0; i < inFolder.Count; i++)
             {
                 var first = inFolder[i]; var last = first; var run = new List<Mark> { first };
@@ -367,8 +389,10 @@ public partial class MainWindow
             }
         }
         MarksList.ItemsSource = rows;
-        MarksEmpty.IsVisible = marks.Count == 0;
+        MarksEmpty.IsVisible = marks.Count == 0 && docs.Count == 0;
     }
+
+    const long DocRowBase = 1_000_000_000_000;
 
     int BookOrder(string id) { var i = _books.ToList().FindIndex(b => b.Id == id); return i < 0 ? int.MaxValue : i; }
 

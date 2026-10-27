@@ -347,6 +347,7 @@
                                 </WrapPanel>
                                 <TextBox x:Name="DocBodyBox" AcceptsReturn="True" TextWrapping="Wrap" MinHeight="220" Watermark="Text. Verse wie „Joh 3,16“ werden zu Links, [[Titel]] verlinkt ein anderes Dokument." />
                                 <TextBox x:Name="DocTagsBox" Watermark="Tags, mit Komma getrennt" />
+                                <Border Classes="pill"><ComboBox x:Name="DocFolderBox" HorizontalAlignment="Stretch" ToolTip.Tip="Ordner, in dem das Dokument liegt (dieselben Ordner wie bei den Markierungen)" /></Border>
                                 <CheckBox x:Name="DocTemplateCheck" Content="Als Vorlage verwenden" />
                                 <TextBlock x:Name="DocPathText" Classes="caption" TextWrapping="Wrap" />
                                 <WrapPanel>
@@ -544,6 +545,26 @@
                     <ScrollViewer Margin="16,8,4,12">
                         <StackPanel x:Name="GuidePanel" Spacing="10" Margin="0,0,12,0" />
                     </ScrollViewer>
+                </TabItem>
+                <TabItem ToolTip.Tip="Kommentare">
+                    <DockPanel Margin="16,8,12,12">
+                        <StackPanel DockPanel.Dock="Top" Spacing="6" Margin="0,0,0,8">
+                            <Border Classes="pill"><ComboBox x:Name="CommentaryBox" HorizontalAlignment="Stretch">
+                            </ComboBox></Border>
+                            <TextBlock x:Name="CommentaryInfo" Classes="caption" TextWrapping="Wrap" />
+                        </StackPanel>
+                        <ScrollViewer x:Name="CommentaryScroll"><StackPanel x:Name="CommentaryPanel" Spacing="10" Margin="0,0,8,0" /></ScrollViewer>
+                    </DockPanel>
+                </TabItem>
+                <TabItem ToolTip.Tip="Lexikon">
+                    <DockPanel Margin="16,8,12,12">
+                        <StackPanel DockPanel.Dock="Top" Spacing="6" Margin="0,0,0,8">
+                            <TextBox x:Name="LexSearchBox" Watermark="Person oder Ort suchen (englisch, z. B. Nebuchadnezzar, Babylon)" />
+                            <TextBlock x:Name="LexInfo" Classes="caption" TextWrapping="Wrap" />
+                            <WrapPanel x:Name="LexChapterChips" />
+                        </StackPanel>
+                        <ScrollViewer><StackPanel x:Name="LexPanel" Spacing="8" Margin="0,0,8,0" /></ScrollViewer>
+                    </DockPanel>
                 </TabItem>
             </TabControl>
             </DockPanel>

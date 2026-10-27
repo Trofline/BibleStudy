@@ -193,6 +193,78 @@ public sealed class HelloAoProvider(HttpClient http, string cacheDir) : IBiblePr
         if (pos < text.Length) yield return new Segment(text[pos..], jesus);
     }
 
+    // ---- library: commentaries and the Bible dictionary (Theographic, based on Easton's Bible Dictionary) ------------------
+
+    public const string LexiconAttribution = "Lexikon: Theographic Bible Metadata (CC BY-SA 4.0), Texte aus Easton's Bible Dictionary (1897, gemeinfrei)";
+
+    public async Task<IReadOnlyList<CommentaryInfo>> GetCommentariesAsync(CancellationToken ct = default)
+    {
+        using var doc = await GetJsonAsync("/api/available_commentaries.json", ct);
+        return doc.RootElement.GetProperty("commentaries").EnumerateArray()
+            .Select(c => new CommentaryInfo(Str(c, "id"), Str(c, "name"), Str(c, "licenseUrl"), Str(c, "languageName"))).ToList();
+    }
+
+    /// <summary>Comments of one chapter: introduction (book introduction for chapter 1) and the notes per verse. Null when the work has no notes here.</summary>
+    public async Task<CommentaryChapter?> GetCommentaryAsync(string commentaryId, string book, int chapter, CancellationToken ct = default)
+    {
+        JsonDocument doc;
+        try { doc = await GetJsonAsync($"/api/c/{commentaryId}/{book}/{chapter}.json", ct); }
+        catch (HttpRequestException) { return null; }
+        using (doc)
+        {
+            var ch = doc.RootElement.GetProperty("chapter");
+            var intro = Str(ch, "introduction");
+            if (chapter == 1 && doc.RootElement.TryGetProperty("book", out var b) && Str(b, "introduction") is { Length: > 0 } bookIntro) intro = (bookIntro + "\n\n" + intro).Trim();
+            var notes = new List<CommentaryNote>();
+            foreach (var item in ch.GetProperty("content").EnumerateArray())
+            {
+                if (Str(item, "type") != "verse" || !item.TryGetProperty("number", out var n)) continue;
+                var text = string.Join("\n\n", item.GetProperty("content").EnumerateArray().Where(x => x.ValueKind == JsonValueKind.String).Select(x => x.GetString()));
+                if (text.Length > 0) notes.Add(new CommentaryNote(n.GetInt32(), text));
+            }
+            return new CommentaryChapter(intro, notes);
+        }
+    }
+
+    /// <summary>All people and places of the dictionary (names only; details are loaded per entry).</summary>
+    public async Task<IReadOnlyList<LexiconItem>> GetLexiconIndexAsync(CancellationToken ct = default)
+    {
+        var list = new List<LexiconItem>();
+        using (var people = await GetJsonAsync("/api/d/theographic/people.json", ct))
+            list.AddRange(people.RootElement.GetProperty("people").EnumerateArray().Select(p => new LexiconItem("people", Str(p, "id"), Str(p, "name"), p.TryGetProperty("numberOfReferences", out var r) ? r.GetInt32() : 0)));
+        using (var places = await GetJsonAsync("/api/d/theographic/places.json", ct))
+            list.AddRange(places.RootElement.GetProperty("places").EnumerateArray().Select(p => new LexiconItem("places", Str(p, "id"), Str(p, "name"), p.TryGetProperty("numberOfReferences", out var r) ? r.GetInt32() : 0)));
+        return list;
+    }
+
+    public async Task<LexiconEntry?> GetLexiconEntryAsync(string kind, string id, CancellationToken ct = default)
+    {
+        using var doc = await GetJsonAsync($"/api/d/theographic/{kind}/{id}.json", ct);
+        var e = doc.RootElement.GetProperty(kind == "people" ? "person" : "place");
+        static List<string> Strings(JsonElement e, string name) =>
+            e.TryGetProperty(name, out var v) && v.ValueKind == JsonValueKind.Array ? v.EnumerateArray().Where(x => x.ValueKind == JsonValueKind.String).Select(x => x.GetString()!).ToList() : [];
+        var refs = e.TryGetProperty("references", out var r) && r.ValueKind == JsonValueKind.Array
+            ? r.EnumerateArray().Select(x => new VerseRef(Str(x, "book"), x.GetProperty("chapter").GetInt32(), x.GetProperty("verse").GetInt32())).ToList() : [];
+        var related = new List<LexiconItem>();
+        foreach (var rel in new[] { "father", "mother", "children", "siblings", "partners", "parents" })
+            if (e.TryGetProperty(rel, out var arr) && arr.ValueKind == JsonValueKind.Array)
+                related.AddRange(arr.EnumerateArray().Where(x => x.ValueKind == JsonValueKind.Object).Select(x => new LexiconItem(Str(x, "type") is { Length: > 0 } t ? t : "people", Str(x, "id"), Str(x, "name"), 0)));
+        return new LexiconEntry(kind, id, Str(e, "name"), Strings(e, "alsoCalled"), Strings(e, "description"), refs, related, Str(e, "featureType"));
+    }
+
+    /// <summary>People and places mentioned in a chapter.</summary>
+    public async Task<IReadOnlyList<(LexiconItem Item, IReadOnlyList<int> Verses)>> GetChapterLexiconAsync(string book, int chapter, CancellationToken ct = default)
+    {
+        using var doc = await GetJsonAsync($"/api/d/theographic/{book}/{chapter}.json", ct);
+        var ch = doc.RootElement.GetProperty("chapter");
+        var result = new List<(LexiconItem, IReadOnlyList<int>)>();
+        foreach (var kind in new[] { "people", "places" })
+            if (ch.TryGetProperty(kind, out var arr))
+                foreach (var p in arr.EnumerateArray())
+                    result.Add((new LexiconItem(kind, Str(p, "id"), Str(p, "name"), 0), p.TryGetProperty("verses", out var v) ? v.EnumerateArray().Select(x => x.GetInt32()).ToList() : []));
+        return result;
+    }
+
     static string Str(JsonElement e, string name) =>
         e.TryGetProperty(name, out var v) && v.ValueKind == JsonValueKind.String ? v.GetString()! : "";
 

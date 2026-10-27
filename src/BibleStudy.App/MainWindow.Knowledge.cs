@@ -12,6 +12,7 @@ namespace BibleStudy.App;
 public partial class MainWindow
 {
     Document? _doc;
+    long? _newDocFolder;   // folder preset for a document created from the folder tree
     string? _docTag;
     bool _docsLoading;
 
@@ -104,6 +105,10 @@ public partial class MainWindow
         _doc = d;
         DocTitleBox.Text = d.Title; DocBodyBox.Text = d.Body; DocTagsBox.Text = string.Join(", ", d.Tags);
         DocTemplateCheck.IsChecked = d.IsTemplate;
+        var folders = _vault.GetFolders().OrderBy(f => f.Name, Comparer<string>.Create(NaturalCompare)).ToList();
+        DocFolderBox.ItemsSource = new List<object> { "(kein Ordner)" }.Concat(folders).ToList();
+        var fid = d.FolderId ?? _newDocFolder;
+        DocFolderBox.SelectedIndex = fid is long f2 && folders.FindIndex(x => x.Id == f2) is var fi and >= 0 ? fi + 1 : 0;
         DocPathText.Text = d.Path is null ? "" : "Verknüpfte Datei: " + d.Path;
         DocOpenFileBtn.IsVisible = d.Path is not null;
         DocFromTemplateBtn.IsVisible = d.IsTemplate && d.Id > 0;
@@ -114,7 +119,7 @@ public partial class MainWindow
 
     void CloseDocument()
     {
-        _doc = null;
+        _doc = null; _newDocFolder = null;
         DocEditorPanel.IsVisible = false; DocListPanel.IsVisible = true;
         DocList.SelectedItem = null;
         RefreshDocs();
@@ -128,9 +133,11 @@ public partial class MainWindow
         var tags = (DocTagsBox.Text ?? "").Split(',', ';');
         var body = DocBodyBox.Text ?? "";
         var template = DocTemplateCheck.IsChecked == true;
-        if (_doc.Id == 0) { var id = _vault.AddDocument(title, body, _doc.Path, template, tags); _doc = _vault.GetDocuments().First(d => d.Id == id); }
-        else { _vault.UpdateDocument(_doc.Id, title, body, _doc.Path, template, tags); _doc = _vault.GetDocuments().First(d => d.Id == _doc.Id); }
+        var folderId = DocFolderBox.SelectedItem is Folder fo ? fo.Id : (long?)null;
+        if (_doc.Id == 0) { var id = _vault.AddDocument(title, body, _doc.Path, template, tags, folderId); _doc = _vault.GetDocuments().First(d => d.Id == id); }
+        else { _vault.UpdateDocument(_doc.Id, title, body, _doc.Path, template, tags, folderId); _doc = _vault.GetDocuments().First(d => d.Id == _doc.Id); }
         OpenDocument(_doc);
+        RefreshCollection();
         DocPathText.Text = (_doc.Path is null ? "" : "Verknüpfte Datei: " + _doc.Path + "\n") + "Gespeichert.";
     }
 

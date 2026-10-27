@@ -36,6 +36,7 @@ public sealed class AppSettings
     public int SpeakRate { get; set; }
     public int SideTab { get; set; }
     public bool FocusMode { get; set; }
+    public string Commentary { get; set; } = "matthew-henry";
 
     static readonly JsonSerializerOptions Json = new() { WriteIndented = true };
 
