@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <UseWindowsForms>true</UseWindowsForms>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <AssemblyName>BibleStudy-Setup</AssemblyName>
+    <Version>1.0.0</Version>
+    <Authors>Trofline</Authors>
+    <Product>BibleStudy Setup</Product>
+    <ApplicationHighDpiMode>SystemAware</ApplicationHighDpiMode>
+    <PayloadZip Condition="'$(PayloadZip)' == ''">$(MSBuildProjectDirectory)\..\..\release\payload.zip</PayloadZip>
+  </PropertyGroup>
+  <!-- The program itself travels inside the installer; release.ps1 builds payload.zip first. -->
+  <ItemGroup Condition="Exists('$(PayloadZip)')">
+    <EmbeddedResource Include="$(PayloadZip)" LogicalName="payload.zip" />
+  </ItemGroup>
+</Project>

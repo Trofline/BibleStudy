@@ -159,7 +159,7 @@ public partial class MainWindow
         if (AppPaths.IsInstalled)
         {
             // the uninstaller asks about the data itself
-            Process.Start(new ProcessStartInfo(Path.Combine(AppPaths.ProgramDir, "Uninstall.exe")) { UseShellExecute = true });
+            Process.Start(new ProcessStartInfo(Path.Combine(AppPaths.ProgramDir, "BibleStudy.App.exe"), "--uninstall") { UseShellExecute = true });
             _exiting = true; Close();
             return;
         }

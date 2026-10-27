@@ -12,8 +12,8 @@ public static class AppPaths
 
     public static bool IsPortable => File.Exists(Path.Combine(ProgramDir, "portable.flag"));
 
-    /// <summary>True when the program was set up by the installer (an uninstaller sits next to it).</summary>
-    public static bool IsInstalled => File.Exists(Path.Combine(ProgramDir, "Uninstall.exe"));
+    /// <summary>True when the program was set up by the installer (it wrote "installed.flag" next to the program).</summary>
+    public static bool IsInstalled => File.Exists(Path.Combine(ProgramDir, "installed.flag"));
 
     public static string Root => IsPortable
         ? Path.Combine(ProgramDir, "Data")
