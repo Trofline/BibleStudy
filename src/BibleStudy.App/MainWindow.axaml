@@ -99,6 +99,12 @@
             </DockPanel>
         </Border>
 
+        <!-- Work tabs like in a browser: click = switch in place, drag out = loose window, drag the window back = snaps in -->
+        <Border x:Name="TabBar" DockPanel.Dock="Top" Padding="16,6,16,6" Background="{DynamicResource BsSurface}"
+                BorderBrush="{DynamicResource BsBorder}" BorderThickness="0,0,0,1">
+            <StackPanel x:Name="TabStrip" Orientation="Horizontal" Spacing="4" />
+        </Border>
+
         <!-- Reading toolbar: what can I do with this chapter (labelled, so nothing has to be guessed) -->
         <Border x:Name="ReadBar" DockPanel.Dock="Top" Padding="16,7" Background="{DynamicResource BsBackground}"
                 BorderBrush="{DynamicResource BsBorder}" BorderThickness="0,0,0,1">
@@ -109,17 +115,6 @@
                         <TextBlock Text="Gelesen" FontSize="13" FontWeight="Medium" VerticalAlignment="Center" />
                     </StackPanel>
                 </ToggleButton>
-                <Border DockPanel.Dock="Left" Classes="pill" Margin="8,0,0,0" VerticalAlignment="Center"><StackPanel Orientation="Horizontal">
-                    <Button x:Name="BooksWinBtn" Classes="toolx" ToolTip.Tip="Kommentare und Lexikon in eigenem Fenster">
-                        <StackPanel Orientation="Horizontal" Spacing="6"><local:Icon Data="M4 19.5A2.5 2.5 0 0 1 6.5 17H20 M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" IconSize="17" VerticalAlignment="Center" /><TextBlock Text="Bücher" VerticalAlignment="Center" /></StackPanel>
-                    </Button>
-                    <Button x:Name="DocsWinBtn" Classes="toolx" ToolTip.Tip="Dokumente schreiben und ordnen in eigenem Fenster (Strg+Umschalt+D)">
-                        <StackPanel Orientation="Horizontal" Spacing="6"><local:Icon Data="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z M14 2v6h6 M8 13h8 M8 17h8" IconSize="17" VerticalAlignment="Center" /><TextBlock Text="Dokumente" VerticalAlignment="Center" /></StackPanel>
-                    </Button>
-                    <Button x:Name="PlanWinBtn" Classes="toolx" ToolTip.Tip="Leseliste und Aufgaben in eigenem Fenster">
-                        <StackPanel Orientation="Horizontal" Spacing="6"><local:Icon Data="M10 12h11 M10 18h11 M10 6h11 M4 10h2 M4 6h1v4" IconSize="17" VerticalAlignment="Center" /><TextBlock Text="Planen" VerticalAlignment="Center" /></StackPanel>
-                    </Button>
-                </StackPanel></Border>
                 <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
                     <Border Classes="pill"><StackPanel Orientation="Horizontal">
                         <Button x:Name="FontMinusBtn" Classes="tool" Width="32" Content="A−" FontSize="13" FontWeight="SemiBold" ToolTip.Tip="Schrift kleiner (Strg+−)" />
@@ -545,7 +540,7 @@
                             <Border Classes="card"><StackPanel Spacing="8">
                                 <TextBlock Classes="eyebrow" Text="FENSTER UND LAYOUTS" />
                                 <TextBlock Classes="caption" TextWrapping="Wrap" Text="Jeden Bereich der Seitenleiste kannst du in ein eigenes Fenster auslagern (Knopf ⧉ neben den Reitern oder Strg+Umschalt+O) und frei verschieben, auch auf einen zweiten Monitor. Die Anordnung speicherst du als Layout und lädst sie jederzeit wieder." />
-                                <Button x:Name="PopOutDocsBtn" Content="Dokumente in eigenem Fenster öffnen" HorizontalAlignment="Left" />
+                                <Button x:Name="PopOutDocsBtn" Content="Dokumente öffnen" HorizontalAlignment="Left" />
                                 <Border Classes="pill" HorizontalAlignment="Left"><ComboBox x:Name="LayoutBox" Width="220" /></Border>
                                 <StackPanel Orientation="Horizontal" Spacing="6">
                                     <Button x:Name="LayoutLoadBtn" Content="Laden" Classes="primary" />
@@ -648,6 +643,7 @@
             <local:GraphView x:Name="GraphPane" IsVisible="False" Background="{DynamicResource BsBackground}" />
             <local:MapView x:Name="MapPane" IsVisible="False" Background="{DynamicResource BsBackground}" />
             <local:KnowledgeView x:Name="KnowledgePane" IsVisible="False" Background="{DynamicResource BsBackground}" />
+            <Grid x:Name="WorkHost" IsVisible="False" Background="{DynamicResource BsSurface}" />
         </Grid>
     </DockPanel>
 </Window>

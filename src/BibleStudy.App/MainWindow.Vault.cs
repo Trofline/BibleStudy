@@ -46,7 +46,8 @@ public partial class MainWindow
         _vault = OpenVault(name);
         _settings.Vault = name; SaveSettings();
         _read = _vault.GetReadChapters();
-        CloseEditor(); RefreshLists(); RefreshQueue(); RefreshTodos(); RefreshVaultUi();
+        CloseEditor(); CloseDocument(); RefreshLists(); RefreshDocs(); RefreshQueue(); RefreshTodos(); RefreshVaultUi();
+        if (_windows.TryGetValue("group:Dokumente", out var docs)) docs.SelectAction?.Invoke(docs.Current);
         if (Home.IsVisible) Home.Show(_books, _read, Home.OpenBook);
         await ShowChapterAsync(_selected);
     }

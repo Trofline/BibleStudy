@@ -85,20 +85,77 @@ sealed class ArcCanvas : Control
         _cts?.Cancel();
         var cts = _cts = new CancellationTokenSource();
         var scale = TopLevel.GetTopLevel(this)?.RenderScaling ?? 1;
-        // The glow is soft anyway: render at about half the pixels (about 3x faster, much less memory) and let the GPU scale it up.
-        const double quality = 0.55;
-        var layout = new ArcRenderer.Layout(Math.Max(64, (int)(Bounds.Width * scale * quality)), Math.Max(64, (int)(Bounds.Height * scale * quality)), scale * quality);
+        var layout = new ArcRenderer.Layout(Math.Max(64, (int)(Bounds.Width * scale)), Math.Max(64, (int)(Bounds.Height * scale)), scale);
         var links = _links; var ids = _ids; double vs = _vs, ve = _ve;
+        var key = $"{_count}|{_filter}|{vs:F1}|{ve:F1}|{layout.Width}x{layout.Height}|{links.VerseCount}|{ids.Length}";
+        var full = vs <= 0 && ve >= links.VerseCount;
+        // Same view seen before: no recomputation (memory first, the whole-Bible view also from disk).
+        if (_cache.TryGetValue(key, out var hit)) { Apply(hit, layout, vs, ve); return; }
         _ = Task.Run(async () =>
         {
             try
             {
-                await Task.Delay(60, cts.Token);
-                var pixels = ArcRenderer.Render(links, ids, vs, ve, layout, cts.Token);
-                Dispatcher.UIThread.Post(() => { if (!cts.IsCancellationRequested) Apply(pixels, layout, vs, ve); });
+                var pixels = full ? LoadDisk(key, layout) : null;
+                if (pixels is null)
+                {
+                    await Task.Delay(60, cts.Token);
+                    pixels = ArcRenderer.Render(links, ids, vs, ve, layout, cts.Token);
+                    if (full) SaveDisk(key, pixels);
+                }
+                Dispatcher.UIThread.Post(() =>
+                {
+                    if (cts.IsCancellationRequested) return;
+                    Remember(key, pixels);
+                    Apply(pixels, layout, vs, ve);
+                });
             }
             catch (OperationCanceledException) { /* a newer render replaced this one */ }
         });
+    }
+
+    // ---- render cache ---------------------------------------------------------------------------------------------------
+
+    static readonly Dictionary<string, byte[]> _cache = [];
+    static readonly Queue<string> _cacheOrder = new();
+
+    static void Remember(string key, byte[] pixels)
+    {
+        if (_cache.TryAdd(key, pixels)) _cacheOrder.Enqueue(key);
+        while (_cacheOrder.Count > 6) _cache.Remove(_cacheOrder.Dequeue());
+    }
+
+    static string DiskPath(string key)
+    {
+        var dir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "BibleStudy", "arc-cache");
+        Directory.CreateDirectory(dir);
+        var hash = Convert.ToHexString(System.Security.Cryptography.SHA1.HashData(System.Text.Encoding.UTF8.GetBytes(key)))[..16];
+        return Path.Combine(dir, hash + ".bin");
+    }
+
+    static byte[]? LoadDisk(string key, ArcRenderer.Layout layout)
+    {
+        try
+        {
+            var path = DiskPath(key);
+            if (!File.Exists(path)) return null;
+            var pixels = new byte[layout.Width * layout.Height * 4];
+            using var s = new System.IO.Compression.DeflateStream(File.OpenRead(path), System.IO.Compression.CompressionMode.Decompress);
+            var read = 0;
+            while (read < pixels.Length) { var n = s.Read(pixels, read, pixels.Length - read); if (n <= 0) return null; read += n; }
+            return pixels;
+        }
+        catch { return null; }
+    }
+
+    static void SaveDisk(string key, byte[] pixels)
+    {
+        try
+        {
+            var path = DiskPath(key);
+            using (var s = new System.IO.Compression.DeflateStream(File.Create(path), System.IO.Compression.CompressionLevel.Fastest)) s.Write(pixels, 0, pixels.Length);
+            foreach (var old in new DirectoryInfo(Path.GetDirectoryName(path)!).GetFiles("*.bin").OrderByDescending(f => f.LastWriteTimeUtc).Skip(8)) old.Delete();
+        }
+        catch { /* the cache is optional */ }
     }
 
     void Apply(byte[] pixels, ArcRenderer.Layout layout, double vs, double ve)

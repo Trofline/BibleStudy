@@ -12,7 +12,8 @@ public sealed class LayoutPreset
     public bool SideOpen { get; set; } = true;
     public double SideWidth { get; set; } = 430;
     public int SideTab { get; set; }
-    public List<WindowBounds> Windows { get; set; } = [];
+    public List<WindowBounds> Windows { get; set; } = [];   // W <= 0: docked as a tab in the main window
+    public string? ActiveWork { get; set; }                 // work tab shown in the main window ("group:Dokumente"), null = reading
 }
 
 public sealed class AppSettings
@@ -53,6 +54,7 @@ public sealed class AppSettings
     public Dictionary<string, WindowBounds> Windows { get; set; } = [];
     public Dictionary<string, LayoutPreset> Layouts { get; set; } = [];
     public LayoutPreset? LastLayout { get; set; }
+    public string? ActiveLayout { get; set; }               // name of the layout the user loaded or saved last
     public WindowBounds? WindowBounds { get; set; }
     public string XrefDirection { get; set; } = "Out";   // Out | In | Both
     public bool Tray { get; set; }

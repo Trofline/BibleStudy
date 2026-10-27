@@ -68,19 +68,12 @@ public partial class MainWindow
         {
             if (_settings.StartMode == "Minimized") { if (_settings.Tray && _tray is not null) Hide(); else WindowState = WindowState.Minimized; }
             if (_settings.RestoreWindows && _settings.LastLayout is { Windows.Count: > 0 } last)
-                Dispatcher.UIThread.Post(() => { foreach (var w in last.Windows) OpenLastWindow(w); }, DispatcherPriority.Background);
+                Dispatcher.UIThread.Post(() => OpenLayoutWindows(last), DispatcherPriority.Background);
         };
         Closing += OnWindowClosing;
     }
 
     void ToggleMaximize() => WindowState = WindowState == WindowState.Maximized ? WindowState.Normal : WindowState.Maximized;
-
-    void OpenLastWindow(WindowBounds w)
-    {
-        _settings.Windows[w.Key] = w;
-        if (w.Key.StartsWith("group:") && NavGroups.FirstOrDefault(g => "group:" + g.Name == w.Key) is { } g) OpenGroupWindow(g);
-        else if (w.Key.StartsWith("tab:") && int.TryParse(w.Key[4..], out var idx)) PopOutTab(idx);
-    }
 
     void OnWindowClosing(object? sender, WindowClosingEventArgs e)
     {

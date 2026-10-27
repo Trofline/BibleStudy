@@ -77,7 +77,7 @@ public partial class MainWindow
             else if (e.Key == Key.Enter) { e.Handled = true; await QuickJumpAsync(QuickJumpBox.Text?.Trim() ?? ""); }
         };
         AddHandler(KeyDownEvent, OnShortcut, RoutingStrategies.Tunnel);
-        ReaderHost.PropertyChanged += (_, e) => { if (e.Property == IsVisibleProperty) ReadBar.IsVisible = ReaderHost.IsVisible && !_settings.FocusMode; };
+        ReaderHost.PropertyChanged += (_, e) => { if (e.Property == IsVisibleProperty) UpdateReadBar(); };
         ActualThemeVariantChanged += (_, _) => ApplyAccent(_settings.Accent);
         _qolReady = true;
     }
@@ -163,7 +163,7 @@ public partial class MainWindow
     {
         _settings.FocusMode = !_settings.FocusMode;
         var focus = _settings.FocusMode;
-        TopBar.IsVisible = !focus; ReadBar.IsVisible = !focus && ReaderHost.IsVisible;
+        TopBar.IsVisible = !focus; TabBar.IsVisible = !focus; UpdateReadBar();
         if (focus)
         {
             _preFocus = (WindowState, SidePanel.IsVisible);

@@ -15,7 +15,7 @@ public sealed class ControlServer : IDisposable
 {
     static readonly JsonSerializerOptions Json = new() { DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull };
 
-    readonly HttpListener _listener = new();
+    HttpListener _listener = new();
     readonly Func<string, JsonElement, Task<object?>> _handler;
     readonly string _infoPath;
     readonly string _token = Convert.ToHexString(RandomNumberGenerator.GetBytes(16));
@@ -34,7 +34,7 @@ public sealed class ControlServer : IDisposable
         {
             try
             {
-                _listener.Prefixes.Clear();
+                _listener = new HttpListener();
                 _listener.Prefixes.Add($"http://127.0.0.1:{port}/");
                 _listener.Start();
                 Port = port;

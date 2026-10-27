@@ -37,7 +37,7 @@ public partial class MainWindow
             new("theme", "Design wechseln (hell/dunkel)", "Ctrl+T", () => Sync(() => Click(ThemeBtn)), true),
             new("focus", "Fokus-Modus (nur Text)", "F11", () => Sync(ToggleFocusMode), true),
             new("guide", "Vers-Übersicht öffnen", "Ctrl+G", () => Sync(() => { SetPanelOpen(true); SideTabs.SelectedIndex = GuideTab; }), true),
-            new("docs", "Dokumente in eigenem Fenster", "Ctrl+Shift+D", () => Sync(() => OpenGroupWindow(NavGroups.First(g => g.Name == "Dokumente"))), true),
+            new("docs", "Dokumente öffnen", "Ctrl+Shift+D", () => Sync(() => OpenWork(NavGroups.First(g => g.Name == "Dokumente"))), true),
             new("popout", "Aktuelles Seitenfenster auslagern", "Ctrl+Shift+O", () => Sync(() => PopOutTab(SideTabs.SelectedIndex)), true),
         ];
         BuildKeysPanel();

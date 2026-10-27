@@ -32,19 +32,13 @@ public partial class MainWindow
             await ShowCommentaryAsync();
         };
         LexSearchBox.TextChanged += async (_, _) => await LexSearchAsync();
-        SideTabs.SelectionChanged += async (_, e) =>
-        {
-            if (e.Source != SideTabs) return;
-            if (SideTabs.SelectedIndex == CommentaryTab) await ShowCommentaryAsync();
-            if (SideTabs.SelectedIndex == LexiconTab) await ShowLexiconAsync();
-        };
     }
 
     /// <summary>Called when the chapter or the verse changes.</summary>
     void LibraryFollowReader()
     {
-        if (SideTabs.SelectedIndex == CommentaryTab) _ = ShowCommentaryAsync();
-        if (SideTabs.SelectedIndex == LexiconTab) _ = ShowLexiconAsync();
+        if (TabActive(CommentaryTab)) _ = ShowCommentaryAsync();
+        if (TabActive(LexiconTab)) _ = ShowLexiconAsync();
     }
 
     // ---- commentaries -------------------------------------------------------------------------------------------------

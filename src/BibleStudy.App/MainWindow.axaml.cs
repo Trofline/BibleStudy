@@ -213,7 +213,7 @@ public partial class MainWindow : Window
         Home.IsVisible = true; ReaderHost.IsVisible = false; GraphPane.IsVisible = false; MapPane.IsVisible = false; KnowledgePane.IsVisible = false;
     }
 
-    void ShowReader() { Home.IsVisible = false; GraphPane.IsVisible = false; MapPane.IsVisible = false; KnowledgePane.IsVisible = false; ReaderHost.IsVisible = true; OnReaderShown(); }
+    void ShowReader() { if (_activeWork is not null) ShowWork(null); Home.IsVisible = false; GraphPane.IsVisible = false; MapPane.IsVisible = false; KnowledgePane.IsVisible = false; ReaderHost.IsVisible = true; OnReaderShown(); }
 
     async Task GoToAsync(string bookId, int chapter, int? verse = null)
     {
@@ -603,8 +603,8 @@ public partial class MainWindow : Window
         NoteTarget.Text = "Notiz zu " + Label(r);
         NoteEditor.Text = _vault.GetNotes().FirstOrDefault(x => x.Ref == r)?.Text ?? "";
         _ = ShowXrefsAsync(r);
-        if (SideTabs.SelectedIndex == GrundtextTab) _ = ShowGrundtextAsync(r);
-        if (SideTabs.SelectedIndex == GuideTab) _ = ShowGuideAsync(r);
+        if (TabActive(GrundtextTab)) _ = ShowGrundtextAsync(r);
+        if (TabActive(GuideTab)) _ = ShowGuideAsync(r);
         LibraryFollowReader();
     }
 
