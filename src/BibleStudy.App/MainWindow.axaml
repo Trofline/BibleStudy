@@ -71,6 +71,24 @@
                         <StackPanel x:Name="StudyPanel" Spacing="10" />
                     </ScrollViewer>
                 </TabItem>
+                <TabItem Header="Querverweise">
+                    <DockPanel Margin="0,8,0,0">
+                        <StackPanel DockPanel.Dock="Top" Spacing="4" Margin="0,0,0,6">
+                            <TextBlock x:Name="XrefTitle" FontWeight="SemiBold" TextWrapping="Wrap" Text="Vers anklicken, um Querverweise zu sehen" />
+                            <TextBlock FontSize="11" Foreground="{DynamicResource BsMuted}" TextWrapping="Wrap" Text="Quelle: OpenBible.info, CC BY 4.0" />
+                        </StackPanel>
+                        <ListBox x:Name="XrefList" ItemTemplate="{StaticResource EntryTpl}" ScrollViewer.HorizontalScrollBarVisibility="Disabled" />
+                    </DockPanel>
+                </TabItem>
+                <TabItem Header="Konkordanz">
+                    <DockPanel Margin="0,8,0,0">
+                        <StackPanel DockPanel.Dock="Top" Spacing="4" Margin="0,0,0,6">
+                            <TextBlock x:Name="ConcTitle" FontWeight="SemiBold" TextWrapping="Wrap" Text="In der Wortstudie „Alle Vorkommen“ wählen" />
+                            <TextBlock x:Name="ConcInfo" FontSize="12" Foreground="{DynamicResource BsMuted}" TextWrapping="Wrap" />
+                        </StackPanel>
+                        <ListBox x:Name="ConcList" ItemTemplate="{StaticResource EntryTpl}" ScrollViewer.HorizontalScrollBarVisibility="Disabled" />
+                    </DockPanel>
+                </TabItem>
             </TabControl>
         </Border>
 

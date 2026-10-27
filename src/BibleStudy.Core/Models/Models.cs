@@ -32,3 +32,9 @@ public readonly record struct VerseRef(string Book, int Chapter, int Verse);
 public sealed record VerseText(string BookId, int Chapter, int Number, string Text);
 
 public sealed record Chapter(string TranslationId, string BookId, int Number, IReadOnlyList<Verse> Verses);
+
+/// <summary>A cross reference target (EndVerse = Target.Verse for single verses) with its relevance score.</summary>
+public sealed record CrossRef(VerseRef Target, int EndVerse, int Score);
+
+/// <summary>One tagged word in a translation, used for the Strong's concordance.</summary>
+public sealed record StrongsOccurrence(string Strong, VerseRef Ref, string Word);

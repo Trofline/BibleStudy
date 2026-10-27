@@ -20,6 +20,9 @@ public sealed record ExtraColumn(ComboBox Lang, ComboBox Trans, Control Root)
 public partial class MainWindow : Window
 {
     const int MaxExtras = 3;
+    const int ConcordanceLimit = 3000;
+    readonly HelloAoProvider _hello;
+    bool _building;
     readonly StrongsDictionary _strongs;
     int _fontSize = 19;
     readonly List<ExtraColumn> _extras = [];
@@ -44,7 +47,7 @@ public partial class MainWindow : Window
         InitializeComponent();
         var root = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "BibleStudy");
         var http = new HttpClient();
-        _provider = new HelloAoProvider(http, Path.Combine(root, "cache"));
+        _provider = _hello = new HelloAoProvider(http, Path.Combine(root, "cache"));
         _strongs = new StrongsDictionary(http, Path.Combine(root, "cache"));
         StudyBtn.IsCheckedChanged += async (_, _) => await ShowChapterAsync(_selected);
         FontMinusBtn.Click += async (_, _) => { _fontSize = Math.Max(13, _fontSize - 1); await ShowChapterAsync(_selected); };
@@ -76,7 +79,7 @@ public partial class MainWindow : Window
         NoteSaveBtn.Click += async (_, _) => await SaveNoteAsync(NoteEditor.Text ?? "");
         NoteDeleteBtn.Click += async (_, _) => { NoteEditor.Text = ""; await SaveNoteAsync(""); };
         SearchBox.KeyDown += async (_, e) => { if (e.Key == Key.Enter) await SearchAsync(); };
-        foreach (var list in new[] { SearchList, BookmarkList, NoteList }) list.SelectionChanged += OnEntryPicked;
+        foreach (var list in new[] { SearchList, BookmarkList, NoteList, XrefList, ConcList }) list.SelectionChanged += OnEntryPicked;
         Opened += async (_, _) => await InitAsync();
     }
 
@@ -249,6 +252,10 @@ public partial class MainWindow : Window
                 StatusText.Text = "Lade Wörterbuch …";
                 var e = await _strongs.LookupAsync(id);
                 StudyPanel.Children.Add(e is null ? new TextBlock { Text = id + ": kein Eintrag" } : StudyCard(e));
+                var all = new Button { Content = "Alle Vorkommen", HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Left };
+                var conc = $"{id}  {e?.Lemma}  „{span.Word.Trim()}“";
+                all.Click += async (_, _) => await ShowConcordanceAsync(id, conc);
+                StudyPanel.Children.Add(all);
             }
             catch (Exception ex) { StudyPanel.Children.Add(new TextBlock { Text = $"{id}: Wörterbuch nicht verfügbar ({ex.Message})", TextWrapping = TextWrapping.Wrap }); }
         }
@@ -318,6 +325,59 @@ public partial class MainWindow : Window
         var r = new VerseRef(_curBook, _curChapter, n);
         NoteTarget.Text = "Notiz zu " + Label(r);
         NoteEditor.Text = _store.GetNotes().FirstOrDefault(x => x.Ref == r)?.Text ?? "";
+        _ = ShowXrefsAsync(r);
+    }
+
+    async Task ShowXrefsAsync(VerseRef r)
+    {
+        try
+        {
+            XrefTitle.Text = "Querverweise zu " + Label(r) + " …";
+            var refs = (await _hello.GetCrossReferencesAsync(r.Book, r.Chapter, r.Verse)).Take(20).ToList();
+            if (TranslationBox.SelectedItem is not TranslationInfo t) return;
+            var texts = await Task.WhenAll(refs.Select(x => VerseTextAsync(t.Id, x)));
+            if (_selected != r.Verse || _curBook != r.Book || _curChapter != r.Chapter) return; // user moved on
+            XrefTitle.Text = refs.Count == 0 ? $"Keine Querverweise zu {Label(r)}" : $"Querverweise zu {Label(r)}";
+            XrefList.ItemsSource = refs.Zip(texts, (x, text) =>
+                new Entry(x.Target, $"{Label(x.Target)}{(x.EndVerse > x.Target.Verse ? "–" + x.EndVerse : "")}\n{text}")).ToList();
+        }
+        catch (Exception ex) { XrefTitle.Text = "Querverweise nicht verfügbar: " + ex.Message; }
+    }
+
+    async Task<string> VerseTextAsync(string translationId, CrossRef x)
+    {
+        try
+        {
+            var ch = await _provider.GetChapterAsync(translationId, x.Target.Book, x.Target.Chapter);
+            var text = string.Join(" ", ch.Verses.Where(v => v.Number >= x.Target.Verse && v.Number <= x.EndVerse).Select(v => v.Text.Trim()));
+            return text.Length > 160 ? text[..160] + "…" : text;
+        }
+        catch { return ""; }
+    }
+
+    async Task ShowConcordanceAsync(string strongId, string title)
+    {
+        if (TranslationBox.SelectedItem is not TranslationInfo t || _building) return;
+        SideTabs.SelectedIndex = 5;
+        ConcTitle.Text = title;
+        ConcList.ItemsSource = null;
+        try
+        {
+            if (!_store.IsStrongsIndexed(t.Id))
+            {
+                _building = true;
+                var progress = new Progress<(int Done, int Total)>(p => ConcInfo.Text = $"Einmalig: Konkordanz für {t.ShortName} wird aufgebaut … {p.Done}/{p.Total} Kapitel");
+                await ConcordanceBuilder.BuildAsync(_provider, _store, t.Id, progress);
+            }
+            var occ = _store.GetOccurrences(t.Id, strongId, ConcordanceLimit);
+            var renderings = occ.GroupBy(o => o.Word.Trim('.', ',', ';', ':', '!', '?', '(', ')').ToLowerInvariant())
+                .OrderByDescending(g => g.Count()).Take(8).Select(g => $"{g.Key} ({g.Count()})");
+            ConcInfo.Text = occ.Count == 0 ? $"Keine Vorkommen in {t.ShortName}."
+                : $"{occ.Count}{(occ.Count >= ConcordanceLimit ? "+" : "")}× in {t.ShortName}. Wiedergaben: {string.Join(", ", renderings)}";
+            ConcList.ItemsSource = occ.Select(o => new Entry(o.Ref, $"{Label(o.Ref)} · {o.Word.Trim()}")).ToList();
+        }
+        catch (Exception ex) { ConcInfo.Text = "Konkordanz nicht verfügbar: " + ex.Message; }
+        finally { _building = false; }
     }
 
     void ToggleBookmark()

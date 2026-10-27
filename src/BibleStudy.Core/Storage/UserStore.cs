@@ -20,6 +20,9 @@ public sealed partial class UserStore
             CREATE TABLE IF NOT EXISTS bookmarks(book TEXT, chapter INT, verse INT, created TEXT, PRIMARY KEY(book,chapter,verse));
             CREATE TABLE IF NOT EXISTS notes(book TEXT, chapter INT, verse INT, text TEXT, updated TEXT, PRIMARY KEY(book,chapter,verse));
             CREATE TABLE IF NOT EXISTS indexed(translation TEXT PRIMARY KEY);
+            CREATE TABLE IF NOT EXISTS occ(translation TEXT, strong TEXT, book TEXT, chapter INT, verse INT, word TEXT);
+            CREATE INDEX IF NOT EXISTS occ_idx ON occ(translation, strong);
+            CREATE TABLE IF NOT EXISTS occ_done(translation TEXT PRIMARY KEY);
             CREATE VIRTUAL TABLE IF NOT EXISTS fts USING fts5(text, translation UNINDEXED, book UNINDEXED, chapter UNINDEXED, verse UNINDEXED, tokenize='unicode61 remove_diacritics 2');
             """);
     }
@@ -75,6 +78,45 @@ public sealed partial class UserStore
         }
         tx.Commit();
     }
+
+    public bool IsStrongsIndexed(string translationId) =>
+        Query("SELECT 1 FROM occ_done WHERE translation=$t", c => c.Parameters.AddWithValue("$t", translationId), _ => 1).Count > 0;
+
+    public void IndexStrongs(string translationId, IEnumerable<StrongsOccurrence> occurrences)
+    {
+        using var con = Open();
+        using var tx = con.BeginTransaction();
+        using (var del = con.CreateCommand())
+        {
+            del.CommandText = "DELETE FROM occ WHERE translation=$t";
+            del.Parameters.AddWithValue("$t", translationId);
+            del.ExecuteNonQuery();
+        }
+        using var ins = con.CreateCommand();
+        ins.CommandText = "INSERT INTO occ VALUES($t,$s,$b,$c,$v,$w)";
+        ins.Parameters.AddWithValue("$t", translationId);
+        var ps = ins.Parameters.Add("$s", SqliteType.Text); var pb = ins.Parameters.Add("$b", SqliteType.Text);
+        var pc = ins.Parameters.Add("$c", SqliteType.Integer); var pv = ins.Parameters.Add("$v", SqliteType.Integer);
+        var pw = ins.Parameters.Add("$w", SqliteType.Text);
+        foreach (var o in occurrences)
+        {
+            ps.Value = o.Strong; pb.Value = o.Ref.Book; pc.Value = o.Ref.Chapter; pv.Value = o.Ref.Verse; pw.Value = o.Word;
+            ins.ExecuteNonQuery();
+        }
+        using (var mark = con.CreateCommand())
+        {
+            mark.CommandText = "INSERT OR REPLACE INTO occ_done VALUES($t)";
+            mark.Parameters.AddWithValue("$t", translationId);
+            mark.ExecuteNonQuery();
+        }
+        tx.Commit();
+    }
+
+    /// <summary>Occurrences of a Strong's number in Bible order.</summary>
+    public List<StrongsOccurrence> GetOccurrences(string translationId, string strong, int limit = 3000) =>
+        Query("SELECT book,chapter,verse,word FROM occ WHERE translation=$t AND strong=$s ORDER BY rowid LIMIT $n",
+            c => { c.Parameters.AddWithValue("$t", translationId); c.Parameters.AddWithValue("$s", strong); c.Parameters.AddWithValue("$n", limit); },
+            r => new StrongsOccurrence(strong, new VerseRef(r.GetString(0), r.GetInt32(1), r.GetInt32(2)), r.GetString(3)));
 
     /// <summary>All words must occur (prefix match). Snippet marks hits with « ».</summary>
     public List<SearchHit> Search(string translationId, string text, int limit = 200)

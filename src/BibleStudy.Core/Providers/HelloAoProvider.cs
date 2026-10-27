@@ -41,6 +41,25 @@ public sealed class HelloAoProvider(HttpClient http, string cacheDir) : IBiblePr
         return new Chapter(translationId, bookId, chapter, ParseVerses(doc.RootElement.GetProperty("chapter"), await TryGetWordsAsync(translationId, bookId, chapter, ct)));
     }
 
+    public const string CrossRefAttribution = "Querverweise © OpenBible.info, CC BY 4.0 (openbible.info/labs/cross-references)";
+
+    /// <summary>Cross references of one verse, best first (dataset "open-cross-ref").</summary>
+    public async Task<IReadOnlyList<CrossRef>> GetCrossReferencesAsync(string book, int chapter, int verse, CancellationToken ct = default)
+    {
+        using var doc = await GetJsonAsync($"/api/d/open-cross-ref/{book}/{chapter}.json", ct);
+        foreach (var item in doc.RootElement.GetProperty("chapter").GetProperty("content").EnumerateArray())
+        {
+            if (item.GetProperty("verse").GetInt32() != verse) continue;
+            return item.GetProperty("references").EnumerateArray().Select(r =>
+            {
+                var v = r.GetProperty("verse").GetInt32();
+                return new CrossRef(new VerseRef(Str(r, "book"), r.GetProperty("chapter").GetInt32(), v),
+                    r.TryGetProperty("endVerse", out var e) ? e.GetInt32() : v, r.TryGetProperty("score", out var s) ? s.GetInt32() : 0);
+            }).OrderByDescending(r => r.Score).ToList();
+        }
+        return [];
+    }
+
     /// <summary>Per-word Strong's tags; only some translations have them, so a miss is remembered per session.</summary>
     async Task<JsonDocument?> TryGetWordsAsync(string translationId, string bookId, int chapter, CancellationToken ct)
     {

@@ -33,3 +33,22 @@ public class UserStoreTests : IDisposable
 
     public void Dispose() { Microsoft.Data.Sqlite.SqliteConnection.ClearAllPools(); try { Directory.Delete(_dir, true); } catch { } }
 }
+
+public class ConcordanceStoreTests
+{
+    [Fact]
+    public void Occurrences_AreStoredPerTranslationInOrder()
+    {
+        var dir = Path.Combine(Path.GetTempPath(), "bs_" + Guid.NewGuid().ToString("N"));
+        var s = new UserStore(Path.Combine(dir, "t.db"));
+        Assert.False(s.IsStrongsIndexed("kjv"));
+        s.IndexStrongs("kjv", [new("G3056", new("JHN", 1, 1), "Word"), new("G2316", new("JHN", 1, 1), "God"), new("G3056", new("JHN", 1, 14), "Word")]);
+        Assert.True(s.IsStrongsIndexed("kjv"));
+        Assert.Equal([1, 14], s.GetOccurrences("kjv", "G3056").Select(o => o.Ref.Verse));
+        Assert.Empty(s.GetOccurrences("other", "G3056"));
+        s.IndexStrongs("kjv", [new("G3056", new("JHN", 3, 3), "x")]); // re-index replaces
+        Assert.Single(s.GetOccurrences("kjv", "G3056"));
+        Microsoft.Data.Sqlite.SqliteConnection.ClearAllPools();
+        try { Directory.Delete(dir, true); } catch { }
+    }
+}
