@@ -3,6 +3,18 @@ namespace BibleStudy.App;
 /// <summary>Timeline of the Bible with the places of the chosen event on the map.</summary>
 public partial class MainWindow
 {
+    void InitFamily()
+    {
+        FamilyPane.CloseRequested += ShowReader;
+        FamilyPane.PersonProvider = id => _hello.GetPersonAsync(id);
+        FamilyPane.PeopleProvider = async () => _lexIndex ??= await _hello.GetLexiconIndexAsync();
+        FamilyBtn.Click += async (_, _) =>
+        {
+            Home.IsVisible = false; ReaderHost.IsVisible = false; GraphPane.IsVisible = false; KnowledgePane.IsVisible = false; MapPane.IsVisible = false; TimelinePane.IsVisible = false; FamilyPane.IsVisible = true;
+            await FamilyPane.OpenAsync();
+        };
+    }
+
     void InitTimeline()
     {
         TimelinePane.CloseRequested += ShowReader;
@@ -14,7 +26,7 @@ public partial class MainWindow
         TimelinePane.OpenVerse += async (book, chapter, verse) => await GoToAsync(book, chapter, verse);
         TimelineBtn.Click += async (_, _) =>
         {
-            Home.IsVisible = false; ReaderHost.IsVisible = false; GraphPane.IsVisible = false; KnowledgePane.IsVisible = false; MapPane.IsVisible = false; TimelinePane.IsVisible = true;
+            Home.IsVisible = false; ReaderHost.IsVisible = false; GraphPane.IsVisible = false; KnowledgePane.IsVisible = false; MapPane.IsVisible = false; FamilyPane.IsVisible = false; TimelinePane.IsVisible = true;
             await TimelinePane.OpenAsync();
         };
     }

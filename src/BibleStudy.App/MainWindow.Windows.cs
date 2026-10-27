@@ -444,7 +444,7 @@ public partial class MainWindow
         SettingsTopBtn.Click += (_, _) => OpenWork(NavGroups.First(g => g.Name == "Mehr"), SettingsTab);
         PopOutDocsBtn.Click += (_, _) => OpenWork(NavGroups.First(g => g.Name == "Dokumente"));
         // anything else that takes over the main area ends the work tab
-        foreach (var pane in new Control[] { Home, GraphPane, MapPane, TimelinePane, KnowledgePane })
+        foreach (var pane in new Control[] { Home, GraphPane, MapPane, TimelinePane, FamilyPane, KnowledgePane })
             pane.PropertyChanged += (_, e) => { { if (e.Property != IsVisibleProperty || !pane.IsVisible) return; AnimateIn(pane); if (_activeWork is not null) ShowWork(null); } };
         WorkHost.PropertyChanged += (_, e) => { if (e.Property == IsVisibleProperty) UpdateReadBar(); };
         RebuildTabStrip();

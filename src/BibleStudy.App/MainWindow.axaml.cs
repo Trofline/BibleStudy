@@ -153,6 +153,7 @@ public partial class MainWindow : Window
         InitLicenses();
         InitTopics();
         InitTimeline();
+        InitFamily();
         InitLibrary();
         ObsidianBtn.Click += async (_, _) => await ExportObsidianAsync();
         SideTabs.SelectionChanged += (_, e) =>
@@ -214,10 +215,10 @@ public partial class MainWindow : Window
         }
         Home.Recent = recent;
         Home.Show(_books, _read, Home.OpenBook);
-        Home.IsVisible = true; ReaderHost.IsVisible = false; GraphPane.IsVisible = false; MapPane.IsVisible = false; TimelinePane.IsVisible = false; KnowledgePane.IsVisible = false;
+        Home.IsVisible = true; ReaderHost.IsVisible = false; GraphPane.IsVisible = false; MapPane.IsVisible = false; TimelinePane.IsVisible = false; FamilyPane.IsVisible = false; KnowledgePane.IsVisible = false;
     }
 
-    void ShowReader() { if (_activeWork is not null) ShowWork(null); Home.IsVisible = false; GraphPane.IsVisible = false; MapPane.IsVisible = false; TimelinePane.IsVisible = false; KnowledgePane.IsVisible = false; ReaderHost.IsVisible = true; OnReaderShown(); }
+    void ShowReader() { if (_activeWork is not null) ShowWork(null); Home.IsVisible = false; GraphPane.IsVisible = false; MapPane.IsVisible = false; TimelinePane.IsVisible = false; FamilyPane.IsVisible = false; KnowledgePane.IsVisible = false; ReaderHost.IsVisible = true; OnReaderShown(); }
 
     async Task GoToAsync(string bookId, int chapter, int? verse = null)
     {
@@ -233,7 +234,7 @@ public partial class MainWindow : Window
 
     async Task GoBackAsync()
     {
-        if (Home.IsVisible || GraphPane.IsVisible || TimelinePane.IsVisible || MapPane.IsVisible || KnowledgePane.IsVisible) { ShowReader(); return; }
+        if (Home.IsVisible || GraphPane.IsVisible || FamilyPane.IsVisible || TimelinePane.IsVisible || MapPane.IsVisible || KnowledgePane.IsVisible) { ShowReader(); return; }
         if (_history.Count < 2) return;
         _history.RemoveAt(_history.Count - 1);
         var (book, chapter) = _history[^1];

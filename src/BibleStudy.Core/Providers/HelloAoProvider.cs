@@ -299,6 +299,20 @@ public sealed class HelloAoProvider(HttpClient http, string cacheDir) : IBiblePr
         return new MapPlace(Str(p, "id"), Str(p, "name"), Str(p, "featureType"), lat.GetDouble(), lon.GetDouble(), []);
     }
 
+
+    // ---- family tree ---------------------------------------------------------------------------------------------------------
+
+    public async Task<PersonNode> GetPersonAsync(string id, CancellationToken ct = default)
+    {
+        using var doc = await GetJsonAsync($"/api/d/theographic/people/{id}.json", ct);
+        var p = doc.RootElement.GetProperty("person");
+        static List<(string, string)> Named(JsonElement e, string name) =>
+            e.TryGetProperty(name, out var v) && v.ValueKind == JsonValueKind.Array ? v.EnumerateArray().Where(x => x.ValueKind == JsonValueKind.Object).Select(x => (Str(x, "id"), Str(x, "name"))).ToList() : [];
+        static int? Year(JsonElement e, string name) => e.TryGetProperty(name, out var v) && v.ValueKind == JsonValueKind.Number ? v.GetInt32() : null;
+        var parents = Named(p, "father").Concat(Named(p, "mother")).ToList();
+        return new PersonNode(Str(p, "id"), Str(p, "name"), Str(p, "gender"), Year(p, "birthYear"), Year(p, "deathYear"), parents, Named(p, "children"), Named(p, "partners"));
+    }
+
     static string Str(JsonElement e, string name) =>
         e.TryGetProperty(name, out var v) && v.ValueKind == JsonValueKind.String ? v.GetString()! : "";
 

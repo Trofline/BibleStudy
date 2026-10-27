@@ -28,7 +28,7 @@ public partial class MainWindow
 
     async Task ShowMapAsync()
     {
-        Home.IsVisible = false; ReaderHost.IsVisible = false; GraphPane.IsVisible = false; KnowledgePane.IsVisible = false; TimelinePane.IsVisible = false; MapPane.IsVisible = true;
+        Home.IsVisible = false; ReaderHost.IsVisible = false; GraphPane.IsVisible = false; KnowledgePane.IsVisible = false; TimelinePane.IsVisible = false; FamilyPane.IsVisible = false; MapPane.IsVisible = true;
         var chapters = _books.FirstOrDefault(b => b.Id == _curBook)?.NumberOfChapters ?? 1;
         await MapPane.OpenAsync(_curBook, BookName(_curBook), _curChapter, chapters);
     }
@@ -228,7 +228,7 @@ public partial class MainWindow
 
     async Task ShowGraphAsync()
     {
-        Home.IsVisible = false; ReaderHost.IsVisible = false; MapPane.IsVisible = false; TimelinePane.IsVisible = false; KnowledgePane.IsVisible = false; GraphPane.IsVisible = true;
+        Home.IsVisible = false; ReaderHost.IsVisible = false; MapPane.IsVisible = false; TimelinePane.IsVisible = false; FamilyPane.IsVisible = false; KnowledgePane.IsVisible = false; GraphPane.IsVisible = true;
         if (_graph is not null) { GraphPane.FocusChapter(_curBook, _curChapter); return; }
         var dir = Path.Combine(_root, "cache", "api", "d", "open-cross-ref");
         var cached = Directory.Exists(dir) ? Directory.EnumerateFiles(dir, "*.json", SearchOption.AllDirectories).Count() : 0;

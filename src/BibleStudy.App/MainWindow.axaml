@@ -135,6 +135,9 @@
                         <Button x:Name="TimelineBtn" Classes="toolx" ToolTip.Tip="Zeitleiste der Bibel mit Karte">
                             <StackPanel Orientation="Horizontal" Spacing="6"><local:Icon Data="M3 12h18 M6 8v8 M12 5v14 M18 9v6" IconSize="17" VerticalAlignment="Center" /><TextBlock Text="Zeitleiste" VerticalAlignment="Center" /></StackPanel>
                         </Button>
+                        <Button x:Name="FamilyBtn" Classes="toolx" ToolTip.Tip="Stammbaum einer Person">
+                            <StackPanel Orientation="Horizontal" Spacing="6"><local:Icon Data="M12 3v6 M5 21v-6a3 3 0 0 1 3-3h8a3 3 0 0 1 3 3v6 M12 9v3 M9 3h6v4H9z M2 21h6v-3H2z M16 21h6v-3h-6z" IconSize="17" VerticalAlignment="Center" /><TextBlock Text="Stammbaum" VerticalAlignment="Center" /></StackPanel>
+                        </Button>
                         <Button x:Name="ParallelBtn" Classes="toolx" ToolTip.Tip="Weitere Übersetzung als Spalte daneben (max. 3)">
                             <StackPanel Orientation="Horizontal" Spacing="6"><local:Icon Data="M5 3h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z M12 3v18" IconSize="17" VerticalAlignment="Center" /><TextBlock Text="Parallel" VerticalAlignment="Center" /></StackPanel>
                         </Button>
@@ -655,6 +658,7 @@
             <local:GraphView x:Name="GraphPane" IsVisible="False" Background="{DynamicResource BsBackground}" />
             <local:MapView x:Name="MapPane" IsVisible="False" Background="{DynamicResource BsBackground}" />
             <local:TimelineView x:Name="TimelinePane" IsVisible="False" Background="{DynamicResource BsBackground}" />
+            <local:FamilyView x:Name="FamilyPane" IsVisible="False" Background="{DynamicResource BsBackground}" />
             <local:KnowledgeView x:Name="KnowledgePane" IsVisible="False" Background="{DynamicResource BsBackground}" />
             <Grid x:Name="WorkHost" IsVisible="False" Background="{DynamicResource BsSurface}" />
         </Grid>
