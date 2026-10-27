@@ -1,0 +1,21 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="BibleStudy.App.MainWindow"
+        Title="BibleStudy" Width="1000" Height="700" MinWidth="560">
+    <DockPanel>
+        <WrapPanel DockPanel.Dock="Top" Margin="12,10" >
+            <ComboBox x:Name="LanguageBox" Width="160" Margin="0,0,8,0" PlaceholderText="Sprache" />
+            <ComboBox x:Name="TranslationBox" Width="260" Margin="0,0,8,0" PlaceholderText="Übersetzung" />
+            <ComboBox x:Name="BookBox" Width="180" Margin="0,0,8,0" PlaceholderText="Buch" />
+            <NumericUpDown x:Name="ChapterBox" Width="110" Minimum="1" Value="1" FormatString="0" Margin="0,0,8,0" />
+            <Button x:Name="PrevBtn" Content="◀" Margin="0,0,4,0" />
+            <Button x:Name="NextBtn" Content="▶" />
+        </WrapPanel>
+        <Border DockPanel.Dock="Bottom" Padding="12,6" BorderThickness="0,1,0,0" BorderBrush="#33888888">
+            <TextBlock x:Name="StatusText" FontSize="12" Opacity="0.7" TextWrapping="Wrap" />
+        </Border>
+        <ScrollViewer>
+            <SelectableTextBlock x:Name="ReaderText" Margin="40,16" FontSize="19" LineHeight="32" TextWrapping="Wrap" MaxWidth="780" />
+        </ScrollViewer>
+    </DockPanel>
+</Window>

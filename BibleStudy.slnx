@@ -1,0 +1,6 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/BibleStudy.App/BibleStudy.App.csproj" />
+    <Project Path="src/BibleStudy.Core/BibleStudy.Core.csproj" />
+  </Folder>
+</Solution>
