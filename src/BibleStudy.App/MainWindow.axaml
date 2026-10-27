@@ -632,6 +632,9 @@
                         <ScrollViewer><StackPanel x:Name="LexPanel" Spacing="8" Margin="0,0,8,0" /></ScrollViewer>
                     </DockPanel>
                 </TabItem>
+                <TabItem Header="Lesepläne">
+                    <ScrollViewer><StackPanel x:Name="PlanPanel" Spacing="10" Margin="16,10,12,16" /></ScrollViewer>
+                </TabItem>
             </TabControl>
             </DockPanel>
         </Border>

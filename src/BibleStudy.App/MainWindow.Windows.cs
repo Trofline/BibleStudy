@@ -58,6 +58,7 @@ public partial class MainWindow
         else if (index == LexiconTab) _ = ShowLexiconAsync();
         else if (index == SettingsTab) UpdateOfflineInfo();
         else if (index == KnowledgeTab) RefreshDocs();
+        else if (index == PlanTab) BuildPlanUi();
     }
 
     // ---- building a work area ------------------------------------------------------------------------------------------

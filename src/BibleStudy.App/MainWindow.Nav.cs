@@ -46,6 +46,7 @@ public partial class MainWindow
         [
             new(6, "Leseliste", "Verse, die du der Reihe nach durchgehen willst."),
             new(7, "Aufgaben", "Deine Aufgaben fürs Studium, auf Wunsch mit Vers."),
+            new(PlanTab, "Lesepläne", "Bibel in einem Jahr und weitere Pläne: jeden Tag ein paar Kapitel, mit Fortschritt und Serie."),
         ], Windowed: true),
         new("KI", "M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9z M19 3v4 M17 5h4 M5 17v4 M3 19h4",
         [
