@@ -1,5 +1,6 @@
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Controls.Primitives;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Layout;
@@ -377,39 +378,62 @@ public partial class MainWindow
         StatusText.Text = $"Layout „{name}“ gespeichert: Leiste, Breite, Reiter und offene Fenster mit Position.";
     }
 
+    /// <summary>Layout panel: all layouts as a list (click = load), a name field to save the current arrangement as a new layout.</summary>
     void ShowLayoutMenu()
     {
-        var menu = new MenuFlyout();
-        void Add(string text, Action act, bool enabled = true) { var i = new MenuItem { Header = text, IsEnabled = enabled }; i.Click += (_, _) => act(); menu.Items.Add(i); }
-        var active = _settings.ActiveLayout;
-        menu.Items.Add(new MenuItem { Header = "Layouts (Desktops) – Klick lädt", IsEnabled = false });
-        foreach (var name in BuiltInLayouts.Concat(_settings.Layouts.Keys.Except(BuiltInLayouts).Order()))
+        var fly = new Flyout { Placement = PlacementMode.BottomEdgeAlignedRight };
+        var panel = new StackPanel { Spacing = 6, Width = 300 };
+        fly.Content = panel;
+        var name = new TextBox { Watermark = "Name, z. B. „Predigtvorbereitung“" };
+        var info = new TextBlock { Classes = { "caption" }, TextWrapping = TextWrapping.Wrap };
+
+        void Fill()
         {
-            var n = name;
-            Add((n == active ? "✓  " : "     ") + n, () => { ApplyLayout(FindLayout(n)!, n); StatusText.Text = $"Layout „{n}“ geladen."; });
-        }
-        menu.Items.Add(new Separator());
-        var custom = active is not null && _settings.Layouts.ContainsKey(active);
-        Add(custom ? $"Layout „{active}“ mit aktueller Anordnung überschreiben" : "Aktuelles Layout überschreiben (nur bei eigenen Layouts)", () => SaveLayoutAs(active!), custom);
-        Add("Als neues Layout speichern …", () =>
-        {
-            var name = new TextBox { Watermark = "Name, z. B. „Predigtvorbereitung“", Width = 240 };
-            var save = new Button { Content = "Speichern", Classes = { "primary" }, Margin = new(0, 8, 0, 0) };
-            var fly = new Flyout { Content = new StackPanel { Spacing = 2, Children = { new TextBlock { Text = "Neues Layout aus der aktuellen Anordnung", FontWeight = FontWeight.SemiBold, Margin = new(0, 0, 0, 6) }, name, save } } };
-            void Commit()
+            panel.Children.Clear();
+            panel.Children.Add(new TextBlock { Text = "LAYOUTS", Classes = { "eyebrow" } });
+            panel.Children.Add(new TextBlock { Text = "Ein Layout merkt sich Seitenleiste, Reiter und Fenster mit Position. Klick lädt es.", Classes = { "caption" }, TextWrapping = TextWrapping.Wrap });
+            foreach (var n0 in BuiltInLayouts.Concat(_settings.Layouts.Keys.Except(BuiltInLayouts).Order()))
             {
-                var n = name.Text?.Trim() ?? "";
-                if (n.Length == 0) return;
-                if (BuiltInLayouts.Contains(n)) { StatusText.Text = "Diesen Namen tragen schon eingebaute Layouts – wähle einen anderen."; return; }
-                SaveLayoutAs(n); fly.Hide();
+                var n = n0; var custom = _settings.Layouts.ContainsKey(n);
+                var load = new Button { Classes = { "seg" }, HorizontalAlignment = HorizontalAlignment.Stretch, HorizontalContentAlignment = HorizontalAlignment.Left, Content = (n == _settings.ActiveLayout ? "✓  " : "     ") + n };
+                load.Classes.Set("active", n == _settings.ActiveLayout);
+                load.Click += (_, _) => { ApplyLayout(FindLayout(n)!, n); StatusText.Text = $"Layout „{n}“ geladen."; Fill(); };
+                var row = new DockPanel();
+                if (custom)
+                {
+                    var del = new Button { Classes = { "tool" }, Width = 28, Height = 28, Content = new Icon { Data = Geometry.Parse("M18 6L6 18 M6 6l12 12"), IconSize = 13 } };
+                    ToolTip.SetTip(del, "Layout löschen");
+                    del.Click += (_, _) => { _settings.Layouts.Remove(n); if (_settings.ActiveLayout == n) SetActiveLayout(null); else SaveSettings(); RefreshLayoutBox(); Fill(); };
+                    DockPanel.SetDock(del, Dock.Right); row.Children.Add(del);
+                    var over = new Button { Classes = { "tool" }, Width = 28, Height = 28, Content = new Icon { Data = Geometry.Parse("M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z M17 21v-8H7v8 M7 3v5h8"), IconSize = 13 } };
+                    ToolTip.SetTip(over, "Mit der aktuellen Anordnung überschreiben");
+                    over.Click += (_, _) => { SaveLayoutAs(n); info.Text = $"„{n}“ überschrieben."; Fill(); };
+                    DockPanel.SetDock(over, Dock.Right); row.Children.Add(over);
+                }
+                row.Children.Add(load);
+                panel.Children.Add(row);
             }
+            panel.Children.Add(new Separator());
+            panel.Children.Add(new TextBlock { Text = "NEUES LAYOUT SPEICHERN", Classes = { "eyebrow" } });
+            panel.Children.Add(name);
+            var save = new Button { Content = "Als neues Layout speichern", Classes = { "primary" }, HorizontalAlignment = HorizontalAlignment.Stretch };
             save.Click += (_, _) => Commit();
-            name.KeyDown += (_, e) => { if (e.Key == Key.Enter) Commit(); };
-            fly.ShowAt(LayoutTopBtn);
-            Dispatcher.UIThread.Post(() => name.Focus());
-        });
-        foreach (var n in _settings.Layouts.Keys.Order().ToList()) { var name = n; Add($"Layout „{name}“ löschen", () => { _settings.Layouts.Remove(name); if (_settings.ActiveLayout == name) SetActiveLayout(null); else SaveSettings(); RefreshLayoutBox(); }); }
-        menu.ShowAt(LayoutTopBtn);
+            panel.Children.Add(save);
+            panel.Children.Add(info);
+        }
+
+        void Commit()
+        {
+            var n = name.Text?.Trim() ?? "";
+            if (n.Length == 0) { info.Text = "Gib dem Layout einen Namen."; return; }
+            if (BuiltInLayouts.Contains(n)) { info.Text = "Diesen Namen tragen schon eingebaute Layouts – wähle einen anderen."; return; }
+            var existed = _settings.Layouts.ContainsKey(n);
+            SaveLayoutAs(n); name.Text = ""; Fill();
+            info.Text = existed ? $"„{n}“ überschrieben." : $"Neues Layout „{n}“ gespeichert.";
+        }
+        name.KeyDown += (_, e) => { if (e.Key == Key.Enter) Commit(); };
+        Fill();
+        fly.ShowAt(LayoutTopBtn);
     }
 
     void InitWindows()

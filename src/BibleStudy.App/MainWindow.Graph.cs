@@ -203,7 +203,7 @@ public partial class MainWindow
             foreach (var (verse, box) in _verseBoxes)
             {
                 if (!_chapterRefs.TryGetValue(verse, out var refs) || refs.Count == 0) continue;
-                if (box.TranslatePoint(new Point(0, Math.Min(box.Bounds.Height / 2, 18)), ThreadPane) is not { } p) continue;
+                if (box.TranslatePoint(new Point(0, box.Bounds.Height / 2), ThreadPane) is not { } p) continue;
                 if (p.Y < -4 || p.Y > ThreadPane.Bounds.Height + 4) continue;
                 anchors.Add(new ThreadGraph.Anchor(p.Y, verse, refs));
             }
