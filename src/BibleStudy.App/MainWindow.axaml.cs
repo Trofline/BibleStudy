@@ -68,6 +68,7 @@ public partial class MainWindow : Window
     {
         SplashWindow.Report(0.2, "Baue die Oberfläche …");
         InitializeComponent();
+        LocXaml.Apply(this);
         _root = BibleStudy.Core.AppPaths.Root;
         var http = _http = new HttpClient();
         _hello = new HelloAoProvider(http, Path.Combine(_root, "cache"));
@@ -157,6 +158,7 @@ public partial class MainWindow : Window
         InitFamily();
         InitUpdate();
         InitLogo();
+        InitLanguage();
         InitLibrary();
         ObsidianBtn.Click += async (_, _) => await ExportObsidianAsync();
         SideTabs.SelectionChanged += (_, e) =>

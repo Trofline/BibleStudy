@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
@@ -7,7 +7,13 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Using Include="BibleStudy.Core.Loc" Static="true" />
     <PackageReference Include="Microsoft.Data.Sqlite" Version="10.0.14" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- UI languages: flat JSON files, German source text -> translation (see Loc.cs) -->
+    <EmbeddedResource Include="Lang\*.json" LogicalName="lang/%(Filename)%(Extension)" />
   </ItemGroup>
 
 </Project>

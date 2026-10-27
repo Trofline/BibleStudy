@@ -417,6 +417,11 @@
 
                             <Border Classes="card"><StackPanel Spacing="10">
                                 <TextBlock Classes="eyebrow" Text="DARSTELLUNG" />
+                                <StackPanel Orientation="Horizontal" Spacing="10">
+                                    <TextBlock Text="Sprache / Language" VerticalAlignment="Center" />
+                                    <Border Classes="pill"><ComboBox x:Name="UiLanguageBox" Width="200" /></Border>
+                                </StackPanel>
+                                <TextBlock x:Name="LanguageNote" Classes="caption" TextWrapping="Wrap" />
                                 <Grid ColumnDefinitions="110,*" RowDefinitions="Auto,Auto" >
                                     <TextBlock Text="Design" VerticalAlignment="Center" />
                                     <Border Classes="pill" Grid.Column="1" HorizontalAlignment="Left">

@@ -11,6 +11,11 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Using Include="BibleStudy.Core.Loc" Static="true" />
+    <Using Include="BibleStudy.Core.Loc" Alias="Loc" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Avalonia" Version="12.1.4" />
     <PackageReference Include="Avalonia.Desktop" Version="12.1.4" />
     <PackageReference Include="Avalonia.Themes.Fluent" Version="12.1.4" />

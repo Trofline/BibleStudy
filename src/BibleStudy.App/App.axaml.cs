@@ -16,6 +16,7 @@ public partial class App : Application
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
             var args = Environment.GetCommandLineArgs();
+            try { Loc.Use(BibleStudy.Core.Storage.AppSettings.Load(Path.Combine(BibleStudy.Core.AppPaths.Root, "settings.json")).Language); } catch { Loc.Use(null); }
             if (args.Contains("--uninstall")) desktop.MainWindow = new UninstallWindow(args);
             else
             {

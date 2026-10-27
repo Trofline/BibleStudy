@@ -5,6 +5,9 @@
     <Project Path="src/BibleStudy.Mcp/BibleStudy.Mcp.csproj" />
     <Project Path="src/BibleStudy.Setup/BibleStudy.Setup.csproj" />
   </Folder>
+  <Folder Name="/tools/">
+    <Project Path="tools/BibleStudy.L10n/BibleStudy.L10n.csproj" />
+  </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/BibleStudy.Tests/BibleStudy.Tests.csproj" />
   </Folder>
