@@ -150,6 +150,7 @@ public partial class MainWindow : Window
         InitWindows();
         InitShell();
         InitXrefDirection();
+        InitLicenses();
         InitLibrary();
         ObsidianBtn.Click += async (_, _) => await ExportObsidianAsync();
         SideTabs.SelectionChanged += (_, e) =>

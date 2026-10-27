@@ -496,6 +496,7 @@
                                     <Button x:Name="ExportBtn" Content="Exportieren …" Margin="0,0,6,6" />
                                     <Button x:Name="ImportBtn" Content="Importieren …" Margin="0,0,6,6" />
                                     <Button x:Name="ObsidianBtn" Content="Als Obsidian-Vault exportieren …" ToolTip.Tip="Schreibt Dokumente, Markierungen, Notizen, Leseliste und Aufgaben als Markdown-Ordner, den Obsidian direkt öffnet" />
+                                    <Button x:Name="LicensesBtn" Content="Quellen und Lizenzen …" ToolTip.Tip="Woher alle Texte und Daten stammen und unter welcher Lizenz sie stehen" />
                                 </WrapPanel>
                                 <TextBlock x:Name="BackupInfo" Classes="caption" TextWrapping="Wrap" />
                             </StackPanel></Border>
