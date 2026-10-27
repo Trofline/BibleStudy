@@ -32,8 +32,14 @@ public partial class MainWindow
             FileTypeFilter = [new FilePickerFileType("Bibeldateien") { Patterns = ["*.bblx", "*.xml", "*.html", "*.htm"] }],
         });
         if (files.Count == 0 || files[0].TryGetLocalPath() is not { } path) return;
+        await ImportBibleFromAsync(path, string.IsNullOrWhiteSpace(ImportLangBox.Text) ? "de" : ImportLangBox.Text.Trim());
+    }
+
+    /// <summary>Imports a Bible file; an already imported translation with the same id is replaced and its search index rebuilt on demand.</summary>
+    internal async Task<string> ImportBibleFromAsync(string path, string language)
+    {
+        if (_importing) return "Ein Import läuft bereits.";
         _importing = true; ImportBibleBtn.IsEnabled = false;
-        var language = string.IsNullOrWhiteSpace(ImportLangBox.Text) ? "de" : ImportLangBox.Text.Trim();
         var progress = new Progress<string>(m => ImportBibleInfo.Text = m);
         try
         {
@@ -42,11 +48,13 @@ public partial class MainWindow
             if (bible.Verses.Count == 0) throw new InvalidDataException("Keine Verse gefunden.");
             ImportBibleInfo.Text = $"{bible.Verses.Count} Verse gelesen, werden gespeichert …";
             var id = await Task.Run(() => _local.Save(bible));
+            _store.ForgetTranslation(id); _corpora.Remove(id); _strongIndexes.Remove(id);   // text changed: rebuild search index and concordance on demand
             await RefreshLocalBibleBoxAsync();
             await ReloadTranslationsAsync(id);
             ImportBibleInfo.Text = $"„{bible.Name}“ importiert: {bible.Verses.Count} Verse, {bible.Footnotes.Count} Fußnoten. Sie steht jetzt in der Übersetzungsliste ({bible.ShortName}).";
+            return ImportBibleInfo.Text;
         }
-        catch (Exception ex) { ImportBibleInfo.Text = "Import fehlgeschlagen: " + ex.Message; }
+        catch (Exception ex) { ImportBibleInfo.Text = "Import fehlgeschlagen: " + ex.Message; return ImportBibleInfo.Text; }
         finally { _importing = false; ImportBibleBtn.IsEnabled = true; }
     }
 

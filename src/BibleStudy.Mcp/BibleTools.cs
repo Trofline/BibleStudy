@@ -56,7 +56,7 @@ public static class BibleTools
     public static Task<string> GetDocument(AppClient app, long? id = null, string? title = null) => app.CallAsync("get_document", new { id, title });
 
     [McpServerTool(Name = "create_document"), Description("Creates a note in the knowledge base. In the text, verse references like \"Joh 3,16\" become links and [[Other title]] links to another document.")]
-    public static Task<string> CreateDocument(AppClient app, string title, string body, string[]? tags = null) => app.CallAsync("create_document", new { title, body, tags });
+    public static Task<string> CreateDocument(AppClient app, string title, string body, string[]? tags = null, string? path = null) => app.CallAsync("create_document", new { title, body, tags, path });
 
     [McpServerTool(Name = "update_document"), Description("Changes title, text or tags of a document (id from list_documents). Only given fields change.")]
     public static Task<string> UpdateDocument(AppClient app, long id, string? title = null, string? body = null, string[]? tags = null) => app.CallAsync("update_document", new { id, title, body, tags });

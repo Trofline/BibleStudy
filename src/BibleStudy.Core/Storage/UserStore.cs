@@ -50,6 +50,13 @@ public sealed partial class UserStore : SqliteDb
         tx.Commit();
     }
 
+    /// <summary>Drops index and concordance of a translation whose text changed.</summary>
+    public void ForgetTranslation(string translationId)
+    {
+        foreach (var sql in new[] { "DELETE FROM fts WHERE translation=$t", "DELETE FROM indexed WHERE translation=$t", "DELETE FROM occ WHERE translation=$t", "DELETE FROM occ_done WHERE translation=$t" })
+            Exec(sql, c => c.Parameters.AddWithValue("$t", translationId));
+    }
+
     public bool IsStrongsIndexed(string translationId) =>
         Query("SELECT 1 FROM occ_done WHERE translation=$t", c => c.Parameters.AddWithValue("$t", translationId), _ => 1).Count > 0;
 

@@ -148,7 +148,7 @@ public static partial class BibleImporters
             {
                 var word = StrongSuffix().Replace(WebUtility.HtmlDecode(Tags().Replace(t.Groups["inner"].Value, "")), "").Trim();
                 var id = StrongId().Match(t.Groups["pos"].Value);
-                if (word.Length > 0) segments.Add(new Segment(word, false, id.Success ? [$"{id.Groups["l"].Value.ToUpperInvariant()}{int.Parse(id.Groups["n"].Value):D4}"] : null));
+                if (word.Length > 0) segments.Add(new Segment(word, false, id.Success ? [$"{(id.Groups["l"].Value.ToUpperInvariant() is "A" ? "H" : id.Groups["l"].Value.ToUpperInvariant())}{int.Parse(id.Groups["n"].Value):D4}"] : null));
             }
             else if (t.Groups["note"].Success)
             {
@@ -195,9 +195,10 @@ public static partial class BibleImporters
     [GeneratedRegex("""
         (?<strong><a\b[^>]*data-position="(?<pos>[^"]*)"[^>]*>(?<inner>.*?)</a>)|(?<note><sup\b[^>]*data-footnote="(?<text>[^"]*)"[^>]*>.*?</sup>)|(?:<[^>]+>)|(?<plain>[^<]+)
         """, RegexOptions.Singleline)] private static partial Regex Token();
-    [GeneratedRegex(@"(?<l>[GgHh])0*(?<n>\d+)")] private static partial Regex StrongId();
-    [GeneratedRegex(@"\s*[~(]*[GH]\d+\S*\s*$")] private static partial Regex StrongSuffix();
-    [GeneratedRegex(@"\s[~(]*[GH]\d{1,4}(:\d+)?\)?(?=\s|$|[.,;:!?])")] private static partial Regex StrongSuffixInline();
+    // A = Aramaic words (Daniel 2-7, Esra, Jeremia 10,11); they use the Hebrew Strong's numbers
+    [GeneratedRegex(@"(?<l>[GgHhAa])0*(?<n>\d+)")] private static partial Regex StrongId();
+    [GeneratedRegex(@"\s*[~(]*[GHA]\d+\S*\s*$")] private static partial Regex StrongSuffix();
+    [GeneratedRegex(@"\s[~(]*[GHA]\d{1,4}(:\d+)?\)?(?=\s|$|[.,;:!?])")] private static partial Regex StrongSuffixInline();
     [GeneratedRegex("<[^>]+>")] private static partial Regex Tags();
     [GeneratedRegex(@"\s+")] private static partial Regex Whitespace();
     [GeneratedRegex("<(RF|FI)>.*?<(Rf|Fi)>", RegexOptions.Singleline)] private static partial Regex EswordNotes();
