@@ -64,6 +64,7 @@ public partial class MainWindow
         _vaultUiLoading = true;
         VaultBox.ItemsSource = VaultNames();
         VaultBox.SelectedItem = _vault.Name;
+        if (VaultQuickBox is not null) { VaultQuickBox.ItemsSource = VaultNames(); VaultQuickBox.SelectedItem = _vault.Name; }
         _vaultUiLoading = false;
         VaultInfo.Text = $"Aktiver Vault: {_vault.Name}";
     }
@@ -87,9 +88,18 @@ public partial class MainWindow
         MarksList.SelectionChanged += async (_, _) =>
         {
             if (MarksList.SelectedItem is not Entry { Id: long id } e) return;
+            if (id < 0)   // folder row: fold in or out
+            {
+                var fid = -1 - id; _foldersTouched = true;
+                if (!_openFolders.Remove(fid)) _openFolders.Add(fid);
+                ApplyCollectionFilter(); return;
+            }
             await GoToAsync(e.Ref.Book, e.Ref.Chapter, e.Ref.Verse);
             LoadEditor(id);
         };
+        MarksDetailBtn.IsCheckedChanged += (_, _) => ApplyCollectionFilter();
+        MarksOpenAllBtn.Click += (_, _) => { _foldersTouched = true; foreach (var f in _vault.GetFolders()) _openFolders.Add(f.Id); _openFolders.Add(0); ApplyCollectionFilter(); };
+        MarksCloseAllBtn.Click += (_, _) => { _foldersTouched = true; _openFolders.Clear(); ApplyCollectionFilter(); };
         MarkSaveBtn.Click += async (_, _) => await SaveEditedMarkAsync();
         MarkDeleteBtn.Click += async (_, _) =>
         {
@@ -290,13 +300,64 @@ public partial class MainWindow
         ApplyCollectionFilter();
     }
 
+    readonly HashSet<long> _openFolders = [];
+    bool _foldersTouched;
+
+    static int NaturalCompare(string a, string b)
+    {
+        var x = System.Text.RegularExpressions.Regex.Split(a, @"(\d+)"); var y = System.Text.RegularExpressions.Regex.Split(b, @"(\d+)");
+        for (var i = 0; i < Math.Min(x.Length, y.Length); i++)
+        {
+            var c = long.TryParse(x[i], out var nx) && long.TryParse(y[i], out var ny) ? nx.CompareTo(ny) : string.Compare(x[i], y[i], StringComparison.CurrentCultureIgnoreCase);
+            if (c != 0) return c;
+        }
+        return x.Length.CompareTo(y.Length);
+    }
+
+    /// <summary>The folders as a collapsible tree; verses that follow each other with the same note and color are shown as one range (19,24–29).</summary>
     void ApplyCollectionFilter()
     {
         long? folder = (FolderFilterBox.SelectedItem as Folder)?.Id;
         var marks = _vault.GetMarks(folderId: folder, noFolder: FolderFilterBox.SelectedIndex == 1,
             tag: TagFilterBox.SelectedIndex > 0 ? TagFilterBox.SelectedItem as string : null);
-        MarksList.ItemsSource = marks.Select(m => new Entry(m.Ref, MarkDisplay(m), m.Id, m.Color)).ToList();
+        var detail = MarksDetailBtn.IsChecked == true;
+        var folders = _vault.GetFolders().OrderBy(f => f.Name, Comparer<string>.Create(NaturalCompare)).ToList();
+        var rows = new List<Entry>();
+        // few folders: start expanded; many: collapsed (until the user decides)
+        if (!_foldersTouched) { _openFolders.Clear(); if (folders.Count <= 3 || folder is not null) foreach (var f in folders) _openFolders.Add(f.Id); _openFolders.Add(0); }
+        foreach (var (id, name) in folders.Select(f => (f.Id, f.Name)).Append((0L, "Ohne Ordner")))
+        {
+            var inFolder = marks.Where(m => (m.FolderId ?? 0) == id).OrderBy(m => BookOrder(m.Ref.Book)).ThenBy(m => m.Ref.Chapter).ThenBy(m => m.Ref.Verse).ToList();
+            if (inFolder.Count == 0) continue;
+            var open = _openFolders.Contains(id);
+            rows.Add(new Entry(default, $"{(open ? "▾" : "▸")}  {name}   ·   {inFolder.Count}", -1 - id, null));
+            if (!open) continue;
+            for (var i = 0; i < inFolder.Count; i++)
+            {
+                var first = inFolder[i]; var last = first; var run = new List<Mark> { first };
+                while (i + 1 < inFolder.Count && inFolder[i + 1] is var n && n.WholeVerse && last.WholeVerse && n.Ref.Book == last.Ref.Book && n.Ref.Chapter == last.Ref.Chapter
+                       && n.Ref.Verse == last.Ref.Verse + 1 && n.Note == first.Note && n.Color == first.Color && n.FolderId == first.FolderId)
+                { run.Add(n); last = n; i++; }
+                rows.Add(new Entry(first.Ref, MarkRowDisplay(run, detail), first.Id, first.Color));
+            }
+        }
+        MarksList.ItemsSource = rows;
         MarksEmpty.IsVisible = marks.Count == 0;
+    }
+
+    int BookOrder(string id) { var i = _books.ToList().FindIndex(b => b.Id == id); return i < 0 ? int.MaxValue : i; }
+
+    string MarkRowDisplay(List<Mark> run, bool detail)
+    {
+        var m = run[0]; var last = run[^1];
+        var label = run.Count == 1 ? Label(m.Ref) : $"{BookName(m.Ref.Book)} {m.Ref.Chapter},{m.Ref.Verse}–{last.Ref.Verse}";
+        if (!detail) return label;
+        var lines = new List<string>();
+        var text = string.Join(" ", run.Select(r => r.Text));
+        if (!m.WholeVerse) lines.Add($"„{Shorten(m.Text, 100)}“"); else if (text.Length > 0) lines.Add(Shorten(text, run.Count > 1 ? 220 : 100));
+        if (m.Note.Length > 0) lines.Add("✎ " + Shorten(m.Note.ReplaceLineEndings(" "), 100));
+        if (m.Tags.Count > 0) lines.Add(string.Join("  ", m.Tags.Select(t => "#" + t)));
+        return lines.Count == 0 ? label : label + "\n" + string.Join("\n", lines);
     }
 
     string MarkDisplay(Mark m)

@@ -181,6 +181,11 @@
                 <TabItem ToolTip.Tip="Sammlung: Markierungen, Ordner, Tags">
                     <TabItem.Header><local:Icon Data="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.7-.9l-.8-1.2A2 2 0 0 0 7.9 3H4a2 2 0 0 0-2 2v13c0 1.1.9 2 2 2z" /></TabItem.Header>
                     <Grid RowDefinitions="Auto,Auto,Auto,*,Auto" Margin="16,14,12,12">
+                        <WrapPanel Grid.Row="0" Margin="0,0,0,8">
+                            <ToggleButton x:Name="MarksDetailBtn" Classes="pillbtn" IsChecked="True" Content="Mit Text" Margin="0,0,6,4" ToolTip.Tip="Verstexte und Notizen anzeigen oder nur die Stellen (zum Überblick)" />
+                            <Button x:Name="MarksOpenAllBtn" Classes="ghost" Content="Alle aufklappen" Margin="0,0,2,4" />
+                            <Button x:Name="MarksCloseAllBtn" Classes="ghost" Content="Alle zuklappen" Margin="0,0,0,4" />
+                        </WrapPanel>
                         <Grid Grid.Row="1" ColumnDefinitions="*,*,Auto" Margin="0,0,0,6">
                             <Border Classes="pill" Margin="0,0,6,0"><ComboBox x:Name="FolderFilterBox" HorizontalAlignment="Stretch" /></Border>
                             <Border Classes="pill" Grid.Column="1"><ComboBox x:Name="TagFilterBox" HorizontalAlignment="Stretch" /></Border>
@@ -322,6 +327,7 @@
                                         <ComboBoxItem Content="Erwähnen den angeklickten Vers" />
                                     </ComboBox>
                                 </Border>
+                                <WrapPanel x:Name="DocTagChips" />
                                 <TextBlock x:Name="DocInfo" Classes="caption" TextWrapping="Wrap" />
                             </StackPanel>
                             <ListBox x:Name="DocList" ItemTemplate="{StaticResource EntryTpl}" ScrollViewer.HorizontalScrollBarVisibility="Disabled" />
@@ -330,6 +336,10 @@
                             <StackPanel Spacing="8" Margin="0,0,12,0">
                                 <Button x:Name="DocBackBtn" Content="← Liste" HorizontalAlignment="Left" />
                                 <TextBox x:Name="DocTitleBox" Watermark="Titel" FontSize="18" />
+                                <WrapPanel>
+                                    <Button x:Name="DocInsertVerseBtn" Content="＋ Vers einfügen" Margin="0,0,6,4" ToolTip.Tip="Fügt den angeklickten Vers als Zitat an der Schreibmarke ein" />
+                                    <Button x:Name="DocInsertLinkBtn" Content="＋ Dokument verlinken" Margin="0,0,6,4" ToolTip.Tip="Fügt einen [[Link]] auf ein anderes Dokument ein" />
+                                </WrapPanel>
                                 <TextBox x:Name="DocBodyBox" AcceptsReturn="True" TextWrapping="Wrap" MinHeight="220" Watermark="Text. Verse wie „Joh 3,16“ werden zu Links, [[Titel]] verlinkt ein anderes Dokument." />
                                 <TextBox x:Name="DocTagsBox" Watermark="Tags, mit Komma getrennt" />
                                 <CheckBox x:Name="DocTemplateCheck" Content="Als Vorlage verwenden" />

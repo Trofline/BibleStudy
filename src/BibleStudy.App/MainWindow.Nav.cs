@@ -47,8 +47,33 @@ public partial class MainWindow
         ]),
     ];
 
+    ComboBox? VaultQuickBox;
+    Border? _vaultBar;
+
+    /// <summary>The active vault is always visible in the collection, with a switcher and "new" – like a notebook in Obsidian.</summary>
+    void BuildVaultBar()
+    {
+        VaultQuickBox = new ComboBox { MinWidth = 150, HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Stretch };
+        VaultQuickBox.SelectionChanged += async (_, _) => { if (!_vaultUiLoading && VaultQuickBox.SelectedItem is string n && n != _vault.Name) await SwitchVaultAsync(n); };
+        var name = new TextBox { Watermark = "Name des neuen Vaults", Width = 200 };
+        var create = new Button { Content = "Anlegen", Classes = { "primary" }, Margin = new(0, 8, 0, 0) };
+        var flyout = new Flyout { Content = new StackPanel { Spacing = 2, Children = { new TextBlock { Text = "Neuer Vault", FontWeight = FontWeight.SemiBold, Margin = new(0, 0, 0, 6) }, name, create } } };
+        create.Click += async (_, _) => { NewVaultBox.Text = name.Text; name.Text = ""; flyout.Hide(); await CreateVaultAsync(); };
+        var add = new Button { Content = "＋", Classes = { "tool" }, Width = 32, Height = 32, Flyout = flyout };
+        ToolTip.SetTip(add, "Neuen Vault anlegen");
+        var pill = new Border { Classes = { "pill" }, Child = VaultQuickBox };
+        Avalonia.Controls.DockPanel.SetDock(add, Avalonia.Controls.Dock.Right);
+        var label = new TextBlock { Text = "VAULT", Classes = { "eyebrow" }, Margin = new(0, 0, 8, 0), VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center };
+        Avalonia.Controls.DockPanel.SetDock(label, Avalonia.Controls.Dock.Left);
+        _vaultBar = new Border { Child = new DockPanel { Children = { label, add, pill } }, IsVisible = false };
+        ToolTip.SetTip(_vaultBar, "Ein Vault ist deine Mappe: Markierungen, Notizen, Dokumente, Leseliste und Aufgaben gehören immer zu einem Vault.");
+        SubNav.Children.Insert(0, _vaultBar);
+        RefreshVaultUi();
+    }
+
     void InitNav()
     {
+        BuildVaultBar();
         foreach (var group in NavGroups)
         {
             var g = group;
@@ -85,8 +110,9 @@ public partial class MainWindow
                 SubPills.Children.Add(pill);
             }
         SubPills.IsVisible = group.Tabs.Length > 1;
+        if (_vaultBar is not null) _vaultBar.IsVisible = group.ShowVault;
         var hint = group.Tabs.FirstOrDefault(t => t.Index == current)?.Hint ?? "";
-        if (group.ShowVault) hint += $" · Gespeichert im Vault „{_settings.Vault}“ (wechseln: Mehr → Einstellungen).";
+        if (group.ShowVault) hint += $"";
         SubHint.Text = hint;
     }
 }

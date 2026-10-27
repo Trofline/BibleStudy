@@ -12,6 +12,7 @@ namespace BibleStudy.App;
 public partial class MainWindow
 {
     Document? _doc;
+    string? _docTag;
     bool _docsLoading;
 
     void InitKnowledge()
@@ -30,6 +31,19 @@ public partial class MainWindow
         DocSaveBtn.Click += (_, _) => SaveDocument();
         DocDeleteBtn.Click += (_, _) => { if (_doc is { Id: > 0 } d) { _vault.DeleteDocument(d.Id); CloseDocument(); } };
         DocOpenFileBtn.Click += (_, _) => OpenLinkedFile();
+        DocInsertVerseBtn.Click += (_, _) => InsertIntoDoc(_selected is int v ? $"> {VerseTextOf(v).Trim()}\n> — {Label(new VerseRef(_curBook, _curChapter, v))}\n\n" : null, "Erst im Bibeltext einen Vers anklicken.");
+        DocInsertLinkBtn.Click += (_, _) =>
+        {
+            var menu = new MenuFlyout();
+            foreach (var d in _vault.GetDocuments().Where(x => x.Id != _doc?.Id).Take(60))
+            {
+                var title = d.Title; var item = new MenuItem { Header = title };
+                item.Click += (_, _) => InsertIntoDoc($"[[{title}]]", null);
+                menu.Items.Add(item);
+            }
+            if (menu.Items.Count == 0) menu.Items.Add(new MenuItem { Header = "Noch keine anderen Dokumente", IsEnabled = false });
+            menu.ShowAt(DocInsertLinkBtn);
+        };
         DocFromTemplateBtn.Click += (_, _) =>
         {
             if (_doc is { } d) OpenDocument(new Document(0, "Neu: " + d.Title, d.Body, null, false, DateTime.Now, d.Tags));
@@ -50,7 +64,8 @@ public partial class MainWindow
     {
         if (_vault is null) return;
         var query = DocSearchBox.Text?.Trim();
-        var docs = _vault.GetDocuments(string.IsNullOrEmpty(query) ? null : query, templates: DocFilterBox.SelectedIndex == 1 ? true : null);
+        var docs = _vault.GetDocuments(string.IsNullOrEmpty(query) ? null : query, tag: _docTag, templates: DocFilterBox.SelectedIndex == 1 ? true : null);
+        BuildDocTagChips();
         if (DocFilterBox.SelectedIndex == 2)
         {
             if (_selected is int v) { var r = new VerseRef(_curBook, _curChapter, v); docs = docs.Where(d => DocumentLinks.VerseRefs(d.Body).Contains(r)).ToList(); DocInfo.Text = $"Dokumente, die {Label(r)} erwähnen: {docs.Count}"; }
@@ -59,10 +74,27 @@ public partial class MainWindow
         else DocInfo.Text = $"{docs.Count} Dokument{(docs.Count == 1 ? "" : "e")}";
         DocList.ItemsSource = docs.Select(d =>
         {
-            var preview = d.Path is not null ? "Datei: " + System.IO.Path.GetFileName(d.Path) : Shorten(d.Body.ReplaceLineEndings(" ").Trim(), 90);
+            var preview = d.Path is not null ? "Datei: " + System.IO.Path.GetFileName(d.Path) : Shorten(d.Body.ReplaceLineEndings(" ").Replace("#", "").Trim(), 90);
             var tags = d.Tags.Count > 0 ? "  " + string.Join(" ", d.Tags.Select(t => "#" + t)) : "";
             return new Entry(default, $"{(d.IsTemplate ? "◇ " : "")}{d.Title}\n{preview}{tags}".TrimEnd('\n'), d.Id);
         }).ToList();
+    }
+
+    void BuildDocTagChips()
+    {
+        DocTagChips.Children.Clear();
+        foreach (var g in _vault.GetDocuments().SelectMany(d => d.Tags).GroupBy(t => t, StringComparer.OrdinalIgnoreCase).OrderByDescending(g => g.Count()).Take(14))
+        {
+            var tag = g.Key; var active = string.Equals(_docTag, tag, StringComparison.OrdinalIgnoreCase);
+            DocTagChips.Children.Add(FilterChip($"#{tag} {g.Count()}", active, null, () => { _docTag = active ? null : tag; RefreshDocs(); }));
+        }
+    }
+
+    void InsertIntoDoc(string? text, string? hint)
+    {
+        if (text is null) { DocPathText.Text = hint ?? ""; return; }
+        var body = DocBodyBox.Text ?? ""; var at = Math.Clamp(DocBodyBox.CaretIndex, 0, body.Length);
+        DocBodyBox.Text = body.Insert(at, text); DocBodyBox.CaretIndex = at + text.Length; DocBodyBox.Focus();
     }
 
     // ---- editor -------------------------------------------------------------------------------------------------------
