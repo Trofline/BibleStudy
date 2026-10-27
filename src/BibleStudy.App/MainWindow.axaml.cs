@@ -104,7 +104,7 @@ public partial class MainWindow : Window
 
         ActualThemeVariantChanged += async (_, _) => await ShowChapterAsync(_selected); // highlight opacity depends on the theme
         ReaderScroll.SizeChanged += (_, _) => FitReader();
-        StudyBtn.IsCheckedChanged += async (_, _) => await ShowChapterAsync(_selected);
+        StudyBtn.IsCheckedChanged += async (_, _) => await OnStudyToggledAsync();
 
         LanguageBox.SelectionChanged += (_, _) => FillTranslations();
         TranslationBox.SelectionChanged += async (_, _) => await LoadBooksAsync();
@@ -133,6 +133,7 @@ public partial class MainWindow : Window
         InitVault();
         InitAi();
         InitGraph();
+        InitPanel();
         StartControl();
         Opened += async (_, _) => await InitAsync();
     }
@@ -177,7 +178,7 @@ public partial class MainWindow : Window
         Home.IsVisible = true; ReaderScroll.IsVisible = false; GraphPane.IsVisible = false;
     }
 
-    void ShowReader() { Home.IsVisible = false; GraphPane.IsVisible = false; ReaderScroll.IsVisible = true; }
+    void ShowReader() { Home.IsVisible = false; GraphPane.IsVisible = false; ReaderScroll.IsVisible = true; OnReaderShown(); }
 
     async Task GoToAsync(string bookId, int chapter, int? verse = null)
     {
@@ -482,7 +483,7 @@ public partial class MainWindow : Window
         return card;
     }
 
-    void AddColumn()
+    void AddColumn(TranslationInfo? preset = null)
     {
         if (_extras.Count >= MaxExtras || _langs.Count == 0) return;
         var lang = new ComboBox { Width = 128, ItemsSource = _langs };
@@ -501,7 +502,7 @@ public partial class MainWindow : Window
             var list = _all.Where(x => x.LanguageName == (string?)lang.SelectedItem).OrderBy(x => x.Name).ToList();
             var main = (TranslationBox.SelectedItem as TranslationInfo)?.Id;
             trans.ItemsSource = list;
-            trans.SelectedItem = list.FirstOrDefault(x => x.Id != main) ?? list.FirstOrDefault();
+            trans.SelectedItem = list.FirstOrDefault(x => preset is not null && x.Id == preset.Id) ?? list.FirstOrDefault(x => x.Id != main) ?? list.FirstOrDefault();
         };
         trans.SelectionChanged += async (_, _) => await ShowChapterAsync(_selected);
         remove.Click += async (_, _) =>
@@ -512,7 +513,7 @@ public partial class MainWindow : Window
         };
         _extras.Add(col); ParallelBar.Children.Add(root);
         ParallelBar.IsVisible = true;
-        lang.SelectedItem = LanguageBox.SelectedItem;
+        lang.SelectedItem = preset?.LanguageName ?? LanguageBox.SelectedItem;
     }
 
     /// <summary>Selected verse: soft accent fill; bookmarked verse: accent bar on the left. Otherwise the hover style applies.</summary>

@@ -34,7 +34,8 @@
                         <local:Icon Data="M3 9.5L12 3l9 6.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z" />
                     </Button>
                 </StackPanel>
-                <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" Spacing="2" VerticalAlignment="Center">
+                <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                    <Border Classes="pill"><StackPanel Orientation="Horizontal" Spacing="2">
                     <ToggleButton x:Name="ReadBtn" Classes="tool" ToolTip.Tip="Dieses Kapitel als gelesen markieren">
                         <local:Icon Data="M20 6L9 17l-5-5" />
                     </ToggleButton>
@@ -56,24 +57,29 @@
                     <Button x:Name="BookmarkBtn" Classes="tool" ToolTip.Tip="Ganzen Vers speichern / entfernen (Standardfarbe)">
                         <local:Icon Data="M19 21l-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" />
                     </Button>
-                    <Rectangle Classes="sep" Margin="8,0" />
-                    <Button x:Name="FontMinusBtn" Classes="tool" Content="A−" FontSize="13" FontWeight="SemiBold" ToolTip.Tip="Schrift kleiner" />
-                    <Button x:Name="FontPlusBtn" Classes="tool" Content="A+" FontSize="15" FontWeight="SemiBold" ToolTip.Tip="Schrift größer" />
+                    </StackPanel></Border>
+                    <Border Classes="pill"><StackPanel Orientation="Horizontal" Spacing="2">
+                    <Button x:Name="FontMinusBtn" IsVisible="False" Classes="tool" Content="A−" FontSize="13" FontWeight="SemiBold" ToolTip.Tip="Schrift kleiner" />
+                    <Button x:Name="FontPlusBtn" IsVisible="False" Classes="tool" Content="A+" FontSize="15" FontWeight="SemiBold" ToolTip.Tip="Schrift größer" />
                     <Button x:Name="ThemeBtn" Classes="tool" ToolTip.Tip="Hell / Dunkel / System wechseln">
                         <local:Icon Data="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9z" />
                     </Button>
+                    </StackPanel></Border>
+                    <ToggleButton x:Name="PanelBtn" Classes="tool" IsChecked="True" ToolTip.Tip="Seitenleiste ein- und ausblenden (Rand ziehen ändert die Breite)">
+                        <local:Icon Data="M5 3h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z M15 3v18" />
+                    </ToggleButton>
                 </StackPanel>
                 <StackPanel Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
                     <Border Classes="pill">
                         <StackPanel Orientation="Horizontal">
-                            <ComboBox x:Name="LanguageBox" Width="128" PlaceholderText="Sprache" />
+                            <ComboBox x:Name="LanguageBox" Width="105" PlaceholderText="Sprache" />
                             <Rectangle Classes="sep" />
-                            <ComboBox x:Name="TranslationBox" Width="250" PlaceholderText="Übersetzung" />
+                            <ComboBox x:Name="TranslationBox" Width="205" PlaceholderText="Übersetzung" />
                         </StackPanel>
                     </Border>
                     <Border Classes="pill">
                         <StackPanel Orientation="Horizontal">
-                            <ComboBox x:Name="BookBox" Width="150" PlaceholderText="Buch" />
+                            <ComboBox x:Name="BookBox" Width="125" PlaceholderText="Buch" />
                             <Rectangle Classes="sep" />
                             <Button x:Name="PrevBtn" Classes="tool" Width="32" Height="32" ToolTip.Tip="Voriges Kapitel">
                                 <local:Icon Data="M15 18l-6-6 6-6" />
@@ -99,7 +105,7 @@
         </Border>
 
         <!-- Side panel with icon rail -->
-        <Border DockPanel.Dock="Right" Width="430" Background="{DynamicResource BsSurface}"
+        <Border x:Name="SidePanel" DockPanel.Dock="Right" Width="430" Background="{DynamicResource BsSurface}"
                 BorderBrush="{DynamicResource BsBorder}" BorderThickness="1,0,0,0">
             <TabControl x:Name="SideTabs" TabStripPlacement="Left">
                 <TabItem ToolTip.Tip="Suche">
@@ -320,6 +326,7 @@
                 </TabItem>
             </TabControl>
         </Border>
+        <Thumb x:Name="SideSplitter" DockPanel.Dock="Right" Width="6" Background="Transparent" Cursor="SizeWestEast" />
 
         <!-- Reader -->
         <Grid>

@@ -90,6 +90,9 @@ public sealed class HelloAoProvider(HttpClient http, string cacheDir) : IBiblePr
 
     readonly HashSet<string> _noWords = [];
 
+    /// <summary>False once a chapter of the translation was loaded and had no Strong's tags (so word study cannot work there).</summary>
+    public bool MayHaveStrongs(string translationId) { lock (_noWords) return !_noWords.Contains(translationId); }
+
     public async Task<IReadOnlyList<VerseText>> GetAllVersesAsync(string translationId, CancellationToken ct = default)
     {
         using var doc = await GetJsonAsync($"/api/{translationId}/complete.json", ct);

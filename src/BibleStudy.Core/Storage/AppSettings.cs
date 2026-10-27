@@ -19,6 +19,8 @@ public sealed class AppSettings
     public string AiContext { get; set; } = "Standpunkt: adventistisch; die Bibel allein ist Maßstab (keine kirchliche oder päpstliche Autorität).";
     public string AiModel { get; set; } = "";
     public bool XrefInText { get; set; }
+    public double SideWidth { get; set; } = 430;
+    public bool SideOpen { get; set; } = true;
     public bool ThreadGraph { get; set; }
 
     static readonly JsonSerializerOptions Json = new() { WriteIndented = true };
