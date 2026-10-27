@@ -58,3 +58,5 @@ Freie, quelloffene Bibelstudien-Software (C#, Avalonia). Nur Quellen mit freier 
 - [x] Predigt-Editor (Gliederung, Verse, Zeitplan, Export als Handout)
 - [x] Übersetzungsvergleich mit hervorgehobenen Unterschieden
 - [x] Quellen und Lizenzen im Programm, MIT-Lizenz, THIRD-PARTY-NOTICES, Release-Skript
+- [x] Stammbaum, Gebetsliste
+- [x] Installer, Deinstallation (fragt nach den Daten), Portable-Version, automatische Updates mit Datensicherung

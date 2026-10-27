@@ -25,7 +25,7 @@ The license of each translation or commentary is shown in the program next to th
 |---|---|
 | Avalonia UI 12 | MIT |
 | Inter font (Avalonia.Fonts.Inter) | SIL OFL 1.1 |
-| Crimson Text | SIL OFL 1.1 |
+| Crimson Text (Copyright 2010 The Crimson Text Project Authors, github.com/skosch/Crimson-Text) | SIL OFL 1.1 |
 | Microsoft.Data.Sqlite, Microsoft.Extensions.Hosting, System.Speech | MIT |
 | ModelContextProtocol C# SDK | MIT / Apache-2.0 |
 
