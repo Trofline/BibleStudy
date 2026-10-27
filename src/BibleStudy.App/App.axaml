@@ -6,6 +6,13 @@
 
     <Application.Resources>
         <ResourceDictionary>
+            <Color x:Key="SystemAccentColor">#8A4F0F</Color>
+            <Color x:Key="SystemAccentColorLight1">#A0651C</Color>
+            <Color x:Key="SystemAccentColorLight2">#B87A30</Color>
+            <Color x:Key="SystemAccentColorLight3">#CC9450</Color>
+            <Color x:Key="SystemAccentColorDark1">#74410C</Color>
+            <Color x:Key="SystemAccentColorDark2">#5E3409</Color>
+            <Color x:Key="SystemAccentColorDark3">#482807</Color>
             <FontFamily x:Key="UiSerif">avares://BibleStudy.App/Assets/Fonts#Crimson Text, Cambria, Georgia, serif</FontFamily>
 
             <ResourceDictionary.ThemeDictionaries>
@@ -112,7 +119,7 @@
         </Style>
 
         <!-- Default buttons: quiet, rounded, readable -->
-        <Style Selector="Button:not(.tool):not(.pillbtn):not(.accent):not(.ghost)">
+        <Style Selector="Button:not(.tool):not(.pillbtn):not(.primary):not(.toolx):not(.rail):not(.seg):not(.ghost)">
             <Setter Property="Background" Value="{DynamicResource BsSurface2}" />
             <Setter Property="BorderBrush" Value="{DynamicResource BsBorder}" />
             <Setter Property="BorderThickness" Value="1" />
@@ -120,18 +127,18 @@
             <Setter Property="Padding" Value="14,7" />
             <Setter Property="FontWeight" Value="Medium" />
         </Style>
-        <Style Selector="Button:not(.tool):not(.pillbtn):not(.accent):not(.ghost):pointerover /template/ ContentPresenter#PART_ContentPresenter">
+        <Style Selector="Button:not(.tool):not(.pillbtn):not(.primary):not(.toolx):not(.rail):not(.seg):not(.ghost):pointerover /template/ ContentPresenter#PART_ContentPresenter">
             <Setter Property="Background" Value="{DynamicResource BsHover}" />
             <Setter Property="BorderBrush" Value="{DynamicResource BsBorder}" />
         </Style>
-        <Style Selector="Button.accent">
+        <Style Selector="Button.primary">
             <Setter Property="Background" Value="{DynamicResource BsAccent}" />
             <Setter Property="Foreground" Value="{DynamicResource BsAccentFg}" />
             <Setter Property="CornerRadius" Value="10" />
             <Setter Property="Padding" Value="18,8" />
             <Setter Property="FontWeight" Value="SemiBold" />
         </Style>
-        <Style Selector="Button.accent:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+        <Style Selector="Button.primary:pointerover /template/ ContentPresenter#PART_ContentPresenter">
             <Setter Property="Background" Value="{DynamicResource BsAccent}" />
             <Setter Property="Foreground" Value="{DynamicResource BsAccentFg}" />
             <Setter Property="Opacity" Value="0.88" />
@@ -143,13 +150,81 @@
             <Setter Property="Padding" Value="8,4" />
             <Setter Property="Foreground" Value="{DynamicResource BsMuted}" />
         </Style>
-        <Style Selector="Button.ghost:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+        <Style Selector="Button.ghost:disabled /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="Opacity" Value="0.4" />
+        </Style>
+<Style Selector="Button.ghost:pointerover /template/ ContentPresenter#PART_ContentPresenter">
             <Setter Property="Background" Value="{DynamicResource BsHover}" />
             <Setter Property="Foreground" Value="{DynamicResource BsText}" />
         </Style>
+        <!-- Labelled tool in the reading toolbar -->
+        <Style Selector="Button.toolx, ToggleButton.toolx">
+            <Setter Property="Height" Value="34" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+            <Setter Property="Padding" Value="10,0" />
+            <Setter Property="CornerRadius" Value="10" />
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="FontSize" Value="12.5" />
+            <Setter Property="FontWeight" Value="Medium" />
+            <Setter Property="Foreground" Value="{DynamicResource BsMuted}" />
+        </Style>
+        <Style Selector="Button.toolx:pointerover /template/ ContentPresenter#PART_ContentPresenter, ToggleButton.toolx:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="{DynamicResource BsHover}" />
+            <Setter Property="Foreground" Value="{DynamicResource BsText}" />
+        </Style>
+        <Style Selector="ToggleButton.toolx:checked /template/ ContentPresenter#PART_ContentPresenter, ToggleButton.toolx:checked:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="{DynamicResource BsAccentSoft}" />
+            <Setter Property="Foreground" Value="{DynamicResource BsAccent}" />
+        </Style>
+
+        <!-- Side panel navigation: rail (big sections) and segment pills (views inside a section) -->
+        <Style Selector="TabControl#SideTabs /template/ ItemsPresenter#PART_ItemsPresenter">
+            <Setter Property="IsVisible" Value="False" />
+        </Style>
+        <Style Selector="Button.rail">
+            <Setter Property="HorizontalAlignment" Value="Stretch" />
+            <Setter Property="HorizontalContentAlignment" Value="Center" />
+            <Setter Property="Padding" Value="2,9" />
+            <Setter Property="CornerRadius" Value="12" />
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Foreground" Value="{DynamicResource BsMuted}" />
+        </Style>
+        <Style Selector="Button.rail:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="{DynamicResource BsHover}" />
+            <Setter Property="Foreground" Value="{DynamicResource BsText}" />
+        </Style>
+        <Style Selector="Button.rail.active /template/ ContentPresenter#PART_ContentPresenter, Button.rail.active:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="{DynamicResource BsAccentSoft}" />
+            <Setter Property="Foreground" Value="{DynamicResource BsAccent}" />
+        </Style>
+        <Style Selector="Button.seg">
+            <Setter Property="Height" Value="30" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+            <Setter Property="Padding" Value="12,0" />
+            <Setter Property="Margin" Value="0,0,4,4" />
+            <Setter Property="CornerRadius" Value="15" />
+            <Setter Property="Background" Value="{DynamicResource BsSurface2}" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="FontSize" Value="12.5" />
+            <Setter Property="FontWeight" Value="Medium" />
+            <Setter Property="Foreground" Value="{DynamicResource BsMuted}" />
+        </Style>
+        <Style Selector="Button.seg:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="{DynamicResource BsHover}" />
+            <Setter Property="Foreground" Value="{DynamicResource BsText}" />
+        </Style>
+        <Style Selector="Button.seg.active /template/ ContentPresenter#PART_ContentPresenter, Button.seg.active:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="{DynamicResource BsAccent}" />
+            <Setter Property="Foreground" Value="{DynamicResource BsAccentFg}" />
+        </Style>
+
         <!-- Labelled toggle in the reading toolbar -->
         <Style Selector="ToggleButton.pillbtn">
             <Setter Property="Height" Value="34" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
             <Setter Property="Padding" Value="12,0" />
             <Setter Property="CornerRadius" Value="12" />
             <Setter Property="Background" Value="{DynamicResource BsSurface2}" />
@@ -166,6 +241,9 @@
         </Style>
 
         <!-- Cards, inputs -->
+        <Style Selector="Border.card Border.pill">
+            <Setter Property="Background" Value="{DynamicResource BsSurface}" />
+        </Style>
         <Style Selector="Border.card">
             <Setter Property="Background" Value="{DynamicResource BsSurface2}" />
             <Setter Property="CornerRadius" Value="14" />

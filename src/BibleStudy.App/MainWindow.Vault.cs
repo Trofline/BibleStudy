@@ -296,6 +296,7 @@ public partial class MainWindow
         var marks = _vault.GetMarks(folderId: folder, noFolder: FolderFilterBox.SelectedIndex == 1,
             tag: TagFilterBox.SelectedIndex > 0 ? TagFilterBox.SelectedItem as string : null);
         MarksList.ItemsSource = marks.Select(m => new Entry(m.Ref, MarkDisplay(m), m.Id, m.Color)).ToList();
+        MarksEmpty.IsVisible = marks.Count == 0;
     }
 
     string MarkDisplay(Mark m)
@@ -350,19 +351,19 @@ public partial class MainWindow
         var list = refs.ToList();
         _vault.AddToQueue(list.Select(r => (r, Label(r))));
         RefreshQueue();
-        QueueInfo.Text = $"{list.Count} hinzugefügt · {_vault.GetQueue().Count} in der Warteschlange";
+        QueueInfo.Text = $"{list.Count} hinzugefügt · {_vault.GetQueue().Count} auf der Leseliste";
     }
 
     void RefreshQueue()
     {
         var items = _vault.GetQueue();
         QueueList.ItemsSource = items.Select(q => new Entry(q.Ref, q.Label, q.Id)).ToList();
-        QueueInfo.Text = items.Count == 0 ? "Leer. Verse oder Querverweise hinzufügen und nacheinander abarbeiten." : $"{items.Count} in der Warteschlange";
+        QueueInfo.Text = items.Count == 0 ? "Die Leseliste ist leer. Füge Verse über „Vers hinzufügen“ hinzu oder schicke Suchergebnisse und Querverweise hierher; „Nächster“ springt dann der Reihe nach durch." : $"{items.Count} Verse auf der Leseliste";
     }
 
     async Task QueueNextAsync()
     {
-        if (_vault.GetQueue().FirstOrDefault() is not { } first) { QueueInfo.Text = "Die Warteschlange ist leer."; return; }
+        if (_vault.GetQueue().FirstOrDefault() is not { } first) { QueueInfo.Text = "Die Leseliste ist leer."; return; }
         _vault.RemoveFromQueue(first.Id);
         RefreshQueue();
         QueueInfo.Text = $"Jetzt: {first.Label} · noch {_vault.GetQueue().Count} offen";
@@ -384,6 +385,7 @@ public partial class MainWindow
     void RefreshTodos()
     {
         TodoPanel.Children.Clear();
+        if (_vault.GetTodos().Count == 0) TodoPanel.Children.Add(new TextBlock { Text = "Noch keine Aufgaben. Schreibe oben eine hinein, z. B. „Römer 8 vergleichen“; auf Wunsch hängt sie den angeklickten Vers an.", TextWrapping = TextWrapping.Wrap, Opacity = 0.65, Margin = new(2, 8) });
         foreach (var t in _vault.GetTodos())
         {
             var id = t.Id;

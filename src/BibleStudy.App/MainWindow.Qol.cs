@@ -77,6 +77,8 @@ public partial class MainWindow
             else if (e.Key == Key.Enter) { e.Handled = true; await QuickJumpAsync(QuickJumpBox.Text?.Trim() ?? ""); }
         };
         AddHandler(KeyDownEvent, OnShortcut, RoutingStrategies.Tunnel);
+        ReaderHost.PropertyChanged += (_, e) => { if (e.Property == IsVisibleProperty) ReadBar.IsVisible = ReaderHost.IsVisible && !_settings.FocusMode; };
+        ActualThemeVariantChanged += (_, _) => ApplyAccent(_settings.Accent);
         _qolReady = true;
     }
 
@@ -110,6 +112,12 @@ public partial class MainWindow
         if (accent.Name is null) accent = Accents[0];
         _settings.Accent = accent.Name;
         var res = Application.Current!.Resources;
+        // Fluent derives sliders, check boxes and focus rings from the system accent
+        var dark = ActualThemeVariant == ThemeVariant.Dark;
+        var baseColor = Color.Parse(dark ? accent.Dark : accent.Light);
+        res["SystemAccentColor"] = baseColor;
+        res["SystemAccentColorLight1"] = Mix(baseColor, Colors.White, 0.15); res["SystemAccentColorLight2"] = Mix(baseColor, Colors.White, 0.3); res["SystemAccentColorLight3"] = Mix(baseColor, Colors.White, 0.45);
+        res["SystemAccentColorDark1"] = Mix(baseColor, Colors.Black, 0.15); res["SystemAccentColorDark2"] = Mix(baseColor, Colors.Black, 0.3); res["SystemAccentColorDark3"] = Mix(baseColor, Colors.Black, 0.45);
         foreach (var (variant, hex, paper) in new[] { (ThemeVariant.Light, accent.Light, "#FFFCF6"), (ThemeVariant.Dark, accent.Dark, "#161A20") })
         {
             if (!res.ThemeDictionaries.TryGetValue(variant, out var provider) || provider is not ResourceDictionary d) continue;
@@ -182,7 +190,7 @@ public partial class MainWindow
     {
         _settings.FocusMode = !_settings.FocusMode;
         var focus = _settings.FocusMode;
-        TopBar.IsVisible = ReadBar.IsVisible = !focus;
+        TopBar.IsVisible = !focus; ReadBar.IsVisible = !focus && ReaderHost.IsVisible;
         if (focus) { SidePanel.IsVisible = SideSplitter.IsVisible = false; WindowState = WindowState.FullScreen; }
         else { WindowState = WindowState.Normal; SetPanelOpen(_settings.SideOpen); }
     }

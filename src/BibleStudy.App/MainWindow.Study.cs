@@ -107,7 +107,7 @@ public partial class MainWindow
             catch (Exception ex) { GrundtextDetail.Children.Add(new TextBlock { Text = "Wörterbuch nicht verfügbar: " + ex.Message, TextWrapping = TextWrapping.Wrap }); }
             var occurrences = new Button { Content = "Alle Vorkommen", Margin = new(0, 0, 8, 0) };
             occurrences.Click += async (_, _) => await ShowConcordanceAsync(w.Strongs, $"{w.Strongs}  {w.Text}");
-            var deeper = new Button { Content = "Mit Claude vertiefen", Classes = { "accent" } };
+            var deeper = new Button { Content = "Mit Claude vertiefen", Classes = { "primary" } };
             deeper.Click += async (_, _) => await AskClaudeAboutWordAsync(w);
             GrundtextDetail.Children.Add(new StackPanel { Orientation = Avalonia.Layout.Orientation.Horizontal, Children = { occurrences, deeper } });
         }

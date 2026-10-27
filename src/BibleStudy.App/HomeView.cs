@@ -112,7 +112,7 @@ public sealed class HomeView : UserControl
         var hero = new DockPanel { Margin = new(0, 0, 0, 4) };
         if (Resume is { } r)
         {
-            var go = new Button { Classes = { "accent" }, VerticalAlignment = VerticalAlignment.Center, Content = $"Weiterlesen: {r.Label}  →" };
+            var go = new Button { Classes = { "primary" }, VerticalAlignment = VerticalAlignment.Center, Content = $"Weiterlesen: {r.Label}  →" };
             go.Click += (_, _) => ChapterChosen?.Invoke(r.Book, r.Chapter);
             DockPanel.SetDock(go, Dock.Right);
             hero.Children.Add(go);

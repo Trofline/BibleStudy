@@ -144,6 +144,7 @@ public partial class MainWindow : Window
         InitImport();
         InitKnowledge();
         InitQol();
+        InitNav();
         StartControl();
         Opened += async (_, _) => await InitAsync();
     }
@@ -605,7 +606,9 @@ public partial class MainWindow : Window
     void RefreshLists()
     {
         RefreshCollection();
-        NoteList.ItemsSource = _vault.GetNotes().Select(n =>
+        var noteRows = _vault.GetNotes();
+        NotesEmpty.IsVisible = noteRows.Count == 0;
+        NoteList.ItemsSource = noteRows.Select(n =>
         {
             var t = n.Text.ReplaceLineEndings(" ");
             return new Entry(n.Ref, $"{Label(n.Ref)}\n{(t.Length > 100 ? t[..100] + "…" : t)}");
