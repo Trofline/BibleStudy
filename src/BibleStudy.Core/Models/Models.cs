@@ -15,12 +15,15 @@ public sealed record BookInfo(string Id, string Name, string CommonName, int Ord
 }
 
 /// <summary>Text fragment of a verse; WordsOfJesus marks red-letter text.</summary>
-public sealed record Segment(string Text, bool WordsOfJesus = false);
+public sealed record Segment(string Text, bool WordsOfJesus = false, IReadOnlyList<string>? Strongs = null);
 
 public sealed record Verse(int Number, IReadOnlyList<Segment> Segments)
 {
     public string Text => string.Concat(Segments.Select(s => s.Text));
 }
+
+/// <summary>One entry of Strong's dictionary (original-language word study).</summary>
+public sealed record StrongsEntry(string Id, string Lemma, string Translit, string Pronunciation, string Definition, string KjvUsage, string Derivation);
 
 /// <summary>Location of a verse, independent of translation (USFM book id), so notes follow across translations.</summary>
 public readonly record struct VerseRef(string Book, int Chapter, int Verse);

@@ -20,6 +20,8 @@ public sealed record ExtraColumn(ComboBox Lang, ComboBox Trans, Control Root)
 public partial class MainWindow : Window
 {
     const int MaxExtras = 3;
+    readonly StrongsDictionary _strongs;
+    int _fontSize = 19;
     readonly List<ExtraColumn> _extras = [];
     IReadOnlyList<string> _langs = [];
 
@@ -41,7 +43,19 @@ public partial class MainWindow : Window
     {
         InitializeComponent();
         var root = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "BibleStudy");
-        _provider = new HelloAoProvider(new HttpClient(), Path.Combine(root, "cache"));
+        var http = new HttpClient();
+        _provider = new HelloAoProvider(http, Path.Combine(root, "cache"));
+        _strongs = new StrongsDictionary(http, Path.Combine(root, "cache"));
+        StudyBtn.IsCheckedChanged += async (_, _) => await ShowChapterAsync(_selected);
+        FontMinusBtn.Click += async (_, _) => { _fontSize = Math.Max(13, _fontSize - 1); await ShowChapterAsync(_selected); };
+        FontPlusBtn.Click += async (_, _) => { _fontSize = Math.Min(34, _fontSize + 1); await ShowChapterAsync(_selected); };
+        ThemeBtn.Click += (_, _) =>
+        {
+            var app = Avalonia.Application.Current!;
+            app.RequestedThemeVariant = app.RequestedThemeVariant == Avalonia.Styling.ThemeVariant.Light ? Avalonia.Styling.ThemeVariant.Dark
+                : app.RequestedThemeVariant == Avalonia.Styling.ThemeVariant.Dark ? Avalonia.Styling.ThemeVariant.Default : Avalonia.Styling.ThemeVariant.Light;
+            StatusText.Text = "Design: " + app.RequestedThemeVariant;
+        };
         _store = new UserStore(Path.Combine(root, "user.db"));
 
         LanguageBox.SelectionChanged += (_, _) => FillTranslations();
@@ -122,7 +136,7 @@ public partial class MainWindow : Window
             _curBook = b.Id; _curChapter = ch.Number; _selected = null;
             _marked = _store.GetBookmarks().Where(r => r.Book == _curBook && r.Chapter == _curChapter).Select(r => r.Verse).ToHashSet();
             var noted = _store.GetNotes().Where(n => n.Ref.Book == _curBook && n.Ref.Chapter == _curChapter).Select(n => n.Ref.Verse).ToHashSet();
-            var size = cols.Count > 2 ? 16 : 19;
+            var size = cols.Count > 2 ? _fontSize - 3 : _fontSize;
 
             ReaderPanel.Children.Clear(); _verseBoxes.Clear();
             ReaderPanel.MaxWidth = cols.Count == 1 ? 780 : double.PositiveInfinity;
@@ -141,7 +155,7 @@ public partial class MainWindow : Window
                     AddCell(row, i, VerseCell(cols[i].C?.Verses.FirstOrDefault(v => v.Number == num), num, cols[i].T, size, i == 0 && noted.Contains(num)));
                 var box = new Border { Child = row, Padding = new(8, 2), CornerRadius = new(6) };
                 var n = num;
-                box.AddHandler(PointerPressedEvent, (object? _, PointerPressedEventArgs _) => SelectVerse(n), RoutingStrategies.Bubble | RoutingStrategies.Tunnel, handledEventsToo: true);
+                box.AddHandler(PointerPressedEvent, (object? _, PointerPressedEventArgs e) => OnVersePressed(n, e), RoutingStrategies.Tunnel, handledEventsToo: true);
                 _verseBoxes[n] = box;
                 ReaderPanel.Children.Add(box);
             }
@@ -173,18 +187,97 @@ public partial class MainWindow : Window
         row.Children.Add(cell);
     }
 
-    static SelectableTextBlock VerseCell(Verse? v, int number, TranslationInfo t, int size, bool hasNote)
+    static readonly FontFamily ScriptureFont = new("Cambria, Georgia, 'Times New Roman', serif");
+
+    /// <summary>Clickable word range inside a verse cell (for the word study).</summary>
+    sealed record WordSpan(int Start, int End, string[] Strongs, string Word);
+
+    SelectableTextBlock VerseCell(Verse? v, int number, TranslationInfo t, int size, bool hasNote)
     {
         var tb = new SelectableTextBlock
         {
             TextWrapping = TextWrapping.Wrap, FontSize = size, LineHeight = size * 1.7, Margin = new(0, 0, 12, 0),
+            FontFamily = ScriptureFont,
             FlowDirection = t.TextDirection == "rtl" ? FlowDirection.RightToLeft : FlowDirection.LeftToRight,
         };
         if (v is null) return tb;
-        tb.Inlines!.Add(new Run(number + (hasNote ? "✎" : "") + " ") { FontSize = 12, FontWeight = FontWeight.Bold, BaselineAlignment = BaselineAlignment.Top, Foreground = Brushes.SteelBlue });
+        var study = StudyBtn.IsChecked == true;
+        var spans = new List<WordSpan>();
+        var pos = 0;
+        void Add(Run run)
+        {
+            tb.Inlines!.Add(run);
+            pos += run.Text!.Length;
+        }
+        var num = new Run(number + (hasNote ? "✎" : "") + " ") { FontSize = 12, FontWeight = FontWeight.Bold, BaselineAlignment = BaselineAlignment.Top };
+        num.Bind(TextElement.ForegroundProperty, this.GetResourceObservable("BsVerseNumber"));
+        Add(num);
         foreach (var s in v.Segments)
-            tb.Inlines.Add(new Run(s.Text + " ") { Foreground = s.WordsOfJesus ? Brushes.IndianRed : null });
+        {
+            var run = new Run(s.Text);
+            if (s.WordsOfJesus) run.Bind(TextElement.ForegroundProperty, this.GetResourceObservable("BsJesus"));
+            if (s.Strongs is { Count: > 0 })
+            {
+                spans.Add(new WordSpan(pos, pos + s.Text.Length, [.. s.Strongs], s.Text));
+                if (study) run.TextDecorations = TextDecorations.Underline;
+            }
+            Add(run);
+        }
+        Add(new Run(" "));
+        tb.Tag = spans;
         return tb;
+    }
+
+    void OnVersePressed(int verse, PointerPressedEventArgs e)
+    {
+        SelectVerse(verse);
+        if (StudyBtn.IsChecked != true || e.Source is not SelectableTextBlock { Tag: List<WordSpan> spans } tb) return;
+        var hit = tb.TextLayout.HitTestPoint(e.GetPosition(tb)).TextPosition;
+        var span = spans.FirstOrDefault(s => hit >= s.Start && hit < s.End);
+        if (span is not null) _ = ShowStudyAsync(span);
+    }
+
+    async Task ShowStudyAsync(WordSpan span)
+    {
+        SideTabs.SelectedIndex = 3;
+        StudyPanel.Children.Clear();
+        StudyPanel.Children.Add(new TextBlock { Text = $"„{span.Word.Trim()}“", FontSize = 20, FontWeight = FontWeight.SemiBold, TextWrapping = TextWrapping.Wrap });
+        foreach (var id in span.Strongs)
+        {
+            try
+            {
+                StatusText.Text = "Lade Wörterbuch …";
+                var e = await _strongs.LookupAsync(id);
+                StudyPanel.Children.Add(e is null ? new TextBlock { Text = id + ": kein Eintrag" } : StudyCard(e));
+            }
+            catch (Exception ex) { StudyPanel.Children.Add(new TextBlock { Text = $"{id}: Wörterbuch nicht verfügbar ({ex.Message})", TextWrapping = TextWrapping.Wrap }); }
+        }
+        var note = new TextBlock { Text = StrongsDictionary.Attribution, FontSize = 11, TextWrapping = TextWrapping.Wrap };
+        note.Bind(TextBlock.ForegroundProperty, this.GetResourceObservable("BsMuted"));
+        StudyPanel.Children.Add(note);
+        StatusText.Text = "";
+    }
+
+    Control StudyCard(StrongsEntry e)
+    {
+        TextBlock Line(string label, string text)
+        {
+            var tb = new TextBlock { TextWrapping = TextWrapping.Wrap, Margin = new(0, 4, 0, 0) };
+            tb.Inlines!.Add(new Run(label + " ") { FontWeight = FontWeight.SemiBold });
+            tb.Inlines.Add(new Run(text));
+            return tb;
+        }
+        var head = new TextBlock { Text = e.Lemma, FontSize = 28, FontFamily = ScriptureFont, FlowDirection = e.Id[0] == 'H' ? FlowDirection.RightToLeft : FlowDirection.LeftToRight, HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Left };
+        head.Bind(TextBlock.ForegroundProperty, this.GetResourceObservable("BsAccent"));
+        var sub = new TextBlock { Text = $"{e.Id}  ·  {e.Translit}{(e.Pronunciation.Length > 0 ? "  ·  " + e.Pronunciation : "")}" };
+        sub.Bind(TextBlock.ForegroundProperty, this.GetResourceObservable("BsMuted"));
+        var panel = new StackPanel { Spacing = 2, Children = { head, sub } };
+        if (e.Derivation.Length > 0) panel.Children.Add(Line("Herkunft:", e.Derivation));
+        if (e.Definition.Length > 0) panel.Children.Add(Line("Bedeutung:", e.Definition));
+        if (e.KjvUsage.Length > 0) panel.Children.Add(Line("KJV:", e.KjvUsage));
+        var card = new Border { Child = panel, Padding = new(12), CornerRadius = new(10), BorderThickness = new(1) };
+        card.Bind(Border.BorderBrushProperty, this.GetResourceObservable("BsBorder"));
+        return card;
     }
 
     void AddColumn()

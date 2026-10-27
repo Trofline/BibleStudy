@@ -2,56 +2,81 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:local="clr-namespace:BibleStudy.App"
         x:Class="BibleStudy.App.MainWindow"
-        Title="BibleStudy" Width="1200" Height="720" MinWidth="760">
+        Title="BibleStudy" Width="1240" Height="760" MinWidth="820"
+        Background="{DynamicResource BsBackground}" Foreground="{DynamicResource BsText}">
     <Window.Resources>
         <DataTemplate x:Key="EntryTpl" x:DataType="local:Entry">
-            <TextBlock Text="{Binding Display}" TextWrapping="Wrap" />
+            <TextBlock Text="{Binding Display}" TextWrapping="Wrap" Margin="2,4" />
         </DataTemplate>
     </Window.Resources>
     <DockPanel>
-        <WrapPanel DockPanel.Dock="Top" Margin="12,10">
-            <ComboBox x:Name="LanguageBox" Width="160" Margin="0,0,8,0" PlaceholderText="Sprache" />
-            <ComboBox x:Name="TranslationBox" Width="260" Margin="0,0,8,0" PlaceholderText="Übersetzung" />
-            <ComboBox x:Name="BookBox" Width="180" Margin="0,0,8,0" PlaceholderText="Buch" />
-            <NumericUpDown x:Name="ChapterBox" Width="110" Minimum="1" Value="1" FormatString="0" Margin="0,0,8,0" />
-            <Button x:Name="PrevBtn" Content="◀" Margin="0,0,4,0" />
-            <Button x:Name="NextBtn" Content="▶" Margin="0,0,16,0" />
-            <Button x:Name="BookmarkBtn" Content="🔖 Lesezeichen" Margin="0,0,8,0" ToolTip.Tip="Angeklickten Vers merken / entfernen" />
-            <Button x:Name="ParallelBtn" Content="＋ Parallel" ToolTip.Tip="Weitere Übersetzung als Spalte daneben anzeigen (max. 3)" />
-        </WrapPanel>
-        <WrapPanel x:Name="ParallelBar" DockPanel.Dock="Top" Margin="12,0,12,8" />
-        <Border DockPanel.Dock="Bottom" Padding="12,6" BorderThickness="0,1,0,0" BorderBrush="#33888888">
-            <TextBlock x:Name="StatusText" FontSize="12" Opacity="0.7" TextWrapping="Wrap" />
+        <!-- Toolbar -->
+        <Border DockPanel.Dock="Top" Padding="16,12,16,8">
+            <DockPanel>
+                <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" Spacing="4" VerticalAlignment="Top">
+                    <Button x:Name="FontMinusBtn" Content="A−" ToolTip.Tip="Schrift kleiner" />
+                    <Button x:Name="FontPlusBtn" Content="A+" ToolTip.Tip="Schrift größer" />
+                    <Button x:Name="ThemeBtn" Content="Design" ToolTip.Tip="Hell / Dunkel / System wechseln" />
+                </StackPanel>
+                <WrapPanel>
+                    <ComboBox x:Name="LanguageBox" Width="150" Margin="0,0,8,6" PlaceholderText="Sprache" />
+                    <ComboBox x:Name="TranslationBox" Width="250" Margin="0,0,8,6" PlaceholderText="Übersetzung" />
+                    <ComboBox x:Name="BookBox" Width="170" Margin="0,0,8,6" PlaceholderText="Buch" />
+                    <NumericUpDown x:Name="ChapterBox" Width="110" Minimum="1" Value="1" FormatString="0" Margin="0,0,4,6" />
+                    <Button x:Name="PrevBtn" Content="◀" Margin="0,0,4,6" ToolTip.Tip="Voriges Kapitel" />
+                    <Button x:Name="NextBtn" Content="▶" Margin="0,0,16,6" ToolTip.Tip="Nächstes Kapitel" />
+                    <Button x:Name="BookmarkBtn" Content="Lesezeichen" Margin="0,0,8,6" ToolTip.Tip="Angeklickten Vers merken / entfernen" />
+                    <Button x:Name="ParallelBtn" Content="Parallel +" Margin="0,0,8,6" ToolTip.Tip="Weitere Übersetzung als Spalte daneben anzeigen (max. 3)" />
+                    <ToggleButton x:Name="StudyBtn" Content="Wortstudie" Margin="0,0,8,6" ToolTip.Tip="Wörter mit Strong-Nummer unterstreichen; Klick öffnet die Wortstudie" />
+                </WrapPanel>
+            </DockPanel>
         </Border>
-        <TabControl DockPanel.Dock="Right" Width="350" Margin="0,0,10,0">
-            <TabItem Header="Suche">
-                <DockPanel Margin="0,8,0,0">
-                    <StackPanel DockPanel.Dock="Top" Spacing="4" Margin="0,0,0,6">
-                        <TextBox x:Name="SearchBox" Watermark="Suchbegriffe, Enter zum Suchen" />
-                        <TextBlock x:Name="SearchInfo" FontSize="12" Opacity="0.7" TextWrapping="Wrap" />
-                    </StackPanel>
-                    <ListBox x:Name="SearchList" ItemTemplate="{StaticResource EntryTpl}" ScrollViewer.HorizontalScrollBarVisibility="Disabled" />
-                </DockPanel>
-            </TabItem>
-            <TabItem Header="Lesezeichen">
-                <ListBox x:Name="BookmarkList" Margin="0,8,0,0" ItemTemplate="{StaticResource EntryTpl}" ScrollViewer.HorizontalScrollBarVisibility="Disabled" />
-            </TabItem>
-            <TabItem Header="Notizen">
-                <DockPanel Margin="0,8,0,0">
-                    <StackPanel DockPanel.Dock="Top" Spacing="6" Margin="0,0,0,8">
-                        <TextBlock x:Name="NoteTarget" FontWeight="SemiBold" Text="Vers anklicken, um eine Notiz zu schreiben" TextWrapping="Wrap" />
-                        <TextBox x:Name="NoteEditor" AcceptsReturn="True" TextWrapping="Wrap" Height="120" />
-                        <StackPanel Orientation="Horizontal" Spacing="6">
-                            <Button x:Name="NoteSaveBtn" Content="Speichern" />
-                            <Button x:Name="NoteDeleteBtn" Content="Löschen" />
+        <WrapPanel x:Name="ParallelBar" DockPanel.Dock="Top" Margin="16,0,16,8" />
+
+        <Border DockPanel.Dock="Bottom" Padding="16,8" BorderThickness="0,1,0,0" BorderBrush="{DynamicResource BsBorder}">
+            <TextBlock x:Name="StatusText" FontSize="12" Foreground="{DynamicResource BsMuted}" TextWrapping="Wrap" />
+        </Border>
+
+        <!-- Side panel -->
+        <Border DockPanel.Dock="Right" Width="360" Margin="0,0,16,12" Padding="12,4,12,12" CornerRadius="12"
+                Background="{DynamicResource BsSurface}" BorderBrush="{DynamicResource BsBorder}" BorderThickness="1">
+            <TabControl x:Name="SideTabs">
+                <TabItem Header="Suche">
+                    <DockPanel Margin="0,8,0,0">
+                        <StackPanel DockPanel.Dock="Top" Spacing="4" Margin="0,0,0,6">
+                            <TextBox x:Name="SearchBox" Watermark="Suchbegriffe, Enter zum Suchen" />
+                            <TextBlock x:Name="SearchInfo" FontSize="12" Foreground="{DynamicResource BsMuted}" TextWrapping="Wrap" />
                         </StackPanel>
-                    </StackPanel>
-                    <ListBox x:Name="NoteList" ItemTemplate="{StaticResource EntryTpl}" ScrollViewer.HorizontalScrollBarVisibility="Disabled" />
-                </DockPanel>
-            </TabItem>
-        </TabControl>
+                        <ListBox x:Name="SearchList" ItemTemplate="{StaticResource EntryTpl}" ScrollViewer.HorizontalScrollBarVisibility="Disabled" />
+                    </DockPanel>
+                </TabItem>
+                <TabItem Header="Lesezeichen">
+                    <ListBox x:Name="BookmarkList" Margin="0,8,0,0" ItemTemplate="{StaticResource EntryTpl}" ScrollViewer.HorizontalScrollBarVisibility="Disabled" />
+                </TabItem>
+                <TabItem Header="Notizen">
+                    <DockPanel Margin="0,8,0,0">
+                        <StackPanel DockPanel.Dock="Top" Spacing="6" Margin="0,0,0,8">
+                            <TextBlock x:Name="NoteTarget" FontWeight="SemiBold" Text="Vers anklicken, um eine Notiz zu schreiben" TextWrapping="Wrap" />
+                            <TextBox x:Name="NoteEditor" AcceptsReturn="True" TextWrapping="Wrap" Height="120" />
+                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                <Button x:Name="NoteSaveBtn" Content="Speichern" Classes="accent" />
+                                <Button x:Name="NoteDeleteBtn" Content="Löschen" />
+                            </StackPanel>
+                        </StackPanel>
+                        <ListBox x:Name="NoteList" ItemTemplate="{StaticResource EntryTpl}" ScrollViewer.HorizontalScrollBarVisibility="Disabled" />
+                    </DockPanel>
+                </TabItem>
+                <TabItem Header="Wortstudie">
+                    <ScrollViewer Margin="0,8,0,0">
+                        <StackPanel x:Name="StudyPanel" Spacing="10" />
+                    </ScrollViewer>
+                </TabItem>
+            </TabControl>
+        </Border>
+
+        <!-- Reader -->
         <ScrollViewer x:Name="ReaderScroll">
-            <StackPanel x:Name="ReaderPanel" Margin="30,16" MaxWidth="780" Spacing="2" />
+            <StackPanel x:Name="ReaderPanel" Margin="24,8,24,24" MaxWidth="780" Spacing="2" />
         </ScrollViewer>
     </DockPanel>
 </Window>

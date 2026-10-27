@@ -2,9 +2,48 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              x:Class="BibleStudy.App.App"
              RequestedThemeVariant="Default">
-             <!-- "Default" ThemeVariant follows system theme variant. "Dark" or "Light" are other available options. -->
+    <!-- "Default" follows the system theme. Design tokens below are defined per theme variant. -->
+
+    <Application.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.ThemeDictionaries>
+                <ResourceDictionary x:Key="Light">
+                    <Color x:Key="BsBackgroundColor">#F6F3EC</Color>
+                    <SolidColorBrush x:Key="BsBackground" Color="#F6F3EC" />
+                    <SolidColorBrush x:Key="BsSurface" Color="#FFFFFF" />
+                    <SolidColorBrush x:Key="BsBorder" Color="#DDD7C9" />
+                    <SolidColorBrush x:Key="BsText" Color="#1F2328" />
+                    <SolidColorBrush x:Key="BsMuted" Color="#5F6670" />
+                    <SolidColorBrush x:Key="BsAccent" Color="#2A6A70" />
+                    <SolidColorBrush x:Key="BsVerseNumber" Color="#2A6A70" />
+                    <SolidColorBrush x:Key="BsJesus" Color="#B3261E" />
+                </ResourceDictionary>
+                <ResourceDictionary x:Key="Dark">
+                    <Color x:Key="BsBackgroundColor">#14171C</Color>
+                    <SolidColorBrush x:Key="BsBackground" Color="#14171C" />
+                    <SolidColorBrush x:Key="BsSurface" Color="#1D2229" />
+                    <SolidColorBrush x:Key="BsBorder" Color="#2E353E" />
+                    <SolidColorBrush x:Key="BsText" Color="#E8E4DA" />
+                    <SolidColorBrush x:Key="BsMuted" Color="#A3AAB4" />
+                    <SolidColorBrush x:Key="BsAccent" Color="#7CC4C9" />
+                    <SolidColorBrush x:Key="BsVerseNumber" Color="#7CC4C9" />
+                    <SolidColorBrush x:Key="BsJesus" Color="#FF9C94" />
+                </ResourceDictionary>
+            </ResourceDictionary.ThemeDictionaries>
+        </ResourceDictionary>
+    </Application.Resources>
 
     <Application.Styles>
         <FluentTheme />
+        <Style Selector="TabControl">
+            <Setter Property="Background" Value="Transparent" />
+        </Style>
+        <Style Selector="TabItem">
+            <Setter Property="FontSize" Value="14" />
+            <Setter Property="Padding" Value="10,6" />
+        </Style>
+        <Style Selector="ListBox">
+            <Setter Property="Background" Value="Transparent" />
+        </Style>
     </Application.Styles>
 </Application>

@@ -38,8 +38,18 @@ public sealed class HelloAoProvider(HttpClient http, string cacheDir) : IBiblePr
     public async Task<Chapter> GetChapterAsync(string translationId, string bookId, int chapter, CancellationToken ct = default)
     {
         using var doc = await GetJsonAsync($"/api/{translationId}/{bookId}/{chapter}.json", ct);
-        return new Chapter(translationId, bookId, chapter, ParseVerses(doc.RootElement.GetProperty("chapter")));
+        return new Chapter(translationId, bookId, chapter, ParseVerses(doc.RootElement.GetProperty("chapter"), await TryGetWordsAsync(translationId, bookId, chapter, ct)));
     }
+
+    /// <summary>Per-word Strong's tags; only some translations have them, so a miss is remembered per session.</summary>
+    async Task<JsonDocument?> TryGetWordsAsync(string translationId, string bookId, int chapter, CancellationToken ct)
+    {
+        lock (_noWords) if (_noWords.Contains(translationId)) return null;
+        try { return await GetJsonAsync($"/api/{translationId}/{bookId}/{chapter}.words.json", ct); }
+        catch (HttpRequestException) { lock (_noWords) _noWords.Add(translationId); return null; }
+    }
+
+    readonly HashSet<string> _noWords = [];
 
     public async Task<IReadOnlyList<VerseText>> GetAllVersesAsync(string translationId, CancellationToken ct = default)
     {
@@ -55,22 +65,56 @@ public sealed class HelloAoProvider(HttpClient http, string cacheDir) : IBiblePr
         return result;
     }
 
-    static List<Verse> ParseVerses(JsonElement chapter)
+    static List<Verse> ParseVerses(JsonElement chapter, JsonDocument? words = null)
     {
+        using var _ = words;
+        var tagged = words?.RootElement.TryGetProperty("verses", out var wv) == true ? wv : (JsonElement?)null;
         var verses = new List<Verse>();
         foreach (var item in chapter.GetProperty("content").EnumerateArray())
         {
             if (Str(item, "type") != "verse") continue;
+            var number = item.GetProperty("number").GetInt32();
+            var tags = Tags(tagged, number);
             var segs = new List<Segment>();
+            var index = 0;
             foreach (var part in item.GetProperty("content").EnumerateArray())
             {
-                if (part.ValueKind == JsonValueKind.String) segs.Add(new Segment(part.GetString()!));
+                var partIndex = index++;
+                var partTags = tags.Where(t => t.Index == partIndex).ToList();
+                if (part.ValueKind == JsonValueKind.String) segs.AddRange(Split(part.GetString()!, false, partTags));
                 else if (part.TryGetProperty("text", out var tx))
-                    segs.Add(new Segment(tx.GetString()!, part.TryGetProperty("wordsOfJesus", out var w) && w.ValueKind == JsonValueKind.True));
+                    segs.AddRange(Split(tx.GetString()!, part.TryGetProperty("wordsOfJesus", out var w) && w.ValueKind == JsonValueKind.True, partTags));
             }
-            verses.Add(new Verse(item.GetProperty("number").GetInt32(), segs));
+            verses.Add(new Verse(number, segs));
         }
         return verses;
+    }
+
+    record Tag(int Index, int Start, int End, string[] Strongs);
+
+    static List<Tag> Tags(JsonElement? verses, int number)
+    {
+        if (verses is not { } v || !v.TryGetProperty(number.ToString(), out var list)) return [];
+        return list.EnumerateArray()
+            .Select(t => new Tag(t.GetProperty("contentIndex").GetInt32(), t.GetProperty("start").GetInt32(), t.GetProperty("end").GetInt32(),
+                t.GetProperty("strongs").EnumerateArray().Select(s => s.GetString()!).ToArray()))
+            .GroupBy(t => (t.Index, t.Start, t.End))
+            .Select(g => new Tag(g.Key.Index, g.Key.Start, g.Key.End, g.SelectMany(t => t.Strongs).Distinct().ToArray()))
+            .ToList();
+    }
+
+    /// <summary>Cuts a text into plain and Strong's-tagged segments (offsets are relative to the text).</summary>
+    static IEnumerable<Segment> Split(string text, bool jesus, List<Tag> tags)
+    {
+        var pos = 0;
+        foreach (var t in tags.OrderBy(t => t.Start))
+        {
+            if (t.Start < pos || t.End > text.Length || t.End <= t.Start) continue;
+            if (t.Start > pos) yield return new Segment(text[pos..t.Start], jesus);
+            yield return new Segment(text[t.Start..t.End], jesus, t.Strongs);
+            pos = t.End;
+        }
+        if (pos < text.Length) yield return new Segment(text[pos..], jesus);
     }
 
     static string Str(JsonElement e, string name) =>
