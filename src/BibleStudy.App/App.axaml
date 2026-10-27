@@ -2,32 +2,65 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              x:Class="BibleStudy.App.App"
              RequestedThemeVariant="Default">
-    <!-- "Default" follows the system theme. Design tokens below are defined per theme variant. -->
+    <!-- Design tokens per theme variant ("Default" follows the system). Direction: scholar's study — warm paper / ink, brass accent. -->
 
     <Application.Resources>
         <ResourceDictionary>
+            <FontFamily x:Key="UiSerif">avares://BibleStudy.App/Assets/Fonts#Crimson Text, Cambria, Georgia, serif</FontFamily>
+
             <ResourceDictionary.ThemeDictionaries>
                 <ResourceDictionary x:Key="Light">
-                    <Color x:Key="BsBackgroundColor">#F6F3EC</Color>
-                    <SolidColorBrush x:Key="BsBackground" Color="#F6F3EC" />
-                    <SolidColorBrush x:Key="BsSurface" Color="#FFFFFF" />
-                    <SolidColorBrush x:Key="BsBorder" Color="#DDD7C9" />
-                    <SolidColorBrush x:Key="BsText" Color="#1F2328" />
-                    <SolidColorBrush x:Key="BsMuted" Color="#5F6670" />
-                    <SolidColorBrush x:Key="BsAccent" Color="#2A6A70" />
-                    <SolidColorBrush x:Key="BsVerseNumber" Color="#2A6A70" />
-                    <SolidColorBrush x:Key="BsJesus" Color="#B3261E" />
+                    <SolidColorBrush x:Key="BsBackground" Color="#F6F1E6" />
+                    <SolidColorBrush x:Key="BsSurface" Color="#FFFCF6" />
+                    <SolidColorBrush x:Key="BsSurface2" Color="#EFE8D8" />
+                    <SolidColorBrush x:Key="BsHover" Color="#E8DFCB" />
+                    <SolidColorBrush x:Key="BsBorder" Color="#E2D9C5" />
+                    <SolidColorBrush x:Key="BsText" Color="#24201A" />
+                    <SolidColorBrush x:Key="BsMuted" Color="#6B6354" />
+                    <SolidColorBrush x:Key="BsAccent" Color="#8A4F0F" />
+                    <SolidColorBrush x:Key="BsAccentSoft" Color="#F0DFBF" />
+                    <SolidColorBrush x:Key="BsVerseNumber" Color="#A0651C" />
+                    <SolidColorBrush x:Key="BsJesus" Color="#A8281F" />
+                    <!-- Fluent control overrides -->
+                    <SolidColorBrush x:Key="ComboBoxBackground" Color="Transparent" />
+                    <SolidColorBrush x:Key="ComboBoxBackgroundPointerOver" Color="#E8DFCB" />
+                    <SolidColorBrush x:Key="ComboBoxBackgroundPressed" Color="#E8DFCB" />
+                    <SolidColorBrush x:Key="ComboBoxBackgroundFocused" Color="Transparent" />
+                    <SolidColorBrush x:Key="ComboBoxBorderBrush" Color="Transparent" />
+                    <SolidColorBrush x:Key="ComboBoxBorderBrushPointerOver" Color="Transparent" />
+                    <SolidColorBrush x:Key="ComboBoxBorderBrushPressed" Color="Transparent" />
+                    <SolidColorBrush x:Key="ComboBoxBorderBrushFocused" Color="Transparent" />
+                    <SolidColorBrush x:Key="TabItemHeaderForegroundUnselected" Color="#6B6354" />
+                    <SolidColorBrush x:Key="TabItemHeaderForegroundUnselectedPointerOver" Color="#24201A" />
+                    <SolidColorBrush x:Key="TabItemHeaderForegroundSelected" Color="#8A4F0F" />
+                    <SolidColorBrush x:Key="TabItemHeaderForegroundSelectedPointerOver" Color="#8A4F0F" />
+                    <SolidColorBrush x:Key="TabItemHeaderSelectedPipeFill" Color="#8A4F0F" />
                 </ResourceDictionary>
                 <ResourceDictionary x:Key="Dark">
-                    <Color x:Key="BsBackgroundColor">#14171C</Color>
-                    <SolidColorBrush x:Key="BsBackground" Color="#14171C" />
-                    <SolidColorBrush x:Key="BsSurface" Color="#1D2229" />
-                    <SolidColorBrush x:Key="BsBorder" Color="#2E353E" />
-                    <SolidColorBrush x:Key="BsText" Color="#E8E4DA" />
-                    <SolidColorBrush x:Key="BsMuted" Color="#A3AAB4" />
-                    <SolidColorBrush x:Key="BsAccent" Color="#7CC4C9" />
-                    <SolidColorBrush x:Key="BsVerseNumber" Color="#7CC4C9" />
-                    <SolidColorBrush x:Key="BsJesus" Color="#FF9C94" />
+                    <SolidColorBrush x:Key="BsBackground" Color="#0F1216" />
+                    <SolidColorBrush x:Key="BsSurface" Color="#161A20" />
+                    <SolidColorBrush x:Key="BsSurface2" Color="#1F252D" />
+                    <SolidColorBrush x:Key="BsHover" Color="#2A323D" />
+                    <SolidColorBrush x:Key="BsBorder" Color="#262D37" />
+                    <SolidColorBrush x:Key="BsText" Color="#ECE7DA" />
+                    <SolidColorBrush x:Key="BsMuted" Color="#9AA2AD" />
+                    <SolidColorBrush x:Key="BsAccent" Color="#E3B65F" />
+                    <SolidColorBrush x:Key="BsAccentSoft" Color="#3A3120" />
+                    <SolidColorBrush x:Key="BsVerseNumber" Color="#D9A94F" />
+                    <SolidColorBrush x:Key="BsJesus" Color="#FF9A8F" />
+                    <SolidColorBrush x:Key="ComboBoxBackground" Color="Transparent" />
+                    <SolidColorBrush x:Key="ComboBoxBackgroundPointerOver" Color="#2A323D" />
+                    <SolidColorBrush x:Key="ComboBoxBackgroundPressed" Color="#2A323D" />
+                    <SolidColorBrush x:Key="ComboBoxBackgroundFocused" Color="Transparent" />
+                    <SolidColorBrush x:Key="ComboBoxBorderBrush" Color="Transparent" />
+                    <SolidColorBrush x:Key="ComboBoxBorderBrushPointerOver" Color="Transparent" />
+                    <SolidColorBrush x:Key="ComboBoxBorderBrushPressed" Color="Transparent" />
+                    <SolidColorBrush x:Key="ComboBoxBorderBrushFocused" Color="Transparent" />
+                    <SolidColorBrush x:Key="TabItemHeaderForegroundUnselected" Color="#9AA2AD" />
+                    <SolidColorBrush x:Key="TabItemHeaderForegroundUnselectedPointerOver" Color="#ECE7DA" />
+                    <SolidColorBrush x:Key="TabItemHeaderForegroundSelected" Color="#E3B65F" />
+                    <SolidColorBrush x:Key="TabItemHeaderForegroundSelectedPointerOver" Color="#E3B65F" />
+                    <SolidColorBrush x:Key="TabItemHeaderSelectedPipeFill" Color="#E3B65F" />
                 </ResourceDictionary>
             </ResourceDictionary.ThemeDictionaries>
         </ResourceDictionary>
@@ -35,15 +68,78 @@
 
     <Application.Styles>
         <FluentTheme />
+
+        <!-- Icon buttons -->
+        <Style Selector="Button.tool, ToggleButton.tool">
+            <Setter Property="Width" Value="36" />
+            <Setter Property="Height" Value="36" />
+            <Setter Property="Padding" Value="0" />
+            <Setter Property="CornerRadius" Value="10" />
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Foreground" Value="{DynamicResource BsMuted}" />
+            <Setter Property="HorizontalContentAlignment" Value="Center" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+        </Style>
+        <Style Selector="Button.tool:pointerover /template/ ContentPresenter#PART_ContentPresenter, ToggleButton.tool:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="{DynamicResource BsHover}" />
+            <Setter Property="Foreground" Value="{DynamicResource BsText}" />
+        </Style>
+        <Style Selector="ToggleButton.tool:checked /template/ ContentPresenter#PART_ContentPresenter, ToggleButton.tool:checked:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="{DynamicResource BsAccentSoft}" />
+            <Setter Property="Foreground" Value="{DynamicResource BsAccent}" />
+        </Style>
+
+        <!-- Pills (grouped controls in the top bar) -->
+        <Style Selector="Border.pill">
+            <Setter Property="Background" Value="{DynamicResource BsSurface2}" />
+            <Setter Property="CornerRadius" Value="12" />
+            <Setter Property="Padding" Value="2" />
+        </Style>
+        <Style Selector="Rectangle.sep">
+            <Setter Property="Width" Value="1" />
+            <Setter Property="Height" Value="18" />
+            <Setter Property="Fill" Value="{DynamicResource BsBorder}" />
+            <Setter Property="Margin" Value="2,0" />
+        </Style>
+
+        <!-- Text roles -->
+        <Style Selector="TextBlock.h2">
+            <Setter Property="FontFamily" Value="{DynamicResource UiSerif}" />
+            <Setter Property="FontSize" Value="24" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+        </Style>
+        <Style Selector="TextBlock.caption">
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="Foreground" Value="{DynamicResource BsMuted}" />
+        </Style>
+
+        <!-- Side rail tabs -->
+        <Style Selector="TabItem">
+            <Setter Property="MinWidth" Value="46" />
+            <Setter Property="MinHeight" Value="46" />
+            <Setter Property="Padding" Value="0" />
+            <Setter Property="HorizontalContentAlignment" Value="Center" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+        </Style>
         <Style Selector="TabControl">
             <Setter Property="Background" Value="Transparent" />
+            <Setter Property="Padding" Value="0" />
         </Style>
-        <Style Selector="TabItem">
-            <Setter Property="FontSize" Value="14" />
-            <Setter Property="Padding" Value="10,6" />
-        </Style>
+
+        <!-- Lists -->
         <Style Selector="ListBox">
             <Setter Property="Background" Value="Transparent" />
+        </Style>
+        <Style Selector="ListBoxItem">
+            <Setter Property="CornerRadius" Value="10" />
+            <Setter Property="Padding" Value="10,8" />
+            <Setter Property="Margin" Value="0,1" />
+        </Style>
+
+        <!-- Verse rows in the reader -->
+        <Style Selector="Border.verse:pointerover">
+            <Setter Property="Background" Value="{DynamicResource BsSurface2}" />
         </Style>
     </Application.Styles>
 </Application>

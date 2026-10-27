@@ -13,7 +13,7 @@ public static class ConcordanceBuilder
         var jobs = books.SelectMany(b => Enumerable.Range(1, b.NumberOfChapters).Select(c => (Book: b.Id, Chapter: c))).ToList();
         var results = new Chapter?[jobs.Count];
         var done = 0;
-        using var gate = new SemaphoreSlim(6);
+        using var gate = new SemaphoreSlim(24);
         await Task.WhenAll(jobs.Select(async (job, i) =>
         {
             await gate.WaitAsync(ct);

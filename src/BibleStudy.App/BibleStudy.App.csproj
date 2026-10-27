@@ -18,6 +18,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <AvaloniaResource Include="Assets\**" />
     <ProjectReference Include="..\BibleStudy.Core\BibleStudy.Core.csproj" />
   </ItemGroup>
 </Project>

@@ -9,7 +9,13 @@ using BibleStudy.Core.Storage;
 
 namespace BibleStudy.App;
 
-public sealed record Entry(VerseRef Ref, string Display);
+/// <summary>List entry: first line of Display is the title, the rest (if any) the body.</summary>
+public sealed record Entry(VerseRef Ref, string Display)
+{
+    public string Title => Display.Split('\n', 2)[0];
+    public string Body => Display.Contains('\n') ? Display[(Display.IndexOf('\n') + 1)..] : "";
+    public bool HasBody => Body.Length > 0;
+}
 
 /// <summary>An additional translation shown next to the main one.</summary>
 public sealed record ExtraColumn(ComboBox Lang, ComboBox Trans, Control Root)
@@ -24,12 +30,12 @@ public partial class MainWindow : Window
     readonly HelloAoProvider _hello;
     bool _building;
     readonly StrongsDictionary _strongs;
-    int _fontSize = 19;
+    int _fontSize = 22;
+    bool _singleColumn = true;
     readonly List<ExtraColumn> _extras = [];
     IReadOnlyList<string> _langs = [];
 
-    static readonly IBrush MarkBrush = new SolidColorBrush(Color.FromArgb(50, 255, 190, 0));
-    static readonly IBrush SelectBrush = new SolidColorBrush(Color.FromArgb(60, 70, 130, 200));
+    IBrush? Res(string key) => this.TryFindResource(key, ActualThemeVariant, out var v) ? v as IBrush : null;
 
     readonly IBibleProvider _provider;
     readonly UserStore _store;
@@ -49,6 +55,8 @@ public partial class MainWindow : Window
         var http = new HttpClient();
         _provider = _hello = new HelloAoProvider(http, Path.Combine(root, "cache"));
         _strongs = new StrongsDictionary(http, Path.Combine(root, "cache"));
+        ActualThemeVariantChanged += (_, _) => Paint();
+        ReaderScroll.SizeChanged += (_, _) => FitReader();
         StudyBtn.IsCheckedChanged += async (_, _) => await ShowChapterAsync(_selected);
         FontMinusBtn.Click += async (_, _) => { _fontSize = Math.Max(13, _fontSize - 1); await ShowChapterAsync(_selected); };
         FontPlusBtn.Click += async (_, _) => { _fontSize = Math.Min(34, _fontSize + 1); await ShowChapterAsync(_selected); };
@@ -142,8 +150,14 @@ public partial class MainWindow : Window
             var size = cols.Count > 2 ? _fontSize - 3 : _fontSize;
 
             ReaderPanel.Children.Clear(); _verseBoxes.Clear();
-            ReaderPanel.MaxWidth = cols.Count == 1 ? 780 : double.PositiveInfinity;
-            ReaderPanel.Children.Add(new TextBlock { Text = $"{b.CommonName} {ch.Number}", FontSize = 28, FontWeight = FontWeight.SemiBold, Margin = new(0, 0, 0, 12) });
+            _singleColumn = cols.Count == 1;
+            FitReader();
+            var kicker = new TextBlock { Text = b.CommonName.ToUpperInvariant(), FontSize = 13, FontWeight = FontWeight.SemiBold, LetterSpacing = 3, Margin = new(8, 0, 0, 0) };
+            kicker.Bind(TextBlock.ForegroundProperty, this.GetResourceObservable("BsMuted"));
+            var numeral = new TextBlock { Text = ch.Number.ToString(), FontSize = 64, FontFamily = UiSerif, FontWeight = FontWeight.SemiBold, Margin = new(8, 0, 0, 14) };
+            numeral.Bind(TextBlock.ForegroundProperty, this.GetResourceObservable("BsAccent"));
+            ReaderPanel.Children.Add(kicker);
+            ReaderPanel.Children.Add(numeral);
             if (cols.Count > 1)
             {
                 var head = NewRow(cols.Count);
@@ -156,7 +170,7 @@ public partial class MainWindow : Window
                 var row = NewRow(cols.Count);
                 for (var i = 0; i < cols.Count; i++)
                     AddCell(row, i, VerseCell(cols[i].C?.Verses.FirstOrDefault(v => v.Number == num), num, cols[i].T, size, i == 0 && noted.Contains(num)));
-                var box = new Border { Child = row, Padding = new(8, 2), CornerRadius = new(6) };
+                var box = new Border { Child = row, Padding = new(10, 3), CornerRadius = new(8), BorderThickness = new(3, 0, 0, 0), BorderBrush = Brushes.Transparent, Classes = { "verse" } };
                 var n = num;
                 box.AddHandler(PointerPressedEvent, (object? _, PointerPressedEventArgs e) => OnVersePressed(n, e), RoutingStrategies.Tunnel, handledEventsToo: true);
                 _verseBoxes[n] = box;
@@ -190,7 +204,9 @@ public partial class MainWindow : Window
         row.Children.Add(cell);
     }
 
-    static readonly FontFamily ScriptureFont = new("Cambria, Georgia, 'Times New Roman', serif");
+    // Crimson Text (SIL OFL) is bundled; system serif fonts cover Greek/Hebrew glyphs it lacks.
+    static readonly FontFamily UiSerif = new("avares://BibleStudy.App/Assets/Fonts#Crimson Text, Cambria, Georgia, serif");
+    static readonly FontFamily ScriptureFont = UiSerif;
 
     /// <summary>Clickable word range inside a verse cell (for the word study).</summary>
     sealed record WordSpan(int Start, int End, string[] Strongs, string Word);
@@ -212,7 +228,7 @@ public partial class MainWindow : Window
             tb.Inlines!.Add(run);
             pos += run.Text!.Length;
         }
-        var num = new Run(number + (hasNote ? "✎" : "") + " ") { FontSize = 12, FontWeight = FontWeight.Bold, BaselineAlignment = BaselineAlignment.Top };
+        var num = new Run(number + (hasNote ? "✎" : "") + " ") { FontSize = 14, FontWeight = FontWeight.Bold, BaselineAlignment = BaselineAlignment.Top };
         num.Bind(TextElement.ForegroundProperty, this.GetResourceObservable("BsVerseNumber"));
         Add(num);
         foreach (var s in v.Segments)
@@ -290,10 +306,15 @@ public partial class MainWindow : Window
     void AddColumn()
     {
         if (_extras.Count >= MaxExtras || _langs.Count == 0) return;
-        var lang = new ComboBox { Width = 140, Margin = new(0, 0, 4, 0), ItemsSource = _langs };
-        var trans = new ComboBox { Width = 230, Margin = new(0, 0, 4, 0) };
-        var remove = new Button { Content = "✕" };
-        var root = new StackPanel { Orientation = Avalonia.Layout.Orientation.Horizontal, Margin = new(0, 0, 12, 0), Children = { lang, trans, remove } };
+        var lang = new ComboBox { Width = 128, ItemsSource = _langs };
+        var trans = new ComboBox { Width = 210 };
+        var remove = new Button { Width = 32, Height = 32, Classes = { "tool" }, Content = new Icon { Data = Geometry.Parse("M18 6L6 18 M6 6l12 12"), IconSize = 16 } };
+        ToolTip.SetTip(remove, "Spalte entfernen");
+        var root = new Border
+        {
+            Classes = { "pill" }, Margin = new(16, 8, 0, 8),
+            Child = new StackPanel { Orientation = Avalonia.Layout.Orientation.Horizontal, Children = { lang, trans, remove } },
+        };
         var col = new ExtraColumn(lang, trans, root);
 
         lang.SelectionChanged += (_, _) =>
@@ -307,16 +328,30 @@ public partial class MainWindow : Window
         remove.Click += async (_, _) =>
         {
             _extras.Remove(col); ParallelBar.Children.Remove(root);
+            ParallelBar.IsVisible = _extras.Count > 0;
             await ShowChapterAsync(_selected);
         };
         _extras.Add(col); ParallelBar.Children.Add(root);
+        ParallelBar.IsVisible = true;
         lang.SelectedItem = LanguageBox.SelectedItem;
     }
 
+    /// <summary>Selected verse: soft accent fill; bookmarked verse: accent bar on the left. Otherwise the hover style applies.</summary>
     void Paint()
     {
+        var soft = Res("BsAccentSoft"); var accent = Res("BsAccent");
         foreach (var (n, box) in _verseBoxes)
-            box.Background = n == _selected ? SelectBrush : _marked.Contains(n) ? MarkBrush : null;
+        {
+            if (n == _selected) box.Background = soft; else box.ClearValue(Border.BackgroundProperty);
+            box.BorderBrush = _marked.Contains(n) ? accent : Brushes.Transparent;
+        }
+    }
+
+    void FitReader()
+    {
+        ReaderPanel.HorizontalAlignment = _singleColumn ? Avalonia.Layout.HorizontalAlignment.Center : Avalonia.Layout.HorizontalAlignment.Stretch;
+        ReaderPanel.Margin = _singleColumn ? new(0, 36, 0, 80) : new(32, 28, 32, 80);
+        ReaderPanel.Width = _singleColumn ? Math.Clamp(ReaderScroll.Bounds.Width - 64, 320, 760) : double.NaN;
     }
 
     void SelectVerse(int n)
@@ -402,7 +437,7 @@ public partial class MainWindow : Window
         NoteList.ItemsSource = _store.GetNotes().Select(n =>
         {
             var t = n.Text.ReplaceLineEndings(" ");
-            return new Entry(n.Ref, $"{Label(n.Ref)} – {(t.Length > 100 ? t[..100] + "…" : t)}");
+            return new Entry(n.Ref, $"{Label(n.Ref)}\n{(t.Length > 100 ? t[..100] + "…" : t)}");
         }).ToList();
     }
 
@@ -418,7 +453,7 @@ public partial class MainWindow : Window
                 await Task.Run(() => _store.Index(t.Id, verses));
             }
             var hits = _store.Search(t.Id, SearchBox.Text);
-            SearchList.ItemsSource = hits.Select(h => new Entry(h.Ref, $"{Label(h.Ref)}  {h.Snippet}")).ToList();
+            SearchList.ItemsSource = hits.Select(h => new Entry(h.Ref, $"{Label(h.Ref)}\n{h.Snippet}")).ToList();
             SearchInfo.Text = hits.Count == 0 ? "Keine Treffer." : $"{hits.Count}{(hits.Count >= 200 ? "+" : "")} Treffer in {t.ShortName}";
         }
         catch (Exception ex) { SearchInfo.Text = "Fehler: " + ex.Message; }
