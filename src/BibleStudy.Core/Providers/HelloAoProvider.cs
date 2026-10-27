@@ -38,8 +38,27 @@ public sealed class HelloAoProvider(HttpClient http, string cacheDir) : IBiblePr
     public async Task<Chapter> GetChapterAsync(string translationId, string bookId, int chapter, CancellationToken ct = default)
     {
         using var doc = await GetJsonAsync($"/api/{translationId}/{bookId}/{chapter}.json", ct);
+        return new Chapter(translationId, bookId, chapter, ParseVerses(doc.RootElement.GetProperty("chapter")));
+    }
+
+    public async Task<IReadOnlyList<VerseText>> GetAllVersesAsync(string translationId, CancellationToken ct = default)
+    {
+        using var doc = await GetJsonAsync($"/api/{translationId}/complete.json", ct);
+        var result = new List<VerseText>();
+        foreach (var book in doc.RootElement.GetProperty("books").EnumerateArray())
+            foreach (var ch in book.GetProperty("chapters").EnumerateArray())
+            {
+                var chapter = ch.GetProperty("chapter");
+                foreach (var v in ParseVerses(chapter))
+                    result.Add(new VerseText(Str(book, "id"), chapter.GetProperty("number").GetInt32(), v.Number, v.Text));
+            }
+        return result;
+    }
+
+    static List<Verse> ParseVerses(JsonElement chapter)
+    {
         var verses = new List<Verse>();
-        foreach (var item in doc.RootElement.GetProperty("chapter").GetProperty("content").EnumerateArray())
+        foreach (var item in chapter.GetProperty("content").EnumerateArray())
         {
             if (Str(item, "type") != "verse") continue;
             var segs = new List<Segment>();
@@ -51,7 +70,7 @@ public sealed class HelloAoProvider(HttpClient http, string cacheDir) : IBiblePr
             }
             verses.Add(new Verse(item.GetProperty("number").GetInt32(), segs));
         }
-        return new Chapter(translationId, bookId, chapter, verses);
+        return verses;
     }
 
     static string Str(JsonElement e, string name) =>

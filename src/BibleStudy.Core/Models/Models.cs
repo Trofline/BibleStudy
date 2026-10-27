@@ -22,4 +22,10 @@ public sealed record Verse(int Number, IReadOnlyList<Segment> Segments)
     public string Text => string.Concat(Segments.Select(s => s.Text));
 }
 
+/// <summary>Location of a verse, independent of translation (USFM book id), so notes follow across translations.</summary>
+public readonly record struct VerseRef(string Book, int Chapter, int Verse);
+
+/// <summary>Plain verse text for indexing.</summary>
+public sealed record VerseText(string BookId, int Chapter, int Number, string Text);
+
 public sealed record Chapter(string TranslationId, string BookId, int Number, IReadOnlyList<Verse> Verses);

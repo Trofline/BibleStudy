@@ -9,4 +9,5 @@ public interface IBibleProvider
     Task<IReadOnlyList<TranslationInfo>> GetTranslationsAsync(CancellationToken ct = default);
     Task<IReadOnlyList<BookInfo>> GetBooksAsync(string translationId, CancellationToken ct = default);
     Task<Chapter> GetChapterAsync(string translationId, string bookId, int chapter, CancellationToken ct = default);
+    Task<IReadOnlyList<VerseText>> GetAllVersesAsync(string translationId, CancellationToken ct = default);
 }

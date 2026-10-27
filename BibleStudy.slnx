@@ -3,4 +3,7 @@
     <Project Path="src/BibleStudy.App/BibleStudy.App.csproj" />
     <Project Path="src/BibleStudy.Core/BibleStudy.Core.csproj" />
   </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/BibleStudy.Tests/BibleStudy.Tests.csproj" />
+  </Folder>
 </Solution>
