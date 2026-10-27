@@ -1,3 +1,5 @@
+<p align="center"><img src="src/BibleStudy.App/Assets/app.png" width="128" alt="BibleStudy logo"></p>
+
 # BibleStudy
 
 Freie, quelloffene Bibelstudien-Software für Windows (C#, .NET 10, Avalonia). Lesen, vergleichen, markieren, Notizen und Dokumente

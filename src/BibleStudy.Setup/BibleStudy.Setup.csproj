@@ -10,6 +10,7 @@
     <Authors>Trofline</Authors>
     <Product>BibleStudy Setup</Product>
     <ApplicationHighDpiMode>SystemAware</ApplicationHighDpiMode>
+    <ApplicationIcon>..\BibleStudy.App\Assets\app.ico</ApplicationIcon>
     <PayloadZip Condition="'$(PayloadZip)' == ''">$(MSBuildProjectDirectory)\..\..\release\payload.zip</PayloadZip>
   </PropertyGroup>
   <!-- The program itself travels inside the installer; release.ps1 builds payload.zip first. -->

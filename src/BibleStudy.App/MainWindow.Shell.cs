@@ -18,6 +18,12 @@ public partial class MainWindow
     /// <summary>The book logo as a bitmap, used for the window, the taskbar and the tray.</summary>
     static WindowIcon MakeIcon()
     {
+        try
+        {
+            using var s = AssetLoader.Open(new Uri("avares://BibleStudy.App/Assets/app.png"));
+            return new WindowIcon(new Bitmap(s));
+        }
+        catch { /* fall back to the drawn icon below */ }
         var rtb = new RenderTargetBitmap(new PixelSize(64, 64), new Vector(96, 96));
         using (var ctx = rtb.CreateDrawingContext())
         {
