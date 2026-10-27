@@ -20,8 +20,8 @@ public sealed record Segment(string Text, bool WordsOfJesus = false, IReadOnlyLi
 public sealed record Verse(int Number, IReadOnlyList<Segment> Segments)
 {
     /// <summary>Plain text; a footnote marker stands where the source has no space, so it counts as one.</summary>
-    public string Text => System.Text.RegularExpressions.Regex.Replace(
-        string.Concat(Segments.Select(s => s.NoteId is null ? s.Text : " ")), @"\s+", " ").Trim();
+    public string Text => System.Text.RegularExpressions.Regex.Replace(System.Text.RegularExpressions.Regex.Replace(
+        string.Concat(Segments.Select(s => s.NoteId is null ? s.Text : " ")), @"\s+", " "), @" ([.,;:!?])", "$1").Trim();
 }
 
 /// <summary>A footnote of a chapter; referenced from verse segments by <see cref="Segment.NoteId"/>.</summary>

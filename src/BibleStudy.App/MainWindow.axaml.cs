@@ -131,6 +131,8 @@ public partial class MainWindow : Window
         SearchBox.KeyDown += async (_, e) => { if (e.Key == Key.Enter) await SearchAsync(); };
         foreach (var list in new[] { SearchList, NoteList, XrefList, ConcList }) list.SelectionChanged += OnEntryPicked;
         InitVault();
+        InitAi();
+        StartControl();
         Opened += async (_, _) => await InitAsync();
     }
 

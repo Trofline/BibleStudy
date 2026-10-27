@@ -20,5 +20,14 @@
   <ItemGroup>
     <AvaloniaResource Include="Assets\**" />
     <ProjectReference Include="..\BibleStudy.Core\BibleStudy.Core.csproj" />
+    <!-- The MCP server is built first and shipped next to the app (mcp\BibleStudy.Mcp.exe). -->
+    <ProjectReference Include="..\BibleStudy.Mcp\BibleStudy.Mcp.csproj" ReferenceOutputAssembly="false" />
   </ItemGroup>
+
+  <Target Name="CopyMcpServer" AfterTargets="Build">
+    <ItemGroup>
+      <McpFiles Include="..\BibleStudy.Mcp\bin\$(Configuration)\net10.0\**\*.*" />
+    </ItemGroup>
+    <Copy SourceFiles="@(McpFiles)" DestinationFiles="@(McpFiles->'$(OutDir)mcp\%(RecursiveDir)%(Filename)%(Extension)')" SkipUnchangedFiles="true" />
+  </Target>
 </Project>

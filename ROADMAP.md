@@ -17,8 +17,8 @@ Freie, quelloffene Bibelstudien-Software (C#, Avalonia). Nur Quellen mit freier 
 - [ ] Dokumente verlinken, eigene Wissensdatenbank
 
 ## Phase 3 – Claude-Anbindung
-- MCP-Server: Claude kann lesen, suchen, markieren, navigieren, das Programm steuern
-- KI-Fenster über die lokale Claude-Installation (Abo, kein API-Schlüssel)
+- [x] MCP-Server (23 Werkzeuge): Claude kann lesen, suchen, markieren, navigieren, das Programm steuern
+- [x] KI-Fenster über die lokale Claude-Installation (Abo, kein API-Schlüssel)
 
 ## Phase 4 – Querverweise & Visualisierung
 - Querverweise im Text, Graph neben dem Text, Netzwerk-Graph, Bogen-Ansicht

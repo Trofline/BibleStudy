@@ -16,6 +16,8 @@ public sealed class AppSettings
     public bool AutoTagBook { get; set; } = true;
     public string DefaultColor { get; set; } = "#FFD54F";
     public List<string> CustomColors { get; set; } = [];
+    public string AiContext { get; set; } = "Standpunkt: adventistisch; die Bibel allein ist Maßstab (keine kirchliche oder päpstliche Autorität).";
+    public string AiModel { get; set; } = "";
 
     static readonly JsonSerializerOptions Json = new() { WriteIndented = true };
 

@@ -2,6 +2,7 @@
   <Folder Name="/src/">
     <Project Path="src/BibleStudy.App/BibleStudy.App.csproj" />
     <Project Path="src/BibleStudy.Core/BibleStudy.Core.csproj" />
+    <Project Path="src/BibleStudy.Mcp/BibleStudy.Mcp.csproj" />
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/BibleStudy.Tests/BibleStudy.Tests.csproj" />

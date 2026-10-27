@@ -208,6 +208,21 @@
                         <ScrollViewer><StackPanel x:Name="TodoPanel" Spacing="4" Margin="0,0,8,0" /></ScrollViewer>
                     </DockPanel>
                 </TabItem>
+                <TabItem ToolTip.Tip="KI-Assistent (Claude)">
+                    <TabItem.Header><local:Icon Data="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9z M19 3v4 M17 5h4 M5 17v4 M3 19h4" /></TabItem.Header>
+                    <Grid RowDefinitions="Auto,*,Auto" Margin="16,14,12,12">
+                        <DockPanel Margin="0,0,0,8">
+                            <Button x:Name="AiNewBtn" DockPanel.Dock="Right" Content="Neues Gespräch" FontSize="12" Padding="10,4" VerticalAlignment="Center" />
+                            <TextBlock Classes="h2" Text="KI-Assistent" />
+                        </DockPanel>
+                        <ScrollViewer x:Name="AiScroll" Grid.Row="1"><StackPanel x:Name="AiMessages" Spacing="10" Margin="0,0,8,0" /></ScrollViewer>
+                        <StackPanel Grid.Row="2" Spacing="6" Margin="0,8,0,0">
+                            <TextBlock x:Name="AiStatus" Classes="caption" TextWrapping="Wrap" />
+                            <TextBox x:Name="AiInput" AcceptsReturn="True" TextWrapping="Wrap" Height="76" Watermark="Frage oder Auftrag … (Enter sendet, Umschalt+Enter neue Zeile)" />
+                            <Button x:Name="AiSendBtn" Content="Senden" Classes="accent" HorizontalAlignment="Right" />
+                        </StackPanel>
+                    </Grid>
+                </TabItem>
                 <TabItem ToolTip.Tip="Einstellungen">
                     <TabItem.Header><local:Icon Data="M21 4h-7 M10 4H3 M21 12h-9 M8 12H3 M21 20h-5 M12 20H3 M14 2v4 M8 10v4 M16 18v4" /></TabItem.Header>
                     <ScrollViewer Margin="16,14,4,12">
@@ -241,6 +256,16 @@
                             <TextBlock Text="Standard-Markierfarbe" FontWeight="SemiBold" />
                             <WrapPanel x:Name="DefaultColorPanel" />
                             <CheckBox x:Name="AutoTagCheck" Content="Beim Speichern den Buchnamen als Tag vergeben" />
+                            <Border Height="1" Background="{DynamicResource BsBorder}" />
+                            <TextBlock Text="KI und MCP" FontWeight="SemiBold" />
+                            <TextBlock Classes="caption" TextWrapping="Wrap" Text="Das KI-Fenster nutzt deine lokal installierte Claude-Code-App mit deiner Anmeldung: kein API-Schlüssel, keine API-Kosten durch das Programm. Claude sieht nur die Bibel-Werkzeuge dieses Programms." />
+                            <TextBlock x:Name="AiCliInfo" Classes="caption" TextWrapping="Wrap" />
+                            <TextBlock Text="Hintergrund für Claude (frei änderbar)" />
+                            <TextBox x:Name="AiContextBox" AcceptsReturn="True" TextWrapping="Wrap" Height="80" />
+                            <TextBox x:Name="AiModelBox" Watermark="Modell (leer = deine Standardeinstellung), z. B. sonnet" />
+                            <TextBlock Text="MCP-Server für andere Programme (z. B. Claude Code)" />
+                            <TextBox x:Name="McpCommandBox" IsReadOnly="True" TextWrapping="Wrap" />
+                            <Button x:Name="McpCopyBtn" Content="Befehl kopieren" HorizontalAlignment="Left" />
                             <Border Height="1" Background="{DynamicResource BsBorder}" />
                             <TextBlock Text="Offline" FontWeight="SemiBold" />
                             <TextBlock x:Name="OfflineInfo" Classes="caption" TextWrapping="Wrap" />
