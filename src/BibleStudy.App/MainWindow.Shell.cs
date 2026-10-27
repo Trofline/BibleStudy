@@ -106,13 +106,13 @@ public partial class MainWindow
             return;
         }
         if (_tray is not null) return;
-        void Show() { if (!IsVisible) Show(); if (WindowState == WindowState.Minimized) WindowState = WindowState.Normal; Activate(); }
+        void Restore() { if (!IsVisible) this.Show(); if (WindowState == WindowState.Minimized) WindowState = WindowState.Normal; Activate(); }
         var menu = new NativeMenu();
-        var open = new NativeMenuItem("BibleStudy öffnen"); open.Click += (_, _) => Show();
+        var open = new NativeMenuItem("BibleStudy öffnen"); open.Click += (_, _) => Restore();
         var quit = new NativeMenuItem("Beenden"); quit.Click += (_, _) => { _exiting = true; Close(); };
         menu.Items.Add(open); menu.Items.Add(new NativeMenuItemSeparator()); menu.Items.Add(quit);
         _tray = new TrayIcon { Icon = Icon, ToolTipText = "BibleStudy", Menu = menu, IsVisible = true };
-        _tray.Clicked += (_, _) => Show();
+        _tray.Clicked += (_, _) => Restore();
         TrayIcon.SetIcons(Application.Current!, [_tray]);
     }
 
