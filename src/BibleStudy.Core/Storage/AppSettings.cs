@@ -12,6 +12,10 @@ public sealed class AppSettings
     public string? TranslationId { get; set; }
     public string? BookId { get; set; }
     public int Chapter { get; set; } = 1;
+    public string Vault { get; set; } = "Standard";
+    public bool AutoTagBook { get; set; } = true;
+    public string DefaultColor { get; set; } = "#FFD54F";
+    public List<string> CustomColors { get; set; } = [];
 
     static readonly JsonSerializerOptions Json = new() { WriteIndented = true };
 

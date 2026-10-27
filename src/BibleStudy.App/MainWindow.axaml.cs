@@ -11,8 +11,10 @@ using BibleStudy.Core.Storage;
 namespace BibleStudy.App;
 
 /// <summary>List entry: first line of Display is the title, the rest (if any) the body.</summary>
-public sealed record Entry(VerseRef Ref, string Display)
+public sealed record Entry(VerseRef Ref, string Display, long? Id = null, string? Color = null)
 {
+    public bool HasColor => Color is not null;
+    public IBrush? ColorBrush => Color is null ? null : new SolidColorBrush(Avalonia.Media.Color.Parse(Color));
     public string Title => Display.Split('\n', 2)[0];
     public string Body => Display.Contains('\n') ? Display[(Display.IndexOf('\n') + 1)..] : "";
     public bool HasBody => Body.Length > 0;
@@ -51,7 +53,8 @@ public partial class MainWindow : Window
     IReadOnlyList<TranslationInfo> _all = [];
     IReadOnlyList<BookInfo> _books = [];
     readonly Dictionary<int, Border> _verseBoxes = [];
-    HashSet<int> _marked = [];
+    Chapter? _curChapterData;
+    List<CrossRef> _xrefs = [];
     string _curBook = "";
     int _curChapter;
     int? _selected;
@@ -67,7 +70,8 @@ public partial class MainWindow : Window
         _store = new UserStore(Path.Combine(_root, "user.db"));
         _settingsPath = Path.Combine(_root, "settings.json");
         _settings = AppSettings.Load(_settingsPath);
-        _read = _store.GetReadChapters();
+        _vault = OpenVault(_settings.Vault);
+        _read = _vault.GetReadChapters();
         _fontSize = _settings.FontSize;
         _startupHome = _settings.StartOnHome;
         FontSlider.Value = _fontSize;
@@ -89,7 +93,7 @@ public partial class MainWindow : Window
         StartHomeCheck.IsCheckedChanged += (_, _) => { _settings.StartOnHome = StartHomeCheck.IsChecked == true; SaveSettings(); };
         AutoReadCheck.IsCheckedChanged += (_, _) => { _settings.AutoMarkRead = AutoReadCheck.IsChecked == true; SaveSettings(); };
         OfflineBtn.Click += async (_, _) => await OfflineAsync();
-        SideTabs.SelectionChanged += (_, _) => { if (SideTabs.SelectedIndex == 6) UpdateOfflineInfo(); };
+        SideTabs.SelectionChanged += (_, _) => { if (SideTabs.SelectedIndex == SettingsTab) UpdateOfflineInfo(); };
         Closing += (_, _) => SaveSettings();
 
         HomeBtn.Click += (_, _) => ShowHome();
@@ -98,7 +102,7 @@ public partial class MainWindow : Window
         Home.ChapterChosen += async (book, chapter) => await GoToAsync(book, chapter);
         Home.ReadChanged += SetRead;
 
-        ActualThemeVariantChanged += (_, _) => Paint();
+        ActualThemeVariantChanged += async (_, _) => await ShowChapterAsync(_selected); // highlight opacity depends on the theme
         ReaderScroll.SizeChanged += (_, _) => FitReader();
         StudyBtn.IsCheckedChanged += async (_, _) => await ShowChapterAsync(_selected);
 
@@ -125,7 +129,8 @@ public partial class MainWindow : Window
         NoteSaveBtn.Click += async (_, _) => await SaveNoteAsync(NoteEditor.Text ?? "");
         NoteDeleteBtn.Click += async (_, _) => { NoteEditor.Text = ""; await SaveNoteAsync(""); };
         SearchBox.KeyDown += async (_, e) => { if (e.Key == Key.Enter) await SearchAsync(); };
-        foreach (var list in new[] { SearchList, BookmarkList, NoteList, XrefList, ConcList }) list.SelectionChanged += OnEntryPicked;
+        foreach (var list in new[] { SearchList, NoteList, XrefList, ConcList }) list.SelectionChanged += OnEntryPicked;
+        InitVault();
         Opened += async (_, _) => await InitAsync();
     }
 
@@ -196,8 +201,8 @@ public partial class MainWindow : Window
     void SetRead(string book, IReadOnlyList<int> chapters, bool read)
     {
         if (book == "") return;
-        _store.SetRead(book, chapters, read);
-        _read = _store.GetReadChapters();
+        _vault.SetRead(book, chapters, read);
+        _read = _vault.GetReadChapters();
         if (Home.IsVisible) Home.Show(_books, _read, Home.OpenBook);
         ReadBtn.IsChecked = _read.Contains((_curBook, _curChapter));
     }
@@ -241,7 +246,7 @@ public partial class MainWindow : Window
         catch (Exception ex) { StatusText.Text = "Fehler: " + ex.Message; }
         finally { _loading = false; }
         if (Home.IsVisible) Home.Show(_books, _read, Home.OpenBook);
-        if (SideTabs.SelectedIndex == 6) UpdateOfflineInfo();
+        if (SideTabs.SelectedIndex == SettingsTab) UpdateOfflineInfo();
         RefreshLists();
         await ShowChapterAsync();
     }
@@ -260,8 +265,9 @@ public partial class MainWindow : Window
             cols.AddRange(extraTs.Zip(await Task.WhenAll(extraTasks), (c, x) => (c, x)));
 
             _curBook = b.Id; _curChapter = ch.Number; _selected = null;
-            _marked = _store.GetBookmarks().Where(r => r.Book == _curBook && r.Chapter == _curChapter).Select(r => r.Verse).ToHashSet();
-            var noted = _store.GetNotes().Where(n => n.Ref.Book == _curBook && n.Ref.Chapter == _curChapter).Select(n => n.Ref.Verse).ToHashSet();
+            _curChapterData = ch;
+            LoadChapterMarks();
+            var noted = _vault.GetNotes().Where(n => n.Ref.Book == _curBook && n.Ref.Chapter == _curChapter).Select(n => n.Ref.Verse).ToHashSet();
             var size = cols.Count > 2 ? _fontSize - 3 : _fontSize;
 
             ReaderPanel.Children.Clear(); _verseBoxes.Clear();
@@ -286,10 +292,12 @@ public partial class MainWindow : Window
             {
                 var row = NewRow(cols.Count);
                 for (var i = 0; i < cols.Count; i++)
-                    AddCell(row, i, VerseCell(cols[i].C?.Verses.FirstOrDefault(v => v.Number == num), num, cols[i].T, size, i == 0 && noted.Contains(num), notes[i]));
+                    AddCell(row, i, VerseCell(cols[i].C?.Verses.FirstOrDefault(v => v.Number == num), num, cols[i].T, size, i == 0 && noted.Contains(num), notes[i],
+                        _chapterMarks.Where(m => m.Ref.Verse == num && !m.WholeVerse && m.TranslationId == cols[i].T.Id).ToList()));
                 var box = new Border { Child = row, Padding = new(10, 3), CornerRadius = new(8), BorderThickness = new(3, 0, 0, 0), BorderBrush = Brushes.Transparent, Classes = { "verse" } };
                 var n = num;
                 box.AddHandler(PointerPressedEvent, (object? _, PointerPressedEventArgs e) => OnVersePressed(n, e), RoutingStrategies.Tunnel, handledEventsToo: true);
+                box.AddHandler(PointerReleasedEvent, (object? _, PointerReleasedEventArgs e) => CaptureSelection(e), RoutingStrategies.Tunnel, handledEventsToo: true);
                 _verseBoxes[n] = box;
                 ReaderPanel.Children.Add(box);
             }
@@ -335,7 +343,13 @@ public partial class MainWindow : Window
 
     static string NoteLetter(int i) => i < 26 ? ((char)('a' + i)).ToString() : NoteLetter(i / 26 - 1) + NoteLetter(i % 26);
 
-    SelectableTextBlock VerseCell(Verse? v, int number, TranslationInfo t, int size, bool hasNote, IReadOnlyDictionary<int, (string Letter, string Text)>? notes)
+    /// <summary>Maps a stretch of the cell's text (Tb) to its offset in the plain verse text (Raw).</summary>
+    sealed record RunMap(int Tb, int Raw, int Len);
+
+    /// <summary>Everything the pointer handlers need to know about one verse cell.</summary>
+    sealed record CellInfo(List<WordSpan> Spans, List<RunMap> Runs, int Verse, string TranslationId, string RawText);
+
+    SelectableTextBlock VerseCell(Verse? v, int number, TranslationInfo t, int size, bool hasNote, IReadOnlyDictionary<int, (string Letter, string Text)>? notes, IReadOnlyList<Mark> marks)
     {
         var tb = new SelectableTextBlock
         {
@@ -346,7 +360,9 @@ public partial class MainWindow : Window
         if (v is null) return tb;
         var study = StudyBtn.IsChecked == true;
         var spans = new List<WordSpan>();
+        var runs = new List<RunMap>();
         var pos = 0;
+        var raw = 0; // offset in the plain verse text (without number and footnote markers)
         void Add(Run run)
         {
             tb.Inlines!.Add(run);
@@ -366,26 +382,41 @@ public partial class MainWindow : Window
                 Add(marker);
                 continue;
             }
-            var run = new Run(s.Text);
-            if (s.WordsOfJesus) run.Bind(TextElement.ForegroundProperty, this.GetResourceObservable("BsJesus"));
-            if (s.Strongs is { Count: > 0 })
+            // Cut the segment where highlights start or end, so each piece has one background color.
+            var cuts = new SortedSet<int> { 0, s.Text.Length };
+            foreach (var m in marks) { cuts.Add(Math.Clamp(m.Start - raw, 0, s.Text.Length)); cuts.Add(Math.Clamp(m.End - raw, 0, s.Text.Length)); }
+            var points = cuts.ToList();
+            for (var i = 0; i + 1 < points.Count; i++)
             {
-                spans.Add(new WordSpan(pos, pos + s.Text.Length, [.. s.Strongs], s.Text));
-                if (study) run.TextDecorations = TextDecorations.Underline;
+                var piece = s.Text[points[i]..points[i + 1]];
+                var from = raw + points[i];
+                var run = new Run(piece);
+                if (s.WordsOfJesus) run.Bind(TextElement.ForegroundProperty, this.GetResourceObservable("BsJesus"));
+                if (marks.FirstOrDefault(m => m.Start <= from && m.End >= from + piece.Length) is { } mark) run.Background = HighlightBrush(mark.Color);
+                if (s.Strongs is { Count: > 0 })
+                {
+                    spans.Add(new WordSpan(pos, pos + piece.Length, [.. s.Strongs], s.Text));
+                    if (study) run.TextDecorations = TextDecorations.Underline;
+                }
+                runs.Add(new RunMap(pos, from, piece.Length));
+                Add(run);
             }
-            Add(run);
+            raw += s.Text.Length;
         }
         Add(new Run(" "));
-        tb.Tag = spans;
+        tb.Tag = new CellInfo(spans, runs, number, t.Id, string.Concat(v.Segments.Where(x => x.NoteId is null).Select(x => x.Text)));
         return tb;
     }
+
+    /// <summary>Translucent so the text stays readable on both themes.</summary>
+    IBrush HighlightBrush(string hex) => new SolidColorBrush(Color.Parse(hex), ActualThemeVariant == Avalonia.Styling.ThemeVariant.Dark ? 0.45 : 0.55);
 
     void OnVersePressed(int verse, PointerPressedEventArgs e)
     {
         SelectVerse(verse);
-        if (e.Source is not SelectableTextBlock { Tag: List<WordSpan> spans } tb) return;
+        if (e.Source is not SelectableTextBlock { Tag: CellInfo cell } tb) return;
         var hit = tb.TextLayout.HitTestPoint(e.GetPosition(tb)).TextPosition;
-        var span = spans.FirstOrDefault(s => hit >= s.Start && hit < s.End);
+        var span = cell.Spans.FirstOrDefault(s => hit >= s.Start && hit < s.End);
         if (span is null) return;
         if (span.Note is not null) ShowFootnote(tb, span);
         else if (StudyBtn.IsChecked == true) _ = ShowStudyAsync(span);
@@ -482,11 +513,14 @@ public partial class MainWindow : Window
     /// <summary>Selected verse: soft accent fill; bookmarked verse: accent bar on the left. Otherwise the hover style applies.</summary>
     void Paint()
     {
-        var soft = Res("BsAccentSoft"); var accent = Res("BsAccent");
+        var soft = Res("BsAccentSoft");
         foreach (var (n, box) in _verseBoxes)
         {
-            if (n == _selected) box.Background = soft; else box.ClearValue(Border.BackgroundProperty);
-            box.BorderBrush = _marked.Contains(n) ? accent : Brushes.Transparent;
+            var whole = _wholeMarks.TryGetValue(n, out var hex) ? Color.Parse(hex) : (Color?)null;
+            if (n == _selected) box.Background = soft;
+            else if (whole is { } c) box.Background = new SolidColorBrush(c, 0.14);
+            else box.ClearValue(Border.BackgroundProperty);
+            box.BorderBrush = whole is { } c2 ? new SolidColorBrush(c2) : Brushes.Transparent;
         }
     }
 
@@ -502,7 +536,7 @@ public partial class MainWindow : Window
         _selected = n; Paint();
         var r = new VerseRef(_curBook, _curChapter, n);
         NoteTarget.Text = "Notiz zu " + Label(r);
-        NoteEditor.Text = _store.GetNotes().FirstOrDefault(x => x.Ref == r)?.Text ?? "";
+        NoteEditor.Text = _vault.GetNotes().FirstOrDefault(x => x.Ref == r)?.Text ?? "";
         _ = ShowXrefsAsync(r);
     }
 
@@ -515,6 +549,7 @@ public partial class MainWindow : Window
             if (TranslationBox.SelectedItem is not TranslationInfo t) return;
             var texts = await Task.WhenAll(refs.Select(x => VerseTextAsync(t.Id, x)));
             if (_selected != r.Verse || _curBook != r.Book || _curChapter != r.Chapter) return; // user moved on
+            _xrefs = refs;
             XrefTitle.Text = refs.Count == 0 ? $"Keine Querverweise zu {Label(r)}" : $"Querverweise zu {Label(r)}";
             XrefList.ItemsSource = refs.Zip(texts, (x, text) =>
                 new Entry(x.Target, $"{Label(x.Target)}{(x.EndVerse > x.Target.Verse ? "–" + x.EndVerse : "")}\n{text}")).ToList();
@@ -558,26 +593,18 @@ public partial class MainWindow : Window
         finally { _building = false; }
     }
 
-    void ToggleBookmark()
-    {
-        if (_selected is not int v) { StatusText.Text = "Erst einen Vers anklicken."; return; }
-        var on = _store.ToggleBookmark(new VerseRef(_curBook, _curChapter, v));
-        if (on) _marked.Add(v); else _marked.Remove(v);
-        Paint(); RefreshLists();
-    }
-
     async Task SaveNoteAsync(string text)
     {
         if (_selected is not int v) { StatusText.Text = "Erst einen Vers anklicken."; return; }
-        _store.SetNote(new VerseRef(_curBook, _curChapter, v), text);
+        _vault.SetNote(new VerseRef(_curBook, _curChapter, v), text);
         RefreshLists();
         await ShowChapterAsync(v);
     }
 
     void RefreshLists()
     {
-        BookmarkList.ItemsSource = _store.GetBookmarks().Select(r => new Entry(r, Label(r))).ToList();
-        NoteList.ItemsSource = _store.GetNotes().Select(n =>
+        RefreshCollection();
+        NoteList.ItemsSource = _vault.GetNotes().Select(n =>
         {
             var t = n.Text.ReplaceLineEndings(" ");
             return new Entry(n.Ref, $"{Label(n.Ref)}\n{(t.Length > 100 ? t[..100] + "…" : t)}");

@@ -21,14 +21,49 @@ public class UserStoreTests : IDisposable
     }
 
     [Fact]
-    public void BookmarksAndNotes_RoundTrip()
+    public void Notes_RoundTrip()
     {
-        var s = NewStore(); var r = new VerseRef("JHN", 3, 16);
-        Assert.True(s.ToggleBookmark(r)); Assert.Single(s.GetBookmarks());
-        Assert.False(s.ToggleBookmark(r)); Assert.Empty(s.GetBookmarks());
+        var s = new VaultStore(Path.Combine(_dir, "v.db"), "test"); var r = new VerseRef("JHN", 3, 16);
         s.SetNote(r, "Kernvers"); s.SetNote(r, "Kernvers 2");
         Assert.Equal("Kernvers 2", Assert.Single(s.GetNotes()).Text);
         s.SetNote(r, " "); Assert.Empty(s.GetNotes());
+    }
+
+    [Fact]
+    public void Marks_FoldersTagsAndFilters()
+    {
+        var s = new VaultStore(Path.Combine(_dir, "m.db"), "test");
+        var folder = s.AddFolder("Erzengel");
+        var word = s.AddMark("kjv", new("JHN", 3, 16), 4, 7, "God", "#FFD54F", "Kernwort", folder, ["Johannes", "Liebe", "liebe"]);
+        var whole = s.AddMark(Mark.AnyTranslation, new("GEN", 1, 1), -1, -1, "", "#6FA8F2", "", null, []);
+        Assert.Equal(2, s.GetMarks().Count);
+        var m = Assert.Single(s.GetMarks("JHN", 3));
+        Assert.Equal(["Johannes", "Liebe"], m.Tags.OrderBy(t => t)); // tags are unique ignoring case
+        Assert.False(m.WholeVerse);
+        Assert.True(Assert.Single(s.GetMarks(noFolder: true)).WholeVerse);
+        Assert.Equal(word, Assert.Single(s.GetMarks(folderId: folder)).Id);
+        Assert.Equal(word, Assert.Single(s.GetMarks(tag: "Liebe")).Id);
+        s.UpdateMark(word, "#FF0000", "neu", null, ["Neu"]);
+        Assert.Equal(("#FF0000", "neu"), (s.GetMarks("JHN")[0].Color, s.GetMarks("JHN")[0].Note));
+        Assert.Equal([("Neu", 1)], s.GetTags());
+        s.DeleteFolder(folder); s.DeleteMark(whole);
+        Assert.Empty(s.GetFolders()); Assert.Single(s.GetMarks());
+    }
+
+    [Fact]
+    public void QueueAndTodos()
+    {
+        var s = new VaultStore(Path.Combine(_dir, "q.db"), "test");
+        s.AddToQueue([(new("ROM", 5, 8), "Röm 5:8"), (new("JHN", 3, 16), "Joh 3:16")]);
+        var q = s.GetQueue();
+        Assert.Equal(["Röm 5:8", "Joh 3:16"], q.Select(x => x.Label));
+        s.RemoveFromQueue(q[0].Id); Assert.Single(s.GetQueue());
+        s.ClearQueue(); Assert.Empty(s.GetQueue());
+        s.AddTodo("Psalm 23 auswendig lernen", new VerseRef("PSA", 23, 1)); s.AddTodo("Offenbarung lesen", null);
+        var t = s.GetTodos(); s.SetTodoDone(t[0].Id, true);
+        Assert.True(s.GetTodos().Last().Done);   // done items sort last
+        Assert.Null(s.GetTodos()[0].Ref);
+        s.DeleteTodo(t[1].Id); Assert.Single(s.GetTodos());
     }
 
     public void Dispose() { Microsoft.Data.Sqlite.SqliteConnection.ClearAllPools(); try { Directory.Delete(_dir, true); } catch { } }
@@ -59,7 +94,7 @@ public class ReadingAndSettingsTests
     public void ReadChapters_MarkAndClearInBulk()
     {
         var dir = Path.Combine(Path.GetTempPath(), "bs_" + Guid.NewGuid().ToString("N"));
-        var s = new UserStore(Path.Combine(dir, "t.db"));
+        var s = new VaultStore(Path.Combine(dir, "t.db"), "test");
         s.SetRead("GEN", [1, 2, 3], true);
         s.SetRead("GEN", [2], false);
         Assert.Equal([("GEN", 1), ("GEN", 3)], s.GetReadChapters().OrderBy(x => x.Chapter));

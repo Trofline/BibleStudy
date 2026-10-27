@@ -7,7 +7,10 @@
     <Window.Resources>
         <DataTemplate x:Key="EntryTpl" x:DataType="local:Entry">
             <StackPanel Spacing="2">
-                <TextBlock Text="{Binding Title}" FontWeight="SemiBold" Foreground="{DynamicResource BsAccent}" TextWrapping="Wrap" />
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                    <Border Width="10" Height="10" CornerRadius="5" VerticalAlignment="Center" IsVisible="{Binding HasColor}" Background="{Binding ColorBrush}" />
+                    <TextBlock Text="{Binding Title}" FontWeight="SemiBold" Foreground="{DynamicResource BsAccent}" TextWrapping="Wrap" />
+                </StackPanel>
                 <TextBlock Text="{Binding Body}" IsVisible="{Binding HasBody}" TextWrapping="Wrap" Opacity="0.85" />
             </StackPanel>
         </DataTemplate>
@@ -41,7 +44,10 @@
                     <ToggleButton x:Name="StudyBtn" Classes="tool" ToolTip.Tip="Wortstudie: Wörter mit Strong-Nummer antippen">
                         <local:Icon Data="m5 8 6 6 M4 14l6-6 2-3 M2 5h12 M7 2h1 m22 22-5-10-5 10 M14 18h6" />
                     </ToggleButton>
-                    <Button x:Name="BookmarkBtn" Classes="tool" ToolTip.Tip="Angeklickten Vers merken / entfernen">
+                    <Button x:Name="MarkBtn" Classes="tool" ToolTip.Tip="Markieren: markierten Text oder Vers einfärben">
+                        <local:Icon Data="m9 11-6 6v3h9l3-3 M22 12l-4.6 4.6a2 2 0 0 1-2.8 0l-5.2-5.2a2 2 0 0 1 0-2.8L14 4" />
+                    </Button>
+                    <Button x:Name="BookmarkBtn" Classes="tool" ToolTip.Tip="Ganzen Vers speichern / entfernen (Standardfarbe)">
                         <local:Icon Data="M19 21l-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" />
                     </Button>
                     <Rectangle Classes="sep" Margin="8,0" />
@@ -101,12 +107,34 @@
                         <ListBox x:Name="SearchList" ItemTemplate="{StaticResource EntryTpl}" ScrollViewer.HorizontalScrollBarVisibility="Disabled" />
                     </DockPanel>
                 </TabItem>
-                <TabItem ToolTip.Tip="Lesezeichen">
-                    <TabItem.Header><local:Icon Data="M19 21l-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" /></TabItem.Header>
-                    <DockPanel Margin="16,14,12,12">
-                        <TextBlock DockPanel.Dock="Top" Classes="h2" Text="Lesezeichen" Margin="0,0,0,8" />
-                        <ListBox x:Name="BookmarkList" ItemTemplate="{StaticResource EntryTpl}" ScrollViewer.HorizontalScrollBarVisibility="Disabled" />
-                    </DockPanel>
+                <TabItem ToolTip.Tip="Sammlung: Markierungen, Ordner, Tags">
+                    <TabItem.Header><local:Icon Data="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.7-.9l-.8-1.2A2 2 0 0 0 7.9 3H4a2 2 0 0 0-2 2v13c0 1.1.9 2 2 2z" /></TabItem.Header>
+                    <Grid RowDefinitions="Auto,Auto,Auto,*,Auto" Margin="16,14,12,12">
+                        <TextBlock Classes="h2" Text="Sammlung" Margin="0,0,0,8" />
+                        <Grid Grid.Row="1" ColumnDefinitions="*,*,Auto" Margin="0,0,0,6">
+                            <Border Classes="pill" Margin="0,0,6,0"><ComboBox x:Name="FolderFilterBox" HorizontalAlignment="Stretch" /></Border>
+                            <Border Classes="pill" Grid.Column="1"><ComboBox x:Name="TagFilterBox" HorizontalAlignment="Stretch" /></Border>
+                            <Button x:Name="DeleteFolderBtn" Grid.Column="2" Classes="tool" Width="32" Height="32" IsVisible="False" ToolTip.Tip="Gewählten Ordner löschen (Markierungen bleiben erhalten)">
+                                <local:Icon Data="M18 6L6 18 M6 6l12 12" IconSize="16" />
+                            </Button>
+                        </Grid>
+                        <TextBox x:Name="NewFolderBox" Grid.Row="2" Watermark="Neuen Ordner anlegen (Enter)" Margin="0,0,0,8" />
+                        <ListBox x:Name="MarksList" Grid.Row="3" ItemTemplate="{StaticResource EntryTpl}" ScrollViewer.HorizontalScrollBarVisibility="Disabled" />
+                        <Border x:Name="MarkEditor" Grid.Row="4" IsVisible="False" Margin="0,8,0,0" Padding="10" CornerRadius="12" Background="{DynamicResource BsSurface2}">
+                            <StackPanel Spacing="6">
+                                <TextBlock x:Name="MarkEditTitle" FontWeight="SemiBold" TextWrapping="Wrap" />
+                                <WrapPanel x:Name="EditSwatches" />
+                                <TextBox x:Name="MarkNoteBox" AcceptsReturn="True" TextWrapping="Wrap" Height="64" Watermark="Notiz zu dieser Markierung" />
+                                <TextBox x:Name="MarkTagsBox" Watermark="Tags, mit Komma getrennt" />
+                                <Border Classes="pill"><ComboBox x:Name="MarkFolderBox" HorizontalAlignment="Stretch" /></Border>
+                                <WrapPanel>
+                                    <Button x:Name="MarkSaveBtn" Content="Speichern" Classes="accent" Margin="0,0,6,0" />
+                                    <Button x:Name="MarkQueueBtn" Content="In Warteschlange" Margin="0,0,6,0" />
+                                    <Button x:Name="MarkDeleteBtn" Content="Löschen" />
+                                </WrapPanel>
+                            </StackPanel>
+                        </Border>
+                    </Grid>
                 </TabItem>
                 <TabItem ToolTip.Tip="Notizen">
                     <TabItem.Header><local:Icon Data="M12 20h9 M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z" /></TabItem.Header>
@@ -135,6 +163,7 @@
                     <DockPanel Margin="16,14,12,12">
                         <StackPanel DockPanel.Dock="Top" Spacing="4" Margin="0,0,0,8">
                             <TextBlock Classes="h2" Text="Querverweise" />
+                            <Button x:Name="XrefQueueBtn" Content="Alle in die Warteschlange" HorizontalAlignment="Left" ToolTip.Tip="Die gezeigten Querverweise nacheinander abarbeiten" />
                             <TextBlock x:Name="XrefTitle" FontWeight="SemiBold" TextWrapping="Wrap" Text="Vers anklicken, um Querverweise zu sehen" />
                             <TextBlock Classes="caption" Text="Quelle: OpenBible.info, CC BY 4.0" />
                         </StackPanel>
@@ -152,6 +181,33 @@
                         <ListBox x:Name="ConcList" ItemTemplate="{StaticResource EntryTpl}" ScrollViewer.HorizontalScrollBarVisibility="Disabled" />
                     </DockPanel>
                 </TabItem>
+                <TabItem ToolTip.Tip="Warteschlange">
+                    <TabItem.Header><local:Icon Data="M10 12h11 M10 18h11 M10 6h11 M4 10h2 M4 6h1v4 M6 18H4c0-1 2-2 2-3s-1-1.5-2-1" /></TabItem.Header>
+                    <DockPanel Margin="16,14,12,12">
+                        <StackPanel DockPanel.Dock="Top" Spacing="6" Margin="0,0,0,8">
+                            <TextBlock Classes="h2" Text="Warteschlange" />
+                            <TextBlock x:Name="QueueInfo" Classes="caption" TextWrapping="Wrap" />
+                            <WrapPanel>
+                                <Button x:Name="QueueNextBtn" Content="Nächster ▶" Classes="accent" Margin="0,0,6,6" ToolTip.Tip="Springt zum ersten Eintrag und nimmt ihn aus der Warteschlange" />
+                                <Button x:Name="QueueAddBtn" Content="Vers hinzufügen" Margin="0,0,6,6" />
+                                <Button x:Name="QueueRemoveBtn" Content="Entfernen" Margin="0,0,6,6" />
+                                <Button x:Name="QueueClearBtn" Content="Leeren" Margin="0,0,6,6" />
+                            </WrapPanel>
+                        </StackPanel>
+                        <ListBox x:Name="QueueList" ItemTemplate="{StaticResource EntryTpl}" ScrollViewer.HorizontalScrollBarVisibility="Disabled" />
+                    </DockPanel>
+                </TabItem>
+                <TabItem ToolTip.Tip="To-Do-Liste">
+                    <TabItem.Header><local:Icon Data="M21 10.5V19a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h12.5 m9 11 3 3L22 4" /></TabItem.Header>
+                    <DockPanel Margin="16,14,12,12">
+                        <StackPanel DockPanel.Dock="Top" Spacing="8" Margin="0,0,0,8">
+                            <TextBlock Classes="h2" Text="To-Do" />
+                            <TextBox x:Name="TodoBox" Watermark="Neue Aufgabe, Enter zum Hinzufügen" />
+                            <CheckBox x:Name="TodoVerseCheck" Content="Angeklickten Vers anhängen" />
+                        </StackPanel>
+                        <ScrollViewer><StackPanel x:Name="TodoPanel" Spacing="4" Margin="0,0,8,0" /></ScrollViewer>
+                    </DockPanel>
+                </TabItem>
                 <TabItem ToolTip.Tip="Einstellungen">
                     <TabItem.Header><local:Icon Data="M21 4h-7 M10 4H3 M21 12h-9 M8 12H3 M21 20h-5 M12 20H3 M14 2v4 M8 10v4 M16 18v4" /></TabItem.Header>
                     <ScrollViewer Margin="16,14,4,12">
@@ -159,11 +215,13 @@
                             <TextBlock Classes="h2" Text="Einstellungen" />
                             <StackPanel Spacing="4">
                                 <TextBlock Text="Design" FontWeight="SemiBold" />
-                                <ComboBox x:Name="ThemeBox" SelectedIndex="0" Width="200">
-                                    <ComboBoxItem Content="System" />
-                                    <ComboBoxItem Content="Hell" />
-                                    <ComboBoxItem Content="Dunkel" />
-                                </ComboBox>
+                                <Border Classes="pill" HorizontalAlignment="Left">
+                                    <ComboBox x:Name="ThemeBox" SelectedIndex="0" Width="200">
+                                        <ComboBoxItem Content="System" />
+                                        <ComboBoxItem Content="Hell" />
+                                        <ComboBoxItem Content="Dunkel" />
+                                    </ComboBox>
+                                </Border>
                             </StackPanel>
                             <StackPanel Spacing="4">
                                 <TextBlock x:Name="FontLabel" Text="Schriftgröße" FontWeight="SemiBold" />
@@ -171,6 +229,18 @@
                             </StackPanel>
                             <CheckBox x:Name="StartHomeCheck" Content="Beim Start die Startseite zeigen" />
                             <CheckBox x:Name="AutoReadCheck" Content="Kapitel beim Weiterblättern (▶) als gelesen markieren" />
+                            <Border Height="1" Background="{DynamicResource BsBorder}" />
+                            <TextBlock Text="Vault" FontWeight="SemiBold" />
+                            <TextBlock Classes="caption" TextWrapping="Wrap" Text="Ein Vault enthält deine persönlichen Daten: Markierungen, Ordner, Tags, Notizen, Warteschlange, To-Dos, Lesefortschritt. Jeder Vault ist eine einzelne Datei." />
+                            <Border Classes="pill" HorizontalAlignment="Left"><ComboBox x:Name="VaultBox" Width="220" /></Border>
+                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                <TextBox x:Name="NewVaultBox" Width="170" Watermark="Name des neuen Vaults" />
+                                <Button x:Name="NewVaultBtn" Content="Anlegen" />
+                            </StackPanel>
+                            <TextBlock x:Name="VaultInfo" Classes="caption" TextWrapping="Wrap" />
+                            <TextBlock Text="Standard-Markierfarbe" FontWeight="SemiBold" />
+                            <WrapPanel x:Name="DefaultColorPanel" />
+                            <CheckBox x:Name="AutoTagCheck" Content="Beim Speichern den Buchnamen als Tag vergeben" />
                             <Border Height="1" Background="{DynamicResource BsBorder}" />
                             <TextBlock Text="Offline" FontWeight="SemiBold" />
                             <TextBlock x:Name="OfflineInfo" Classes="caption" TextWrapping="Wrap" />

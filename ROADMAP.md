@@ -10,11 +10,11 @@ Freie, quelloffene Bibelstudien-Software (C#, Avalonia). Nur Quellen mit freier 
 - [x] Einstellungen (gespeichert), Hilfe, Info (Maße, Gewichte, Abkürzungen)
 
 ## Phase 2 – Persönliches Wissen (Vaults)
-- Mehrere Vaults (wie Obsidian), jeder mit eigener Datenbank
-- Markierungen innerhalb von Versen (Wörter), Farben (Vorschläge + eigene)
-- Gespeicherte Verse mit Notiz, Ordnern, Tags (Auto-Tag Buchname), Schnellsprung, Farbe ändern
-- Warteschlange (Queue) und To-Do-Liste
-- Dokumente verlinken, eigene Wissensdatenbank
+- [x] Mehrere Vaults (wie Obsidian), jeder eine eigene Datei
+- [x] Markierungen innerhalb von Versen (Wörter) und ganze Verse, Farben (Vorschläge + eigene)
+- [x] Sammlung mit Notiz, Ordnern, Tags (Auto-Tag Buchname), Schnellsprung, Farbe ändern
+- [x] Warteschlange (Queue) und To-Do-Liste
+- [ ] Dokumente verlinken, eigene Wissensdatenbank
 
 ## Phase 3 – Claude-Anbindung
 - MCP-Server: Claude kann lesen, suchen, markieren, navigieren, das Programm steuern

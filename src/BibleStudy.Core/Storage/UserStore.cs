@@ -4,52 +4,22 @@ using Microsoft.Data.Sqlite;
 
 namespace BibleStudy.Core.Storage;
 
-public sealed record Note(VerseRef Ref, string Text);
+
 public sealed record SearchHit(VerseRef Ref, string Snippet);
 
-/// <summary>Local SQLite storage: bookmarks, notes and a full-text index (FTS5) per translation.</summary>
-public sealed partial class UserStore
+/// <summary>Shared SQLite index (not personal data): full-text search (FTS5) and Strong's concordance per translation.</summary>
+public sealed partial class UserStore : SqliteDb
 {
-    readonly string _cs;
 
-    public UserStore(string dbPath)
+    public UserStore(string dbPath) : base(dbPath)
     {
-        Directory.CreateDirectory(Path.GetDirectoryName(dbPath)!);
-        _cs = $"Data Source={dbPath}";
         Exec("""
-            CREATE TABLE IF NOT EXISTS bookmarks(book TEXT, chapter INT, verse INT, created TEXT, PRIMARY KEY(book,chapter,verse));
-            CREATE TABLE IF NOT EXISTS notes(book TEXT, chapter INT, verse INT, text TEXT, updated TEXT, PRIMARY KEY(book,chapter,verse));
             CREATE TABLE IF NOT EXISTS indexed(translation TEXT PRIMARY KEY);
             CREATE TABLE IF NOT EXISTS occ(translation TEXT, strong TEXT, book TEXT, chapter INT, verse INT, word TEXT);
             CREATE INDEX IF NOT EXISTS occ_idx ON occ(translation, strong);
             CREATE TABLE IF NOT EXISTS occ_done(translation TEXT PRIMARY KEY);
-            CREATE TABLE IF NOT EXISTS read_chapters(book TEXT, chapter INT, read_at TEXT, PRIMARY KEY(book,chapter));
             CREATE VIRTUAL TABLE IF NOT EXISTS fts USING fts5(text, translation UNINDEXED, book UNINDEXED, chapter UNINDEXED, verse UNINDEXED, tokenize='unicode61 remove_diacritics 2');
             """);
-    }
-
-    public List<VerseRef> GetBookmarks() =>
-        Query("SELECT book,chapter,verse FROM bookmarks ORDER BY created", _ => { }, r => new VerseRef(r.GetString(0), r.GetInt32(1), r.GetInt32(2)));
-
-    /// <returns>true if the verse is bookmarked afterwards.</returns>
-    public bool ToggleBookmark(VerseRef v)
-    {
-        void P(SqliteCommand c) { c.Parameters.AddWithValue("$b", v.Book); c.Parameters.AddWithValue("$c", v.Chapter); c.Parameters.AddWithValue("$v", v.Verse); }
-        if (Exec("DELETE FROM bookmarks WHERE book=$b AND chapter=$c AND verse=$v", P) > 0) return false;
-        Exec("INSERT INTO bookmarks VALUES($b,$c,$v,$t)", c => { P(c); c.Parameters.AddWithValue("$t", DateTime.UtcNow.ToString("o")); });
-        return true;
-    }
-
-    public List<Note> GetNotes() =>
-        Query("SELECT book,chapter,verse,text FROM notes ORDER BY book,chapter,verse", _ => { },
-            r => new Note(new VerseRef(r.GetString(0), r.GetInt32(1), r.GetInt32(2)), r.GetString(3)));
-
-    /// <summary>Saves the note; empty text deletes it.</summary>
-    public void SetNote(VerseRef v, string text)
-    {
-        void P(SqliteCommand c) { c.Parameters.AddWithValue("$b", v.Book); c.Parameters.AddWithValue("$c", v.Chapter); c.Parameters.AddWithValue("$v", v.Verse); }
-        if (string.IsNullOrWhiteSpace(text)) { Exec("DELETE FROM notes WHERE book=$b AND chapter=$c AND verse=$v", P); return; }
-        Exec("INSERT OR REPLACE INTO notes VALUES($b,$c,$v,$x,$t)", c => { P(c); c.Parameters.AddWithValue("$x", text); c.Parameters.AddWithValue("$t", DateTime.UtcNow.ToString("o")); });
     }
 
     public bool IsIndexed(string translationId) =>
@@ -77,23 +47,6 @@ public sealed partial class UserStore
             mark.Parameters.AddWithValue("$t", translationId);
             mark.ExecuteNonQuery();
         }
-        tx.Commit();
-    }
-
-    public HashSet<(string Book, int Chapter)> GetReadChapters() =>
-        Query("SELECT book,chapter FROM read_chapters", _ => { }, r => (r.GetString(0), r.GetInt32(1))).ToHashSet();
-
-    /// <summary>Marks chapters of one book as read (or unread) in one transaction.</summary>
-    public void SetRead(string book, IEnumerable<int> chapters, bool read)
-    {
-        using var con = Open();
-        using var tx = con.BeginTransaction();
-        using var cmd = con.CreateCommand();
-        cmd.CommandText = read ? "INSERT OR IGNORE INTO read_chapters VALUES($b,$c,$t)" : "DELETE FROM read_chapters WHERE book=$b AND chapter=$c";
-        cmd.Parameters.AddWithValue("$b", book);
-        var pc = cmd.Parameters.Add("$c", SqliteType.Integer);
-        if (read) cmd.Parameters.AddWithValue("$t", DateTime.UtcNow.ToString("o"));
-        foreach (var c in chapters) { pc.Value = c; cmd.ExecuteNonQuery(); }
         tx.Commit();
     }
 
@@ -148,22 +101,4 @@ public sealed partial class UserStore
 
     [GeneratedRegex(@"[\p{L}\p{N}]+")] private static partial Regex Words();
 
-    SqliteConnection Open() { var c = new SqliteConnection(_cs); c.Open(); return c; }
-
-    int Exec(string sql, Action<SqliteCommand>? bind = null)
-    {
-        using var con = Open(); using var cmd = con.CreateCommand();
-        cmd.CommandText = sql; bind?.Invoke(cmd);
-        return cmd.ExecuteNonQuery();
-    }
-
-    List<T> Query<T>(string sql, Action<SqliteCommand> bind, Func<SqliteDataReader, T> map)
-    {
-        using var con = Open(); using var cmd = con.CreateCommand();
-        cmd.CommandText = sql; bind(cmd);
-        using var r = cmd.ExecuteReader();
-        var list = new List<T>();
-        while (r.Read()) list.Add(map(r));
-        return list;
-    }
 }
