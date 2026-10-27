@@ -20,9 +20,9 @@ public partial class MainWindow
             new(0, "Text", "Sucht in der gewählten Übersetzung: Wörter, „Wendungen“, Grundformen (L=…), Bibelstellen und Strong-Nummern."),
             new(StrongTab, "Strong-Wörterbuch", "Schlägt Wörter des Urtextes nach: Nummer (G3056), griechisches/hebräisches Wort, Umschrift oder englische Bedeutung."),
         ]),
-        new("Studieren", "M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z",
+        new("Vers", "M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z",
         [
-            new(GuideTab, "Übersicht", "Alles zum angeklickten Vers: deine Notizen, Markierungen und Dokumente, andere Übersetzungen, Querverweise. Tipp: Rechtsklick auf einen Vers."),
+            new(GuideTab, "Übersicht", "Alles zum angeklickten Vers auf einen Blick: deine Notizen und Dokumente, andere Übersetzungen, Querverweise. Tipp: Rechtsklick auf einen Vers."),
             new(3, "Wort", "Schalte oben „Wortstudie“ ein und tippe ein unterstrichenes Wort an: Bedeutung im Urtext."),
             new(GrundtextTab, "Grundtext", "Der angeklickte Vers im Original, Wort für Wort mit Bedeutung."),
             new(4, "Querverweise", "Verse, die mit dem angeklickten Vers zusammenhängen."),
@@ -33,11 +33,17 @@ public partial class MainWindow
             new(CommentaryTab, "Kommentare", "Freie Bibelkommentare (Matthew Henry, Jamieson-Fausset-Brown, Keil-Delitzsch, Tyndale u. a.) zum aktuellen Kapitel; der angeklickte Vers wird hervorgehoben."),
             new(LexiconTab, "Lexikon", "Bibellexikon zu Personen und Orten (Easton's Bible Dictionary über Theographic). Oben stehen die Namen des aktuellen Kapitels."),
         ]),
-        new("Sammlung", "M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.7-.9l-.8-1.2A2 2 0 0 0 7.9 3H4a2 2 0 0 0-2 2v13c0 1.1.9 2 2 2z",
+        new("Notizen", "M12 20h9 M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z",
         [
+            new(2, "Notizen", "Schreibe eine kurze Notiz zum angeklickten Vers. Darunter stehen alle deine Notizen; Klick springt zur Stelle."),
+        ], ShowVault: true),
+        new("Dokumente", "M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z M14 2v6h6 M8 13h8 M8 17h8",
+        [
+            new(KnowledgeTab, "Schreiben", "Eigene Texte und verknüpfte Dateien. Verse wie „Joh 3,16“ und [[Titel]] werden zu Links."),
             new(1, "Ordner", "Deine Ordner mit Dokumenten (📄) und markierten Versen. Klick öffnet das Dokument bzw. springt zur Stelle. ⋯ legt Ordner und Dokumente an."),
-            new(2, "Notizen", "Deine kurzen Notizen zu einzelnen Versen."),
-            new(KnowledgeTab, "Dokumente", "Eigene Texte und verknüpfte Dateien. Verse wie „Joh 3,16“ und [[Titel]] werden zu Links."),
+        ], ShowVault: true),
+        new("Planen", "M10 12h11 M10 18h11 M10 6h11 M4 10h2 M4 6h1v4 M6 18H4c0-1 2-2 2-3s-1-1.5-2-1",
+        [
             new(6, "Leseliste", "Verse, die du der Reihe nach durchgehen willst."),
             new(7, "Aufgaben", "Deine Aufgaben fürs Studium, auf Wunsch mit Vers."),
         ], ShowVault: true),

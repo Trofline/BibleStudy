@@ -146,6 +146,7 @@ public partial class MainWindow : Window
         InitKnowledge();
         InitQol();
         InitNav();
+        InitPickers();
         InitLibrary();
         ObsidianBtn.Click += async (_, _) => await ExportObsidianAsync();
         SideTabs.SelectionChanged += (_, e) =>

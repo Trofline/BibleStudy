@@ -54,31 +54,36 @@
                 <Border DockPanel.Dock="Right" Classes="pill" Margin="10,0,0,0" VerticalAlignment="Center" ToolTip.Tip="Bibelstelle öffnen (Joh 3,16) oder suchen (Strg+K)">
                     <StackPanel Orientation="Horizontal" Margin="8,0,0,0">
                         <local:Icon Data="M13 2L3 14h9l-1 8 10-12h-9z" IconSize="16" VerticalAlignment="Center" Opacity="0.7" />
-                        <TextBox x:Name="QuickJumpBox" Width="190" MinHeight="32" Watermark="Gehe zu … (Strg+K)" BorderThickness="0" Background="Transparent" />
+                        <TextBox x:Name="QuickJumpBox" Width="130" MinHeight="32" Watermark="Gehe zu … (Strg+K)" BorderThickness="0" Background="Transparent" />
                     </StackPanel>
                 </Border>
                 <StackPanel Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
                     <Border Classes="pill">
                         <StackPanel Orientation="Horizontal">
-                            <ComboBox x:Name="LanguageBox" Width="105" PlaceholderText="Sprache" />
+                            <Button x:Name="LangBtn" Classes="picker" MinWidth="96" ToolTip.Tip="Sprache wählen" />
                             <Rectangle Classes="sep" />
-                            <ComboBox x:Name="TranslationBox" Width="205" PlaceholderText="Übersetzung" />
+                            <Button x:Name="TransBtn" Classes="picker" MinWidth="140" ToolTip.Tip="Übersetzung wählen" />
                         </StackPanel>
                     </Border>
                     <Border Classes="pill">
                         <StackPanel Orientation="Horizontal">
-                            <ComboBox x:Name="BookBox" Width="125" PlaceholderText="Buch" />
+                            <Button x:Name="BookBtn" Classes="picker" MinWidth="120" ToolTip.Tip="Buch wählen: alle Bücher auf einen Blick" />
                             <Rectangle Classes="sep" />
                             <Button x:Name="PrevBtn" Classes="tool" Width="32" Height="32" ToolTip.Tip="Voriges Kapitel (Strg+←)">
                                 <local:Icon Data="M15 18l-6-6 6-6" />
                             </Button>
-                            <NumericUpDown x:Name="ChapterBox" Width="52" Minimum="1" Value="1" FormatString="0" ShowButtonSpinner="False"
-                                           Background="Transparent" BorderThickness="0" HorizontalContentAlignment="Center" MinHeight="32" />
+                            <Button x:Name="ChapterBtn" Classes="picker" MinWidth="64" ToolTip.Tip="Kapitel wählen: alle Kapitel auf einen Blick" />
                             <Button x:Name="NextBtn" Classes="tool" Width="32" Height="32" ToolTip.Tip="Nächstes Kapitel (Strg+→)">
                                 <local:Icon Data="M9 18l6-6-6-6" />
                             </Button>
                         </StackPanel>
                     </Border>
+                    <StackPanel IsVisible="False">
+                        <ComboBox x:Name="LanguageBox" />
+                        <ComboBox x:Name="TranslationBox" />
+                        <ComboBox x:Name="BookBox" />
+                        <NumericUpDown x:Name="ChapterBox" Minimum="1" Value="1" FormatString="0" ShowButtonSpinner="False" />
+                    </StackPanel>
                 </StackPanel>
             </DockPanel>
         </Border>

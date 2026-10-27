@@ -182,7 +182,7 @@ public sealed class HomeView : UserControl
 
     Control BookTile(BookInfo b)
     {
-        var color = Colors[BookCategories.Of(b.Id)];
+        var color = MainWindow.BookColorAt(_books, b.Id);
         var count = ReadCount(b);
         var done = b.NumberOfChapters > 0 && count == b.NumberOfChapters;
         var frac = b.NumberOfChapters == 0 ? 0 : (double)count / b.NumberOfChapters;
@@ -217,7 +217,7 @@ public sealed class HomeView : UserControl
     void BuildChapters(StackPanel panel, BookInfo b)
     {
         var chapters = Enumerable.Range(1, b.NumberOfChapters).ToList();
-        var color = Colors[BookCategories.Of(b.Id)];
+        var color = MainWindow.BookColorAt(_books, b.Id);
         var count = ReadCount(b);
 
         var back = new Button { Classes = { "ghost" }, HorizontalAlignment = HorizontalAlignment.Left, Margin = new(-8, 0, 0, 10), Content = "←  Alle Bücher" };
