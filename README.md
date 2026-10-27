@@ -34,7 +34,7 @@ Beim Deinstallieren (und beim Entfernen der portablen Version) wirst du immer ge
 
 ```powershell
 dotnet run --project src/BibleStudy.App      # Entwicklung
-.\release.ps1 -Version 1.0.0                 # Installer + Portable-Paket in .\release
+powershell -ExecutionPolicy Bypass -File .\release.ps1 -Version 1.0.0   # Installer + Portable-Paket in .\release
 ```
 
 ## Lizenzen und Quellen
