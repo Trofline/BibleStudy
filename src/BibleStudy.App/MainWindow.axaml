@@ -38,6 +38,12 @@
                     </Button>
                 </StackPanel>
                 <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" Spacing="2" VerticalAlignment="Center" Margin="10,0,0,0">
+                    <Button x:Name="VaultTopBtn" Classes="ghost" Margin="0,0,6,0" ToolTip.Tip="Aktiver Vault (deine Mappe mit Markierungen, Notizen, Dokumenten). Klicken zum Wechseln.">
+                        <StackPanel Orientation="Horizontal" Spacing="7">
+                            <local:Icon Data="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.7-.9l-.8-1.2A2 2 0 0 0 7.9 3H4a2 2 0 0 0-2 2v13c0 1.1.9 2 2 2z" IconSize="16" VerticalAlignment="Center" />
+                            <TextBlock x:Name="VaultTopText" FontSize="12.5" FontWeight="Medium" VerticalAlignment="Center" MaxWidth="110" TextTrimming="CharacterEllipsis" />
+                        </StackPanel>
+                    </Button>
                     <Button x:Name="ThemeBtn" Classes="tool" ToolTip.Tip="Hell / Dunkel / System wechseln (Strg+T)">
                         <local:Icon Data="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9z" />
                     </Button>
@@ -181,19 +187,18 @@
                 <TabItem ToolTip.Tip="Sammlung: Markierungen, Ordner, Tags">
                     <TabItem.Header><local:Icon Data="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.7-.9l-.8-1.2A2 2 0 0 0 7.9 3H4a2 2 0 0 0-2 2v13c0 1.1.9 2 2 2z" /></TabItem.Header>
                     <Grid RowDefinitions="Auto,Auto,Auto,*,Auto" Margin="16,14,12,12">
-                        <WrapPanel Grid.Row="0" Margin="0,0,0,8">
-                            <ToggleButton x:Name="MarksDetailBtn" Classes="pillbtn" IsChecked="True" Content="Mit Text" Margin="0,0,6,4" ToolTip.Tip="Verstexte und Notizen anzeigen oder nur die Stellen (zum Überblick)" />
-                            <Button x:Name="MarksOpenAllBtn" Classes="ghost" Content="Alle aufklappen" Margin="0,0,2,4" />
-                            <Button x:Name="MarksCloseAllBtn" Classes="ghost" Content="Alle zuklappen" Margin="0,0,0,4" />
-                        </WrapPanel>
-                        <Grid Grid.Row="1" ColumnDefinitions="*,*,Auto" Margin="0,0,0,6">
+                        <Grid Grid.Row="0" ColumnDefinitions="*,*,Auto,Auto" Margin="0,0,0,8">
                             <Border Classes="pill" Margin="0,0,6,0"><ComboBox x:Name="FolderFilterBox" HorizontalAlignment="Stretch" /></Border>
-                            <Border Classes="pill" Grid.Column="1"><ComboBox x:Name="TagFilterBox" HorizontalAlignment="Stretch" /></Border>
-                            <Button x:Name="DeleteFolderBtn" Grid.Column="2" Classes="tool" Width="32" Height="32" IsVisible="False" ToolTip.Tip="Gewählten Ordner löschen (Markierungen bleiben erhalten)">
-                                <local:Icon Data="M18 6L6 18 M6 6l12 12" IconSize="16" />
+                            <Border Classes="pill" Grid.Column="1" Margin="0,0,6,0"><ComboBox x:Name="TagFilterBox" HorizontalAlignment="Stretch" /></Border>
+                            <ToggleButton x:Name="MarksDetailBtn" Grid.Column="2" Classes="tool" IsChecked="True" Margin="0,0,2,0" ToolTip.Tip="Verstexte und Notizen anzeigen oder nur die Stellen (Überblick)">
+                                <TextBlock Text="Aa" FontWeight="SemiBold" FontSize="14" />
+                            </ToggleButton>
+                            <Button x:Name="MarksMoreBtn" Grid.Column="3" Classes="tool" ToolTip.Tip="Alle auf-/zuklappen, neuer Ordner, Ordner löschen">
+                                <local:Icon Data="M5 12a1 1 0 1 0 2 0a1 1 0 1 0-2 0z M11 12a1 1 0 1 0 2 0a1 1 0 1 0-2 0z M17 12a1 1 0 1 0 2 0a1 1 0 1 0-2 0z" IconSize="18" />
                             </Button>
+                            <Button x:Name="DeleteFolderBtn" IsVisible="False" Width="0" Height="0" />
                         </Grid>
-                        <TextBox x:Name="NewFolderBox" Grid.Row="2" Watermark="Neuen Ordner anlegen (Enter)" Margin="0,0,0,8" />
+                        <TextBox x:Name="NewFolderBox" Grid.Row="1" IsVisible="False" Watermark="Name des neuen Ordners, Enter zum Anlegen" Margin="0,0,0,8" />
                         <TextBlock x:Name="MarksEmpty" Grid.Row="3" Classes="caption" TextWrapping="Wrap" IsVisible="False" Margin="2,8" Text="Noch keine Markierungen. Wähle im Text ein Wort oder einen Vers und klicke oben auf „Markieren“ (Farbe wählen) oder „Merken“." />
                         <ListBox x:Name="MarksList" Grid.Row="3" ItemTemplate="{StaticResource EntryTpl}" ScrollViewer.HorizontalScrollBarVisibility="Disabled" />
                         <Border x:Name="MarkEditor" Grid.Row="4" IsVisible="False" Margin="0,8,0,0" Padding="10" CornerRadius="12" Background="{DynamicResource BsSurface2}">

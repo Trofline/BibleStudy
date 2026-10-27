@@ -1,3 +1,4 @@
+using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
 using Avalonia.Controls.Documents;
@@ -320,7 +321,7 @@ public partial class MainWindow : Window
             }
             Paint();
             ShowThread(_threadOn && cols.Count == 1);
-            if (focusVerse is int fv && _verseBoxes.ContainsKey(fv)) { SelectVerse(fv); _verseBoxes[fv].BringIntoView(); }
+            if (focusVerse is int fv && _verseBoxes.ContainsKey(fv)) { SelectVerse(fv); ScrollToVerse(fv); }
             else ReaderScroll.Offset = default;
 
             ReadBtn.IsChecked = _read.Contains((b.Id, number));
@@ -545,8 +546,18 @@ public partial class MainWindow : Window
             if (n == _selected) box.Background = soft;
             else if (whole is { } c) box.Background = new SolidColorBrush(c, 0.14);
             else box.ClearValue(Border.BackgroundProperty);
-            box.BorderBrush = whole is { } c2 ? new SolidColorBrush(c2) : Brushes.Transparent;
+            box.BorderBrush = n == _selected ? (Res("BsAccent") ?? Brushes.Gray) : whole is { } c2 ? new SolidColorBrush(c2) : Brushes.Transparent;
         }
+    }
+
+    /// <summary>Scrolls so the verse sits near the top, after the new text has been laid out.</summary>
+    void ScrollToVerse(int verse)
+    {
+        Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+        {
+            if (!_verseBoxes.TryGetValue(verse, out var box)) return;
+            if (box.TranslatePoint(new Point(0, 0), ReaderPanel) is { } p) ReaderScroll.Offset = new Vector(0, Math.Max(0, p.Y + ReaderPanel.Margin.Top - 70));
+        }, Avalonia.Threading.DispatcherPriority.Background);
     }
 
     void FitReader()

@@ -67,6 +67,7 @@ public partial class MainWindow
         if (VaultQuickBox is not null) { VaultQuickBox.ItemsSource = VaultNames(); VaultQuickBox.SelectedItem = _vault.Name; }
         _vaultUiLoading = false;
         VaultInfo.Text = $"Aktiver Vault: {_vault.Name}";
+        if (VaultTopText is not null) VaultTopText.Text = _vault.Name;
     }
 
     void InitVault()
@@ -83,7 +84,7 @@ public partial class MainWindow
         NewFolderBox.KeyDown += (_, e) =>
         {
             if (e.Key != Key.Enter || string.IsNullOrWhiteSpace(NewFolderBox.Text)) return;
-            _vault.AddFolder(NewFolderBox.Text); NewFolderBox.Text = ""; RefreshCollection();
+            _vault.AddFolder(NewFolderBox.Text); NewFolderBox.Text = ""; NewFolderBox.IsVisible = false; RefreshCollection();
         };
         MarksList.SelectionChanged += async (_, _) =>
         {
@@ -98,8 +99,13 @@ public partial class MainWindow
             LoadEditor(id);
         };
         MarksDetailBtn.IsCheckedChanged += (_, _) => ApplyCollectionFilter();
-        MarksOpenAllBtn.Click += (_, _) => { _foldersTouched = true; foreach (var f in _vault.GetFolders()) _openFolders.Add(f.Id); _openFolders.Add(0); ApplyCollectionFilter(); };
-        MarksCloseAllBtn.Click += (_, _) => { _foldersTouched = true; _openFolders.Clear(); ApplyCollectionFilter(); };
+        var more = new MenuFlyout();
+        void AddItem(string text, Action act) { var i = new MenuItem { Header = text }; i.Click += (_, _) => act(); more.Items.Add(i); }
+        AddItem("Alle Ordner aufklappen", () => { _foldersTouched = true; foreach (var f in _vault.GetFolders()) _openFolders.Add(f.Id); _openFolders.Add(0); ApplyCollectionFilter(); });
+        AddItem("Alle Ordner zuklappen", () => { _foldersTouched = true; _openFolders.Clear(); ApplyCollectionFilter(); });
+        AddItem("Neuer Ordner …", () => { NewFolderBox.IsVisible = true; NewFolderBox.Focus(); });
+        AddItem("Gewählten Ordner löschen", () => { if (DeleteFolderBtn.IsVisible) DeleteFolderBtn.RaiseEvent(new Avalonia.Interactivity.RoutedEventArgs(Button.ClickEvent)); });
+        MarksMoreBtn.Flyout = more;
         MarkSaveBtn.Click += async (_, _) => await SaveEditedMarkAsync();
         MarkDeleteBtn.Click += async (_, _) =>
         {
@@ -242,6 +248,32 @@ public partial class MainWindow
         return Color.TryParse(t, out var c) ? $"#{c.R:X2}{c.G:X2}{c.B:X2}" : null;
     }
 
+
+    /// <summary>Own colors: three sliders and a preview; the color is remembered with the presets.</summary>
+    StackPanel BuildRgbPicker(Action<string> pick, out Button openButton, out Button applyButton, bool startOpen = false)
+    {
+        var start = Avalonia.Media.Color.Parse(_settings.DefaultColor);
+        Slider Channel(byte v) => new() { Minimum = 0, Maximum = 255, Value = v, Height = 24 };
+        var sr = Channel(start.R); var sg = Channel(start.G); var sb = Channel(start.B);
+        var preview = new Border { Height = 28, CornerRadius = new(8) };
+        string Current() => $"#{(int)sr.Value:X2}{(int)sg.Value:X2}{(int)sb.Value:X2}";
+        void Update() => preview.Background = new SolidColorBrush(Avalonia.Media.Color.Parse(Current()));
+        sr.ValueChanged += (_, _) => Update(); sg.ValueChanged += (_, _) => Update(); sb.ValueChanged += (_, _) => Update();
+        Update();
+        var panel = new StackPanel { IsVisible = startOpen, Spacing = 2, Children = { new TextBlock { Text = "Rot · Grün · Blau", Classes = { "caption" } }, sr, sg, sb, preview } };
+        var open = new Button { Content = "＋ Eigene Farbe …", IsVisible = !startOpen };
+        var apply = new Button { Content = "Farbe verwenden und speichern", Classes = { "primary" }, IsVisible = startOpen };
+        open.Click += (_, _) => { panel.IsVisible = true; apply.IsVisible = true; open.IsVisible = false; };
+        apply.Click += (_, _) =>
+        {
+            var hex = Current();
+            if (!PresetColors.Contains(hex) && !_settings.CustomColors.Contains(hex)) { _settings.CustomColors.Add(hex); SaveSettings(); }
+            pick(hex);
+        };
+        openButton = open; applyButton = apply;
+        return panel;
+    }
+
     void ShowColorFlyout()
     {
         var flyout = new Flyout { Placement = PlacementMode.BottomEdgeAlignedRight };
@@ -253,21 +285,14 @@ public partial class MainWindow
         };
         var swatches = new WrapPanel();
         foreach (var hex in PresetColors.Concat(_settings.CustomColors)) swatches.Children.Add(Swatch(hex, Pick));
-        var hexBox = new TextBox { Watermark = "#RRGGBB", Width = 110 };
+        var picker = BuildRgbPicker(Pick, out var custom, out var apply);
         var error = new TextBlock { Classes = { "caption" } };
-        var add = new Button { Content = "Eigene Farbe" };
-        add.Click += (_, _) =>
-        {
-            if (NormalizeHex(hexBox.Text) is not { } hex) { error.Text = "Bitte eine Farbe wie #FFD54F eingeben."; return; }
-            if (!_settings.CustomColors.Contains(hex)) { _settings.CustomColors.Add(hex); SaveSettings(); }
-            Pick(hex);
-        };
         var remove = new Button { Content = "Markierung entfernen" };
         remove.Click += (_, _) => { flyout.Hide(); _ = RemoveMarksAsync(); };
         flyout.Content = new StackPanel
         {
-            Spacing = 8, Width = 260,
-            Children = { title, swatches, new StackPanel { Orientation = Orientation.Horizontal, Spacing = 6, Children = { hexBox, add } }, error, remove },
+            Spacing = 8, Width = 280,
+            Children = { title, swatches, custom, picker, apply, error, remove },
         };
         flyout.ShowAt(MarkBtn);
     }
@@ -392,6 +417,8 @@ public partial class MainWindow
         var all = PresetColors.Concat(_settings.CustomColors).ToList();
         if (!all.Contains(_editColor)) all.Add(_editColor);
         foreach (var hex in all) EditSwatches.Children.Add(Swatch(hex, h => { _editColor = h; BuildEditSwatches(); }, hex == _editColor));
+        var rgb = BuildRgbPicker(h => { _editColor = h; BuildEditSwatches(); }, out var open, out var apply);
+        EditSwatches.Children.Add(new StackPanel { Width = 240, Spacing = 4, Margin = new(0, 6, 0, 0), Children = { open, rgb, apply } });
     }
 
     async Task SaveEditedMarkAsync()

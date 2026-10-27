@@ -29,7 +29,7 @@ public partial class MainWindow
         ]),
         new("Sammlung", "M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.7-.9l-.8-1.2A2 2 0 0 0 7.9 3H4a2 2 0 0 0-2 2v13c0 1.1.9 2 2 2z",
         [
-            new(1, "Markierungen", "Farbig markierte Verse und Wörter. Ordner sind Fächer zum Einsortieren (eine Markierung liegt in einem Ordner), Tags sind Schlagwörter (beliebig viele pro Markierung)."),
+            new(1, "Markierungen", "Farbig markierte Verse und Wörter, sortiert in Ordnern (Fächern). Klick auf eine Markierung springt zur Stelle."),
             new(2, "Notizen", "Deine kurzen Notizen zu einzelnen Versen."),
             new(KnowledgeTab, "Dokumente", "Eigene Texte und verknüpfte Dateien. Verse wie „Joh 3,16“ und [[Titel]] werden zu Links."),
             new(6, "Leseliste", "Verse, die du der Reihe nach durchgehen willst."),
@@ -68,6 +68,20 @@ public partial class MainWindow
         _vaultBar = new Border { Child = new DockPanel { Children = { label, add, pill } }, IsVisible = false };
         ToolTip.SetTip(_vaultBar, "Ein Vault ist deine Mappe: Markierungen, Notizen, Dokumente, Leseliste und Aufgaben gehören immer zu einem Vault.");
         SubNav.Children.Insert(0, _vaultBar);
+        VaultTopBtn.Click += (_, _) =>
+        {
+            var menu = new MenuFlyout();
+            foreach (var n in VaultNames())
+            {
+                var name2 = n; var item = new MenuItem { Header = (name2 == _vault.Name ? "✓  " : "     ") + name2 };
+                item.Click += async (_, _) => { if (name2 != _vault.Name) await SwitchVaultAsync(name2); };
+                menu.Items.Add(item);
+            }
+            menu.Items.Add(new Separator());
+            var neu = new MenuItem { Header = "＋  Neuer Vault …" }; neu.Click += (_, _) => flyout.ShowAt(VaultTopBtn);
+            menu.Items.Add(neu);
+            menu.ShowAt(VaultTopBtn);
+        };
         RefreshVaultUi();
     }
 
