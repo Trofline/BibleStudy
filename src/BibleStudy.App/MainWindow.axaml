@@ -479,6 +479,7 @@
                                     </Border>
                                 </Grid>
                                 <CheckBox x:Name="JesusRedCheck" Content="Worte Jesu farbig hervorheben" />
+                                <CheckBox x:Name="TranslateMeaningsCheck" Content="Wortbedeutungen in meine Sprache übersetzen (KI mit deinem Claude, wird gespeichert)" />
                                 <CheckBox x:Name="CommentariesCheck" Content="Kommentare anzeigen (Menschenwerk, nicht der Bibeltext; gilt nach Neustart)" />
                                 <CheckBox x:Name="JustifyCheck" Content="Blocksatz" />
                                 <CheckBox x:Name="AnimationsCheck" Content="Animationen (Seitenleiste, Reiter, Kapitel gleiten sanft ein)" />

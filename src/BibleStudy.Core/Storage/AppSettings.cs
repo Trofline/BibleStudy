@@ -60,6 +60,8 @@ public sealed class AppSettings
     public bool ParallelSync { get; set; } = true;
     /// <summary>Commentaries are human writings (Calvin, Henry …), not Scripture: hidden unless switched on.</summary>
     public bool ShowCommentaries { get; set; }
+    /// <summary>Translate the English word data (glosses, dictionary entries) into the program language with the local Claude (cached).</summary>
+    public bool TranslateMeanings { get; set; } = true;
     public List<DocCategory> Categories { get; set; } = [];
     public bool CategoriesSeeded { get; set; }
     public string Commentary { get; set; } = "matthew-henry";

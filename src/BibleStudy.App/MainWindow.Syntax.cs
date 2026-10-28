@@ -63,6 +63,8 @@ public partial class MainWindow
         if (data is null || data.Words.Count == 0) { _syntaxView.Children.Add(new TextBlock { Text = L("Für diesen Vers gibt es keine Syntaxdaten."), Classes = { "caption" } }); return; }
 
         if (_syntaxOutline) AddOutline(data); else AddMorphology(data);
+        var glosses = data.Words.Select(w => w.Gloss).Concat(data.Outline.Select(l => l.Gloss)).Where(g => g.Length > 0).ToList();
+        if (glosses.Any(_meanings.IsMissing)) _ = WarmMeaningsAsync(glosses, () => _ = ShowSyntaxAsync());
         _syntaxView.Children.Add(new TextBlock { Text = SyntaxProvider.Attribution, Classes = { "caption" }, TextWrapping = TextWrapping.Wrap });
     }
 
@@ -72,7 +74,7 @@ public partial class MainWindow
         {
             var head = new TextBlock { Text = w.Text, FontSize = w.Hebrew ? 26 : 20, FontFamily = w.Hebrew ? HebrewFont : ScriptureFont, FlowDirection = w.Hebrew ? FlowDirection.RightToLeft : FlowDirection.LeftToRight, HorizontalAlignment = HorizontalAlignment.Left };
             head.Bind(TextBlock.ForegroundProperty, this.GetResourceObservable("BsAccent"));
-            var sub = new TextBlock { Text = string.Join("  ·  ", new[] { w.Translit, w.Strong, w.Gloss }.Where(s => s.Length > 0)), Classes = { "caption" }, TextWrapping = TextWrapping.Wrap };
+            var sub = new TextBlock { Text = string.Join("  ·  ", new[] { w.Translit, w.Strong, Mean(w.Gloss) }.Where(s => s.Length > 0)), Classes = { "caption" }, TextWrapping = TextWrapping.Wrap };
             var grammar = string.Join(" · ", new[] { Term(w.PartOfSpeech) }.Concat(w.Features.Select(f => Term(f.Value))).Where(s => s.Length > 0));
             var card = new Border
             {
@@ -105,7 +107,7 @@ public partial class MainWindow
                     Children =
                     {
                         new TextBlock { Text = line.Text, FontSize = hebrew ? 22 : 17, FontFamily = hebrew ? HebrewFont : ScriptureFont, TextWrapping = TextWrapping.Wrap, FlowDirection = hebrew ? FlowDirection.RightToLeft : FlowDirection.LeftToRight, HorizontalAlignment = hebrew ? HorizontalAlignment.Right : HorizontalAlignment.Left },
-                        new TextBlock { Text = line.Gloss, Classes = { "caption" }, TextWrapping = TextWrapping.Wrap },
+                        new TextBlock { Text = Mean(line.Gloss), Classes = { "caption" }, TextWrapping = TextWrapping.Wrap },
                     },
                 };
                 Grid.SetColumn(texts, 1);

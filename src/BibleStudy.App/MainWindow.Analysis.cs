@@ -38,7 +38,7 @@ public partial class MainWindow
     async Task<Control> WordChipAsync(string id, string? suffix = null)
     {
         var e = await EntryAsync(id);
-        var label = e is null ? id : $"{e.Lemma}  {Gloss(e)}";
+        var label = e is null ? id : $"{e.Lemma}  {Mean(Gloss(e))}";
         return FilterChip(label + (suffix is null ? "" : "  " + suffix), false, null, () => _ = AnalyzeWordAsync(id), id);
     }
 
@@ -97,6 +97,8 @@ public partial class MainWindow
     async Task FillChipsAsync(WrapPanel panel, List<(string Id, string? Suffix)> items, string emptyText)
     {
         if (items.Count == 0) { panel.Children.Add(new TextBlock { Text = emptyText, Classes = { "caption" } }); return; }
+        var entries = await Task.WhenAll(items.Select(i => EntryAsync(i.Id)));
+        await WarmMeaningsAsync(entries.OfType<StrongsEntry>().Select(Gloss), () => { });
         foreach (var (id, suffix) in items) panel.Children.Add(await WordChipAsync(id, suffix));
     }
 

@@ -38,6 +38,7 @@ public partial class MainWindow : Window
     bool _building;
     readonly StrongsDictionary _strongs;
     readonly SyntaxProvider _syntax;
+    readonly MeaningTranslator _meanings;
     int _fontSize = 22;
     bool _singleColumn = true;
     readonly string _root;
@@ -77,6 +78,7 @@ public partial class MainWindow : Window
         _provider = new CompositeProvider(_hello, _local);
         _strongs = new StrongsDictionary(http, Path.Combine(_root, "cache"));
         _syntax = new SyntaxProvider(http, Path.Combine(_root, "cache"));
+        _meanings = new MeaningTranslator(Path.Combine(_root, "cache"));
         _store = new UserStore(Path.Combine(_root, "user.db"));
         _settingsPath = Path.Combine(_root, "settings.json");
         _settings = AppSettings.Load(_settingsPath);
@@ -537,9 +539,18 @@ public partial class MainWindow : Window
         var sub = new TextBlock { Text = $"{e.Id}  ·  {e.Translit}{(e.Pronunciation.Length > 0 ? "  ·  " + e.Pronunciation : "")}" };
         sub.Bind(TextBlock.ForegroundProperty, this.GetResourceObservable("BsMuted"));
         var panel = new StackPanel { Spacing = 2, Children = { head, sub } };
-        if (e.Derivation.Length > 0) panel.Children.Add(Line(L("Herkunft:"), e.Derivation));
-        if (e.Definition.Length > 0) panel.Children.Add(Line(L("Bedeutung:"), e.Definition));
-        if (e.KjvUsage.Length > 0) panel.Children.Add(Line("KJV:", e.KjvUsage));
+        var lines = new List<(Run Run, string English)>();
+        void Add(string label, string english)
+        {
+            var tb = Line(label, Mean(english));
+            lines.Add(((Run)tb.Inlines![1], english));
+            panel.Children.Add(tb);
+        }
+        if (e.Derivation.Length > 0) Add(L("Herkunft:"), e.Derivation);
+        if (e.Definition.Length > 0) Add(L("Bedeutung:"), e.Definition);
+        if (e.KjvUsage.Length > 0) Add("KJV:", e.KjvUsage);
+        if (lines.Any(l => _meanings.IsMissing(l.English)))
+            _ = WarmMeaningsAsync(lines.Select(l => l.English), () => { foreach (var (run, en) in lines) run.Text = Mean(en); });
         var card = new Border { Child = panel, Padding = new(12), CornerRadius = new(10), BorderThickness = new(1) };
         card.Bind(Border.BorderBrushProperty, this.GetResourceObservable("BsBorder"));
         return card;
