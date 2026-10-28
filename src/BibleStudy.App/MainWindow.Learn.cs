@@ -10,7 +10,7 @@ namespace BibleStudy.App;
 /// <summary>Learning Greek and Hebrew: alphabet, letter quiz and a vocabulary trainer with spaced repetition (words from the Strong's dictionary).</summary>
 public partial class MainWindow
 {
-    const int LearnTab = 21;
+    const int LearnTab = 22;
     const int NewCardsPerSession = 10;
 
     LearnStore? _learnStore;
@@ -187,10 +187,13 @@ public partial class MainWindow
         knew.Click += (_, _) => Rate(true);
         again.Click += (_, _) => Rate(false);
 
-        _learnArea.Children.Add(Card(new StackPanel
+        var cardView = Card(new StackPanel
         {
             Spacing = 8,
             Children = { new TextBlock { Text = L("Karte {0} von {1}", _queuePos + 1, _queue.Count), Classes = { "caption" }, HorizontalAlignment = HorizontalAlignment.Center }, lemma, sound, reveal, answer, rate },
-        }));
+        });
+        _learnArea.Children.Add(cardView);
+        AnimateIn(cardView, 24, 0);
     }
 }
+

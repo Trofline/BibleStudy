@@ -43,6 +43,25 @@ To remove the program: Settings > Updates and program > "Remove portable version
 "@
 [IO.Compression.ZipFile]::CreateFromDirectory((Join-Path $rel 'stage'), "$rel\BibleStudy-Portable-$Version.zip", 'Optimal', $false)
 
+Write-Host "== Linux and macOS packages (not tested by the build; see README-Unix.txt in each)"
+foreach ($rid in 'linux-x64', 'osx-arm64', 'osx-x64') {
+    $u = Join-Path $rel "unix-$rid\BibleStudy"
+    dotnet publish "$root\src\BibleStudy.App\BibleStudy.App.csproj" -c Release -r $rid --self-contained true -p:Version=$Version -p:DebugType=none -o $u
+    if ($LASTEXITCODE) { throw "publish app $rid failed" }
+    dotnet publish "$root\src\BibleStudy.Mcp\BibleStudy.Mcp.csproj" -c Release -r $rid --self-contained true -p:Version=$Version -p:DebugType=none -o "$u\mcp"
+    if ($LASTEXITCODE) { throw "publish mcp $rid failed" }
+    Copy-Item "$root\LICENSE", "$root\THIRD-PARTY-NOTICES.md" $u
+    Set-Content -LiteralPath "$u\README-Unix.txt" -Value @"
+BibleStudy for $rid (built on Windows, not tested on this system - please report problems).
+1. Unpack, then in a terminal in this folder:  chmod +x BibleStudy.App mcp/BibleStudy.Mcp
+2. macOS only: xattr -dr com.apple.quarantine .   (the program is not signed)
+3. Start:  ./BibleStudy.App
+Your data is stored in ~/.local/share/BibleStudy. Self-updating is Windows only; new versions are announced and the download page opens.
+"@
+    $name = if ($rid -like 'linux*') { "BibleStudy-Linux-x64-$Version.tar.gz" } else { "BibleStudy-macOS-$($rid.Split('-')[1])-$Version.zip" }
+    if ($rid -like 'linux*') { tar -czf "$rel\$name" -C (Join-Path $rel "unix-$rid") BibleStudy } else { [IO.Compression.ZipFile]::CreateFromDirectory((Join-Path $rel "unix-$rid"), "$rel\$name", 'Optimal', $false) }
+    Remove-Item -LiteralPath (Join-Path $rel "unix-$rid") -Recurse -Force
+}
 Remove-Item -LiteralPath (Join-Path $rel 'stage'), (Join-Path $rel 'setup'), $payload -Recurse -Force
 Get-ChildItem $rel -File | Where-Object { $_.Name -ne 'SHA256SUMS.txt' } | ForEach-Object { '{0}  {1}' -f (Get-FileHash $_.FullName -Algorithm SHA256).Hash.ToLower(), $_.Name } | Set-Content "$rel\SHA256SUMS.txt"
 Get-ChildItem $rel -File | ForEach-Object { '{0,-40} {1,8:N1} MB' -f $_.Name, ($_.Length / 1MB) }

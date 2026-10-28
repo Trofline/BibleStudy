@@ -93,6 +93,20 @@ public partial class MainWindow
 
     void OnWindowClosing(object? sender, WindowClosingEventArgs e)
     {
+        var toTray = !_exiting && _settings.CloseToTray && _tray is not null && _settings.Tray;
+        if (_closeAnimating) { e.Cancel = true; return; }
+        if (!_closeAnimated && _settings.Animations && IsVisible && WindowState != WindowState.Minimized && e.CloseReason == WindowCloseReason.WindowClosing)
+        {
+            e.Cancel = true; _closeAnimating = true;
+            Dispatcher.UIThread.Post(async () =>
+            {
+                await PlayCloseAnimationAsync();
+                _closeAnimating = false;
+                if (toTray) { Hide(); ResetAfterCloseAnimation(); }
+                else { _closeAnimated = true; Close(); }
+            });
+            return;
+        }
         if (!_exiting && _settings.CloseToTray && _tray is not null && _settings.Tray)
         {
             e.Cancel = true;

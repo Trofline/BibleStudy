@@ -1,4 +1,4 @@
-using Avalonia.Controls;
+﻿using Avalonia.Controls;
 using BibleStudy.Core.Models;
 using BibleStudy.Core.Storage;
 
@@ -17,18 +17,6 @@ public partial class MainWindow
         new(L("Gleichnis-Auslegung"), [L("Der Text"), L("Hintergrund und Zuhörer"), L("Das Bild und seine Bedeutung"), L("Die Hauptaussage"), L("Anwendung für mich")]),
         new(L("Abschnittsstudie"), [L("Beobachten: Was steht da?"), L("Auslegen: Was bedeutet es?"), L("Anwenden: Was heißt das für mich?"), L("Gebet")]),
     ];
-
-    void BuildTemplateMenu()
-    {
-        var menu = new MenuFlyout();
-        foreach (var t in StudyTemplates)
-        {
-            var item = new MenuItem { Header = t.Title };
-            item.Click += (_, _) => NewDocumentFromTemplate(t);
-            menu.Items.Add(item);
-        }
-        DocTemplatesBtn.Flyout = menu;
-    }
 
     void NewDocumentFromTemplate(StudyTemplate t)
     {

@@ -27,7 +27,7 @@ public partial class MainWindow
         AutoUpdateCheck.IsChecked = _settings.AutoUpdate;
         AutoUpdateCheck.IsCheckedChanged += (_, _) => { _settings.AutoUpdate = AutoUpdateCheck.IsChecked == true; SaveSettings(); };
         CheckUpdateBtn.Click += async (_, _) => await CheckForUpdateAsync(manual: true);
-        RemoveAppBtn.IsVisible = AppPaths.IsPortable || AppPaths.IsInstalled;
+        RemoveAppBtn.IsVisible = OperatingSystem.IsWindows() && (AppPaths.IsPortable || AppPaths.IsInstalled);
         RemoveAppBtn.Content = AppPaths.IsPortable ? L("Portable-Version entfernen …") : L("Deinstallieren …");
         RemoveAppBtn.Click += async (_, _) => await RemoveProgramAsync();
         InitBackup();
@@ -99,7 +99,7 @@ public partial class MainWindow
         if (!manual && _settings.SkippedVersion == info.Version) { UpdateStatus.Text = ""; return; }
         UpdateStatus.Text = L("Neue Version {0} verfügbar.", info.Version);
 
-        var canInstall = AppPaths.IsInstalled || AppPaths.IsPortable;
+        var canInstall = OperatingSystem.IsWindows() && (AppPaths.IsInstalled || AppPaths.IsPortable);   // the self-installing update is Windows only; elsewhere the download page opens
         var notes = info.Notes.Length > 600 ? info.Notes[..600] + " …" : info.Notes;
         var text = L("Version {0} ist da (du hast {1}).\n\n{2}", info.Version, AppPaths.Version, (notes.Length > 0 ? notes + "\n\n" : "")) +
                    (canInstall ? L("Beim Installieren sichert das Programm zuerst deine Daten, lädt das Update, installiert es und startet neu. Deine Vaults, Notizen und Einstellungen bleiben unverändert.")

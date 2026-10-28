@@ -1,4 +1,4 @@
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using Avalonia.Controls;
 using Avalonia.Layout;
 using BibleStudy.Core.Storage;
@@ -40,7 +40,10 @@ public partial class MainWindow
             if (exe is null) return;
             _exiting = true;
             // a moment's wait lets this instance release its files first
-            Process.Start(new ProcessStartInfo("cmd.exe", $"/c ping 127.0.0.1 -n 2 >nul & start \"\" \"{exe}\"") { CreateNoWindow = true, UseShellExecute = false });
+            if (OperatingSystem.IsWindows())
+                Process.Start(new ProcessStartInfo("cmd.exe", $"/c ping 127.0.0.1 -n 2 >nul & start \"\" \"{exe}\"") { CreateNoWindow = true, UseShellExecute = false });
+            else
+                Process.Start(new ProcessStartInfo("/bin/sh") { ArgumentList = { "-c", "sleep 1; exec \"$0\"", exe }, UseShellExecute = false });
             Close();
         }
         catch { /* the language applies at the next manual start */ }

@@ -6,6 +6,13 @@ namespace BibleStudy.Core.Storage;
 /// <summary>Position and size of a detached panel window (Tab = index of the side panel tab).</summary>
 public sealed record WindowBounds(int X, int Y, int W, int H, bool Maximized) { public string Key { get; set; } = ""; }
 
+/// <summary>A category for documents (stored on the document as the tag "kat:Name"). Color is an index into the program's palette.</summary>
+public sealed class DocCategory
+{
+    public string Name { get; set; } = "";
+    public int Color { get; set; }
+}
+
 /// <summary>A saved arrangement: side panel and detached windows.</summary>
 public sealed class LayoutPreset
 {
@@ -51,6 +58,10 @@ public sealed class AppSettings
     public bool FocusMode { get; set; }
     /// <summary>Parallel columns scroll together verse by verse (true) or each column on its own (false).</summary>
     public bool ParallelSync { get; set; } = true;
+    /// <summary>Commentaries are human writings (Calvin, Henry …), not Scripture: hidden unless switched on.</summary>
+    public bool ShowCommentaries { get; set; }
+    public List<DocCategory> Categories { get; set; } = [];
+    public bool CategoriesSeeded { get; set; }
     public string Commentary { get; set; } = "matthew-henry";
     public Dictionary<string, string> KeyBindings { get; set; } = [];
     public Dictionary<string, WindowBounds> Windows { get; set; } = [];

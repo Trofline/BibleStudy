@@ -16,6 +16,9 @@ verknüpfen, Predigten vorbereiten – alles offline nutzbar und ohne Konto.
 - **Eigenes Wissen:** Vaults (wie bei Obsidian) mit Markierungen, Notizen, Dokumenten, Ordnern, Tags, Wiki-Links
 - **Planen:** Lesepläne mit Fortschritt, Leseliste, Aufgaben, **Gebetsliste**
 - **Predigt-Editor** mit Gliederung, Versen, Zeitplan und Handout-Export
+- **Analyse-Werkzeuge:** Schlüsselwörter und einmalige Wörter je Kapitel, verwandte Wörter, Verteilung eines Wortes über die Bibel
+- **Dokumente mit Kategorien**, Studienvorlagen und Wissensgraph
+- **Linux und macOS:** Pakete werden mit gebaut (ungetestet), siehe Releases
 - **Griechisch und Hebräisch lernen:** Alphabet, Buchstaben-Quiz, Vokabeltrainer mit Wiederholung
 - **Drucken / PDF** für Dokumente, Lesepläne, Gebete und Predigt; Predigt-Folien als Vollbild-Show
 - **Reiter wie im Explorer**, Layouts (Desktops), frei belegbare Tastenkürzel
@@ -53,4 +56,5 @@ Eigene Dateien, die du importierst (z. B. eine Elberfelder-CSV), bleiben auf dei
 
 Fehler und Wünsche bitte als [Issue](https://github.com/trofline/BibleStudy/issues) melden. Beiträge sind willkommen; mit einem
 Pull Request stimmst du zu, dass dein Beitrag unter der MIT-Lizenz steht. Bitte nur Daten und Texte mit klarer, freier Lizenz einbauen.
+
 

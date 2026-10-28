@@ -1,4 +1,4 @@
-<Application xmlns="https://github.com/avaloniaui"
+﻿<Application xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              x:Class="BibleStudy.App.App"
              RequestedThemeVariant="Default">
@@ -377,6 +377,39 @@
         <!-- Verse rows in the reader -->
         <Style Selector="Border.verse:pointerover">
             <Setter Property="Background" Value="{DynamicResource BsSurface2}" />
+        </Style>
+
+        <!-- Motion: soft press, hover and selection transitions (the window class "noanim" switches them off) -->
+        <Style Selector="Button">
+            <Setter Property="RenderTransform" Value="scale(1)" />
+            <Setter Property="Transitions">
+                <Transitions>
+                    <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.12" Easing="CubicEaseOut" />
+                </Transitions>
+            </Setter>
+        </Style>
+        <Style Selector="Button:pressed"><Setter Property="RenderTransform" Value="scale(0.95)" /></Style>
+        <Style Selector="Button.rail:pointerover"><Setter Property="RenderTransform" Value="scale(1.06)" /></Style>
+        <Style Selector="Border.tile">
+            <Setter Property="RenderTransform" Value="scale(1)" />
+            <Setter Property="Transitions">
+                <Transitions>
+                    <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.16" Easing="CubicEaseOut" />
+                    <DoubleTransition Property="Opacity" Duration="0:0:0.16" />
+                </Transitions>
+            </Setter>
+        </Style>
+        <Style Selector="Border.tile:pointerover"><Setter Property="RenderTransform" Value="scale(1.025)" /></Style>
+        <Style Selector="Border.verse">
+            <Setter Property="Transitions">
+                <Transitions>
+                    <BrushTransition Property="Background" Duration="0:0:0.18" />
+                    <BrushTransition Property="BorderBrush" Duration="0:0:0.18" />
+                </Transitions>
+            </Setter>
+        </Style>
+        <Style Selector="Window.noanim Button, Window.noanim Border.tile, Window.noanim Border.verse">
+            <Setter Property="Transitions" Value="{x:Null}" />
         </Style>
     </Application.Styles>
 </Application>

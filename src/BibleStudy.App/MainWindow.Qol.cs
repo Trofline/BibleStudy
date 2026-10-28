@@ -34,8 +34,11 @@ public partial class MainWindow
         FontBox.SelectedItem = ReaderFonts.Contains(_settings.ReaderFont) ? _settings.ReaderFont : ReaderFonts[0];
         LineSlider.Value = _settings.LineSpacing; WidthSlider.Value = _settings.ReaderWidth; SpeakSlider.Value = _settings.SpeakRate;
         VerseNumberBox.SelectedIndex = Math.Max(0, Array.IndexOf(VerseNumberModes, _settings.VerseNumbers));
+        CommentariesCheck.IsChecked = _settings.ShowCommentaries;
+        CommentariesCheck.IsCheckedChanged += (_, _) => { _settings.ShowCommentaries = CommentariesCheck.IsChecked == true; SaveSettings(); StatusText.Text = L("Die Einstellung gilt nach einem Neustart."); };
         JesusRedCheck.IsChecked = _settings.JesusRed; JustifyCheck.IsChecked = _settings.Justify;
-        AnimationsCheck.IsChecked = _settings.Animations; AnimationsCheck.IsCheckedChanged += (_, _) => { _settings.Animations = AnimationsCheck.IsChecked == true; SaveSettings(); };
+        AnimationsCheck.IsChecked = _settings.Animations; AnimationsCheck.IsCheckedChanged += (_, _) => { _settings.Animations = AnimationsCheck.IsChecked == true; SaveSettings(); Classes.Set("noanim", !_settings.Animations); };
+        Classes.Set("noanim", !_settings.Animations);
         HeadingCheck.IsChecked = _settings.ChapterHeading; ScrollReadCheck.IsChecked = _settings.ScrollMarksRead;
         LineLabel.Text = L("Zeilenabstand: {0:0.0}", _settings.LineSpacing); WidthLabel.Text = L("Textbreite: {0}", _settings.ReaderWidth);
         SpeakLabel.Text = L("Vorlesen: Geschwindigkeit {0:+0;-0;normal}", _settings.SpeakRate);

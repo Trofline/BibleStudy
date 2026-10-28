@@ -13,7 +13,15 @@ public partial class MainWindow
     sealed record NavTab(int Index, string Label, string Hint);
     sealed record NavGroup(string Name, string Icon, NavTab[] Tabs, bool ShowVault = false, bool Windowed = false);
 
-    static readonly NavGroup[] NavGroups =
+    /// <summary>Commentaries are human writings, not Scripture: off unless the user turns them on (applies after a restart).</summary>
+    static bool CommentariesOn;
+    static NavGroup[] NavGroups = MakeNavGroups();
+
+    static NavTab[] CommentaryTabs() => CommentariesOn
+        ? [new(CommentaryTab, K("Kommentare"), L("Freie Bibelkommentare (Matthew Henry, Jamieson-Fausset-Brown, Keil-Delitzsch, Tyndale u. a.) zum aktuellen Kapitel; der angeklickte Vers wird hervorgehoben."))]
+        : [];
+
+    static NavGroup[] MakeNavGroups() =>
     [
         new(K("Suchen"), "M3 11a8 8 0 1 0 16 0a8 8 0 1 0-16 0z M21 21l-4.3-4.3",
         [
@@ -27,10 +35,11 @@ public partial class MainWindow
             new(GrundtextTab, K("Grundtext"), L("Der angeklickte Vers im Original, Wort für Wort mit Bedeutung.")),
             new(4, K("Querverweise"), L("Verse, die mit dem angeklickten Vers zusammenhängen.")),
             new(5, K("Vorkommen"), L("Alle Stellen, an denen ein Wort (Strong-Nummer) vorkommt, mit Verstext.")),
+            new(AnalysisTab, K("Analyse"), L("Werkzeuge zum besseren Verstehen: Schlüsselwörter, einmalige Wörter, verwandte Wörter und wo ein Wort in der Bibel vorkommt.")),
         ]),
         new(K("Bücher"), "M4 19.5A2.5 2.5 0 0 1 6.5 17H20 M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z",
         [
-            new(CommentaryTab, K("Kommentare"), L("Freie Bibelkommentare (Matthew Henry, Jamieson-Fausset-Brown, Keil-Delitzsch, Tyndale u. a.) zum aktuellen Kapitel; der angeklickte Vers wird hervorgehoben.")),
+            ..CommentaryTabs(),
             new(LexiconTab, K("Lexikon"), L("Bibellexikon zu Personen und Orten (Easton's Bible Dictionary über Theographic). Oben stehen die Namen des aktuellen Kapitels.")),
         ], Windowed: true),
         new(K("Notizen"), "M12 20h9 M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z",
@@ -148,6 +157,8 @@ public partial class MainWindow
                 return;
             }
             _lastSideIndex = SideTabs.SelectedIndex;
+            if (SideTabs.SelectedItem is TabItem { Content: Control page }) AnimateIn(page, 10, 0);
+            if (SideTabs.SelectedIndex == AnalysisTab) BuildAnalysisUi();
             SyncNav();
         };
         if (GroupOf(SideTabs.SelectedIndex) is { Windowed: true }) SideTabs.SelectedIndex = 0;

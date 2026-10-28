@@ -24,16 +24,10 @@ public partial class MainWindow
         {
             if (DocList.SelectedItem is Entry { Id: long id } && _vault.GetDocuments().FirstOrDefault(d => d.Id == id) is { } d) OpenDocument(d);
         };
-        DocNewBtn.Click += (_, _) => OpenDocument(new Document(0, "", "", null, false, DateTime.Now, []));
-        DocFromVerseBtn.Click += (_, _) => NewDocumentFromVerse();
-        BuildTemplateMenu();
-        DocPrintBtn.Click += (_, _) => PrintDocument();
-        DocFileBtn.Click += async (_, _) => await LinkFileAsync();
+        BuildDocMenus();
         DocGraphBtn.Click += (_, _) => ShowKnowledgeGraph();
         DocBackBtn.Click += (_, _) => CloseDocument();
         DocSaveBtn.Click += (_, _) => SaveDocument();
-        DocDeleteBtn.Click += (_, _) => { if (_doc is { Id: > 0 } d) { _vault.DeleteDocument(d.Id); CloseDocument(); } };
-        DocOpenFileBtn.Click += (_, _) => OpenLinkedFile();
         DocInsertVerseBtn.Click += (_, _) => InsertIntoDoc(_selected is int v ? L("> {0}\n> — {1}\n\n", VerseTextOf(v).Trim(), Label(new VerseRef(_curBook, _curChapter, v))) : null, L("Erst im Bibeltext einen Vers anklicken."));
         DocInsertLinkBtn.Click += (_, _) =>
         {
@@ -46,10 +40,6 @@ public partial class MainWindow
             }
             if (menu.Items.Count == 0) menu.Items.Add(new MenuItem { Header = L("Noch keine anderen Dokumente"), IsEnabled = false });
             menu.ShowAt(DocInsertLinkBtn);
-        };
-        DocFromTemplateBtn.Click += (_, _) =>
-        {
-            if (_doc is { } d) OpenDocument(new Document(0, L("Neu: ") + d.Title, d.Body, null, false, DateTime.Now, d.Tags));
         };
         KnowledgePane.CloseRequested += ShowReader;
         KnowledgePane.NotesToggled += on => { _graphNotes = on; ShowKnowledgeGraph(); };
@@ -69,6 +59,9 @@ public partial class MainWindow
         if (_vault is null) return;
         var query = DocSearchBox.Text?.Trim();
         var docs = _vault.GetDocuments(string.IsNullOrEmpty(query) ? null : query, tag: _docTag, templates: DocFilterBox.SelectedIndex == 1 ? true : null);
+        DocWelcome.IsVisible = _vault.GetDocuments().Count == 0;
+        BuildCategoryChips();
+        if (_docCategory is not null) docs = docs.Where(d => _docCategory.Length == 0 ? CategoryOf(d) is null : InCategory(d, _docCategory)).ToList();
         BuildDocTagChips();
         if (DocFilterBox.SelectedIndex == 2)
         {
@@ -79,15 +72,18 @@ public partial class MainWindow
         DocList.ItemsSource = docs.Select(d =>
         {
             var preview = d.Path is not null ? L("Datei: ") + System.IO.Path.GetFileName(d.Path) : Shorten(d.Body.ReplaceLineEndings(" ").Replace("#", "").Replace("**", "").Replace("[[", "").Replace("]]", "").Trim(), 90);
-            var tags = d.Tags.Count > 0 ? "  " + string.Join(" ", d.Tags.Select(t => "#" + t)) : "";
-            return new Entry(default, $"{(d.IsTemplate ? "◇ " : "")}{d.Title}\n{preview}{tags}".TrimEnd('\n'), d.Id);
+            var shown = d.Tags.Where(t => !IsCategoryTag(t)).ToList();
+            var tags = shown.Count > 0 ? "  " + string.Join(" ", shown.Select(t => "#" + t)) : "";
+            var cat = CategoryOf(d);
+            var dot = cat is null ? "" : CategoryColors[Math.Clamp(cat.Color, 0, CategoryColors.Length - 1)].Dot + " ";
+            return new Entry(default, $"{dot}{(d.IsTemplate ? "◇ " : "")}{d.Title}\n{preview}{tags}".TrimEnd('\n'), d.Id);
         }).ToList();
     }
 
     void BuildDocTagChips()
     {
         DocTagChips.Children.Clear();
-        foreach (var g in _vault.GetDocuments().SelectMany(d => d.Tags).GroupBy(t => t, StringComparer.OrdinalIgnoreCase).OrderByDescending(g => g.Count()).Take(14))
+        foreach (var g in _vault.GetDocuments().SelectMany(d => d.Tags).Where(t => !IsCategoryTag(t)).GroupBy(t => t, StringComparer.OrdinalIgnoreCase).OrderByDescending(g => g.Count()).Take(14))
         {
             var tag = g.Key; var active = string.Equals(_docTag, tag, StringComparison.OrdinalIgnoreCase);
             DocTagChips.Children.Add(FilterChip($"#{tag} {g.Count()}", active, null, () => { _docTag = active ? null : tag; RefreshDocs(); }));
@@ -106,16 +102,17 @@ public partial class MainWindow
     void OpenDocument(Document d)
     {
         _doc = d;
-        DocTitleBox.Text = d.Title; DocBodyBox.Text = d.Body; DocTagsBox.Text = string.Join(", ", d.Tags);
+        DocTitleBox.Text = d.Title; DocBodyBox.Text = d.Body; DocTagsBox.Text = string.Join(", ", d.Tags.Where(t => !IsCategoryTag(t)));
+        FillCategoryBox(d);
         DocTemplateCheck.IsChecked = d.IsTemplate;
         var folders = _vault.GetFolders().OrderBy(f => f.Name, Comparer<string>.Create(NaturalCompare)).ToList();
         DocFolderBox.ItemsSource = new List<object> { L("(kein Ordner)") }.Concat(folders).ToList();
         var fid = d.FolderId ?? _newDocFolder;
         DocFolderBox.SelectedIndex = fid is long f2 && folders.FindIndex(x => x.Id == f2) is var fi and >= 0 ? fi + 1 : 0;
         DocPathText.Text = d.Path is null ? "" : L("Verknüpfte Datei: ") + d.Path;
-        DocOpenFileBtn.IsVisible = d.Path is not null;
-        DocFromTemplateBtn.IsVisible = d.IsTemplate && d.Id > 0;
-        DocDeleteBtn.IsVisible = d.Id > 0;
+        _miOpenFile.IsVisible = d.Path is not null;
+        _miFromTemplate.IsVisible = d.IsTemplate && d.Id > 0;
+        _miDelete.IsVisible = d.Id > 0;
         DocListPanel.IsVisible = false; DocEditorPanel.IsVisible = true;
         RefreshDocChips(d);
     }
@@ -133,7 +130,7 @@ public partial class MainWindow
         if (_doc is null) return;
         var title = DocTitleBox.Text?.Trim() ?? "";
         if (title.Length == 0) { DocInfo.Text = ""; DocPathText.Text = L("Bitte einen Titel eingeben."); return; }
-        var tags = (DocTagsBox.Text ?? "").Split(',', ';');
+        var tags = (DocTagsBox.Text ?? "").Split(',', ';').Where(t => !IsCategoryTag(t.Trim())).Concat(SelectedCategoryTag()).ToArray();
         var body = DocBodyBox.Text ?? "";
         var template = DocTemplateCheck.IsChecked == true;
         var folderId = DocFolderBox.SelectedItem is Folder fo ? fo.Id : (long?)null;

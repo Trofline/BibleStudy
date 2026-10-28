@@ -53,6 +53,7 @@ public partial class MainWindow
         PrayerPanel.Children.Add(new TextBlock { Text = L("OFFEN ({0})", open.Count), Classes = { "eyebrow" }, Margin = new(0, 10, 0, 0) });
         if (open.Count == 0) PrayerPanel.Children.Add(new TextBlock { Text = L("Noch keine Anliegen. Schreibe oben das erste auf; Strg+Enter fügt es hinzu."), Classes = { "caption" }, TextWrapping = TextWrapping.Wrap });
         foreach (var p in open) PrayerPanel.Children.Add(PrayerCard(p));
+        Stagger(PrayerPanel.Children.OfType<Border>());
 
         if (done.Count > 0)
         {

@@ -78,6 +78,7 @@ public partial class MainWindow : Window
         _store = new UserStore(Path.Combine(_root, "user.db"));
         _settingsPath = Path.Combine(_root, "settings.json");
         _settings = AppSettings.Load(_settingsPath);
+        CommentariesOn = _settings.ShowCommentaries; NavGroups = MakeNavGroups();
         _vault = OpenVault(_settings.Vault);
         _read = _vault.GetReadChapters();
         _fontSize = _settings.FontSize;

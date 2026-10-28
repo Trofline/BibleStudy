@@ -39,6 +39,7 @@ public partial class MainWindow
     {
         if (TabActive(CommentaryTab)) _ = ShowCommentaryAsync();
         if (TabActive(LexiconTab)) _ = ShowLexiconAsync();
+        if (_analyzer is not null && TabActive(AnalysisTab)) BuildAnalysisUi();
     }
 
     // ---- commentaries -------------------------------------------------------------------------------------------------

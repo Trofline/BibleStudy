@@ -347,53 +347,77 @@
                     <TabItem.Header><local:Icon Data="M4 3h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H4z M8 3v18 M12 8h4 M12 12h4" /></TabItem.Header>
                     <Grid>
                         <DockPanel x:Name="DocListPanel" Margin="16,14,12,12">
-                            <StackPanel DockPanel.Dock="Top" Spacing="8" Margin="0,0,0,8">
+                            <StackPanel DockPanel.Dock="Top" Spacing="10" Margin="0,0,0,8">
+                                <DockPanel>
+                                    <Button x:Name="DocNewBtn" DockPanel.Dock="Right" Content="＋ Neu ▾" Classes="primary" VerticalAlignment="Center" />
+                                    <StackPanel Spacing="2">
+                                        <TextBlock Text="Deine Dokumente" FontSize="18" FontWeight="SemiBold" />
+                                        <TextBlock Classes="caption" TextWrapping="Wrap" Text="Gedanken, Studien und Predigten – geordnet nach Kategorien." />
+                                    </StackPanel>
+                                </DockPanel>
                                 <TextBox x:Name="DocSearchBox" Watermark="Dokumente durchsuchen (Titel, Text, Tags)" />
-                                <WrapPanel>
-                                    <Button x:Name="DocNewBtn" Content="Neue Notiz" Classes="primary" Margin="0,0,6,6" />
-                                    <Button x:Name="DocFromVerseBtn" Content="Aus Vers" Margin="0,0,6,6" ToolTip.Tip="Neue Notiz zum angeklickten Vers, mit dem Verstext" />
-                                    <Button x:Name="DocTemplatesBtn" Content="Studienvorlage ▾" Margin="0,0,6,6" ToolTip.Tip="Fertiges Gerüst für Wortstudie, Personenstudie, Themenstudie, Gleichnis oder Abschnittsstudie" />
-                                    <Button x:Name="DocFileBtn" Content="Datei verknüpfen …" Margin="0,0,6,6" />
-                                    <Button x:Name="DocGraphBtn" Content="Wissensgraph" Margin="0,0,6,6" />
-                                </WrapPanel>
-                                <Border Classes="pill" HorizontalAlignment="Left">
-                                    <ComboBox x:Name="DocFilterBox" Width="240" SelectedIndex="0">
-                                        <ComboBoxItem Content="Alle Dokumente" />
-                                        <ComboBoxItem Content="Vorlagen" />
-                                        <ComboBoxItem Content="Erwähnen den angeklickten Vers" />
-                                    </ComboBox>
-                                </Border>
-                                <WrapPanel x:Name="DocTagChips" />
+                                <TextBlock Classes="eyebrow" Text="KATEGORIEN" />
+                                <WrapPanel x:Name="DocCategoryChips" />
+                                <Expander Header="Mehr Filter und Graph" Padding="0">
+                                    <StackPanel Spacing="8" Margin="0,6,0,0">
+                                        <Border Classes="pill" HorizontalAlignment="Left">
+                                            <ComboBox x:Name="DocFilterBox" Width="240" SelectedIndex="0">
+                                                <ComboBoxItem Content="Alle Dokumente" />
+                                                <ComboBoxItem Content="Vorlagen" />
+                                                <ComboBoxItem Content="Erwähnen den angeklickten Vers" />
+                                            </ComboBox>
+                                        </Border>
+                                        <WrapPanel x:Name="DocTagChips" />
+                                        <Button x:Name="DocGraphBtn" Content="Wissensgraph" HorizontalAlignment="Left" />
+                                    </StackPanel>
+                                </Expander>
                                 <TextBlock x:Name="DocInfo" Classes="caption" TextWrapping="Wrap" />
+                                <Border x:Name="DocWelcome" Classes="card" IsVisible="False">
+                                    <StackPanel Spacing="6">
+                                        <TextBlock Text="So fängst du an" FontWeight="SemiBold" />
+                                        <TextBlock TextWrapping="Wrap" Text="1. Klicke auf „＋ Neu“ und schreibe deine erste Notiz." />
+                                        <TextBlock TextWrapping="Wrap" Text="2. Gib ihr eine Kategorie, zum Beispiel Predigt oder Wortstudie." />
+                                        <TextBlock TextWrapping="Wrap" Text="3. Mit Versen wie „Joh 3,16“ und [[Titel]] verknüpfst du alles miteinander." />
+                                    </StackPanel>
+                                </Border>
                             </StackPanel>
                             <ListBox x:Name="DocList" ItemTemplate="{StaticResource EntryTpl}" ScrollViewer.HorizontalScrollBarVisibility="Disabled" />
                         </DockPanel>
                         <ScrollViewer x:Name="DocEditorPanel" IsVisible="False" Margin="16,14,4,12">
-                            <StackPanel Spacing="8" Margin="0,0,12,0">
-                                <Button x:Name="DocBackBtn" Content="← Liste" HorizontalAlignment="Left" />
+                            <StackPanel Spacing="10" Margin="0,0,12,0">
+                                <DockPanel>
+                                    <Button x:Name="DocSaveBtn" DockPanel.Dock="Right" Content="Speichern" Classes="primary" />
+                                    <Button x:Name="DocMoreBtn" DockPanel.Dock="Right" Content="⋯" Classes="tool" Margin="0,0,6,0" ToolTip.Tip="Mehr" />
+                                    <Button x:Name="DocBackBtn" Content="← Liste" HorizontalAlignment="Left" />
+                                </DockPanel>
                                 <TextBox x:Name="DocTitleBox" Watermark="Titel" FontSize="18" />
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <TextBlock Text="Kategorie" VerticalAlignment="Center" />
+                                    <Border Classes="pill"><ComboBox x:Name="DocCategoryBox" Width="220" /></Border>
+                                </StackPanel>
                                 <WrapPanel>
                                     <Button x:Name="DocInsertVerseBtn" Content="＋ Vers einfügen" Margin="0,0,6,4" ToolTip.Tip="Fügt den angeklickten Vers als Zitat an der Schreibmarke ein" />
                                     <Button x:Name="DocInsertLinkBtn" Content="＋ Dokument verlinken" Margin="0,0,6,4" ToolTip.Tip="Fügt einen [[Link]] auf ein anderes Dokument ein" />
                                 </WrapPanel>
                                 <TextBox x:Name="DocBodyBox" AcceptsReturn="True" TextWrapping="Wrap" MinHeight="220" Watermark="Text. Verse wie „Joh 3,16“ werden zu Links, [[Titel]] verlinkt ein anderes Dokument." />
-                                <TextBox x:Name="DocTagsBox" Watermark="Tags, mit Komma getrennt" />
-                                <Border Classes="pill"><ComboBox x:Name="DocFolderBox" HorizontalAlignment="Stretch" ToolTip.Tip="Ordner, in dem das Dokument liegt (dieselben Ordner wie bei den Markierungen)" /></Border>
-                                <CheckBox x:Name="DocTemplateCheck" Content="Als Vorlage verwenden" />
                                 <TextBlock x:Name="DocPathText" Classes="caption" TextWrapping="Wrap" />
-                                <WrapPanel>
-                                    <Button x:Name="DocSaveBtn" Content="Speichern" Classes="primary" Margin="0,0,6,6" />
-                                    <Button x:Name="DocPrintBtn" Content="Drucken / PDF" Margin="0,0,6,6" />
-                                    <Button x:Name="DocOpenFileBtn" Content="Datei öffnen" Margin="0,0,6,6" />
-                                    <Button x:Name="DocFromTemplateBtn" Content="Neu aus dieser Vorlage" Margin="0,0,6,6" />
-                                    <Button x:Name="DocDeleteBtn" Content="Löschen" Margin="0,0,6,6" />
-                                </WrapPanel>
-                                <TextBlock Text="Verse in diesem Dokument" FontWeight="SemiBold" />
-                                <WrapPanel x:Name="DocVerseChips" />
-                                <TextBlock Text="Verknüpft mit" FontWeight="SemiBold" />
-                                <WrapPanel x:Name="DocLinkChips" />
-                                <TextBlock Text="Erwähnt von" FontWeight="SemiBold" />
-                                <WrapPanel x:Name="DocBackChips" />
+                                <Expander Header="Einordnen: Tags, Ordner, Vorlage" Padding="0">
+                                    <StackPanel Spacing="8" Margin="0,6,0,0">
+                                        <TextBox x:Name="DocTagsBox" Watermark="Tags, mit Komma getrennt" />
+                                        <Border Classes="pill"><ComboBox x:Name="DocFolderBox" HorizontalAlignment="Stretch" ToolTip.Tip="Ordner, in dem das Dokument liegt (dieselben Ordner wie bei den Markierungen)" /></Border>
+                                        <CheckBox x:Name="DocTemplateCheck" Content="Als Vorlage verwenden" />
+                                    </StackPanel>
+                                </Expander>
+                                <Expander Header="Verbindungen: Verse, Links, Erwähnungen" Padding="0">
+                                    <StackPanel Spacing="6" Margin="0,6,0,0">
+                                        <TextBlock Text="Verse in diesem Dokument" FontWeight="SemiBold" />
+                                        <WrapPanel x:Name="DocVerseChips" />
+                                        <TextBlock Text="Verknüpft mit" FontWeight="SemiBold" />
+                                        <WrapPanel x:Name="DocLinkChips" />
+                                        <TextBlock Text="Erwähnt von" FontWeight="SemiBold" />
+                                        <WrapPanel x:Name="DocBackChips" />
+                                    </StackPanel>
+                                </Expander>
                             </StackPanel>
                         </ScrollViewer>
                     </Grid>
@@ -455,6 +479,7 @@
                                     </Border>
                                 </Grid>
                                 <CheckBox x:Name="JesusRedCheck" Content="Worte Jesu farbig hervorheben" />
+                                <CheckBox x:Name="CommentariesCheck" Content="Kommentare anzeigen (Menschenwerk, nicht der Bibeltext; gilt nach Neustart)" />
                                 <CheckBox x:Name="JustifyCheck" Content="Blocksatz" />
                                 <CheckBox x:Name="AnimationsCheck" Content="Animationen (Seitenleiste, Reiter, Kapitel gleiten sanft ein)" />
                                 <CheckBox x:Name="HeadingCheck" Content="Großes Kapitel-Kopfstück (sonst schlicht)" />
@@ -672,6 +697,9 @@
                 </TabItem>
                 <TabItem Header="Gebete">
                     <ScrollViewer><StackPanel x:Name="PrayerPanel" Spacing="8" Margin="16,10,12,16" /></ScrollViewer>
+                </TabItem>
+                <TabItem Header="Analyse">
+                    <ScrollViewer><StackPanel x:Name="AnalysisPanel" Spacing="8" Margin="16,10,12,16" /></ScrollViewer>
                 </TabItem>
                 <TabItem Header="Sprachen">
                     <ScrollViewer><StackPanel x:Name="LearnPanel" Spacing="8" Margin="16,10,12,16" /></ScrollViewer>
