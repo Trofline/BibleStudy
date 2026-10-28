@@ -326,34 +326,29 @@ public partial class MainWindow : Window
             ReaderPanel.Children.Clear(); _verseBoxes.Clear();
             if (_animKey != $"{_curBook}{_curChapter}") { _animKey = $"{_curBook}{_curChapter}"; AnimateIn(ReaderPanel); }
             _singleColumn = cols.Count == 1;
+            _independent = cols.Count > 1 && !_settings.ParallelSync;
+            _colBoxes.Clear(); _colScrolls.Clear(); _indepGrid = null;
+            ParallelHeader.IsVisible = false;
             FitReader();
             var kicker = new TextBlock { Text = b.CommonName.ToUpperInvariant(), FontSize = 13, FontWeight = FontWeight.SemiBold, LetterSpacing = 3, Margin = new(8, 0, 0, 0) };
             kicker.Bind(TextBlock.ForegroundProperty, this.GetResourceObservable("BsMuted"));
-            var numeral = new TextBlock { Text = _settings.ChapterHeading ? ch.Number.ToString() : $"{b.CommonName} {ch.Number}", FontSize = _settings.ChapterHeading ? 64 : 30, FontFamily = UiSerif, FontWeight = FontWeight.SemiBold, Margin = new(8, 0, 0, 14) };
+            var numeral = new TextBlock { Text = _settings.ChapterHeading && !_independent ? ch.Number.ToString() : $"{b.CommonName} {ch.Number}", FontSize = _settings.ChapterHeading && !_independent ? 64 : 26, FontFamily = UiSerif, FontWeight = FontWeight.SemiBold, Margin = new(8, 0, 0, 14) };
             numeral.Bind(TextBlock.ForegroundProperty, this.GetResourceObservable("BsAccent"));
-            if (_settings.ChapterHeading) ReaderPanel.Children.Add(kicker);
+            if (_settings.ChapterHeading && !_independent) ReaderPanel.Children.Add(kicker);
             ReaderPanel.Children.Add(numeral);
-            if (cols.Count > 1)
-            {
-                var head = NewRow(cols.Count);
-                for (var i = 0; i < cols.Count; i++)
-                    AddCell(head, i, new TextBlock { Text = cols[i].T.ShortName + (cols[i].C is null ? L(" (Kapitel nicht verfügbar)") : ""), FontWeight = FontWeight.Bold, Opacity = 0.7, Margin = new(8, 0, 12, 4) });
-                ReaderPanel.Children.Add(head);
-            }
+            if (cols.Count > 1 && !_independent) BuildStickyHeader(cols);
             var notes = cols.Select(c => c.C?.Footnotes?.OrderBy(f => f.NoteId).Select((f, i) => (f.NoteId, Letter: NoteLetter(i), f.Text))
                 .ToDictionary(x => x.NoteId, x => (x.Letter, x.Text))).ToList();
             await LoadChapterRefsAsync(b.Id, number);
-            foreach (var num in cols.SelectMany(c => c.C?.Verses.Select(v => v.Number) ?? []).Distinct().Order())
+            if (_independent) BuildIndependent(cols, size, noted, notes!, t);
+            else foreach (var num in cols.SelectMany(c => c.C?.Verses.Select(v => v.Number) ?? []).Distinct().Order())
             {
                 var row = NewRow(cols.Count);
                 for (var i = 0; i < cols.Count; i++)
-                    AddCell(row, i, VerseCell(cols[i].C?.Verses.FirstOrDefault(v => v.Number == num), num, cols[i].T, size, i == 0 && noted.Contains(num), notes[i],
-                        _chapterMarks.Where(m => m.Ref.Verse == num && !m.WholeVerse && m.TranslationId == cols[i].T.Id).ToList()));
-                var box = new Border { Child = XrefChips(num, t.Id) is { } chips ? new StackPanel { Children = { row, chips } } : row, Padding = new(10, 3), CornerRadius = new(8), BorderThickness = new(3, 0, 0, 0), BorderBrush = Brushes.Transparent, Classes = { "verse" } };
-                var n = num;
-                box.AddHandler(PointerPressedEvent, (object? _, PointerPressedEventArgs e) => OnVersePressed(n, e), RoutingStrategies.Tunnel, handledEventsToo: true);
-                box.AddHandler(PointerReleasedEvent, (object? _, PointerReleasedEventArgs e) => CaptureSelection(e), RoutingStrategies.Tunnel, handledEventsToo: true);
-                _verseBoxes[n] = box;
+                    AddCell(row, i, ColumnCell(VerseCell(cols[i].C?.Verses.FirstOrDefault(v => v.Number == num), num, cols[i].T, size, i == 0 && noted.Contains(num), notes[i],
+                        _chapterMarks.Where(m => m.Ref.Verse == num && !m.WholeVerse && m.TranslationId == cols[i].T.Id).ToList()), i, cols.Count));
+                var box = MakeVerseBox(XrefChips(num, t.Id) is { } chips ? new StackPanel { Children = { row, chips } } : row, num);
+                _verseBoxes[num] = box;
                 ReaderPanel.Children.Add(box);
             }
             Paint();
@@ -539,8 +534,8 @@ public partial class MainWindow : Window
         var sub = new TextBlock { Text = $"{e.Id}  ·  {e.Translit}{(e.Pronunciation.Length > 0 ? "  ·  " + e.Pronunciation : "")}" };
         sub.Bind(TextBlock.ForegroundProperty, this.GetResourceObservable("BsMuted"));
         var panel = new StackPanel { Spacing = 2, Children = { head, sub } };
-        if (e.Derivation.Length > 0) panel.Children.Add(Line("Herkunft:", e.Derivation));
-        if (e.Definition.Length > 0) panel.Children.Add(Line("Bedeutung:", e.Definition));
+        if (e.Derivation.Length > 0) panel.Children.Add(Line(L("Herkunft:"), e.Derivation));
+        if (e.Definition.Length > 0) panel.Children.Add(Line(L("Bedeutung:"), e.Definition));
         if (e.KjvUsage.Length > 0) panel.Children.Add(Line("KJV:", e.KjvUsage));
         var card = new Border { Child = panel, Padding = new(12), CornerRadius = new(10), BorderThickness = new(1) };
         card.Bind(Border.BorderBrushProperty, this.GetResourceObservable("BsBorder"));
@@ -554,10 +549,11 @@ public partial class MainWindow : Window
         var trans = new ComboBox { Width = 210 };
         var remove = new Button { Width = 32, Height = 32, Classes = { "tool" }, Content = new Icon { Data = Geometry.Parse("M18 6L6 18 M6 6l12 12"), IconSize = 16 } };
         ToolTip.SetTip(remove, L("Spalte entfernen"));
+        var dot = new Border { Width = 12, Height = 12, CornerRadius = new(6), VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center, Margin = new(10, 0, 4, 0) };
         var root = new Border
         {
             Classes = { "pill" }, Margin = new(16, 8, 0, 8),
-            Child = new StackPanel { Orientation = Avalonia.Layout.Orientation.Horizontal, Children = { lang, trans, remove } },
+            Child = new StackPanel { Orientation = Avalonia.Layout.Orientation.Horizontal, Children = { dot, lang, trans, remove } },
         };
         var col = new ExtraColumn(lang, trans, root);
 
@@ -571,11 +567,13 @@ public partial class MainWindow : Window
         trans.SelectionChanged += async (_, _) => await ShowChapterAsync(_selected);
         remove.Click += async (_, _) =>
         {
-            _extras.Remove(col); ParallelBar.Children.Remove(root);
+            _extras.Remove(col); ParallelBar.Children.Remove(root); RecolorPills();
             ParallelBar.IsVisible = _extras.Count > 0;
             await ShowChapterAsync(_selected);
         };
-        _extras.Add(col); ParallelBar.Children.Add(root);
+        EnsureSyncPill();
+        if (!ParallelBar.Children.Contains(_syncPill!)) ParallelBar.Children.Insert(0, _syncPill!);
+        _extras.Add(col); ParallelBar.Children.Add(root); RecolorPills();
         ParallelBar.IsVisible = true;
         lang.SelectedItem = preset?.LanguageName ?? LanguageBox.SelectedItem;
     }
@@ -584,7 +582,7 @@ public partial class MainWindow : Window
     void Paint()
     {
         var soft = Res("BsAccentSoft");
-        foreach (var (n, box) in _verseBoxes)
+        foreach (var (n, box) in _verseBoxes.Concat(_colBoxes.SelectMany(d => d)))
         {
             var whole = _wholeMarks.TryGetValue(n, out var hex) ? Color.Parse(hex) : (Color?)null;
             if (n == _selected) box.Background = soft;
@@ -599,6 +597,16 @@ public partial class MainWindow : Window
     {
         Avalonia.Threading.Dispatcher.UIThread.Post(() =>
         {
+            if (_independent)
+            {
+                for (var j = 0; j < _colScrolls.Count; j++)
+                {
+                    var dict = j == 0 ? _verseBoxes : _colBoxes[j - 1];
+                    if (dict.TryGetValue(verse, out var cb) && _colScrolls[j].Content is Control content && cb.TranslatePoint(new Point(0, 0), content) is { } q)
+                        _colScrolls[j].Offset = new Vector(0, Math.Max(0, q.Y - 40));
+                }
+                return;
+            }
             if (!_verseBoxes.TryGetValue(verse, out var box)) return;
             if (box.TranslatePoint(new Point(0, 0), ReaderPanel) is { } p) ReaderScroll.Offset = new Vector(0, Math.Max(0, p.Y + ReaderPanel.Margin.Top - 70));
         }, Avalonia.Threading.DispatcherPriority.Background);
@@ -607,7 +615,10 @@ public partial class MainWindow : Window
     void FitReader()
     {
         ReaderPanel.HorizontalAlignment = _singleColumn ? Avalonia.Layout.HorizontalAlignment.Center : Avalonia.Layout.HorizontalAlignment.Stretch;
-        ReaderPanel.Margin = _singleColumn ? new(0, 36, 0, 80) : new(32, 28, 32, 80);
+        ReaderScroll.VerticalScrollBarVisibility = _independent ? Avalonia.Controls.Primitives.ScrollBarVisibility.Disabled : Avalonia.Controls.Primitives.ScrollBarVisibility.Auto;
+        ReaderPanel.Margin = _singleColumn ? new(0, 36, 0, 80) : _independent ? new(24, 12, 24, 16) : new(32, 28, 32, 80);
+        ReaderPanel.Height = _independent ? Math.Max(240, ReaderScroll.Bounds.Height - 28) : double.NaN;
+        if (_indepGrid is not null) _indepGrid.Height = Math.Max(160, ReaderPanel.Height - 70);
         var reserve = 0.0;
         ReaderPanel.Width = _singleColumn ? Math.Clamp(ReaderScroll.Bounds.Width - 64 - reserve, 320, _settings.ReaderWidth) : double.NaN;
     }

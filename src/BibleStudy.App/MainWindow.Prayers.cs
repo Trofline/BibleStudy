@@ -17,7 +17,7 @@ public partial class MainWindow
     static string Ago(DateTime d)
     {
         var days = (int)(DateTime.Now.Date - d.Date).TotalDays;
-        return days <= 0 ? "heute" : days == 1 ? "gestern" : days < 31 ? L("vor {0} Tagen", days) : days < 365 ? L("vor {0} Monaten", days / 30) : L("vor {0} Jahr(en)", days / 365);
+        return days <= 0 ? L("heute") : days == 1 ? L("gestern") : days < 31 ? L("vor {0} Tagen", days) : days < 365 ? L("vor {0} Monaten", days / 30) : L("vor {0} Jahr(en)", days / 365);
     }
 
     void BuildPrayerUi()
@@ -44,6 +44,12 @@ public partial class MainWindow
         var open = all.Where(p => p.Answered is null).ToList();
         var done = all.Where(p => p.Answered is not null).ToList();
 
+        if (all.Count > 0)
+        {
+            var print = new Button { Content = L("Drucken / PDF"), HorizontalAlignment = HorizontalAlignment.Left };
+            print.Click += (_, _) => PrintPrayers();
+            PrayerPanel.Children.Add(print);
+        }
         PrayerPanel.Children.Add(new TextBlock { Text = L("OFFEN ({0})", open.Count), Classes = { "eyebrow" }, Margin = new(0, 10, 0, 0) });
         if (open.Count == 0) PrayerPanel.Children.Add(new TextBlock { Text = L("Noch keine Anliegen. Schreibe oben das erste auf; Strg+Enter fügt es hinzu."), Classes = { "caption" }, TextWrapping = TextWrapping.Wrap });
         foreach (var p in open) PrayerPanel.Children.Add(PrayerCard(p));

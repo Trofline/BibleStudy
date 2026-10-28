@@ -26,6 +26,8 @@ public partial class MainWindow
         };
         DocNewBtn.Click += (_, _) => OpenDocument(new Document(0, "", "", null, false, DateTime.Now, []));
         DocFromVerseBtn.Click += (_, _) => NewDocumentFromVerse();
+        BuildTemplateMenu();
+        DocPrintBtn.Click += (_, _) => PrintDocument();
         DocFileBtn.Click += async (_, _) => await LinkFileAsync();
         DocGraphBtn.Click += (_, _) => ShowKnowledgeGraph();
         DocBackBtn.Click += (_, _) => CloseDocument();
@@ -50,11 +52,12 @@ public partial class MainWindow
             if (_doc is { } d) OpenDocument(new Document(0, L("Neu: ") + d.Title, d.Body, null, false, DateTime.Now, d.Tags));
         };
         KnowledgePane.CloseRequested += ShowReader;
+        KnowledgePane.NotesToggled += on => { _graphNotes = on; ShowKnowledgeGraph(); };
         KnowledgePane.NodeOpened += async node =>
         {
             if (node.Kind == "doc" && long.TryParse(node.Key, out var id) && _vault.GetDocuments().FirstOrDefault(d => d.Id == id) is { } d)
             { ShowReader(); SideTabs.SelectedIndex = KnowledgeTab; OpenDocument(d); }
-            else if (node.Kind == "verse" && node.Key.Split('|') is [var book, var chapter, var verse]) await GoToAsync(book, int.Parse(chapter), int.Parse(verse));
+            else if (node.Kind is "verse" or "note" && node.Key.Split('|') is [var book, var chapter, var verse]) await GoToAsync(book, int.Parse(chapter), int.Parse(verse));
         };
         RefreshDocs();
     }
@@ -205,6 +208,8 @@ public partial class MainWindow
 
     // ---- knowledge graph ----------------------------------------------------------------------------------------------
 
+    bool _graphNotes = true;
+
     void ShowKnowledgeGraph()
     {
         var docs = _vault.GetDocuments();
@@ -222,6 +227,18 @@ public partial class MainWindow
                 edges.Add((from, Node($"v:{r.Book}|{r.Chapter}|{r.Verse}", () => new KnowledgeNode("verse", Label(r), $"{r.Book}|{r.Chapter}|{r.Verse}", HomeView.ColorOf(r.Book)))));
             foreach (var tag in d.Tags)
                 edges.Add((from, Node("t:" + tag, () => new KnowledgeNode("tag", "#" + tag, tag, Color.Parse("#9a9890")))));
+        }
+        // notes on verses: a note links to its verse, to verses it mentions and to documents it links with [[Title]]
+        var green = Color.Parse("#6BBF8A");
+        foreach (var n in _graphNotes ? _vault.GetNotes() : [])
+        {
+            var key = $"{n.Ref.Book}|{n.Ref.Chapter}|{n.Ref.Verse}";
+            var from = Node("n:" + key, () => new KnowledgeNode("note", n.Text.Replace('\n', ' ').Trim() is { Length: > 28 } s ? s[..28] + "…" : n.Text.Trim(), key, green));
+            edges.Add((from, Node("v:" + key, () => new KnowledgeNode("verse", Label(n.Ref), key, HomeView.ColorOf(n.Ref.Book)))));
+            foreach (var r in DocumentLinks.VerseRefs(n.Text).Where(r => r != n.Ref))
+                edges.Add((from, Node($"v:{r.Book}|{r.Chapter}|{r.Verse}", () => new KnowledgeNode("verse", Label(r), $"{r.Book}|{r.Chapter}|{r.Verse}", HomeView.ColorOf(r.Book)))));
+            foreach (var title in DocumentLinks.WikiLinks(n.Text))
+                if (docs.FirstOrDefault(x => string.Equals(x.Title, title, StringComparison.OrdinalIgnoreCase)) is { } t) edges.Add((from, index["doc:" + t.Id]));
         }
         Home.IsVisible = false; ReaderHost.IsVisible = false; GraphPane.IsVisible = false; MapPane.IsVisible = false; TimelinePane.IsVisible = false; FamilyPane.IsVisible = false; KnowledgePane.IsVisible = true;
         KnowledgePane.SetData(nodes, edges);

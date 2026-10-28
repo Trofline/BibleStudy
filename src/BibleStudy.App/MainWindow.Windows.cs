@@ -60,6 +60,7 @@ public partial class MainWindow
         else if (index == KnowledgeTab) RefreshDocs();
         else if (index == PlanTab) BuildPlanUi();
         else if (index == PrayerTab) BuildPrayerUi();
+        else if (index == LearnTab) BuildLearnUi();
         else if (index == SermonTab && (_sermonVault != _vault.Name || SermonPanel.Children.Count == 0)) BuildSermonUi();
     }
 
@@ -332,6 +333,7 @@ public partial class MainWindow
     void ApplyLayout(LayoutPreset l, string? name = null)
     {
         CloseAllDetached();
+        if (name == "Dashboard") PlaceMainForDashboard();
         SidePanel.Width = Math.Clamp(l.SideWidth, 300, 900); _settings.SideWidth = SidePanel.Width;
         SetPanelOpen(l.SideOpen);
         if (l.SideTab >= 0 && l.SideTab < SideTabs.ItemCount && GroupOf(l.SideTab) is { Windowed: false }) SideTabs.SelectedIndex = l.SideTab;
@@ -361,7 +363,7 @@ public partial class MainWindow
         ToolTip.SetTip(LayoutTopBtn, name is null ? L("Layouts: Anordnung speichern und laden") : L("Layouts – aktiv: {0}", name));
     }
 
-    static readonly string[] BuiltInLayouts = [K("Lesen"), K("Studium"), K("Schreiben")];
+    static readonly string[] BuiltInLayouts = [K("Lesen"), K("Studium"), K("Schreiben"), K("Dashboard")];
 
     /// <summary>The name of a layout as shown (the built-in ones are translated, the user's own are shown as typed).</summary>
     static string LayoutLabel(string n) => BuiltInLayouts.Contains(n) ? L(n) : n;
@@ -371,8 +373,39 @@ public partial class MainWindow
         "Lesen" => new() { SideOpen = false },
         "Studium" => new() { SideOpen = true, SideWidth = 460, SideTab = GuideTab },
         "Schreiben" => new() { SideOpen = true, SideWidth = 400, SideTab = GuideTab, ActiveWork = "group:Dokumente", Windows = [new(0, 0, 0, 0, false) { Key = "group:Dokumente" }] },
+        "Dashboard" => DashboardLayout(),
         _ => null,
     };
+
+    /// <summary>Bible text on the left, commentary and notes tiled on the right – each in its own window on the same screen.</summary>
+    LayoutPreset DashboardLayout()
+    {
+        var screen = Screens.ScreenFromWindow(this) ?? Screens.Primary;
+        if (screen is null) return new() { SideOpen = false };
+        var wa = screen.WorkingArea;
+        int left = (int)(wa.Width * 0.58), right = wa.Width - left, half = wa.Height / 2;
+        double s = screen.Scaling;
+        return new()
+        {
+            SideOpen = false,
+            Windows =
+            [
+                new(wa.X + left, wa.Y, (int)(right / s), (int)(half / s) - 28, false) { Key = "group:Bücher" },
+                new(wa.X + left, wa.Y + half, (int)(right / s), (int)(half / s) - 28, false) { Key = "tab:2" },
+            ],
+        };
+    }
+
+    /// <summary>The main window takes the left part of the screen so that the dashboard windows fit beside it.</summary>
+    void PlaceMainForDashboard()
+    {
+        var screen = Screens.ScreenFromWindow(this) ?? Screens.Primary;
+        if (screen is null) return;
+        var wa = screen.WorkingArea;
+        WindowState = WindowState.Normal;
+        Position = wa.Position;
+        Width = wa.Width * 0.58 / screen.Scaling; Height = wa.Height / screen.Scaling;
+    }
 
     LayoutPreset? FindLayout(string name) => _settings.Layouts.GetValueOrDefault(name) ?? BuiltIn(name);
 

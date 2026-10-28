@@ -30,6 +30,7 @@ public partial class MainWindow
         RemoveAppBtn.IsVisible = AppPaths.IsPortable || AppPaths.IsInstalled;
         RemoveAppBtn.Content = AppPaths.IsPortable ? L("Portable-Version entfernen …") : L("Deinstallieren …");
         RemoveAppBtn.Click += async (_, _) => await RemoveProgramAsync();
+        InitBackup();
         // once per start, a few seconds after launch so that the reader is up first
         if (_settings.AutoUpdate)
             DispatcherTimer.RunOnce(async () => await CheckForUpdateAsync(manual: false), TimeSpan.FromSeconds(10));
@@ -59,10 +60,11 @@ public partial class MainWindow
     // ---- backup of the user's data -----------------------------------------------------------------------------------------
 
     /// <summary>Zips the user's data (vaults, settings, local translations; not the re-downloadable caches).</summary>
-    static string BackupData(string label)
+    static string BackupData(string label, string? folder = null)
     {
-        Directory.CreateDirectory(AppPaths.BackupDir);
-        var path = Path.Combine(AppPaths.BackupDir, $"BibleStudy-Daten-{label}-{DateTime.Now:yyyy-MM-dd_HHmm}.zip");
+        folder ??= AppPaths.BackupDir;
+        Directory.CreateDirectory(folder);
+        var path = Path.Combine(folder, $"BibleStudy-Daten-{label}-{DateTime.Now:yyyy-MM-dd_HHmm}.zip");
         var root = AppPaths.Root;
         using var zip = ZipFile.Open(path, ZipArchiveMode.Create);
         if (Directory.Exists(root))
@@ -102,7 +104,7 @@ public partial class MainWindow
         var text = L("Version {0} ist da (du hast {1}).\n\n{2}", info.Version, AppPaths.Version, (notes.Length > 0 ? notes + "\n\n" : "")) +
                    (canInstall ? L("Beim Installieren sichert das Programm zuerst deine Daten, lädt das Update, installiert es und startet neu. Deine Vaults, Notizen und Einstellungen bleiben unverändert.")
                                : L("Diese Entwicklungsversion aktualisierst du selbst; die Seite mit dem Download öffnet sich."));
-        var choice = await AskAsync("Update verfügbar", text, canInstall ? L("Jetzt installieren") : L("Seite öffnen"), L("Später"), L("Diese Version überspringen"));
+        var choice = await AskAsync(L("Update verfügbar"), text, canInstall ? L("Jetzt installieren") : L("Seite öffnen"), L("Später"), L("Diese Version überspringen"));
         if (choice == 2) { _settings.SkippedVersion = info.Version; SaveSettings(); return; }
         if (choice != 0) return;
         if (!canInstall) { try { Process.Start(new ProcessStartInfo(info.PageUrl) { UseShellExecute = true }); } catch { /* no browser */ } return; }

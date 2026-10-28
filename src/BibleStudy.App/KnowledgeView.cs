@@ -15,6 +15,7 @@ public sealed class KnowledgeView : UserControl
 {
     public event Action? CloseRequested;
     public event Action<KnowledgeNode>? NodeOpened;
+    public event Action<bool>? NotesToggled;
 
     readonly ForceCanvas _canvas = new();
     readonly TextBlock _hint = new() { FontSize = 12, VerticalAlignment = VerticalAlignment.Center, TextTrimming = TextTrimming.CharacterEllipsis };
@@ -27,13 +28,16 @@ public sealed class KnowledgeView : UserControl
         var strip = new WrapPanel { Margin = new(16, 10, 16, 6) };
         back.Margin = new(0, 0, 16, 4);
         strip.Children.Add(back);
-        foreach (var (color, name) in new[] { ("#E3B65F", L("Dokument")), ("#0593e6", L("Bibelvers (Farbe nach Gattung)")), ("#9a9890", L("Tag")) })
+        foreach (var (color, name) in new[] { ("#E3B65F", L("Dokument")), ("#6BBF8A", L("Notiz")), ("#0593e6", L("Bibelvers (Farbe nach Gattung)")), ("#9a9890", L("Tag")) })
         {
             var dot = new Border { Width = 10, Height = 10, CornerRadius = new(5), Background = new SolidColorBrush(Color.Parse(color)), VerticalAlignment = VerticalAlignment.Center, Margin = new(0, 0, 5, 0) };
             var label = new TextBlock { Text = name, FontSize = 12, Margin = new(0, 0, 14, 0) };
             label.Bind(TextBlock.ForegroundProperty, this.GetResourceObservable("BsMuted"));
             strip.Children.Add(new StackPanel { Orientation = Orientation.Horizontal, Margin = new(0, 0, 0, 4), VerticalAlignment = VerticalAlignment.Center, Children = { dot, label } });
         }
+        var notes = new CheckBox { Content = L("Notizen zeigen"), IsChecked = true, Margin = new(8, 0, 0, 4), VerticalAlignment = VerticalAlignment.Center };
+        notes.IsCheckedChanged += (_, _) => NotesToggled?.Invoke(notes.IsChecked == true);
+        strip.Children.Add(notes);
         var hintRow = new Border { Height = 24, Padding = new(16, 0), Child = _hint };
         var dock = new DockPanel();
         DockPanel.SetDock(strip, Dock.Top); DockPanel.SetDock(hintRow, Dock.Top);
@@ -116,7 +120,7 @@ sealed class ForceCanvas : Control
 
     Point Map(Point p) => new((Bounds.Width / 2 + p.X * (Bounds.Width / 2 - 80)) * _zoom + _pan.X, (Bounds.Height / 2 + p.Y * (Bounds.Height / 2 - 50)) * _zoom + _pan.Y);
 
-    double Radius(int i) => (_nodes[i].Kind == "doc" ? 8 : 4.5) + 1.6 * Math.Sqrt(_degree[i]);
+    double Radius(int i) => (_nodes[i].Kind == "doc" ? 8 : _nodes[i].Kind == "note" ? 6 : 4.5) + 1.6 * Math.Sqrt(_degree[i]);
 
     public override void Render(DrawingContext dc)
     {

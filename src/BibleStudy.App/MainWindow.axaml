@@ -1,4 +1,4 @@
-<Window xmlns="https://github.com/avaloniaui"
+﻿<Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:local="clr-namespace:BibleStudy.App"
         x:Class="BibleStudy.App.MainWindow"
@@ -352,6 +352,7 @@
                                 <WrapPanel>
                                     <Button x:Name="DocNewBtn" Content="Neue Notiz" Classes="primary" Margin="0,0,6,6" />
                                     <Button x:Name="DocFromVerseBtn" Content="Aus Vers" Margin="0,0,6,6" ToolTip.Tip="Neue Notiz zum angeklickten Vers, mit dem Verstext" />
+                                    <Button x:Name="DocTemplatesBtn" Content="Studienvorlage ▾" Margin="0,0,6,6" ToolTip.Tip="Fertiges Gerüst für Wortstudie, Personenstudie, Themenstudie, Gleichnis oder Abschnittsstudie" />
                                     <Button x:Name="DocFileBtn" Content="Datei verknüpfen …" Margin="0,0,6,6" />
                                     <Button x:Name="DocGraphBtn" Content="Wissensgraph" Margin="0,0,6,6" />
                                 </WrapPanel>
@@ -382,6 +383,7 @@
                                 <TextBlock x:Name="DocPathText" Classes="caption" TextWrapping="Wrap" />
                                 <WrapPanel>
                                     <Button x:Name="DocSaveBtn" Content="Speichern" Classes="primary" Margin="0,0,6,6" />
+                                    <Button x:Name="DocPrintBtn" Content="Drucken / PDF" Margin="0,0,6,6" />
                                     <Button x:Name="DocOpenFileBtn" Content="Datei öffnen" Margin="0,0,6,6" />
                                     <Button x:Name="DocFromTemplateBtn" Content="Neu aus dieser Vorlage" Margin="0,0,6,6" />
                                     <Button x:Name="DocDeleteBtn" Content="Löschen" Margin="0,0,6,6" />
@@ -558,6 +560,19 @@
                                     <Button x:Name="LicensesBtn" Content="Quellen und Lizenzen …" ToolTip.Tip="Woher alle Texte und Daten stammen und unter welcher Lizenz sie stehen" />
                                 </WrapPanel>
                                 <TextBlock x:Name="BackupInfo" Classes="caption" TextWrapping="Wrap" />
+                                <TextBlock Text="Automatische Sicherung aller Daten (ZIP)" FontWeight="SemiBold" Margin="0,6,0,0" />
+                                <Border Classes="pill"><ComboBox x:Name="BackupScheduleBox" HorizontalAlignment="Stretch">
+                                    <ComboBoxItem Tag="off" Content="Aus" />
+                                    <ComboBoxItem Tag="daily" Content="Täglich" />
+                                    <ComboBoxItem Tag="weekly" Content="Wöchentlich" />
+                                    <ComboBoxItem Tag="monthly" Content="Monatlich" />
+                                </ComboBox></Border>
+                                <TextBlock x:Name="BackupFolderText" Classes="caption" TextWrapping="Wrap" />
+                                <WrapPanel>
+                                    <Button x:Name="BackupFolderBtn" Content="Sicherungsordner wählen …" Margin="0,0,6,6" />
+                                    <Button x:Name="BackupNowBtn" Content="Jetzt sichern" Margin="0,0,6,6" />
+                                </WrapPanel>
+                                <TextBlock x:Name="AutoBackupInfo" Classes="caption" TextWrapping="Wrap" />
                             </StackPanel></Border>
 
                             <Border Classes="card"><StackPanel Spacing="8">
@@ -658,6 +673,9 @@
                 <TabItem Header="Gebete">
                     <ScrollViewer><StackPanel x:Name="PrayerPanel" Spacing="8" Margin="16,10,12,16" /></ScrollViewer>
                 </TabItem>
+                <TabItem Header="Sprachen">
+                    <ScrollViewer><StackPanel x:Name="LearnPanel" Spacing="8" Margin="16,10,12,16" /></ScrollViewer>
+                </TabItem>
             </TabControl>
             </DockPanel>
         </Border>
@@ -665,11 +683,12 @@
 
         <!-- Reader -->
         <Grid>
-            <Grid x:Name="ReaderHost" ColumnDefinitions="*,Auto">
-                <ScrollViewer x:Name="ReaderScroll">
+            <Grid x:Name="ReaderHost" ColumnDefinitions="*,Auto" RowDefinitions="Auto,*">
+                <Grid x:Name="ParallelHeader" IsVisible="False" Margin="42,10,42,2" />
+                <ScrollViewer x:Name="ReaderScroll" Grid.Row="1">
                     <StackPanel x:Name="ReaderPanel" Margin="0,36,0,80" HorizontalAlignment="Center" Spacing="2" />
                 </ScrollViewer>
-                <local:ThreadGraph x:Name="ThreadPane" Grid.Column="1" IsVisible="False" Margin="0,0,8,0" />
+                <local:ThreadGraph x:Name="ThreadPane" Grid.Column="1" Grid.RowSpan="2" IsVisible="False" Margin="0,0,8,0" />
             </Grid>
             <local:HomeView x:Name="Home" IsVisible="False" Background="{DynamicResource BsBackground}" />
             <local:GraphView x:Name="GraphPane" IsVisible="False" Background="{DynamicResource BsBackground}" />

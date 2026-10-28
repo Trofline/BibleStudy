@@ -110,6 +110,9 @@ public partial class MainWindow
 
         var reset = new Button { Content = L("Plan beenden / anderen wählen"), HorizontalAlignment = HorizontalAlignment.Left };
         reset.Click += (_, _) => { _settings.PlanId = null; _settings.PlanStart = null; _planDayShown = 0; SaveSettings(); BuildPlanUi(); };
+        var print = new Button { Content = L("Plan drucken / PDF"), HorizontalAlignment = HorizontalAlignment.Left };
+        print.Click += (_, _) => PrintPlan();
+        PlanPanel.Children.Add(new WrapPanel { Children = { print } });
         PlanPanel.Children.Add(reset);
     }
 

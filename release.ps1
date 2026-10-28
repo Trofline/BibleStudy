@@ -12,6 +12,10 @@ if ($rel -ne (Join-Path $root 'release')) { throw 'unexpected release path' }
 if (Test-Path $rel) { Remove-Item -LiteralPath $rel -Recurse -Force }
 New-Item -ItemType Directory -Force $stage | Out-Null
 
+Write-Host '== Checking that every text is translated'
+dotnet test "$root\tests\BibleStudy.Tests\BibleStudy.Tests.csproj" --filter "FullyQualifiedName~LocalizationTests" --nologo -v q
+if ($LASTEXITCODE) { throw 'Translations are incomplete: fix the missing texts before releasing' }
+
 Write-Host "== Publishing program $Version"
 dotnet publish "$root\src\BibleStudy.App\BibleStudy.App.csproj" -c Release -r win-x64 --self-contained true -p:Version=$Version -p:DebugType=none -o $stage
 if ($LASTEXITCODE) { throw 'publish app failed' }

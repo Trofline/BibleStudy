@@ -1,4 +1,4 @@
-using System.Text.Json;
+﻿using System.Text.Json;
 
 namespace BibleStudy.Core.Storage;
 
@@ -49,6 +49,8 @@ public sealed class AppSettings
     public int SpeakRate { get; set; }
     public int SideTab { get; set; }
     public bool FocusMode { get; set; }
+    /// <summary>Parallel columns scroll together verse by verse (true) or each column on its own (false).</summary>
+    public bool ParallelSync { get; set; } = true;
     public string Commentary { get; set; } = "matthew-henry";
     public Dictionary<string, string> KeyBindings { get; set; } = [];
     public Dictionary<string, WindowBounds> Windows { get; set; } = [];
@@ -60,6 +62,9 @@ public sealed class AppSettings
     public string Logo { get; set; } = "Book";            // Book (rounded square) | Circle
     public bool AutoUpdate { get; set; } = true;
     public string? LastUpdateCheck { get; set; }
+    public string BackupSchedule { get; set; } = "off";   // off | daily | weekly | monthly
+    public string? BackupFolder { get; set; }              // null = Documents\BibleStudy-Backup
+    public string? LastAutoBackup { get; set; }
     public string? SkippedVersion { get; set; }
     public string? PlanId { get; set; }
     public string? PlanStart { get; set; }
