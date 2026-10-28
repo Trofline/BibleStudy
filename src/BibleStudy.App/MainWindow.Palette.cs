@@ -151,6 +151,25 @@ public partial class MainWindow
             }
             catch { /* offline: the other results stay */ }
         }
+
+        // people and places of the Bible dictionary (like a fact book): a click opens the entry
+        if (text.Length >= 3)
+        {
+            try
+            {
+                var index = _lexIndex ??= await _hello.GetLexiconIndexAsync();
+                if (version != _paletteVersion) return;
+                var found = index.Where(i => i.Name.Contains(text, StringComparison.CurrentCultureIgnoreCase)).OrderByDescending(i => i.References).Take(3).Reverse().ToList();
+                foreach (var it in found)
+                {
+                    var item = it;
+                    items.Insert(Math.Min(1, items.Count), new(item.Kind == "places" ? L("Ort") : L("Person"), item.Name, L("{0} Erwähnungen · öffnet das Lexikon", item.References),
+                        () => { OpenWork(NavGroups.First(g => g.Name == "Bücher"), LexiconTab); return ShowLexEntryAsync(item); }));
+                }
+                if (found.Count > 0) ShowPalette(items);
+            }
+            catch { /* offline: the other results stay */ }
+        }
     }
 
     void ShowPalette(List<PaletteItem> items)

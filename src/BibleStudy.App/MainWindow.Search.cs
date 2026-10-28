@@ -36,7 +36,9 @@ public partial class MainWindow
         (L("Paulusbriefe"), id => BookCategories.Of(id) == BookCategory.Paul),
         (L("Kleine Propheten"), id => BookCategories.Of(id) == BookCategory.MinorProphets),
         (L("Aktuelles Buch"), id => id == _currentBookForSearch),
+        (L("Nur Worte Jesu (rot gedruckt)"), _ => true),
     ];
+    static bool IsJesusScope(int index) => index == Scopes.Length - 1;
     static string _currentBookForSearch = "";
 
     static readonly string[] MatchModes = [L("Wortanfang"), L("Ganzes Wort"), L("Wortende"), L("Wortteil")];
@@ -55,6 +57,9 @@ public partial class MainWindow
         (L("Grundform von …"), w => string.Join(" ", w.Select(x => "L=" + x))),
         (L("Grundtextwort zu …"), w => string.Join(" ", w.Select(x => "O=" + x))),
         (L("Strong-Nummer"), w => string.Join(" ", w)),
+        (L("Person in der Bibel"), w => "Person:\"" + string.Join(" ", w) + "\""),
+        (L("Ort in der Bibel"), w => "Ort:\"" + string.Join(" ", w) + "\""),
+        (L("Bezug zu einer Bibelstelle (AT↔NT)"), w => "Bezug:\"" + string.Join(" ", w) + "\""),
     ];
     readonly List<(ComboBox Kind, TextBox Text)> _builderRows = [];
 
@@ -71,6 +76,9 @@ public partial class MainWindow
         (L("*keit"), L("Wortende: Barmherzigkeit, Gerechtigkeit …")),
         (L("*geist*"), L("Wortteil: Geist, Heiliger Geist, geistlich …")),
         (L("O=Gnade"), L("Grundtext: alle Verse mit dem Hebräisch/Griechisch-Wort hinter „Gnade“")),
+        (L("Person:Abraham"), L("Person: alle Verse, in denen sie erwähnt wird (auch unter anderen Namen); mit Wörtern kombinierbar: Person:Abraham Verheißung")),
+        (L("Ort:Jerusalem"), L("Ort: alle Verse, in denen er erwähnt wird")),
+        (L("Bezug:\"Jer 31\""), L("Altes Testament: welche Neutestament-Verse darauf verweisen. Neues Testament (Bezug:\"Hebr 10\"): auf welche AT-Verse es verweist (Querverweise, nicht nur Zitate)")),
         ("G3056", L("Strong-Nummer (mehrere: alle müssen vorkommen)")),
         (L("H8392=Arche"), L("Strong-Nummer, übersetzt mit einem bestimmten Wort")),
         (L("Joh 3,16"), L("Bibelstelle aufschlagen")),
@@ -234,6 +242,22 @@ public partial class MainWindow
                 return;
             }
 
+            // 2b. Person:… / Ort:… / Bezug:"…": what a text is about; the rest of the query is an ordinary search within those verses
+            _hitNotes.Clear();
+            var query = text;
+            HashSet<VerseRef>? entityFilter = null;
+            Dictionary<VerseRef, int>? entityBest = null;
+            if (await ResolveEntitiesAsync(text) is { } entity)
+            {
+                if (entity.Verses.Count == 0)
+                {
+                    if (!entity.HasMessage) SearchInfo.Text = L("Keine Treffer in {0}.", t.ShortName);
+                    SearchList.ItemsSource = null; _hits = []; return;
+                }
+                entityFilter = entity.Verses; query = entity.Remaining; entityBest = entity.Best;
+                foreach (var (k, v) in entity.Notes) _hitNotes[k] = v;
+            }
+
             // 3. full-text / lemma / Strong search
             if (!_store.IsIndexed(t.Id))
             {
@@ -250,10 +274,19 @@ public partial class MainWindow
             var books = scope is null ? null : _books.Select(b => b.Id).Where(scope).ToHashSet();
             var options = new SearchOptions((WordMatch)Math.Max(0, SearchMatchBox.SelectedIndex), SearchCaseCheck.IsChecked == true, SearchOriginalCheck.IsChecked == true,
                 Ranges[Math.Clamp(SearchRangeBox.SelectedIndex, 0, Ranges.Length - 1)].Range);
+            if (IsJesusScope(SearchScopeBox.SelectedIndex))
+            {
+                corpus = await JesusCorpusAsync(t) ?? [];
+                if (corpus.Count == 0) { SearchInfo.Text = L("Diese Übersetzung kennzeichnet die Worte Jesu nicht (Rotdruck). Wähle eine andere, z. B. eine englische oder die Schlachter."); SearchList.ItemsSource = null; _hits = []; return; }
+                books = null;
+            }
             var searched = narrowTo is null ? corpus : corpus.Where(c => narrowTo.Contains(c.Ref)).ToList();
+            if (entityFilter is not null) searched = searched.Where(c => entityFilter.Contains(c.Ref)).ToList();
 
             _strongIndexes.TryGetValue(t.Id, out var strongs);
-            var outcome = await Task.Run(() => SearchEngine.Run(searched, text, strongs, options, books));
+            var outcome = query.Length == 0
+                ? new SearchOutcome(searched.Where(c => books is null || books.Contains(c.Ref.Book)).Select(c => new SearchResult(c.Ref, c.Text, [])).ToList(), null, false)
+                : await Task.Run(() => SearchEngine.Run(searched, query, strongs, options, books));
             if (outcome.NeedsStrongs)
             {
                 if (!_store.IsStrongsIndexed(t.Id))
@@ -268,12 +301,13 @@ public partial class MainWindow
                     finally { _building = false; }
                 }
                 _strongIndexes[t.Id] = strongs = await Task.Run(() => new StrongIndex(_store.GetAllOccurrences(t.Id)));
-                outcome = await Task.Run(() => SearchEngine.Run(searched, text, strongs, options, books));
+                outcome = await Task.Run(() => SearchEngine.Run(searched, query, strongs, options, books));
             }
             if (outcome.Error is not null) { SearchInfo.Text = outcome.Error; SearchList.ItemsSource = null; _hits = []; return; }
 
             RememberSearch(text);
             _hits = outcome.Results.ToList();
+            if (entityBest is { Count: > 0 }) _hits = _hits.OrderByDescending(h => entityBest.GetValueOrDefault(h.Ref)).ToList();   // strongest references first
             ShowHits(t);
             ShowSearchStrongs(outcome.Strongs);
         }
@@ -284,9 +318,10 @@ public partial class MainWindow
     void ShowHits(TranslationInfo t)
     {
         var list = CurrentHits().ToList();
-        SearchList.ItemsSource = list.Take(ShownHits).Select(h => new Entry(h.Ref, $"{Label(h.Ref)}\n{h.Marked()}")).ToList();
+        SearchList.ItemsSource = list.Take(ShownHits).Select(h => new Entry(h.Ref, $"{Label(h.Ref)}\n{h.Marked()}" + (_hitNotes.TryGetValue(h.Ref, out var note) ? "\n" + note : ""))).ToList();
         var words = list.Sum(h => h.Spans.Count);
         SearchInfo.Text = _hits.Count == 0 ? L("Keine Treffer in {0}.", t.ShortName)
+            : words == 0 ? L("{0} Verse in {1}{2}", list.Count, t.ShortName, (list.Count > ShownHits ? L(" (erste {0} angezeigt)", ShownHits) : ""))
             : L("{0} Verse · {1} Fundstellen in {2}{3}", list.Count, words, t.ShortName, (list.Count > ShownHits ? L(" (erste {0} angezeigt)", ShownHits) : ""));
         SearchQueueBtn.IsVisible = list.Count > 0;
 
