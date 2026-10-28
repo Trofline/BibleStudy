@@ -44,6 +44,12 @@ public sealed class AppSettings
     public bool ThreadGraph { get; set; }
     public List<string> SearchHistory { get; set; } = [];
     public bool SearchExactWords { get; set; }
+    /// <summary>0 word beginning, 1 whole word, 2 word ending, 3 part of a word.</summary>
+    public int SearchMatch { get; set; }
+    public bool SearchOriginal { get; set; }
+    public bool SearchCase { get; set; }
+    /// <summary>Index of the "all words must occur …" choice: verse, 2 verses, 5 verses, chapter.</summary>
+    public int SearchRange { get; set; }
     public string ReaderFont { get; set; } = "Crimson Text";
     public double LineSpacing { get; set; } = 1.7;
     public int ReaderWidth { get; set; } = 760;

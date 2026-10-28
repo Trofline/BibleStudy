@@ -27,6 +27,16 @@ public static partial class DocumentLinks
         return result;
     }
 
+    /// <summary>Where verse references stand in the text: position, length and the (first) verse, for making them clickable.</summary>
+    public static IReadOnlyList<(int Index, int Length, VerseRef Ref)> VerseSpans(string text)
+    {
+        var result = new List<(int, int, VerseRef)>();
+        foreach (Match m in Verse().Matches(text))
+            if (Names.Value.TryGetValue(Normalize(m.Groups["b"].Value), out var book))
+                result.Add((m.Index, m.Length, new VerseRef(book, int.Parse(m.Groups["c"].Value), int.Parse(m.Groups["v"].Value))));
+        return result;
+    }
+
     /// <summary>USFM id for a book name or abbreviation (German or English), or null.</summary>
     public static string? BookId(string name) => Names.Value.TryGetValue(Normalize(name), out var id) ? id : null;
 

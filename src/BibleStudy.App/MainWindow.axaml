@@ -194,13 +194,39 @@
                                 <Border Classes="pill" Margin="0,0,8,4">
                                     <ComboBox x:Name="SearchScopeBox" Width="170" SelectedIndex="0" />
                                 </Border>
-                                <CheckBox x:Name="SearchExactCheck" Content="Ganze Wörter" Margin="0,0,8,4" ToolTip.Tip="Sonst finden Wortanfänge auch Endungen (lieb → liebe, lieben)" />
-                                <ToggleButton x:Name="SearchHelpBtn" Classes="pillbtn" Margin="0,0,0,4" Content="Suchhilfe" FontSize="12.5" ToolTip.Tip="Alle Suchmöglichkeiten mit Beispielen" />
-                                <Button x:Name="TopicBtn" Classes="seg" Margin="8,0,0,4" Content="Themensuche" ToolTip.Tip="Ein Thema (z. B. Vergebung) mit verwandten Wörtern im ganzen Text suchen" />
+                                <Border Classes="pill" Margin="0,0,8,4">
+                                    <ComboBox x:Name="SearchMatchBox" Width="170" SelectedIndex="0" ToolTip.Tip="Wie ein Suchwort zu den Wörtern im Text passen muss" />
+                                </Border>
+                                <ToggleButton x:Name="SearchOptionsBtn" Classes="pillbtn" Margin="0,0,8,4" Content="Mehr Optionen" FontSize="12.5" ToolTip.Tip="Grundtext, Groß-/Kleinschreibung, Abstand der Wörter, nur in den Treffern suchen" />
+                                <ToggleButton x:Name="SearchBuilderBtn" Classes="pillbtn" Margin="0,0,8,4" Content="Suche bauen" FontSize="12.5" ToolTip.Tip="Die Suche aus Auswahlfeldern zusammenstellen, ohne die Schreibweise zu kennen" />
+                                <ToggleButton x:Name="SearchHelpBtn" Classes="pillbtn" Margin="0,0,8,4" Content="Suchhilfe" FontSize="12.5" ToolTip.Tip="Alle Suchmöglichkeiten mit Beispielen" />
+                                <Button x:Name="TopicBtn" Classes="seg" Margin="0,0,0,4" Content="Themensuche" ToolTip.Tip="Ein Thema (z. B. Vergebung) mit verwandten Wörtern im ganzen Text suchen" />
                             </WrapPanel>
-                            <Border x:Name="SearchHelp" IsVisible="False" Classes="card">
-                                <StackPanel x:Name="SearchHelpList" Spacing="6" />
+                            <Border x:Name="SearchOptionsCard" IsVisible="False" Classes="card">
+                                <StackPanel Spacing="8">
+                                    <CheckBox x:Name="SearchOriginalCheck" Content="Im Grundtext suchen (Hebräisch/Griechisch)" ToolTip.Tip="Findet das Wort auch dort, wo die Übersetzung ein anderes deutsches Wort verwendet: Es wird nach den Strong-Nummern gesucht, die hinter dem Wort stehen." />
+                                    <CheckBox x:Name="SearchCaseCheck" Content="Groß-/Kleinschreibung beachten" ToolTip.Tip="HERR (Gottesname) und Herr sind dann verschieden" />
+                                    <CheckBox x:Name="SearchInHitsCheck" Content="Nur in den letzten Treffern suchen" ToolTip.Tip="Grenzt die vorigen Treffer weiter ein" />
+                                    <TextBlock Text="Alle Suchwörter müssen vorkommen …" Classes="caption" />
+                                    <Border Classes="pill" HorizontalAlignment="Left"><ComboBox x:Name="SearchRangeBox" Width="250" SelectedIndex="0" /></Border>
+                                </StackPanel>
                             </Border>
+                            <Border x:Name="SearchBuilder" IsVisible="False" Classes="card">
+                                <StackPanel Spacing="8">
+                                    <TextBlock Text="Suche zusammenstellen" FontWeight="SemiBold" />
+                                    <StackPanel x:Name="SearchBuilderRows" Spacing="6" />
+                                    <WrapPanel>
+                                        <Button x:Name="SearchBuilderAddBtn" Content="＋ Bedingung" Margin="0,0,8,0" />
+                                        <Button x:Name="SearchBuilderRunBtn" Content="Suchen" Classes="primary" />
+                                    </WrapPanel>
+                                </StackPanel>
+                            </Border>
+                            <Border x:Name="SearchHelp" IsVisible="False" Classes="card">
+                                <ScrollViewer MaxHeight="280" HorizontalScrollBarVisibility="Disabled">
+                                    <StackPanel x:Name="SearchHelpList" Spacing="6" Margin="0,0,10,0" />
+                                </ScrollViewer>
+                            </Border>
+                            <WrapPanel x:Name="SearchStrongsPanel" />
                             <WrapPanel x:Name="SearchHistoryPanel" />
                             <TextBlock x:Name="SearchInfo" Classes="caption" TextWrapping="Wrap" />
                             <WrapPanel x:Name="SearchBooksPanel" />
@@ -345,11 +371,12 @@
                 </TabItem>
                 <TabItem ToolTip.Tip="Wissen: Notizen, Dokumente, Verknüpfungen">
                     <TabItem.Header><local:Icon Data="M4 3h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H4z M8 3v18 M12 8h4 M12 12h4" /></TabItem.Header>
-                    <Grid>
+                    <Grid x:Name="DocHost">
                         <DockPanel x:Name="DocListPanel" Margin="16,14,12,12">
                             <StackPanel DockPanel.Dock="Top" Spacing="10" Margin="0,0,0,8">
                                 <DockPanel>
                                     <Button x:Name="DocNewBtn" DockPanel.Dock="Right" Content="＋ Neu ▾" Classes="primary" VerticalAlignment="Center" />
+                                    <Button x:Name="DocFolderBtn" DockPanel.Dock="Right" Content="＋ Ordner" Margin="0,0,8,0" VerticalAlignment="Center" ToolTip.Tip="Neuen Ordner anlegen. Dokumente lassen sich per Ziehen in Ordner und auf Kategorien legen." />
                                     <StackPanel Spacing="2">
                                         <TextBlock Text="Deine Dokumente" FontSize="18" FontWeight="SemiBold" />
                                         <TextBlock Classes="caption" TextWrapping="Wrap" Text="Gedanken, Studien und Predigten – geordnet nach Kategorien." />
@@ -381,45 +408,60 @@
                                     </StackPanel>
                                 </Border>
                             </StackPanel>
-                            <ListBox x:Name="DocList" ItemTemplate="{StaticResource EntryTpl}" ScrollViewer.HorizontalScrollBarVisibility="Disabled" />
+                            <ScrollViewer HorizontalScrollBarVisibility="Disabled">
+                                <StackPanel x:Name="DocTree" Spacing="3" Margin="0,0,8,0" />
+                            </ScrollViewer>
                         </DockPanel>
-                        <ScrollViewer x:Name="DocEditorPanel" IsVisible="False" Margin="16,14,4,12">
-                            <StackPanel Spacing="10" Margin="0,0,12,0">
-                                <DockPanel>
-                                    <Button x:Name="DocSaveBtn" DockPanel.Dock="Right" Content="Speichern" Classes="primary" />
-                                    <Button x:Name="DocMoreBtn" DockPanel.Dock="Right" Content="⋯" Classes="tool" Margin="0,0,6,0" ToolTip.Tip="Mehr" />
-                                    <Button x:Name="DocBackBtn" Content="← Liste" HorizontalAlignment="Left" />
-                                </DockPanel>
-                                <TextBox x:Name="DocTitleBox" Watermark="Titel" FontSize="18" />
-                                <StackPanel Orientation="Horizontal" Spacing="8">
-                                    <TextBlock Text="Kategorie" VerticalAlignment="Center" />
-                                    <Border Classes="pill"><ComboBox x:Name="DocCategoryBox" Width="220" /></Border>
+                        <Grid x:Name="DocEditorPanel" IsVisible="False" RowDefinitions="Auto,Auto,Auto,*,Auto" Margin="12,12,6,8">
+                            <DockPanel Margin="0,0,0,8">
+                                <Button x:Name="DocSaveBtn" DockPanel.Dock="Right" Content="Speichern" Classes="primary" />
+                                <Button x:Name="DocMoreBtn" DockPanel.Dock="Right" Content="⋯" Classes="tool" Margin="0,0,6,0" ToolTip.Tip="Mehr" />
+                                <ToggleButton x:Name="DocReadBtn" DockPanel.Dock="Right" Classes="pillbtn" Content="Lesen" Margin="0,0,6,0" ToolTip.Tip="Zwischen Schreiben und fertiger Ansicht wechseln (Strg+E). In der Ansicht sind Verse und Links anklickbar." />
+                                <Button x:Name="DocBackBtn" Content="← Liste" HorizontalAlignment="Left" />
+                            </DockPanel>
+                            <Border Grid.Row="1" Padding="6,4" CornerRadius="10" Background="{DynamicResource BsSurface2}" BorderBrush="{DynamicResource BsBorder}" BorderThickness="1">
+                                <WrapPanel x:Name="DocRibbon" />
+                            </Border>
+                            <WrapPanel Grid.Row="2" Margin="0,8,0,0">
+                                <Border Classes="pill" Margin="0,0,8,0"><ComboBox x:Name="DocCategoryBox" Width="170" ToolTip.Tip="Kategorie" /></Border>
+                                <Border Classes="pill" Margin="0,0,8,0"><ComboBox x:Name="DocFolderBox" Width="170" ToolTip.Tip="Ordner, in dem das Dokument liegt (dieselben Ordner wie bei den Markierungen)" /></Border>
+                            </WrapPanel>
+                            <ScrollViewer Grid.Row="3" Margin="0,8,0,0" HorizontalScrollBarVisibility="Disabled">
+                                <StackPanel Spacing="10" Margin="0,0,8,0">
+                                    <Border x:Name="DocPage" Padding="30,24,30,30" CornerRadius="12" Background="{DynamicResource BsSurface2}" BorderBrush="{DynamicResource BsBorder}" BorderThickness="1" MaxWidth="820">
+                                        <StackPanel Spacing="10">
+                                            <TextBox x:Name="DocTitleBox" Classes="paper" Watermark="Titel" FontSize="28" FontWeight="SemiBold" TextWrapping="Wrap" />
+                                            <Border Height="1" Background="{DynamicResource BsBorder}" />
+                                            <TextBox x:Name="DocBodyBox" Classes="paper" AcceptsReturn="True" TextWrapping="Wrap" MinHeight="380" FontSize="18" Watermark="Schreibe hier. Verse wie „Joh 3,16“ werden zu Links, [[Titel]] verlinkt ein anderes Dokument. Mit der Leiste oben formatierst du." />
+                                            <StackPanel x:Name="DocPreview" IsVisible="False" Spacing="8" MinHeight="380" />
+                                        </StackPanel>
+                                    </Border>
+                                    <TextBlock x:Name="DocPathText" Classes="caption" TextWrapping="Wrap" />
+                                    <Expander Header="Einordnen: Tags, Vorlage" Padding="0">
+                                        <StackPanel Spacing="8" Margin="0,6,0,0">
+                                            <TextBox x:Name="DocTagsBox" Watermark="Tags, mit Komma getrennt" />
+                                            <CheckBox x:Name="DocTemplateCheck" Content="Als Vorlage verwenden" />
+                                        </StackPanel>
+                                    </Expander>
+                                    <Expander Header="Verbindungen: Verse, Links, Erwähnungen" Padding="0">
+                                        <StackPanel Spacing="6" Margin="0,6,0,0">
+                                            <TextBlock Text="Verse in diesem Dokument" FontWeight="SemiBold" />
+                                            <WrapPanel x:Name="DocVerseChips" />
+                                            <TextBlock Text="Verknüpft mit" FontWeight="SemiBold" />
+                                            <WrapPanel x:Name="DocLinkChips" />
+                                            <TextBlock Text="Erwähnt von" FontWeight="SemiBold" />
+                                            <WrapPanel x:Name="DocBackChips" />
+                                        </StackPanel>
+                                    </Expander>
                                 </StackPanel>
-                                <WrapPanel>
-                                    <Button x:Name="DocInsertVerseBtn" Content="＋ Vers einfügen" Margin="0,0,6,4" ToolTip.Tip="Fügt den angeklickten Vers als Zitat an der Schreibmarke ein" />
-                                    <Button x:Name="DocInsertLinkBtn" Content="＋ Dokument verlinken" Margin="0,0,6,4" ToolTip.Tip="Fügt einen [[Link]] auf ein anderes Dokument ein" />
-                                </WrapPanel>
-                                <TextBox x:Name="DocBodyBox" AcceptsReturn="True" TextWrapping="Wrap" MinHeight="220" Watermark="Text. Verse wie „Joh 3,16“ werden zu Links, [[Titel]] verlinkt ein anderes Dokument." />
-                                <TextBlock x:Name="DocPathText" Classes="caption" TextWrapping="Wrap" />
-                                <Expander Header="Einordnen: Tags, Ordner, Vorlage" Padding="0">
-                                    <StackPanel Spacing="8" Margin="0,6,0,0">
-                                        <TextBox x:Name="DocTagsBox" Watermark="Tags, mit Komma getrennt" />
-                                        <Border Classes="pill"><ComboBox x:Name="DocFolderBox" HorizontalAlignment="Stretch" ToolTip.Tip="Ordner, in dem das Dokument liegt (dieselben Ordner wie bei den Markierungen)" /></Border>
-                                        <CheckBox x:Name="DocTemplateCheck" Content="Als Vorlage verwenden" />
-                                    </StackPanel>
-                                </Expander>
-                                <Expander Header="Verbindungen: Verse, Links, Erwähnungen" Padding="0">
-                                    <StackPanel Spacing="6" Margin="0,6,0,0">
-                                        <TextBlock Text="Verse in diesem Dokument" FontWeight="SemiBold" />
-                                        <WrapPanel x:Name="DocVerseChips" />
-                                        <TextBlock Text="Verknüpft mit" FontWeight="SemiBold" />
-                                        <WrapPanel x:Name="DocLinkChips" />
-                                        <TextBlock Text="Erwähnt von" FontWeight="SemiBold" />
-                                        <WrapPanel x:Name="DocBackChips" />
-                                    </StackPanel>
-                                </Expander>
-                            </StackPanel>
-                        </ScrollViewer>
+                            </ScrollViewer>
+                            <TextBlock x:Name="DocStatus" Grid.Row="4" Classes="caption" Margin="2,6,0,0" />
+                        </Grid>
+                        <Canvas x:Name="DocDragLayer" IsHitTestVisible="False">
+                            <Border x:Name="DocDragGhost" IsVisible="False" Padding="12,7" CornerRadius="8" Opacity="0.95" Background="{DynamicResource BsAccentSoft}" BorderBrush="{DynamicResource BsAccent}" BorderThickness="1">
+                                <TextBlock x:Name="DocDragText" MaxWidth="260" TextTrimming="CharacterEllipsis" />
+                            </Border>
+                        </Canvas>
                     </Grid>
                 </TabItem>
                 <TabItem ToolTip.Tip="KI-Assistent (Claude)">
@@ -632,19 +674,33 @@
                     <ScrollViewer Margin="16,14,4,12">
                         <StackPanel Spacing="10" Margin="0,0,12,0">
                             <TextBlock FontWeight="SemiBold" Text="Lesen und Navigieren" />
-                            <TextBlock TextWrapping="Wrap" Text="Haus-Symbol: Startseite mit allen Büchern. Pfeil links: zurück zur vorherigen Stelle. Buch, Kapitel und Übersetzung wählst du oben; ◀ ▶ blättert Kapitel." />
-                            <TextBlock FontWeight="SemiBold" Text="Gelesen" />
-                            <TextBlock TextWrapping="Wrap" Text="Das Häkchen oben markiert das Kapitel als gelesen. Auf der Startseite zeigt ein Balken den Fortschritt je Buch. Im Kapitelraster: Rechtsklick oder Strg+Klick markiert einzelne Kapitel, die Knöpfe markieren ein ganzes Buch." />
+                            <TextBlock TextWrapping="Wrap" Text="Haus-Symbol: Startseite mit allen Büchern. Pfeil links: zurück zur vorherigen Stelle. Buch, Kapitel und Übersetzung wählst du oben; ◀ ▶ blättert Kapitel. Das Häkchen „Gelesen“ markiert ein Kapitel; auf der Startseite zeigt ein Balken den Fortschritt je Buch." />
+                            <TextBlock FontWeight="SemiBold" Text="Schnell zu allem (Strg+K)" />
+                            <TextBlock TextWrapping="Wrap" Text="Ein Feld für alles: Bibelstellen („Röm 8,28“), Bücher, Befehle, Dokumente, Notizen, Gebete und Strong-Nummern. Während du tippst, erscheinen die Treffer; Pfeiltasten und Enter wählen. Alles andere startet die Textsuche." />
                             <TextBlock FontWeight="SemiBold" Text="Verse" />
-                            <TextBlock TextWrapping="Wrap" Text="Vers anklicken: Notiz, Lesezeichen und Querverweise beziehen sich darauf. Der Knopf „Parallel“ zeigt bis zu drei weitere Übersetzungen versgenau daneben." />
-                            <TextBlock FontWeight="SemiBold" Text="Wortstudie" />
-                            <TextBlock TextWrapping="Wrap" Text="Den Schalter „Wortstudie“ einschalten (nur Übersetzungen mit Strong-Nummern, z. B. KJV). Unterstrichene Wörter anklicken: Grundtextwort, Bedeutung, „Alle Vorkommen“ in der Konkordanz." />
+                            <TextBlock TextWrapping="Wrap" Text="Vers anklicken: Notiz, Lesezeichen und Querverweise beziehen sich darauf. Rechtsklick auf einen Vers: kopieren, als Bild exportieren, zum Auswendiglernen vormerken, in ein Dokument einfügen." />
+                            <TextBlock FontWeight="SemiBold" Text="Parallel" />
+                            <TextBlock TextWrapping="Wrap" Text="Zeigt bis zu drei weitere Übersetzungen versgenau nebeneinander, jede Spalte in eigener Farbe mit Kopfzeile. „Synchron scrollen“ lässt alle Spalten zusammen laufen; ausgeschaltet scrollt jede für sich." />
                             <TextBlock FontWeight="SemiBold" Text="Suche" />
-                            <TextBlock TextWrapping="Wrap" Text="Wörter, „Wendungen“, Gnade / Wahrheit (ODER), Gnade -Wahrheit (ausschließen), Klammern, L=Grundform, Platzhalter *, Strong-Nummern (G3056, H8392=Arche), Bibelstellen (Joh 3,16; Mt 14,13-21) und griechische/hebräische Wörter. Der Knopf „Suchhilfe“ in der Suche zeigt alle Beispiele zum Anklicken; die Buchkürzel unter dem Ergebnis grenzen die Treffer ein." />
-                            <TextBlock FontWeight="SemiBold" Text="Schnell navigieren" />
-                            <TextBlock TextWrapping="Wrap" Text="Strg+K öffnet „Gehe zu“: „Röm 8,28“ springt dorthin, ein Buchname öffnet das Buch, alles andere startet die Suche. Alle Tastenkürzel stehen unter Einstellungen." />
-                            <TextBlock FontWeight="SemiBold" Text="Offline" />
-                            <TextBlock TextWrapping="Wrap" Text="Einstellungen → „Offline verfügbar machen“ lädt eine ganze Übersetzung. Bereits gelesene Kapitel sind automatisch offline lesbar." />
+                            <TextBlock TextWrapping="Wrap" Text="Das Suchfeld versteht Wörter, „Wendungen“, Gnade / Wahrheit (ODER), Gnade -Wahrheit (ausschließen), Klammern, L=Grundform, Platzhalter * (*keit, Geist*, *geist*), Strong-Nummern (G3056, H8392=Arche), O=Gnade (Grundtextwort hinter „Gnade“), Bibelstellen und griechische/hebräische Wörter. „Suchhilfe“ zeigt alle Beispiele zum Anklicken." />
+                            <TextBlock FontWeight="SemiBold" Text="Suchoptionen" />
+                            <TextBlock TextWrapping="Wrap" Text="Neben dem Bereich (Ganze Bibel, Altes Testament, Propheten, Paulusbriefe …) wählst du, wie Wörter passen: Wortanfang (lieb → liebe), Ganzes Wort, Wortende (… → -keit) oder Wortteil. Unter „Mehr Optionen“: im Grundtext suchen (findet ein Wort auch dort, wo die Übersetzung ein anderes deutsches Wort nutzt, über die Strong-Nummern; sie erscheinen als Knöpfe unter dem Feld), Groß-/Kleinschreibung beachten (HERR ≠ Herr), nur in den letzten Treffern suchen und „Suchwörter im selben Vers / innerhalb von 2 oder 5 Versen / im selben Kapitel“." />
+                            <TextBlock FontWeight="SemiBold" Text="Suche bauen" />
+                            <TextBlock TextWrapping="Wrap" Text="Wer die Schreibweise nicht kennen will: „Suche bauen“ lässt dich pro Zeile aus einer Liste wählen (alle Wörter, eines der Wörter, genaue Wendung, ohne, beginnt mit, endet auf, Wortteil, Grundform, Grundtextwort, Strong-Nummer) und setzt daraus die Suche zusammen. Sie steht danach im Suchfeld, so lernst du die Schreibweise nebenbei." />
+                            <TextBlock FontWeight="SemiBold" Text="Wortstudie und Analyse" />
+                            <TextBlock TextWrapping="Wrap" Text="Den Schalter „Wortstudie“ einschalten (Übersetzungen mit Strong-Nummern, z. B. KJV), dann Wörter anklicken: Grundtextwort, Bedeutung (in deiner Sprache), alle Vorkommen. Der Reiter „Analyse“ zeigt Verteilung über die Bücher, verwandte Wörter, Häufigkeiten und Begleitwörter. Im Neuen Testament gibt es Morphologie und Satzbau (Wortart, Zeit, Fall …) und eine Grammatiksuche, z. B. alle Aorist-Passiv-Partizipien." />
+                            <TextBlock FontWeight="SemiBold" Text="Dokumente schreiben" />
+                            <TextBlock TextWrapping="Wrap" Text="Wissen → Schreiben → „＋ Neu“. Der Editor arbeitet wie ein Textprogramm: oben Absatzformat (Überschriften, Zitat, Listen), Fett und Kursiv (Strg+B, Strg+I), Trennlinie, „＋ Vers“ (Bibelstelle eintippen und als Zitat oder Link einfügen), „[[ ]]“ (anderes Dokument verlinken) sowie Rückgängig. Enter in einer Liste führt sie fort. „Lesen“ (Strg+E) zeigt die fertige Seite, in der Verse und Links anklickbar sind. Es wird automatisch gespeichert; Strg+S speichert sofort. Drucken oder als PDF über „⋯“." />
+                            <TextBlock FontWeight="SemiBold" Text="Ordnen: Ordner und Kategorien" />
+                            <TextBlock TextWrapping="Wrap" Text="„＋ Ordner“ legt Ordner an. Dokumente ziehst du mit der Maus auf einen Ordner (verschiebt) oder auf eine Kategorie (setzt sie); dasselbe gibt der Rechtsklick auf ein Dokument. Rechtsklick auf einen Ordner: umbenennen oder löschen (die Dokumente bleiben). Mit [[Titel]] und Versen verknüpfst du alles; der Wissensgraph zeigt die Verbindungen, auch deine Notizen." />
+                            <TextBlock FontWeight="SemiBold" Text="Sprachen lernen und Auswendiglernen" />
+                            <TextBlock TextWrapping="Wrap" Text="Planen → Sprachen: griechisches und hebräisches Alphabet, dann Vokabeln aus den wichtigsten Wörtern mit Wiederholung nach Können. Planen → Auswendig lernen: Verse vormerken und mit Lücken üben, die mit deinem Können wachsen." />
+                            <TextBlock FontWeight="SemiBold" Text="Predigt, Gebet, Pläne" />
+                            <TextBlock TextWrapping="Wrap" Text="Der Predigt-Editor gliedert Abschnitte mit Zeit und exportiert Folien oder Druckfassung. Gebete, Lesepläne und die Leseliste findest du unter „Planen“." />
+                            <TextBlock FontWeight="SemiBold" Text="KI-Gespräche" />
+                            <TextBlock TextWrapping="Wrap" Text="Der Reiter „KI“ nutzt dein lokales Claude. Mehrere Gespräche laufen nebeneinander, jedes mit eigenem Verlauf; „＋ Neues Gespräch“ öffnet ein weiteres, das ✕ im Reiter schließt eines." />
+                            <TextBlock FontWeight="SemiBold" Text="Ansicht, Layouts, Sicherung" />
+                            <TextBlock TextWrapping="Wrap" Text="Fenster- und Layout-Knöpfe oben speichern und laden Anordnungen (z. B. Dashboard). Das Symbol links in der Seitenleiste lässt sich als eigenes Fenster herausziehen. Unter Einstellungen: Sprache, Design, Offline-Verfügbarkeit, automatische Sicherung und Tastenkürzel." />
                         </StackPanel>
                     </ScrollViewer>
                 </TabItem>

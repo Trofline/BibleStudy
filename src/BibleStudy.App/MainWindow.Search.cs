@@ -33,9 +33,30 @@ public partial class MainWindow
         (L("Propheten"), id => BookCategories.Of(id) is BookCategory.MajorProphets or BookCategory.MinorProphets),
         (L("Evangelien"), id => BookCategories.Of(id) == BookCategory.Gospels),
         (L("Briefe"), id => BookCategories.Of(id) is BookCategory.Paul or BookCategory.General),
+        (L("Paulusbriefe"), id => BookCategories.Of(id) == BookCategory.Paul),
+        (L("Kleine Propheten"), id => BookCategories.Of(id) == BookCategory.MinorProphets),
         (L("Aktuelles Buch"), id => id == _currentBookForSearch),
     ];
     static string _currentBookForSearch = "";
+
+    static readonly string[] MatchModes = [L("Wortanfang"), L("Ganzes Wort"), L("Wortende"), L("Wortteil")];
+    static readonly (string Name, int Range)[] Ranges = [(L("im selben Vers"), 0), (L("innerhalb von 2 Versen"), 2), (L("innerhalb von 5 Versen"), 5), (L("im selben Kapitel"), -1)];
+
+    /// <summary>Kinds of conditions of the search builder: what the user picks, and how the words typed after it become search syntax.</summary>
+    static readonly (string Name, Func<string[], string> Make)[] BuilderKinds =
+    [
+        (L("alle diese Wörter"), w => string.Join(" ", w)),
+        (L("eines dieser Wörter"), w => w.Length == 1 ? w[0] : "(" + string.Join(" / ", w) + ")"),
+        (L("genau diese Wendung"), w => "\"" + string.Join(" ", w) + "\""),
+        (L("ohne diese Wörter"), w => string.Join(" ", w.Select(x => "-" + x))),
+        (L("beginnt mit …"), w => string.Join(" ", w.Select(x => x.Trim('*') + "*"))),
+        (L("endet auf …"), w => string.Join(" ", w.Select(x => "*" + x.Trim('*')))),
+        (L("enthält den Wortteil …"), w => string.Join(" ", w.Select(x => "*" + x.Trim('*') + "*"))),
+        (L("Grundform von …"), w => string.Join(" ", w.Select(x => "L=" + x))),
+        (L("Grundtextwort zu …"), w => string.Join(" ", w.Select(x => "O=" + x))),
+        (L("Strong-Nummer"), w => string.Join(" ", w)),
+    ];
+    readonly List<(ComboBox Kind, TextBox Text)> _builderRows = [];
 
     static readonly (string Query, string Text)[] Examples =
     [
@@ -47,6 +68,9 @@ public partial class MainWindow
         (L("L=gehen"), L("Grundform: findet ging, gegangen, geht …")),
         (L("L=Haus*"), L("Platzhalter *: Hausbewohner, Hausgeborene …")),
         (L("L~*haus*"), L("Tilde ~: Groß-/Kleinschreibung egal")),
+        (L("*keit"), L("Wortende: Barmherzigkeit, Gerechtigkeit …")),
+        (L("*geist*"), L("Wortteil: Geist, Heiliger Geist, geistlich …")),
+        (L("O=Gnade"), L("Grundtext: alle Verse mit dem Hebräisch/Griechisch-Wort hinter „Gnade“")),
         ("G3056", L("Strong-Nummer (mehrere: alle müssen vorkommen)")),
         (L("H8392=Arche"), L("Strong-Nummer, übersetzt mit einem bestimmten Wort")),
         (L("Joh 3,16"), L("Bibelstelle aufschlagen")),
@@ -58,8 +82,26 @@ public partial class MainWindow
     {
         SearchScopeBox.ItemsSource = Scopes.Select(s => s.Name).ToList();
         SearchScopeBox.SelectedIndex = 0;
-        SearchExactCheck.IsChecked = _settings.SearchExactWords;
-        SearchExactCheck.IsCheckedChanged += (_, _) => { _settings.SearchExactWords = SearchExactCheck.IsChecked == true; SaveSettings(); };
+        if (_settings.SearchExactWords) { _settings.SearchExactWords = false; _settings.SearchMatch = 1; SaveSettings(); }   // the old checkbox became the choice below
+        SearchMatchBox.ItemsSource = MatchModes;
+        SearchMatchBox.SelectedIndex = Math.Clamp(_settings.SearchMatch, 0, MatchModes.Length - 1);
+        SearchMatchBox.SelectionChanged += (_, _) => { _settings.SearchMatch = Math.Max(0, SearchMatchBox.SelectedIndex); SaveSettings(); };
+        SearchRangeBox.ItemsSource = Ranges.Select(r => r.Name).ToList();
+        SearchRangeBox.SelectedIndex = Math.Clamp(_settings.SearchRange, 0, Ranges.Length - 1);
+        SearchRangeBox.SelectionChanged += (_, _) => { _settings.SearchRange = Math.Max(0, SearchRangeBox.SelectedIndex); SaveSettings(); };
+        SearchOriginalCheck.IsChecked = _settings.SearchOriginal;
+        SearchOriginalCheck.IsCheckedChanged += (_, _) => { _settings.SearchOriginal = SearchOriginalCheck.IsChecked == true; SaveSettings(); };
+        SearchCaseCheck.IsChecked = _settings.SearchCase;
+        SearchCaseCheck.IsCheckedChanged += (_, _) => { _settings.SearchCase = SearchCaseCheck.IsChecked == true; SaveSettings(); };
+        SearchOptionsBtn.IsCheckedChanged += (_, _) => SearchOptionsCard.IsVisible = SearchOptionsBtn.IsChecked == true;
+        SearchBuilderBtn.IsCheckedChanged += (_, _) => { SearchBuilder.IsVisible = SearchBuilderBtn.IsChecked == true; if (SearchBuilder.IsVisible && _builderRows.Count == 0) { AddBuilderRow(0); AddBuilderRow(0); } };
+        SearchBuilderAddBtn.Click += (_, _) => AddBuilderRow(0);
+        SearchBuilderRunBtn.Click += async (_, _) => await RunBuilderAsync();
+        // a changed option searches again at once, so the effect is visible
+        foreach (var box in new[] { SearchMatchBox, SearchRangeBox })
+            box.SelectionChanged += async (_, _) => { if (!string.IsNullOrWhiteSpace(SearchBox.Text) && _hits.Count > 0 && IsLoaded) await SearchAsync(); };
+        foreach (var check in new[] { SearchOriginalCheck, SearchCaseCheck })
+            check.IsCheckedChanged += async (_, _) => { if (!string.IsNullOrWhiteSpace(SearchBox.Text) && _hits.Count > 0 && IsLoaded) await SearchAsync(); };
         SearchBox.KeyDown += async (_, e) => { if (e.Key == Key.Enter) await SearchAsync(); };
         SearchGoBtn.Click += async (_, _) => await SearchAsync();
         SearchScopeBox.SelectionChanged += async (_, _) => { if (!string.IsNullOrWhiteSpace(SearchBox.Text) && IsLoaded) await SearchAsync(); };
@@ -72,6 +114,62 @@ public partial class MainWindow
             SearchHelpList.Children.Add(new StackPanel { Spacing = 2, Children = { b, new TextBlock { Text = text, Classes = { "caption" }, TextWrapping = TextWrapping.Wrap } } });
         }
         RefreshSearchHistory();
+    }
+
+    // ---- search builder: pick the kind of condition from a list instead of knowing the syntax -------------------------------
+
+    void AddBuilderRow(int kind)
+    {
+        var box = new ComboBox { ItemsSource = BuilderKinds.Select(k => k.Name).ToList(), SelectedIndex = kind, Width = 190 };
+        var text = new TextBox { Watermark = L("Wort(e) eingeben") };
+        text.KeyDown += async (_, e) => { if (e.Key == Key.Enter) await RunBuilderAsync(); };
+        var remove = new Button { Content = "✕", Classes = { "tool" }, Width = 28, Height = 28 };
+        ToolTip.SetTip(remove, L("Entfernen"));
+        var row = new Grid { ColumnDefinitions = new("Auto,*,Auto"), ColumnSpacing = 6 };
+        var pill = new Border { Classes = { "pill" }, Child = box };
+        Grid.SetColumn(text, 1); Grid.SetColumn(remove, 2);
+        row.Children.Add(pill); row.Children.Add(text); row.Children.Add(remove);
+        _builderRows.Add((box, text));
+        SearchBuilderRows.Children.Add(row);
+        remove.Click += (_, _) => { _builderRows.RemoveAll(r => r.Text == text); SearchBuilderRows.Children.Remove(row); };
+        AnimateIn(row, 0, 8);
+    }
+
+    string BuilderQuery() => string.Join(" ", _builderRows
+        .Select(r => BuilderKinds[Math.Max(0, r.Kind.SelectedIndex)].Make((r.Text.Text ?? "").Split(' ', StringSplitOptions.RemoveEmptyEntries)) is var q && (r.Text.Text ?? "").Trim().Length > 0 ? q : "")
+        .Where(q => q.Length > 0));
+
+    async Task RunBuilderAsync()
+    {
+        var query = BuilderQuery();
+        if (query.Length == 0) { SearchInfo.Text = L("Gib in mindestens ein Feld ein Wort ein."); return; }
+        SearchBox.Text = query;   // the finished search stays visible, so the syntax can be learned from it
+        await SearchAsync();
+    }
+
+    /// <summary>The Strong numbers behind the translated search word, as chips: a click searches that one word of the original text.</summary>
+    void ShowSearchStrongs(IReadOnlyCollection<string>? ids)
+    {
+        SearchStrongsPanel.Children.Clear();
+        if (ids is not { Count: > 0 }) return;
+        SearchStrongsPanel.Children.Add(new TextBlock { Text = L("Grundtext-Wörter hinter dem Suchwort:"), Classes = { "caption" }, VerticalAlignment = VerticalAlignment.Center, Margin = new(0, 0, 6, 4) });
+        foreach (var id in ids.Take(14))
+        {
+            var chip = FilterChip(id, false, null, () => { SearchBox.Text = id; _ = SearchAsync(); }, L("Nur dieses Wort des Grundtexts suchen"));
+            SearchStrongsPanel.Children.Add(chip);
+            _ = FillLemmaAsync(chip, id);
+        }
+        if (ids.Count > 14) SearchStrongsPanel.Children.Add(new TextBlock { Text = $"+{ids.Count - 14}", Classes = { "caption" }, VerticalAlignment = VerticalAlignment.Center });
+    }
+
+    async Task FillLemmaAsync(Button chip, string id)
+    {
+        try
+        {
+            var entry = (await _strongs.SearchAsync(id, 1)).FirstOrDefault(e => e.Id == id);
+            if (entry is not null) { chip.Content = $"{id}  {entry.Lemma}"; ToolTip.SetTip(chip, $"{entry.Lemma} – {Shorten(Mean(entry.Definition), 80)}"); }
+        }
+        catch { /* offline: the number alone is still useful */ }
     }
 
     static string ShortBook(BookInfo b) { var i = Array.IndexOf(BookData.UsfmIds, b.Id); return i >= 0 ? BookData.GermanAbbreviations[i] : b.CommonName; }
@@ -108,7 +206,8 @@ public partial class MainWindow
         _searching = true;
         try
         {
-            SearchQueueBtn.IsVisible = false; SearchBooksPanel.Children.Clear(); _hitBook = null; _queueRefs = [];
+            SearchQueueBtn.IsVisible = false; SearchBooksPanel.Children.Clear(); _hitBook = null; _queueRefs = []; SearchStrongsPanel.Children.Clear();
+            var narrowTo = SearchInHitsCheck.IsChecked == true && _hits.Count > 0 ? _hits.Select(h => h.Ref).ToHashSet() : null;
 
             // 1. passages: "Joh 3,16" opens, several passages become a list of verses
             if (PassageParser.Parse(text, out var single) is { } passages)
@@ -149,10 +248,12 @@ public partial class MainWindow
             _currentBookForSearch = _curBook;
             var scope = SearchScopeBox.SelectedIndex is var si and > 0 && si < Scopes.Length ? Scopes[si].Match : null;
             var books = scope is null ? null : _books.Select(b => b.Id).Where(scope).ToHashSet();
-            var exact = SearchExactCheck.IsChecked == true;
+            var options = new SearchOptions((WordMatch)Math.Max(0, SearchMatchBox.SelectedIndex), SearchCaseCheck.IsChecked == true, SearchOriginalCheck.IsChecked == true,
+                Ranges[Math.Clamp(SearchRangeBox.SelectedIndex, 0, Ranges.Length - 1)].Range);
+            var searched = narrowTo is null ? corpus : corpus.Where(c => narrowTo.Contains(c.Ref)).ToList();
 
             _strongIndexes.TryGetValue(t.Id, out var strongs);
-            var outcome = await Task.Run(() => SearchEngine.Run(corpus, text, strongs, exact, books));
+            var outcome = await Task.Run(() => SearchEngine.Run(searched, text, strongs, options, books));
             if (outcome.NeedsStrongs)
             {
                 if (!_store.IsStrongsIndexed(t.Id))
@@ -167,13 +268,14 @@ public partial class MainWindow
                     finally { _building = false; }
                 }
                 _strongIndexes[t.Id] = strongs = await Task.Run(() => new StrongIndex(_store.GetAllOccurrences(t.Id)));
-                outcome = await Task.Run(() => SearchEngine.Run(corpus, text, strongs, exact, books));
+                outcome = await Task.Run(() => SearchEngine.Run(searched, text, strongs, options, books));
             }
             if (outcome.Error is not null) { SearchInfo.Text = outcome.Error; SearchList.ItemsSource = null; _hits = []; return; }
 
             RememberSearch(text);
             _hits = outcome.Results.ToList();
             ShowHits(t);
+            ShowSearchStrongs(outcome.Strongs);
         }
         catch (Exception ex) { SearchInfo.Text = L("Fehler: ") + ex.Message; }
         finally { _searching = false; }

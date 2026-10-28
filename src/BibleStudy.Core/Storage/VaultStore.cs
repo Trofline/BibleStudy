@@ -97,10 +97,18 @@ public sealed class VaultStore : SqliteDb
         return (long)cmd.ExecuteScalar()!;
     }
 
-    /// <summary>Deletes the folder; its marks are kept (without folder).</summary>
+    public void RenameFolder(long id, string name) =>
+        Exec("UPDATE folders SET name=$n WHERE id=$i", c => { c.Parameters.AddWithValue("$n", name.Trim()); c.Parameters.AddWithValue("$i", id); });
+
+    /// <summary>Moves a document into a folder (null = out of every folder) without touching anything else.</summary>
+    public void SetDocumentFolder(long documentId, long? folderId) =>
+        Exec("UPDATE documents SET folder_id=$f WHERE id=$i", c => { c.Parameters.AddWithValue("$f", (object?)folderId ?? DBNull.Value); c.Parameters.AddWithValue("$i", documentId); });
+
+    /// <summary>Deletes the folder; its marks and documents are kept (without folder).</summary>
     public void DeleteFolder(long id)
     {
         Exec("UPDATE marks SET folder_id=NULL WHERE folder_id=$i", c => c.Parameters.AddWithValue("$i", id));
+        Exec("UPDATE documents SET folder_id=NULL WHERE folder_id=$i", c => c.Parameters.AddWithValue("$i", id));
         Exec("DELETE FROM folders WHERE id=$i", c => c.Parameters.AddWithValue("$i", id));
     }
 

@@ -20,28 +20,13 @@ public partial class MainWindow
     {
         DocSearchBox.TextChanged += (_, _) => RefreshDocs();
         DocFilterBox.SelectionChanged += (_, _) => { if (!_docsLoading) RefreshDocs(); };
-        DocList.SelectionChanged += (_, _) =>
-        {
-            if (DocList.SelectedItem is Entry { Id: long id } && _vault.GetDocuments().FirstOrDefault(d => d.Id == id) is { } d) OpenDocument(d);
-        };
         BuildDocMenus();
         InitAutosave();
+        InitDocTree();
+        InitDocEditor();
         DocGraphBtn.Click += (_, _) => ShowKnowledgeGraph();
         DocBackBtn.Click += (_, _) => CloseDocument();
         DocSaveBtn.Click += (_, _) => SaveDocument();
-        DocInsertVerseBtn.Click += (_, _) => InsertIntoDoc(_selected is int v ? L("> {0}\n> — {1}\n\n", VerseTextOf(v).Trim(), Label(new VerseRef(_curBook, _curChapter, v))) : null, L("Erst im Bibeltext einen Vers anklicken."));
-        DocInsertLinkBtn.Click += (_, _) =>
-        {
-            var menu = new MenuFlyout();
-            foreach (var d in _vault.GetDocuments().Where(x => x.Id != _doc?.Id).Take(60))
-            {
-                var title = d.Title; var item = new MenuItem { Header = title };
-                item.Click += (_, _) => InsertIntoDoc($"[[{title}]]", null);
-                menu.Items.Add(item);
-            }
-            if (menu.Items.Count == 0) menu.Items.Add(new MenuItem { Header = L("Noch keine anderen Dokumente"), IsEnabled = false });
-            menu.ShowAt(DocInsertLinkBtn);
-        };
         KnowledgePane.CloseRequested += ShowReader;
         KnowledgePane.NotesToggled += on => { _graphNotes = on; ShowKnowledgeGraph(); };
         KnowledgePane.NodeOpened += async node =>
@@ -61,6 +46,7 @@ public partial class MainWindow
         var query = DocSearchBox.Text?.Trim();
         var docs = _vault.GetDocuments(string.IsNullOrEmpty(query) ? null : query, tag: _docTag, templates: DocFilterBox.SelectedIndex == 1 ? true : null);
         DocWelcome.IsVisible = _vault.GetDocuments().Count == 0;
+        _dropTargets.Clear();
         BuildCategoryChips();
         if (_docCategory is not null) docs = docs.Where(d => _docCategory.Length == 0 ? CategoryOf(d) is null : InCategory(d, _docCategory)).ToList();
         BuildDocTagChips();
@@ -70,15 +56,7 @@ public partial class MainWindow
             else { docs = []; DocInfo.Text = L("Erst einen Vers anklicken."); }
         }
         else DocInfo.Text = (docs.Count == 1 ? L("1 Dokument") : L("{0} Dokumente", docs.Count));
-        DocList.ItemsSource = docs.Select(d =>
-        {
-            var preview = d.Path is not null ? L("Datei: ") + System.IO.Path.GetFileName(d.Path) : Shorten(d.Body.ReplaceLineEndings(" ").Replace("#", "").Replace("**", "").Replace("[[", "").Replace("]]", "").Trim(), 90);
-            var shown = d.Tags.Where(t => !IsCategoryTag(t)).ToList();
-            var tags = shown.Count > 0 ? "  " + string.Join(" ", shown.Select(t => "#" + t)) : "";
-            var cat = CategoryOf(d);
-            var dot = cat is null ? "" : CategoryColors[Math.Clamp(cat.Color, 0, CategoryColors.Length - 1)].Dot + " ";
-            return new Entry(default, $"{dot}{(d.IsTemplate ? "◇ " : "")}{d.Title}\n{preview}{tags}".TrimEnd('\n'), d.Id);
-        }).ToList();
+        BuildDocTree(docs, flat: !string.IsNullOrEmpty(query) || DocFilterBox.SelectedIndex == 2);
     }
 
     void BuildDocTagChips()
@@ -94,14 +72,18 @@ public partial class MainWindow
     void InsertIntoDoc(string? text, string? hint)
     {
         if (text is null) { DocPathText.Text = hint ?? ""; return; }
-        var body = DocBodyBox.Text ?? ""; var at = Math.Clamp(DocBodyBox.CaretIndex, 0, body.Length);
-        DocBodyBox.Text = body.Insert(at, text); DocBodyBox.CaretIndex = at + text.Length; DocBodyBox.Focus();
+        if (DocReadBtn.IsChecked == true) DocReadBtn.IsChecked = false;
+        var at = Math.Clamp(DocBodyBox.CaretIndex, 0, (DocBodyBox.Text ?? "").Length);
+        Splice(at, at, text);
+        DocBodyBox.Focus();
     }
 
     // ---- editor -------------------------------------------------------------------------------------------------------
 
     void OpenDocument(Document d)
     {
+        var sameDocument = _doc is { } previous && previous.Id == d.Id && d.Id > 0 && DocEditorPanel.IsVisible;
+        if (!sameDocument && _doc is not null && DocEditorPanel.IsVisible) AutoSaveDocument();   // following a link must not lose what was just typed
         _doc = d;
         DocTitleBox.Text = d.Title; DocBodyBox.Text = d.Body; DocTagsBox.Text = string.Join(", ", d.Tags.Where(t => !IsCategoryTag(t)));
         FillCategoryBox(d);
@@ -115,15 +97,19 @@ public partial class MainWindow
         _miFromTemplate.IsVisible = d.IsTemplate && d.Id > 0;
         _miDelete.IsVisible = d.Id > 0;
         DocListPanel.IsVisible = false; DocEditorPanel.IsVisible = true;
+        if (!sameDocument) DocReadBtn.IsChecked = false;   // saving keeps the mode; opening another document starts in writing mode
         RefreshDocChips(d);
+        UpdateDocStatus();
         _docSnapshot = DocState();
+        if (!sameDocument) AnimateIn(DocPage, 0, 10);
+        if (d.Id == 0) DocTitleBox.Focus();
     }
 
     void CloseDocument()
     {
+        AutoSaveDocument();
         _doc = null; _newDocFolder = null;
         DocEditorPanel.IsVisible = false; DocListPanel.IsVisible = true;
-        DocList.SelectedItem = null;
         RefreshDocs();
     }
 
@@ -140,7 +126,7 @@ public partial class MainWindow
         else { _vault.UpdateDocument(_doc.Id, title, body, _doc.Path, template, tags, folderId); _doc = _vault.GetDocuments().First(d => d.Id == _doc.Id); }
         OpenDocument(_doc);
         RefreshCollection();
-        DocPathText.Text = (_doc.Path is null ? "" : L("Verknüpfte Datei: ") + _doc.Path + "\n") + "Gespeichert.";
+        DocPathText.Text = (_doc.Path is null ? "" : L("Verknüpfte Datei: ") + _doc.Path + "\n") + L("Gespeichert.");
     }
 
     /// <summary>Verse references, [[links]] and backlinks of the document, as clickable chips.</summary>

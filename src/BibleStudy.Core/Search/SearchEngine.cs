@@ -30,6 +30,7 @@ public sealed partial class CorpusVerse
 public sealed class StrongIndex
 {
     readonly Dictionary<string, Dictionary<VerseRef, List<string>>> _by = [];
+    readonly Dictionary<string, HashSet<string>> _idsByWord = [];
 
     public StrongIndex(IEnumerable<StrongsOccurrence> occurrences)
     {
@@ -39,8 +40,21 @@ public sealed class StrongIndex
             var id = SearchQuery.NormalizeStrong(o.Strong);
             if (!_by.TryGetValue(id, out var verses)) _by[id] = verses = [];
             if (!verses.TryGetValue(o.Ref, out var words)) verses[o.Ref] = words = [];
-            words.Add(SearchQuery.Fold(o.Word.Trim().Trim('.', ',', ';', ':', '!', '?', '(', ')', '„', '“', '"'), true));
+            var folded = SearchQuery.Fold(o.Word.Trim().Trim('.', ',', ';', ':', '!', '?', '(', ')', '„', '“', '"'), true);
+            words.Add(folded);
+            if (folded.Length == 0) continue;
+            if (!_idsByWord.TryGetValue(folded, out var ids)) _idsByWord[folded] = ids = [];
+            ids.Add(id);
         }
+    }
+
+    /// <summary>The Strong numbers whose translated words (or a part of a multi-word rendering) satisfy the test.</summary>
+    public HashSet<string> IdsForWords(Func<string, bool> test)
+    {
+        var found = new HashSet<string>();
+        foreach (var (word, ids) in _idsByWord)
+            if (test(word) || (word.Contains(' ') && word.Split(' ').Any(test))) found.UnionWith(ids);
+        return found;
     }
 
     public bool Has(string id, VerseRef r) => _by.TryGetValue(id, out var v) && v.ContainsKey(r);
@@ -64,46 +78,126 @@ public sealed record SearchResult(VerseRef Ref, string Text, IReadOnlyList<(int 
     }
 }
 
-public sealed record SearchOutcome(IReadOnlyList<SearchResult> Results, string? Error, bool NeedsStrongs);
+public sealed record SearchOutcome(IReadOnlyList<SearchResult> Results, string? Error, bool NeedsStrongs, IReadOnlyCollection<string>? Strongs = null);
+
+public enum WordMatch { Prefix, Whole, Suffix, Contains }
+
+/// <summary>How plain words are matched and where the words of one search have to stand.</summary>
+/// <param name="Match">Word beginning (lieb → liebe, lieben), whole word, word ending or part of a word.</param>
+/// <param name="CaseSensitive">Capitals count (Herr ≠ HERR).</param>
+/// <param name="Original">Plain words are looked up as the Hebrew/Greek words behind the translated word (via Strong's tags).</param>
+/// <param name="Range">0 = all words in one verse; n > 0 = within n verses of each other; -1 = within one chapter.</param>
+public sealed record SearchOptions(WordMatch Match = WordMatch.Prefix, bool CaseSensitive = false, bool Original = false, int Range = 0);
 
 public static class SearchEngine
 {
     /// <param name="exactWords">Plain words must match whole words; otherwise they match word beginnings (lieb → liebe, lieben).</param>
     public static SearchOutcome Run(IReadOnlyList<CorpusVerse> corpus, string input, StrongIndex? strongs, bool exactWords = false, IReadOnlyCollection<string>? books = null)
+        => Run(corpus, input, strongs, new SearchOptions(exactWords ? WordMatch.Whole : WordMatch.Prefix), books);
+
+    public static SearchOutcome Run(IReadOnlyList<CorpusVerse> corpus, string input, StrongIndex? strongs, SearchOptions options, IReadOnlyCollection<string>? books = null)
     {
         var node = SearchQuery.Parse(input, out var error);
         if (node is null) return new([], error, false);
-        if (strongs is null && UsesStrongs(node)) return new([], null, true);
+        if (strongs is null && (UsesStrongs(node) || options.Original)) return new([], null, true);
 
-        var ctx = new Ctx(strongs, exactWords);
+        var ctx = new Ctx(strongs, options);
+        var scope = books is null ? corpus : corpus.Where(v => books.Contains(v.Ref.Book)).ToList();
+        var results = options.Range != 0 && node is AndNode { Items.Count: > 1 } and ? RunNear(scope, and, ctx) : RunSingle(scope, node, ctx);
+        return new(results, null, false, ctx.Used.Count > 0 ? ctx.Used.OrderBy(x => x[0]).ThenBy(x => int.Parse(x[1..])).ToList() : null);
+    }
+
+    static List<SearchResult> RunSingle(IEnumerable<CorpusVerse> scope, SearchNode node, Ctx ctx)
+    {
         var results = new List<SearchResult>();
-        foreach (var v in corpus)
+        foreach (var v in scope)
         {
-            if (books is not null && !books.Contains(v.Ref.Book)) continue;
             var spans = new List<(int, int)>();
             if (!Eval(node, v, ctx, spans)) continue;
             results.Add(new(v.Ref, v.Text, Merge(spans)));
         }
-        return new(results, null, false);
+        return results;
+    }
+
+    /// <summary>All parts of an AND search must occur close together (a few verses, or one chapter) instead of in the same verse.</summary>
+    static List<SearchResult> RunNear(IReadOnlyList<CorpusVerse> scope, AndNode and, Ctx ctx)
+    {
+        var positive = and.Items.Where(i => i is not NotNode).ToList();
+        var negative = and.Items.OfType<NotNode>().Select(n => n.Inner).ToList();
+        var own = positive.Select(_ => new List<(int, int)>?[scope.Count]).ToArray();
+        var banned = new bool[scope.Count];
+        for (var i = 0; i < scope.Count; i++)
+        {
+            for (var k = 0; k < positive.Count; k++)
+            {
+                var spans = new List<(int, int)>();
+                if (Eval(positive[k], scope[i], ctx, spans)) own[k][i] = spans;
+            }
+            banned[i] = negative.Any(n => Eval(n, scope[i], ctx, []));
+        }
+
+        bool SameChapter(int a, int b) => scope[a].Ref.Book == scope[b].Ref.Book && scope[a].Ref.Chapter == scope[b].Ref.Chapter;
+        var chapterHas = new Dictionary<(string, int), bool[]>();
+        var chapterBanned = new HashSet<(string, int)>();
+        if (ctx.Options.Range < 0)
+            for (var i = 0; i < scope.Count; i++)
+            {
+                var key = (scope[i].Ref.Book, scope[i].Ref.Chapter);
+                if (!chapterHas.TryGetValue(key, out var has)) chapterHas[key] = has = new bool[positive.Count];
+                for (var k = 0; k < positive.Count; k++) if (own[k][i] is not null) has[k] = true;
+                if (banned[i]) chapterBanned.Add(key);
+            }
+
+        var results = new List<SearchResult>();
+        for (var i = 0; i < scope.Count; i++)
+        {
+            if (positive.Select((_, k) => own[k][i]).All(x => x is null)) continue;   // the verse itself carries at least one part
+            bool ok;
+            if (ctx.Options.Range < 0)
+            {
+                var key = (scope[i].Ref.Book, scope[i].Ref.Chapter);
+                ok = chapterHas[key].All(x => x) && !chapterBanned.Contains(key);
+            }
+            else
+            {
+                var have = new bool[positive.Count]; var bad = false;
+                void Collect(int j) { for (var k = 0; k < positive.Count; k++) if (own[k][j] is not null) have[k] = true; if (banned[j]) bad = true; }
+                for (var j = i; j >= 0 && SameChapter(i, j) && scope[i].Ref.Verse - scope[j].Ref.Verse <= ctx.Options.Range; j--) Collect(j);
+                for (var j = i + 1; j < scope.Count && SameChapter(i, j) && scope[j].Ref.Verse - scope[i].Ref.Verse <= ctx.Options.Range; j++) Collect(j);
+                ok = have.All(x => x) && !bad;
+            }
+            if (!ok) continue;
+            var spans = new List<(int, int)>();
+            for (var k = 0; k < positive.Count; k++) if (own[k][i] is { } s) spans.AddRange(s);
+            results.Add(new(scope[i].Ref, scope[i].Text, Merge(spans)));
+        }
+        return results;
     }
 
     public static bool UsesStrongs(SearchNode n) => n switch
     {
-        StrongNode or StrongWordNode => true,
+        StrongNode or StrongWordNode or OriginalNode => true,
         NotNode x => UsesStrongs(x.Inner),
         AndNode a => a.Items.Any(UsesStrongs),
         OrNode o => o.Items.Any(UsesStrongs),
         _ => false,
     };
 
-    sealed record Ctx(StrongIndex? Strongs, bool Exact);
+    sealed class Ctx(StrongIndex? strongs, SearchOptions options)
+    {
+        public StrongIndex? Strongs { get; } = strongs;
+        public SearchOptions Options { get; } = options;
+        public HashSet<string> Used { get; } = [];
+        public Dictionary<string, HashSet<string>> IdsByTerm { get; } = [];
+    }
 
     static bool Eval(SearchNode n, CorpusVerse v, Ctx c, List<(int, int)> spans)
     {
         switch (n)
         {
-            case WordNode w: return Word(w.Text, v, c, spans);
-            case PhraseNode p: return Phrase(p.Words, v, spans);
+            case WordNode w: return c.Options.Original ? Original(w.Text, v, c, spans) : Word(w.Text, v, c, spans);
+            case OriginalNode o: return Original(o.Text, v, c, spans);
+            case PhraseNode p: return Phrase(p.Words, v, c.Options.CaseSensitive, spans);
             case LemmaNode l: return Lemma(l, v, spans);
             case StrongNode s:
             {
@@ -141,30 +235,65 @@ public static class SearchEngine
         }
     }
 
+    /// <summary>Tests one word of the text against a search word: wildcards (*) or the chosen match mode.</summary>
+    static Func<string, bool> Matcher(string text, SearchOptions o)
+    {
+        var q = SearchQuery.Fold(text, !o.CaseSensitive);
+        if (q.Contains('*'))
+        {
+            var rx = new Regex("^" + string.Join(@"[\p{L}\p{N}]*", q.Split('*').Select(Regex.Escape)) + "$", RegexOptions.CultureInvariant);
+            return rx.IsMatch;
+        }
+        return o.Match switch
+        {
+            WordMatch.Whole => t => t == q,
+            WordMatch.Suffix => t => t.EndsWith(q, StringComparison.Ordinal),
+            WordMatch.Contains => t => t.Contains(q, StringComparison.Ordinal),
+            _ => t => t.StartsWith(q, StringComparison.Ordinal),
+        };
+    }
+
     static bool Word(string text, CorpusVerse v, Ctx c, List<(int, int)> spans)
     {
-        var q = SearchQuery.Fold(text, true);
-        Regex? rx = null;
-        if (q.Contains('*')) rx = new Regex("^" + string.Join(@"[\p{L}\p{N}]*", q.Split('*').Select(Regex.Escape)) + "$", RegexOptions.CultureInvariant);
+        var test = Matcher(text, c.Options);
         var hit = false;
         for (var i = 0; i < v.Words.Length; i++)
         {
-            var tok = v.Word(i, true);
-            var ok = rx is not null ? rx.IsMatch(tok) : c.Exact ? tok == q : tok.StartsWith(q, StringComparison.Ordinal);
-            if (!ok) continue;
+            if (!test(v.Word(i, !c.Options.CaseSensitive))) continue;
             hit = true; spans.Add(v.Words[i]);
         }
         return hit;
     }
 
-    static bool Phrase(IReadOnlyList<string> words, CorpusVerse v, List<(int, int)> spans)
+    /// <summary>The word as it stands in the Hebrew/Greek text: every Strong number the translation tags on a matching word, wherever it occurs.</summary>
+    static bool Original(string text, CorpusVerse v, Ctx c, List<(int, int)> spans)
     {
-        var q = words.Select(w => SearchQuery.Fold(w, true)).ToArray();
+        if (c.Strongs is null) return false;
+        if (!c.IdsByTerm.TryGetValue(text, out var ids))
+        {
+            // the numbers are found without regard to capitals; the options only decide how the word has to match
+            c.IdsByTerm[text] = ids = c.Strongs.IdsForWords(Matcher(text, c.Options with { CaseSensitive = false }));
+            c.Used.UnionWith(ids);
+        }
+        var hit = false;
+        foreach (var id in ids)
+        {
+            var words = c.Strongs.Words(id, v.Ref);
+            if (words is null) continue;
+            hit = true;
+            foreach (var w in words) AddWord(w, v, spans);
+        }
+        return hit;
+    }
+
+    static bool Phrase(IReadOnlyList<string> words, CorpusVerse v, bool cs, List<(int, int)> spans)
+    {
+        var q = words.Select(w => SearchQuery.Fold(w, !cs)).ToArray();
         var hit = false;
         for (var i = 0; i + q.Length <= v.Words.Length; i++)
         {
             var ok = true;
-            for (var k = 0; k < q.Length && ok; k++) ok = v.Word(i + k, true) == q[k];
+            for (var k = 0; k < q.Length && ok; k++) ok = v.Word(i + k, !cs) == q[k];
             if (!ok) continue;
             hit = true;
             var last = v.Words[i + q.Length - 1];

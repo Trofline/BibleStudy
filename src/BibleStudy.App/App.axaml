@@ -319,6 +319,17 @@
             <Setter Property="MinHeight" Value="36" />
             <Setter Property="Padding" Value="10,7" />
         </Style>
+        <!-- writing area of a document: no frame, it is the page itself -->
+        <Style Selector="TextBox.paper">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Padding" Value="0,4" />
+            <Setter Property="FontFamily" Value="{DynamicResource UiSerif}" />
+        </Style>
+        <Style Selector="TextBox.paper:pointerover /template/ Border#PART_BorderElement, TextBox.paper:focus /template/ Border#PART_BorderElement, TextBox.paper:focus:pointerover /template/ Border#PART_BorderElement">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+        </Style>
         <Style Selector="CheckBox">
             <Setter Property="Margin" Value="0,2" />
         </Style>

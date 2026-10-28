@@ -106,6 +106,8 @@ public partial class MainWindow
             b.Classes.Set("active", active);
             b.Click += (_, _) => { _docCategory = active ? null : key; RefreshDocs(); };
             if (key is { Length: > 0 }) b.ContextMenu = CategoryMenu(key);
+            if (key is not null)   // a document dragged onto the chip gets that category
+                _dropTargets.Add(new DropTarget(b, d => SetCategory(d, key.Length == 0 ? null : Categories.FirstOrDefault(c => c.Name == key)), on => b.Classes.Set("active", on || active)));
             return b;
         }
         DocCategoryChips.Children.Add(Chip(L("Alle"), null, null, docs.Count));

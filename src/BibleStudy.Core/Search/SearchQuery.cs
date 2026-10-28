@@ -10,6 +10,8 @@ public sealed record WordNode(string Text) : SearchNode;
 public sealed record PhraseNode(IReadOnlyList<string> Words) : SearchNode;
 public sealed record LemmaNode(string Pattern, bool IgnoreCase) : SearchNode;
 public sealed record StrongNode(string Id) : SearchNode;
+/// <summary>O=Gnade: the Hebrew/Greek word(s) behind a translated word.</summary>
+public sealed record OriginalNode(string Text) : SearchNode;
 public sealed record StrongWordNode(string Id, string Word) : SearchNode;
 public sealed record NotNode(SearchNode Inner) : SearchNode;
 public sealed record AndNode(IReadOnlyList<SearchNode> Items) : SearchNode;
@@ -167,6 +169,9 @@ public static partial class SearchQuery
         var lemma = LemmaRx().Match(text);
         if (lemma.Success) return new LemmaNode(lemma.Groups["w"].Value, lemma.Groups["m"].Value == "~");
 
+        var orig = OriginalRx().Match(text);
+        if (orig.Success) return new OriginalNode(orig.Groups["w"].Value.Trim('"'));
+
         var sw = StrongWordRx().Match(text);
         if (sw.Success) return new StrongWordNode(NormalizeStrong(sw.Groups["id"].Value), sw.Groups["w"].Value.Trim('"'));
 
@@ -182,6 +187,7 @@ public static partial class SearchQuery
 
     [GeneratedRegex(@"^[GgHh]\d{1,4}[a-cA-C]?$")] private static partial Regex StrongRx();
     [GeneratedRegex(@"^[Ll](?<m>[=~])(?<w>.+)$")] private static partial Regex LemmaRx();
+    [GeneratedRegex(@"^[Oo]=(?<w>.+)$")] private static partial Regex OriginalRx();
     [GeneratedRegex(@"^(?<id>[GgHh]\d{1,4}[a-cA-C]?)=(?<w>.+)$")] private static partial Regex StrongWordRx();
     [GeneratedRegex(@"[\p{L}\p{N}]+")] private static partial Regex WordRx();
 }
