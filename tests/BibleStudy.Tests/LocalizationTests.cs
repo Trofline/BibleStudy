@@ -1,4 +1,4 @@
-using BibleStudy.Core;
+﻿using BibleStudy.Core;
 using BibleStudy.L10n;
 
 namespace BibleStudy.Tests;
@@ -15,7 +15,7 @@ public class LocalizationTests
 
     static readonly Lazy<HashSet<string>> Keys = new(() => Extractor.AllKeys(SrcRoot()));
 
-    public static IEnumerable<object[]> Languages => [["en"], ["es"], ["fr"]];
+    public static IEnumerable<object[]> Languages => [["en"], ["es"], ["fr"], ["ru"]];
 
     [Theory, MemberData(nameof(Languages))]
     public void Every_text_is_translated(string code)
@@ -52,3 +52,4 @@ public class LocalizationTests
         Loc.Use("de");
     }
 }
+

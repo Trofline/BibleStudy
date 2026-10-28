@@ -17,6 +17,7 @@ verknüpfen, Predigten vorbereiten – alles offline nutzbar und ohne Konto.
 - **Planen:** Lesepläne mit Fortschritt, Leseliste, Aufgaben, **Gebetsliste**
 - **Predigt-Editor** mit Gliederung, Versen, Zeitplan und Handout-Export
 - **Reiter wie im Explorer**, Layouts (Desktops), frei belegbare Tastenkürzel
+- **Mehrsprachig:** Oberfläche auf Englisch, Deutsch, Spanisch, Französisch und Russisch (KI-erstellte Übersetzungen, Korrekturen willkommen; weitere Sprachen als JSON-Datei im Ordner `lang` ergänzbar)
 - **KI-Anbindung (optional):** MCP-Server, damit Claude das Programm bedienen kann
 
 ## Installation

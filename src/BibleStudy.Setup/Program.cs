@@ -1,4 +1,4 @@
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using System.IO.Compression;
 using System.Reflection;
 using Microsoft.Win32;
@@ -67,13 +67,13 @@ static class Installer
 
         // never unpack into a folder that already holds other things
         if (Directory.Exists(dir) && Directory.EnumerateFileSystemEntries(dir).Any() && !File.Exists(exe))
-            throw new InvalidOperationException($"Der Ordner \"{dir}\" ist nicht leer und enthält kein BibleStudy. Bitte wähle einen leeren oder neuen Ordner.");
+            throw new InvalidOperationException(Tr.T("folderNotEmpty", dir));
 
-        status("Warte, bis BibleStudy beendet ist …");
+        status(Tr.T("waiting"));
         WaitForExit(o.WaitPid, dir);
 
-        status("Entpacke Programm …");
-        using var payload = Assembly.GetExecutingAssembly().GetManifestResourceStream("payload.zip") ?? throw new InvalidOperationException("Dieses Setup enthält kein Programmpaket.");
+        status(Tr.T("unpacking"));
+        using var payload = Assembly.GetExecutingAssembly().GetManifestResourceStream("payload.zip") ?? throw new InvalidOperationException(Tr.T("noPayload"));
         using var zip = new ZipArchive(payload);
         Directory.CreateDirectory(dir);
         foreach (var entry in zip.Entries)
@@ -86,7 +86,7 @@ static class Installer
         }
         File.WriteAllText(Path.Combine(dir, "installed.flag"), Version);
 
-        status("Richte Verknüpfungen ein …");
+        status(Tr.T("shortcuts"));
         var desktop = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory), "BibleStudy.lnk");
         Shortcut(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Programs), "BibleStudy.lnk"), exe, dir);
         if (o.DesktopShortcut || File.Exists(desktop)) Shortcut(desktop, exe, dir);
@@ -105,7 +105,7 @@ static class Installer
             k.SetValue("EstimatedSize", (int)(Directory.EnumerateFiles(dir, "*", SearchOption.AllDirectories).Sum(f => new FileInfo(f).Length) / 1024), RegistryValueKind.DWord);
         }
 
-        status("Fertig.");
+        status(Tr.T("done"));
         if (!o.NoLaunch && (o.Silent || o.Update)) Process.Start(new ProcessStartInfo(exe) { UseShellExecute = true, WorkingDirectory = dir });
     }
 
@@ -118,17 +118,17 @@ static class Installer
             if (!running) return;
             Thread.Sleep(400);
         }
-        throw new InvalidOperationException("BibleStudy läuft noch. Bitte beende es und starte die Installation erneut.");
+        throw new InvalidOperationException(Tr.T("stillRunning"));
     }
 
     static string SafePath(Process p) { try { return p.MainModule?.FileName ?? ""; } catch { return ""; } }
 
     static void Shortcut(string path, string target, string workDir)
     {
-        var shell = Type.GetTypeFromProgID("WScript.Shell") ?? throw new InvalidOperationException("Verknüpfungen werden nicht unterstützt.");
+        var shell = Type.GetTypeFromProgID("WScript.Shell") ?? throw new InvalidOperationException(Tr.T("noShortcuts"));
         dynamic sh = Activator.CreateInstance(shell)!;
         dynamic link = sh.CreateShortcut(path);
-        link.TargetPath = target; link.WorkingDirectory = workDir; link.Description = "BibleStudy – Bibelstudium"; link.IconLocation = target + ",0";
+        link.TargetPath = target; link.WorkingDirectory = workDir; link.Description = Tr.T("description"); link.IconLocation = target + ",0";
         link.Save();
     }
 }
@@ -137,10 +137,10 @@ sealed class SetupForm : Form
 {
     readonly Options _o;
     readonly TextBox _dir = new() { Width = 360 };
-    readonly CheckBox _desktop = new() { Text = "Verknüpfung auf dem Desktop anlegen", Checked = true, AutoSize = true };
+    readonly CheckBox _desktop = new() { Text = Tr.T("desktopShortcut"), Checked = true, AutoSize = true };
     readonly ProgressBar _bar = new() { Style = ProgressBarStyle.Marquee, Visible = false, Width = 460 };
     readonly Label _status = new() { AutoSize = true, MaximumSize = new Size(470, 0) };
-    readonly Button _go = new() { Text = "Installieren", Width = 130, Height = 32 };
+    readonly Button _go = new() { Text = Tr.T("install"), Width = 130, Height = 32 };
     bool _done;
 
     public SetupForm(Options o, bool update)
@@ -149,16 +149,15 @@ sealed class SetupForm : Form
         Text = "BibleStudy – Setup"; FormBorderStyle = FormBorderStyle.FixedDialog; MaximizeBox = false; StartPosition = FormStartPosition.CenterScreen;
         ClientSize = new Size(500, 330); Font = new Font("Segoe UI", 9.5f);
         _dir.Text = o.Dir!;
-        var title = new Label { Text = update ? "BibleStudy aktualisieren" : "BibleStudy installieren", Font = new Font("Segoe UI Semibold", 15f), AutoSize = true, Location = new(20, 16) };
+        var title = new Label { Text = update ? Tr.T("titleUpdate") : Tr.T("titleInstall"), Font = new Font("Segoe UI Semibold", 15f), AutoSize = true, Location = new(20, 16) };
         var info = new Label
         {
-            Text = "Freie Bibelstudien-Software (MIT-Lizenz). Das Programm enthält keine Bibeltexte; sie werden auf Wunsch von den Originalquellen geladen.\n\n" +
-                   "Deine Daten (Vaults, Notizen, Dokumente, Einstellungen) liegen getrennt vom Programm in %LOCALAPPDATA%\\BibleStudy und bleiben bei Updates und Neuinstallationen unberührt.",
+            Text = Tr.T("info1") + "\n\n" + Tr.T("info2"),
             Location = new(20, 56), Size = new(460, 100),
         };
-        var where = new Label { Text = "Installationsordner", AutoSize = true, Location = new(20, 166) };
+        var where = new Label { Text = Tr.T("folder"), AutoSize = true, Location = new(20, 166) };
         _dir.Location = new(20, 188);
-        var browse = new Button { Text = "Ändern …", Location = new(390, 186), Width = 90 };
+        var browse = new Button { Text = Tr.T("change"), Location = new(390, 186), Width = 90 };
         browse.Click += (_, _) =>
         {
             using var d = new FolderBrowserDialog { SelectedPath = _dir.Text };
@@ -167,7 +166,7 @@ sealed class SetupForm : Form
         _desktop.Location = new(20, 224);
         _bar.Location = new(20, 254); _status.Location = new(20, 254);
         _go.Location = new(350, 282);
-        var close = new Button { Text = "Schließen", Location = new(250, 282), Width = 90, Height = 32 };
+        var close = new Button { Text = Tr.T("close"), Location = new(250, 282), Width = 90, Height = 32 };
         close.Click += (_, _) => Close();
         _go.Click += async (_, _) => await Go();
         Controls.AddRange([title, info, where, _dir, browse, _desktop, _bar, _status, _go, close]);
@@ -187,12 +186,12 @@ sealed class SetupForm : Form
         try
         {
             await Task.Run(() => Installer.Run(_o, s => BeginInvoke(() => _status.Text = s)));
-            _bar.Visible = false; _status.Top = 254; _status.Text = "BibleStudy ist installiert.";
-            _done = true; _go.Text = "Starten"; _go.Enabled = true;
+            _bar.Visible = false; _status.Top = 254; _status.Text = Tr.T("installed");
+            _done = true; _go.Text = Tr.T("start"); _go.Enabled = true;
         }
         catch (Exception ex)
         {
-            _bar.Visible = false; _status.Top = 254; _status.Text = "Fehler: " + ex.Message;
+            _bar.Visible = false; _status.Top = 254; _status.Text = Tr.T("error") + ex.Message;
             _go.Enabled = true; _dir.Enabled = true;
         }
     }
