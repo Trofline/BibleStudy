@@ -48,6 +48,10 @@ public partial class MainWindow
         AnalysisPanel.Children.Add(new TextBlock { Text = L("ANALYSE"), Classes = { "eyebrow" } });
         AnalysisPanel.Children.Add(new TextBlock { Text = L("Werkzeuge, um Wörter und Kapitel besser zu verstehen. Grundlage sind die Strong-Nummern der KJV; sie werden einmalig geladen."), Classes = { "caption" }, TextWrapping = TextWrapping.Wrap });
 
+        // grammar and sentence structure of the clicked verse (original text); needs no downloaded index
+        AnalysisPanel.Children.Add(_syntaxView);
+        _ = ShowSyntaxAsync();
+
         if (_analyzer is null)
         {
             var go = new Button { Content = _store.IsStrongsIndexed(AnalysisTranslation) ? L("Analyse starten") : L("Analysedaten laden (einmalig)"), Classes = { "primary" }, HorizontalAlignment = HorizontalAlignment.Left };

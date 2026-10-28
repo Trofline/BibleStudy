@@ -1,4 +1,4 @@
-# Third-party notices and data sources
+﻿# Third-party notices and data sources
 
 BibleStudy's own code is MIT-licensed (see LICENSE). The program ships **no Bible text, commentary or dataset**.
 Everything below is downloaded at the user's request from its original source, or imported by the user from their own files.
@@ -12,6 +12,7 @@ The license of each translation or commentary is shown in the program next to th
 | Berean Standard Bible and interlinear | Hebrew/Greek word data | Public domain |
 | Open Cross Reference data (OpenBible.info) | Cross references | CC BY 4.0 |
 | Theographic Bible Metadata | People, places, events, timeline | CC BY-SA 4.0 |
+| [MACULA Greek / Hebrew](https://github.com/Clear-Bible) (Clear Bible, Biblica) | Morphology and syntax trees | CC BY 4.0 |
 | Easton's Bible Dictionary (via Theographic) | Bible dictionary | Public domain (1897) |
 | STEPBible lexicon (Tyndale House, Cambridge) | Strong's dictionary | CC BY 4.0 |
 | Commentaries via the Free Use Bible API (Matthew Henry, Jamieson-Fausset-Brown, Keil-Delitzsch, Calvin, Tyndale Open Study Notes …) | Commentaries | Per commentary, shown in the program (mostly public domain; Tyndale notes CC BY-SA 4.0) |

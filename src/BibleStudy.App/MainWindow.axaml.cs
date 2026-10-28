@@ -37,6 +37,7 @@ public partial class MainWindow : Window
     readonly HttpClient _http;
     bool _building;
     readonly StrongsDictionary _strongs;
+    readonly SyntaxProvider _syntax;
     int _fontSize = 22;
     bool _singleColumn = true;
     readonly string _root;
@@ -75,6 +76,7 @@ public partial class MainWindow : Window
         _local = new LocalBibleStore(Path.Combine(_root, "local.db"));
         _provider = new CompositeProvider(_hello, _local);
         _strongs = new StrongsDictionary(http, Path.Combine(_root, "cache"));
+        _syntax = new SyntaxProvider(http, Path.Combine(_root, "cache"));
         _store = new UserStore(Path.Combine(_root, "user.db"));
         _settingsPath = Path.Combine(_root, "settings.json");
         _settings = AppSettings.Load(_settingsPath);
