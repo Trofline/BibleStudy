@@ -173,7 +173,7 @@ public partial class MainWindow : Window
         StartControl();
         var initialised = false;
         SplashWindow.Report(0.5, L("Bereite Werkzeuge vor …"));
-        Opened += async (_, _) => { if (initialised) return; initialised = true; await InitAsync(); };
+        Opened += async (_, _) => { if (initialised) return; initialised = true; await InitAsync(); await EnsureTermsAsync(); };
     }
 
     string BookName(string id) => _books.FirstOrDefault(b => b.Id == id)?.CommonName ?? id;

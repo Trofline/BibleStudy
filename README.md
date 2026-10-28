@@ -52,6 +52,8 @@ The program code is under the [MIT license](LICENSE). **The program contains no 
 downloaded from their original sources on request; the license is shown in the footer and under *Settings → Sources and licenses*.
 All sources: [THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md). Files you import yourself (e.g. a CSV Bible) stay on your computer and are for your private use only.
 
+**No warranty, no liability.** BibleStudy is free software provided "as is", without warranty of any kind (see the license). To the extent permitted by law, the developers are not liable for damages arising from its use; liability for intent, gross negligence, injury to life, body or health and any liability that cannot be excluded by law remains unaffected. Content from third parties (translations, commentaries, data), your own imports and anything you share are your responsibility. The program asks for agreement to short terms of use at the first start.
+
 ## Contributing
 
 Please report bugs and wishes as an [issue](https://github.com/Trofline/BibleStudy/issues). Contributions are welcome; with a pull request

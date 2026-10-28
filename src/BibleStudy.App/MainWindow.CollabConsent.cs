@@ -68,3 +68,16 @@ public partial class MainWindow
         BuildCollabUi();
     }
 }
+
+public partial class MainWindow
+{
+    /// <summary>First start: the terms of use must be accepted, otherwise the program ends.</summary>
+    async Task EnsureTermsAsync()
+    {
+        if (_settings.TermsAccepted.StartsWith(TermsWindow.Version + "|", StringComparison.Ordinal)) return;
+        var accepted = await new TermsWindow().ShowDialog<bool>(this);
+        if (!accepted) { Environment.Exit(0); return; }
+        _settings.TermsAccepted = $"{TermsWindow.Version}|{DateTime.Now:yyyy-MM-dd}";
+        SaveSettings();
+    }
+}
