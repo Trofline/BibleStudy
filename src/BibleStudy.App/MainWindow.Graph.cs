@@ -180,8 +180,11 @@ public partial class MainWindow
 
     Control? XrefChips(int verse, string translationId)
     {
-        if (!_xrefInText || _chapterRefs is null || !_chapterRefs.TryGetValue(verse, out var refs) || refs.Count == 0) return null;
+        var mine = MyXrefsAt(verse);
+        IReadOnlyList<CrossRef> refs = _xrefInText && _chapterRefs is not null && _chapterRefs.TryGetValue(verse, out var found) ? found : [];
+        if (mine.Count == 0 && refs.Count == 0) return null;
         var wrap = new WrapPanel { Margin = new(30, 0, 0, 6) };
+        foreach (var x in mine) wrap.Children.Add(MyXrefChip(x, verse, translationId));   // your own come first and stand out
         foreach (var r in refs.Take(6))
             wrap.Children.Add(Chip(Label(r.Target) + (r.EndVerse > r.Target.Verse ? "–" + r.EndVerse : ""), () => _ = GoToAsync(r.Target.Book, r.Target.Chapter, r.Target.Verse), translationId, r));
         if (refs.Count > 6) wrap.Children.Add(Chip($"+{refs.Count - 6}", () => SideTabs.SelectedIndex = 4, translationId, null));

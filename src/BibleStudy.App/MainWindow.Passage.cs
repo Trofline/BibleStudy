@@ -38,6 +38,7 @@ public partial class MainWindow
         Item(L("Als Aufgabe merken"), () => { _vault.AddTodo(L("{0} studieren", Label(r)), r); RefreshTodos(); StatusText.Text = L("Aufgabe zu {0} angelegt.", Label(r)); });
         menu.Items.Add(new Separator());
         Item(L("Querverweise"), () => Open(4));
+        Item(L("Eigenen Querverweis setzen …"), () => ShowMyXrefEditor(r, anchor));
         Item(L("Grundtext Wort für Wort"), () => { Open(GrundtextTab); _ = ShowGrundtextAsync(r); });
         Item(L("Vorlesen"), ToggleSpeak);
         menu.ShowAt(anchor, showAtPointer: true);

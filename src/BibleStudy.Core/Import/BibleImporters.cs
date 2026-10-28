@@ -17,10 +17,15 @@ public static partial class BibleImporters
         var ext = Path.GetExtension(path).ToLowerInvariant();
         return ext switch
         {
-            ".bblx" => ReadEsword(path, languageCode),
-            ".xml" => ReadZefania(path, languageCode),
+            ".bblx" or ".mybible" => ReadEsword(path, languageCode),
+            ".xml" or ".osis" => XmlKind(path) switch { "osis" => ReadOsis(path, languageCode), "usx" => ReadUsx(path, languageCode), _ => ReadZefania(path, languageCode) },
+            ".usx" => ReadUsx(path, languageCode),
+            ".usfm" or ".sfm" or ".zip" => ReadUsfm(path, languageCode),
+            ".md" or ".markdown" => ReadMarkdown(path, languageCode),
+            ".txt" or ".csv" or ".tsv" => ReadTextLines(path, languageCode),
+            ".json" => ReadJson(path, languageCode),
             ".html" or ".htm" => ReadCsvOfflineHtml(path, progress),
-            _ => throw new NotSupportedException("Unterstützt: e-Sword (.bblx), Zefania (.xml) und die Offline-HTML von csv-bibel.de."),
+            _ => throw new NotSupportedException("Unterstützt: e-Sword und MySword (.bblx, .mybible), Zefania, OSIS und USX (.xml), USFM (.usfm, .sfm, .zip), Markdown, Text, CSV, JSON und die Offline-HTML von csv-bibel.de."),
         };
     }
 

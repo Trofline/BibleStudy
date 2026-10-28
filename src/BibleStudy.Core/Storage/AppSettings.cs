@@ -72,6 +72,8 @@ public sealed class AppSettings
     public bool FocusMode { get; set; }
     /// <summary>Parallel columns scroll together verse by verse (true) or each column on its own (false).</summary>
     public bool ParallelSync { get; set; } = true;
+    /// <summary>With independent columns: the translations whose columns still scroll together (verse by verse). Empty = none.</summary>
+    public List<string> ParallelSyncIds { get; set; } = [];
     /// <summary>Commentaries are human writings (Calvin, Henry …), not Scripture: hidden unless switched on.</summary>
     public bool ShowCommentaries { get; set; }
     /// <summary>Translate the English word data (glosses, dictionary entries) into the program language with the local Claude (cached).</summary>

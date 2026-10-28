@@ -480,6 +480,11 @@ public partial class MainWindow
 
     void InitWindows()
     {
+        // the status bar stays, but steps aside while the mouse is over it (it would cover small things otherwise)
+        StatusBar.PointerEntered += (_, _) => StatusBar.Opacity = 0;
+        StatusBar.PointerExited += (_, _) => StatusBar.Opacity = 1;
+        // the search options and the hit chips never push the hit list out of the panel: they scroll within half of the height
+        SearchDock.SizeChanged += (_, e) => SearchTopScroll.MaxHeight = Math.Max(160, e.NewSize.Height * 0.55);
         LayoutTopBtn.Click += (_, _) => ShowLayoutMenu();
         SettingsTopBtn.Click += (_, _) => OpenWork(NavGroups.First(g => g.Name == "Mehr"), SettingsTab);
         PopOutDocsBtn.Click += (_, _) => OpenWork(NavGroups.First(g => g.Name == "Dokumente"));

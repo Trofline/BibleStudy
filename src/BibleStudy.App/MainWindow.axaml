@@ -163,8 +163,9 @@
         <WrapPanel x:Name="ParallelBar" DockPanel.Dock="Top" IsVisible="False" Background="{DynamicResource BsSurface}" />
 
         <!-- Footer: license information of the shown translations -->
-        <Border DockPanel.Dock="Bottom" Padding="16,6" Height="32" Background="{DynamicResource BsSurface}"
+        <Border x:Name="StatusBar" DockPanel.Dock="Bottom" Padding="16,6" Height="32" Background="{DynamicResource BsSurface}"
                 BorderBrush="{DynamicResource BsBorder}" BorderThickness="0,1,0,0">
+            <Border.Transitions><Transitions><DoubleTransition Property="Opacity" Duration="0:0:0.15" /></Transitions></Border.Transitions>
             <TextBlock x:Name="StatusText" Classes="caption" TextTrimming="CharacterEllipsis" ToolTip.Tip="{Binding #StatusText.Text}" />
         </Border>
 
@@ -182,8 +183,9 @@
             <TabControl x:Name="SideTabs" TabStripPlacement="Left">
                 <TabItem ToolTip.Tip="Suche">
                     <TabItem.Header><local:Icon Data="M3 11a8 8 0 1 0 16 0a8 8 0 1 0-16 0z M21 21l-4.3-4.3" /></TabItem.Header>
-                    <DockPanel Margin="16,14,12,12">
-                        <StackPanel DockPanel.Dock="Top" Spacing="8" Margin="0,0,0,8">
+                    <DockPanel x:Name="SearchDock" Margin="16,14,12,12">
+                        <ScrollViewer x:Name="SearchTopScroll" DockPanel.Dock="Top" HorizontalScrollBarVisibility="Disabled" Margin="0,0,0,8">
+                        <StackPanel Spacing="8" Margin="0,0,8,0">
                             <Grid ColumnDefinitions="*,Auto">
                                 <TextBox x:Name="SearchBox" Watermark="Wort, „Wendung“, L=Grundform, G3056, Joh 3,16 …" />
                                 <Button x:Name="SearchGoBtn" Grid.Column="1" Classes="tool" Margin="6,0,0,0" ToolTip.Tip="Suchen (Enter)">
@@ -232,6 +234,7 @@
                             <WrapPanel x:Name="SearchBooksPanel" />
                             <Button x:Name="SearchQueueBtn" IsVisible="False" Content="Alle Treffer zur Leseliste" HorizontalAlignment="Left" />
                         </StackPanel>
+                        </ScrollViewer>
                         <ListBox x:Name="SearchList" ItemTemplate="{StaticResource EntryTpl}" ScrollViewer.HorizontalScrollBarVisibility="Disabled" />
                     </DockPanel>
                 </TabItem>
@@ -599,7 +602,7 @@
                             <Border Classes="card"><StackPanel Spacing="8">
                                 <TextBlock Classes="eyebrow" Text="EIGENE ÜBERSETZUNG IMPORTIEREN" />
                                 <TextBlock Classes="caption" TextWrapping="Wrap"
-                                           Text="Für Bibeltexte, die du rechtmäßig besitzt und die nicht frei verfügbar sind (z. B. die Elberfelder Edition CSV). Unterstützt: e-Sword-Module (.bblx), Zefania-XML und die Offline-HTML der CSV-Bibel (mit Strong-Nummern und Fußnoten). Der Text bleibt nur auf diesem Rechner und dient deiner privaten Nutzung; gib ihn nicht weiter und lege ihn nicht in ein öffentliches Repository." />
+                                           Text="Für Bibeltexte, die du rechtmäßig besitzt und die nicht frei verfügbar sind (z. B. die Elberfelder Edition CSV). Unterstützt: e-Sword und MySword (.bblx, .mybible), Zefania, OSIS und USX (.xml), USFM (.usfm, .sfm oder ZIP), Markdown, Text, CSV, JSON und die Offline-HTML der CSV-Bibel (mit Strong-Nummern und Fußnoten). Kopiergeschützte Formate (Kindle, Logos) lassen sich nicht einlesen. Der Text bleibt nur auf diesem Rechner und dient deiner privaten Nutzung; gib ihn nicht weiter und lege ihn nicht in ein öffentliches Repository." />
                                 <StackPanel Orientation="Horizontal" Spacing="8">
                                     <TextBox x:Name="ImportLangBox" Width="70" Text="de" Watermark="Sprache" ToolTip.Tip="Sprachcode der Datei, z. B. de oder en (bei der CSV-Datei automatisch Deutsch)" />
                                     <Button x:Name="ImportBibleBtn" Content="Datei wählen …" />
@@ -617,6 +620,19 @@
                                 <Button x:Name="OfflineBtn" Content="Gewählte Übersetzung offline verfügbar machen" HorizontalAlignment="Left" />
                                 <TextBlock Classes="caption" TextWrapping="Wrap"
                                            Text="Es werden nur Texte geladen, die die Quelle zur freien Nutzung anbietet; Lizenz und Namensnennung stehen unten in der Fußzeile. Die Daten liegen lokal und gehören dir." />
+                            </StackPanel></Border>
+
+                            <Border Classes="card"><StackPanel Spacing="8">
+                                <TextBlock Classes="eyebrow" Text="FEEDBACK UND WINDOWS-SUCHE" />
+                                <TextBlock Classes="caption" TextWrapping="Wrap" Text="Fehler, Ideen und Rückmeldungen gehen als öffentliches Ticket an das Projekt auf GitHub (dafür brauchst du dort ein Konto). Es wird nichts gesendet, bevor du es dort selbst abschickst. Version und System stehen schon im Text, deine Daten nie." />
+                                <WrapPanel>
+                                    <Button x:Name="BugBtn" Content="Fehler melden …" Margin="0,0,6,6" />
+                                    <Button x:Name="IdeaBtn" Content="Idee vorschlagen …" Margin="0,0,6,6" />
+                                    <Button x:Name="FeedbackBtn" Content="Feedback geben …" Margin="0,0,6,6" />
+                                    <Button x:Name="IdeasListBtn" Content="Ideen und Fehler ansehen …" Margin="0,0,6,6" />
+                                </WrapPanel>
+                                <Button x:Name="StartMenuBtn" Content="Im Startmenü eintragen (Windows-Suche)" HorizontalAlignment="Left" ToolTip.Tip="Legt eine Verknüpfung im Startmenü an, damit Windows (Win-Taste, Suche) BibleStudy findet" />
+                                <TextBlock x:Name="StartMenuInfo" Classes="caption" TextWrapping="Wrap" />
                             </StackPanel></Border>
 
                             <Border Classes="card"><StackPanel Spacing="8">
@@ -681,6 +697,9 @@
                             <TextBlock TextWrapping="Wrap" Text="Vers anklicken: Notiz, Lesezeichen und Querverweise beziehen sich darauf. Rechtsklick auf einen Vers: kopieren, als Bild exportieren, zum Auswendiglernen vormerken, in ein Dokument einfügen." />
                             <TextBlock FontWeight="SemiBold" Text="Parallel" />
                             <TextBlock TextWrapping="Wrap" Text="Zeigt bis zu drei weitere Übersetzungen versgenau nebeneinander, jede Spalte in eigener Farbe mit Kopfzeile. „Synchron scrollen“ lässt alle Spalten zusammen laufen; ausgeschaltet scrollt jede für sich." />
+                            <TextBlock TextWrapping="Wrap" Text="Mit dem Symbol neben „Synchron scrollen“ wählst du, welche Spalten zusammen laufen (z. B. nur die zweite und vierte); die übrigen scrollen für sich." />
+                            <TextBlock FontWeight="SemiBold" Text="Eigene Querverweise" />
+                            <TextBlock TextWrapping="Wrap" Text="Rechtsklick auf einen Vers → „Eigenen Querverweis setzen …“: Stelle und eine kurze Notiz eingeben. Er erscheint als goldener Chip unter dem Vers (mit ★) und, als Rückweg, unter dem Vers, auf den er zeigt. Rechtsklick auf den Chip löscht ihn. Eigene Querverweise gehören zum Vault und sind in der Sicherung enthalten." />
                             <TextBlock FontWeight="SemiBold" Text="Suche" />
                             <TextBlock TextWrapping="Wrap" Text="Das Suchfeld versteht Wörter, „Wendungen“, Gnade / Wahrheit (ODER), Gnade -Wahrheit (ausschließen), Klammern, L=Grundform, Platzhalter * (*keit, Geist*, *geist*), Strong-Nummern (G3056, H8392=Arche), O=Gnade (Grundtextwort hinter „Gnade“), Bibelstellen und griechische/hebräische Wörter. „Suchhilfe“ zeigt alle Beispiele zum Anklicken." />
                             <TextBlock FontWeight="SemiBold" Text="Suchoptionen" />
@@ -693,6 +712,9 @@
                             <TextBlock TextWrapping="Wrap" Text="Neben dem Suchfeld und im Strong-Wörterbuch öffnet „α א“ eine Tastatur für griechische und hebräische Buchstaben; man kann auch lateinisch tippen („logos“ → λογος, „shalom“ → שלם). Mit ☆ merkst du eine Suche samt Optionen, „Gemerkte Suchen“ ruft sie wieder auf. Unter den Treffern legen „Treffer als Dokument“ und „Treffer als Tabelle (CSV)“ die Verse ab, und „Orte auf der Karte“ zeigt, wo die genannten Orte liegen (größerer Punkt = mehr Verse). Strg+K → „Verweis-Netz“ zeigt die Querverweise zwischen AT- und NT-Büchern als Bild; ein Klick auf ein Buch zeigt seine Verse. Die Satzrollen-Suche (unter Analyse, Grammatik) findet griechische Sätze nach Rollen, z. B. Subjekt Jesus und Objekt Petrus." />
                             <TextBlock FontWeight="SemiBold" Text="Graphen" />
                             <TextBlock TextWrapping="Wrap" Text="Der Knopf „Graph“ hat mehrere Ansichten: Netzwerk (ein Kapitel und seine Verweise, per Doppelklick erweiterbar), Bogen (die ganze Bibel), AT ↔ NT (Verweise zwischen den Testamenten), Kreis (alle Bücher im Kreis mit Bändern), Autoren (die Bibelschreiber nach traditioneller Zuschreibung), Wort-Netz (Wörter, die oft in denselben Versen stehen), Personen-Netz (wer in denselben Kapiteln vorkommt) und Themen-Netz (verwandte Wörter eines Themas). In den Netzen kannst du Knoten ziehen, mit dem Mausrad zoomen, einen Knoten anklicken (Nachbarn leuchten) und doppelklicken, um mehr davon zu laden. Auf der Karte zeigt „Reiseweg zeigen“ die Orte, die bei einer Person genannt werden, in der Reihenfolge der Bibel." />
+                            <TextBlock TextWrapping="Wrap" Text="In Wort-, Personen- und Themen-Netz kannst du mehrere Begriffe mit + verbinden, z. B. „Tag + Herr“ oder „Petrus + Johannes“: Das Netz zeigt dann nur, was zu allen zusammen passt (Verse bzw. Kapitel, in denen alle vorkommen)." />
+                            <TextBlock FontWeight="SemiBold" Text="Fehler, Ideen, Rückmeldung" />
+                            <TextBlock TextWrapping="Wrap" Text="Unter Einstellungen → „Feedback und Windows-Suche“ öffnen „Fehler melden“, „Idee vorschlagen“ und „Feedback geben“ ein vorbereitetes Ticket auf GitHub (Version und System stehen schon drin, nichts wird ohne dein Absenden gesendet). Dort siehst du auch alle Ideen und Fehler anderer. „Im Startmenü eintragen“ sorgt dafür, dass Windows BibleStudy über die Suche findet." />
                             <TextBlock FontWeight="SemiBold" Text="Wortstudie und Analyse" />
                             <TextBlock TextWrapping="Wrap" Text="Den Schalter „Wortstudie“ einschalten (Übersetzungen mit Strong-Nummern, z. B. KJV), dann Wörter anklicken: Grundtextwort, Bedeutung (in deiner Sprache), alle Vorkommen. Der Reiter „Analyse“ zeigt Verteilung über die Bücher, verwandte Wörter, Häufigkeiten und Begleitwörter. Im Neuen Testament gibt es Morphologie und Satzbau (Wortart, Zeit, Fall …) und eine Grammatiksuche, z. B. alle Aorist-Passiv-Partizipien." />
                             <TextBlock FontWeight="SemiBold" Text="Dokumente schreiben" />

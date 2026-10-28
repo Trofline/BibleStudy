@@ -164,6 +164,7 @@ public partial class MainWindow
             _lastSideIndex = SideTabs.SelectedIndex;
             if (SideTabs.SelectedItem is TabItem { Content: Control page }) AnimateIn(page, 10, 0);
             if (SideTabs.SelectedIndex == AnalysisTab) BuildAnalysisUi();
+            else if (SideTabs.SelectedIndex == CollabTab) TabShown(CollabTab);
             SyncNav();
         };
         if (GroupOf(SideTabs.SelectedIndex) is { Windowed: true }) SideTabs.SelectedIndex = 0;

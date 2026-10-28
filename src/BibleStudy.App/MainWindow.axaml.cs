@@ -339,7 +339,7 @@ public partial class MainWindow : Window
             if (_animKey != $"{_curBook}{_curChapter}") { _animKey = $"{_curBook}{_curChapter}"; AnimateIn(ReaderPanel); }
             _singleColumn = cols.Count == 1;
             _independent = cols.Count > 1 && !_settings.ParallelSync;
-            _colBoxes.Clear(); _colScrolls.Clear(); _indepGrid = null;
+            _colBoxes.Clear(); _colScrolls.Clear(); _colIds.Clear(); _mirrorExpect.Clear(); _indepGrid = null;
             ParallelHeader.IsVisible = false;
             FitReader();
             var kicker = new TextBlock { Text = b.CommonName.ToUpperInvariant(), FontSize = 13, FontWeight = FontWeight.SemiBold, LetterSpacing = 3, Margin = new(8, 0, 0, 0) };

@@ -29,7 +29,7 @@ public partial class MainWindow
         var files = await StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
         {
             Title = L("Bibeldatei wählen"), AllowMultiple = false,
-            FileTypeFilter = [new FilePickerFileType(L("Bibeldateien")) { Patterns = ["*.bblx", "*.xml", "*.html", "*.htm"] }],
+            FileTypeFilter = [new FilePickerFileType(L("Bibeldateien")) { Patterns = ["*.bblx", "*.mybible", "*.xml", "*.osis", "*.usx", "*.usfm", "*.sfm", "*.zip", "*.md", "*.markdown", "*.txt", "*.csv", "*.tsv", "*.json", "*.html", "*.htm"] }],
         });
         if (files.Count == 0 || files[0].TryGetLocalPath() is not { } path) return;
         await ImportBibleFromAsync(path, string.IsNullOrWhiteSpace(ImportLangBox.Text) ? "de" : ImportLangBox.Text.Trim());

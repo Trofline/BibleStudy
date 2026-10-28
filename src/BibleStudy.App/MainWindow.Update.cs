@@ -31,6 +31,7 @@ public partial class MainWindow
         RemoveAppBtn.Content = AppPaths.IsPortable ? L("Portable-Version entfernen …") : L("Deinstallieren …");
         RemoveAppBtn.Click += async (_, _) => await RemoveProgramAsync();
         InitBackup();
+        InitFeedback();
         // once per start, a few seconds after launch so that the reader is up first
         if (_settings.AutoUpdate)
         {

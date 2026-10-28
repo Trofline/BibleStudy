@@ -87,6 +87,9 @@ public partial class MainWindow
             }
             var scroll = new ScrollViewer { Content = panel };
             _colScrolls.Add(scroll);
+            _colIds.Add(cols[i].T.Id);
+            var col = i;
+            scroll.ScrollChanged += (_, _) => MirrorScroll(col);
             var column = new Grid { RowDefinitions = new RowDefinitions("Auto,*") };
             var header = ColumnHeader(cols[i].T, cols[i].C, i);
             header.Margin = new(0);
@@ -104,7 +107,39 @@ public partial class MainWindow
         FitReader();
     }
 
-    /// <summary>The bar above the text: sync switch plus one colored dot per column.</summary>
+    // ---- selective sync: columns on their own, but the chosen ones follow each other verse by verse -------------------------
+
+    readonly List<string> _colIds = [];
+    readonly Dictionary<int, double> _mirrorExpect = [];
+
+    Dictionary<int, Border> BoxesOf(int col) => col == 0 ? _verseBoxes : col - 1 < _colBoxes.Count ? _colBoxes[col - 1] : [];
+
+    void MirrorScroll(int src)
+    {
+        if (!_independent || src >= _colIds.Count || !_settings.ParallelSyncIds.Contains(_colIds[src])) return;
+        var scroll = _colScrolls[src];
+        if (_mirrorExpect.TryGetValue(src, out var expected) && Math.Abs(scroll.Offset.Y - expected) < 2) { _mirrorExpect.Remove(src); return; }
+        if (scroll.Content is not Control content) return;
+        // the verse at the top of this column and how far into it we are
+        int? verse = null; double top = 0;
+        foreach (var (n, box) in BoxesOf(src).OrderBy(b => b.Key))
+            if (box.TranslatePoint(new Point(0, 0), content) is { } p && p.Y + box.Bounds.Height > scroll.Offset.Y + 2) { verse = n; top = p.Y; break; }
+        if (verse is not int v) return;
+        var delta = scroll.Offset.Y - top;
+        for (var j = 0; j < _colScrolls.Count; j++)
+        {
+            if (j == src || !_settings.ParallelSyncIds.Contains(_colIds[j]) || _colScrolls[j].Content is not Control other) continue;
+            var boxes = BoxesOf(j);
+            var target = boxes.Where(b => b.Key >= v).OrderBy(b => b.Key).Select(b => b.Value).FirstOrDefault();
+            if (target?.TranslatePoint(new Point(0, 0), other) is not { } q) continue;
+            var y = Math.Max(0, q.Y + delta);
+            if (Math.Abs(_colScrolls[j].Offset.Y - y) < 2) continue;
+            _mirrorExpect[j] = y;
+            _colScrolls[j].Offset = new Vector(0, y);
+        }
+    }
+
+    /// <summary>The bar above the text: sync switch (all columns together), a choice of which columns scroll together, one colored dot per column.</summary>
     void EnsureSyncPill()
     {
         if (_syncPill is not null) return;
@@ -113,9 +148,43 @@ public partial class MainWindow
         check.IsCheckedChanged += async (_, _) =>
         {
             _settings.ParallelSync = check.IsChecked == true;
+            if (_settings.ParallelSync) _settings.ParallelSyncIds.Clear();
             await ShowChapterAsync(_selected);
         };
-        _syncPill = new Border { Classes = { "pill" }, Margin = new(16, 8, 0, 8), Padding = new(12, 0), Child = check };
+        var pick = new Button { Classes = { "tool" }, Width = 28, Height = 28, Content = new Icon { Data = Geometry.Parse("M4 6h16 M7 12h10 M10 18h4"), IconSize = 14 }, VerticalAlignment = VerticalAlignment.Center };
+        ToolTip.SetTip(pick, L("Auswählen, welche Spalten zusammen scrollen"));
+        pick.Click += (_, _) => ShowSyncChoice(pick, check);
+        _syncPill = new Border { Classes = { "pill" }, Margin = new(16, 8, 0, 8), Padding = new(12, 0, 4, 0), Child = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 4, Children = { check, pick } } };
+    }
+
+    void ShowSyncChoice(Control anchor, CheckBox all)
+    {
+        var cols = new List<TranslationInfo>();
+        if (TranslationBox.SelectedItem is TranslationInfo primary) cols.Add(primary);
+        cols.AddRange(_extras.Select(e => e.Translation).OfType<TranslationInfo>());
+        var chosen = _settings.ParallelSync ? cols.Select(c => c.Id).ToHashSet() : _settings.ParallelSyncIds.ToHashSet();
+        var panel = new StackPanel { Spacing = 4, Width = 260 };
+        panel.Children.Add(new TextBlock { Text = L("Diese Spalten scrollen zusammen, die anderen für sich:"), Classes = { "caption" }, TextWrapping = TextWrapping.Wrap });
+        for (var i = 0; i < cols.Count; i++)
+        {
+            var id = cols[i].Id;
+            var box = new CheckBox { Content = cols[i].ShortName, IsChecked = chosen.Contains(id), Foreground = new SolidColorBrush(ColumnColor(i)) };
+            box.IsCheckedChanged += (_, _) => { if (box.IsChecked == true) chosen.Add(id); else chosen.Remove(id); };
+            panel.Children.Add(box);
+        }
+        var apply = new Button { Content = L("Übernehmen"), Classes = { "primary" }, HorizontalAlignment = HorizontalAlignment.Left, Margin = new(0, 6, 0, 0) };
+        var fly = new Flyout { Content = panel };
+        apply.Click += async (_, _) =>
+        {
+            fly.Hide();
+            var allOn = chosen.Count == cols.Count;
+            _settings.ParallelSync = allOn;
+            _settings.ParallelSyncIds = allOn ? [] : chosen.Where(c => cols.Any(x => x.Id == c)).ToList();
+            all.IsChecked = allOn;
+            await ShowChapterAsync(_selected);
+        };
+        panel.Children.Add(apply);
+        fly.ShowAt(anchor);
     }
 
     void RecolorPills()

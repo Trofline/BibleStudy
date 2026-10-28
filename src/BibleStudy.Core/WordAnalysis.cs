@@ -53,16 +53,31 @@ public sealed partial class WordAnalyzer
         _words.TryGetValue(r, out var w) ? w.DistinctBy(x => x.Id).ToList() : [];
 
     /// <summary>Words that appear in the same verses as the given one, rare partners first (frequent filler words score low).</summary>
-    public IReadOnlyList<(string Id, int Shared)> CoOccurring(string id, int top = 12)
+    public IReadOnlyList<(string Id, int Shared)> CoOccurring(string id, int top = 12) => CoOccurring([id], top);
+
+    /// <summary>The verses in which all the given words stand together (a phrase like "day of the Lord" is several words).</summary>
+    public HashSet<VerseRef> Together(IReadOnlyList<string> ids)
     {
-        var target = Occurrences(id).ToHashSet();
+        HashSet<VerseRef>? common = null;
+        foreach (var id in ids)
+        {
+            var set = Occurrences(id).ToHashSet();
+            if (common is null) common = set; else common.IntersectWith(set);
+        }
+        return common ?? [];
+    }
+
+    /// <summary>Words that appear in the same verses as all of the given ones (rare partners first).</summary>
+    public IReadOnlyList<(string Id, int Shared)> CoOccurring(IReadOnlyList<string> ids, int top = 12)
+    {
+        var target = Together(ids);
         if (target.Count == 0) return [];
         var scored = new List<(string Id, int Shared, double Score)>();
         foreach (var (other, list) in _verses)
         {
-            if (other == id) continue;
+            if (ids.Contains(other)) continue;
             var shared = list.Where(target.Contains).Distinct().Count();
-            if (shared < 2) continue;
+            if (shared < (ids.Count > 1 ? 1 : 2)) continue;
             scored.Add((other, shared, shared * Idf(other)));
         }
         return scored.OrderByDescending(s => s.Score).Take(top).Select(s => (s.Id, s.Shared)).ToList();

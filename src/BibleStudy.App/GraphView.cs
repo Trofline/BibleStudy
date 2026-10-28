@@ -185,14 +185,14 @@ public sealed class GraphView : UserControl
             2 => L("Jede Linie verbindet ein NT-Buch (rechts) mit einem AT-Buch (links); je dicker, desto mehr Verweise. Buch anklicken: seine Verse in der Suche."),
             3 => L("Alle Bücher im Kreis, die Bänder zeigen die Querverweise dazwischen. Buch anklicken: seine Verse in der Suche."),
             4 => L("Die Bibelschreiber (nach der traditionellen Zuschreibung, bei einigen Büchern umstritten) und die Verweise zwischen ihren Büchern. Knoten ziehen, Mausrad: zoomen."),
-            5 => L("Wort eingeben: die Wörter, die oft in denselben Versen stehen (KJV mit Strong-Nummern). Doppelklick auf einen Knoten: mehr davon."),
-            6 => L("Person eingeben: wer in denselben Kapiteln vorkommt. Doppelklick auf einen Knoten: mehr davon."),
+            5 => L("Wort eingeben: die Wörter, die oft in denselben Versen stehen (KJV mit Strong-Nummern). Mehrere mit +: nur Verse, in denen alle vorkommen. Doppelklick auf einen Knoten: mehr davon."),
+            6 => L("Person eingeben: wer in denselben Kapiteln vorkommt. Mehrere mit +: nur Kapitel, in denen alle vorkommen. Doppelklick auf einen Knoten: mehr davon."),
             7 => L("Thema eingeben: verwandte Wörter und wie oft sie gemeinsam in einem Vers stehen. Doppelklick auf einen Knoten: mehr davon."),
             _ => L("Knoten anklicken: Details · Mausrad: zoomen · ziehen: verschieben"),
         };
         if (mode >= 5)
         {
-            _netInput.Watermark = mode switch { 5 => L("Strong-Nummer oder Wort, z. B. G26"), 6 => L("Person, z. B. Abraham, Paulus"), _ => L("Thema, z. B. Vergebung, Mut") };
+            _netInput.Watermark = mode switch { 5 => L("Strong-Nummer oder Wort; mehrere mit +, z. B. Tag + Herr"), 6 => L("Person; mehrere mit +, z. B. Petrus + Johannes"), _ => L("Thema; mehrere mit +, z. B. Vergebung + Gnade") };
             _force.SetData(new NetData(), null);
             return;
         }
