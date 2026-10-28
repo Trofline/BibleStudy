@@ -233,11 +233,12 @@ public partial class MainWindow
     {
         if (_selected is not int v) { StatusText.Text = L("Erst einen Vers anklicken."); return; }
         var existing = _chapterMarks.Where(m => m.WholeVerse && m.Ref.Verse == v).ToList();
-        if (existing.Count > 0) foreach (var m in existing) _vault.DeleteMark(m.Id);
+        var verse = new VerseRef(_curBook, _curChapter, v);
+        if (existing.Count > 0) { foreach (var m in existing) _vault.DeleteMark(m.Id); StatusText.Text = L("{0} nicht mehr gemerkt.", Label(verse)); }
         else
         {
-            var r = new VerseRef(_curBook, _curChapter, v);
-            _vault.AddMark(Mark.AnyTranslation, r, -1, -1, VerseTextOf(v), _settings.DefaultColor, "", null, AutoTags(r));
+            _vault.AddMark(Mark.AnyTranslation, verse, -1, -1, VerseTextOf(v), _settings.DefaultColor, "", null, AutoTags(verse));
+            StatusText.Text = L("{0} gemerkt – zu finden im Reiter „Ordner“.", Label(verse));   // the selection color hides the mark's color, so say it
         }
         LoadChapterMarks(); Paint(); RefreshCollection();
     }
