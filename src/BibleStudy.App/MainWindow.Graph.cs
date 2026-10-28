@@ -24,6 +24,13 @@ public partial class MainWindow
         MapPane.MapProvider = async () => _worldMap ??= await WorldMap.LoadAsync(_http, Path.Combine(_root, "cache"));
         MapPane.PlacesProvider = (book, chapter) => _hello.GetChapterPlacesAsync(book, chapter);
         MapPane.BookNames = BookName;
+        MapPane.BookOrder = id => _books.ToList().FindIndex(b => b.Id == id);
+        MapPane.RouteRequested += async name =>
+        {
+            var entry = await FindEntityAsync("people", name);
+            if (entry is null) { MapPane.ShowMessage(L("Keine Person „{0}“ gefunden.", name)); return; }
+            await MapPane.OpenHitsAsync(L("Reiseweg: {0}", entry.Name), entry.References, route: true);
+        };
         MapPane.OpenVerse += async (book, chapter, verse) => await GoToAsync(book, chapter, verse);
     }
 
@@ -37,6 +44,7 @@ public partial class MainWindow
     void InitGraph()
     {
         InitMap();
+        InitNets();
         _xrefInText = _settings.XrefInText;
         _threadOn = _settings.ThreadGraph;
         ViewBtn.Click += (_, _) => ShowViewFlyout();

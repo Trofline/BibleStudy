@@ -19,6 +19,11 @@ public sealed class MapView : UserControl
     public Func<Task<WorldMap>>? MapProvider { get; set; }
     public Func<string, int, Task<IReadOnlyList<MapPlace>>>? PlacesProvider { get; set; }
     public Func<string, string>? BookNames { get; set; }
+    public Func<string, int>? BookOrder { get; set; }
+    /// <summary>The user asked for the journey of a person (name as typed).</summary>
+    public event Action<string>? RouteRequested;
+    readonly TextBox _personBox = new() { Width = 170 };
+    readonly Button _personBtn = new();
     bool _hitMode;
     readonly Dictionary<string, List<VerseRef>> _hitMentions = [];
 
@@ -53,6 +58,11 @@ public sealed class MapView : UserControl
         var strip = new WrapPanel { Margin = new(16, 10, 16, 6) };
         void Add(Control c, double right = 10) { c.Margin = new(0, 0, right, 4); c.VerticalAlignment = VerticalAlignment.Center; strip.Children.Add(c); }
         Add(back, 16); Add(_chapterBtn, 4); Add(_bookBtn, 16); Add(_routeBox, 16); Add(_title);
+        _personBox.Watermark = L("Reiseweg von … (Person)"); _personBtn.Content = L("Reiseweg zeigen");
+        ToolTip.SetTip(_personBtn, L("Die Orte, die in der Nähe der Verse einer Person genannt werden, in der Reihenfolge der Bibel"));
+        Add(_personBox, 6); Add(_personBtn, 10);
+        _personBtn.Click += (_, _) => { if (!string.IsNullOrWhiteSpace(_personBox.Text)) RouteRequested?.Invoke(_personBox.Text.Trim()); };
+        _personBox.KeyDown += (_, e) => { if (e.Key == Avalonia.Input.Key.Enter && !string.IsNullOrWhiteSpace(_personBox.Text)) RouteRequested?.Invoke(_personBox.Text.Trim()); };
         var hintRow = new Border { Height = 24, Padding = new(16, 0), Child = _hint };
 
         var source = new TextBlock { FontSize = 11, Margin = new(16, 4, 16, 8), Text = $"{WorldMap.Attribution} · {Core.Providers.HelloAoProvider.PlacesAttribution}", TextWrapping = TextWrapping.Wrap };
@@ -73,7 +83,7 @@ public sealed class MapView : UserControl
 
     public async Task OpenAsync(string book, string bookName, int chapter, int chapters)
     {
-        _hitMode = false; _chapterBtn.IsVisible = true; _bookBtn.IsVisible = true; _routeBox.IsVisible = true;
+        _hitMode = false; _chapterBtn.IsVisible = true; _bookBtn.IsVisible = true; _routeBox.IsVisible = true; _canvas.ShowRoute = _routeBox.IsChecked == true;
         await OpenCoreAsync(book, bookName, chapter, chapters);
     }
 
@@ -85,11 +95,13 @@ public sealed class MapView : UserControl
     }
 
     /// <summary>The places named in the verses that a search found: the bigger the dot, the more of the hits mention it.</summary>
-    public async Task OpenHitsAsync(string title, IReadOnlyList<VerseRef> hits)
+    public void ShowMessage(string text) => _hint.Text = text;
+
+    public async Task OpenHitsAsync(string title, IReadOnlyList<VerseRef> hits, bool route = false)
     {
         _hitMode = true; _detail.IsVisible = false;
         _chapterBtn.IsVisible = false; _bookBtn.IsVisible = false; _routeBox.IsVisible = false;
-        _canvas.ShowRoute = false;
+        _canvas.ShowRoute = route;
         var generation = ++_generation;
         _title.Text = title;
         try
@@ -111,6 +123,7 @@ public sealed class MapView : UserControl
                 {
                     var places = await PlacesProvider!(group.Key.Book, group.Key.Chapter);
                     var verses = group.Select(h => h.Verse).ToHashSet();
+                    if (route) foreach (var v in verses.ToList()) { verses.Add(v - 1); verses.Add(v + 1); }   // a journey names its places next to the person
                     lock (found)
                         foreach (var place in places)
                             foreach (var v in place.Verses.Where(verses.Contains))
@@ -128,10 +141,12 @@ public sealed class MapView : UserControl
                 }
             }));
             if (generation != _generation) return;
-            var ordered = found.Values.OrderByDescending(e => e.Verses.Count).ToList();
+            var ordered = route
+                ? found.Values.OrderBy(e => e.Verses.Min(v => (BookOrder?.Invoke(v.Book) ?? 0) * 1_000_000 + v.Chapter * 1000 + v.Verse)).ToList()
+                : found.Values.OrderByDescending(e => e.Verses.Count).ToList();
             _hitMentions.Clear();
             foreach (var e in ordered) _hitMentions[e.Place.Id] = e.Verses.OrderBy(v => v.Book).ThenBy(v => v.Chapter).ThenBy(v => v.Verse).ToList();
-            _canvas.SetPlaces(ordered.Select(e => e.Place).ToList(), ordered.Select(e => e.Verses.Count).ToList());
+            _canvas.SetPlaces(ordered.Select(e => e.Place).ToList(), route ? null : ordered.Select(e => e.Verses.Count).ToList());
             _hint.Text = ordered.Count == 0 ? L("In den Treffern kommen keine Orte mit Koordinaten vor.")
                 : L("{0} Orte in {1} Treffern · Punktgröße = Zahl der Verse · Ort anklicken: Stellen", ordered.Count, hits.Count);
         }

@@ -25,6 +25,20 @@ public sealed class GraphView : UserControl
     readonly NetworkCanvas _net = new();
     readonly ArcCanvas _arc = new();
     readonly RefNetView _otnt = new() { IsVisible = false };
+    readonly ChordView _chord = new() { IsVisible = false };
+    readonly ForceGraphView _force = new() { IsVisible = false };
+    readonly ToggleButton _chordBtn = new() { Content = L("Kreis") };
+    readonly ToggleButton _authorBtn = new() { Content = L("Autoren") };
+    readonly ToggleButton _wordBtn = new() { Content = L("Wort-Netz") };
+    readonly ToggleButton _personBtn = new() { Content = L("Personen-Netz") };
+    readonly ToggleButton _topicBtn = new() { Content = L("Themen-Netz") };
+    readonly TextBox _netInput = new() { Width = 230, IsVisible = false };
+    readonly Button _netGo = new() { Content = L("Zeigen"), Classes = { "primary" }, IsVisible = false };
+    bool _promptShown;
+    /// <summary>kind ("word", "person", "topic"), key, expand, status report → the nodes and edges to show (null: nothing found).</summary>
+    public Func<string, string, bool, Action<string>, Task<NetData?>>? NetProvider { get; set; }
+    /// <summary>A node of a word, person or topic network was asked to be opened: kind, key.</summary>
+    public event Action<string, string>? NetOpen;
     readonly ToggleButton _otntBtn = new() { Content = L("AT ↔ NT") };
     readonly ComboBox _strengthBox = new() { ItemsSource = new[] { L("alle Verweise"), L("ab 10 je Buchpaar"), L("ab 30 je Buchpaar"), L("ab 100 je Buchpaar") }, SelectedIndex = 1, Width = 170, IsVisible = false };
     int _mode;   // 0 network, 1 arcs, 2 Old Testament ↔ New Testament
@@ -68,13 +82,13 @@ public sealed class GraphView : UserControl
         back.Click += (_, _) => CloseRequested?.Invoke();
         var strip = new WrapPanel { Margin = new(16, 10, 16, 6) };
         void Add(Control c, double right = 10) { c.Margin = new(0, 0, right, 4); c.VerticalAlignment = VerticalAlignment.Center; strip.Children.Add(c); }
-        Add(back, 16); Add(_netBtn, 4); Add(_arcBtn, 4); Add(_otntBtn, 16); Add(_strengthBox); Add(_dirBox); Add(_countLabel, 6); Add(_countSlider, 14); Add(_bookBox); Add(_arcSlider, 14); Add(_resetBtn);
+        Add(back, 16); Add(_netBtn, 4); Add(_arcBtn, 4); Add(_otntBtn, 4); Add(_chordBtn, 4); Add(_authorBtn, 4); Add(_wordBtn, 4); Add(_personBtn, 4); Add(_topicBtn, 16); Add(_netInput, 6); Add(_netGo, 14); Add(_strengthBox); Add(_dirBox); Add(_countLabel, 6); Add(_countSlider, 14); Add(_bookBox); Add(_arcSlider, 14); Add(_resetBtn);
 
         _detailActions.Children.Add(_centerBtn); _detailActions.Children.Add(_expandBtn); _detailActions.Children.Add(_openBtn);
         foreach (var b in _detailActions.Children) b.Margin = new(0, 6, 8, 0);
         _detail.Child = new StackPanel { Children = { _detailTitle, _detailInfo, _detailChips, _detailActions } };
 
-        var host = new Grid { Children = { _net, _arc, _otnt, _buildPanel } };
+        var host = new Grid { Children = { _net, _arc, _otnt, _chord, _force, _buildPanel } };
         var legend = new WrapPanel { Margin = new(16, 4, 16, 8) };
         foreach (var (c, name) in new[] { (BookCategory.Law, L("Gesetz")), (BookCategory.History, L("Geschichte")), (BookCategory.Poetry, L("Poesie")), (BookCategory.MajorProphets, L("Große Propheten")),
                      (BookCategory.MinorProphets, L("Kleine Propheten")), (BookCategory.Gospels, L("Evangelien")), (BookCategory.Acts, L("Apostelgeschichte")), (BookCategory.Paul, L("Paulus")),
@@ -94,6 +108,18 @@ public sealed class GraphView : UserControl
 
         _netBtn.Click += (_, _) => SetView(0);
         _otntBtn.Click += (_, _) => SetView(2);
+        _chordBtn.Click += (_, _) => SetView(3);
+        _authorBtn.Click += (_, _) => SetView(4);
+        _wordBtn.Click += (_, _) => SetView(5);
+        _personBtn.Click += (_, _) => SetView(6);
+        _topicBtn.Click += (_, _) => SetView(7);
+        _chord.BookClicked += id => OtNtBookPicked?.Invoke(id);
+        _chord.Hint += text => _hint.Text = text;
+        _netGo.Click += async (_, _) => await LoadNetAsync(_netInput.Text ?? "", expand: false);
+        _netInput.KeyDown += async (_, e) => { if (e.Key == Key.Enter) await LoadNetAsync(_netInput.Text ?? "", expand: false); };
+        _force.Hovered += text => { if (_mode >= 4) _hint.Text = text; };
+        _force.Selected += ShowNetDetail;
+        _force.Expand += async node => await LoadNetAsync(node.Key, expand: true);
         _strengthBox.SelectionChanged += (_, _) => DrawOtNt();
         _otnt.Hint += text => _hint.Text = text;
         _otnt.BookClicked += id => OtNtBookPicked?.Invoke(id);
@@ -104,8 +130,16 @@ public sealed class GraphView : UserControl
         _bookBox.SelectionChanged += (_, _) => { if (!_loadingBooks) { _arcBook = _bookBox.SelectedIndex - 1; ReconfigureArcs(); } };
         _resetBtn.Click += (_, _) => { if (IsArc) { _arc.ResetView(); _arcBook = -1; _bookBox.SelectedIndex = 0; _selected = -1; _detail.IsVisible = false; ReconfigureArcs(); } else ResetNetwork(); };
         _centerBtn.Click += (_, _) => { if (_selected >= 0) { _center = _selected; ResetNetwork(); } };
-        _expandBtn.Click += (_, _) => { if (_selected >= 0 && _graph is not null) { _net.Expand(_graph, _selected, Direction, (int)_countSlider.Value); ShowDetail(_selected); } };
-        _openBtn.Click += (_, _) => OpenNode(_selected);
+        _expandBtn.Click += async (_, _) =>
+        {
+            if (_mode >= 5) { if (_force.SelectedNode is { } n) await LoadNetAsync(n.Key, expand: true); }
+            else if (_selected >= 0 && _graph is not null) { _net.Expand(_graph, _selected, Direction, (int)_countSlider.Value); ShowDetail(_selected); }
+        };
+        _openBtn.Click += (_, _) =>
+        {
+            if (_mode >= 5) { if (_force.SelectedNode is { } n) NetOpen?.Invoke(_mode switch { 5 => "word", 6 => "person", _ => "topic" }, n.Key); }
+            else OpenNode(_selected);
+        };
         _net.Selected += n => { _selected = n; ShowDetail(n); };
         _net.Open += OpenNode;
         _arc.Selected += n => { _selected = n; ShowDetail(n); };
@@ -133,20 +167,120 @@ public sealed class GraphView : UserControl
     void SetView(int mode)
     {
         _mode = mode;
-        _netBtn.IsChecked = mode == 0; _arcBtn.IsChecked = mode == 1; _otntBtn.IsChecked = mode == 2;
-        _net.IsVisible = mode == 0 && _graph is not null; _arc.IsVisible = mode == 1 && _graph is not null; _otnt.IsVisible = mode == 2 && _graph is not null;
+        var toggles = new[] { _netBtn, _arcBtn, _otntBtn, _chordBtn, _authorBtn, _wordBtn, _personBtn, _topicBtn };
+        for (var i = 0; i < toggles.Length; i++) toggles[i].IsChecked = i == mode;
+        var ready = _graph is not null;
+        _net.IsVisible = mode == 0 && ready; _arc.IsVisible = mode == 1 && ready; _otnt.IsVisible = mode == 2 && ready; _chord.IsVisible = mode == 3 && ready;
+        _force.IsVisible = (mode == 4 && ready) || mode >= 5;
         _dirBox.IsVisible = _countSlider.IsVisible = _countLabel.IsVisible = mode == 0;
         _bookBox.IsVisible = _arcSlider.IsVisible = mode == 1;
-        _strengthBox.IsVisible = mode == 2;
+        _strengthBox.IsVisible = mode is >= 2 and <= 4;
+        _netInput.IsVisible = _netGo.IsVisible = mode >= 5;
+        _resetBtn.IsVisible = mode <= 1;
+        _buildPanel.IsVisible = mode <= 4 && !ready && _promptShown;
         _selected = -1; _detail.IsVisible = false;
         _hint.Text = mode switch
         {
             1 => L("Kapitel anklicken: Verbindungen. Buchleiste anklicken: filtern."),
             2 => L("Jede Linie verbindet ein NT-Buch (rechts) mit einem AT-Buch (links); je dicker, desto mehr Verweise. Buch anklicken: seine Verse in der Suche."),
+            3 => L("Alle Bücher im Kreis, die Bänder zeigen die Querverweise dazwischen. Buch anklicken: seine Verse in der Suche."),
+            4 => L("Die Bibelschreiber (nach der traditionellen Zuschreibung, bei einigen Büchern umstritten) und die Verweise zwischen ihren Büchern. Knoten ziehen, Mausrad: zoomen."),
+            5 => L("Wort eingeben: die Wörter, die oft in denselben Versen stehen (KJV mit Strong-Nummern). Doppelklick auf einen Knoten: mehr davon."),
+            6 => L("Person eingeben: wer in denselben Kapiteln vorkommt. Doppelklick auf einen Knoten: mehr davon."),
+            7 => L("Thema eingeben: verwandte Wörter und wie oft sie gemeinsam in einem Vers stehen. Doppelklick auf einen Knoten: mehr davon."),
             _ => L("Knoten anklicken: Details · Mausrad: zoomen · ziehen: verschieben"),
         };
-        if (_graph is null) return;
-        if (mode == 1) ReconfigureArcs(); else if (mode == 2) DrawOtNt(); else ResetNetwork();
+        if (mode >= 5)
+        {
+            _netInput.Watermark = mode switch { 5 => L("Strong-Nummer oder Wort, z. B. G26"), 6 => L("Person, z. B. Abraham, Paulus"), _ => L("Thema, z. B. Vergebung, Mut") };
+            _force.SetData(new NetData(), null);
+            return;
+        }
+        if (!ready) return;
+        switch (mode)
+        {
+            case 1: ReconfigureArcs(); break;
+            case 2: DrawOtNt(); break;
+            case 3: DrawChord(); break;
+            case 4: DrawAuthors(); break;
+            default: ResetNetwork(); break;
+        }
+    }
+
+    static int Threshold(ComboBox box) => new[] { 1, 10, 30, 100 }[Math.Max(0, box.SelectedIndex)];
+
+    /// <summary>The references between all pairs of books, added up.</summary>
+    Dictionary<(string A, string B), int> BookPairs(int min)
+    {
+        var sums = new Dictionary<(string, string), int>();
+        if (_graph is null) return sums;
+        var order = _graph.Books.Select((b, i) => (b.Book, i)).ToDictionary(x => x.Book, x => x.i);
+        foreach (var e in _graph.Edges)
+        {
+            var a = _graph.At(e.From).Book; var b = _graph.At(e.To).Book;
+            if (a == b) continue;
+            var key = order[a] < order[b] ? (a, b) : (b, a);
+            sums[key] = sums.GetValueOrDefault(key) + e.Weight;
+        }
+        return sums.Where(p => p.Value >= min).ToDictionary(p => p.Key, p => p.Value);
+    }
+
+    void DrawChord()
+    {
+        if (_graph is null || _mode != 3) return;
+        _chord.SetData(_graph.Books.Select(b => (b.Book, _bookName(b.Book))).ToList(), BookPairs(Threshold(_strengthBox)));
+    }
+
+    /// <summary>The writers of the Bible as a network: an edge for the references between books that different writers wrote.</summary>
+    void DrawAuthors()
+    {
+        if (_graph is null || _mode != 4) return;
+        var min = Threshold(_strengthBox);
+        var weight = new Dictionary<(string, string), int>();
+        var total = new Dictionary<string, int>();
+        foreach (var ((a, b), w) in BookPairs(1))
+        {
+            var x = AuthorMap.Of(a); var y = AuthorMap.Of(b);
+            if (x == y) continue;
+            var key = string.CompareOrdinal(x, y) < 0 ? (x, y) : (y, x);
+            weight[key] = weight.GetValueOrDefault(key) + w;
+        }
+        var data = new NetData();
+        foreach (var ((x, y), w) in weight.Where(p => p.Value >= min * 3))
+        {
+            data.Edges.Add((x, y, w));
+            total[x] = total.GetValueOrDefault(x) + w; total[y] = total.GetValueOrDefault(y) + w;
+        }
+        var max = Math.Max(1, total.Values.DefaultIfEmpty(1).Max());
+        foreach (var (author, w) in total.OrderByDescending(t => t.Value))
+            data.Nodes.Add(new NetNode(author, author, AuthorMap.BooksOf(author, _bookName), HomeView.ColorOf(AuthorMap.FirstBook(author)), 40.0 * w / max));
+        _force.SetData(data, null);
+    }
+
+    async Task LoadNetAsync(string key, bool expand)
+    {
+        if (NetProvider is null || _mode < 5 || string.IsNullOrWhiteSpace(key)) return;
+        var kind = _mode switch { 5 => "word", 6 => "person", _ => "topic" };
+        _hint.Text = L("Wird geladen …");
+        try
+        {
+            var data = await NetProvider(kind, key.Trim(), expand, status => _hint.Text = status);
+            if (data is null || data.Nodes.Count == 0) { _hint.Text = L("Nichts gefunden."); return; }
+            if (expand) _force.Merge(data); else _force.SetData(data, data.Nodes[0].Key);
+            _hint.Text = L("{0} Knoten · Knoten anklicken: Details · Doppelklick: mehr davon · Mausrad: zoomen", data.Nodes.Count);
+        }
+        catch (Exception ex) { _hint.Text = L("Fehler: ") + ex.Message; }
+    }
+
+    void ShowNetDetail(NetNode? node)
+    {
+        if (node is null) { _detail.IsVisible = false; return; }
+        _detailTitle.Text = node.Label;
+        _detailInfo.Text = node.Sub ?? "";
+        _detailChips.Children.Clear();
+        _centerBtn.IsVisible = false;
+        _expandBtn.IsVisible = _mode >= 5; _openBtn.IsVisible = _mode >= 5;
+        _detail.IsVisible = true;
     }
 
     /// <summary>The cross references between the testaments, added up per pair of books.</summary>
@@ -171,7 +305,7 @@ public sealed class GraphView : UserControl
     public void SetGraph(CrossRefGraph graph, Func<string, string> bookName)
     {
         _graph = graph; _bookName = bookName;
-        _buildPanel.IsVisible = false;
+        _buildPanel.IsVisible = false; _promptShown = false;
         _loadingBooks = true;
         _bookBox.ItemsSource = new[] { L("Alle Bücher") }.Concat(graph.Books.Select(b => bookName(b.Book))).ToList();
         _bookBox.SelectedIndex = 0; _arcBook = -1;
@@ -181,14 +315,15 @@ public sealed class GraphView : UserControl
 
     public void ShowBuildPrompt(string? message = null)
     {
-        _buildPanel.IsVisible = true; _buildBtn.IsEnabled = true; _progress.IsVisible = false;
+        _promptShown = true; _buildPanel.IsVisible = _mode <= 4; _buildBtn.IsEnabled = true; _progress.IsVisible = false;
         if (message is not null) _buildText.Text = message;
-        _net.IsVisible = _arc.IsVisible = false;
+        _net.IsVisible = _arc.IsVisible = _otnt.IsVisible = _chord.IsVisible = false;
+        if (_mode == 4) _force.IsVisible = false;
     }
 
     public void ReportProgress(int done, int total)
     {
-        _buildPanel.IsVisible = true; _progress.IsVisible = true; _buildBtn.IsEnabled = false;
+        _promptShown = true; _buildPanel.IsVisible = _mode <= 4; _progress.IsVisible = true; _buildBtn.IsEnabled = false;
         _progress.Maximum = total; _progress.Value = done;
         _buildText.Text = L("Lade Querverweise … {0}/{1} Kapitel", done, total);
     }

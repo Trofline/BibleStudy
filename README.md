@@ -12,7 +12,7 @@ The guiding principle is **Scripture alone**: the Bible text comes first. Commen
 ## Features
 
 - **Read and compare:** many free translations, parallel columns (color-coded, optional synchronous scrolling), differences between translations highlighted
-- **Search:** words, phrases, base forms, Strong's numbers, passages, search options (word beginning/ending, original-language words, proximity), **people and places** (`Person:Abraham`), **Old/New Testament references** (`Bezug:"Jer 31"`), **words of Jesus only**, a search builder, saved searches, a Greek/Hebrew keyboard, clause search by syntactic roles, hits on the map, an OT/NT reference network and a **topic search**
+- **Search:** words, phrases, base forms, Strong's numbers, passages, search options (word beginning/ending, original-language words, proximity), **people and places** (`Person:Abraham`), **Old/New Testament references** (`Bezug:"Jer 31"`), **words of Jesus only**, a search builder, saved searches, many graph views (network, arcs, OT/NT, circle, writers, word/people/topic networks), journeys on the map, a Greek/Hebrew keyboard, clause search by syntactic roles, hits on the map, an OT/NT reference network and a **topic search**
 - **Study:** word-by-word original text, Strong's dictionary, cross-references (graph, network, arc), Bible dictionary
 - **Analysis tools:** morphology (every word's tense, case, person …) and **syntax** (clause structure with subject, verb, object …) for Greek and Hebrew; key words and unique words per chapter, related words, distribution of a word across the Bible
 - **Learn Greek and Hebrew:** alphabets, letter quiz, vocabulary trainer with spaced repetition
