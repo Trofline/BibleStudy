@@ -426,9 +426,10 @@
                     <TabItem.Header><local:Icon Data="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9z M19 3v4 M17 5h4 M5 17v4 M3 19h4" /></TabItem.Header>
                     <Grid RowDefinitions="Auto,*,Auto" Margin="16,14,12,12">
                         <DockPanel Margin="0,0,0,8">
-                            <Button x:Name="AiNewBtn" DockPanel.Dock="Right" Content="Neues Gespräch" FontSize="12" Padding="10,4" VerticalAlignment="Center" />
+                            <Button x:Name="AiNewBtn" DockPanel.Dock="Right" Content="＋ Neues Gespräch" FontSize="12" Padding="10,4" VerticalAlignment="Center" />
+                            <WrapPanel x:Name="AiChatBar" />
                         </DockPanel>
-                        <ScrollViewer x:Name="AiScroll" Grid.Row="1"><StackPanel x:Name="AiMessages" Spacing="10" Margin="0,0,8,0" /></ScrollViewer>
+                        <ScrollViewer x:Name="AiScroll" Grid.Row="1" />
                         <StackPanel Grid.Row="2" Spacing="6" Margin="0,8,0,0">
                             <TextBlock x:Name="AiStatus" Classes="caption" TextWrapping="Wrap" />
                             <TextBox x:Name="AiInput" AcceptsReturn="True" TextWrapping="Wrap" Height="76" Watermark="Frage oder Auftrag … (Enter sendet, Umschalt+Enter neue Zeile)" />
