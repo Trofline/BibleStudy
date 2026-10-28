@@ -36,7 +36,11 @@ public partial class MainWindow
     {
         CollabPanel.Children.Clear();
         CollabPanel.Children.Add(new TextBlock { Text = L("GEMEINSAM STUDIEREN"), Classes = { "eyebrow" } });
+        if (!CollabConsented) { BuildCollabConsent(); return; }
         if (_peer?.IsOpen == true) BuildCollabConnected(); else BuildCollabStart();
+        var revoke = new Button { Content = L("Zustimmung zurücknehmen"), Classes = { "tool" }, Padding = new(10, 0), HorizontalAlignment = HorizontalAlignment.Left, Margin = new(0, 12, 0, 0) };
+        revoke.Click += (_, _) => RevokeCollabConsent();
+        CollabPanel.Children.Add(revoke);
     }
 
     // ---- before the connection: two codes ------------------------------------------------------------------------------
@@ -252,7 +256,9 @@ public partial class MainWindow
         if (_selected is not int v) { StatusText.Text = L("Erst einen Vers anklicken."); return; }
         var r = new VerseRef(_curBook, _curChapter, v);
         var translation = (TranslationBox.SelectedItem as TranslationInfo)?.ShortName ?? "";
-        CollabSend(new { t = "verse", book = r.Book, chapter = r.Chapter, verse = r.Verse, text = VerseTextOf(v).Trim(), translation });
+        // text of a privately imported translation (private use only) is never sent: only the place, the other person reads it in their own Bible
+        var isPrivate = TranslationBox.SelectedItem is TranslationInfo { Id: var tid } && BibleStudy.Core.Import.LocalBibleStore.Owns(tid);
+        CollabSend(new { t = "verse", book = r.Book, chapter = r.Chapter, verse = r.Verse, text = isPrivate ? "" : VerseTextOf(v).Trim(), translation = isPrivate ? "" : translation });
         AddCollabLog(L("Du hast {0} geteilt.", Label(r)), mine: true, system: true);
     }
 
@@ -332,7 +338,7 @@ public partial class MainWindow
 
     void ShowSharedVerse(string book, int chapter, int verse, string text, string translation)
     {
-        if (_books.All(b => b.Id != book) || chapter < 1 || verse < 1 || text.Length == 0) return;
+        if (_books.All(b => b.Id != book) || chapter < 1 || verse < 1) return;
         var r = new VerseRef(book, chapter, verse);
         var go = new Button { Content = L("Hingehen"), Classes = { "tool" }, Padding = new(10, 0) };
         go.Click += async (_, _) => await GoToAsync(book, chapter, verse);
@@ -349,7 +355,7 @@ public partial class MainWindow
             Children =
             {
                 new TextBlock { Text = $"{(_peerName.Length > 0 ? _peerName : L("Die andere Person"))} · {Label(r)}{(translation.Length > 0 ? " (" + translation + ")" : "")}", FontWeight = FontWeight.SemiBold, TextWrapping = TextWrapping.Wrap },
-                new TextBlock { Text = text, TextWrapping = TextWrapping.Wrap, FontFamily = ScriptureFont },
+                new TextBlock { Text = text, TextWrapping = TextWrapping.Wrap, FontFamily = ScriptureFont, IsVisible = text.Length > 0 },
                 new WrapPanel { Children = { go, keep } },
             },
         });

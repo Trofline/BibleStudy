@@ -53,6 +53,8 @@ public sealed class AppSettings
     /// <summary>Name shown to the other person when studying together.</summary>
     public string CollabName { get; set; } = "";
     public bool CollabSendLocation { get; set; } = true;
+    /// <summary>Version and date of the consent to the terms of studying together ("1|2026-10-28"); empty = not agreed.</summary>
+    public string CollabConsent { get; set; } = "";
     public string ReaderFont { get; set; } = "Crimson Text";
     public double LineSpacing { get; set; } = 1.7;
     public int ReaderWidth { get; set; } = 760;
