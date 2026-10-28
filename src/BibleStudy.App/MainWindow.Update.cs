@@ -33,7 +33,16 @@ public partial class MainWindow
         InitBackup();
         // once per start, a few seconds after launch so that the reader is up first
         if (_settings.AutoUpdate)
+        {
             DispatcherTimer.RunOnce(async () => await CheckForUpdateAsync(manual: false), TimeSpan.FromSeconds(10));
+            // programs that stay open for days (tray) look again now and then; a program hidden in the tray applies a waiting update
+            var again = new DispatcherTimer { Interval = TimeSpan.FromHours(6) };
+            again.Tick += async (_, _) => await CheckForUpdateAsync(manual: false);
+            again.Start();
+            var tray = new DispatcherTimer { Interval = TimeSpan.FromMinutes(2) };
+            tray.Tick += (_, _) => { if (!IsVisible && UpdateApply.HasPending(_settings) && ApplyPendingUpdate(launch: true)) { _exiting = true; Close(); } };
+            tray.Start();
+        }
     }
 
     // ---- small dialogs -----------------------------------------------------------------------------------------------------
@@ -86,29 +95,47 @@ public partial class MainWindow
 
     // ---- updating ------------------------------------------------------------------------------------------------------------
 
+    /// <summary>
+    /// Updating needs no question: the check runs by itself (at start and every few hours), a newer version is downloaded in the background
+    /// after the data was backed up, and installed at the next exit or start (see <see cref="UpdateApply"/>).
+    /// The "Check now" button installs at once and restarts.
+    /// </summary>
     async Task CheckForUpdateAsync(bool manual)
     {
         if (_updating) return;
         _updater ??= new Updater(_http);
+        if (!manual && UpdateApply.HasPending(_settings)) { UpdateStatus.Text = L("Update {0} ist geladen und wird beim nächsten Beenden oder Start installiert.", _settings.PendingUpdateVersion); return; }
         UpdateStatus.Text = L("Suche nach Updates …");
         UpdateInfo? info;
         try { info = await _updater.CheckAsync(AppPaths.Version, AppPaths.IsPortable); }
         catch (Exception ex) { UpdateStatus.Text = manual ? L("Update-Suche nicht möglich: ") + ex.Message : ""; return; }
         _settings.LastUpdateCheck = DateTime.Today.ToString("yyyy-MM-dd"); SaveSettings();
         if (info is null) { UpdateStatus.Text = manual ? L("Du hast die neueste Version ({0}).", AppPaths.Version) : ""; return; }
-        if (!manual && _settings.SkippedVersion == info.Version) { UpdateStatus.Text = ""; return; }
         UpdateStatus.Text = L("Neue Version {0} verfügbar.", info.Version);
 
         var canInstall = OperatingSystem.IsWindows() && (AppPaths.IsInstalled || AppPaths.IsPortable);   // the self-installing update is Windows only; elsewhere the download page opens
-        var notes = info.Notes.Length > 600 ? info.Notes[..600] + " …" : info.Notes;
-        var text = L("Version {0} ist da (du hast {1}).\n\n{2}", info.Version, AppPaths.Version, (notes.Length > 0 ? notes + "\n\n" : "")) +
-                   (canInstall ? L("Beim Installieren sichert das Programm zuerst deine Daten, lädt das Update, installiert es und startet neu. Deine Vaults, Notizen und Einstellungen bleiben unverändert.")
-                               : L("Diese Entwicklungsversion aktualisierst du selbst; die Seite mit dem Download öffnet sich."));
-        var choice = await AskAsync(L("Update verfügbar"), text, canInstall ? L("Jetzt installieren") : L("Seite öffnen"), L("Später"), L("Diese Version überspringen"));
-        if (choice == 2) { _settings.SkippedVersion = info.Version; SaveSettings(); return; }
-        if (choice != 0) return;
-        if (!canInstall) { try { Process.Start(new ProcessStartInfo(info.PageUrl) { UseShellExecute = true }); } catch { /* no browser */ } return; }
-        await InstallUpdateAsync(info);
+        if (!canInstall)
+        {
+            if (manual) { try { Process.Start(new ProcessStartInfo(info.PageUrl) { UseShellExecute = true }); } catch { /* no browser */ } }
+            return;
+        }
+        if (manual) { await InstallUpdateAsync(info); return; }
+        await DownloadUpdateInBackgroundAsync(info);
+    }
+
+    async Task DownloadUpdateInBackgroundAsync(UpdateInfo info)
+    {
+        _updating = true;
+        try
+        {
+            await Task.Run(() => BackupData("vor-Update-" + info.Version));
+            var progress = new Progress<double>(p => UpdateStatus.Text = L("Lade Update {0} … {1:P0}", info.Version, p));
+            var file = await _updater!.DownloadAsync(info, progress);
+            _settings.PendingUpdateFile = file; _settings.PendingUpdateVersion = info.Version; SaveSettings();
+            UpdateStatus.Text = L("Update {0} ist geladen und wird beim nächsten Beenden oder Start installiert.", info.Version);
+        }
+        catch (Exception ex) { UpdateStatus.Text = L("Update fehlgeschlagen, deine Daten sind unverändert: ") + ex.Message; }
+        finally { _updating = false; }
     }
 
     async Task InstallUpdateAsync(UpdateInfo info)
@@ -122,9 +149,8 @@ public partial class MainWindow
             var progress = new Progress<double>(p => UpdateStatus.Text = L("Lade Update … {0:P0}", p));
             var file = await _updater!.DownloadAsync(info, progress);
             UpdateStatus.Text = L("Installiere – das Programm startet gleich neu …");
-
-            if (AppPaths.IsPortable) StartPortableUpdate(file);
-            else Process.Start(new ProcessStartInfo(file, $"--update --silent --wait-pid {Environment.ProcessId}") { UseShellExecute = true });
+            _settings.PendingUpdateFile = file; _settings.PendingUpdateVersion = info.Version; SaveSettings();
+            if (!UpdateApply.TryApply(_settings, launch: true)) throw new InvalidOperationException(L("Der Installer konnte nicht gestartet werden."));
             _exiting = true;
             Close();
         }
@@ -135,24 +161,8 @@ public partial class MainWindow
         }
     }
 
-    /// <summary>Portable: unpack the zip, then a small script copies the new files over the program folder (never the Data folder).</summary>
-    static void StartPortableUpdate(string zipFile)
-    {
-        var staging = Path.Combine(Path.GetTempPath(), "BibleStudy-Portable-Update");
-        if (Directory.Exists(staging)) Directory.Delete(staging, true);
-        ZipFile.ExtractToDirectory(zipFile, staging);
-        var exe = Path.Combine(AppPaths.ProgramDir, "BibleStudy.App.exe");
-        var script = Path.Combine(Path.GetTempPath(), "BibleStudy-Portable-Update.ps1");
-        File.WriteAllText(script, $$"""
-            $ErrorActionPreference = 'Stop'
-            Wait-Process -Id {{Environment.ProcessId}} -ErrorAction SilentlyContinue
-            Start-Sleep -Seconds 1
-            Get-ChildItem -LiteralPath '{{staging}}' -Force | Where-Object { $_.Name -notin @('Data', 'portable.flag') } |
-                ForEach-Object { Copy-Item -LiteralPath $_.FullName -Destination '{{AppPaths.ProgramDir}}' -Recurse -Force }
-            Start-Process -FilePath '{{exe}}'
-            """, Encoding.UTF8);
-        Process.Start(new ProcessStartInfo("powershell.exe", $"-NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File \"{script}\"") { UseShellExecute = false, CreateNoWindow = true });
-    }
+    /// <summary>Called when the program ends or has been sitting in the tray: installs a downloaded update. Returns true when it started.</summary>
+    bool ApplyPendingUpdate(bool launch) => UpdateApply.TryApply(_settings, launch);
 
     // ---- removing the program --------------------------------------------------------------------------------------------------
 

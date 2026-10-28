@@ -92,6 +92,9 @@ public sealed class AppSettings
     public string? BackupFolder { get; set; }              // null = Documents\BibleStudy-Backup
     public string? LastAutoBackup { get; set; }
     public string? SkippedVersion { get; set; }
+    /// <summary>A downloaded update that is installed automatically at the next start or exit.</summary>
+    public string? PendingUpdateFile { get; set; }
+    public string? PendingUpdateVersion { get; set; }
     public string? PlanId { get; set; }
     public string? PlanStart { get; set; }
     public List<string> PlanDoneDays { get; set; } = [];

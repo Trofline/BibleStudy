@@ -123,6 +123,7 @@ public partial class MainWindow
         if (_settings.FocusMode && _preFocus is { } pre) _settings.LastLayout.SideOpen = pre.SideOpen;
         CloseAllDetached();
         SaveSettings();
+        ApplyPendingUpdate(launch: false);   // an update that was downloaded in the background is installed now, without restarting
         _tray?.Dispose();
     }
 

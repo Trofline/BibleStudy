@@ -10,6 +10,9 @@ sealed class TermsWindow : Window
 {
     public const string Version = "1";
 
+    /// <summary>True only when the user ticked the box and clicked "agree"; closing the window any other way counts as declining.</summary>
+    public bool Accepted { get; private set; }
+
     static string[] Points() =>
     [
         L("BibleStudy ist kostenlose Open-Source-Software (MIT-Lizenz). Es wird unentgeltlich und ohne Gewähr „wie besehen“ bereitgestellt."),
@@ -25,7 +28,7 @@ sealed class TermsWindow : Window
     public TermsWindow()
     {
         Title = L("Nutzungsbedingungen"); Width = 640; SizeToContent = SizeToContent.Height; MaxHeight = 760; CanResize = false;
-        WindowStartupLocation = WindowStartupLocation.CenterOwner;
+        WindowStartupLocation = WindowStartupLocation.CenterScreen; CanMinimize = false;
         var stack = new StackPanel { Spacing = 10 };
         stack.Children.Add(new TextBlock { Text = L("Nutzungsbedingungen und Haftungshinweis"), FontSize = 20, FontWeight = FontWeight.SemiBold, TextWrapping = TextWrapping.Wrap });
         stack.Children.Add(new TextBlock { Text = L("Bitte lies das kurz durch. Du brauchst deine Zustimmung nur einmal zu geben."), TextWrapping = TextWrapping.Wrap, Opacity = 0.7 });
@@ -43,8 +46,8 @@ sealed class TermsWindow : Window
         var ok = new Button { Content = L("Zustimmen und starten"), IsEnabled = false, Margin = new(0, 0, 8, 0) };
         var no = new Button { Content = L("Ablehnen und beenden") };
         agree.IsCheckedChanged += (_, _) => ok.IsEnabled = agree.IsChecked == true;
-        ok.Click += (_, _) => Close(true);
-        no.Click += (_, _) => Close(false);
+        ok.Click += (_, _) => { Accepted = true; Close(); };
+        no.Click += (_, _) => Close();
         stack.Children.Add(agree);
         stack.Children.Add(new WrapPanel { Children = { ok, no } });
         Content = new ScrollViewer { Content = new Border { Padding = new(26, 22), Child = stack } };
