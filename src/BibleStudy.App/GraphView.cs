@@ -24,6 +24,11 @@ public sealed class GraphView : UserControl
 
     readonly NetworkCanvas _net = new();
     readonly ArcCanvas _arc = new();
+    readonly RefNetView _otnt = new() { IsVisible = false };
+    readonly ToggleButton _otntBtn = new() { Content = L("AT ↔ NT") };
+    readonly ComboBox _strengthBox = new() { ItemsSource = new[] { L("alle Verweise"), L("ab 10 je Buchpaar"), L("ab 30 je Buchpaar"), L("ab 100 je Buchpaar") }, SelectedIndex = 1, Width = 170, IsVisible = false };
+    int _mode;   // 0 network, 1 arcs, 2 Old Testament ↔ New Testament
+    public event Action<string>? OtNtBookPicked;
     readonly ToggleButton _netBtn = new() { Content = L("Netzwerk"), IsChecked = true };
     readonly ToggleButton _arcBtn = new() { Content = L("Bogen") };
     readonly ComboBox _dirBox = new() { ItemsSource = new[] { L("Von hier"), L("Hierher"), L("Beide") }, SelectedIndex = 2, Width = 110 };
@@ -63,13 +68,13 @@ public sealed class GraphView : UserControl
         back.Click += (_, _) => CloseRequested?.Invoke();
         var strip = new WrapPanel { Margin = new(16, 10, 16, 6) };
         void Add(Control c, double right = 10) { c.Margin = new(0, 0, right, 4); c.VerticalAlignment = VerticalAlignment.Center; strip.Children.Add(c); }
-        Add(back, 16); Add(_netBtn, 4); Add(_arcBtn, 16); Add(_dirBox); Add(_countLabel, 6); Add(_countSlider, 14); Add(_bookBox); Add(_arcSlider, 14); Add(_resetBtn);
+        Add(back, 16); Add(_netBtn, 4); Add(_arcBtn, 4); Add(_otntBtn, 16); Add(_strengthBox); Add(_dirBox); Add(_countLabel, 6); Add(_countSlider, 14); Add(_bookBox); Add(_arcSlider, 14); Add(_resetBtn);
 
         _detailActions.Children.Add(_centerBtn); _detailActions.Children.Add(_expandBtn); _detailActions.Children.Add(_openBtn);
         foreach (var b in _detailActions.Children) b.Margin = new(0, 6, 8, 0);
         _detail.Child = new StackPanel { Children = { _detailTitle, _detailInfo, _detailChips, _detailActions } };
 
-        var host = new Grid { Children = { _net, _arc, _buildPanel } };
+        var host = new Grid { Children = { _net, _arc, _otnt, _buildPanel } };
         var legend = new WrapPanel { Margin = new(16, 4, 16, 8) };
         foreach (var (c, name) in new[] { (BookCategory.Law, L("Gesetz")), (BookCategory.History, L("Geschichte")), (BookCategory.Poetry, L("Poesie")), (BookCategory.MajorProphets, L("Große Propheten")),
                      (BookCategory.MinorProphets, L("Kleine Propheten")), (BookCategory.Gospels, L("Evangelien")), (BookCategory.Acts, L("Apostelgeschichte")), (BookCategory.Paul, L("Paulus")),
@@ -87,8 +92,12 @@ public sealed class GraphView : UserControl
         dock.Children.Add(strip); dock.Children.Add(hintRow); dock.Children.Add(bottom); dock.Children.Add(host);
         Content = dock;
 
-        _netBtn.Click += (_, _) => SetMode(arc: false);
-        _arcBtn.Click += (_, _) => SetMode(arc: true);
+        _netBtn.Click += (_, _) => SetView(0);
+        _otntBtn.Click += (_, _) => SetView(2);
+        _strengthBox.SelectionChanged += (_, _) => DrawOtNt();
+        _otnt.Hint += text => _hint.Text = text;
+        _otnt.BookClicked += id => OtNtBookPicked?.Invoke(id);
+        _arcBtn.Click += (_, _) => SetView(1);
         _dirBox.SelectionChanged += (_, _) => ResetNetwork();
         _countSlider.ValueChanged += (_, _) => { _countLabel.Text = L("Anzahl {0}", (int)_countSlider.Value); ResetNetwork(); };
         _arcSlider.ValueChanged += (_, _) => ReconfigureArcs();
@@ -104,12 +113,15 @@ public sealed class GraphView : UserControl
         _arc.Open += OpenNode;
         _arc.Hovered += text => _hint.Text = text;
         _net.Hovered += text => _hint.Text = text;
-        SetMode(arc: false);
+        SetView(0);
     }
 
     EdgeDirection Direction => _dirBox.SelectedIndex switch { 0 => EdgeDirection.Outgoing, 1 => EdgeDirection.Incoming, _ => EdgeDirection.Both };
 
     bool IsArc => _arcBtn.IsChecked == true;
+
+    /// <summary>Shows the picture of the references between the testaments (also when the data arrives later).</summary>
+    public void ShowOtNt() => SetView(2);
 
     void OpenNode(int node)
     {
@@ -118,15 +130,41 @@ public sealed class GraphView : UserControl
         OpenChapter?.Invoke(c.Book, c.Chapter);
     }
 
-    void SetMode(bool arc)
+    void SetView(int mode)
     {
-        _arcBtn.IsChecked = arc; _netBtn.IsChecked = !arc;
-        _net.IsVisible = !arc && _graph is not null; _arc.IsVisible = arc && _graph is not null;
-        _dirBox.IsVisible = _countSlider.IsVisible = _countLabel.IsVisible = !arc;
-        _bookBox.IsVisible = _arcSlider.IsVisible = arc;
+        _mode = mode;
+        _netBtn.IsChecked = mode == 0; _arcBtn.IsChecked = mode == 1; _otntBtn.IsChecked = mode == 2;
+        _net.IsVisible = mode == 0 && _graph is not null; _arc.IsVisible = mode == 1 && _graph is not null; _otnt.IsVisible = mode == 2 && _graph is not null;
+        _dirBox.IsVisible = _countSlider.IsVisible = _countLabel.IsVisible = mode == 0;
+        _bookBox.IsVisible = _arcSlider.IsVisible = mode == 1;
+        _strengthBox.IsVisible = mode == 2;
         _selected = -1; _detail.IsVisible = false;
-        _hint.Text = arc ? L("Kapitel anklicken: Verbindungen. Buchleiste anklicken: filtern.") : L("Knoten anklicken: Details · Mausrad: zoomen · ziehen: verschieben");
-        if (_graph is not null) { if (arc) ReconfigureArcs(); else ResetNetwork(); }
+        _hint.Text = mode switch
+        {
+            1 => L("Kapitel anklicken: Verbindungen. Buchleiste anklicken: filtern."),
+            2 => L("Jede Linie verbindet ein NT-Buch (rechts) mit einem AT-Buch (links); je dicker, desto mehr Verweise. Buch anklicken: seine Verse in der Suche."),
+            _ => L("Knoten anklicken: Details · Mausrad: zoomen · ziehen: verschieben"),
+        };
+        if (_graph is null) return;
+        if (mode == 1) ReconfigureArcs(); else if (mode == 2) DrawOtNt(); else ResetNetwork();
+    }
+
+    /// <summary>The cross references between the testaments, added up per pair of books.</summary>
+    void DrawOtNt()
+    {
+        if (_graph is null || _mode != 2) return;
+        var min = new[] { 1, 10, 30, 100 }[Math.Max(0, _strengthBox.SelectedIndex)];
+        var sums = new Dictionary<(string Nt, string Ot), int>();
+        foreach (var e in _graph.Edges)
+        {
+            var from = _graph.At(e.From).Book; var to = _graph.At(e.To).Book;
+            if (BookCategories.IsNewTestament(BookCategories.Of(from)) && BookCategories.IsOldTestament(BookCategories.Of(to)))
+                sums[(from, to)] = sums.GetValueOrDefault((from, to)) + e.Weight;
+        }
+        var count = sums.Where(p => p.Value >= min).ToDictionary(p => p.Key, p => p.Value);
+        var ot = _graph.Books.Where(b => BookCategories.IsOldTestament(BookCategories.Of(b.Book))).Select(b => (b.Book, _bookName(b.Book))).ToList();
+        var nt = _graph.Books.Where(b => BookCategories.IsNewTestament(BookCategories.Of(b.Book))).Select(b => (b.Book, _bookName(b.Book))).ToList();
+        _otnt.SetData(ot, nt, count);
     }
 
     /// <summary>Called when the data is ready.</summary>
@@ -138,7 +176,7 @@ public sealed class GraphView : UserControl
         _bookBox.ItemsSource = new[] { L("Alle Bücher") }.Concat(graph.Books.Select(b => bookName(b.Book))).ToList();
         _bookBox.SelectedIndex = 0; _arcBook = -1;
         _loadingBooks = false;
-        SetMode(IsArc);
+        SetView(_mode);
     }
 
     public void ShowBuildPrompt(string? message = null)
@@ -161,14 +199,14 @@ public sealed class GraphView : UserControl
         var node = _graph.Index(book, chapter);
         if (node < 0) return;
         _center = node;
-        if (!IsArc) ResetNetwork();
+        if (_mode == 0) ResetNetwork();
     }
 
     string NodeName(int node) { var c = _graph!.At(node); return $"{_bookName(c.Book)} {c.Chapter}"; }
 
     void ResetNetwork()
     {
-        if (_graph is null || IsArc) return;
+        if (_graph is null || _mode != 0) return;
         _selected = _center;
         _net.Layout(_graph, _center, Direction, (int)_countSlider.Value, _bookName);
         ShowDetail(_center);
@@ -176,7 +214,7 @@ public sealed class GraphView : UserControl
 
     void ReconfigureArcs()
     {
-        if (_graph is null || !IsArc) return;
+        if (_graph is null || _mode != 1) return;
         _arc.Configure(_graph, (int)_arcSlider.Value, _arcBook, _bookName);
     }
 
@@ -196,7 +234,7 @@ public sealed class GraphView : UserControl
             chip.Click += (_, _) => OpenNode(target);
             _detailChips.Children.Add(chip);
         }
-        _centerBtn.IsVisible = _expandBtn.IsVisible = !IsArc;
+        _centerBtn.IsVisible = _expandBtn.IsVisible = _mode == 0;
         _detail.IsVisible = true;
     }
 }

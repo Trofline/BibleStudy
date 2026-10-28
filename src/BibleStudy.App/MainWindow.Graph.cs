@@ -44,6 +44,16 @@ public partial class MainWindow
         GraphPane.BuildRequested += async () => await BuildGraphAsync();
         GraphPane.OpenChapter += async (book, chapter) => await GoToAsync(book, chapter);
         GraphPane.CloseRequested += ShowReader;
+        GraphPane.OtNtBookPicked += async id =>
+        {
+            var book = _books.FirstOrDefault(b => b.Id == id);
+            if (book is null) return;
+            ShowReader();
+            SetPanelOpen(true);
+            OpenWork(NavGroups.First(g => g.Name == "Suchen"));
+            SearchBox.Text = $"Bezug:\"{book.CommonName} 1-{book.NumberOfChapters}\"";
+            await SearchAsync();
+        };
         ThreadPane.Picked += ShowRefsFlyout;
         ThreadPane.Jump += r => _ = GoToAsync(r.Target.Book, r.Target.Chapter, r.Target.Verse);
         ThreadPane.BuildRequested += async () => await BuildGraphAsync();
