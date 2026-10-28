@@ -1,4 +1,4 @@
-using System.Text.RegularExpressions;
+﻿using System.Text.RegularExpressions;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Documents;
@@ -16,7 +16,7 @@ namespace BibleStudy.App;
 public partial class MainWindow
 {
     static readonly Regex GermanWords = new(
-        @"[äöüÄÖÜß]|\b(und|der|die|das|den|dem|des|nicht|mit|für|oder|wird|werden|ein|eine|einen|zum|zur|bei|nach|auf|über|von|noch|kein|keine|Klick|Vers|Verse|Kapitel|Buch|Bücher|Suche|Notiz|Notizen|Dokument|Dokumente|Wort|Wörter|Einstellungen|Speichern|Löschen|Abbrechen|Zurück|Weiter|Fehler|Hilfe|Lesen|Planen|Aufgaben)\b",
+        @"[äöüÄÖÜß]|\b(und|der|die|das|den|dem|des|nicht|mit|für|oder|wird|werden|ein|eine|einen|zum|zur|bei|nach|auf|über|von|noch|kein|keine|Klick|Vers|Kapitel|Buch|Bücher|Suche|Notiz|Notizen|Dokument|Dokumente|Wort|Wörter|Einstellungen|Speichern|Löschen|Abbrechen|Zurück|Weiter|Fehler|Hilfe|Lesen|Planen|Aufgaben)\b",
         RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
     object ScanUi()
@@ -34,6 +34,7 @@ public partial class MainWindow
             Check(w.Title, "window title");
             foreach (var n in w.GetLogicalDescendants().OfType<ILogical>().Prepend(w))
             {
+                if (n != (ILogical)ReaderHost && n.GetLogicalAncestors().Contains(ReaderHost)) continue;   // the Bible text itself is in the Bible's language
                 if (n is TextBlock tb)
                 {
                     Check(tb.Text, where);
