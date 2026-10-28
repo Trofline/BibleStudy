@@ -64,6 +64,10 @@ public partial class MainWindow
             new(MemoryTab, K("Auswendig lernen"), L("Bibelverse auswendig lernen: Lücken wachsen mit dem Können, mit Wiederholung.")),
             new(LearnTab, K("Sprachen"), L("Griechisch und Hebräisch lernen: Alphabet, Buchstaben-Quiz und Vokabeln mit Wiederholung.")),
         ], Windowed: true),
+        new(K("Zusammen"), "M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2 M9 11a4 4 0 1 0 0-8a4 4 0 0 0 0 8z M23 21v-2a4 4 0 0 0-3-3.87 M16 3.13a4 4 0 0 1 0 7.75",
+        [
+            new(CollabTab, K("Zusammen studieren"), L("Mit einer anderen Person direkt verbunden studieren: Chat, Verse und Dokumente teilen, die Bibelstelle mitlesen. Verschlüsselt, ohne Server und kostenlos.")),
+        ]),
         new(K("KI"), "M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9z M19 3v4 M17 5h4 M5 17v4 M3 19h4",
         [
             new(AiTab, K("Claude"), L("Dein lokaler Claude-Assistent. Er liest die Bibel über die Werkzeuge dieses Programms.")),

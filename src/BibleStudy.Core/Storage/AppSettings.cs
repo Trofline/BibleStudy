@@ -50,6 +50,9 @@ public sealed class AppSettings
     public bool SearchCase { get; set; }
     /// <summary>Index of the "all words must occur …" choice: verse, 2 verses, 5 verses, chapter.</summary>
     public int SearchRange { get; set; }
+    /// <summary>Name shown to the other person when studying together.</summary>
+    public string CollabName { get; set; } = "";
+    public bool CollabSendLocation { get; set; } = true;
     public string ReaderFont { get; set; } = "Crimson Text";
     public double LineSpacing { get; set; } = 1.7;
     public int ReaderWidth { get; set; } = 760;

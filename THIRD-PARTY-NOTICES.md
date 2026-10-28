@@ -29,6 +29,7 @@ The license of each translation or commentary is shown in the program next to th
 | Crimson Text (Copyright 2010 The Crimson Text Project Authors, github.com/skosch/Crimson-Text) | SIL OFL 1.1 |
 | Microsoft.Data.Sqlite, Microsoft.Extensions.Hosting, System.Speech | MIT |
 | ModelContextProtocol C# SDK | MIT / Apache-2.0 |
+| SIPSorcery (WebRTC data channel for studying together) | BSD-3-Clause |
 
 ## User-imported files
 

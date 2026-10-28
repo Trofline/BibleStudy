@@ -84,6 +84,7 @@ public partial class MainWindow
         yield return C(L("Leseliste"), () => Work("Planen", 6));
         yield return C(L("Sprachen"), () => Work("Planen", LearnTab));
         yield return C(L("Auswendig lernen"), () => Work("Planen", MemoryTab));
+        yield return C(L("Gemeinsam studieren"), () => Side(CollabTab));
         yield return C(L("Predigt-Editor"), () => Work("Predigt", SermonTab));
         yield return C(L("Analyse"), () => Side(AnalysisTab));
         yield return C(L("Vers-Übersicht öffnen"), () => Side(GuideTab));

@@ -14,6 +14,7 @@ static class Licenses
         (L("STEPBible Lexikon (Tyndale House)"), L("Strong-Wörterbuch"), L("CC BY 4.0")),
         (L("Kommentare (Matthew Henry, JFB, Keil-Delitzsch, Calvin, Tyndale u. a.)"), L("Kommentare"), L("je Kommentar angezeigt; meist gemeinfrei, Tyndale CC BY-SA 4.0")),
         ("OpenThesaurus", L("Deutsche Synonyme"), L("CC BY-SA 4.0 / LGPL")),
+        ("SIPSorcery (WebRTC)", L("Direktverbindung beim gemeinsamen Studium"), "BSD-3-Clause"),
         (L("Natural Earth"), L("Weltkarte"), L("Gemeinfrei")),
         (L("Avalonia UI, Microsoft.Data.Sqlite, ModelContextProtocol"), L("Programmbibliotheken"), L("MIT / Apache-2.0")),
         (L("Inter, Crimson Text"), L("Schriften"), L("SIL Open Font License 1.1")),

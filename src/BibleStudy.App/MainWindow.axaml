@@ -697,6 +697,8 @@
                             <TextBlock TextWrapping="Wrap" Text="Planen → Sprachen: griechisches und hebräisches Alphabet, dann Vokabeln aus den wichtigsten Wörtern mit Wiederholung nach Können. Planen → Auswendig lernen: Verse vormerken und mit Lücken üben, die mit deinem Können wachsen." />
                             <TextBlock FontWeight="SemiBold" Text="Predigt, Gebet, Pläne" />
                             <TextBlock TextWrapping="Wrap" Text="Der Predigt-Editor gliedert Abschnitte mit Zeit und exportiert Folien oder Druckfassung. Gebete, Lesepläne und die Leseliste findest du unter „Planen“." />
+                            <TextBlock FontWeight="SemiBold" Text="Zusammen studieren" />
+                            <TextBlock TextWrapping="Wrap" Text="Im Reiter „Zusammen“ liefert „Einladung erstellen“ einen Code, den du per Messenger schickst. Die andere Person wählt „Einladung annehmen“, fügt ihn ein und schickt dir ihren Antwortcode zurück, den du einfügst. Dann seid ihr direkt und verschlüsselt verbunden, ohne Server und ohne Konto. Ihr könnt chatten, Verse und Dokumente (als Kopie) teilen, die eigene Bibelstelle mitsenden und der Stelle der anderen Person folgen. Übertragen wird nur, was ihr sendet; die andere Person sieht deine Internetadresse. Beide müssen gleichzeitig online sein; ein VPN oder eine strenge Firewall kann die Verbindung verhindern." />
                             <TextBlock FontWeight="SemiBold" Text="KI-Gespräche" />
                             <TextBlock TextWrapping="Wrap" Text="Der Reiter „KI“ nutzt dein lokales Claude. Mehrere Gespräche laufen nebeneinander, jedes mit eigenem Verlauf; „＋ Neues Gespräch“ öffnet ein weiteres, das ✕ im Reiter schließt eines." />
                             <TextBlock FontWeight="SemiBold" Text="Ansicht, Layouts, Sicherung" />
@@ -761,6 +763,9 @@
                 </TabItem>
                 <TabItem Header="Sprachen">
                     <ScrollViewer><StackPanel x:Name="LearnPanel" Spacing="8" Margin="16,10,12,16" /></ScrollViewer>
+                </TabItem>
+                <TabItem Header="Gemeinsam">
+                    <ScrollViewer><StackPanel x:Name="CollabPanel" Spacing="8" Margin="16,10,12,16" MaxWidth="640" HorizontalAlignment="Left" /></ScrollViewer>
                 </TabItem>
                 <TabItem Header="Auswendig lernen">
                     <ScrollViewer><StackPanel x:Name="MemoryPanel" Spacing="8" Margin="16,10,12,16" /></ScrollViewer>

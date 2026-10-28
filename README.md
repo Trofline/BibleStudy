@@ -22,6 +22,7 @@ The guiding principle is **Scripture alone**: the Bible text comes first. Commen
 - **Sermon editor** with outline, verses, time plan, handout, slides and print/PDF export
 - **Tabs like in a file explorer**, layouts (including a dashboard), custom keyboard shortcuts, animations
 - **Multilingual:** English, German, Spanish, French and Russian (AI-made translations, corrections welcome; more languages can be added as a JSON file in the `lang` folder)
+- **Study together:** connect directly with one other person (encrypted, no server, no account, free): chat, share verses and documents, follow each other's place; set up by swapping two short codes
 - **Backups:** manual or scheduled, to a folder of your choice
 - **AI integration (optional):** MCP server so that Claude can operate the program
 

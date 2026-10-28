@@ -13,7 +13,7 @@ namespace BibleStudy.App;
 /// </summary>
 public partial class MainWindow
 {
-    const int MemoryTab = 23;
+    const int MemoryTab = 24;
 
     LearnStore? _memoryStore;
     LearnStore Memory => _memoryStore ??= new LearnStore(Path.Combine(AppPaths.Root, "memory.json"));

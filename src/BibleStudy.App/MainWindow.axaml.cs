@@ -327,6 +327,7 @@ public partial class MainWindow : Window
             cols.AddRange(extraTs.Zip(await Task.WhenAll(extraTasks), (c, x) => (c, x)));
 
             _curBook = b.Id; _curChapter = ch.Number; _selected = null;
+            CollabSendLocation(focusVerse);
             _curChapterData = ch;
             LoadChapterMarks();
             var noted = _vault.GetNotes().Where(n => n.Ref.Book == _curBook && n.Ref.Chapter == _curChapter).Select(n => n.Ref.Verse).ToHashSet();
