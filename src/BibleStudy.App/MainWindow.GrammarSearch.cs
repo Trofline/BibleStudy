@@ -51,6 +51,35 @@ public partial class MainWindow
         go.Click += async (_, _) => await RunGrammarSearchAsync(result, go);
         _grammarView.Children.Add(go);
         _grammarView.Children.Add(result);
+
+        // ---- clause search: roles in the same clause ------------------------------------------------------------------------
+        _grammarView.Children.Add(new TextBlock { Text = L("Satzrollen-Suche (Neues Testament)"), FontWeight = FontWeight.SemiBold, TextWrapping = TextWrapping.Wrap, Margin = new(0, 18, 0, 0) });
+        _grammarView.Children.Add(new TextBlock { Text = L("Findet Sätze, in denen alle Rollen zusammen vorkommen, z. B. Subjekt Jesus und Objekt Petrus. Das Wort kann eine Strong-Nummer, die griechische Grundform oder die englische Bedeutung sein; leer heißt: irgendein Wort in dieser Rolle."), Classes = { "caption" }, TextWrapping = TextWrapping.Wrap });
+        var rows = new StackPanel { Spacing = 6 };
+        var roleResult = new StackPanel { Spacing = 6 };
+        void AddRow(int roleIndex)
+        {
+            var role = new ComboBox { ItemsSource = RoleNames.Select(r => L(r.Label)).ToList(), SelectedIndex = roleIndex, Width = 170 };
+            var term = new TextBox { Watermark = L("Wort (optional), z. B. Jesus, G2424") };
+            var remove = new Button { Content = "✕", Classes = { "tool" }, Width = 28, Height = 28 };
+            ToolTip.SetTip(remove, L("Entfernen"));
+            var row = new Grid { ColumnDefinitions = new("Auto,*,Auto"), ColumnSpacing = 6 };
+            var pill = new Border { Classes = { "pill" }, Child = role };
+            Grid.SetColumn(term, 1); Grid.SetColumn(remove, 2);
+            row.Children.Add(pill); row.Children.Add(term); row.Children.Add(remove);
+            _roleRows.Add((role, term));
+            rows.Children.Add(row);
+            remove.Click += (_, _) => { _roleRows.RemoveAll(r => r.Term == term); rows.Children.Remove(row); };
+        }
+        _roleRows.Clear();
+        AddRow(0); AddRow(1);
+        var more = new Button { Content = L("＋ Rolle"), Margin = new(0, 0, 8, 0) };
+        more.Click += (_, _) => AddRow(2);
+        var run = new Button { Content = L("Suchen"), Classes = { "primary" } };
+        run.Click += async (_, _) => await RunRoleSearchAsync(roleResult, run);
+        _grammarView.Children.Add(rows);
+        _grammarView.Children.Add(new WrapPanel { Children = { more, run } });
+        _grammarView.Children.Add(roleResult);
     }
 
     GrammarQuery ReadGrammarQuery()
@@ -62,6 +91,46 @@ public partial class MainWindow
             return GrammarFields.First(f => f.Key == key).Values[box.SelectedIndex - 1];
         }
         return new GrammarQuery(Pick("class"), Pick("tense"), Pick("voice"), Pick("mood"), Pick("person"), Pick("number"), Pick("gender"), Pick("case"), _grammarWord?.Text);
+    }
+
+    static readonly (string Code, string Label)[] RoleNames =
+    [
+        ("s", K("Subjekt")), ("o", K("Objekt")), ("v", K("Verb")), ("io", K("Indirektes Objekt")), ("adv", K("Umstandsbestimmung")), ("p", K("Prädikat")), ("vc", K("Verbalergänzung")),
+    ];
+    readonly List<(ComboBox Role, TextBox Term)> _roleRows = [];
+
+    async Task RunRoleSearchAsync(StackPanel result, Button go)
+    {
+        go.IsEnabled = false;
+        result.Children.Clear();
+        var status = new TextBlock { Classes = { "caption" }, TextWrapping = TextWrapping.Wrap };
+        result.Children.Add(status);
+        try
+        {
+            if (_greekWords is null)
+            {
+                var progress = new Progress<(int Done, int Total)>(p => status.Text = L("Lade Grammatikdaten … {0}/{1}", p.Done, p.Total));
+                _greekWords = await _syntax.LoadGreekWordsAsync(progress);
+            }
+            var conditions = _roleRows.Select(r => new RoleCondition(RoleNames[Math.Max(0, r.Role.SelectedIndex)].Code, string.IsNullOrWhiteSpace(r.Term.Text) ? null : r.Term.Text!.Trim())).ToList();
+            var hits = await Task.Run(() => ClauseSearch.Run(_greekWords, conditions));
+            result.Children.Clear();
+            if (hits.Count == 0) { result.Children.Add(new TextBlock { Text = L("Keine Treffer."), Classes = { "caption" } }); return; }
+            result.Children.Add(new TextBlock { Text = L("{0} Sätze", hits.Count), FontWeight = FontWeight.SemiBold });
+            result.Children.Add(SpreadBars(hits.Select(h => new VerseRef(h.Book, h.Chapter, h.Verse)).ToList()));
+            foreach (var h in hits.Take(60))
+            {
+                var hit = h;
+                var line = new StackPanel { Spacing = 2 };
+                var open = FilterChip(Label(new VerseRef(h.Book, h.Chapter, h.Verse)), false, HomeView.ColorOf(h.Book), () => _ = GoToAsync(hit.Book, hit.Chapter, hit.Verse), L("Springt zur Stelle"));
+                line.Children.Add(open);
+                line.Children.Add(new TextBlock { Text = h.Text, FontFamily = ScriptureFont, TextWrapping = TextWrapping.Wrap, Opacity = 0.85 });
+                result.Children.Add(line);
+            }
+            if (hits.Count > 60) result.Children.Add(new TextBlock { Text = L(" (erste {0} angezeigt)", 60), Classes = { "caption" } });
+        }
+        catch (Exception ex) { status.Text = L("Fehler: ") + ex.Message; }
+        finally { go.IsEnabled = true; }
     }
 
     async Task RunGrammarSearchAsync(StackPanel result, Button go)

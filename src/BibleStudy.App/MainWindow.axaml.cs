@@ -141,6 +141,8 @@ public partial class MainWindow : Window
         NoteSaveBtn.Click += async (_, _) => await SaveNoteAsync(NoteEditor.Text ?? "");
         NoteDeleteBtn.Click += async (_, _) => { NoteEditor.Text = ""; await SaveNoteAsync(""); };
         InitSearch();
+        InitKeyboards();
+        InitSavedSearches();
         foreach (var list in new[] { SearchList, NoteList, XrefList, ConcList }) list.SelectionChanged += OnEntryPicked;
         InitVault();
         InitAi();

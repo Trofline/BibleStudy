@@ -53,6 +53,7 @@ public sealed class AppSettings
     /// <summary>Name shown to the other person when studying together.</summary>
     public string CollabName { get; set; } = "";
     public bool CollabSendLocation { get; set; } = true;
+    public List<SavedSearch> SavedSearches { get; set; } = [];
     /// <summary>Version and date of the consent to the terms of studying together ("1|2026-10-28"); empty = not agreed.</summary>
     public string CollabConsent { get; set; } = "";
     /// <summary>Terms of use accepted at the first start ("1|2026-10-28"); empty = not yet.</summary>
@@ -119,4 +120,16 @@ public sealed class AppSettings
         Directory.CreateDirectory(Path.GetDirectoryName(path)!);
         File.WriteAllText(path, JsonSerializer.Serialize(this, Json));
     }
+}
+
+/// <summary>A search kept under a name: the text and the options it was made with.</summary>
+public sealed class SavedSearch
+{
+    public string Name { get; set; } = "";
+    public string Query { get; set; } = "";
+    public int Scope { get; set; }
+    public int Match { get; set; }
+    public int Range { get; set; }
+    public bool Original { get; set; }
+    public bool CaseSensitive { get; set; }
 }

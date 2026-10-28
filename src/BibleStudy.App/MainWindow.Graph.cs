@@ -23,6 +23,7 @@ public partial class MainWindow
         MapPane.CloseRequested += ShowReader;
         MapPane.MapProvider = async () => _worldMap ??= await WorldMap.LoadAsync(_http, Path.Combine(_root, "cache"));
         MapPane.PlacesProvider = (book, chapter) => _hello.GetChapterPlacesAsync(book, chapter);
+        MapPane.BookNames = BookName;
         MapPane.OpenVerse += async (book, chapter, verse) => await GoToAsync(book, chapter, verse);
     }
 

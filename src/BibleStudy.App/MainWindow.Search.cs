@@ -214,7 +214,7 @@ public partial class MainWindow
         _searching = true;
         try
         {
-            SearchQueueBtn.IsVisible = false; SearchBooksPanel.Children.Clear(); _hitBook = null; _queueRefs = []; SearchStrongsPanel.Children.Clear();
+            SearchQueueBtn.IsVisible = false; UpdateHitActions(false); SearchBooksPanel.Children.Clear(); _hitBook = null; _queueRefs = []; SearchStrongsPanel.Children.Clear();
             var narrowTo = SearchInHitsCheck.IsChecked == true && _hits.Count > 0 ? _hits.Select(h => h.Ref).ToHashSet() : null;
 
             // 1. passages: "Joh 3,16" opens, several passages become a list of verses
@@ -323,7 +323,7 @@ public partial class MainWindow
         SearchInfo.Text = _hits.Count == 0 ? L("Keine Treffer in {0}.", t.ShortName)
             : words == 0 ? L("{0} Verse in {1}{2}", list.Count, t.ShortName, (list.Count > ShownHits ? L(" (erste {0} angezeigt)", ShownHits) : ""))
             : L("{0} Verse · {1} Fundstellen in {2}{3}", list.Count, words, t.ShortName, (list.Count > ShownHits ? L(" (erste {0} angezeigt)", ShownHits) : ""));
-        SearchQueueBtn.IsVisible = list.Count > 0;
+        SearchQueueBtn.IsVisible = list.Count > 0; UpdateHitActions(list.Count > 0);
 
         // hits per book, in Bible order; click narrows the list to that book, click again shows all
         SearchBooksPanel.Children.Clear();

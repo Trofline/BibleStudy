@@ -18,6 +18,9 @@ public sealed class MapView : UserControl
 
     public Func<Task<WorldMap>>? MapProvider { get; set; }
     public Func<string, int, Task<IReadOnlyList<MapPlace>>>? PlacesProvider { get; set; }
+    public Func<string, string>? BookNames { get; set; }
+    bool _hitMode;
+    readonly Dictionary<string, List<VerseRef>> _hitMentions = [];
 
     readonly MapCanvas _canvas = new();
     readonly ToggleButton _chapterBtn = new() { Content = L("Kapitel"), IsChecked = true };
@@ -70,9 +73,69 @@ public sealed class MapView : UserControl
 
     public async Task OpenAsync(string book, string bookName, int chapter, int chapters)
     {
+        _hitMode = false; _chapterBtn.IsVisible = true; _bookBtn.IsVisible = true; _routeBox.IsVisible = true;
+        await OpenCoreAsync(book, bookName, chapter, chapters);
+    }
+
+    async Task OpenCoreAsync(string book, string bookName, int chapter, int chapters)
+    {
         _book = book; _bookName = bookName; _chapter = chapter; _chapters = chapters;
         _detail.IsVisible = false;
         await LoadAsync();
+    }
+
+    /// <summary>The places named in the verses that a search found: the bigger the dot, the more of the hits mention it.</summary>
+    public async Task OpenHitsAsync(string title, IReadOnlyList<VerseRef> hits)
+    {
+        _hitMode = true; _detail.IsVisible = false;
+        _chapterBtn.IsVisible = false; _bookBtn.IsVisible = false; _routeBox.IsVisible = false;
+        _canvas.ShowRoute = false;
+        var generation = ++_generation;
+        _title.Text = title;
+        try
+        {
+            if (_map is null)
+            {
+                _hint.Text = L("Karte wird geladen (einmalig, danach offline) …");
+                _map = await MapProvider!();
+                _canvas.SetMap(_map);
+            }
+            var byChapter = hits.GroupBy(h => (h.Book, h.Chapter)).ToList();
+            var found = new Dictionary<string, (MapPlace Place, List<VerseRef> Verses)>();
+            using var gate = new SemaphoreSlim(8);
+            var done = 0;
+            await Task.WhenAll(byChapter.Select(async group =>
+            {
+                await gate.WaitAsync();
+                try
+                {
+                    var places = await PlacesProvider!(group.Key.Book, group.Key.Chapter);
+                    var verses = group.Select(h => h.Verse).ToHashSet();
+                    lock (found)
+                        foreach (var place in places)
+                            foreach (var v in place.Verses.Where(verses.Contains))
+                            {
+                                if (!found.TryGetValue(place.Id, out var entry)) found[place.Id] = entry = (place, []);
+                                entry.Verses.Add(new VerseRef(group.Key.Book, group.Key.Chapter, v));
+                            }
+                }
+                catch (HttpRequestException) { /* a chapter without data is skipped */ }
+                finally
+                {
+                    gate.Release();
+                    var n = Interlocked.Increment(ref done);
+                    if (n % 10 == 0 && generation == _generation) Avalonia.Threading.Dispatcher.UIThread.Post(() => _hint.Text = L("Orte der Treffer werden gesucht … {0}/{1} Kapitel", n, byChapter.Count));
+                }
+            }));
+            if (generation != _generation) return;
+            var ordered = found.Values.OrderByDescending(e => e.Verses.Count).ToList();
+            _hitMentions.Clear();
+            foreach (var e in ordered) _hitMentions[e.Place.Id] = e.Verses.OrderBy(v => v.Book).ThenBy(v => v.Chapter).ThenBy(v => v.Verse).ToList();
+            _canvas.SetPlaces(ordered.Select(e => e.Place).ToList(), ordered.Select(e => e.Verses.Count).ToList());
+            _hint.Text = ordered.Count == 0 ? L("In den Treffern kommen keine Orte mit Koordinaten vor.")
+                : L("{0} Orte in {1} Treffern · Punktgröße = Zahl der Verse · Ort anklicken: Stellen", ordered.Count, hits.Count);
+        }
+        catch (Exception ex) { _hint.Text = L("Karte nicht verfügbar: ") + ex.Message; }
     }
 
     async Task LoadAsync()
@@ -121,6 +184,19 @@ public sealed class MapView : UserControl
         _detailTitle.Text = place.Name;
         _detailInfo.Text = $"{(string.IsNullOrEmpty(place.FeatureType) ? L("Ort") : place.FeatureType)} · {place.Latitude.ToString("0.00", CultureInfo.InvariantCulture)}°, {place.Longitude.ToString("0.00", CultureInfo.InvariantCulture)}°";
         _detailChips.Children.Clear();
+        if (_hitMode)
+        {
+            foreach (var r in _hitMentions.GetValueOrDefault(place.Id, []).Take(40))
+            {
+                var chip = new Button { Content = $"{BookNames?.Invoke(r.Book) ?? r.Book} {r.Chapter},{r.Verse}", FontSize = 12, Padding = new(8, 2), Margin = new(0, 6, 6, 0) };
+                var target = r;
+                chip.Click += (_, _) => OpenVerse?.Invoke(target.Book, target.Chapter, target.Verse);
+                _detailChips.Children.Add(chip);
+            }
+            _detailInfo.Text += $" · {L("{0} Verse", _hitMentions.GetValueOrDefault(place.Id, []).Count)}";
+            _detail.IsVisible = true;
+            return;
+        }
         foreach (var (chapter, verse) in _mentions.GetValueOrDefault(place.Id, []).Take(30))
         {
             var chip = new Button { Content = $"{_bookName} {chapter},{verse}", FontSize = 12, Padding = new(8, 2), Margin = new(0, 6, 6, 0) };
@@ -175,9 +251,11 @@ sealed class MapCanvas : Control
         InvalidateVisual();
     }
 
-    public void SetPlaces(IReadOnlyList<MapPlace> places)
+    IReadOnlyList<int>? _weights;
+
+    public void SetPlaces(IReadOnlyList<MapPlace> places, IReadOnlyList<int>? weights = null)
     {
-        _places = places; _hover = -1; _selected = -1;
+        _places = places; _weights = weights; _hover = -1; _selected = -1;
         Selected?.Invoke(null);
         Fit();
         InvalidateVisual();
@@ -232,11 +310,11 @@ sealed class MapCanvas : Control
         {
             var p = ToScreen(_places[i]);
             if (p.X < -20 || p.Y < -20 || p.X > Bounds.Width + 20 || p.Y > Bounds.Height + 20) continue;
-            var radius = i == _selected ? 8 : i == _hover ? 7 : 5;
+            var radius = Radius(i) + (i == _selected ? 3 : i == _hover ? 2 : 0);
             dc.DrawEllipse(ColorOf(_places[i].FeatureType), new Pen(i == _selected ? text : Brushes.Black, i == _selected ? 2 : 1), p, radius, radius);
             if (_places.Count <= 40 || i == _hover || i == _selected || _scale > 40)
             {
-                var label = new FormattedText($"{(_places.Count <= 60 ? (i + 1) + " " : "")}{_places[i].Name}", CultureInfo.CurrentUICulture, FlowDirection.LeftToRight, Typeface.Default, 11, text);
+                var label = new FormattedText($"{(_weights is null && _places.Count <= 60 ? (i + 1) + " " : "")}{_places[i].Name}{(_weights is null ? "" : $" ({_weights[i]})")}", CultureInfo.CurrentUICulture, FlowDirection.LeftToRight, Typeface.Default, 11, text);
                 dc.DrawRectangle(new SolidColorBrush(Color.Parse("#0d1b2a"), 0.65), null, new Rect(p.X + 8, p.Y - label.Height / 2 - 1, label.Width + 6, label.Height + 2));
                 dc.DrawText(label, new Point(p.X + 11, p.Y - label.Height / 2));
             }
@@ -245,9 +323,11 @@ sealed class MapCanvas : Control
             dc.DrawText(new FormattedText(L("Keine Orte mit Koordinaten in diesem Abschnitt."), CultureInfo.CurrentUICulture, FlowDirection.LeftToRight, Typeface.Default, 14, text), new Point(24, 20));
     }
 
+    double Radius(int i) => _weights is null ? 5 : Math.Min(22, 4 + 2.4 * Math.Sqrt(_weights[i]));
+
     int HitTest(Point p)
     {
-        for (var i = _places.Count - 1; i >= 0; i--) { var s = ToScreen(_places[i]); if (Math.Abs(s.X - p.X) <= 9 && Math.Abs(s.Y - p.Y) <= 9) return i; }
+        for (var i = _places.Count - 1; i >= 0; i--) { var s = ToScreen(_places[i]); var r = Math.Max(9, Radius(i)); if (Math.Abs(s.X - p.X) <= r && Math.Abs(s.Y - p.Y) <= r) return i; }
         return -1;
     }
 

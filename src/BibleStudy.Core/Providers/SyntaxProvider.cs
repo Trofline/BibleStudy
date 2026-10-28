@@ -11,7 +11,7 @@ public sealed record SyntaxLine(int Depth, string Kind, string? Role, string Tex
 
 /// <summary>One word of the Greek New Testament with the grammar fields that can be searched.</summary>
 public sealed record GrammarWord(string Book, int Chapter, int Verse, string Text, string Lemma, string Strong, string Gloss, string Class,
-    string? Tense, string? Voice, string? Mood, string? Person, string? Number, string? Gender, string? Case);
+    string? Tense, string? Voice, string? Mood, string? Person, string? Number, string? Gender, string? Case, string? Role = null, int Clause = 0);
 
 /// <summary>Which grammar a word must have; empty fields do not matter.</summary>
 public sealed record GrammarQuery(string? Class = null, string? Tense = null, string? Voice = null, string? Mood = null, string? Person = null,
@@ -110,14 +110,28 @@ public sealed class SyntaxProvider(HttpClient http, string cacheDir)
     public static List<GrammarWord> ParseWords(string xml, string book)
     {
         var result = new List<GrammarWord>();
+        var clauseIds = new Dictionary<XElement, int>();
         foreach (var w in XDocument.Parse(xml).Descendants("w"))
         {
             if (w.Attribute("ref")?.Value is not { } r || RefPattern.Match(r) is not { Success: true } m) continue;
             result.Add(new GrammarWord(book, int.Parse(m.Groups[1].Value), int.Parse(m.Groups[2].Value), w.Value.Trim(), (string?)w.Attribute("lemma") ?? "", Strong(w, false),
                 Gloss(w, false), (string?)w.Attribute("class") ?? "", (string?)w.Attribute("tense"), (string?)w.Attribute("voice"), (string?)w.Attribute("mood"),
-                (string?)w.Attribute("person"), (string?)w.Attribute("number"), (string?)w.Attribute("gender"), (string?)w.Attribute("case")));
+                (string?)w.Attribute("person"), (string?)w.Attribute("number"), (string?)w.Attribute("gender"), (string?)w.Attribute("case"),
+                RoleOf(w), ClauseOf(w, clauseIds)));
         }
         return result;
+    }
+
+    /// <summary>The syntactic role (s subject, o object, io indirect object, v verb, p predicate, adv adverbial …) of the word or of the closest phrase around it.</summary>
+    static string? RoleOf(XElement w) => w.AncestorsAndSelf().Select(e => (string?)e.Attribute("role")).FirstOrDefault(r => !string.IsNullOrEmpty(r));
+
+    /// <summary>A number for the closest clause around the word (unique within one book), 0 when there is none.</summary>
+    static int ClauseOf(XElement w, Dictionary<XElement, int> ids)
+    {
+        var clause = w.Ancestors("wg").FirstOrDefault(e => (string?)e.Attribute("class") == "cl");
+        if (clause is null) return 0;
+        if (!ids.TryGetValue(clause, out var id)) ids[clause] = id = ids.Count + 1;
+        return id;
     }
 
     static readonly Regex RefPattern = new(@"(\d+):(\d+)!\d+$", RegexOptions.Compiled);
