@@ -1,4 +1,4 @@
-using System.Text.Json;
+﻿using System.Text.Json;
 using BibleStudy.Core.Models;
 
 namespace BibleStudy.Core.Providers;
@@ -51,7 +51,7 @@ public sealed class HelloAoProvider(HttpClient http, string cacheDir) : IBiblePr
             Str(f, "text"))).ToList();
     }
 
-    public const string CrossRefAttribution = "Querverweise © OpenBible.info, CC BY 4.0 (openbible.info/labs/cross-references)";
+    public static string CrossRefAttribution => L("Querverweise © OpenBible.info, CC BY 4.0 (openbible.info/labs/cross-references)");
 
     /// <summary>Cross references of one verse, best first (dataset "open-cross-ref").</summary>
     public async Task<IReadOnlyList<CrossRef>> GetCrossReferencesAsync(string book, int chapter, int verse, CancellationToken ct = default) =>
@@ -89,9 +89,9 @@ public sealed class HelloAoProvider(HttpClient http, string cacheDir) : IBiblePr
         return result;
     }
 
-    public const string InterlinearAttribution = "Interlinear: Berean Standard Bible Interlinear (bereanbible.com), gemeinfrei";
+    public static string InterlinearAttribution => L("Interlinear: Berean Standard Bible Interlinear (bereanbible.com), gemeinfrei");
 
-    public const string PlacesAttribution = "Orte: Theographic Bible Metadata (CC BY-SA 4.0)";
+    public static string PlacesAttribution => L("Orte: Theographic Bible Metadata (CC BY-SA 4.0)");
 
     /// <summary>Places with coordinates mentioned in a chapter, in order of their first verse.</summary>
     public async Task<IReadOnlyList<MapPlace>> GetChapterPlacesAsync(string book, int chapter, CancellationToken ct = default)
@@ -195,7 +195,7 @@ public sealed class HelloAoProvider(HttpClient http, string cacheDir) : IBiblePr
 
     // ---- library: commentaries and the Bible dictionary (Theographic, based on Easton's Bible Dictionary) ------------------
 
-    public const string LexiconAttribution = "Lexikon: Theographic Bible Metadata (CC BY-SA 4.0), Texte aus Easton's Bible Dictionary (1897, gemeinfrei)";
+    public static string LexiconAttribution => L("Lexikon: Theographic Bible Metadata (CC BY-SA 4.0), Texte aus Easton's Bible Dictionary (1897, gemeinfrei)");
 
     public async Task<IReadOnlyList<CommentaryInfo>> GetCommentariesAsync(CancellationToken ct = default)
     {
@@ -268,7 +268,7 @@ public sealed class HelloAoProvider(HttpClient http, string cacheDir) : IBiblePr
 
     // ---- timeline (Theographic: events with dates, people, places and passages) --------------------------------------------
 
-    public const string TimelineAttribution = "Zeitleiste: Theographic Bible Metadata (CC BY-SA 4.0); Datierungen sind Näherungswerte";
+    public static string TimelineAttribution => L("Zeitleiste: Theographic Bible Metadata (CC BY-SA 4.0); Datierungen sind Näherungswerte");
 
     public async Task<IReadOnlyList<TimelineEvent>> GetTimelineAsync(CancellationToken ct = default)
     {

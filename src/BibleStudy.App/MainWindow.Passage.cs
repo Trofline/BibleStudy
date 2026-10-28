@@ -23,21 +23,21 @@ public partial class MainWindow
         var menu = new MenuFlyout();
         void Item(string text, Action act, bool enabled = true) { var i = new MenuItem { Header = text, IsEnabled = enabled }; i.Click += (_, _) => act(); menu.Items.Add(i); }
         void Open(int tab) { SetPanelOpen(true); SideTabs.SelectedIndex = tab; }
-        Item($"{Label(r)} – Vers-Übersicht", () => { Open(GuideTab); _ = ShowGuideAsync(r); });
+        Item(L("{0} – Vers-Übersicht", Label(r)), () => { Open(GuideTab); _ = ShowGuideAsync(r); });
         menu.Items.Add(new Separator());
-        Item("Vers mit Stelle kopieren", () => _ = CopyVerseAsync());
-        Item("Markieren (Farbe wählen) …", ShowColorFlyout);
-        Item("Merken / nicht mehr merken", ToggleBookmark);
-        Item("Notiz schreiben", () => { Open(2); NoteEditor.Focus(); });
-        Item("Neues Dokument aus diesem Vers", () => { Open(KnowledgeTab); NewDocumentFromVerse(); });
-        Item(_doc is null ? "In offenes Dokument einfügen (kein Dokument offen)" : $"In „{Shorten(_doc.Title, 30)}“ einfügen",
-             () => { Open(KnowledgeTab); InsertIntoDoc($"> {VerseTextOf(verse).Trim()}\n> — {Label(r)}\n\n", null); }, _doc is not null);
-        Item("Zur Leseliste", () => AddToQueue([r]));
-        Item("Als Aufgabe merken", () => { _vault.AddTodo($"{Label(r)} studieren", r); RefreshTodos(); StatusText.Text = L("Aufgabe zu {0} angelegt.", Label(r)); });
+        Item(L("Vers mit Stelle kopieren"), () => _ = CopyVerseAsync());
+        Item(L("Markieren (Farbe wählen) …"), ShowColorFlyout);
+        Item(L("Merken / nicht mehr merken"), ToggleBookmark);
+        Item(L("Notiz schreiben"), () => { Open(2); NoteEditor.Focus(); });
+        Item(L("Neues Dokument aus diesem Vers"), () => { Open(KnowledgeTab); NewDocumentFromVerse(); });
+        Item(_doc is null ? L("In offenes Dokument einfügen (kein Dokument offen)") : L("In „{0}“ einfügen", Shorten(_doc.Title, 30)),
+             () => { Open(KnowledgeTab); InsertIntoDoc(L("> {0}\n> — {1}\n\n", VerseTextOf(verse).Trim(), Label(r)), null); }, _doc is not null);
+        Item(L("Zur Leseliste"), () => AddToQueue([r]));
+        Item(L("Als Aufgabe merken"), () => { _vault.AddTodo(L("{0} studieren", Label(r)), r); RefreshTodos(); StatusText.Text = L("Aufgabe zu {0} angelegt.", Label(r)); });
         menu.Items.Add(new Separator());
-        Item("Querverweise", () => Open(4));
-        Item("Grundtext Wort für Wort", () => { Open(GrundtextTab); _ = ShowGrundtextAsync(r); });
-        Item("Vorlesen", ToggleSpeak);
+        Item(L("Querverweise"), () => Open(4));
+        Item(L("Grundtext Wort für Wort"), () => { Open(GrundtextTab); _ = ShowGrundtextAsync(r); });
+        Item(L("Vorlesen"), ToggleSpeak);
         menu.ShowAt(anchor, showAtPointer: true);
     }
 
@@ -51,7 +51,7 @@ public partial class MainWindow
     {
         var version = ++_guideVersion;
         GuidePanel.Children.Clear();
-        if (r.Book == "") { GuidePanel.Children.Add(Muted("Klicke im Bibeltext einen Vers an. Hier erscheint dann alles, was du und die Werkzeuge zu diesem Vers haben.")); return; }
+        if (r.Book == "") { GuidePanel.Children.Add(Muted(L("Klicke im Bibeltext einen Vers an. Hier erscheint dann alles, was du und die Werkzeuge zu diesem Vers haben."))); return; }
         var current = TranslationBox.SelectedItem as TranslationInfo;
 
         GuidePanel.Children.Add(new TextBlock { Text = Label(r), Classes = { "h2" } });
@@ -66,51 +66,51 @@ public partial class MainWindow
             b.Click += (_, _) => act();
             actions.Children.Add(b);
         }
-        Action("Notiz", () => { SideTabs.SelectedIndex = 2; NoteEditor.Focus(); }, true);
-        Action("Dokument", () => { SideTabs.SelectedIndex = KnowledgeTab; NewDocumentFromVerse(); });
-        Action("Kopieren", () => _ = CopyVerseAsync());
-        Action("Leseliste", () => AddToQueue([r]));
+        Action(L("Notiz"), () => { SideTabs.SelectedIndex = 2; NoteEditor.Focus(); }, true);
+        Action(L("Dokument"), () => { SideTabs.SelectedIndex = KnowledgeTab; NewDocumentFromVerse(); });
+        Action(L("Kopieren"), () => _ = CopyVerseAsync());
+        Action(L("Leseliste"), () => AddToQueue([r]));
         GuidePanel.Children.Add(actions);
 
         // what you already have
-        GuidePanel.Children.Add(Eyebrow("Deine Notizen und Markierungen"));
+        GuidePanel.Children.Add(Eyebrow(L("Deine Notizen und Markierungen")));
         var mine = new StackPanel { Spacing = 6 };
         if (_vault.GetNotes().FirstOrDefault(n => n.Ref == r) is { } note)
             mine.Children.Add(new TextBlock { Text = "✎ " + note.Text, TextWrapping = TextWrapping.Wrap });
         foreach (var m in _vault.GetMarks(r.Book, r.Chapter).Where(m => m.Ref.Verse == r.Verse))
         {
             var dot = new Border { Width = 10, Height = 10, CornerRadius = new(5), Background = new SolidColorBrush(Color.Parse(m.Color)), VerticalAlignment = VerticalAlignment.Top, Margin = new(0, 5, 8, 0) };
-            var body = new TextBlock { TextWrapping = TextWrapping.Wrap, Text = (m.WholeVerse ? "Ganzer Vers" : $"„{Shorten(m.Text, 60)}“") + (m.Note.Length > 0 ? " – " + Shorten(m.Note.ReplaceLineEndings(" "), 160) : "") + (m.Tags.Count > 0 ? "  " + string.Join(" ", m.Tags.Select(t => "#" + t)) : "") };
+            var body = new TextBlock { TextWrapping = TextWrapping.Wrap, Text = (m.WholeVerse ? L("Ganzer Vers") : $"„{Shorten(m.Text, 60)}“") + (m.Note.Length > 0 ? " – " + Shorten(m.Note.ReplaceLineEndings(" "), 160) : "") + (m.Tags.Count > 0 ? "  " + string.Join(" ", m.Tags.Select(t => "#" + t)) : "") };
             var row = new DockPanel { Children = { dot, body } };
             DockPanel.SetDock(dot, Dock.Left);
             mine.Children.Add(row);
         }
-        if (mine.Children.Count == 0) mine.Children.Add(Muted("Noch nichts. Rechtsklick auf einen Vers bietet Markieren, Notiz und Dokument an."));
+        if (mine.Children.Count == 0) mine.Children.Add(Muted(L("Noch nichts. Rechtsklick auf einen Vers bietet Markieren, Notiz und Dokument an.")));
         GuidePanel.Children.Add(mine);
 
         // documents that mention the verse
         var docs = _vault.GetDocuments().Where(d => DocumentLinks.VerseRefs(d.Body).Contains(r)).ToList();
-        GuidePanel.Children.Add(Eyebrow($"In deinen Dokumenten ({docs.Count})"));
+        GuidePanel.Children.Add(Eyebrow(L("In deinen Dokumenten ({0})", docs.Count)));
         var docChips = new WrapPanel();
         foreach (var d in docs.Take(20))
         {
             var doc = d;
             docChips.Children.Add(Chip(d.Title, () => { SideTabs.SelectedIndex = KnowledgeTab; OpenDocument(doc); }, current?.Id ?? "", null));
         }
-        GuidePanel.Children.Add(docs.Count == 0 ? Muted("Kein Dokument erwähnt diesen Vers.") : docChips);
+        GuidePanel.Children.Add(docs.Count == 0 ? Muted(L("Kein Dokument erwähnt diesen Vers.")) : docChips);
 
         // other translations
-        GuidePanel.Children.Add(Eyebrow("Übersetzungen im Vergleich"));
+        GuidePanel.Children.Add(Eyebrow(L("Übersetzungen im Vergleich")));
         var compare = new StackPanel { Spacing = 8 };
         GuidePanel.Children.Add(compare);
-        compare.Children.Add(Muted("Lade …"));
+        compare.Children.Add(Muted(L("Lade …")));
         // cross references
-        GuidePanel.Children.Add(Eyebrow("Querverweise"));
+        GuidePanel.Children.Add(Eyebrow(L("Querverweise")));
         var xrefs = new StackPanel { Spacing = 6 };
         GuidePanel.Children.Add(xrefs);
-        xrefs.Children.Add(Muted("Lade …"));
+        xrefs.Children.Add(Muted(L("Lade …")));
         // original text
-        GuidePanel.Children.Add(Eyebrow("Grundtext"));
+        GuidePanel.Children.Add(Eyebrow(L("Grundtext")));
         var orig = new Button { Content = L("Wort für Wort im Grundtext öffnen"), HorizontalAlignment = HorizontalAlignment.Left };
         orig.Click += (_, _) => { SideTabs.SelectedIndex = GrundtextTab; _ = ShowGrundtextAsync(r); };
         GuidePanel.Children.Add(orig);
@@ -142,8 +142,8 @@ public partial class MainWindow
             }
             compare.Children.Add(tb);
         }
-        if (marked && current is not null) compare.Children.Add(Muted($"Farbig und unterstrichen: Wörter, die in {current.ShortName} anders lauten."));
-        if (rows.Count == 0) compare.Children.Add(Muted("Keine weitere Übersetzung erreichbar (offline?)."));
+        if (marked && current is not null) compare.Children.Add(Muted(L("Farbig und unterstrichen: Wörter, die in {0} anders lauten.", current.ShortName)));
+        if (rows.Count == 0) compare.Children.Add(Muted(L("Keine weitere Übersetzung erreichbar (offline?).")));
         var xr = await xrefTask;
         if (version != _guideVersion) return;
         xrefs.Children.Clear();
@@ -154,7 +154,7 @@ public partial class MainWindow
             head.Click += async (_, _) => await GoToAsync(target.Target.Book, target.Target.Chapter, target.Target.Verse);
             xrefs.Children.Add(new StackPanel { Children = { head, new TextBlock { Text = t, TextWrapping = TextWrapping.Wrap, Opacity = 0.85 } } });
         }
-        if (xr.Count == 0) xrefs.Children.Add(Muted("Keine Querverweise gefunden."));
+        if (xr.Count == 0) xrefs.Children.Add(Muted(L("Keine Querverweise gefunden.")));
     }
 
     /// <summary>Same verse in other translations of the same language (local ones first) plus the KJV.</summary>

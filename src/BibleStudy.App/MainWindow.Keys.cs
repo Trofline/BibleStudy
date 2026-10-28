@@ -21,24 +21,24 @@ public partial class MainWindow
         void Click(Button b) => b.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
         _keyActions =
         [
-            new("quickjump", "Gehe zu Stelle oder suchen", "Ctrl+K", () => Sync(() => { QuickJumpBox.Focus(); QuickJumpBox.SelectAll(); }), true),
-            new("search", "Suche öffnen", "Ctrl+F", () => Sync(() => { SetPanelOpen(true); SideTabs.SelectedIndex = 0; SearchBox.Focus(); SearchBox.SelectAll(); }), true),
-            new("back", "Zurück zur vorherigen Stelle", "Alt+Left", GoBackAsync, true),
-            new("home", "Startseite", "Alt+Home", () => Sync(ShowHome), true),
-            new("prev", "Voriges Kapitel", "Ctrl+Left", () => Sync(() => { if (ChapterBox.Value > ChapterBox.Minimum) ChapterBox.Value -= 1; })),
-            new("next", "Nächstes Kapitel", "Ctrl+Right", () => Sync(() => ChapterBox.Value += 1)),
-            new("read", "Kapitel als gelesen markieren", "Ctrl+R", () => Sync(() => { if (_curBook != "") SetRead(_curBook, [_curChapter], !_read.Contains((_curBook, _curChapter))); })),
-            new("bookmark", "Vers merken", "Ctrl+D", () => Sync(ToggleBookmark)),
-            new("copy", "Vers mit Stelle kopieren", "Ctrl+Shift+C", CopyVerseAsync, true),
-            new("fontplus", "Schrift größer", "Ctrl+Plus", () => Sync(() => Click(FontPlusBtn)), true),
-            new("fontminus", "Schrift kleiner", "Ctrl+Minus", () => Sync(() => Click(FontMinusBtn)), true),
-            new("fontreset", "Schriftgröße zurücksetzen", "Ctrl+D0", () => Sync(() => FontSlider.Value = 22), true),
-            new("panel", "Seitenleiste ein/aus", "Ctrl+B", () => Sync(() => SetPanelOpen(!SidePanel.IsVisible)), true),
-            new("theme", "Design wechseln (hell/dunkel)", "Ctrl+T", () => Sync(() => Click(ThemeBtn)), true),
-            new("focus", "Fokus-Modus (nur Text)", "F11", () => Sync(ToggleFocusMode), true),
-            new("guide", "Vers-Übersicht öffnen", "Ctrl+G", () => Sync(() => { SetPanelOpen(true); SideTabs.SelectedIndex = GuideTab; }), true),
-            new("docs", "Dokumente öffnen", "Ctrl+Shift+D", () => Sync(() => OpenWork(NavGroups.First(g => g.Name == "Dokumente"))), true),
-            new("popout", "Aktuelles Seitenfenster auslagern", "Ctrl+Shift+O", () => Sync(() => PopOutTab(SideTabs.SelectedIndex)), true),
+            new("quickjump", L("Gehe zu Stelle oder suchen"), "Ctrl+K", () => Sync(() => { QuickJumpBox.Focus(); QuickJumpBox.SelectAll(); }), true),
+            new("search", L("Suche öffnen"), "Ctrl+F", () => Sync(() => { SetPanelOpen(true); SideTabs.SelectedIndex = 0; SearchBox.Focus(); SearchBox.SelectAll(); }), true),
+            new("back", L("Zurück zur vorherigen Stelle"), "Alt+Left", GoBackAsync, true),
+            new("home", L("Startseite"), "Alt+Home", () => Sync(ShowHome), true),
+            new("prev", L("Voriges Kapitel"), "Ctrl+Left", () => Sync(() => { if (ChapterBox.Value > ChapterBox.Minimum) ChapterBox.Value -= 1; })),
+            new("next", L("Nächstes Kapitel"), "Ctrl+Right", () => Sync(() => ChapterBox.Value += 1)),
+            new("read", L("Kapitel als gelesen markieren"), "Ctrl+R", () => Sync(() => { if (_curBook != "") SetRead(_curBook, [_curChapter], !_read.Contains((_curBook, _curChapter))); })),
+            new("bookmark", L("Vers merken"), "Ctrl+D", () => Sync(ToggleBookmark)),
+            new("copy", L("Vers mit Stelle kopieren"), "Ctrl+Shift+C", CopyVerseAsync, true),
+            new("fontplus", L("Schrift größer"), "Ctrl+Plus", () => Sync(() => Click(FontPlusBtn)), true),
+            new("fontminus", L("Schrift kleiner"), "Ctrl+Minus", () => Sync(() => Click(FontMinusBtn)), true),
+            new("fontreset", L("Schriftgröße zurücksetzen"), "Ctrl+D0", () => Sync(() => FontSlider.Value = 22), true),
+            new("panel", L("Seitenleiste ein/aus"), "Ctrl+B", () => Sync(() => SetPanelOpen(!SidePanel.IsVisible)), true),
+            new("theme", L("Design wechseln (hell/dunkel)"), "Ctrl+T", () => Sync(() => Click(ThemeBtn)), true),
+            new("focus", L("Fokus-Modus (nur Text)"), "F11", () => Sync(ToggleFocusMode), true),
+            new("guide", L("Vers-Übersicht öffnen"), "Ctrl+G", () => Sync(() => { SetPanelOpen(true); SideTabs.SelectedIndex = GuideTab; }), true),
+            new("docs", L("Dokumente öffnen"), "Ctrl+Shift+D", () => Sync(() => OpenWork(NavGroups.First(g => g.Name == "Dokumente"))), true),
+            new("popout", L("Aktuelles Seitenfenster auslagern"), "Ctrl+Shift+O", () => Sync(() => PopOutTab(SideTabs.SelectedIndex)), true),
         ];
         BuildKeysPanel();
         ResetKeysBtn.Click += (_, _) => { _settings.KeyBindings.Clear(); SaveSettings(); BuildKeysPanel(); };
@@ -46,7 +46,7 @@ public partial class MainWindow
 
     string GestureOf(KeyAction a) => _settings.KeyBindings.TryGetValue(a.Id, out var g) ? g : a.Default;
 
-    static string Pretty(string gesture) => gesture.Replace("Ctrl", "Strg").Replace("Shift", "Umschalt").Replace("Left", "←").Replace("Right", "→").Replace("Home", "Pos1")
+    static string Pretty(string gesture) => gesture.Replace("Ctrl", L("Strg")).Replace("Shift", L("Umschalt")).Replace("Left", "←").Replace("Right", "→").Replace("Home", L("Pos1"))
         .Replace("Plus", "+").Replace("Minus", "−").Replace("D0", "0").Replace("Up", "↑").Replace("Down", "↓");
 
     /// <summary>"Ctrl+Shift+K" style text of a key event; null for modifier keys alone.</summary>

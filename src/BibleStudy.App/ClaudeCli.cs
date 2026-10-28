@@ -1,4 +1,4 @@
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using System.Text;
 using System.Text.Json;
 
@@ -59,7 +59,7 @@ public static class ClaudeCli
         if (!string.IsNullOrWhiteSpace(sessionId)) { psi.ArgumentList.Add("--resume"); psi.ArgumentList.Add(sessionId); }
         if (!string.IsNullOrWhiteSpace(model)) { psi.ArgumentList.Add("--model"); psi.ArgumentList.Add(model); }
 
-        using var process = Process.Start(psi) ?? throw new InvalidOperationException("Claude konnte nicht gestartet werden.");
+        using var process = Process.Start(psi) ?? throw new InvalidOperationException(L("Claude konnte nicht gestartet werden."));
         using var kill = ct.Register(() => { try { process.Kill(entireProcessTree: true); } catch (InvalidOperationException) { } });
         var stderr = process.StandardError.ReadToEndAsync();
         await process.StandardInput.WriteAsync(prompt);
@@ -75,7 +75,7 @@ public static class ClaudeCli
         if (!sawResult)
         {
             var err = (await stderr).Trim();
-            onEvent(new ClaudeResult(err.Length > 0 ? err : $"Claude wurde ohne Antwort beendet (Code {process.ExitCode}).", sessionId, true));
+            onEvent(new ClaudeResult(err.Length > 0 ? err : L("Claude wurde ohne Antwort beendet (Code {0}).", process.ExitCode), sessionId, true));
         }
     }
 

@@ -1,4 +1,4 @@
-using System.Globalization;
+﻿using System.Globalization;
 using System.Text.Json;
 using BibleStudy.Core.Models;
 using BibleStudy.Core.Providers;
@@ -18,7 +18,7 @@ public sealed record ParsedBible(string Name, string ShortName, string LanguageC
 public sealed class LocalBibleStore : SqliteDb, IBibleProvider
 {
     public const string Prefix = "local:";
-    public string Name => "Lokal importiert";
+    public string Name => L("Lokal importiert");
 
     sealed record SegmentDto(string? T, string[]? S, int? N, bool? J);
 
@@ -42,7 +42,7 @@ public sealed class LocalBibleStore : SqliteDb, IBibleProvider
             var culture = SafeCulture(lang);
             var license = new LicenseInfo("-", "-", "-", false, false);
             return new TranslationInfo(r.GetString(0), r.GetString(1), r.GetString(1), r.GetString(2), lang, culture?.EnglishName ?? lang, "ltr",
-                "lokaler Import, nur private Nutzung", null, license, 66);
+                L("lokaler Import, nur private Nutzung"), null, license, 66);
         });
         return Task.FromResult(list);
     }

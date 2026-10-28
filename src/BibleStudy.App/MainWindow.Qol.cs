@@ -21,8 +21,8 @@ public partial class MainWindow
     // name, accent in light theme, accent in dark theme
     static readonly (string Name, string Light, string Dark)[] Accents =
     [
-        ("Messing", "#8A4F0F", "#E3B65F"), ("Saphir", "#2457A6", "#7DB2F2"), ("Smaragd", "#1B7A57", "#5BCB9C"),
-        ("Granat", "#A02F44", "#F0889A"), ("Amethyst", "#6A47B8", "#B69CF6"), ("Graphit", "#3E4A59", "#B3BDCB"),
+        (K("Messing"), "#8A4F0F", "#E3B65F"), (K("Saphir"), "#2457A6", "#7DB2F2"), (K("Smaragd"), "#1B7A57", "#5BCB9C"),
+        (K("Granat"), "#A02F44", "#F0889A"), (K("Amethyst"), "#6A47B8", "#B69CF6"), (K("Graphit"), "#3E4A59", "#B3BDCB"),
     ];
 
     bool _qolReady;
@@ -100,7 +100,7 @@ public partial class MainWindow
                 },
                 BorderThickness = new(name == _settings.Accent ? 3 : 1), BorderBrush = name == _settings.Accent ? Res("BsText") : Res("BsBorder"),
             };
-            ToolTip.SetTip(dot, name);
+            ToolTip.SetTip(dot, L(name));
             var captured = name;
             dot.PointerPressed += (_, _) => { ApplyAccent(captured); BuildAccentPanel(); };
             AccentPanel.Children.Add(dot);

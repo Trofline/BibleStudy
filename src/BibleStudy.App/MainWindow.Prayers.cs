@@ -17,7 +17,7 @@ public partial class MainWindow
     static string Ago(DateTime d)
     {
         var days = (int)(DateTime.Now.Date - d.Date).TotalDays;
-        return days <= 0 ? "heute" : days == 1 ? "gestern" : days < 31 ? $"vor {days} Tagen" : days < 365 ? $"vor {days / 30} Monaten" : $"vor {days / 365} Jahr(en)";
+        return days <= 0 ? "heute" : days == 1 ? "gestern" : days < 31 ? L("vor {0} Tagen", days) : days < 365 ? L("vor {0} Monaten", days / 30) : L("vor {0} Jahr(en)", days / 365);
     }
 
     void BuildPrayerUi()
@@ -26,7 +26,7 @@ public partial class MainWindow
         PrayerPanel.Children.Add(new TextBlock { Text = L("GEBETSLISTE"), Classes = { "eyebrow" } });
 
         var box = new TextBox { Watermark = L("Wofür möchtest du beten oder danken?"), AcceptsReturn = true, TextWrapping = TextWrapping.Wrap, MinHeight = 64 };
-        var withVerse = new CheckBox { Content = _selected is int v ? L("Mit {0} {1},{2} verbinden", BookName(_curBook), _curChapter, v) : "Mit dem angeklickten Vers verbinden", IsChecked = _prayerWithVerse && _selected is not null, IsEnabled = _selected is not null };
+        var withVerse = new CheckBox { Content = _selected is int v ? L("Mit {0} {1},{2} verbinden", BookName(_curBook), _curChapter, v) : L("Mit dem angeklickten Vers verbinden"), IsChecked = _prayerWithVerse && _selected is not null, IsEnabled = _selected is not null };
         withVerse.IsCheckedChanged += (_, _) => _prayerWithVerse = withVerse.IsChecked == true;
         var add = new Button { Content = L("Anliegen hinzufügen"), Classes = { "primary" }, HorizontalAlignment = HorizontalAlignment.Left };
         void Commit()
@@ -61,13 +61,13 @@ public partial class MainWindow
         var text = new TextBlock { Text = p.Text, TextWrapping = TextWrapping.Wrap, Opacity = isDone ? 0.7 : 1 };
         var meta = new TextBlock
         {
-            Text = isDone ? L("Aufgeschrieben {0:dd.MM.yyyy} · erhört {1:dd.MM.yyyy}", p.Created, p.Answered) : $"Aufgeschrieben {p.Created:dd.MM.yyyy} ({Ago(p.Created)})",
+            Text = isDone ? L("Aufgeschrieben {0:dd.MM.yyyy} · erhört {1:dd.MM.yyyy}", p.Created, p.Answered) : L("Aufgeschrieben {0:dd.MM.yyyy} ({1})", p.Created, Ago(p.Created)),
             Classes = { "caption" },
         };
         var row = new WrapPanel();
         if (p.Ref is { } r)
         {
-            var chip = FilterChip(Label(r), false, null, async () => await GoToAsync(r.Book, r.Chapter, r.Verse), "Springt zur Stelle");
+            var chip = FilterChip(Label(r), false, null, async () => await GoToAsync(r.Book, r.Chapter, r.Verse), L("Springt zur Stelle"));
             row.Children.Add(chip);
         }
         var panel = new StackPanel { Spacing = 4, Children = { text, meta, row } };

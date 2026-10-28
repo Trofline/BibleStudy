@@ -1,4 +1,4 @@
-using System.Net.Http.Headers;
+﻿using System.Net.Http.Headers;
 using System.Security.Cryptography;
 using System.Text.Json;
 
@@ -62,12 +62,12 @@ public sealed class Updater(HttpClient http)
             var buf = new byte[81920]; long done = 0; int n;
             while ((n = await src.ReadAsync(buf, ct)) > 0) { await dst.WriteAsync(buf.AsMemory(0, n), ct); done += n; if (total > 0) progress?.Report((double)done / total); }
         }
-        if (info.Size > 0 && new FileInfo(path).Length != info.Size) { File.Delete(path); throw new InvalidDataException("Der Download ist unvollständig."); }
+        if (info.Size > 0 && new FileInfo(path).Length != info.Size) { File.Delete(path); throw new InvalidDataException(L("Der Download ist unvollständig.")); }
         if (info.Sha256 is { } expected)
         {
             await using var fs = File.OpenRead(path);
             var actual = Convert.ToHexString(await SHA256.HashDataAsync(fs, ct));
-            if (!actual.Equals(expected, StringComparison.OrdinalIgnoreCase)) { fs.Close(); File.Delete(path); throw new InvalidDataException("Die Prüfsumme der Datei stimmt nicht – Update abgebrochen."); }
+            if (!actual.Equals(expected, StringComparison.OrdinalIgnoreCase)) { fs.Close(); File.Delete(path); throw new InvalidDataException(L("Die Prüfsumme der Datei stimmt nicht – Update abgebrochen.")); }
         }
         return path;
     }

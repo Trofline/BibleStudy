@@ -248,7 +248,7 @@ public partial class MainWindow
             UpdateThread();
             GraphPane.FocusChapter(_curBook, _curChapter);
         }
-        catch (Exception ex) { GraphPane.ShowBuildPrompt("Das Laden ist fehlgeschlagen: " + ex.Message); }
+        catch (Exception ex) { GraphPane.ShowBuildPrompt(L("Das Laden ist fehlgeschlagen: ") + ex.Message); }
         finally { _graphBuilding = false; }
     }
 }

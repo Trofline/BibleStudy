@@ -66,7 +66,7 @@ public partial class MainWindow : Window
 
     public MainWindow()
     {
-        SplashWindow.Report(0.2, "Baue die Oberfläche …");
+        SplashWindow.Report(0.2, L("Baue die Oberfläche …"));
         InitializeComponent();
         LocXaml.Apply(this);
         _root = BibleStudy.Core.AppPaths.Root;
@@ -167,7 +167,7 @@ public partial class MainWindow : Window
         };
         StartControl();
         var initialised = false;
-        SplashWindow.Report(0.5, "Bereite Werkzeuge vor …");
+        SplashWindow.Report(0.5, L("Bereite Werkzeuge vor …"));
         Opened += async (_, _) => { if (initialised) return; initialised = true; await InitAsync(); };
     }
 
@@ -178,14 +178,14 @@ public partial class MainWindow : Window
     {
         try
         {
-            SplashWindow.Report(0.6, "Lade Übersetzungen …");
+            SplashWindow.Report(0.6, L("Lade Übersetzungen …"));
             StatusText.Text = L("Lade Übersetzungen …");
             _all = await _provider.GetTranslationsAsync();
             _langs = _all.Select(t => t.LanguageName).Where(l => l != "").Distinct().Order().ToList();
             LanguageBox.ItemsSource = _langs;
             var wanted = _all.FirstOrDefault(t => t.Id == (_settings.TranslationId ?? "deu_elbbk")) ?? _all.FirstOrDefault(t => t.Id == "eng_kjv");
             _pendingTranslation = wanted?.Id;
-            SplashWindow.Report(0.75, "Lade Bücher …");
+            SplashWindow.Report(0.75, L("Lade Bücher …"));
             LanguageBox.SelectedItem = wanted?.LanguageName ?? _langs.FirstOrDefault();
         }
         catch (Exception ex) { StatusText.Text = L("Fehler: ") + ex.Message; }
@@ -214,12 +214,12 @@ public partial class MainWindow : Window
         foreach (var d in _vault.GetDocuments().OrderByDescending(d => d.Updated).Take(4))
         {
             var doc = d;
-            recent.Add(("Dokument", d.Title, Shorten(string.Join(" ", d.Body.Split((char)10).Where(l => !l.TrimStart().StartsWith("#") && !l.StartsWith("**Quelle")).Take(6)).Trim(), 80), () => { SetPanelOpen(true); SideTabs.SelectedIndex = KnowledgeTab; OpenDocument(doc); }));
+            recent.Add((L("Dokument"), d.Title, Shorten(string.Join(" ", d.Body.Split((char)10).Where(l => !l.TrimStart().StartsWith("#") && !l.StartsWith("**Quelle")).Take(6)).Trim(), 80), () => { SetPanelOpen(true); SideTabs.SelectedIndex = KnowledgeTab; OpenDocument(doc); }));
         }
         foreach (var m in _vault.GetMarks().OrderByDescending(m => m.Id).Take(4))
         {
             var mark = m;
-            recent.Add(("Markierung", Label(m.Ref), m.Note.Length > 0 ? Shorten(m.Note.ReplaceLineEndings(" "), 80) : Shorten(m.Text, 80), () => _ = GoToAsync(mark.Ref.Book, mark.Ref.Chapter, mark.Ref.Verse)));
+            recent.Add((L("Markierung"), Label(m.Ref), m.Note.Length > 0 ? Shorten(m.Note.ReplaceLineEndings(" "), 80) : Shorten(m.Text, 80), () => _ = GoToAsync(mark.Ref.Book, mark.Ref.Chapter, mark.Ref.Verse)));
         }
         Home.Recent = recent;
         Home.Show(_books, _read, Home.OpenBook);
@@ -306,7 +306,7 @@ public partial class MainWindow : Window
     async Task ShowChapterAsync(int? focusVerse = null)
     {
         if (_loading || TranslationBox.SelectedItem is not TranslationInfo t || BookBox.SelectedItem is not BookInfo b) return;
-        SplashWindow.Report(0.88, "Öffne Kapitel …");
+        SplashWindow.Report(0.88, L("Öffne Kapitel …"));
         try
         {
             var number = (int)(ChapterBox.Value ?? 1);
@@ -337,7 +337,7 @@ public partial class MainWindow : Window
             {
                 var head = NewRow(cols.Count);
                 for (var i = 0; i < cols.Count; i++)
-                    AddCell(head, i, new TextBlock { Text = cols[i].T.ShortName + (cols[i].C is null ? " (Kapitel nicht verfügbar)" : ""), FontWeight = FontWeight.Bold, Opacity = 0.7, Margin = new(8, 0, 12, 4) });
+                    AddCell(head, i, new TextBlock { Text = cols[i].T.ShortName + (cols[i].C is null ? L(" (Kapitel nicht verfügbar)") : ""), FontWeight = FontWeight.Bold, Opacity = 0.7, Margin = new(8, 0, 12, 4) });
                 ReaderPanel.Children.Add(head);
             }
             var notes = cols.Select(c => c.C?.Footnotes?.OrderBy(f => f.NoteId).Select((f, i) => (f.NoteId, Letter: NoteLetter(i), f.Text))
@@ -369,7 +369,7 @@ public partial class MainWindow : Window
             if (_startupHome) { _startupHome = false; ShowHome(); }
 
             StatusText.Text = string.Join("  |  ", cols.Select(c =>
-                $"{c.T.Name}: {(c.T.License.PublicDomain ? "gemeinfrei" : "Lizenz " + c.T.LicenseUrl)}, Namensnennung: {c.T.License.Attribution}")) + $" · Quelle: {_provider.Name}";
+                L("{0}: {1}, Namensnennung: {2}", c.T.Name, (c.T.License.PublicDomain ? "gemeinfrei" : L("Lizenz ") + c.T.LicenseUrl), c.T.License.Attribution))) + L(" · Quelle: {0}", _provider.Name);
         }
         catch (Exception ex) { StatusText.Text = L("Kapitel nicht verfügbar: ") + ex.Message; }
         finally { SplashWindow.Done(); }
@@ -637,7 +637,7 @@ public partial class MainWindow : Window
             if (dir is "In" or "Both")
             {
                 var incoming = IncomingRefs(r);
-                if (incoming is null) note = "Eingehende Verweise brauchen den Verweis-Datensatz (344 000 Verse). Er wird einmal geladen und lokal gespeichert: Knopf „Graph“ oben.";
+                if (incoming is null) note = L("Eingehende Verweise brauchen den Verweis-Datensatz (344 000 Verse). Er wird einmal geladen und lokal gespeichert: Knopf „Graph“ oben.");
                 else refs.AddRange(incoming.Take(dir == "Both" ? 15 : 20));
             }
             refs = refs.GroupBy(x => x.Target).Select(g => g.First()).ToList();
@@ -645,8 +645,8 @@ public partial class MainWindow : Window
             var texts = await Task.WhenAll(refs.Select(x => VerseTextAsync(t.Id, x)));
             if (_selected != r.Verse || _curBook != r.Book || _curChapter != r.Chapter) return; // user moved on
             _xrefs = refs;
-            var kind = dir switch { "In" => "Eingehende", "Both" => "Ein- und ausgehende", _ => "Ausgehende" };
-            XrefTitle.Text = refs.Count == 0 ? L("Keine Querverweise zu {0}", Label(r)) : $"{kind} Querverweise zu {Label(r)}";
+            var kind = dir switch { "In" => L("Eingehende"), "Both" => L("Ein- und ausgehende"), _ => L("Ausgehende") };
+            XrefTitle.Text = refs.Count == 0 ? L("Keine Querverweise zu {0}", Label(r)) : L("{0} Querverweise zu {1}", kind, Label(r));
             if (note is not null) XrefTitle.Text += "\n" + note;
             XrefList.ItemsSource = refs.Zip(texts, (x, text) =>
                 new Entry(x.Target, $"{Label(x.Target)}{(x.EndVerse > x.Target.Verse ? "–" + x.EndVerse : "")}\n{text}")).ToList();

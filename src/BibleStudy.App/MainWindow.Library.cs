@@ -65,8 +65,8 @@ public partial class MainWindow
                 var chapter = await _hello.GetCommentaryAsync(c.Id, _curBook, _curChapter);
                 if (_shownCommentary != (c.Id, _curBook, _curChapter)) return;
                 CommentaryInfo.Text = chapter is null || (chapter.Notes.Count == 0 && chapter.Introduction.Length == 0)
-                    ? $"{c.Name} hat zu {BookName(_curBook)} {_curChapter} keine Anmerkungen. Wähle oben einen anderen Kommentar."
-                    : $"{c.Name} zu {BookName(_curBook)} {_curChapter} · {(c.LicenseUrl.Contains("publicdomain") ? "gemeinfrei" : "Lizenz " + c.LicenseUrl)} · Englisch";
+                    ? L("{0} hat zu {1} {2} keine Anmerkungen. Wähle oben einen anderen Kommentar.", c.Name, BookName(_curBook), _curChapter)
+                    : L("{0} zu {1} {2} · {3} · Englisch", c.Name, BookName(_curBook), _curChapter, (c.LicenseUrl.Contains("publicdomain") ? "gemeinfrei" : L("Lizenz ") + c.LicenseUrl));
                 if (chapter is null) return;
                 if (chapter.Introduction.Length > 0)
                     CommentaryPanel.Children.Add(new Expander { Header = L("Einleitung"), HorizontalAlignment = HorizontalAlignment.Stretch, Content = new SelectableTextBlock { Text = chapter.Introduction, TextWrapping = TextWrapping.Wrap } });
@@ -83,7 +83,7 @@ public partial class MainWindow
         var go = new Button { Classes = { "ghost" }, Padding = new(0), Content = L("Vers {0}", note.Verse), FontWeight = FontWeight.SemiBold, Foreground = Res("BsAccent") };
         go.Click += async (_, _) => await GoToAsync(r.Book, r.Chapter, r.Verse);
         var cite = new Button { Classes = { "ghost" }, Content = L("In Dokument zitieren"), FontSize = 12 };
-        cite.Click += (_, _) => CiteIntoDocument($"> {note.Text.Replace("\n\n", "\n>\n> ")}\n> — {c.Name} zu {Label(r)}\n\n", $"{c.Name}: {Label(r)}", r);
+        cite.Click += (_, _) => CiteIntoDocument(L("> {0}\n> — {1} zu {2}\n\n", note.Text.Replace("\n\n", L("\n>\n> ")), c.Name, Label(r)), $"{c.Name}: {Label(r)}", r);
         var head = new DockPanel { Children = { cite, go } };
         DockPanel.SetDock(cite, Dock.Right);
         var card = new Border { Classes = { "card" }, Child = new StackPanel { Spacing = 6, Children = { head, new SelectableTextBlock { Text = note.Text, TextWrapping = TextWrapping.Wrap, LineHeight = 21 } } } };
@@ -172,23 +172,23 @@ public partial class MainWindow
             LexPanel.Children.Clear();
             if (e is null) return;
             LexPanel.Children.Add(new TextBlock { Text = e.Name, Classes = { "h2" } });
-            var kind = e.Kind == "places" ? "Ort" + (e.FeatureType.Length > 0 ? $" ({e.FeatureType})" : "") : "Person";
-            LexPanel.Children.Add(new TextBlock { Text = kind + (e.AlsoCalled.Count > 0 ? " · auch: " + string.Join(", ", e.AlsoCalled) : ""), Classes = { "caption" } });
+            var kind = e.Kind == "places" ? L("Ort") + (e.FeatureType.Length > 0 ? $" ({e.FeatureType})" : "") : L("Person");
+            LexPanel.Children.Add(new TextBlock { Text = kind + (e.AlsoCalled.Count > 0 ? L(" · auch: ") + string.Join(", ", e.AlsoCalled) : ""), Classes = { "caption" } });
             var text = string.Join("\n\n", e.Description);
             LexPanel.Children.Add(text.Length > 0 ? new SelectableTextBlock { Text = text, TextWrapping = TextWrapping.Wrap, LineHeight = 21 } : new TextBlock { Text = L("Kein Lexikontext vorhanden."), Classes = { "caption" } });
             var cite = new Button { Content = L("In Dokument zitieren"), HorizontalAlignment = HorizontalAlignment.Left };
-            cite.Click += (_, _) => CiteIntoDocument($"> {text.Replace("\n\n", "\n>\n> ")}\n> — Lexikon (Easton/Theographic): {e.Name}\n\n", $"Lexikon: {e.Name}", null);
+            cite.Click += (_, _) => CiteIntoDocument(L("> {0}\n> — Lexikon (Easton/Theographic): {1}\n\n", text.Replace("\n\n", L("\n>\n> ")), e.Name), L("Lexikon: {0}", e.Name), null);
             LexPanel.Children.Add(cite);
             if (e.Related.Count > 0)
             {
-                LexPanel.Children.Add(Eyebrow("Verwandt"));
+                LexPanel.Children.Add(Eyebrow(L("Verwandt")));
                 var rel = new WrapPanel();
                 foreach (var r in e.Related.Where(r => r.Id.Length > 0).Take(30)) { var it = r; rel.Children.Add(FilterChip(r.Name, false, null, () => _ = ShowLexEntryAsync(it))); }
                 LexPanel.Children.Add(rel);
             }
             if (e.References.Count > 0)
             {
-                LexPanel.Children.Add(Eyebrow($"Bibelstellen ({e.References.Count})"));
+                LexPanel.Children.Add(Eyebrow(L("Bibelstellen ({0})", e.References.Count)));
                 var refs = new WrapPanel();
                 foreach (var r in e.References.Take(80))
                 {

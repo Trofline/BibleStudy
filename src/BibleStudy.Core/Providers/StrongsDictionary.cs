@@ -1,4 +1,4 @@
-using System.Text.Json;
+﻿using System.Text.Json;
 using BibleStudy.Core.Models;
 
 namespace BibleStudy.Core.Providers;
@@ -9,7 +9,7 @@ namespace BibleStudy.Core.Providers;
 /// </summary>
 public sealed class StrongsDictionary(HttpClient http, string cacheDir)
 {
-    public const string Attribution = "Strong's Dictionary © Open Scriptures, CC BY-SA (github.com/openscriptures/strongs)";
+    public static string Attribution => L("Strong's Dictionary © Open Scriptures, CC BY-SA (github.com/openscriptures/strongs)");
     const string RawBase = "https://raw.githubusercontent.com/openscriptures/strongs/master/";
 
     readonly Dictionary<char, Task<Dictionary<int, StrongsEntry>>> _loaded = [];

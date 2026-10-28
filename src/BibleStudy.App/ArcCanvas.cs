@@ -1,4 +1,4 @@
-using System.Globalization;
+﻿using System.Globalization;
 using System.Runtime.InteropServices;
 using Avalonia;
 using Avalonia.Controls;
@@ -22,7 +22,7 @@ sealed class ArcCanvas : Control
     public event Action<int>? Selected, BookPicked, Open;
 
     static readonly string[] GenreNames =
-        ["Gesetz", "Geschichtsbücher", "Poesie und Weisheit", "Große Propheten", "Kleine Propheten", "Evangelien", "Apostelgeschichte", "Paulusbriefe", "Katholische Briefe", "Offenbarung"];
+        [L("Gesetz"), L("Geschichtsbücher"), L("Poesie und Weisheit"), L("Große Propheten"), L("Kleine Propheten"), L("Evangelien"), L("Apostelgeschichte"), L("Paulusbriefe"), L("Katholische Briefe"), L("Offenbarung")];
 
     public ArcCanvas() => ClipToBounds = true;
 

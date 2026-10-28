@@ -110,7 +110,7 @@ public sealed class MapView : UserControl
                     if (seen.Add(place.Id)) places.Add(place);
                 }
             _canvas.SetPlaces(places);
-            _hint.Text = places.Count == 0 ? L("Keine Orte mit Koordinaten in diesem Abschnitt.") : $"{places.Count} Orte · Mausrad: zoomen · ziehen: verschieben · Ort anklicken: Stellen";
+            _hint.Text = places.Count == 0 ? L("Keine Orte mit Koordinaten in diesem Abschnitt.") : L("{0} Orte · Mausrad: zoomen · ziehen: verschieben · Ort anklicken: Stellen", places.Count);
         }
         catch (Exception ex) { _hint.Text = L("Karte nicht verfügbar: ") + ex.Message; }
     }
@@ -119,7 +119,7 @@ public sealed class MapView : UserControl
     {
         if (place is null) { _detail.IsVisible = false; return; }
         _detailTitle.Text = place.Name;
-        _detailInfo.Text = $"{(string.IsNullOrEmpty(place.FeatureType) ? "Ort" : place.FeatureType)} · {place.Latitude.ToString("0.00", CultureInfo.InvariantCulture)}°, {place.Longitude.ToString("0.00", CultureInfo.InvariantCulture)}°";
+        _detailInfo.Text = $"{(string.IsNullOrEmpty(place.FeatureType) ? L("Ort") : place.FeatureType)} · {place.Latitude.ToString("0.00", CultureInfo.InvariantCulture)}°, {place.Longitude.ToString("0.00", CultureInfo.InvariantCulture)}°";
         _detailChips.Children.Clear();
         foreach (var (chapter, verse) in _mentions.GetValueOrDefault(place.Id, []).Take(30))
         {
@@ -242,7 +242,7 @@ sealed class MapCanvas : Control
             }
         }
         if (_places.Count == 0)
-            dc.DrawText(new FormattedText("Keine Orte mit Koordinaten in diesem Abschnitt.", CultureInfo.CurrentUICulture, FlowDirection.LeftToRight, Typeface.Default, 14, text), new Point(24, 20));
+            dc.DrawText(new FormattedText(L("Keine Orte mit Koordinaten in diesem Abschnitt."), CultureInfo.CurrentUICulture, FlowDirection.LeftToRight, Typeface.Default, 14, text), new Point(24, 20));
     }
 
     int HitTest(Point p)

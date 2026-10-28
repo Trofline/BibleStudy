@@ -15,53 +15,53 @@ public partial class MainWindow
 
     static readonly NavGroup[] NavGroups =
     [
-        new("Suchen", "M3 11a8 8 0 1 0 16 0a8 8 0 1 0-16 0z M21 21l-4.3-4.3",
+        new(K("Suchen"), "M3 11a8 8 0 1 0 16 0a8 8 0 1 0-16 0z M21 21l-4.3-4.3",
         [
-            new(0, "Text", "Sucht in der gewählten Übersetzung: Wörter, „Wendungen“, Grundformen (L=…), Bibelstellen und Strong-Nummern."),
-            new(StrongTab, "Strong-Wörterbuch", "Schlägt Wörter des Urtextes nach: Nummer (G3056), griechisches/hebräisches Wort, Umschrift oder englische Bedeutung."),
+            new(0, K("Text"), L("Sucht in der gewählten Übersetzung: Wörter, „Wendungen“, Grundformen (L=…), Bibelstellen und Strong-Nummern.")),
+            new(StrongTab, K("Strong-Wörterbuch"), L("Schlägt Wörter des Urtextes nach: Nummer (G3056), griechisches/hebräisches Wort, Umschrift oder englische Bedeutung.")),
         ]),
-        new("Vers", "M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z",
+        new(K("Vers"), "M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z",
         [
-            new(GuideTab, "Übersicht", "Alles zum angeklickten Vers auf einen Blick: deine Notizen und Dokumente, andere Übersetzungen, Querverweise. Tipp: Rechtsklick auf einen Vers."),
-            new(3, "Wort", "Schalte oben „Wortstudie“ ein und tippe ein unterstrichenes Wort an: Bedeutung im Urtext."),
-            new(GrundtextTab, "Grundtext", "Der angeklickte Vers im Original, Wort für Wort mit Bedeutung."),
-            new(4, "Querverweise", "Verse, die mit dem angeklickten Vers zusammenhängen."),
-            new(5, "Vorkommen", "Alle Stellen, an denen ein Wort (Strong-Nummer) vorkommt, mit Verstext."),
+            new(GuideTab, K("Übersicht"), L("Alles zum angeklickten Vers auf einen Blick: deine Notizen und Dokumente, andere Übersetzungen, Querverweise. Tipp: Rechtsklick auf einen Vers.")),
+            new(3, K("Wort"), L("Schalte oben „Wortstudie“ ein und tippe ein unterstrichenes Wort an: Bedeutung im Urtext.")),
+            new(GrundtextTab, K("Grundtext"), L("Der angeklickte Vers im Original, Wort für Wort mit Bedeutung.")),
+            new(4, K("Querverweise"), L("Verse, die mit dem angeklickten Vers zusammenhängen.")),
+            new(5, K("Vorkommen"), L("Alle Stellen, an denen ein Wort (Strong-Nummer) vorkommt, mit Verstext.")),
         ]),
-        new("Bücher", "M4 19.5A2.5 2.5 0 0 1 6.5 17H20 M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z",
+        new(K("Bücher"), "M4 19.5A2.5 2.5 0 0 1 6.5 17H20 M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z",
         [
-            new(CommentaryTab, "Kommentare", "Freie Bibelkommentare (Matthew Henry, Jamieson-Fausset-Brown, Keil-Delitzsch, Tyndale u. a.) zum aktuellen Kapitel; der angeklickte Vers wird hervorgehoben."),
-            new(LexiconTab, "Lexikon", "Bibellexikon zu Personen und Orten (Easton's Bible Dictionary über Theographic). Oben stehen die Namen des aktuellen Kapitels."),
+            new(CommentaryTab, K("Kommentare"), L("Freie Bibelkommentare (Matthew Henry, Jamieson-Fausset-Brown, Keil-Delitzsch, Tyndale u. a.) zum aktuellen Kapitel; der angeklickte Vers wird hervorgehoben.")),
+            new(LexiconTab, K("Lexikon"), L("Bibellexikon zu Personen und Orten (Easton's Bible Dictionary über Theographic). Oben stehen die Namen des aktuellen Kapitels.")),
         ], Windowed: true),
-        new("Notizen", "M12 20h9 M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z",
+        new(K("Notizen"), "M12 20h9 M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z",
         [
-            new(2, "Notizen", "Schreibe eine kurze Notiz zum angeklickten Vers. Darunter stehen alle deine Notizen; Klick springt zur Stelle."),
+            new(2, K("Notizen"), L("Schreibe eine kurze Notiz zum angeklickten Vers. Darunter stehen alle deine Notizen; Klick springt zur Stelle.")),
         ]),
-        new("Dokumente", "M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z M14 2v6h6 M8 13h8 M8 17h8",
+        new(K("Dokumente"), "M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z M14 2v6h6 M8 13h8 M8 17h8",
         [
-            new(KnowledgeTab, "Schreiben", "Eigene Texte und verknüpfte Dateien. Verse wie „Joh 3,16“ und [[Titel]] werden zu Links."),
-            new(1, "Ordner", "Deine Ordner mit Dokumenten (📄) und markierten Versen. Klick öffnet das Dokument bzw. springt zur Stelle. ⋯ legt Ordner und Dokumente an."),
+            new(KnowledgeTab, K("Schreiben"), L("Eigene Texte und verknüpfte Dateien. Verse wie „Joh 3,16“ und [[Titel]] werden zu Links.")),
+            new(1, K("Ordner"), L("Deine Ordner mit Dokumenten (📄) und markierten Versen. Klick öffnet das Dokument bzw. springt zur Stelle. ⋯ legt Ordner und Dokumente an.")),
         ], Windowed: true),
-        new("Predigt", "M4 21h16 M6 21V8l6-5 6 5v13 M12 3v5 M10 21v-5h4v5",
+        new(K("Predigt"), "M4 21h16 M6 21V8l6-5 6 5v13 M12 3v5 M10 21v-5h4v5",
         [
-            new(SermonTab, "Predigt-Editor", "Predigt vorbereiten: Text, Kernaussage, Gliederung mit Versen, Notizen und Zeitplan; Export als Handout."),
+            new(SermonTab, K("Predigt-Editor"), L("Predigt vorbereiten: Text, Kernaussage, Gliederung mit Versen, Notizen und Zeitplan; Export als Handout.")),
         ], Windowed: true),
-        new("Planen", "M10 12h11 M10 18h11 M10 6h11 M4 10h2 M4 6h1v4 M6 18H4c0-1 2-2 2-3s-1-1.5-2-1",
+        new(K("Planen"), "M10 12h11 M10 18h11 M10 6h11 M4 10h2 M4 6h1v4 M6 18H4c0-1 2-2 2-3s-1-1.5-2-1",
         [
-            new(6, "Leseliste", "Verse, die du der Reihe nach durchgehen willst."),
-            new(7, "Aufgaben", "Deine Aufgaben fürs Studium, auf Wunsch mit Vers."),
-            new(PrayerTab, "Gebete", "Deine Gebetsliste: Anliegen mit Datum und Vers, erhörte Gebete abhaken und festhalten."),
-            new(PlanTab, "Lesepläne", "Bibel in einem Jahr und weitere Pläne: jeden Tag ein paar Kapitel, mit Fortschritt und Serie."),
+            new(6, K("Leseliste"), L("Verse, die du der Reihe nach durchgehen willst.")),
+            new(7, K("Aufgaben"), L("Deine Aufgaben fürs Studium, auf Wunsch mit Vers.")),
+            new(PrayerTab, K("Gebete"), L("Deine Gebetsliste: Anliegen mit Datum und Vers, erhörte Gebete abhaken und festhalten.")),
+            new(PlanTab, K("Lesepläne"), L("Bibel in einem Jahr und weitere Pläne: jeden Tag ein paar Kapitel, mit Fortschritt und Serie.")),
         ], Windowed: true),
-        new("KI", "M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9z M19 3v4 M17 5h4 M5 17v4 M3 19h4",
+        new(K("KI"), "M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9z M19 3v4 M17 5h4 M5 17v4 M3 19h4",
         [
-            new(AiTab, "Claude", "Dein lokaler Claude-Assistent. Er liest die Bibel über die Werkzeuge dieses Programms."),
+            new(AiTab, K("Claude"), L("Dein lokaler Claude-Assistent. Er liest die Bibel über die Werkzeuge dieses Programms.")),
         ]),
-        new("Mehr", "M21 4h-7 M10 4H3 M21 12h-9 M8 12H3 M21 20h-5 M12 20H3 M14 2v4 M8 10v4 M16 18v4",
+        new(K("Mehr"), "M21 4h-7 M10 4H3 M21 12h-9 M8 12H3 M21 20h-5 M12 20H3 M14 2v4 M8 10v4 M16 18v4",
         [
-            new(SettingsTab, "Einstellungen", "Aussehen, Verhalten, Vault, Sicherung, eigene Übersetzungen."),
-            new(13, "Hilfe", "So funktioniert das Programm."),
-            new(14, "Maße & Info", "Maße, Gewichte und Abkürzungen aus der Bibel."),
+            new(SettingsTab, K("Einstellungen"), L("Aussehen, Verhalten, Vault, Sicherung, eigene Übersetzungen.")),
+            new(13, K("Hilfe"), L("So funktioniert das Programm.")),
+            new(14, K("Maße & Info"), L("Maße, Gewichte und Abkürzungen aus der Bibel.")),
         ], Windowed: true),
     ];
 
@@ -110,9 +110,9 @@ public partial class MainWindow
         {
             var g = group;
             var icon = new Icon { Data = Geometry.Parse(g.Icon), IconSize = 22, HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center };
-            var label = new TextBlock { Text = g.Name, FontSize = 11, FontWeight = FontWeight.Medium, HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center };
+            var label = new TextBlock { Text = L(g.Name), FontSize = 11, FontWeight = FontWeight.Medium, HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center };
             var button = new Button { Classes = { "rail" }, Tag = g, Content = new StackPanel { Spacing = 4, Children = { icon, label } } };
-            ToolTip.SetTip(button, g.Tabs.Length > 1 ? string.Join(" · ", g.Tabs.Select(t => t.Label)) : g.Tabs[0].Hint);
+            ToolTip.SetTip(button, g.Tabs.Length > 1 ? string.Join(" · ", g.Tabs.Select(t => L(t.Label))) : g.Tabs[0].Hint);
             // drag a tab out of the side panel = its own window
             Avalonia.Point? dragFrom = null; var dragged = false;
             button.AddHandler(PointerPressedEvent, (object? _, Avalonia.Input.PointerPressedEventArgs e) => { if (e.GetCurrentPoint(button).Properties.IsLeftButtonPressed) { dragFrom = e.GetPosition(this); dragged = false; } }, Avalonia.Interactivity.RoutingStrategies.Tunnel | Avalonia.Interactivity.RoutingStrategies.Bubble, true);
@@ -165,7 +165,7 @@ public partial class MainWindow
             foreach (var tab in group.Tabs)
             {
                 var t = tab;
-                var pill = new Button { Classes = { "seg" }, Content = t.Label };
+                var pill = new Button { Classes = { "seg" }, Content = L(t.Label) };
                 pill.Classes.Set("active", t.Index == current);
                 pill.Click += (_, _) => SideTabs.SelectedIndex = t.Index;
                 SubPills.Children.Add(pill);
@@ -174,6 +174,6 @@ public partial class MainWindow
         if (_vaultBar is not null) _vaultBar.IsVisible = group.ShowVault;
         var hint = group.Tabs.FirstOrDefault(t => t.Index == current)?.Hint ?? "";
         if (group.ShowVault) hint += $"";
-        SubHint.Text = hint + (group.Windowed ? "" : "  Tipp: Das Symbol links aus der Leiste ziehen = eigenes Fenster.");
+        SubHint.Text = hint + (group.Windowed ? "" : L("  Tipp: Das Symbol links aus der Leiste ziehen = eigenes Fenster."));
     }
 }

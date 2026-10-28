@@ -23,12 +23,12 @@ public partial class MainWindow
 
     void InitUpdate()
     {
-        VersionText.Text = L("Version {0} · ", AppPaths.Version) + (AppPaths.IsPortable ? $"Portable (Daten in {AppPaths.Root})" : AppPaths.IsInstalled ? "installiert" : "Entwicklungsversion") + $" · Daten: {AppPaths.Root}";
+        VersionText.Text = L("Version {0} · ", AppPaths.Version) + (AppPaths.IsPortable ? L("Portable (Daten in {0})", AppPaths.Root) : AppPaths.IsInstalled ? L("installiert") : L("Entwicklungsversion")) + L(" · Daten: {0}", AppPaths.Root);
         AutoUpdateCheck.IsChecked = _settings.AutoUpdate;
         AutoUpdateCheck.IsCheckedChanged += (_, _) => { _settings.AutoUpdate = AutoUpdateCheck.IsChecked == true; SaveSettings(); };
         CheckUpdateBtn.Click += async (_, _) => await CheckForUpdateAsync(manual: true);
         RemoveAppBtn.IsVisible = AppPaths.IsPortable || AppPaths.IsInstalled;
-        RemoveAppBtn.Content = AppPaths.IsPortable ? L("Portable-Version entfernen …") : "Deinstallieren …";
+        RemoveAppBtn.Content = AppPaths.IsPortable ? L("Portable-Version entfernen …") : L("Deinstallieren …");
         RemoveAppBtn.Click += async (_, _) => await RemoveProgramAsync();
         // once per start, a few seconds after launch so that the reader is up first
         if (_settings.AutoUpdate)
@@ -99,10 +99,10 @@ public partial class MainWindow
 
         var canInstall = AppPaths.IsInstalled || AppPaths.IsPortable;
         var notes = info.Notes.Length > 600 ? info.Notes[..600] + " …" : info.Notes;
-        var text = $"Version {info.Version} ist da (du hast {AppPaths.Version}).\n\n{(notes.Length > 0 ? notes + "\n\n" : "")}" +
-                   (canInstall ? "Beim Installieren sichert das Programm zuerst deine Daten, lädt das Update, installiert es und startet neu. Deine Vaults, Notizen und Einstellungen bleiben unverändert."
-                               : "Diese Entwicklungsversion aktualisierst du selbst; die Seite mit dem Download öffnet sich.");
-        var choice = await AskAsync("Update verfügbar", text, canInstall ? "Jetzt installieren" : "Seite öffnen", "Später", "Diese Version überspringen");
+        var text = L("Version {0} ist da (du hast {1}).\n\n{2}", info.Version, AppPaths.Version, (notes.Length > 0 ? notes + "\n\n" : "")) +
+                   (canInstall ? L("Beim Installieren sichert das Programm zuerst deine Daten, lädt das Update, installiert es und startet neu. Deine Vaults, Notizen und Einstellungen bleiben unverändert.")
+                               : L("Diese Entwicklungsversion aktualisierst du selbst; die Seite mit dem Download öffnet sich."));
+        var choice = await AskAsync("Update verfügbar", text, canInstall ? L("Jetzt installieren") : L("Seite öffnen"), L("Später"), L("Diese Version überspringen"));
         if (choice == 2) { _settings.SkippedVersion = info.Version; SaveSettings(); return; }
         if (choice != 0) return;
         if (!canInstall) { try { Process.Start(new ProcessStartInfo(info.PageUrl) { UseShellExecute = true }); } catch { /* no browser */ } return; }
@@ -170,7 +170,7 @@ public partial class MainWindow
         var looksRight = File.Exists(Path.Combine(dir, "BibleStudy.App.exe")) && File.Exists(Path.Combine(dir, "portable.flag")) && dir.Length > 12;
         if (!looksRight) { UpdateStatus.Text = L("Dieser Ordner sieht nicht wie eine Portable-Version aus – nichts wurde gelöscht."); return; }
 
-        var keep = await AskAsync("Portable-Version entfernen", $"Der Ordner „{dir}“ mit dem Programm wird gelöscht.\n\nWas soll mit deiner Arbeit passieren (Vaults, Notizen, Dokumente, Markierungen, Einstellungen)?", "Daten behalten", "Daten löschen", "Abbrechen");
+        var keep = await AskAsync(L("Portable-Version entfernen"), L("Der Ordner „{0}“ mit dem Programm wird gelöscht.\n\nWas soll mit deiner Arbeit passieren (Vaults, Notizen, Dokumente, Markierungen, Einstellungen)?", dir), L("Daten behalten"), L("Daten löschen"), L("Abbrechen"));
         if (keep is not (0 or 1)) return;
         string? kept = null;
         if (keep == 0)
@@ -179,7 +179,7 @@ public partial class MainWindow
             try { await Task.Run(() => CopyData(AppPaths.Root, kept)); }
             catch (Exception ex) { UpdateStatus.Text = L("Die Daten konnten nicht gesichert werden, es wurde nichts gelöscht: ") + ex.Message; return; }
         }
-        else if (await AskAsync("Wirklich alles löschen?", "Deine Vaults, Notizen, Dokumente und Einstellungen werden unwiderruflich gelöscht.", "Doch behalten", "Alles löschen") != 1) return;
+        else if (await AskAsync(L("Wirklich alles löschen?"), L("Deine Vaults, Notizen, Dokumente und Einstellungen werden unwiderruflich gelöscht."), L("Doch behalten"), L("Alles löschen")) != 1) return;
 
         var cmd = $"/c ping 127.0.0.1 -n 4 >nul & rmdir /s /q \"{dir}\"";
         Process.Start(new ProcessStartInfo("cmd.exe", cmd) { CreateNoWindow = true, UseShellExecute = false });

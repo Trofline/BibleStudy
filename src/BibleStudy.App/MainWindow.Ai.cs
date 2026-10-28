@@ -19,12 +19,12 @@ public partial class MainWindow
     static string McpExe => Path.Combine(AppContext.BaseDirectory, "mcp", OperatingSystem.IsWindows() ? "BibleStudy.Mcp.exe" : "BibleStudy.Mcp");
 
     string AiSystemPrompt() =>
-        "Du bist der Assistent in der Bibelstudien-Software BibleStudy. Du hast Werkzeuge (mcp__biblestudy__*), um Bibeltexte zu lesen und zu durchsuchen, " +
-        "Querverweise und Strong-Nummern nachzuschlagen und die App zu steuern (anzeigen, markieren, Notizen, Warteschlange, To-Dos). " +
-        "Nutze die Werkzeuge, statt Verse aus dem Gedächtnis zu zitieren, und zitiere nur, was die Werkzeuge liefern. Prüfe Aussagen am Text. " +
-        "Wenn der Nutzer sich auf \"diesen Vers\" oder \"hier\" bezieht, frage get_app_state ab. " +
-        "Wenn du in der App etwas änderst (markieren, Notiz, Warteschlange), sage kurz, was du getan hast. Antworte auf Deutsch, klar und knapp. " +
-        "Hintergrund des Nutzers: " + _settings.AiContext;
+        L("Du bist der Assistent in der Bibelstudien-Software BibleStudy. Du hast Werkzeuge (mcp__biblestudy__*), um Bibeltexte zu lesen und zu durchsuchen, ") +
+        L("Querverweise und Strong-Nummern nachzuschlagen und die App zu steuern (anzeigen, markieren, Notizen, Warteschlange, To-Dos). ") +
+        L("Nutze die Werkzeuge, statt Verse aus dem Gedächtnis zu zitieren, und zitiere nur, was die Werkzeuge liefern. Prüfe Aussagen am Text. ") +
+        L("Wenn der Nutzer sich auf \"diesen Vers\" oder \"hier\" bezieht, frage get_app_state ab. ") +
+        L("Wenn du in der App etwas änderst (markieren, Notiz, Warteschlange), sage kurz, was du getan hast. Antworte auf Deutsch, klar und knapp. ") +
+        L("Hintergrund des Nutzers: ") + _settings.AiContext;
 
     void InitAi()
     {
@@ -44,7 +44,7 @@ public partial class MainWindow
         AiModelBox.LostFocus += (_, _) => { _settings.AiModel = AiModelBox.Text?.Trim() ?? ""; SaveSettings(); };
 
         var exe = ClaudeCli.FindExecutable();
-        AiCliInfo.Text = exe is null ? L("Claude Code wurde nicht gefunden. Installiere es (claude.com/claude-code) und melde dich einmal an.") : $"Claude Code gefunden: {exe}";
+        AiCliInfo.Text = exe is null ? L("Claude Code wurde nicht gefunden. Installiere es (claude.com/claude-code) und melde dich einmal an.") : L("Claude Code gefunden: {0}", exe);
         McpCommandBox.Text = L("claude mcp add biblestudy -- \"{0}\"", McpExe);
         McpCopyBtn.Click += async (_, _) =>
         {

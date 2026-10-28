@@ -26,7 +26,7 @@ public sealed class GraphView : UserControl
     readonly ArcCanvas _arc = new();
     readonly ToggleButton _netBtn = new() { Content = L("Netzwerk"), IsChecked = true };
     readonly ToggleButton _arcBtn = new() { Content = L("Bogen") };
-    readonly ComboBox _dirBox = new() { ItemsSource = new[] { "Von hier", "Hierher", "Beide" }, SelectedIndex = 2, Width = 110 };
+    readonly ComboBox _dirBox = new() { ItemsSource = new[] { L("Von hier"), L("Hierher"), L("Beide") }, SelectedIndex = 2, Width = 110 };
     readonly Slider _countSlider = new() { Minimum = 4, Maximum = 40, Value = 14, Width = 140, TickFrequency = 1, IsSnapToTickEnabled = true };
     readonly TextBlock _countLabel = new() { Text = L("Anzahl 14") };
     readonly ComboBox _bookBox = new() { Width = 170, IsVisible = false };
@@ -71,9 +71,9 @@ public sealed class GraphView : UserControl
 
         var host = new Grid { Children = { _net, _arc, _buildPanel } };
         var legend = new WrapPanel { Margin = new(16, 4, 16, 8) };
-        foreach (var (c, name) in new[] { (BookCategory.Law, "Gesetz"), (BookCategory.History, "Geschichte"), (BookCategory.Poetry, "Poesie"), (BookCategory.MajorProphets, "Große Propheten"),
-                     (BookCategory.MinorProphets, "Kleine Propheten"), (BookCategory.Gospels, "Evangelien"), (BookCategory.Acts, "Apostelgeschichte"), (BookCategory.Paul, "Paulus"),
-                     (BookCategory.General, "Briefe"), (BookCategory.Revelation, "Offenbarung") })
+        foreach (var (c, name) in new[] { (BookCategory.Law, L("Gesetz")), (BookCategory.History, L("Geschichte")), (BookCategory.Poetry, L("Poesie")), (BookCategory.MajorProphets, L("Große Propheten")),
+                     (BookCategory.MinorProphets, L("Kleine Propheten")), (BookCategory.Gospels, L("Evangelien")), (BookCategory.Acts, L("Apostelgeschichte")), (BookCategory.Paul, L("Paulus")),
+                     (BookCategory.General, L("Briefe")), (BookCategory.Revelation, L("Offenbarung")) })
         {
             var dot = new Border { Width = 10, Height = 10, CornerRadius = new(5), Background = new SolidColorBrush(HomeView.Colors[c]), VerticalAlignment = VerticalAlignment.Center, Margin = new(0, 0, 5, 0) };
             var text = new TextBlock { Text = name, FontSize = 12, Margin = new(0, 0, 14, 0) };
@@ -125,7 +125,7 @@ public sealed class GraphView : UserControl
         _dirBox.IsVisible = _countSlider.IsVisible = _countLabel.IsVisible = !arc;
         _bookBox.IsVisible = _arcSlider.IsVisible = arc;
         _selected = -1; _detail.IsVisible = false;
-        _hint.Text = arc ? L("Kapitel anklicken: Verbindungen. Buchleiste anklicken: filtern.") : "Knoten anklicken: Details · Mausrad: zoomen · ziehen: verschieben";
+        _hint.Text = arc ? L("Kapitel anklicken: Verbindungen. Buchleiste anklicken: filtern.") : L("Knoten anklicken: Details · Mausrad: zoomen · ziehen: verschieben");
         if (_graph is not null) { if (arc) ReconfigureArcs(); else ResetNetwork(); }
     }
 
@@ -135,7 +135,7 @@ public sealed class GraphView : UserControl
         _graph = graph; _bookName = bookName;
         _buildPanel.IsVisible = false;
         _loadingBooks = true;
-        _bookBox.ItemsSource = new[] { "Alle Bücher" }.Concat(graph.Books.Select(b => bookName(b.Book))).ToList();
+        _bookBox.ItemsSource = new[] { L("Alle Bücher") }.Concat(graph.Books.Select(b => bookName(b.Book))).ToList();
         _bookBox.SelectedIndex = 0; _arcBook = -1;
         _loadingBooks = false;
         SetMode(IsArc);
@@ -360,7 +360,7 @@ sealed class NetworkCanvas : Control
         if (i == _hover) return;
         _hover = i;
         Cursor = i >= 0 ? new Cursor(StandardCursorType.Hand) : null;
-        Hovered?.Invoke(i < 0 ? "" : $"{Label(i)} · {_score[i]:0} Verbindungen im Netz");
+        Hovered?.Invoke(i < 0 ? "" : L("{0} · {1:0} Verbindungen im Netz", Label(i), _score[i]));
         InvalidateVisual();
     }
 

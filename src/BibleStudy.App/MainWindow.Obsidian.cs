@@ -12,7 +12,7 @@ public partial class MainWindow
     {
         var invalid = Path.GetInvalidFileNameChars().Concat(new[] { '#', '^', '[', ']', '|' }).ToHashSet();
         var s = new string(name.Select(c => invalid.Contains(c) ? '-' : c).ToArray()).Trim(' ', '.');
-        return s.Length == 0 ? "Ohne Titel" : s.Length > 120 ? s[..120] : s;
+        return s.Length == 0 ? L("Ohne Titel") : s.Length > 120 ? s[..120] : s;
     }
 
     static string ObsidianTag(string tag) => "#" + string.Concat(tag.Trim().Select(c => char.IsLetterOrDigit(c) || c is '-' or '_' or '/' ? c : '_'));
@@ -41,16 +41,16 @@ public partial class MainWindow
         {
             var sb = new StringBuilder();
             if (d.Tags.Count > 0) sb.AppendLine("---").AppendLine($"tags: [{string.Join(", ", d.Tags.Select(t => '"' + t.Replace("\"", "'") + '"'))}]").AppendLine("---");
-            if (d.Path is not null) sb.AppendLine($"Verknüpfte Datei: [{Path.GetFileName(d.Path)}](<file:///{d.Path.Replace('\\', '/')}>)").AppendLine();
+            if (d.Path is not null) sb.AppendLine($"{L("Verknüpfte Datei:")} [{Path.GetFileName(d.Path)}](<file:///{d.Path.Replace('\\', '/')}>)").AppendLine();
             sb.AppendLine(d.Body);
-            Write(Path.Combine("Dokumente", SafeFileName(d.Title) + ".md"), sb.ToString());
+            Write(Path.Combine(L("Dokumente"), SafeFileName(d.Title) + ".md"), sb.ToString());
         }
 
         // marks: one note per folder, consecutive verses as one range
         var folders = _vault.GetFolders().ToDictionary(f => f.Id, f => f.Name);
         foreach (var group in _vault.GetMarks().GroupBy(m => m.FolderId))
         {
-            var name = group.Key is long id && folders.TryGetValue(id, out var n) ? n : "Ohne Ordner";
+            var name = group.Key is long id && folders.TryGetValue(id, out var n) ? n : L("Ohne Ordner");
             var sb = new StringBuilder($"# {name}\n\n");
             var list = group.OrderBy(m => BookOrder(m.Ref.Book)).ThenBy(m => m.Ref.Chapter).ThenBy(m => m.Ref.Verse).ToList();
             for (var i = 0; i < list.Count; i++)
@@ -63,28 +63,28 @@ public partial class MainWindow
                 sb.AppendLine($"> {(first.WholeVerse ? string.Join(" ", texts) : "„" + first.Text + "“")}").AppendLine();
                 if (first.Note.Length > 0) sb.AppendLine(first.Note).AppendLine();
                 if (first.Tags.Count > 0) sb.AppendLine(string.Join(" ", first.Tags.Select(ObsidianTag)));
-                sb.AppendLine($"Farbe: `{first.Color}`").AppendLine();
+                sb.AppendLine($"{L("Farbe:")} `{first.Color}`").AppendLine();
             }
-            Write(Path.Combine("Markierungen", SafeFileName(name) + ".md"), sb.ToString());
+            Write(Path.Combine(L("Markierungen"), SafeFileName(name) + ".md"), sb.ToString());
         }
 
-        var notes = new StringBuilder("# Notizen zu Versen\n\n");
+        var notes = new StringBuilder("# " + L("Notizen zu Versen") + "\n\n");
         foreach (var n in _vault.GetNotes().OrderBy(n => BookOrder(n.Ref.Book)).ThenBy(n => n.Ref.Chapter).ThenBy(n => n.Ref.Verse))
             notes.AppendLine($"## {Label(n.Ref)}").AppendLine(n.Text).AppendLine();
-        Write("Notizen.md", notes.ToString());
+        Write(L("Notizen") + ".md", notes.ToString());
 
-        var queue = new StringBuilder("# Leseliste\n\n");
+        var queue = new StringBuilder("# " + L("Leseliste") + "\n\n");
         foreach (var q in _vault.GetQueue()) queue.AppendLine($"- [ ] {q.Label}");
-        Write("Leseliste.md", queue.ToString());
+        Write(L("Leseliste") + ".md", queue.ToString());
 
-        var todos = new StringBuilder("# Aufgaben\n\n");
+        var todos = new StringBuilder("# " + L("Aufgaben") + "\n\n");
         foreach (var t in _vault.GetTodos()) todos.AppendLine($"- [{(t.Done ? "x" : " ")}] {t.Text}{(t.Ref is { } r ? $" ({Label(r)})" : "")}");
-        Write("Aufgaben.md", todos.ToString());
+        Write(L("Aufgaben") + ".md", todos.ToString());
 
-        var start = new StringBuilder($"# {_vault.Name}\n\nExport aus BibleStudy vom {DateTime.Now:dd.MM.yyyy HH:mm}.\n\n## Dokumente\n");
+        var start = new StringBuilder($"# {_vault.Name}\n\n{L("Export aus BibleStudy vom {0:dd.MM.yyyy HH:mm}.", DateTime.Now)}\n\n## {L("Dokumente")}\n");
         foreach (var d in docs.OrderBy(d => d.Title)) start.AppendLine($"- [[{SafeFileName(d.Title)}]]");
-        start.AppendLine("\n## Weitere\n- [[Notizen]]\n- [[Leseliste]]\n- [[Aufgaben]]");
-        foreach (var f in folders.Values.Order()) start.AppendLine($"- [[{SafeFileName(f)}]] (Markierungen)");
+        start.AppendLine($"\n## {L("Weitere")}\n- [[{L("Notizen")}]]\n- [[{L("Leseliste")}]]\n- [[{L("Aufgaben")}]]");
+        foreach (var f in folders.Values.Order()) start.AppendLine($"- [[{SafeFileName(f)}]] ({L("Markierungen")})");
         Write("Start.md", start.ToString());
         return files;
     }

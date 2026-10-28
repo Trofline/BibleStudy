@@ -1,4 +1,4 @@
-using System.Text.Json;
+﻿using System.Text.Json;
 
 namespace BibleStudy.Core.Models;
 
@@ -8,7 +8,7 @@ public sealed record MapPlace(string Id, string Name, string FeatureType, double
 /// <summary>Base map from Natural Earth (public domain): land and lake outlines and river lines as lon/lat sequences.</summary>
 public sealed class WorldMap
 {
-    public const string Attribution = "Kartendaten: Natural Earth (gemeinfrei)";
+    public static string Attribution => L("Kartendaten: Natural Earth (gemeinfrei)");
     const string Base = "https://raw.githubusercontent.com/nvkelso/natural-earth-vector/master/geojson/";
 
     public IReadOnlyList<double[]> Land { get; init; } = [];

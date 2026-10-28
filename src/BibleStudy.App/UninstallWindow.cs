@@ -44,20 +44,20 @@ sealed class UninstallWindow : Window
 
     void StepWelcome()
     {
-        if (Running()) { Show("BibleStudy läuft noch", "Bitte schließe BibleStudy (auch im Infobereich neben der Uhr: Rechtsklick → Beenden) und starte die Deinstallation dann noch einmal.", ("OK", Close)); return; }
-        Show("BibleStudy deinstallieren", $"Das Programm wird aus „{AppPaths.ProgramDir}“ entfernt, ebenso die Verknüpfungen.\n\nIm nächsten Schritt entscheidest du, was mit deiner eigenen Arbeit passiert.", ("Weiter", StepData), ("Abbrechen", Close));
+        if (Running()) { Show(L("BibleStudy läuft noch"), L("Bitte schließe BibleStudy (auch im Infobereich neben der Uhr: Rechtsklick → Beenden) und starte die Deinstallation dann noch einmal."), ("OK", Close)); return; }
+        Show(L("BibleStudy deinstallieren"), L("Das Programm wird aus „{0}“ entfernt, ebenso die Verknüpfungen.\n\nIm nächsten Schritt entscheidest du, was mit deiner eigenen Arbeit passiert.", AppPaths.ProgramDir), (L("Weiter"), StepData), (L("Abbrechen"), Close));
     }
 
-    void StepData() => Show("Deine Daten behalten?",
-        $"Deine Vaults, Notizen, Dokumente, Markierungen, Leselisten, Gebete und Einstellungen liegen in:\n{_dataDir}\n\nBehältst du sie, findet eine spätere Installation alles wieder vor.",
-        ("Daten behalten (empfohlen)", () => Finish(false)), ("Daten sichern und löschen", () => ConfirmDelete(backup: true)), ("Daten löschen", () => ConfirmDelete(backup: false)), ("Abbrechen", Close));
+    void StepData() => Show(L("Deine Daten behalten?"),
+        L("Deine Vaults, Notizen, Dokumente, Markierungen, Leselisten, Gebete und Einstellungen liegen in:\n{0}\n\nBehältst du sie, findet eine spätere Installation alles wieder vor.", _dataDir),
+        (L("Daten behalten (empfohlen)"), () => Finish(false)), (L("Daten sichern und löschen"), () => ConfirmDelete(backup: true)), (L("Daten löschen"), () => ConfirmDelete(backup: false)), (L("Abbrechen"), Close));
 
-    void ConfirmDelete(bool backup) => Show("Wirklich löschen?",
-        backup ? "Deine Daten werden zuerst als ZIP in Dokumente\\BibleStudy-Backup gesichert und dann gelöscht."
-               : "Deine Daten werden unwiderruflich gelöscht. Es gibt keine Sicherung.",
-        ("Zurück", StepData), (backup ? "Sichern und löschen" : "Endgültig löschen", () =>
+    void ConfirmDelete(bool backup) => Show(L("Wirklich löschen?"),
+        backup ? L("Deine Daten werden zuerst als ZIP in Dokumente\\BibleStudy-Backup gesichert und dann gelöscht.")
+               : L("Deine Daten werden unwiderruflich gelöscht. Es gibt keine Sicherung."),
+        (L("Zurück"), StepData), (backup ? L("Sichern und löschen") : L("Endgültig löschen"), () =>
         {
-            if (backup) { try { BackupAll(); } catch (Exception ex) { Show("Sicherung fehlgeschlagen", "Es wurde nichts gelöscht: " + ex.Message, ("OK", Close)); return; } }
+            if (backup) { try { BackupAll(); } catch (Exception ex) { Show(L("Sicherung fehlgeschlagen"), L("Es wurde nichts gelöscht: ") + ex.Message, ("OK", Close)); return; } }
             Finish(true);
         }));
 
@@ -104,6 +104,6 @@ sealed class UninstallWindow : Window
         Process.Start(new ProcessStartInfo("cmd.exe", "/c " + string.Join(" & ", cmd)) { CreateNoWindow = true, UseShellExecute = false });
 
         if (Environment.GetCommandLineArgs().Contains("--silent")) { Close(); return; }
-        Show("BibleStudy wurde entfernt", deleteData ? "Das Programm und deine Daten wurden gelöscht." : $"Das Programm wurde entfernt. Deine Daten bleiben erhalten:\n{_dataDir}", ("Fertig", Close));
+        Show(L("BibleStudy wurde entfernt"), deleteData ? L("Das Programm und deine Daten wurden gelöscht.") : L("Das Programm wurde entfernt. Deine Daten bleiben erhalten:\n{0}", _dataDir), (L("Fertig"), Close));
     }
 }

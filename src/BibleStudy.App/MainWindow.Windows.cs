@@ -39,11 +39,11 @@ public partial class MainWindow
     bool _revertingTab;
     bool _exiting;
 
-    static readonly string[] WorkTabs = ["Bücher", "Dokumente", "Predigt", "Planen"];
+    static readonly string[] WorkTabs = [L("Bücher"), "Dokumente", "Predigt", "Planen"];
 
     NavGroup? GroupOf(int tabIndex) => NavGroups.FirstOrDefault(g => g.Tabs.Any(t => t.Index == tabIndex));
 
-    string TabLabel(int index) => GroupOf(index) is { } g && g.Tabs.First(t => t.Index == index) is var t ? (g.Tabs.Length > 1 ? $"{g.Name} – {t.Label}" : g.Name) : $"Fenster {index}";
+    string TabLabel(int index) => GroupOf(index) is { } g && g.Tabs.First(t => t.Index == index) is var t ? (g.Tabs.Length > 1 ? $"{L(g.Name)} – {L(t.Label)}" : L(g.Name)) : L("Fenster {0}", index);
 
     TabItem? TabItemAt(int index) => SideTabs.Items.OfType<TabItem>().ElementAtOrDefault(index);
 
@@ -99,7 +99,7 @@ public partial class MainWindow
             foreach (var t in group!.Tabs.Where(t => indices.Contains(t.Index)))
             {
                 var idx = t.Index;
-                var b = new Button { Classes = { "seg" }, Content = t.Label, Tag = idx };
+                var b = new Button { Classes = { "seg" }, Content = L(t.Label), Tag = idx };
                 b.Click += (_, _) => Select(idx);
                 pills.Children.Add(b);
             }
@@ -175,11 +175,11 @@ public partial class MainWindow
     void RebuildTabStrip()
     {
         TabStrip.Children.Clear();
-        TabStrip.Children.Add(MakeTab("Lesen", null, "M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"));
+        TabStrip.Children.Add(MakeTab(L("Lesen"), null, "M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"));
         foreach (var d in _windows.Values.Where(w => !w.Side).ToList())
         {
             var g = NavGroups.First(x => "group:" + x.Name == d.Key);
-            TabStrip.Children.Add(MakeTab(d.Title, d.Key, g.Icon, closable: true));
+            TabStrip.Children.Add(MakeTab(L(d.Title), d.Key, g.Icon, closable: true));
         }
         // "+" opens a new tab, like in a browser or the Explorer
         var plus = new Button { Classes = { "tool" }, Width = 30, Height = 30, VerticalAlignment = VerticalAlignment.Center, Margin = new(4, 0, 0, 2), Content = new Icon { Data = Geometry.Parse("M12 5v14 M5 12h14"), IconSize = 14 } };
@@ -187,10 +187,10 @@ public partial class MainWindow
         plus.Click += (_, _) =>
         {
             var menu = new MenuFlyout();
-            foreach (var name in new[] { "Bücher", "Dokumente", "Predigt", "Planen", "Mehr" })
+            foreach (var name in new[] { L("Bücher"), "Dokumente", "Predigt", "Planen", "Mehr" })
             {
                 var g = NavGroups.First(x => x.Name == name);
-                var item = new MenuItem { Header = name == L("Mehr") ? "Einstellungen" : name, IsEnabled = !_windows.ContainsKey("group:" + name) };
+                var item = new MenuItem { Header = name == "Mehr" ? L("Einstellungen") : L(name), IsEnabled = !_windows.ContainsKey("group:" + name) };
                 item.Click += (_, _) => OpenWork(g, name == "Mehr" ? SettingsTab : null);
                 menu.Items.Add(item);
             }
@@ -208,7 +208,7 @@ public partial class MainWindow
         row.Children.Add(new TextBlock { Text = label + (windowed ? "  ⧉" : ""), VerticalAlignment = VerticalAlignment.Center });
         var b = new Button { Classes = { "wtab" }, Content = row };
         b.Classes.Set("active", active);
-        ToolTip.SetTip(b, key is null ? L("Zurück zum Bibeltext") : windowed ? "Liegt in einem eigenen Fenster – klicken holt es nach vorn" : "Klicken wechselt hierher. Nach unten ziehen macht ein eigenes Fenster daraus.");
+        ToolTip.SetTip(b, key is null ? L("Zurück zum Bibeltext") : windowed ? L("Liegt in einem eigenen Fenster – klicken holt es nach vorn") : L("Klicken wechselt hierher. Nach unten ziehen macht ein eigenes Fenster daraus."));
         if (closable)
         {
             var x = new Button { Classes = { "tool" }, Width = 22, Height = 22, Padding = new(0), Content = new Icon { Data = Geometry.Parse("M18 6L6 18 M6 6l12 12"), IconSize = 12 } };
@@ -267,7 +267,7 @@ public partial class MainWindow
         var saved = _settings.Windows.TryGetValue(d.Key, out var s) && s.W > 0 ? s : null;
         var win = new Window
         {
-            Title = L("BibleStudy – {0}", d.Title), Width = saved?.W ?? (d.Items.Count > 1 ? 640 : 520), Height = saved?.H ?? 800, MinWidth = 320, MinHeight = 240,
+            Title = L("BibleStudy – {0}", L(d.Title)), Width = saved?.W ?? (d.Items.Count > 1 ? 640 : 520), Height = saved?.H ?? 800, MinWidth = 320, MinHeight = 240,
             Background = Res("BsSurface"), Content = d.Panel, Icon = Icon,
             WindowStartupLocation = saved is null && at is null ? WindowStartupLocation.CenterOwner : WindowStartupLocation.Manual,
         };
@@ -358,10 +358,13 @@ public partial class MainWindow
     void SetActiveLayout(string? name)
     {
         _settings.ActiveLayout = name; SaveSettings();
-        ToolTip.SetTip(LayoutTopBtn, name is null ? L("Layouts: Anordnung speichern und laden") : $"Layouts – aktiv: {name}");
+        ToolTip.SetTip(LayoutTopBtn, name is null ? L("Layouts: Anordnung speichern und laden") : L("Layouts – aktiv: {0}", name));
     }
 
-    static readonly string[] BuiltInLayouts = ["Lesen", "Studium", "Schreiben"];
+    static readonly string[] BuiltInLayouts = [K("Lesen"), K("Studium"), K("Schreiben")];
+
+    /// <summary>The name of a layout as shown (the built-in ones are translated, the user's own are shown as typed).</summary>
+    static string LayoutLabel(string n) => BuiltInLayouts.Contains(n) ? L(n) : n;
 
     LayoutPreset? BuiltIn(string name) => name switch
     {
@@ -398,9 +401,9 @@ public partial class MainWindow
             foreach (var n0 in BuiltInLayouts.Concat(_settings.Layouts.Keys.Except(BuiltInLayouts).Order()))
             {
                 var n = n0; var custom = _settings.Layouts.ContainsKey(n);
-                var load = new Button { Classes = { "seg" }, HorizontalAlignment = HorizontalAlignment.Stretch, HorizontalContentAlignment = HorizontalAlignment.Left, Content = (n == _settings.ActiveLayout ? "✓  " : "     ") + n };
+                var load = new Button { Classes = { "seg" }, HorizontalAlignment = HorizontalAlignment.Stretch, HorizontalContentAlignment = HorizontalAlignment.Left, Content = (n == _settings.ActiveLayout ? "✓  " : "     ") + LayoutLabel(n) };
                 load.Classes.Set("active", n == _settings.ActiveLayout);
-                load.Click += (_, _) => { ApplyLayout(FindLayout(n)!, n); StatusText.Text = L("Layout „{0}“ geladen.", n); Fill(); };
+                load.Click += (_, _) => { ApplyLayout(FindLayout(n)!, n); StatusText.Text = L("Layout „{0}“ geladen.", LayoutLabel(n)); Fill(); };
                 var row = new DockPanel();
                 if (custom)
                 {
@@ -432,7 +435,7 @@ public partial class MainWindow
             if (BuiltInLayouts.Contains(n)) { info.Text = L("Diesen Namen tragen schon eingebaute Layouts – wähle einen anderen."); return; }
             var existed = _settings.Layouts.ContainsKey(n);
             SaveLayoutAs(n); name.Text = ""; Fill();
-            info.Text = existed ? L("„{0}“ überschrieben.", n) : $"Neues Layout „{n}“ gespeichert.";
+            info.Text = existed ? L("„{0}“ überschrieben.", n) : L("Neues Layout „{0}“ gespeichert.", n);
         }
         name.KeyDown += (_, e) => { if (e.Key == Key.Enter) Commit(); };
         Fill();
@@ -453,7 +456,7 @@ public partial class MainWindow
         RefreshLayoutBox();
         LayoutLoadBtn.Click += (_, _) =>
         {
-            var name = LayoutBox.SelectedItem as string;
+            var name = (LayoutBox.SelectedItem as ComboBoxItem)?.Tag as string;
             var preset = name is null ? null : FindLayout(name);
             if (preset is null) { LayoutInfo.Text = L("Wähle zuerst ein Layout."); return; }
             ApplyLayout(preset, name); LayoutInfo.Text = L("Layout „{0}“ geladen.", name);
@@ -467,7 +470,7 @@ public partial class MainWindow
         };
         LayoutDeleteBtn.Click += (_, _) =>
         {
-            if (LayoutBox.SelectedItem is string n && _settings.Layouts.Remove(n)) { if (_settings.ActiveLayout == n) SetActiveLayout(null); SaveSettings(); RefreshLayoutBox(); LayoutInfo.Text = L("Layout „{0}“ gelöscht.", n); }
+            if ((LayoutBox.SelectedItem as ComboBoxItem)?.Tag is string n && _settings.Layouts.Remove(n)) { if (_settings.ActiveLayout == n) SetActiveLayout(null); SaveSettings(); RefreshLayoutBox(); LayoutInfo.Text = L("Layout „{0}“ gelöscht.", n); }
             else LayoutInfo.Text = L("Eingebaute Layouts lassen sich nicht löschen.");
         };
     }
@@ -475,7 +478,9 @@ public partial class MainWindow
     void RefreshLayoutBox(string? select = null)
     {
         var names = BuiltInLayouts.Concat(_settings.Layouts.Keys.Except(BuiltInLayouts).Order()).ToList();
-        LayoutBox.ItemsSource = names;
-        LayoutBox.SelectedItem = select ?? _settings.ActiveLayout ?? names.First();
+        var items = names.Select(n => new ComboBoxItem { Content = LayoutLabel(n), Tag = n }).ToList();
+        LayoutBox.ItemsSource = items;
+        var want = select ?? _settings.ActiveLayout ?? names.First();
+        LayoutBox.SelectedItem = items.FirstOrDefault(i => (string?)i.Tag == want) ?? items.First();
     }
 }

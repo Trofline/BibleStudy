@@ -27,7 +27,7 @@ public sealed class KnowledgeView : UserControl
         var strip = new WrapPanel { Margin = new(16, 10, 16, 6) };
         back.Margin = new(0, 0, 16, 4);
         strip.Children.Add(back);
-        foreach (var (color, name) in new[] { ("#E3B65F", "Dokument"), ("#0593e6", "Bibelvers (Farbe nach Gattung)"), ("#9a9890", "Tag") })
+        foreach (var (color, name) in new[] { ("#E3B65F", L("Dokument")), ("#0593e6", L("Bibelvers (Farbe nach Gattung)")), ("#9a9890", L("Tag")) })
         {
             var dot = new Border { Width = 10, Height = 10, CornerRadius = new(5), Background = new SolidColorBrush(Color.Parse(color)), VerticalAlignment = VerticalAlignment.Center, Margin = new(0, 0, 5, 0) };
             var label = new TextBlock { Text = name, FontSize = 12, Margin = new(0, 0, 14, 0) };
@@ -46,7 +46,7 @@ public sealed class KnowledgeView : UserControl
     public void SetData(IReadOnlyList<KnowledgeNode> nodes, IReadOnlyList<(int A, int B)> edges)
     {
         _canvas.SetData(nodes, edges);
-        _hint.Text = nodes.Count == 0 ? L("Noch keine Dokumente. Lege im Reiter „Wissen“ Notizen an.") : $"{nodes.Count} Knoten · Klick: Details · Doppelklick: öffnen · Mausrad: zoomen · ziehen: verschieben";
+        _hint.Text = nodes.Count == 0 ? L("Noch keine Dokumente. Lege im Reiter „Wissen“ Notizen an.") : L("{0} Knoten · Klick: Details · Doppelklick: öffnen · Mausrad: zoomen · ziehen: verschieben", nodes.Count);
     }
 }
 
@@ -159,7 +159,7 @@ sealed class ForceCanvas : Control
         if (i == _hover) return;
         _hover = i;
         Cursor = i >= 0 ? new Cursor(StandardCursorType.Hand) : null;
-        Hovered?.Invoke(i < 0 ? "" : $"{_nodes[i].Label} · {_degree[i]} Verbindungen");
+        Hovered?.Invoke(i < 0 ? "" : L("{0} · {1} Verbindungen", _nodes[i].Label, _degree[i]));
         InvalidateVisual();
     }
 

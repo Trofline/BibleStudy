@@ -40,8 +40,8 @@ public partial class MainWindow
     {
         Sections =
         [
-            new() { Heading = "Einleitung", Minutes = 4 }, new() { Heading = "Punkt 1", Minutes = 8 }, new() { Heading = "Punkt 2", Minutes = 8 },
-            new() { Heading = "Punkt 3", Minutes = 6 }, new() { Heading = "Schluss und Aufruf", Minutes = 4 },
+            new() { Heading = L("Einleitung"), Minutes = 4 }, new() { Heading = L("Punkt 1"), Minutes = 8 }, new() { Heading = L("Punkt 2"), Minutes = 8 },
+            new() { Heading = L("Punkt 3"), Minutes = 6 }, new() { Heading = L("Schluss und Aufruf"), Minutes = 4 },
         ],
     };
 
@@ -60,7 +60,7 @@ public partial class MainWindow
 
         // choose / create
         var saved = _vault.GetDocuments(tag: "Predigt").Where(d => d.Body.Contains(SermonMark)).ToList();
-        var pick = new ComboBox { MinWidth = 220, PlaceholderText = saved.Count == 0 ? L("Noch keine gespeicherte Predigt") : "Gespeicherte Predigt öffnen …", ItemsSource = saved.Select(d => d.Title).ToList() };
+        var pick = new ComboBox { MinWidth = 220, PlaceholderText = saved.Count == 0 ? L("Noch keine gespeicherte Predigt") : L("Gespeicherte Predigt öffnen …"), ItemsSource = saved.Select(d => d.Title).ToList() };
         pick.SelectionChanged += (_, _) =>
         {
             if (_sermonLoading || pick.SelectedIndex < 0) return;
@@ -80,18 +80,18 @@ public partial class MainWindow
             SermonPanel.Children.Add(box);
             return box;
         }
-        Field("Titel", _sermon.Title, v => _sermon.Title = v, hint: L("z. B. Treue im Exil"));
-        var passage = Field("Predigttext", _sermon.Passage, v => _sermon.Passage = v, hint: "z. B. Daniel 1,1–21");
+        Field(L("Titel"), _sermon.Title, v => _sermon.Title = v, hint: L("z. B. Treue im Exil"));
+        var passage = Field(L("Predigttext"), _sermon.Passage, v => _sermon.Passage = v, hint: L("z. B. Daniel 1,1–21"));
         var useCurrent = new Button { Content = L("Aktuellen Vers als Predigttext"), HorizontalAlignment = HorizontalAlignment.Left };
         useCurrent.Click += (_, _) => passage.Text = _selected is int v ? $"{BookName(_curBook)} {_curChapter},{v}" : $"{BookName(_curBook)} {_curChapter}";
         SermonPanel.Children.Add(useCurrent);
-        Field("Kernaussage (ein Satz)", _sermon.Message, v => _sermon.Message = v, multi: true, hint: "Was sollen alle mitnehmen?");
+        Field(L("Kernaussage (ein Satz)"), _sermon.Message, v => _sermon.Message = v, multi: true, hint: L("Was sollen alle mitnehmen?"));
 
         var total = new TextBlock { Classes = { "caption" }, TextWrapping = TextWrapping.Wrap };
         void UpdateTotal()
         {
             var sum = _sermon.Sections.Sum(s => s.Minutes);
-            total.Text = L("Geplant: {0} min von {1} min", sum, _sermon.Minutes) + (sum > _sermon.Minutes ? $" – {sum - _sermon.Minutes} min zu viel" : sum < _sermon.Minutes ? $" – {_sermon.Minutes - sum} min frei" : " – passt genau");
+            total.Text = L("Geplant: {0} min von {1} min", sum, _sermon.Minutes) + (sum > _sermon.Minutes ? L(" – {0} min zu viel", sum - _sermon.Minutes) : sum < _sermon.Minutes ? L(" – {0} min frei", _sermon.Minutes - sum) : L(" – passt genau"));
         }
         var goal = new NumericUpDown { Minimum = 5, Maximum = 180, Value = _sermon.Minutes, FormatString = "0", Width = 120, Increment = 5 };
         goal.ValueChanged += (_, _) => { _sermon.Minutes = (int)(goal.Value ?? 30); UpdateTotal(); };
@@ -118,7 +118,7 @@ public partial class MainWindow
                 foreach (var key in sec.Verses.ToList())
                 {
                     var k = key; var p = k.Split('|');
-                    var chip = FilterChip(VerseLabel(k), false, null, async () => { if (p.Length == 3) await GoToAsync(p[0], int.Parse(p[1]), int.Parse(p[2])); }, "Springt zur Stelle");
+                    var chip = FilterChip(VerseLabel(k), false, null, async () => { if (p.Length == 3) await GoToAsync(p[0], int.Parse(p[1]), int.Parse(p[2])); }, L("Springt zur Stelle"));
                     var del = new Button { Classes = { "tool" }, Width = 22, Height = 24, Content = new Icon { Data = Geometry.Parse("M18 6L6 18 M6 6l12 12"), IconSize = 10 }, Margin = new(0, 0, 6, 4) };
                     del.Click += (_, _) => { sec.Verses.Remove(k); DrawVerses(); };
                     verses.Children.Add(new StackPanel { Orientation = Orientation.Horizontal, Children = { chip, del } });
@@ -155,7 +155,7 @@ public partial class MainWindow
             });
         }
         var addSection = new Button { Content = L("＋ Teil hinzufügen"), HorizontalAlignment = HorizontalAlignment.Left };
-        addSection.Click += (_, _) => { _sermon.Sections.Add(new SermonSection { Heading = $"Punkt {_sermon.Sections.Count}", Minutes = 5 }); BuildSermonUi(); };
+        addSection.Click += (_, _) => { _sermon.Sections.Add(new SermonSection { Heading = L("Punkt {0}", _sermon.Sections.Count), Minutes = 5 }); BuildSermonUi(); };
         SermonPanel.Children.Add(addSection);
         UpdateTotal();
 
@@ -188,13 +188,13 @@ public partial class MainWindow
     {
         var sb = new StringBuilder();
         sb.AppendLine($"# {(_sermon.Title.Length > 0 ? _sermon.Title : "Predigt")}").AppendLine();
-        if (_sermon.Passage.Length > 0) sb.AppendLine($"**Predigttext:** {_sermon.Passage}  ");
-        sb.AppendLine($"**Zielzeit:** {_sermon.Minutes} min").AppendLine();
+        if (_sermon.Passage.Length > 0) sb.AppendLine(L("**Predigttext:** {0}  ", _sermon.Passage));
+        sb.AppendLine(L("**Zielzeit:** {0} min", _sermon.Minutes)).AppendLine();
         if (_sermon.Message.Length > 0) sb.AppendLine($"> {_sermon.Message.ReplaceLineEndings(" ")}").AppendLine();
         foreach (var s in _sermon.Sections)
         {
             sb.AppendLine($"## {s.Heading} ({s.Minutes} min)").AppendLine();
-            if (s.Verses.Count > 0) sb.AppendLine("Verse: " + string.Join(", ", s.Verses.Select(VerseLabel))).AppendLine();
+            if (s.Verses.Count > 0) sb.AppendLine(L("Verse: ") + string.Join(", ", s.Verses.Select(VerseLabel))).AppendLine();
             if (s.Notes.Length > 0) sb.AppendLine(s.Notes).AppendLine();
         }
         sb.AppendLine(SermonMark + JsonSerializer.Serialize(_sermon, SermonJson) + "-->");
@@ -203,7 +203,7 @@ public partial class MainWindow
 
     void SaveSermon()
     {
-        var title = "Predigt: " + (_sermon.Title.Length > 0 ? _sermon.Title : "ohne Titel");
+        var title = L("Predigt: ") + (_sermon.Title.Length > 0 ? _sermon.Title : L("ohne Titel"));
         var body = SermonMarkdown();
         var tags = new[] { "Predigt" };
         if (_sermonDocId is long id && _vault.GetDocuments().Any(d => d.Id == id)) _vault.UpdateDocument(id, title, body, null, false, tags);
@@ -216,7 +216,7 @@ public partial class MainWindow
     void ExportSermon()
     {
         static string H(string s) => WebUtility.HtmlEncode(s);
-        var sb = new StringBuilder("<!doctype html><html lang=\"de\"><meta charset=\"utf-8\"><title>" + H(_sermon.Title) + "</title><style>body{font-family:Georgia,serif;max-width:720px;margin:40px auto;line-height:1.55;color:#222}h1{margin-bottom:0}h2{border-bottom:1px solid #ccc;padding-bottom:4px;margin-top:28px}.meta{color:#666}blockquote{border-left:4px solid #c9a227;margin:16px 0;padding:4px 14px;background:#faf6e8}.v{color:#555;font-style:italic}small{color:#888}</style>");
+        var sb = new StringBuilder("<!doctype html><html lang=\"" + Loc.Code + "\"><meta charset=\"utf-8\"><title>" + H(_sermon.Title) + "</title><style>body{font-family:Georgia,serif;max-width:720px;margin:40px auto;line-height:1.55;color:#222}h1{margin-bottom:0}h2{border-bottom:1px solid #ccc;padding-bottom:4px;margin-top:28px}.meta{color:#666}blockquote{border-left:4px solid #c9a227;margin:16px 0;padding:4px 14px;background:#faf6e8}.v{color:#555;font-style:italic}small{color:#888}</style>");
         sb.Append($"<h1>{H(_sermon.Title)}</h1><p class=\"meta\">{H(_sermon.Passage)} · {_sermon.Minutes} min</p>");
         if (_sermon.Message.Length > 0) sb.Append($"<blockquote>{H(_sermon.Message)}</blockquote>");
         foreach (var s in _sermon.Sections)

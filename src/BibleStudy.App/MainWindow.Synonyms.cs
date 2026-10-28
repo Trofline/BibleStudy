@@ -1,4 +1,4 @@
-using System.Net.Http.Json;
+﻿using System.Net.Http.Json;
 using System.Text.Json;
 using Avalonia.Controls;
 using Avalonia.Layout;
@@ -23,8 +23,8 @@ public partial class MainWindow
                 .Where(g => g.Key.Length > 0).OrderByDescending(g => g.Count()).Take(14).ToList();
             if (renderings.Count > 1)
             {
-                StudyPanel.Children.Add(Eyebrow("So wird das Wort hier noch wiedergegeben"));
-                StudyPanel.Children.Add(Muted("Andere deutsche Wörter für dieselbe Grundtext-Nummer – ein Klick zeigt alle Stellen."));
+                StudyPanel.Children.Add(Eyebrow(L("So wird das Wort hier noch wiedergegeben")));
+                StudyPanel.Children.Add(Muted(L("Andere deutsche Wörter für dieselbe Grundtext-Nummer – ein Klick zeigt alle Stellen.")));
                 var wrap = new WrapPanel();
                 foreach (var g in renderings)
                 {
@@ -41,20 +41,20 @@ public partial class MainWindow
             var word = ExtractWord(span.Word);
             if (word.Length < 3) return;
             var panel = new StackPanel { Spacing = 4 };
-            StudyPanel.Children.Add(Eyebrow($"Synonyme zu „{word}“"));
+            StudyPanel.Children.Add(Eyebrow(L("Synonyme zu „{0}“", word)));
             StudyPanel.Children.Add(panel);
-            panel.Children.Add(Muted("Lade …"));
+            panel.Children.Add(Muted(L("Lade …")));
             var groups = await SynonymsAsync(word);
             panel.Children.Clear();
-            if (groups.Count == 0) { panel.Children.Add(Muted("Keine Synonyme gefunden.")); return; }
+            if (groups.Count == 0) { panel.Children.Add(Muted(L("Keine Synonyme gefunden."))); return; }
             var wrap = new WrapPanel();
             foreach (var s in groups.Take(24))
             {
                 var term = s;
-                wrap.Children.Add(FilterChip(s, false, null, () => { SearchBox.Text = term; SideTabs.SelectedIndex = 0; _ = SearchAsync(); }, "Im Text suchen"));
+                wrap.Children.Add(FilterChip(s, false, null, () => { SearchBox.Text = term; SideTabs.SelectedIndex = 0; _ = SearchAsync(); }, L("Im Text suchen")));
             }
             panel.Children.Add(wrap);
-            panel.Children.Add(Muted("Ein Klick sucht das Wort im Bibeltext – so siehst du, ob ein anderes Wort die Stelle klarer macht. Quelle: openthesaurus.de (CC BY-SA 4.0)."));
+            panel.Children.Add(Muted(L("Ein Klick sucht das Wort im Bibeltext – so siehst du, ob ein anderes Wort die Stelle klarer macht. Quelle: openthesaurus.de (CC BY-SA 4.0).")));
         }
     }
 

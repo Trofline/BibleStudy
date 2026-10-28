@@ -27,8 +27,8 @@ public sealed class TimelineView : UserControl
 
     static readonly (string Name, int From, int To)[] Eras =
     [
-        ("Alles", int.MinValue, int.MaxValue), ("Urgeschichte", int.MinValue, -2100), ("Erzväter", -2100, -1500), ("Exodus bis Richter", -1500, -1050),
-        ("Königreich", -1050, -586), ("Exil und Rückkehr", -586, -400), ("Jesus", -10, 34), ("Urgemeinde", 34, 100),
+        (L("Alles"), int.MinValue, int.MaxValue), (L("Urgeschichte"), int.MinValue, -2100), (L("Erzväter"), -2100, -1500), (L("Exodus bis Richter"), -1500, -1050),
+        (L("Königreich"), -1050, -586), (L("Exil und Rückkehr"), -586, -400), ("Jesus", -10, 34), (L("Urgemeinde"), 34, 100),
     ];
 
     readonly Ruler _ruler = new();
@@ -116,7 +116,7 @@ public sealed class TimelineView : UserControl
         foreach (var b in _eras.Children.OfType<Button>()) b.Classes.Set("active", b.Content as string == Eras[_era].Name);
     }
 
-    static string YearText(int y) => y < 0 ? $"{-y} v. Chr." : y == 0 ? "0" : $"{y} n. Chr.";
+    static string YearText(int y) => y < 0 ? L("{0} v. Chr.", -y) : y == 0 ? "0" : L("{0} n. Chr.", y);
 
     async void Select(TimelineEvent e, bool fromRuler)
     {
@@ -131,7 +131,7 @@ public sealed class TimelineView : UserControl
         {
             var d = await DetailProvider!(e.Id);
             if (generation != _generation) return;
-            _meta.Text = L("{0} (Näherungswert){1}", YearText(d.Year), (d.Duration.Length > 0 ? " · Dauer " + d.Duration : ""));
+            _meta.Text = L("{0} (Näherungswert){1}", YearText(d.Year), (d.Duration.Length > 0 ? L(" · Dauer ") + d.Duration : ""));
             _people.Text = d.Participants.Count > 0 ? L("Beteiligt: ") + string.Join(", ", d.Participants.Select(p => p.Name)) : "";
             _placesText.Text = d.Locations.Count > 0 ? L("Orte: ") + string.Join(", ", d.Locations.Select(p => p.Name)) : "";
             foreach (var (r, end) in d.References.Take(24))

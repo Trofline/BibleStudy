@@ -1,4 +1,4 @@
-using System.Text;
+﻿using System.Text;
 using System.Text.RegularExpressions;
 
 namespace BibleStudy.L10n;
@@ -161,7 +161,7 @@ public static class Extractor
             {
                 // is this literal the first argument of L( … ) ?
                 var before = text[Math.Max(0, l.Start - 12)..l.Start].TrimEnd();
-                if (!(before.EndsWith("L(") && !before.EndsWith("IL(") )) continue;
+                if (!((before.EndsWith("L(") || before.EndsWith("K(")) && !before.EndsWith("IL(") && !before.EndsWith("XL("))) continue;
                 if (l.Interpolated || l.Raw) continue;
                 var key = l.Verbatim ? l.Content.Replace("\"\"", "\"") : Unescape(l.Content);
                 if (HasLetters(key)) yield return (file, key);
@@ -186,6 +186,13 @@ public static class Extractor
             {
                 var v = System.Net.WebUtility.HtmlDecode(m.Groups["v"].Value);
                 if (v.StartsWith('{') || !HasLetters(v)) continue;
+                // "Text" is only a fixed UI text on TextBlock and Run (a TextBox's Text is what the user types)
+                if (m.Groups["n"].Value == "Text")
+                {
+                    var tagStart = text.LastIndexOf('<', m.Index);
+                    var tag = tagStart >= 0 ? Regex.Match(text[tagStart..], @"^<([\w:.]+)").Groups[1].Value : "";
+                    if (tag is not ("TextBlock" or "Run" or "Label")) continue;
+                }
                 yield return (file, v);
             }
             foreach (Match m in XamlElementText.Matches(text))

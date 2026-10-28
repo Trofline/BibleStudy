@@ -64,9 +64,9 @@ public partial class MainWindow
 
     void UpdatePickerLabels()
     {
-        LangBtn.Content = PickerLabel(LanguageBox.SelectedItem as string ?? "Sprache");
-        TransBtn.Content = PickerLabel(TranslationBox.SelectedItem is TranslationInfo t ? t.ShortName : "Übersetzung");
-        BookBtn.Content = PickerLabel(BookBox.SelectedItem is BookInfo b ? b.CommonName : "Buch");
+        LangBtn.Content = PickerLabel(LanguageBox.SelectedItem as string ?? L("Sprache"));
+        TransBtn.Content = PickerLabel(TranslationBox.SelectedItem is TranslationInfo t ? t.ShortName : L("Übersetzung"));
+        BookBtn.Content = PickerLabel(BookBox.SelectedItem is BookInfo b ? b.CommonName : L("Buch"));
         ChapterBtn.Content = PickerLabel(((int)(ChapterBox.Value ?? 1)).ToString());
     }
 
@@ -120,9 +120,9 @@ public partial class MainWindow
             bool Match(BookInfo b) => q.Length == 0 || SearchQuery.Fold(b.CommonName + ShortBook(b) + b.Id, true).Replace(" ", "").Replace(".", "").Contains(q);
             foreach (var (title, pred) in new (string, Func<BookInfo, bool>)[]
             {
-                ("Altes Testament", b => BookCategories.IsOldTestament(BookCategories.Of(b.Id))),
-                ("Neues Testament", b => BookCategories.IsNewTestament(BookCategories.Of(b.Id))),
-                ("Weitere Bücher", b => BookCategories.Of(b.Id) == BookCategory.Other),
+                (L("Altes Testament"), b => BookCategories.IsOldTestament(BookCategories.Of(b.Id))),
+                (L("Neues Testament"), b => BookCategories.IsNewTestament(BookCategories.Of(b.Id))),
+                (L("Weitere Bücher"), b => BookCategories.Of(b.Id) == BookCategory.Other),
             })
             {
                 var list = _books.Where(pred).Where(Match).OrderBy(b => b.Order).ToList();
@@ -155,7 +155,7 @@ public partial class MainWindow
         var current = (int)(ChapterBox.Value ?? 1);
         var color = BookColorAt(_books, book.Id);
         var panel = new StackPanel { Width = Math.Min(620, 70 + Math.Ceiling(Math.Sqrt(book.NumberOfChapters)) * 56) };
-        panel.Children.Add(PickerHeading($"{book.CommonName} – Kapitel wählen"));
+        panel.Children.Add(PickerHeading(L("{0} – Kapitel wählen", book.CommonName)));
         var number = new TextBox { Watermark = L("Nummer tippen (1–{0}) + Enter", book.NumberOfChapters), Margin = new(0, 0, 0, 8) };
         number.KeyDown += (_, e) =>
         {

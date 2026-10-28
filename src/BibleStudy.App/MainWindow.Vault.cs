@@ -109,16 +109,16 @@ public partial class MainWindow
         MarksDetailBtn.IsCheckedChanged += (_, _) => ApplyCollectionFilter();
         var more = new MenuFlyout();
         void AddItem(string text, Action act) { var i = new MenuItem { Header = text }; i.Click += (_, _) => act(); more.Items.Add(i); }
-        AddItem("Alle Ordner aufklappen", () => { _foldersTouched = true; foreach (var f in _vault.GetFolders()) _openFolders.Add(f.Id); _openFolders.Add(0); ApplyCollectionFilter(); });
-        AddItem("Alle Ordner zuklappen", () => { _foldersTouched = true; _openFolders.Clear(); ApplyCollectionFilter(); });
-        AddItem("Neues Dokument im gewählten Ordner", () =>
+        AddItem(L("Alle Ordner aufklappen"), () => { _foldersTouched = true; foreach (var f in _vault.GetFolders()) _openFolders.Add(f.Id); _openFolders.Add(0); ApplyCollectionFilter(); });
+        AddItem(L("Alle Ordner zuklappen"), () => { _foldersTouched = true; _openFolders.Clear(); ApplyCollectionFilter(); });
+        AddItem(L("Neues Dokument im gewählten Ordner"), () =>
         {
             _newDocFolder = (FolderFilterBox.SelectedItem as Folder)?.Id;
             SideTabs.SelectedIndex = KnowledgeTab;
             OpenDocument(new Document(0, "", "", null, false, DateTime.Now, [], _newDocFolder));
         });
-        AddItem("Neuer Ordner …", () => { NewFolderBox.IsVisible = true; NewFolderBox.Focus(); });
-        AddItem("Gewählten Ordner löschen", () => { if (DeleteFolderBtn.IsVisible) DeleteFolderBtn.RaiseEvent(new Avalonia.Interactivity.RoutedEventArgs(Button.ClickEvent)); });
+        AddItem(L("Neuer Ordner …"), () => { NewFolderBox.IsVisible = true; NewFolderBox.Focus(); });
+        AddItem(L("Gewählten Ordner löschen"), () => { if (DeleteFolderBtn.IsVisible) DeleteFolderBtn.RaiseEvent(new Avalonia.Interactivity.RoutedEventArgs(Button.ClickEvent)); });
         MarksMoreBtn.Flyout = more;
         MarkSaveBtn.Click += async (_, _) => await SaveEditedMarkAsync();
         MarkDeleteBtn.Click += async (_, _) =>
@@ -295,7 +295,7 @@ public partial class MainWindow
         var title = new TextBlock
         {
             FontWeight = FontWeight.SemiBold, TextWrapping = TextWrapping.Wrap,
-            Text = _selection is { } s ? $"Auswahl: „{Shorten(s.Text)}“" : _selected is int v ? $"Ganzer Vers {v}" : "Erst Text auswählen oder einen Vers anklicken",
+            Text = _selection is { } s ? L("Auswahl: „{0}“", Shorten(s.Text)) : _selected is int v ? L("Ganzer Vers {0}", v) : L("Erst Text auswählen oder einen Vers anklicken"),
         };
         var swatches = new WrapPanel();
         foreach (var hex in PresetColors.Concat(_settings.CustomColors)) swatches.Children.Add(Swatch(hex, Pick));
@@ -330,9 +330,9 @@ public partial class MainWindow
         var tags = _vault.GetTags().Select(t => t.Tag).ToList();
 
         _vaultUiLoading = true;
-        FolderFilterBox.ItemsSource = new List<object> { "Alle Ordner", "Ohne Ordner" }.Concat(folders).ToList();
+        FolderFilterBox.ItemsSource = new List<object> { L("Alle Ordner"), L("Ohne Ordner") }.Concat(folders).ToList();
         FolderFilterBox.SelectedIndex = keepNoFolder ? 1 : keepFolder is long id && folders.FindIndex(f => f.Id == id) is var i and >= 0 ? i + 2 : 0;
-        TagFilterBox.ItemsSource = new List<string> { "Alle Tags" }.Concat(tags).ToList();
+        TagFilterBox.ItemsSource = new List<string> { L("Alle Tags") }.Concat(tags).ToList();
         TagFilterBox.SelectedIndex = keepTag is not null && tags.IndexOf(keepTag) is var j and >= 0 ? j + 1 : 0;
         _vaultUiLoading = false;
         DeleteFolderBtn.IsVisible = FolderFilterBox.SelectedItem is Folder;
@@ -367,19 +367,19 @@ public partial class MainWindow
             .Where(d => FolderFilterBox.SelectedIndex == 1 ? d.FolderId is null : folder is null || d.FolderId == folder).ToList();
         // few folders: start expanded; many: collapsed (until the user decides)
         if (!_foldersTouched) { _openFolders.Clear(); if (folders.Count <= 3 || folder is not null) foreach (var f in folders) _openFolders.Add(f.Id); _openFolders.Add(0); }
-        foreach (var (id, name) in folders.Select(f => (f.Id, f.Name)).Append((0L, "Ohne Ordner")))
+        foreach (var (id, name) in folders.Select(f => (f.Id, f.Name)).Append((0L, L("Ohne Ordner"))))
         {
             var inFolder = marks.Where(m => (m.FolderId ?? 0) == id).OrderBy(m => BookOrder(m.Ref.Book)).ThenBy(m => m.Ref.Chapter).ThenBy(m => m.Ref.Verse).ToList();
             var folderDocs = docs.Where(d => (d.FolderId ?? 0) == id).OrderBy(d => d.Title, Comparer<string>.Create(NaturalCompare)).ToList();
             if (inFolder.Count == 0 && folderDocs.Count == 0) continue;
             var open = _openFolders.Contains(id);
-            var counts = string.Join(" · ", new[] { folderDocs.Count > 0 ? $"{folderDocs.Count} Dok." : null, inFolder.Count > 0 ? $"{inFolder.Count} Verse" : null }.OfType<string>());
+            var counts = string.Join(" · ", new[] { folderDocs.Count > 0 ? L("{0} Dok.", folderDocs.Count) : null, inFolder.Count > 0 ? L("{0} Verse", inFolder.Count) : null }.OfType<string>());
             rows.Add(new Entry(default, $"{(open ? "▾" : "▸")}  {name}   ·   {counts}", -1 - id, null));
             if (!open) continue;
             foreach (var d in folderDocs)
             {
                 var preview = string.Join(" ", d.Body.Split((char)10).Where(l => !l.TrimStart().StartsWith('#') && !l.StartsWith("**Quelle")).Take(4)).Trim();
-                rows.Add(new Entry(default, detail ? $"📄  {d.Title}\n{Shorten(preview, 120)}" : $"📄  {d.Title}", DocRowBase + d.Id, null));
+                rows.Add(new Entry(default, detail ? L("📄  {0}\n{1}", d.Title, Shorten(preview, 120)) : $"📄  {d.Title}", DocRowBase + d.Id, null));
             }
             for (var i = 0; i < inFolder.Count; i++)
             {
@@ -426,12 +426,12 @@ public partial class MainWindow
         if (_vault.GetMarks().FirstOrDefault(x => x.Id == id) is not { } m) { CloseEditor(); return; }
         _editMark = m; _editColor = m.Color;
         MarkEditor.IsVisible = true;
-        MarkEditTitle.Text = Label(m.Ref) + (m.WholeVerse ? " (ganzer Vers)" : $" „{Shorten(m.Text)}“");
+        MarkEditTitle.Text = Label(m.Ref) + (m.WholeVerse ? L(" (ganzer Vers)") : $" „{Shorten(m.Text)}“");
         BuildEditSwatches();
         MarkNoteBox.Text = m.Note;
         MarkTagsBox.Text = string.Join(", ", m.Tags);
         var folders = _vault.GetFolders();
-        MarkFolderBox.ItemsSource = new List<object> { "(kein Ordner)" }.Concat(folders).ToList();
+        MarkFolderBox.ItemsSource = new List<object> { L("(kein Ordner)") }.Concat(folders).ToList();
         MarkFolderBox.SelectedIndex = m.FolderId is long fid ? folders.FindIndex(f => f.Id == fid) + 1 : 0;
     }
 
@@ -472,7 +472,7 @@ public partial class MainWindow
     {
         var items = _vault.GetQueue();
         QueueList.ItemsSource = items.Select(q => new Entry(q.Ref, q.Label, q.Id)).ToList();
-        QueueInfo.Text = items.Count == 0 ? L("Die Leseliste ist leer. Füge Verse über „Vers hinzufügen“ hinzu oder schicke Suchergebnisse und Querverweise hierher; „Nächster“ springt dann der Reihe nach durch.") : $"{items.Count} Verse auf der Leseliste";
+        QueueInfo.Text = items.Count == 0 ? L("Die Leseliste ist leer. Füge Verse über „Vers hinzufügen“ hinzu oder schicke Suchergebnisse und Querverweise hierher; „Nächster“ springt dann der Reihe nach durch.") : L("{0} Verse auf der Leseliste", items.Count);
     }
 
     async Task QueueNextAsync()

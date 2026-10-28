@@ -20,6 +20,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\BibleStudy.Core\BibleStudy.Core.csproj" />
+    <ProjectReference Include="..\..\tools\BibleStudy.L10n\BibleStudy.L10n.csproj" />
   </ItemGroup>
 
 </Project>

@@ -1,4 +1,4 @@
-using System.Globalization;
+﻿using System.Globalization;
 using System.Text;
 using System.Text.RegularExpressions;
 
@@ -46,8 +46,8 @@ public static partial class SearchQuery
         var tokens = Tokenize(input);
         var pos = 0;
         var node = ParseAnd(tokens, ref pos);
-        if (node is null) { error = "Nichts zu suchen."; return null; }
-        if (!HasPositive(node)) { error = "Es braucht mindestens ein Suchwort, das vorkommen soll."; return null; }
+        if (node is null) { error = L("Nichts zu suchen."); return null; }
+        if (!HasPositive(node)) { error = L("Es braucht mindestens ein Suchwort, das vorkommen soll."); return null; }
         return node;
     }
 

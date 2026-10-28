@@ -24,34 +24,34 @@ public partial class MainWindow
 
     static readonly (string Name, Func<string, bool> Match)[] Scopes =
     [
-        ("Ganze Bibel", _ => true),
-        ("Altes Testament", id => BookCategories.IsOldTestament(BookCategories.Of(id))),
-        ("Neues Testament", id => BookCategories.IsNewTestament(BookCategories.Of(id))),
-        ("Gesetz (1.–5. Mose)", id => BookCategories.Of(id) == BookCategory.Law),
-        ("Geschichtsbücher", id => BookCategories.Of(id) == BookCategory.History),
-        ("Poesie und Weisheit", id => BookCategories.Of(id) == BookCategory.Poetry),
-        ("Propheten", id => BookCategories.Of(id) is BookCategory.MajorProphets or BookCategory.MinorProphets),
-        ("Evangelien", id => BookCategories.Of(id) == BookCategory.Gospels),
-        ("Briefe", id => BookCategories.Of(id) is BookCategory.Paul or BookCategory.General),
-        ("Aktuelles Buch", id => id == _currentBookForSearch),
+        (L("Ganze Bibel"), _ => true),
+        (L("Altes Testament"), id => BookCategories.IsOldTestament(BookCategories.Of(id))),
+        (L("Neues Testament"), id => BookCategories.IsNewTestament(BookCategories.Of(id))),
+        (L("Gesetz (1.–5. Mose)"), id => BookCategories.Of(id) == BookCategory.Law),
+        (L("Geschichtsbücher"), id => BookCategories.Of(id) == BookCategory.History),
+        (L("Poesie und Weisheit"), id => BookCategories.Of(id) == BookCategory.Poetry),
+        (L("Propheten"), id => BookCategories.Of(id) is BookCategory.MajorProphets or BookCategory.MinorProphets),
+        (L("Evangelien"), id => BookCategories.Of(id) == BookCategory.Gospels),
+        (L("Briefe"), id => BookCategories.Of(id) is BookCategory.Paul or BookCategory.General),
+        (L("Aktuelles Buch"), id => id == _currentBookForSearch),
     ];
     static string _currentBookForSearch = "";
 
     static readonly (string Query, string Text)[] Examples =
     [
-        ("Mose Elia", "Mehrere Wörter: alle kommen im Vers vor"),
-        ("\"Engel des HERRN\"", "Wendung: Wörter direkt hintereinander"),
-        ("Gnade / Wahrheit", "ODER: eines der Wörter oder beide"),
-        ("Gnade -Wahrheit", "Minus schließt ein Wort aus"),
-        ("(L=hüten / L=weiden) (Schaf / Herde)", "Gruppen in Klammern, mit Grundformen"),
-        ("L=gehen", "Grundform: findet ging, gegangen, geht …"),
-        ("L=Haus*", "Platzhalter *: Hausbewohner, Hausgeborene …"),
-        ("L~*haus*", "Tilde ~: Groß-/Kleinschreibung egal"),
-        ("G3056", "Strong-Nummer (mehrere: alle müssen vorkommen)"),
-        ("H8392=Arche", "Strong-Nummer, übersetzt mit einem bestimmten Wort"),
-        ("Joh 3,16", "Bibelstelle aufschlagen"),
-        ("Joh 15,11; 16,24; 17,13", "Mehrere Stellen als Verslisten (bis 150 Verse)"),
-        ("λογος", "Griechisches/hebräisches Wort: öffnet das Strong-Wörterbuch"),
+        (L("Mose Elia"), L("Mehrere Wörter: alle kommen im Vers vor")),
+        (L("\"Engel des HERRN\""), L("Wendung: Wörter direkt hintereinander")),
+        (L("Gnade / Wahrheit"), L("ODER: eines der Wörter oder beide")),
+        (L("Gnade -Wahrheit"), L("Minus schließt ein Wort aus")),
+        (L("(L=hüten / L=weiden) (Schaf / Herde)"), L("Gruppen in Klammern, mit Grundformen")),
+        (L("L=gehen"), L("Grundform: findet ging, gegangen, geht …")),
+        (L("L=Haus*"), L("Platzhalter *: Hausbewohner, Hausgeborene …")),
+        (L("L~*haus*"), L("Tilde ~: Groß-/Kleinschreibung egal")),
+        ("G3056", L("Strong-Nummer (mehrere: alle müssen vorkommen)")),
+        (L("H8392=Arche"), L("Strong-Nummer, übersetzt mit einem bestimmten Wort")),
+        (L("Joh 3,16"), L("Bibelstelle aufschlagen")),
+        (L("Joh 15,11; 16,24; 17,13"), L("Mehrere Stellen als Verslisten (bis 150 Verse)")),
+        (L("λογος"), L("Griechisches/hebräisches Wort: öffnet das Strong-Wörterbuch")),
     ];
 
     void InitSearch()
@@ -185,7 +185,7 @@ public partial class MainWindow
         SearchList.ItemsSource = list.Take(ShownHits).Select(h => new Entry(h.Ref, $"{Label(h.Ref)}\n{h.Marked()}")).ToList();
         var words = list.Sum(h => h.Spans.Count);
         SearchInfo.Text = _hits.Count == 0 ? L("Keine Treffer in {0}.", t.ShortName)
-            : $"{list.Count} Verse · {words} Fundstellen in {t.ShortName}{(list.Count > ShownHits ? $" (erste {ShownHits} angezeigt)" : "")}";
+            : L("{0} Verse · {1} Fundstellen in {2}{3}", list.Count, words, t.ShortName, (list.Count > ShownHits ? L(" (erste {0} angezeigt)", ShownHits) : ""));
         SearchQueueBtn.IsVisible = list.Count > 0;
 
         // hits per book, in Bible order; click narrows the list to that book, click again shows all
@@ -228,7 +228,7 @@ public partial class MainWindow
         }
         _hits = [];
         SearchList.ItemsSource = entries;
-        SearchInfo.Text = L("{0} Verse aus {1} Stelle{2}{3} · {4}", entries.Count, passages.Count, (passages.Count == 1 ? "" : "n"), (capped ? " (Maximum 150)" : ""), t.ShortName);
+        SearchInfo.Text = (passages.Count == 1 ? L("{0} Verse aus 1 Stelle{1} · {2}", entries.Count, (capped ? L(" (Maximum 150)") : ""), t.ShortName) : L("{0} Verse aus {1} Stellen{2} · {3}", entries.Count, passages.Count, (capped ? L(" (Maximum 150)") : ""), t.ShortName));
         SearchQueueBtn.IsVisible = false;
         if (entries.Count > 0)
         {

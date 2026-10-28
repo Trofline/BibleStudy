@@ -138,6 +138,13 @@ public partial class MainWindow
             }
 
             case "show_window": RestoreFromTray(); return new { ok = true, visible = IsVisible };
+            case "scan_ui": return ScanUi();
+            case "open_tab":
+            {
+                var name = ArgStr(a, "name") ?? "";
+                if (NavGroups.FirstOrDefault(g => g.Name == name) is { } grp) OpenWork(grp);
+                return new { ok = true };
+            }
             case "hide_window": Hide(); return new { ok = true, visible = IsVisible };
 
             case "navigate":

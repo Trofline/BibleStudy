@@ -108,7 +108,7 @@ public sealed class FamilyView : UserControl
     }
 
     static string Years(PersonNode n) => n.BirthYear is int b ? $" ({Y(b)}{(n.DeathYear is int d ? " – " + Y(d) : "")})" : "";
-    static string Y(int y) => y < 0 ? $"{-y} v. Chr." : $"{y} n. Chr.";
+    static string Y(int y) => y < 0 ? L("{0} v. Chr.", -y) : L("{0} n. Chr.", y);
 
     FamilyCanvas.Tree Build(string id, int depth, bool up, HashSet<string>? seen = null)
     {

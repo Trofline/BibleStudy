@@ -47,8 +47,8 @@ public partial class MainWindow
             foreach (var s in syn.Where(s => !s.Contains(' ')).Take(16)) all.Add(s);
             foreach (var s in all.Skip(1).Take(5)) selected.Add(s);
             info.Text = syn.Count == 0
-                ? "Keine verwandten Wörter gefunden (offline oder Wort unbekannt) – gesucht wird nur das Thema."
-                : "Tippe auf Wörter, um sie ein- oder auszuschließen. Gesucht wird nach der Grundform, also auch „vergebe“, „vergab“ …  Quelle der Wörter: openthesaurus.de (CC BY-SA 4.0).";
+                ? L("Keine verwandten Wörter gefunden (offline oder Wort unbekannt) – gesucht wird nur das Thema.")
+                : L("Tippe auf Wörter, um sie ein- oder auszuschließen. Gesucht wird nach der Grundform, also auch „vergebe“, „vergab“ …  Quelle der Wörter: openthesaurus.de (CC BY-SA 4.0).");
             Redraw();
         }
         topic.KeyDown += async (_, e) => { if (e.Key == Key.Enter) await Find(); };

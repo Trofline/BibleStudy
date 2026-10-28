@@ -1,4 +1,4 @@
-using System.Text;
+﻿using System.Text;
 using System.Text.RegularExpressions;
 using BibleStudy.L10n;
 
@@ -28,7 +28,7 @@ static IEnumerable<string> SourceFiles(string src) =>
 static bool IsAlreadyWrapped(string text, int start)
 {
     var before = text[Math.Max(0, start - 6)..start].TrimEnd();
-    return before.EndsWith("L(") && !before.EndsWith("IL(");
+    return (before.EndsWith("L(") || before.EndsWith("K(")) && !before.EndsWith("IL(");
 }
 
 static void Wrap(string src)
@@ -66,6 +66,7 @@ static void Wrap(string src)
             sb.Append(text, pos, l.Start - pos).Append(replacement); pos = l.End; changed++;
         }
         if (changed == 0) continue;
+        if (pos > text.Length) { Console.WriteLine($"SKIP {Path.GetFileName(file)}: literal runs past end of file (lexer)"); continue; }
         sb.Append(text, pos, text.Length - pos);
         File.WriteAllText(file, sb.ToString(), new UTF8Encoding(true));
         wrapped += changed; files++;
@@ -109,15 +110,16 @@ static void Check(string src, string langDir)
     }
 }
 
-static bool UiLike(string staticText)
+static bool UiLike(string c)
 {
-    var c = staticText;
+    if (c is "Crimson Text" or "Segoe UI" or "Palatino Linotype" or "Georgia" or "Cambria" or "Verdana" or "de") return false;   // names and codes, not texts
+    if (c.StartsWith('-') || c.StartsWith("/c") || c.Contains("--update") || c.Contains("ExecutionPolicy") || c.Contains("rmdir") || c.Contains("ping 127")) return false;   // command lines
     if (c.Length < 2 || !Extractor.HasLetters(c)) return false;
     if (Regex.IsMatch(c, @"^[MmLlHhVvCcSsZzAa0-9 .,\-]+$")) return false;                 // svg path data
     if (Regex.IsMatch(c.Trim(), @"^[A-Za-z0-9]+(\+[A-Za-z0-9]+)+\+?$") || c is "Ctrl+" or "Alt+" or "Shift+") return false;   // key gestures
-    if (c.Contains("\p{") || c.Contains("(?<") || c.StartsWith('^') || c.Contains("://") || c.StartsWith("avares") || c.StartsWith('#') || c.StartsWith('<') || c.StartsWith("</")) return false;
+    if (c.Contains(@"\p{") || c.Contains("(?<") || c.StartsWith('^') || c.Contains("://") || c.StartsWith("avares") || c.StartsWith('#') || c.StartsWith('<')) return false;
     if (Regex.IsMatch(c, @"^\s*(SELECT|INSERT|UPDATE|DELETE|CREATE|PRAGMA|ALTER|DROP|WITH|VACUUM)\b", RegexOptions.IgnoreCase)) return false;
-    if (Regex.IsMatch(c, @"^[A-Za-z0-9_.\-/\:*|=;,]+$")) return false;                    // identifiers, paths, ids (no spaces, no umlauts)
+    if (Regex.IsMatch(c, @"^[A-Za-z0-9_.\-/\\:*|=;,]+$")) return false;                    // identifiers, paths, ids (no spaces, no umlauts)
     return true;
 }
 
@@ -131,8 +133,8 @@ static void WrapFiles(string src, string[] names)
         var sb = new StringBuilder(); var pos = 0; var changed = 0;
         foreach (var l in Extractor.Lex(text))
         {
-            if (l.Raw || l.Verbatim || IsAlreadyWrapped(text, l.Start)) continue;
-            // string in a const declaration or a case label cannot be a method call
+            if (l.Raw || l.Verbatim || l.Start < pos || IsAlreadyWrapped(text, l.Start)) continue;
+            // a string in a const declaration or a case label cannot be a method call
             var lineStart = text.LastIndexOf('\n', Math.Max(0, l.Start - 1)) + 1;
             var prefix = text[lineStart..l.Start];
             if (Regex.IsMatch(prefix, @"\bconst\b|\bcase\s*$|\bnameof\b")) continue;
@@ -154,6 +156,7 @@ static void WrapFiles(string src, string[] names)
             sb.Append(text, pos, l.Start - pos).Append(replacement); pos = l.End; changed++;
         }
         if (changed == 0) continue;
+        if (pos > text.Length) { Console.WriteLine($"SKIP {Path.GetFileName(file)}: literal runs past end of file (lexer)"); continue; }
         sb.Append(text, pos, text.Length - pos);
         File.WriteAllText(file, sb.ToString(), new UTF8Encoding(true));
         wrapped += changed; Console.WriteLine($"{Path.GetFileName(file)}: {changed}");

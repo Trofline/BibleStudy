@@ -20,11 +20,11 @@ public partial class MainWindow
 
     PlanDef[] Plans =>
     [
-        new("year", "Bibel in einem Jahr", "Alle 1189 Kapitel, etwa 3 am Tag", 365, _ => true),
-        new("nt90", "Neues Testament in 90 Tagen", "Alle 260 Kapitel, etwa 3 am Tag", 90, b => BookIndex(b) >= 39),
-        new("gospels30", "Die vier Evangelien in 30 Tagen", "89 Kapitel, etwa 3 am Tag", 30, b => Gospels.Contains(b.Id)),
-        new("psalms30", "Psalmen in 30 Tagen", "150 Psalmen, 5 am Tag", 30, b => b.Id == "PSA"),
-        new("proverbs31", "Sprüche in 31 Tagen", "Ein Kapitel pro Tag", 31, b => b.Id == "PRO"),
+        new("year", L("Bibel in einem Jahr"), L("Alle 1189 Kapitel, etwa 3 am Tag"), 365, _ => true),
+        new("nt90", L("Neues Testament in 90 Tagen"), L("Alle 260 Kapitel, etwa 3 am Tag"), 90, b => BookIndex(b) >= 39),
+        new("gospels30", L("Die vier Evangelien in 30 Tagen"), L("89 Kapitel, etwa 3 am Tag"), 30, b => Gospels.Contains(b.Id)),
+        new("psalms30", L("Psalmen in 30 Tagen"), L("150 Psalmen, 5 am Tag"), 30, b => b.Id == "PSA"),
+        new("proverbs31", L("Sprüche in 31 Tagen"), L("Ein Kapitel pro Tag"), 31, b => b.Id == "PRO"),
     ];
 
     int BookIndex(BookInfo b) => _books.ToList().IndexOf(b);
@@ -71,7 +71,7 @@ public partial class MainWindow
         PlanPanel.Children.Add(new TextBlock
         {
             Text = L("{0} von {1} Kapiteln gelesen ({2} %) · Tag {3} von {4} · ", readCount, all.Count, 100 * readCount / Math.Max(1, all.Count), Math.Min(today, plan.Days), plan.Days)
-                 + (today > plan.Days ? "Plan abgeschlossen oder überfällig" : behind == 0 ? "im Plan" : $"{behind} Kapitel im Rückstand") + $" · Serie: {PlanStreak()} Tage",
+                 + (today > plan.Days ? L("Plan abgeschlossen oder überfällig") : behind == 0 ? L("im Plan") : L("{0} Kapitel im Rückstand", behind)) + L(" · Serie: {0} Tage", PlanStreak()),
             Classes = { "caption" }, TextWrapping = TextWrapping.Wrap,
         });
 
@@ -81,7 +81,7 @@ public partial class MainWindow
         next.Click += (_, _) => { _planDayShown = Math.Min(plan.Days, day + 1); BuildPlanUi(); };
         DockPanel.SetDock(prev, Dock.Left); DockPanel.SetDock(next, Dock.Right);
         nav.Children.Add(prev); nav.Children.Add(next);
-        nav.Children.Add(new TextBlock { Text = L("Tag {0}", day) + (day == Math.Min(today, plan.Days) ? " (heute)" : "") + $" · {start.AddDays(day - 1):dd.MM.yyyy}", HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Center, FontWeight = FontWeight.SemiBold });
+        nav.Children.Add(new TextBlock { Text = L("Tag {0}", day) + (day == Math.Min(today, plan.Days) ? L(" (heute)") : "") + $" · {start.AddDays(day - 1):dd.MM.yyyy}", HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Center, FontWeight = FontWeight.SemiBold });
         PlanPanel.Children.Add(nav);
 
         var chapters = PlanDay(plan, day);
@@ -98,7 +98,7 @@ public partial class MainWindow
         PlanPanel.Children.Add(list);
 
         var allDone = chapters.All(c => _read.Contains(c));
-        var finish = new Button { Content = allDone ? L("Tag erledigt ✓") : "Alle Kapitel dieses Tages als gelesen markieren", Classes = { "primary" }, HorizontalAlignment = HorizontalAlignment.Stretch };
+        var finish = new Button { Content = allDone ? L("Tag erledigt ✓") : L("Alle Kapitel dieses Tages als gelesen markieren"), Classes = { "primary" }, HorizontalAlignment = HorizontalAlignment.Stretch };
         finish.Click += (_, _) =>
         {
             foreach (var g in chapters.GroupBy(c => c.Book)) SetRead(g.Key, g.Select(c => c.Chapter).ToList(), true);

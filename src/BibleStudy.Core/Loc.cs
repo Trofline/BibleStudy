@@ -1,4 +1,4 @@
-using System.Globalization;
+﻿using System.Globalization;
 using System.Text.Json;
 
 namespace BibleStudy.Core;
@@ -79,6 +79,9 @@ public static class Loc
         lock (Missing) Missing.Add(de);
         return de;
     }
+
+    /// <summary>Marks a text that is translated later (at the place where it is shown): returns it unchanged, but the text is registered as a translation key.</summary>
+    public static string K(string de) => de;
 
     /// <summary>Translated text with {0}, {1} … filled in (numbers and dates follow the language).</summary>
     public static string L(string de, params object?[] args) => string.Format(Culture, L(de), args);

@@ -120,13 +120,13 @@ public sealed class HomeView : UserControl
             DockPanel.SetDock(go, Dock.Right);
             hero.Children.Add(go);
         }
-        hero.Children.Add(new StackPanel { Children = { Heading("Bibel", 46, "BsAccent"), Caption($"{read} von {total} Kapiteln gelesen · {(total == 0 ? 0 : 100 * read / total)} %", 13) } });
+        hero.Children.Add(new StackPanel { Children = { Heading(L("Bibel"), 46, "BsAccent"), Caption(L("{0} von {1} Kapiteln gelesen · {2} %", read, total, (total == 0 ? 0 : 100 * read / total)), 13) } });
         panel.Children.Add(hero);
         panel.Children.Add(new Border { Margin = new(0, 6, 0, 0), Child = Bar(total == 0 ? 0 : (double)read / total, accent, 6) });
         if (Recent.Count > 0)
         {
             panel.Children.Add(new Border { Height = 18 });
-            panel.Children.Add(Heading("Weiterarbeiten", 22));
+            panel.Children.Add(Heading(L("Weiterarbeiten"), 22));
             var wrap = new WrapPanel { Margin = new(0, 8, 0, 0) };
             foreach (var (kind, title, detail, open) in Recent)
             {
@@ -143,9 +143,9 @@ public sealed class HomeView : UserControl
             panel.Children.Add(wrap);
         }
 
-        Section(panel, "Altes Testament", _books.Where(b => BookCategories.IsOldTestament(BookCategories.Of(b.Id))));
-        Section(panel, "Neues Testament", _books.Where(b => BookCategories.IsNewTestament(BookCategories.Of(b.Id))));
-        Section(panel, "Weitere Bücher", _books.Where(b => BookCategories.Of(b.Id) == BookCategory.Other));
+        Section(panel, L("Altes Testament"), _books.Where(b => BookCategories.IsOldTestament(BookCategories.Of(b.Id))));
+        Section(panel, L("Neues Testament"), _books.Where(b => BookCategories.IsNewTestament(BookCategories.Of(b.Id))));
+        Section(panel, L("Weitere Bücher"), _books.Where(b => BookCategories.Of(b.Id) == BookCategory.Other));
     }
 
     void Section(StackPanel panel, string title, IEnumerable<BookInfo> books)
@@ -168,7 +168,7 @@ public sealed class HomeView : UserControl
         ToolTip.SetTip(more, L("Abschnitt: alles als gelesen markieren oder zurücksetzen"));
         DockPanel.SetDock(more, Dock.Right);
         head.Children.Add(more);
-        var meta = Caption($"{read} / {chapters} Kapitel");
+        var meta = Caption(L("{0} / {1} Kapitel", read, chapters));
         meta.VerticalAlignment = VerticalAlignment.Center; meta.Margin = new(0, 0, 8, 0);
         DockPanel.SetDock(meta, Dock.Right);
         head.Children.Add(meta);
@@ -226,7 +226,7 @@ public sealed class HomeView : UserControl
 
         var title = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 14, Children = { new Border { Width = 8, Height = 46, CornerRadius = new(4), Background = new SolidColorBrush(color) }, Heading(b.CommonName, 46, "BsAccent") } };
         panel.Children.Add(title);
-        panel.Children.Add(Caption($"{count} von {b.NumberOfChapters} Kapiteln gelesen · Klick öffnet · Rechtsklick oder Strg+Klick markiert ein Kapitel", 13));
+        panel.Children.Add(Caption(L("{0} von {1} Kapiteln gelesen · Klick öffnet · Rechtsklick oder Strg+Klick markiert ein Kapitel", count, b.NumberOfChapters), 13));
         panel.Children.Add(new Border { Margin = new(0, 8, 0, 0), Child = Bar(b.NumberOfChapters == 0 ? 0 : (double)count / b.NumberOfChapters, color, 6) });
 
         var actions = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 6, Margin = new(0, 12, 0, 16) };
@@ -255,7 +255,7 @@ public sealed class HomeView : UserControl
             var chip = new Border { Width = 58, Height = 48, Margin = new(0, 0, 8, 8), CornerRadius = new(12), BorderThickness = new(isNext ? 2 : 1), Cursor = new Cursor(StandardCursorType.Hand), Child = content, Classes = { "tile" } };
             Themed(chip, Border.BackgroundProperty, isRead ? "BsAccentSoft" : "BsSurface");
             Themed(chip, Border.BorderBrushProperty, isRead || isNext ? "BsAccent" : "BsBorder");
-            ToolTip.SetTip(chip, isNext ? L("Kapitel {0}: als Nächstes ungelesen", c) : $"Kapitel {c}{(isRead ? " · gelesen" : "")}");
+            ToolTip.SetTip(chip, isNext ? L("Kapitel {0}: als Nächstes ungelesen", c) : L("Kapitel {0}{1}", c, (isRead ? L(" · gelesen") : "")));
             var chapter = c;
             chip.PointerPressed += (_, e) =>
             {

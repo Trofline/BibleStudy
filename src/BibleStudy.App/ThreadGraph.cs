@@ -1,4 +1,4 @@
-using System.Globalization;
+﻿using System.Globalization;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
@@ -81,7 +81,7 @@ public sealed class ThreadGraph : Control
         dc.DrawRectangle(Brushes.Transparent, null, new Rect(Bounds.Size));
         if (_graph?.Links is null)
         {
-            var hint = new FormattedText("Querverweis-Daten laden ▸", CultureInfo.CurrentUICulture, FlowDirection.LeftToRight, Typeface.Default, 13, Text);
+            var hint = new FormattedText(L("Querverweis-Daten laden ▸"), CultureInfo.CurrentUICulture, FlowDirection.LeftToRight, Typeface.Default, 13, Text);
             dc.DrawText(hint, new Point(24, 24));
             return;
         }
@@ -191,7 +191,7 @@ public sealed class ThreadGraph : Control
         var p = e.GetPosition(this);
         if (HitBook(p) is var b and >= 0)
         {
-            Picked?.Invoke($"{_name(_graph.Books[b].Book)} · Verweise aus den sichtbaren Versen", _threads.Where(t => t.BookIndex == b).Select(t => t.Ref).ToList(), p);
+            Picked?.Invoke(L("{0} · Verweise aus den sichtbaren Versen", _name(_graph.Books[b].Book)), _threads.Where(t => t.BookIndex == b).Select(t => t.Ref).ToList(), p);
             return;
         }
         if (HitThread(p) is var i and >= 0) Jump?.Invoke(_threads[i].Ref);

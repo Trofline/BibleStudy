@@ -49,7 +49,7 @@ public partial class MainWindow
         var all = _concOcc;
         var shown = all.Where(o => (_concForm is null || CleanWord(o.Word) == _concForm) && (_concBook is null || o.Ref.Book == _concBook)).ToList();
         ConcInfo.Text = all.Count == 0 ? L("Keine Vorkommen in {0}.", t.ShortName)
-            : $"{shown.Count}{(all.Count >= ConcordanceLimit ? "+" : "")} von {all.Count} Vorkommen in {t.ShortName}" + (_concVerses is null ? " · Verstexte erscheinen, sobald die Suche für diese Übersetzung einmal lief." : "");
+            : L("{0}{1} von {2} Vorkommen in {3}", shown.Count, (all.Count >= ConcordanceLimit ? "+" : ""), all.Count, t.ShortName) + (_concVerses is null ? L(" · Verstexte erscheinen, sobald die Suche für diese Übersetzung einmal lief.") : "");
 
         // renderings: how this word was translated, click to filter
         ConcForms.Children.Clear();

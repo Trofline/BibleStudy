@@ -53,7 +53,7 @@ public partial class MainWindow
             var hebrew = words[0].IsHebrew;
             GrundtextPanel.FlowDirection = hebrew ? FlowDirection.RightToLeft : FlowDirection.LeftToRight;
             foreach (var w in words) GrundtextPanel.Children.Add(WordCell(w));
-            GrundtextInfo.Text = L("{0} · {1}, {2} Wörter. Wort anklicken: Wörterbuch.", Label(r), (hebrew ? "Hebräisch (von rechts nach links)" : "Griechisch"), words.Count);
+            GrundtextInfo.Text = L("{0} · {1}, {2} Wörter. Wort anklicken: Wörterbuch.", Label(r), (hebrew ? L("Hebräisch (von rechts nach links)") : L("Griechisch")), words.Count);
             GrundtextSource.Text = HelloAoProvider.InterlinearAttribution + " · " + StrongsDictionary.Attribution;
             GrundtextCheckBtn.IsVisible = true;
         }
@@ -119,7 +119,7 @@ public partial class MainWindow
         var t = TranslationBox.SelectedItem as TranslationInfo;
         SideTabs.SelectedIndex = AiTab;
         AiInput.Text = L("Analysiere das Wort „{0}“ ({1}, {2}, {3}) in {4} genauer: Bedeutungsspektrum, Grammatik und ihre Bedeutung hier, wie das Wort an anderen Stellen verwendet und übersetzt wird ", w.Text, w.Translit, w.Strongs, w.ParsingFull, Label(r)) +
-                       $"(nutze get_strongs und get_word_occurrences mit eng_kjv) und ob {t?.Name} es hier treffend wiedergibt (get_passage, translation={t?.Id}). Genau und knapp.";
+                       L("(nutze get_strongs und get_word_occurrences mit eng_kjv) und ob {0} es hier treffend wiedergibt (get_passage, translation={1}). Genau und knapp.", t?.Name, t?.Id);
         await AiSendOrStopAsync();
     }
 
@@ -144,8 +144,8 @@ public partial class MainWindow
         try
         {
             _strongResults = (await _strongs.SearchAsync(query)).ToList();
-            StrongList.ItemsSource = _strongResults.Select(e => new Entry(default, $"{e.Id}  {e.Lemma}  ({e.Translit})\n{Shorten((e.Definition.Length > 0 ? e.Definition : e.KjvUsage).Trim(), 90)}")).ToList();
-            StrongInfo.Text = _strongResults.Count == 0 ? L("Nichts gefunden.") : $"{_strongResults.Count} Treffer{(_strongResults.Count >= 60 ? " (erste 60)" : "")} · Treffer anklicken für Details";
+            StrongList.ItemsSource = _strongResults.Select(e => new Entry(default, L("{0}  {1}  ({2})\n{3}", e.Id, e.Lemma, e.Translit, Shorten((e.Definition.Length > 0 ? e.Definition : e.KjvUsage).Trim(), 90)))).ToList();
+            StrongInfo.Text = _strongResults.Count == 0 ? L("Nichts gefunden.") : L("{0} Treffer{1} · Treffer anklicken für Details", _strongResults.Count, (_strongResults.Count >= 60 ? L(" (erste 60)") : ""));
             StrongDetail.Children.Clear();
             if (_strongResults.Count == 1) await ShowStrongDetailAsync(_strongResults[0]);
         }
@@ -176,7 +176,7 @@ public partial class MainWindow
         var t = TranslationBox.SelectedItem as TranslationInfo;
         SideTabs.SelectedIndex = AiTab;
         AiInput.Text = L("Prüfe Wort für Wort, ob die Übersetzung {0} ({1}) in {2} den Grundtext richtig und vollständig wiedergibt. ", t?.Name, t?.Id, Label(r)) +
-                       $"Nutze get_interlinear und get_passage (translation={t?.Id}) und bei Bedarf get_strongs. Nenne Abweichungen, Nuancen und mögliche andere Wiedergaben, genau und knapp.";
+                       L("Nutze get_interlinear und get_passage (translation={0}) und bei Bedarf get_strongs. Nenne Abweichungen, Nuancen und mögliche andere Wiedergaben, genau und knapp.", t?.Id);
         await AiSendOrStopAsync();
     }
 
@@ -230,7 +230,7 @@ public partial class MainWindow
                 if (File.Exists(_settingsPath)) zip.CreateEntryFromFile(_settingsPath, "settings.json");
                 var info = zip.CreateEntry("info.txt");
                 using var writer = new StreamWriter(info.Open());
-                writer.Write($"BibleStudy vault \"{_vault.Name}\", exported {DateTime.Now:yyyy-MM-dd HH:mm}");
+                writer.Write(L("BibleStudy vault \"{0}\", exported {1:yyyy-MM-dd HH:mm}", _vault.Name, DateTime.Now));
             }
             BackupInfo.Text = L("Exportiert nach {0}", path);
         }
@@ -248,8 +248,8 @@ public partial class MainWindow
         try
         {
             using var zip = ZipFile.OpenRead(path);
-            var vaultEntry = zip.GetEntry("vault.db") ?? throw new InvalidDataException("Die Datei enthält keinen Vault (vault.db).");
-            var name = $"Import {DateTime.Now:yyyy-MM-dd HH-mm}";
+            var vaultEntry = zip.GetEntry("vault.db") ?? throw new InvalidDataException(L("Die Datei enthält keinen Vault (vault.db)."));
+            var name = L("Import {0:yyyy-MM-dd HH-mm}", DateTime.Now);
             var target = Path.Combine(_root, "vaults", name, "vault.db");
             Directory.CreateDirectory(Path.GetDirectoryName(target)!);
             vaultEntry.ExtractToFile(target);

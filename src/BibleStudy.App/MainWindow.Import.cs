@@ -29,7 +29,7 @@ public partial class MainWindow
         var files = await StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
         {
             Title = L("Bibeldatei wählen"), AllowMultiple = false,
-            FileTypeFilter = [new FilePickerFileType("Bibeldateien") { Patterns = ["*.bblx", "*.xml", "*.html", "*.htm"] }],
+            FileTypeFilter = [new FilePickerFileType(L("Bibeldateien")) { Patterns = ["*.bblx", "*.xml", "*.html", "*.htm"] }],
         });
         if (files.Count == 0 || files[0].TryGetLocalPath() is not { } path) return;
         await ImportBibleFromAsync(path, string.IsNullOrWhiteSpace(ImportLangBox.Text) ? "de" : ImportLangBox.Text.Trim());
@@ -38,14 +38,14 @@ public partial class MainWindow
     /// <summary>Imports a Bible file; an already imported translation with the same id is replaced and its search index rebuilt on demand.</summary>
     internal async Task<string> ImportBibleFromAsync(string path, string language)
     {
-        if (_importing) return "Ein Import läuft bereits.";
+        if (_importing) return L("Ein Import läuft bereits.");
         _importing = true; ImportBibleBtn.IsEnabled = false;
         var progress = new Progress<string>(m => ImportBibleInfo.Text = m);
         try
         {
             ImportBibleInfo.Text = L("Datei wird gelesen …");
             var bible = await Task.Run(() => BibleImporters.Read(path, language, progress));
-            if (bible.Verses.Count == 0) throw new InvalidDataException("Keine Verse gefunden.");
+            if (bible.Verses.Count == 0) throw new InvalidDataException(L("Keine Verse gefunden."));
             ImportBibleInfo.Text = L("{0} Verse gelesen, werden gespeichert …", bible.Verses.Count);
             var id = await Task.Run(() => _local.Save(bible));
             _store.ForgetTranslation(id); _corpora.Remove(id); _strongIndexes.Remove(id);   // text changed: rebuild search index and concordance on demand

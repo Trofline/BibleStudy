@@ -32,7 +32,7 @@ public partial class MainWindow
         DocSaveBtn.Click += (_, _) => SaveDocument();
         DocDeleteBtn.Click += (_, _) => { if (_doc is { Id: > 0 } d) { _vault.DeleteDocument(d.Id); CloseDocument(); } };
         DocOpenFileBtn.Click += (_, _) => OpenLinkedFile();
-        DocInsertVerseBtn.Click += (_, _) => InsertIntoDoc(_selected is int v ? $"> {VerseTextOf(v).Trim()}\n> — {Label(new VerseRef(_curBook, _curChapter, v))}\n\n" : null, "Erst im Bibeltext einen Vers anklicken.");
+        DocInsertVerseBtn.Click += (_, _) => InsertIntoDoc(_selected is int v ? L("> {0}\n> — {1}\n\n", VerseTextOf(v).Trim(), Label(new VerseRef(_curBook, _curChapter, v))) : null, L("Erst im Bibeltext einen Vers anklicken."));
         DocInsertLinkBtn.Click += (_, _) =>
         {
             var menu = new MenuFlyout();
@@ -47,7 +47,7 @@ public partial class MainWindow
         };
         DocFromTemplateBtn.Click += (_, _) =>
         {
-            if (_doc is { } d) OpenDocument(new Document(0, "Neu: " + d.Title, d.Body, null, false, DateTime.Now, d.Tags));
+            if (_doc is { } d) OpenDocument(new Document(0, L("Neu: ") + d.Title, d.Body, null, false, DateTime.Now, d.Tags));
         };
         KnowledgePane.CloseRequested += ShowReader;
         KnowledgePane.NodeOpened += async node =>
@@ -72,10 +72,10 @@ public partial class MainWindow
             if (_selected is int v) { var r = new VerseRef(_curBook, _curChapter, v); docs = docs.Where(d => DocumentLinks.VerseRefs(d.Body).Contains(r)).ToList(); DocInfo.Text = L("Dokumente, die {0} erwähnen: {1}", Label(r), docs.Count); }
             else { docs = []; DocInfo.Text = L("Erst einen Vers anklicken."); }
         }
-        else DocInfo.Text = L("{0} Dokument{1}", docs.Count, (docs.Count == 1 ? "" : "e"));
+        else DocInfo.Text = (docs.Count == 1 ? L("1 Dokument") : L("{0} Dokumente", docs.Count));
         DocList.ItemsSource = docs.Select(d =>
         {
-            var preview = d.Path is not null ? "Datei: " + System.IO.Path.GetFileName(d.Path) : Shorten(d.Body.ReplaceLineEndings(" ").Replace("#", "").Replace("**", "").Replace("[[", "").Replace("]]", "").Trim(), 90);
+            var preview = d.Path is not null ? L("Datei: ") + System.IO.Path.GetFileName(d.Path) : Shorten(d.Body.ReplaceLineEndings(" ").Replace("#", "").Replace("**", "").Replace("[[", "").Replace("]]", "").Trim(), 90);
             var tags = d.Tags.Count > 0 ? "  " + string.Join(" ", d.Tags.Select(t => "#" + t)) : "";
             return new Entry(default, $"{(d.IsTemplate ? "◇ " : "")}{d.Title}\n{preview}{tags}".TrimEnd('\n'), d.Id);
         }).ToList();
@@ -106,10 +106,10 @@ public partial class MainWindow
         DocTitleBox.Text = d.Title; DocBodyBox.Text = d.Body; DocTagsBox.Text = string.Join(", ", d.Tags);
         DocTemplateCheck.IsChecked = d.IsTemplate;
         var folders = _vault.GetFolders().OrderBy(f => f.Name, Comparer<string>.Create(NaturalCompare)).ToList();
-        DocFolderBox.ItemsSource = new List<object> { "(kein Ordner)" }.Concat(folders).ToList();
+        DocFolderBox.ItemsSource = new List<object> { L("(kein Ordner)") }.Concat(folders).ToList();
         var fid = d.FolderId ?? _newDocFolder;
         DocFolderBox.SelectedIndex = fid is long f2 && folders.FindIndex(x => x.Id == f2) is var fi and >= 0 ? fi + 1 : 0;
-        DocPathText.Text = d.Path is null ? "" : "Verknüpfte Datei: " + d.Path;
+        DocPathText.Text = d.Path is null ? "" : L("Verknüpfte Datei: ") + d.Path;
         DocOpenFileBtn.IsVisible = d.Path is not null;
         DocFromTemplateBtn.IsVisible = d.IsTemplate && d.Id > 0;
         DocDeleteBtn.IsVisible = d.Id > 0;
@@ -138,7 +138,7 @@ public partial class MainWindow
         else { _vault.UpdateDocument(_doc.Id, title, body, _doc.Path, template, tags, folderId); _doc = _vault.GetDocuments().First(d => d.Id == _doc.Id); }
         OpenDocument(_doc);
         RefreshCollection();
-        DocPathText.Text = (_doc.Path is null ? "" : "Verknüpfte Datei: " + _doc.Path + "\n") + "Gespeichert.";
+        DocPathText.Text = (_doc.Path is null ? "" : L("Verknüpfte Datei: ") + _doc.Path + "\n") + "Gespeichert.";
     }
 
     /// <summary>Verse references, [[links]] and backlinks of the document, as clickable chips.</summary>
@@ -154,7 +154,7 @@ public partial class MainWindow
         foreach (var title in DocumentLinks.WikiLinks(d.Body))
         {
             var target = all.FirstOrDefault(x => string.Equals(x.Title, title, StringComparison.OrdinalIgnoreCase));
-            var text = target is null ? $"„{title}“ (neu anlegen)" : title;
+            var text = target is null ? L("„{0}“ (neu anlegen)", title) : title;
             DocLinkChips.Children.Add(Chip(text, () =>
             {
                 if (target is not null) OpenDocument(target);
