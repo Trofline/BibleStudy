@@ -1,4 +1,4 @@
-using System.Text.Json;
+﻿using System.Text.Json;
 
 namespace BibleStudy.Core;
 
@@ -75,6 +75,19 @@ public sealed class LearnStore(string path)
     }
 
     public CardState? Get(string id) => Cards.GetValueOrDefault(id);
+
+    public IReadOnlyCollection<string> Ids => Cards.Keys;
+
+    /// <summary>A new card, due at once.</summary>
+    public bool Add(string id, DateTime now)
+    {
+        if (Cards.ContainsKey(id)) return false;
+        Cards[id] = new CardState { Box = 0, Due = now };
+        Save();
+        return true;
+    }
+
+    public void Remove(string id) { if (Cards.Remove(id)) Save(); }
 
     public bool IsDue(string id, DateTime now) => Cards.TryGetValue(id, out var c) && c.Due <= now;
 

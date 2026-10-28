@@ -216,6 +216,10 @@ public partial class MainWindow : Window
     {
         Home.Resume = _curBook == "" ? null : (_curBook, _curChapter, $"{BookName(_curBook)} {_curChapter}");
         var recent = new List<(string, string, string, Action)>();
+        var votd = VerseOfTheDay();
+        recent.Add((L("Vers des Tages"), Label(votd), L("Klicken zum Lesen"), () => _ = GoToAsync(votd.Book, votd.Chapter, votd.Verse)));
+        var dueCards = Memory.Ids.Count(i => Memory.IsDue(i, DateTime.Now));
+        if (dueCards > 0) recent.Add((L("Auswendig lernen"), L("{0} Verse fällig", dueCards), L("Klicken zum Üben"), () => OpenWork(NavGroups.First(g => g.Name == "Planen"), MemoryTab)));
         foreach (var d in _vault.GetDocuments().OrderByDescending(d => d.Updated).Take(4))
         {
             var doc = d;

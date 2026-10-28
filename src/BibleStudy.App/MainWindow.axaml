@@ -705,6 +705,9 @@
                 <TabItem Header="Sprachen">
                     <ScrollViewer><StackPanel x:Name="LearnPanel" Spacing="8" Margin="16,10,12,16" /></ScrollViewer>
                 </TabItem>
+                <TabItem Header="Auswendig lernen">
+                    <ScrollViewer><StackPanel x:Name="MemoryPanel" Spacing="8" Margin="16,10,12,16" /></ScrollViewer>
+                </TabItem>
             </TabControl>
             </DockPanel>
         </Border>

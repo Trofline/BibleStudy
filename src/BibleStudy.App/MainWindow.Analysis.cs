@@ -51,6 +51,8 @@ public partial class MainWindow
         // grammar and sentence structure of the clicked verse (original text); needs no downloaded index
         AnalysisPanel.Children.Add(_syntaxView);
         _ = ShowSyntaxAsync();
+        EnsureGrammarSearch();
+        if (!AnalysisPanel.Children.Contains(_grammarView)) AnalysisPanel.Children.Add(_grammarView);
 
         if (_analyzer is null)
         {

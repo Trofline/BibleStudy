@@ -25,6 +25,7 @@ public partial class MainWindow
             if (DocList.SelectedItem is Entry { Id: long id } && _vault.GetDocuments().FirstOrDefault(d => d.Id == id) is { } d) OpenDocument(d);
         };
         BuildDocMenus();
+        InitAutosave();
         DocGraphBtn.Click += (_, _) => ShowKnowledgeGraph();
         DocBackBtn.Click += (_, _) => CloseDocument();
         DocSaveBtn.Click += (_, _) => SaveDocument();
@@ -115,6 +116,7 @@ public partial class MainWindow
         _miDelete.IsVisible = d.Id > 0;
         DocListPanel.IsVisible = false; DocEditorPanel.IsVisible = true;
         RefreshDocChips(d);
+        _docSnapshot = DocState();
     }
 
     void CloseDocument()

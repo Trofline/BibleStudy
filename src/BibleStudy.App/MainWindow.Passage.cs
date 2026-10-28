@@ -26,6 +26,8 @@ public partial class MainWindow
         Item(L("{0} – Vers-Übersicht", Label(r)), () => { Open(GuideTab); _ = ShowGuideAsync(r); });
         menu.Items.Add(new Separator());
         Item(L("Vers mit Stelle kopieren"), () => _ = CopyVerseAsync());
+        Item(L("Als Bild exportieren"), ExportVerseImage);
+        Item(L("Zum Auswendiglernen"), () => { Memory.Add(MemoryKey(r), DateTime.Now); StatusText.Text = L("{0} zum Auswendiglernen hinzugefügt.", Label(r)); });
         Item(L("Markieren (Farbe wählen) …"), ShowColorFlyout);
         Item(L("Merken / nicht mehr merken"), ToggleBookmark);
         Item(L("Notiz schreiben"), () => { Open(2); NoteEditor.Focus(); });

@@ -9,6 +9,26 @@ public sealed record SyntaxWord(string Text, string Lemma, string Strong, string
 /// <summary>One line of the clause outline: depth, role in the clause (s, v, o …), the original words and their glosses.</summary>
 public sealed record SyntaxLine(int Depth, string Kind, string? Role, string Text, string Gloss);
 
+/// <summary>One word of the Greek New Testament with the grammar fields that can be searched.</summary>
+public sealed record GrammarWord(string Book, int Chapter, int Verse, string Text, string Lemma, string Strong, string Gloss, string Class,
+    string? Tense, string? Voice, string? Mood, string? Person, string? Number, string? Gender, string? Case);
+
+/// <summary>Which grammar a word must have; empty fields do not matter.</summary>
+public sealed record GrammarQuery(string? Class = null, string? Tense = null, string? Voice = null, string? Mood = null, string? Person = null,
+    string? Number = null, string? Gender = null, string? Case = null, string? Word = null)
+{
+    public bool Matches(GrammarWord w) =>
+        (Class is null || w.Class == Class) && (Tense is null || w.Tense == Tense) && (Voice is null || w.Voice == Voice) && (Mood is null || w.Mood == Mood)
+        && (Person is null || w.Person == Person) && (Number is null || w.Number == Number) && (Gender is null || w.Gender == Gender) && (Case is null || w.Case == Case)
+        && (string.IsNullOrWhiteSpace(Word) || w.Strong.Equals(Word.Trim(), StringComparison.OrdinalIgnoreCase) || Fold(w.Lemma) == Fold(Word));
+
+    static string Fold(string s)
+    {
+        var d = s.Normalize(System.Text.NormalizationForm.FormD);
+        return new string(d.Where(c => System.Globalization.CharUnicodeInfo.GetUnicodeCategory(c) != System.Globalization.UnicodeCategory.NonSpacingMark).ToArray()).ToLowerInvariant();
+    }
+}
+
 public sealed record SyntaxVerse(IReadOnlyList<SyntaxWord> Words, IReadOnlyList<SyntaxLine> Outline);
 
 /// <summary>
@@ -60,6 +80,44 @@ public sealed class SyntaxProvider(HttpClient http, string cacheDir)
             await File.WriteAllTextAsync(path, xml, ct);
         }
         return await Task.Run(() => Parse(xml, chapter, verse), ct);
+    }
+
+    /// <summary>All words of the Greek New Testament with their grammar (downloads the 27 books once, then reads them from the cache).</summary>
+    public async Task<List<GrammarWord>> LoadGreekWordsAsync(IProgress<(int Done, int Total)>? progress = null, CancellationToken ct = default)
+    {
+        var all = new List<GrammarWord>(145_000);
+        for (var i = 0; i < GreekBooks.Length; i++)
+        {
+            progress?.Report((i, GreekBooks.Length));
+            var parts = GreekBooks[i].Split(':');
+            var file = parts[1] + ".xml";
+            var path = Path.Combine(cacheDir, "macula", file);
+            string xml;
+            if (File.Exists(path)) xml = await File.ReadAllTextAsync(path, ct);
+            else
+            {
+                xml = await http.GetStringAsync(GreekBase + file, ct);
+                Directory.CreateDirectory(Path.GetDirectoryName(path)!);
+                await File.WriteAllTextAsync(path, xml, ct);
+            }
+            var book = parts[0];
+            all.AddRange(await Task.Run(() => ParseWords(xml, book), ct));
+        }
+        progress?.Report((GreekBooks.Length, GreekBooks.Length));
+        return all;
+    }
+
+    public static List<GrammarWord> ParseWords(string xml, string book)
+    {
+        var result = new List<GrammarWord>();
+        foreach (var w in XDocument.Parse(xml).Descendants("w"))
+        {
+            if (w.Attribute("ref")?.Value is not { } r || RefPattern.Match(r) is not { Success: true } m) continue;
+            result.Add(new GrammarWord(book, int.Parse(m.Groups[1].Value), int.Parse(m.Groups[2].Value), w.Value.Trim(), (string?)w.Attribute("lemma") ?? "", Strong(w, false),
+                Gloss(w, false), (string?)w.Attribute("class") ?? "", (string?)w.Attribute("tense"), (string?)w.Attribute("voice"), (string?)w.Attribute("mood"),
+                (string?)w.Attribute("person"), (string?)w.Attribute("number"), (string?)w.Attribute("gender"), (string?)w.Attribute("case")));
+        }
+        return result;
     }
 
     static readonly Regex RefPattern = new(@"(\d+):(\d+)!\d+$", RegexOptions.Compiled);

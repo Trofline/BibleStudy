@@ -77,11 +77,7 @@ public partial class MainWindow
         SideTabs.SelectionChanged += (_, e) => { if (e.Source == SideTabs) { _settings.SideTab = SideTabs.SelectedIndex; } };
 
         // quick jump and shortcuts
-        QuickJumpBox.KeyDown += async (_, e) =>
-        {
-            if (e.Key == Key.Escape) { QuickJumpBox.Text = ""; Focus(); }
-            else if (e.Key == Key.Enter) { e.Handled = true; await QuickJumpAsync(QuickJumpBox.Text?.Trim() ?? ""); }
-        };
+        InitPalette();
         AddHandler(KeyDownEvent, OnShortcut, RoutingStrategies.Tunnel);
         ReaderHost.PropertyChanged += (_, e) => { if (e.Property == IsVisibleProperty) UpdateReadBar(); };
         ActualThemeVariantChanged += (_, _) => ApplyAccent(_settings.Accent);

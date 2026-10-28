@@ -61,6 +61,7 @@ public partial class MainWindow
             new(7, K("Aufgaben"), L("Deine Aufgaben fürs Studium, auf Wunsch mit Vers.")),
             new(PrayerTab, K("Gebete"), L("Deine Gebetsliste: Anliegen mit Datum und Vers, erhörte Gebete abhaken und festhalten.")),
             new(PlanTab, K("Lesepläne"), L("Bibel in einem Jahr und weitere Pläne: jeden Tag ein paar Kapitel, mit Fortschritt und Serie.")),
+            new(MemoryTab, K("Auswendig lernen"), L("Bibelverse auswendig lernen: Lücken wachsen mit dem Können, mit Wiederholung.")),
             new(LearnTab, K("Sprachen"), L("Griechisch und Hebräisch lernen: Alphabet, Buchstaben-Quiz und Vokabeln mit Wiederholung.")),
         ], Windowed: true),
         new(K("KI"), "M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9z M19 3v4 M17 5h4 M5 17v4 M3 19h4",
