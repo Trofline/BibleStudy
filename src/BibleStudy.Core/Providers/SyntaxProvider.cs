@@ -1,5 +1,6 @@
 ﻿using System.Text.RegularExpressions;
 using System.Xml.Linq;
+using BibleStudy.Core.Storage;
 
 namespace BibleStudy.Core.Providers;
 
@@ -77,7 +78,7 @@ public sealed class SyntaxProvider(HttpClient http, string cacheDir)
         {
             xml = await http.GetStringAsync(url, ct);
             Directory.CreateDirectory(Path.GetDirectoryName(path)!);
-            await File.WriteAllTextAsync(path, xml, ct);
+            await SafeFile.WriteAllTextAsync(path, xml);
         }
         return await Task.Run(() => Parse(xml, chapter, verse), ct);
     }
@@ -98,7 +99,7 @@ public sealed class SyntaxProvider(HttpClient http, string cacheDir)
             {
                 xml = await http.GetStringAsync(GreekBase + file, ct);
                 Directory.CreateDirectory(Path.GetDirectoryName(path)!);
-                await File.WriteAllTextAsync(path, xml, ct);
+                await SafeFile.WriteAllTextAsync(path, xml);
             }
             var book = parts[0];
             all.AddRange(await Task.Run(() => ParseWords(xml, book), ct));

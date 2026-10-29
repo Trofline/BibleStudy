@@ -65,7 +65,8 @@ public partial class MainWindow
         try
         {
             var folder = BackupFolder;
-            var path = await Task.Run(() => BackupData("Auto", folder));
+            // only automatic backups are thinned out later; one made by hand is kept
+            var path = await Task.Run(() => BackupData(manual ? "Manuell" : "Auto", folder));
             _settings.LastAutoBackup = DateTime.Now.ToString("yyyy-MM-dd HH:mm"); SaveSettings();
             await Task.Run(() => PruneAutoBackups(folder));
             ShowBackupState();

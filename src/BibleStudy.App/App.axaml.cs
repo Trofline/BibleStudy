@@ -16,6 +16,7 @@ public partial class App : Application
 
     public override void OnFrameworkInitializationCompleted()
     {
+        ErrorLog.Install();
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
             var args = Environment.GetCommandLineArgs();

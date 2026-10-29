@@ -41,15 +41,21 @@ static class UpdateApply
         var staging = Path.Combine(Path.GetTempPath(), "BibleStudy-Portable-Update");
         if (Directory.Exists(staging)) Directory.Delete(staging, true);
         ZipFile.ExtractToDirectory(zipFile, staging);
+        // the portable zip holds the program in a folder "BibleStudy": copy that folder's content, not the folder itself
+        // (otherwise the update lands in ProgramDir\BibleStudy and the old program stays)
+        var source = File.Exists(Path.Combine(staging, "BibleStudy.App.exe")) ? staging
+            : Directory.GetDirectories(staging).FirstOrDefault(d => File.Exists(Path.Combine(d, "BibleStudy.App.exe")))
+              ?? throw new InvalidDataException("BibleStudy.App.exe");
         var exe = Path.Combine(AppPaths.ProgramDir, "BibleStudy.App.exe");
+        static string Q(string s) => "'" + s.Replace("'", "''") + "'";   // a quote in a folder name must not break the script
         var script = Path.Combine(Path.GetTempPath(), "BibleStudy-Portable-Update.ps1");
         File.WriteAllText(script, $$"""
             $ErrorActionPreference = 'Stop'
             Wait-Process -Id {{Environment.ProcessId}} -ErrorAction SilentlyContinue
             Start-Sleep -Seconds 1
-            Get-ChildItem -LiteralPath '{{staging}}' -Force | Where-Object { $_.Name -notin @('Data', 'portable.flag') } |
-                ForEach-Object { Copy-Item -LiteralPath $_.FullName -Destination '{{AppPaths.ProgramDir}}' -Recurse -Force }
-            {{(launch ? $"Start-Process -FilePath '{exe}'" : "")}}
+            Get-ChildItem -LiteralPath {{Q(source)}} -Force | Where-Object { $_.Name -notin @('Data', 'portable.flag') } |
+                ForEach-Object { Copy-Item -LiteralPath $_.FullName -Destination {{Q(AppPaths.ProgramDir)}} -Recurse -Force }
+            {{(launch ? $"Start-Process -FilePath {Q(exe)}" : "")}}
             """, Encoding.UTF8);
         Process.Start(new ProcessStartInfo("powershell.exe", $"-NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File \"{script}\"") { UseShellExecute = false, CreateNoWindow = true });
     }

@@ -18,7 +18,7 @@ public partial class MainWindow
     async Task ShowConcordanceAsync(string strongId, string title)
     {
         if (TranslationBox.SelectedItem is not TranslationInfo t || _building) return;
-        SideTabs.SelectedIndex = 5;
+        RevealSideTab(5);
         ConcTitle.Text = title;
         ConcList.ItemsSource = null; ConcForms.Children.Clear(); ConcBooks.Children.Clear();
         _concForm = _concBook = null; _concVerses = null;

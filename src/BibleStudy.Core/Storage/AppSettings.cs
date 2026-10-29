@@ -120,7 +120,11 @@ public sealed class AppSettings
     public void Save(string path)
     {
         Directory.CreateDirectory(Path.GetDirectoryName(path)!);
-        File.WriteAllText(path, JsonSerializer.Serialize(this, Json));
+        // written next to it first and then swapped in: a crash or full disk while writing must not leave half a file
+        // (an unreadable file would mean all settings start from scratch)
+        var tmp = path + ".tmp";
+        File.WriteAllText(tmp, JsonSerializer.Serialize(this, Json));
+        File.Move(tmp, path, overwrite: true);
     }
 }
 

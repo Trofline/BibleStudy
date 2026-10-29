@@ -119,6 +119,8 @@ public sealed class HelloAoProvider(HttpClient http, string cacheDir) : IBiblePr
         lock (_noWords) if (_noWords.Contains(translationId)) return null;
         try { return await GetJsonAsync($"/api/{translationId}/{bookId}/{chapter}.words.json", ct); }
         catch (HttpRequestException) { lock (_noWords) _noWords.Add(translationId); return null; }
+        // the word tags are extra: a slow or broken answer must not stop the chapter text from showing
+        catch (Exception e) when (e is TaskCanceledException or JsonException && !ct.IsCancellationRequested) { return null; }
     }
 
     readonly HashSet<string> _noWords = [];
@@ -319,10 +321,18 @@ public sealed class HelloAoProvider(HttpClient http, string cacheDir) : IBiblePr
     async Task<JsonDocument> GetJsonAsync(string path, CancellationToken ct)
     {
         var file = Path.Combine(cacheDir, path.TrimStart('/').Replace('/', Path.DirectorySeparatorChar));
-        if (File.Exists(file)) return JsonDocument.Parse(await File.ReadAllBytesAsync(file, ct));
+        if (File.Exists(file))
+        {
+            // a damaged cache file (e.g. the program ended while writing) is fetched again instead of breaking this page for good
+            try { return JsonDocument.Parse(await File.ReadAllBytesAsync(file, ct)); }
+            catch (JsonException) { try { File.Delete(file); } catch (IOException) { } }
+        }
         var bytes = await http.GetByteArrayAsync(Base + path, ct);
+        var doc = JsonDocument.Parse(bytes);   // only a complete, readable answer is kept
         Directory.CreateDirectory(Path.GetDirectoryName(file)!);
-        await File.WriteAllBytesAsync(file, bytes, ct);
-        return JsonDocument.Parse(bytes);
+        var tmp = file + ".tmp";
+        try { await File.WriteAllBytesAsync(tmp, bytes, CancellationToken.None); File.Move(tmp, file, overwrite: true); }
+        catch (IOException) { /* not cached this time; the text is shown anyway */ }
+        return doc;
     }
 }

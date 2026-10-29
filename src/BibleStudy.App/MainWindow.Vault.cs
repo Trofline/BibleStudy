@@ -43,10 +43,15 @@ public partial class MainWindow
 
     async Task SwitchVaultAsync(string name)
     {
+        // an open document is saved into the vault it belongs to, before the other vault takes over
+        // (saved afterwards it went into the new vault and could overwrite a document there that has the same number)
+        CloseEditor(); CloseDocument(); SaveNoteDraft();
+        _noteRef = null; NoteEditor.Text = _noteLoaded = "";
         _vault = OpenVault(name);
         _settings.Vault = name; SaveSettings();
         _read = _vault.GetReadChapters();
-        _sermonVault = null; if (TabActive(PrayerTab)) BuildPrayerUi(); CloseEditor(); CloseDocument(); RefreshLists(); RefreshDocs(); RefreshQueue(); RefreshTodos(); RefreshVaultUi();
+        _myXrefKey = null;
+        _sermonVault = null; if (TabActive(PrayerTab)) BuildPrayerUi(); RefreshLists(); RefreshDocs(); RefreshQueue(); RefreshTodos(); RefreshVaultUi();
         if (_windows.TryGetValue("group:Dokumente", out var docs)) docs.SelectAction?.Invoke(docs.Current);
         if (_windows.TryGetValue("group:Predigt", out var sermon)) sermon.SelectAction?.Invoke(sermon.Current);
         if (Home.IsVisible) Home.Show(_books, _read, Home.OpenBook);
@@ -56,7 +61,9 @@ public partial class MainWindow
     async Task CreateVaultAsync()
     {
         var name = NewVaultBox.Text?.Trim() ?? "";
-        if (name.Length == 0 || name.IndexOfAny(Path.GetInvalidFileNameChars()) >= 0) { VaultInfo.Text = L("Ungültiger Name (keine Sonderzeichen wie \\ / : * ? \" < > |)."); return; }
+        // "." or ".." would put the vault outside the vault folder; Windows also refuses names ending in a dot or space and device names like CON
+        var device = name.Split('.')[0].Trim().ToUpperInvariant() is "CON" or "PRN" or "AUX" or "NUL" or "COM1" or "COM2" or "COM3" or "COM4" or "LPT1" or "LPT2" or "LPT3";
+        if (name.Length == 0 || name.IndexOfAny(Path.GetInvalidFileNameChars()) >= 0 || name.Trim('.').Length == 0 || name.EndsWith('.') || device) { VaultInfo.Text = L("Ungültiger Name (keine Sonderzeichen wie \\ / : * ? \" < > |)."); return; }
         NewVaultBox.Text = "";
         await SwitchVaultAsync(name);
     }

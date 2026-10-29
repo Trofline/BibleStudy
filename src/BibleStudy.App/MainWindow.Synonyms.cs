@@ -51,7 +51,7 @@ public partial class MainWindow
             foreach (var s in groups.Take(24))
             {
                 var term = s;
-                wrap.Children.Add(FilterChip(s, false, null, () => { SearchBox.Text = term; SideTabs.SelectedIndex = 0; _ = SearchAsync(); }, L("Im Text suchen")));
+                wrap.Children.Add(FilterChip(s, false, null, () => { SearchBox.Text = term; RevealSideTab(0); _ = SearchAsync(); }, L("Im Text suchen")));
             }
             panel.Children.Add(wrap);
             panel.Children.Add(Muted(L("Ein Klick sucht das Wort im Bibeltext – so siehst du, ob ein anderes Wort die Stelle klarer macht. Quelle: openthesaurus.de (CC BY-SA 4.0).")));

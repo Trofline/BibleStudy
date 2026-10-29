@@ -35,6 +35,14 @@ public class SearchEngineTests
     }
 
     [Fact]
+    public void Punctuation_in_a_search_word_is_ignored()
+    {
+        Assert.Equal([3, 4], Hits("Gnade,"));
+        Assert.Equal([5], Hits("Engel-des-HERRN"));
+        Assert.Equal([1, 7], Hits("L=gehen"));   // ging, gingen, gegangen
+    }
+
+    [Fact]
     public void Groups_and_wildcards()
     {
         Assert.Equal([8], Hits("(L=hüten / L=weiden) (Schaf / Herde / Vieh)"));

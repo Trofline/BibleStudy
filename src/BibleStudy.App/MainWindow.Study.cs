@@ -250,6 +250,7 @@ public partial class MainWindow
             using var zip = ZipFile.OpenRead(path);
             var vaultEntry = zip.GetEntry("vault.db") ?? throw new InvalidDataException(L("Die Datei enthält keinen Vault (vault.db)."));
             var name = L("Import {0:yyyy-MM-dd HH-mm}", DateTime.Now);
+            for (var n = 2; Directory.Exists(Path.Combine(_root, "vaults", name)); n++) name = L("Import {0:yyyy-MM-dd HH-mm}", DateTime.Now) + $" ({n})";   // a second import in the same minute
             var target = Path.Combine(_root, "vaults", name, "vault.db");
             Directory.CreateDirectory(Path.GetDirectoryName(target)!);
             vaultEntry.ExtractToFile(target);

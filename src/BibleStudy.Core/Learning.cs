@@ -1,4 +1,5 @@
 ﻿using System.Text.Json;
+using BibleStudy.Core.Storage;
 
 namespace BibleStudy.Core;
 
@@ -106,6 +107,6 @@ public sealed class LearnStore(string path)
     void Save()
     {
         Directory.CreateDirectory(Path.GetDirectoryName(path)!);
-        File.WriteAllText(path, JsonSerializer.Serialize(Cards));
+        SafeFile.WriteAllText(path, JsonSerializer.Serialize(Cards));
     }
 }

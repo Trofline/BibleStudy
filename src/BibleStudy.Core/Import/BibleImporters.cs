@@ -33,7 +33,8 @@ public static partial class BibleImporters
 
     public static ParsedBible ReadEsword(string path, string languageCode)
     {
-        using var con = new SqliteConnection($"Data Source={path};Mode=ReadOnly");
+        // no pooling: otherwise the user's file stays locked (cannot be moved or deleted) until the program ends
+        using var con = new SqliteConnection(new SqliteConnectionStringBuilder { DataSource = path, Mode = SqliteOpenMode.ReadOnly, Pooling = false }.ToString());
         con.Open();
         string title = Path.GetFileNameWithoutExtension(path), abbreviation = title;
         try
@@ -51,7 +52,7 @@ public static partial class BibleImporters
         while (reader.Read())
         {
             var book = reader.GetInt32(0);
-            if (book < 1 || book > 66) continue;
+            if (book < 1 || book > 66 || reader.IsDBNull(3)) continue;
             verses.Add(new ParsedVerse(BookData.UsfmIds[book - 1], reader.GetInt32(1), reader.GetInt32(2), [new Segment(CleanPlain(reader.GetString(3)))]));
         }
         return new ParsedBible(title, abbreviation, languageCode, verses, []);
@@ -192,6 +193,8 @@ public static partial class BibleImporters
     static string CleanPlain(string raw)
     {
         var withoutNotes = EswordNotes().Replace(raw, "");
+        // e-Sword modules store the text as RTF ("{\cf6 Gott} sprach\par"): keep the words, drop the codes
+        if (withoutNotes.Contains('\\')) withoutNotes = RtfCodes().Replace(withoutNotes, " ").Replace("{", "").Replace("}", "");
         return Whitespace().Replace(WebUtility.HtmlDecode(Tags().Replace(withoutNotes, "")), " ").Trim();
     }
 
@@ -207,4 +210,5 @@ public static partial class BibleImporters
     [GeneratedRegex("<[^>]+>")] private static partial Regex Tags();
     [GeneratedRegex(@"\s+")] private static partial Regex Whitespace();
     [GeneratedRegex("<(RF|FI)>.*?<(Rf|Fi)>", RegexOptions.Singleline)] private static partial Regex EswordNotes();
+    [GeneratedRegex(@"\\[a-zA-Z]+-?\d*\s?|\\[{}\\]")] private static partial Regex RtfCodes();
 }

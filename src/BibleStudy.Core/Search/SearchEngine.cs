@@ -189,6 +189,9 @@ public static class SearchEngine
         public SearchOptions Options { get; } = options;
         public HashSet<string> Used { get; } = [];
         public Dictionary<string, HashSet<string>> IdsByTerm { get; } = [];
+        // prepared once per search, not once per verse (wildcards and word forms are costly to build)
+        public Dictionary<string, Func<string, bool>> Matchers { get; } = [];
+        public Dictionary<LemmaNode, Func<string, bool>> Lemmas { get; } = [];
     }
 
     static bool Eval(SearchNode n, CorpusVerse v, Ctx c, List<(int, int)> spans)
@@ -198,7 +201,7 @@ public static class SearchEngine
             case WordNode w: return c.Options.Original ? Original(w.Text, v, c, spans) : Word(w.Text, v, c, spans);
             case OriginalNode o: return Original(o.Text, v, c, spans);
             case PhraseNode p: return Phrase(p.Words, v, c.Options.CaseSensitive, spans);
-            case LemmaNode l: return Lemma(l, v, spans);
+            case LemmaNode l: return Lemma(l, v, c, spans);
             case StrongNode s:
             {
                 var words = c.Strongs?.Words(s.Id, v.Ref);
@@ -255,7 +258,7 @@ public static class SearchEngine
 
     static bool Word(string text, CorpusVerse v, Ctx c, List<(int, int)> spans)
     {
-        var test = Matcher(text, c.Options);
+        if (!c.Matchers.TryGetValue(text, out var test)) c.Matchers[text] = test = Matcher(text, c.Options);
         var hit = false;
         for (var i = 0; i < v.Words.Length; i++)
         {
@@ -336,41 +339,36 @@ public static class SearchEngine
         ["fahren"] = ["fährt", "fuhr", "fuhren", "gefahren"], ["heißen"] = ["hieß", "hießen", "geheißen"], ["ziehen"] = ["zog", "zogen", "gezogen"],
         ["stehlen"] = ["stiehlt", "stahl", "gestohlen"], ["sterben"] = ["stirbt", "starb", "starben", "gestorben"], ["helfen"] = ["hilft", "half", "halfen", "geholfen"],
         ["lesen"] = ["liest", "las", "lasen", "gelesen"], ["treten"] = ["tritt", "trat", "traten", "getreten"], ["gelten"] = ["gilt", "galt", "galten", "gegolten"],
-        ["fliehen"] = ["floh", "flohen", "geflohen"], ["steigen"] = ["stieg", "stiegen", "gestiegen"], ["bleiben "] = [], ["senden"] = ["sandte", "sandten", "gesandt"],
+        ["fliehen"] = ["floh", "flohen", "geflohen"], ["steigen"] = ["stieg", "stiegen", "gestiegen"], ["senden"] = ["sandte", "sandten", "gesandt"],
         ["kennen"] = ["kannte", "kannten", "gekannt"], ["bitten"] = ["bat", "baten", "gebeten"], ["binden"] = ["band", "banden", "gebunden"],
     };
 
-    static bool Lemma(LemmaNode l, CorpusVerse v, List<(int, int)> spans)
+    static bool Lemma(LemmaNode l, CorpusVerse v, Ctx c, List<(int, int)> spans)
     {
-        var pattern = SearchQuery.Fold(l.Pattern, l.IgnoreCase);
+        if (!c.Lemmas.TryGetValue(l, out var test)) c.Lemmas[l] = test = LemmaMatcher(l);
         var hit = false;
-        Regex? rx = null;
-        string[]? forms = null; string stem = "";
-        if (pattern.Contains('*'))
-            rx = new Regex("^" + string.Join(@"[\p{L}\p{N}]*", pattern.Split('*').Select(Regex.Escape)) + "$", RegexOptions.CultureInvariant);
-        else
-        {
-            var isVerb = pattern.EndsWith("en", StringComparison.Ordinal) && pattern.Length > 4 && char.IsLower(pattern[0]);
-            stem = isVerb ? pattern[..^2] : pattern;
-            if (pattern.Length > 3 && pattern.EndsWith("ern", StringComparison.Ordinal) && char.IsLower(pattern[0])) stem = pattern[..^1];
-            var irregular = Irregular.FirstOrDefault(kv => SearchQuery.Fold(kv.Key, l.IgnoreCase) == pattern).Value;
-            forms = irregular?.Select(f => SearchQuery.Fold(f, l.IgnoreCase)).ToArray();
-        }
         for (var i = 0; i < v.Words.Length; i++)
         {
-            var tok = v.Word(i, l.IgnoreCase);
-            bool ok;
-            if (rx is not null) ok = rx.IsMatch(tok);
-            else
-            {
-                ok = tok == pattern || (tok.Length - stem.Length is >= 0 and <= 3 && tok.StartsWith(stem, StringComparison.Ordinal))
-                    || (tok.Length > 4 && tok.StartsWith("ge", StringComparison.Ordinal) && tok.Length - stem.Length - 2 is >= 1 and <= 2 && tok.AsSpan(2).StartsWith(stem, StringComparison.Ordinal) && char.IsLower(pattern[0]));
-                if (!ok && forms is not null) ok = forms.Contains(tok);
-            }
-            if (!ok) continue;
+            if (!test(v.Word(i, l.IgnoreCase))) continue;
             hit = true; spans.Add(v.Words[i]);
         }
         return hit;
+    }
+
+    static Func<string, bool> LemmaMatcher(LemmaNode l)
+    {
+        var pattern = SearchQuery.Fold(l.Pattern, l.IgnoreCase);
+        if (pattern.Contains('*'))
+            return new Regex("^" + string.Join(@"[\p{L}\p{N}]*", pattern.Split('*').Select(Regex.Escape)) + "$", RegexOptions.CultureInvariant).IsMatch;
+        var lowerStart = pattern.Length > 0 && char.IsLower(pattern[0]);
+        var isVerb = pattern.EndsWith("en", StringComparison.Ordinal) && pattern.Length > 4 && lowerStart;
+        var stem = isVerb ? pattern[..^2] : pattern;
+        if (pattern.Length > 3 && pattern.EndsWith("ern", StringComparison.Ordinal) && lowerStart) stem = pattern[..^1];
+        var irregular = Irregular.FirstOrDefault(kv => SearchQuery.Fold(kv.Key, l.IgnoreCase) == pattern).Value;
+        var forms = irregular?.Select(f => SearchQuery.Fold(f, l.IgnoreCase)).ToHashSet();
+        return tok => tok == pattern || (tok.Length - stem.Length is >= 0 and <= 3 && tok.StartsWith(stem, StringComparison.Ordinal))
+            || (lowerStart && tok.Length > 4 && tok.StartsWith("ge", StringComparison.Ordinal) && tok.Length - stem.Length - 2 is >= 1 and <= 2 && tok.AsSpan(2).StartsWith(stem, StringComparison.Ordinal))
+            || (forms is not null && forms.Contains(tok));
     }
 
     static IReadOnlyList<(int Start, int Len)> Merge(List<(int, int)> spans)

@@ -46,7 +46,7 @@ public partial class MainWindow
     }
 
     /// <summary>Several terms in one field ("Tag + Herr", "Glaube, Werke"): they are combined.</summary>
-    static string[] Terms(string key) => key.Split(['+', ',', ';', '&'], StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+    static string[] Terms(string key) => key.Split(['+', ',', ';', '&'], StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).Distinct(StringComparer.OrdinalIgnoreCase).ToArray();
 
     async Task<NetData?> WordNetAsync(string key, bool expand, Action<string> status)
     {
@@ -90,7 +90,8 @@ public partial class MainWindow
             if (await WordNodeAsync(other, Math.Min(30, 4 + shared / 2.0), $"{shared}×") is { } node) data.Nodes.Add(node);
         foreach (var (other, shared) in partners) data.Edges.Add((id, other, shared));
         // the partners also belong together if they share verses with each other
-        var sets = partners.ToDictionary(p => p.Id, p => _analyzer.Occurrences(p.Id).ToHashSet());        for (var i = 0; i < partners.Count; i++)
+        var sets = partners.ToDictionary(p => p.Id, p => _analyzer.Occurrences(p.Id).ToHashSet());
+        for (var i = 0; i < partners.Count; i++)
             for (var j = i + 1; j < partners.Count; j++)
             {
                 var common = sets[partners[i].Id].Count(sets[partners[j].Id].Contains);
@@ -199,7 +200,7 @@ public partial class MainWindow
         var added = new List<string>();
         foreach (var word in fresh)
         {
-            var hits = await Task.Run(() => SearchEngine.Run(corpus, $"L={word}", null, new SearchOptions(), null).Results.Select(r => r.Ref).ToHashSet());
+            var hits = await Task.Run(() => SearchEngine.Run(corpus, word.Contains(' ') ? $"\"{word}\"" : $"L={word}", null, new SearchOptions(), null).Results.Select(r => r.Ref).ToHashSet());
             var isStart = !expand && starts.Contains(word, StringComparer.OrdinalIgnoreCase);
             if (hits.Count == 0 && !isStart) continue;
             _topicVerses[word] = hits; _topicWords.Add(word); added.Add(word);

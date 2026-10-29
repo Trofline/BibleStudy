@@ -176,7 +176,9 @@ public static partial class SearchQuery
         if (sw.Success) return new StrongWordNode(NormalizeStrong(sw.Groups["id"].Value), sw.Groups["w"].Value.Trim('"'));
 
         if (IsStrongId(text)) return new StrongNode(NormalizeStrong(text));
-        return new WordNode(text);
+        // punctuation never stands inside a word of the text: "Herr," is Herr, "Menschen-Sohn" are two words in a row
+        var parts = NotWordRx().Split(text).Where(x => x.Length > 0).ToList();
+        return parts.Count switch { 0 => null, 1 => new WordNode(parts[0]), _ => parts.Any(x => x.Contains('*')) ? new AndNode(parts.Select(x => (SearchNode)new WordNode(x)).ToList()) : new PhraseNode(parts) };
     }
 
     static SearchNode? Phrase(string text)
@@ -190,4 +192,5 @@ public static partial class SearchQuery
     [GeneratedRegex(@"^[Oo]=(?<w>.+)$")] private static partial Regex OriginalRx();
     [GeneratedRegex(@"^(?<id>[GgHh]\d{1,4}[a-cA-C]?)=(?<w>.+)$")] private static partial Regex StrongWordRx();
     [GeneratedRegex(@"[\p{L}\p{N}]+")] private static partial Regex WordRx();
+    [GeneratedRegex(@"[^\p{L}\p{N}*]+")] private static partial Regex NotWordRx();
 }

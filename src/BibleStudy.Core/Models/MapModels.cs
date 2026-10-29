@@ -1,4 +1,5 @@
 ﻿using System.Text.Json;
+using BibleStudy.Core.Storage;
 
 namespace BibleStudy.Core.Models;
 
@@ -24,7 +25,7 @@ public sealed class WorldMap
             if (!File.Exists(file))
             {
                 Directory.CreateDirectory(Path.GetDirectoryName(file)!);
-                await File.WriteAllBytesAsync(file, await http.GetByteArrayAsync($"{Base}{name}.geojson", ct), ct);
+                await SafeFile.WriteAllBytesAsync(file, await http.GetByteArrayAsync($"{Base}{name}.geojson", ct));
             }
             return await Task.Run(() => ParseShapes(File.ReadAllBytes(file)), ct);
         }

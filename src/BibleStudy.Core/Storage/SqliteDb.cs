@@ -10,7 +10,7 @@ public abstract class SqliteDb
     protected SqliteDb(string dbPath)
     {
         Directory.CreateDirectory(Path.GetDirectoryName(dbPath)!);
-        _cs = $"Data Source={dbPath}";
+        _cs = new SqliteConnectionStringBuilder { DataSource = dbPath }.ToString();   // a folder name with ";" or "=" stays one path
     }
 
     protected SqliteConnection Open() { var c = new SqliteConnection(_cs); c.Open(); return c; }

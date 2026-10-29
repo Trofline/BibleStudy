@@ -74,24 +74,55 @@ public partial class MainWindow
     {
         folder ??= AppPaths.BackupDir;
         Directory.CreateDirectory(folder);
-        var path = Path.Combine(folder, $"BibleStudy-Daten-{label}-{DateTime.Now:yyyy-MM-dd_HHmm}.zip");
+        // two backups in the same minute (e.g. one before an update and one by hand) must not collide
+        var path = Path.Combine(folder, $"BibleStudy-Daten-{label}-{DateTime.Now:yyyy-MM-dd_HHmmss}.zip");
+        for (var n = 2; File.Exists(path); n++) path = Path.Combine(folder, $"BibleStudy-Daten-{label}-{DateTime.Now:yyyy-MM-dd_HHmmss}-{n}.zip");
         var root = AppPaths.Root;
+        var backupDir = Path.GetFullPath(folder).TrimEnd(Path.DirectorySeparatorChar) + Path.DirectorySeparatorChar;
         using var zip = ZipFile.Open(path, ZipArchiveMode.Create);
         if (Directory.Exists(root))
             foreach (var file in Directory.EnumerateFiles(root, "*", SearchOption.AllDirectories))
             {
                 var rel = Path.GetRelativePath(root, file);
                 if (CacheFolders.Contains(rel.Split(Path.DirectorySeparatorChar)[0])) continue;
+                if (Path.GetFullPath(file).StartsWith(backupDir, StringComparison.OrdinalIgnoreCase)) continue;   // a backup folder inside the data: not the backups themselves
+                if (file.EndsWith(".tmp", StringComparison.OrdinalIgnoreCase)) continue;
                 try
                 {
-                    // the database may be open right now: read it without asking for exclusive access
-                    using var src = new FileStream(file, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete);
                     using var dst = zip.CreateEntry(rel, CompressionLevel.Optimal).Open();
-                    src.CopyTo(dst);
+                    if (Path.GetExtension(file).Equals(".db", StringComparison.OrdinalIgnoreCase) && SnapshotDb(file) is { } snapshot)
+                    {
+                        // a database is copied through SQLite: a plain copy taken while it is being written can be unusable
+                        try { using var src = File.OpenRead(snapshot); src.CopyTo(dst); }
+                        finally { try { File.Delete(snapshot); } catch (IOException) { } }
+                    }
+                    else
+                    {
+                        // the file may be open right now: read it without asking for exclusive access
+                        using var src = new FileStream(file, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete);
+                        src.CopyTo(dst);
+                    }
                 }
                 catch (IOException) { /* a temporary file that vanished meanwhile */ }
             }
         return path;
+    }
+
+    /// <summary>A consistent copy of a SQLite database in a temp file; null when the file is no database (it is then copied as it is).</summary>
+    static string? SnapshotDb(string file)
+    {
+        var tmp = Path.Combine(Path.GetTempPath(), "bs-backup-" + Guid.NewGuid().ToString("N") + ".db");
+        try
+        {
+            using (var src = new Microsoft.Data.Sqlite.SqliteConnection(new Microsoft.Data.Sqlite.SqliteConnectionStringBuilder { DataSource = file, Mode = Microsoft.Data.Sqlite.SqliteOpenMode.ReadOnly, Pooling = false }.ToString()))
+            using (var dst = new Microsoft.Data.Sqlite.SqliteConnection(new Microsoft.Data.Sqlite.SqliteConnectionStringBuilder { DataSource = tmp, Pooling = false }.ToString()))
+            {
+                src.Open(); dst.Open();
+                src.BackupDatabase(dst);
+            }
+            return tmp;
+        }
+        catch (Microsoft.Data.Sqlite.SqliteException) { try { File.Delete(tmp); } catch (IOException) { } return null; }
     }
 
     // ---- updating ------------------------------------------------------------------------------------------------------------
@@ -194,6 +225,7 @@ public partial class MainWindow
         }
         else if (await AskAsync(L("Wirklich alles löschen?"), L("Deine Vaults, Notizen, Dokumente und Einstellungen werden unwiderruflich gelöscht."), L("Doch behalten"), L("Alles löschen")) != 1) return;
 
+        RemoveOwnStartMenuEntry(dir);
         var cmd = $"/c ping 127.0.0.1 -n 4 >nul & rmdir /s /q \"{dir}\"";
         Process.Start(new ProcessStartInfo("cmd.exe", cmd) { CreateNoWindow = true, UseShellExecute = false });
         if (kept is not null) { try { Process.Start(new ProcessStartInfo("explorer.exe", $"\"{kept}\"")); } catch { /* optional */ } }

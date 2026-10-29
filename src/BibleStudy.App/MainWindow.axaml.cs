@@ -318,6 +318,8 @@ public partial class MainWindow : Window
     {
         if (_loading || TranslationBox.SelectedItem is not TranslationInfo t || BookBox.SelectedItem is not BookInfo b) return;
         SplashWindow.Report(0.88, L("Öffne Kapitel …"));
+        // fast paging starts several loads; only the newest may draw (a slow older answer must not replace the chapter shown)
+        var generation = ++_showGeneration;
         try
         {
             var number = (int)(ChapterBox.Value ?? 1);
@@ -327,7 +329,10 @@ public partial class MainWindow : Window
             var ch = await primaryTask;
             var cols = new List<(TranslationInfo T, Chapter? C)> { (t, ch) };
             cols.AddRange(extraTs.Zip(await Task.WhenAll(extraTasks), (c, x) => (c, x)));
+            if (generation != _showGeneration) return;
 
+            // a text selection belongs to the chapter it was made in (kept, its offsets would mark the same verse number of the next chapter)
+            if (_curBook != b.Id || _curChapter != ch.Number) _selection = null;
             _curBook = b.Id; _curChapter = ch.Number; _selected = null;
             CollabSendLocation(focusVerse);
             _curChapterData = ch;
@@ -352,6 +357,7 @@ public partial class MainWindow : Window
             var notes = cols.Select(c => c.C?.Footnotes?.OrderBy(f => f.NoteId).Select((f, i) => (f.NoteId, Letter: NoteLetter(i), f.Text))
                 .ToDictionary(x => x.NoteId, x => (x.Letter, x.Text))).ToList();
             await LoadChapterRefsAsync(b.Id, number);
+            if (generation != _showGeneration) return;
             if (_independent) BuildIndependent(cols, size, noted, notes!, t);
             else foreach (var num in cols.SelectMany(c => c.C?.Verses.Select(v => v.Number) ?? []).Distinct().Order())
             {
@@ -378,9 +384,11 @@ public partial class MainWindow : Window
             StatusText.Text = string.Join("  |  ", cols.Select(c =>
                 L("{0}: {1}, Namensnennung: {2}", c.T.Name, (c.T.License.PublicDomain ? "gemeinfrei" : L("Lizenz ") + c.T.LicenseUrl), c.T.License.Attribution))) + L(" · Quelle: {0}", _provider.Name);
         }
-        catch (Exception ex) { StatusText.Text = L("Kapitel nicht verfügbar: ") + ex.Message; }
+        catch (Exception ex) { if (generation == _showGeneration) StatusText.Text = L("Kapitel nicht verfügbar: ") + ex.Message; }
         finally { SplashWindow.Done(); }
     }
+
+    int _showGeneration;
 
     static async Task<Chapter?> TryAsync(Task<Chapter> task)
     {
@@ -508,7 +516,7 @@ public partial class MainWindow : Window
 
     async Task ShowStudyAsync(WordSpan span)
     {
-        SideTabs.SelectedIndex = 3;
+        RevealSideTab(3);
         StudyPanel.Children.Clear();
         StudyPanel.Children.Add(new TextBlock { Text = $"„{span.Word.Trim()}“", FontSize = 20, FontWeight = FontWeight.SemiBold, TextWrapping = TextWrapping.Wrap });
         foreach (var id in span.Strongs)
@@ -648,8 +656,10 @@ public partial class MainWindow : Window
     {
         _selected = n; Paint();
         var r = new VerseRef(_curBook, _curChapter, n);
+        if (_noteRef != r) SaveNoteDraft();
         NoteTarget.Text = L("Notiz zu ") + Label(r);
-        NoteEditor.Text = _vault.GetNotes().FirstOrDefault(x => x.Ref == r)?.Text ?? "";
+        NoteEditor.Text = _noteLoaded = _vault.GetNotes().FirstOrDefault(x => x.Ref == r)?.Text ?? "";
+        _noteRef = r;
         _ = ShowXrefsAsync(r);
         if (TabActive(GrundtextTab)) _ = ShowGrundtextAsync(r);
         if (TabActive(GuideTab)) _ = ShowGuideAsync(r);
@@ -724,10 +734,28 @@ public partial class MainWindow : Window
         catch { return ""; }
     }
 
+    VerseRef? _noteRef;      // the verse the note editor shows
+    string _noteLoaded = ""; // its text as it was loaded or saved
+
+    /// <summary>
+    /// A note that was typed but not saved is kept when another verse is clicked, the vault changes or the program closes
+    /// (it used to be replaced by the next verse's note without a word). Emptying a note still needs the delete button.
+    /// </summary>
+    void SaveNoteDraft()
+    {
+        var text = NoteEditor.Text ?? "";
+        if (_noteRef is not { } r || text == _noteLoaded || string.IsNullOrWhiteSpace(text)) return;
+        _vault.SetNote(r, text);
+        _noteLoaded = text;
+        StatusText.Text = L("Notiz zu {0} gespeichert.", Label(r));
+        RefreshLists();
+    }
+
     async Task SaveNoteAsync(string text)
     {
         if (_selected is not int v) { StatusText.Text = L("Erst einen Vers anklicken."); return; }
         _vault.SetNote(new VerseRef(_curBook, _curChapter, v), text);
+        _noteLoaded = text;
         RefreshLists();
         await ShowChapterAsync(v);
     }

@@ -39,7 +39,7 @@ public sealed class ControlServer : IDisposable
                 _listener.Start();
                 Port = port;
             }
-            catch (HttpListenerException) { /* port taken, try the next */ }
+            catch (HttpListenerException) { _listener.Close(); /* port taken, try the next */ }
         }
         if (Port == 0) return false;
         Directory.CreateDirectory(Path.GetDirectoryName(_infoPath)!);

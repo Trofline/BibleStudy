@@ -332,16 +332,30 @@ public static partial class BibleImporters
             if (line.StartsWith('#'))
             {
                 var h = MdInline().Replace(line.TrimStart('#'), "$1").Trim();
-                if (BookFromName(h) is { } onlyBook) { book = onlyBook; chapter = 0; lastVerse = 0; continue; }
-                var bc = MdBookChapter().Match(h);
-                if (bc.Success && BookFromName(bc.Groups["b"].Value) is { } b2) { book = b2; chapter = int.Parse(bc.Groups["c"].Value); lastVerse = 0; continue; }
+                // "## 1" is a chapter, not the first book (book numbers are only for other formats)
                 var ch = MdChapter().Match(h);
-                if (ch.Success && book is not null) { chapter = int.Parse(ch.Groups["c"].Value); lastVerse = 0; }
+                if (ch.Success && book is not null) { chapter = int.Parse(ch.Groups["c"].Value); lastVerse = 0; continue; }
+                if (!h.All(char.IsDigit) && BookFromName(h) is { } onlyBook) { book = onlyBook; chapter = 0; lastVerse = 0; continue; }
+                var bc = MdBookChapter().Match(h);
+                if (bc.Success && BookFromName(bc.Groups["b"].Value) is { } b2) { book = b2; chapter = int.Parse(bc.Groups["c"].Value); lastVerse = 0; }
                 continue;
             }
             line = line.TrimStart('>', ' ');
-            line = MdVerseMark().Replace(line, m => " " + m.Groups.Cast<Group>().Skip(1).First(g => g.Success).Value + " ").Trim();
-            line = MdInline().Replace(line, "$1").Trim();
+            // marked verse numbers (<sup>1</sup>, **1**, ^1^): a paragraph may hold several verses
+            var marks = MdVerseMark().Matches(line);
+            if (marks.Count > 0 && book is not null && chapter > 0)
+            {
+                var before = Clean(line[..marks[0].Index]);
+                if (before.Length > 0 && lastVerse > 0) c.Add(book, chapter, lastVerse, before);
+                for (var i = 0; i < marks.Count; i++)
+                {
+                    var end = i + 1 < marks.Count ? marks[i + 1].Index : line.Length;
+                    NextVerse(int.Parse(marks[i].Groups.Cast<Group>().Skip(1).First(g => g.Success).Value));
+                    c.Add(book, chapter, lastVerse, Clean(line[(marks[i].Index + marks[i].Length)..end]));
+                }
+                continue;
+            }
+            line = Clean(MdVerseMark().Replace(line, m => " " + m.Groups.Cast<Group>().Skip(1).First(g => g.Success).Value + " "));
             if (line.Length == 0) continue;
             var full = LineRef().Match(line);
             if (full.Success && BookFromName(full.Groups["b"].Value) is { } bk)
@@ -350,10 +364,16 @@ public static partial class BibleImporters
                 c.Add(bk, chapter, lastVerse, full.Groups["t"].Value);
                 continue;
             }
+            // a line that starts with a number is a new verse only when the number fits the count ("12 Stämme …" inside a verse is text)
             var vm = MdVerseLine().Match(line);
-            if (vm.Success && book is not null && chapter > 0) { lastVerse = int.Parse(vm.Groups["v"].Value); c.Add(book, chapter, lastVerse, vm.Groups["t"].Value); }
+            if (vm.Success && book is not null && chapter > 0 && int.Parse(vm.Groups["v"].Value) is var n && (lastVerse == 0 || n == 1 || (n > lastVerse && n <= lastVerse + 3)))
+            { NextVerse(n); c.Add(book, chapter, lastVerse, vm.Groups["t"].Value); }
             else if (book is not null && chapter > 0 && lastVerse > 0) c.Add(book, chapter, lastVerse, line);   // a verse that continues in the next line
         }
         return c.Done(Path.GetFileNameWithoutExtension(path), languageCode);
+
+        // verse 1 after higher verses without a heading in between: the next chapter has begun
+        void NextVerse(int n) { if (n == 1 && lastVerse > 1) chapter++; lastVerse = n; }
+        static string Clean(string s) => MdInline().Replace(s, "$1").Trim();
     }
 }

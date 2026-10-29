@@ -51,6 +51,17 @@ public partial class MainWindow
     bool TabActive(int index) =>
         SideTabs.SelectedIndex == index || _windows.Values.Any(d => d.Current == index && (d.Win is not null || d.Key == _activeWork));
 
+    /// <summary>
+    /// Brings a side tab into view for a result that was just put into it: its own window to the front when it was dragged out,
+    /// otherwise the side panel opens (a closed panel used to swallow the result without a sign).
+    /// </summary>
+    void RevealSideTab(int index)
+    {
+        if (_windows.Values.FirstOrDefault(d => d.Side && d.Indices.Contains(index)) is { Win: { } win }) { win.Activate(); return; }
+        SetPanelOpen(true);
+        SideTabs.SelectedIndex = index;
+    }
+
     /// <summary>A tab became visible: load what it shows (for the current chapter, vault, settings …).</summary>
     void TabShown(int index)
     {
@@ -191,7 +202,7 @@ public partial class MainWindow
         plus.Click += (_, _) =>
         {
             var menu = new MenuFlyout();
-            foreach (var name in new[] { L("Bücher"), "Dokumente", "Predigt", "Planen", "Mehr" })
+            foreach (var name in new[] { "Bücher", "Dokumente", "Predigt", "Planen", "Mehr" })   // the inner names; the menu shows them translated
             {
                 var g = NavGroups.First(x => x.Name == name);
                 var item = new MenuItem { Header = name == "Mehr" ? L("Einstellungen") : L(name), IsEnabled = !_windows.ContainsKey("group:" + name) };

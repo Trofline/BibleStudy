@@ -62,6 +62,7 @@ public partial class MainWindow
     {
         if (LocalBibleBox.SelectedItem is not TranslationInfo t) return;
         _local.Remove(t.Id);
+        _store.ForgetTranslation(t.Id); _corpora.Remove(t.Id); _strongIndexes.Remove(t.Id);   // its search index goes with it
         await RefreshLocalBibleBoxAsync();
         ImportBibleInfo.Text = L("„{0}“ wurde aus der Anwendung entfernt (deine Originaldatei bleibt unberührt).", t.Name);
         await ReloadTranslationsAsync(null);

@@ -69,7 +69,7 @@ public partial class MainWindow
             b.Click += (_, _) => act();
             actions.Children.Add(b);
         }
-        Action(L("Notiz"), () => { SideTabs.SelectedIndex = 2; NoteEditor.Focus(); }, true);
+        Action(L("Notiz"), () => { RevealSideTab(2); NoteEditor.Focus(); }, true);
         Action(L("Dokument"), () => { SideTabs.SelectedIndex = KnowledgeTab; NewDocumentFromVerse(); });
         Action(L("Kopieren"), () => _ = CopyVerseAsync());
         Action(L("Leseliste"), () => AddToQueue([r]));

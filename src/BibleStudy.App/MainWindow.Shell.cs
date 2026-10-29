@@ -119,6 +119,8 @@ public partial class MainWindow
             _settings.WindowBounds = new WindowBounds(Position.X, Position.Y, (int)Width, (int)Height, false);
         else if (_settings.WindowBounds is { } old) _settings.WindowBounds = old with { Maximized = maximized };
         if (maximized && _settings.WindowBounds is { } wb) _settings.WindowBounds = wb with { Maximized = true };
+        // what was typed in the last seconds (the autosave runs every few seconds) is kept
+        try { AutoSaveDocument(); SaveNoteDraft(); } catch (Exception ex) { ErrorLog.Write(ex); }
         _settings.LastLayout = CaptureLayout();
         if (_settings.FocusMode && _preFocus is { } pre) _settings.LastLayout.SideOpen = pre.SideOpen;
         CloseAllDetached();

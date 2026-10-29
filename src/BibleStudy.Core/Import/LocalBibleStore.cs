@@ -78,9 +78,11 @@ public sealed class LocalBibleStore : SqliteDb, IBibleProvider
 
     public async Task<IReadOnlyList<VerseText>> GetAllVersesAsync(string translationId, CancellationToken ct = default)
     {
-        var rows = Query("SELECT book,chapter,verse,segs FROM verses WHERE translation=$t ORDER BY rowid", c => c.Parameters.AddWithValue("$t", translationId),
+        var rows = Query("SELECT book,chapter,verse,segs FROM verses WHERE translation=$t", c => c.Parameters.AddWithValue("$t", translationId),
             r => new VerseText(r.GetString(0), r.GetInt32(1), r.GetInt32(2), new Verse(r.GetInt32(2), FromJson(r.GetString(3))).Text));
-        return await Task.FromResult<IReadOnlyList<VerseText>>(rows);
+        // Bible order, whatever order the imported file had (search hits and the concordance are listed in this order)
+        var order = BookData.UsfmIds.Select((b, i) => (b, i)).ToDictionary(x => x.b, x => x.i);
+        return await Task.FromResult<IReadOnlyList<VerseText>>(rows.OrderBy(v => order.GetValueOrDefault(v.BookId, 99)).ThenBy(v => v.Chapter).ThenBy(v => v.Number).ToList());
     }
 
     static string ToJson(IReadOnlyList<Segment> segments) =>
@@ -92,8 +94,7 @@ public sealed class LocalBibleStore : SqliteDb, IBibleProvider
     /// <summary>Stores a parsed Bible (replacing one with the same id) and returns its translation id.</summary>
     public string Save(ParsedBible bible)
     {
-        var slug = new string(bible.ShortName.ToLowerInvariant().Where(char.IsLetterOrDigit).ToArray());
-        var id = Prefix + (slug.Length > 0 ? slug : "bible");
+        var id = IdFor(bible);
         using var con = Open();
         using var tx = con.BeginTransaction();
         void Run(string sql, params (string, object)[] args)
@@ -124,6 +125,25 @@ public sealed class LocalBibleStore : SqliteDb, IBibleProvider
         return id;
     }
 
+    /// <summary>
+    /// The same Bible imported again (same name) replaces its earlier import; a different Bible never does, even when the names
+    /// start alike ("Schlachter2000-AT" and "Schlachter2000-NT" once shared their 12-letter short name and overwrote each other).
+    /// </summary>
+    string IdFor(ParsedBible bible)
+    {
+        var same = Query("SELECT id FROM translations WHERE name=$n", c => c.Parameters.AddWithValue("$n", bible.Name), r => r.GetString(0)).FirstOrDefault();
+        if (same is not null) return same;
+        var taken = Query("SELECT id FROM translations", _ => { }, r => r.GetString(0)).ToHashSet();
+        static string Slug(string s) => new(s.ToLowerInvariant().Where(char.IsLetterOrDigit).Take(40).ToArray());
+        // the short name first (as before), the full name when that is taken by another Bible, then a number
+        foreach (var slug in new[] { Slug(bible.ShortName), Slug(bible.Name) })
+            if (slug.Length > 0 && !taken.Contains(Prefix + slug)) return Prefix + slug;
+        var basis = Prefix + (Slug(bible.Name) is { Length: > 0 } s ? s : "bible");
+        var id = basis;
+        for (var n = 2; taken.Contains(id); n++) id = basis + n;
+        return id;
+    }
+
     public void Remove(string translationId)
     {
         Exec("DELETE FROM verses WHERE translation=$i", c => c.Parameters.AddWithValue("$i", translationId));
@@ -143,7 +163,7 @@ public sealed class CompositeProvider(IBibleProvider web, LocalBibleStore local)
     {
         var mine = await local.GetTranslationsAsync(ct);
         try { return [.. mine, .. await web.GetTranslationsAsync(ct)]; }
-        catch (HttpRequestException) when (mine.Count > 0) { return mine; } // offline: imported translations still work
+        catch (Exception e) when (e is HttpRequestException or TaskCanceledException && mine.Count > 0) { return mine; } // offline or timed out: imported translations still work
     }
 
     public Task<IReadOnlyList<BookInfo>> GetBooksAsync(string translationId, CancellationToken ct = default) => For(translationId).GetBooksAsync(translationId, ct);

@@ -21,6 +21,7 @@ public partial class MainWindow
     readonly List<Dictionary<int, Border>> _colBoxes = [];
     readonly List<ScrollViewer> _colScrolls = [];
     Border? _syncPill;
+    bool _settingSyncCheck;
 
     Color ColumnColor(int i) => i == 0 ? (Res("BsAccent") as ISolidColorBrush)?.Color ?? Colors.Goldenrod : Color.Parse(ColumnColors[i % ColumnColors.Length]);
 
@@ -147,6 +148,7 @@ public partial class MainWindow
         ToolTip.SetTip(check, L("An: alle Spalten laufen Vers für Vers nebeneinander und scrollen gemeinsam. Aus: jede Spalte scrollt für sich."));
         check.IsCheckedChanged += async (_, _) =>
         {
+            if (_settingSyncCheck) return;
             _settings.ParallelSync = check.IsChecked == true;
             if (_settings.ParallelSync) _settings.ParallelSyncIds.Clear();
             await ShowChapterAsync(_selected);
@@ -180,7 +182,9 @@ public partial class MainWindow
             var allOn = chosen.Count == cols.Count;
             _settings.ParallelSync = allOn;
             _settings.ParallelSyncIds = allOn ? [] : chosen.Where(c => cols.Any(x => x.Id == c)).ToList();
+            _settingSyncCheck = true;   // the switch only shows the new state; drawing happens once, below
             all.IsChecked = allOn;
+            _settingSyncCheck = false;
             await ShowChapterAsync(_selected);
         };
         panel.Children.Add(apply);

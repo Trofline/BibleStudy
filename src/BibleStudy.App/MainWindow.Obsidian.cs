@@ -34,23 +34,35 @@ public partial class MainWindow
     {
         var files = 0;
         void Write(string relative, string content) { var p = Path.Combine(root, relative); Directory.CreateDirectory(Path.GetDirectoryName(p)!); File.WriteAllText(p, content, new UTF8Encoding(false)); files++; }
+        // two documents with the same title (or titles that only differ in case or in characters a file name cannot have) get their own file
+        var used = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        string Unique(string folder, string name)
+        {
+            var candidate = name;
+            for (var n = 2; !used.Add(folder + "/" + candidate); n++) candidate = $"{name} ({n})";
+            return candidate;
+        }
 
         // documents: one note per document, [[links]] keep working because file name = title
         var docs = _vault.GetDocuments();
+        var docFiles = docs.OrderBy(d => d.Id).ToDictionary(d => d.Id, d => Unique("docs", SafeFileName(d.Title)));
         foreach (var d in docs)
         {
             var sb = new StringBuilder();
             if (d.Tags.Count > 0) sb.AppendLine("---").AppendLine($"tags: [{string.Join(", ", d.Tags.Select(t => '"' + t.Replace("\"", "'") + '"'))}]").AppendLine("---");
             if (d.Path is not null) sb.AppendLine($"{L("Verknüpfte Datei:")} [{Path.GetFileName(d.Path)}](<file:///{d.Path.Replace('\\', '/')}>)").AppendLine();
             sb.AppendLine(d.Body);
-            Write(Path.Combine(L("Dokumente"), SafeFileName(d.Title) + ".md"), sb.ToString());
+            Write(Path.Combine(L("Dokumente"), docFiles[d.Id] + ".md"), sb.ToString());
         }
 
         // marks: one note per folder, consecutive verses as one range
         var folders = _vault.GetFolders().ToDictionary(f => f.Id, f => f.Name);
+        var markFiles = new List<string>();
         foreach (var group in _vault.GetMarks().GroupBy(m => m.FolderId))
         {
             var name = group.Key is long id && folders.TryGetValue(id, out var n) ? n : L("Ohne Ordner");
+            var file = Unique("marks", SafeFileName(name));
+            markFiles.Add(file);
             var sb = new StringBuilder($"# {name}\n\n");
             var list = group.OrderBy(m => BookOrder(m.Ref.Book)).ThenBy(m => m.Ref.Chapter).ThenBy(m => m.Ref.Verse).ToList();
             for (var i = 0; i < list.Count; i++)
@@ -65,7 +77,7 @@ public partial class MainWindow
                 if (first.Tags.Count > 0) sb.AppendLine(string.Join(" ", first.Tags.Select(ObsidianTag)));
                 sb.AppendLine($"{L("Farbe:")} `{first.Color}`").AppendLine();
             }
-            Write(Path.Combine(L("Markierungen"), SafeFileName(name) + ".md"), sb.ToString());
+            Write(Path.Combine(L("Markierungen"), file + ".md"), sb.ToString());
         }
 
         var notes = new StringBuilder("# " + L("Notizen zu Versen") + "\n\n");
@@ -82,9 +94,9 @@ public partial class MainWindow
         Write(L("Aufgaben") + ".md", todos.ToString());
 
         var start = new StringBuilder($"# {_vault.Name}\n\n{L("Export aus BibleStudy vom {0:dd.MM.yyyy HH:mm}.", DateTime.Now)}\n\n## {L("Dokumente")}\n");
-        foreach (var d in docs.OrderBy(d => d.Title)) start.AppendLine($"- [[{SafeFileName(d.Title)}]]");
+        foreach (var d in docs.OrderBy(d => d.Title)) start.AppendLine($"- [[{docFiles[d.Id]}]]");
         start.AppendLine($"\n## {L("Weitere")}\n- [[{L("Notizen")}]]\n- [[{L("Leseliste")}]]\n- [[{L("Aufgaben")}]]");
-        foreach (var f in folders.Values.Order()) start.AppendLine($"- [[{SafeFileName(f)}]] ({L("Markierungen")})");
+        foreach (var f in markFiles.Order()) start.AppendLine($"- [[{f}]] ({L("Markierungen")})");   // only folders that have marks have a file
         Write("Start.md", start.ToString());
         return files;
     }

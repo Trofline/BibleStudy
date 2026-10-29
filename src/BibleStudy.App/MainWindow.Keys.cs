@@ -72,6 +72,8 @@ public partial class MainWindow
             var b = new Button { Content = Pretty(GestureOf(a)), MinWidth = 150, HorizontalContentAlignment = HorizontalAlignment.Center };
             ToolTip.SetTip(b, L("Klicken, dann die neue Tastenkombination drücken (Esc bricht ab, Entf löscht)"));
             b.Click += (_, _) => { _capturing = action.Id; b.Content = L("Taste drücken …"); b.Focus(); };
+            // clicking somewhere else ends the recording; otherwise the next key typed anywhere (even in a text field) became the new shortcut
+            b.LostFocus += (_, _) => { if (_capturing == action.Id) { _capturing = null; b.Content = Pretty(GestureOf(action)); } };
             _keyButtons[a.Id] = b;
             var row = new DockPanel { Margin = new(0, 2) };
             DockPanel.SetDock(b, Dock.Right);

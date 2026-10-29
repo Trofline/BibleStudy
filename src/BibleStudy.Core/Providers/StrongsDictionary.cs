@@ -1,5 +1,6 @@
 ﻿using System.Text.Json;
 using BibleStudy.Core.Models;
+using BibleStudy.Core.Storage;
 
 namespace BibleStudy.Core.Providers;
 
@@ -85,7 +86,7 @@ public sealed class StrongsDictionary(HttpClient http, string cacheDir)
         {
             js = await http.GetStringAsync(RawBase + path, ct);
             Directory.CreateDirectory(Path.GetDirectoryName(file)!);
-            await File.WriteAllTextAsync(file, js, ct);
+            await SafeFile.WriteAllTextAsync(file, js);
         }
         return await Task.Run(() => Parse(js, lang), ct);
     }

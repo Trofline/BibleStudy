@@ -1,6 +1,7 @@
 using System.IO.Compression;
 using System.Text;
 using BibleStudy.Core.Import;
+using BibleStudy.Core.Models;
 using Microsoft.Data.Sqlite;
 
 namespace BibleStudy.Tests;
@@ -62,6 +63,22 @@ public class MoreImportersTests : IDisposable
         }
         SqliteConnection.ClearAllPools();
         Check(BibleImporters.Read(path, "de"));
+        File.Delete(path);   // the file is not kept locked after reading
+    }
+
+    [Fact]
+    public void Esword_Rtf_IsCleaned()
+    {
+        Directory.CreateDirectory(_dir);
+        var path = Path.Combine(_dir, "e.bblx");
+        using (var con = new SqliteConnection($"Data Source={path};Pooling=False"))
+        {
+            con.Open();
+            using var cmd = con.CreateCommand();
+            cmd.CommandText = "CREATE TABLE Bible(Book INT, Chapter INT, Verse INT, Scripture TEXT);" + string.Concat(Verses.Select(v => $"INSERT INTO Bible VALUES(1,1,{v},'Vers {v} {{\\cf6 Text}} mit Wörtern.\\par');"));
+            cmd.ExecuteNonQuery();
+        }
+        Check(BibleImporters.Read(path, "de"));
     }
 
     [Fact]
@@ -73,6 +90,20 @@ public class MoreImportersTests : IDisposable
     }
 
     [Fact]
+    public void Markdown_Paragraphs_ContinuationNumbers_AndChapterWithoutHeading()
+    {
+        // several verses in one paragraph
+        var para = string.Join(" ", Verses.Select(v => $"<sup>{v}</sup> Vers {v} Text mit Wörtern."));
+        Check(BibleImporters.Read(File_("p.md", $"# 1. Mose 1\n\n{para}\n"), "de"));
+
+        // a wrapped line that starts with a number stays in its verse; verse 1 again means the next chapter
+        var b = BibleImporters.Read(File_("w.md", "# Genesis\n\n## 1\n\n1 Am Anfang\n2 Da waren\n12 Stämme im Text\n3 Und Gott\n" +
+            string.Join("\n", Enumerable.Range(4, 6).Select(v => $"{v} Vers {v}")) + "\n1 Neues Kapitel\n2 Weiter\n"), "de");
+        Assert.Equal("Da waren 12 Stämme im Text", string.Concat(b.Verses.First(v => v.Chapter == 1 && v.Verse == 2).Segments.Select(s => s.Text)));
+        Assert.Equal("Neues Kapitel", string.Concat(b.Verses.First(v => v.Chapter == 2 && v.Verse == 1).Segments.Select(s => s.Text)));
+    }
+
+    [Fact]
     public void Text_Csv_And_Json()
     {
         Check(BibleImporters.Read(File_("t.txt", string.Join("\n", Verses.Select(v => $"1. Mose 1,{v} Vers {v} Text mit Wörtern."))), "de"));
@@ -80,6 +111,19 @@ public class MoreImportersTests : IDisposable
         Check(BibleImporters.Read(File_("a.json", "[" + string.Join(",", Verses.Select(v => $"{{\"book\":\"Gen\",\"chapter\":1,\"verse\":{v},\"text\":\"Vers {v} Text mit Wörtern.\"}}")) + "]"), "de"));
         Check(BibleImporters.Read(File_("b.json", "[{\"abbrev\":\"gn\",\"name\":\"Genesis\",\"chapters\":[[" + string.Join(",", Verses.Select(v => $"\"Vers {v} Text mit Wörtern.\"")) + "]]}]"), "de"));
         Check(BibleImporters.Read(File_("c.json", "{\"Genesis\":{\"1\":{" + string.Join(",", Verses.Select(v => $"\"{v}\":\"Vers {v} Text mit Wörtern.\"")) + "}}}"), "de"));
+    }
+
+    [Fact]
+    public void LocalStore_DifferentBiblesWithSameShortName_DoNotReplaceEachOther()
+    {
+        Directory.CreateDirectory(_dir);
+        var store = new LocalBibleStore(Path.Combine(_dir, "local.db"));
+        ParsedBible Bible(string name) => new(name, "Schlachter20", "de", [new ParsedVerse("GEN", 1, 1, [new Segment("Text")])], []);
+        var at = store.Save(Bible("Schlachter2000-AT"));
+        var nt = store.Save(Bible("Schlachter2000-NT"));
+        Assert.NotEqual(at, nt);
+        Assert.Equal(at, store.Save(Bible("Schlachter2000-AT")));   // importing the same file again replaces it
+        SqliteConnection.ClearAllPools();
     }
 
     [Theory]
