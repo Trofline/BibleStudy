@@ -50,6 +50,7 @@ public sealed class VaultStore : SqliteDb
             CREATE TABLE IF NOT EXISTS todos(id INTEGER PRIMARY KEY, text TEXT, done INT, book TEXT, chapter INT, verse INT, created TEXT);
             CREATE TABLE IF NOT EXISTS my_xrefs(id INTEGER PRIMARY KEY, fbook TEXT, fchapter INT, fverse INT, tbook TEXT, tchapter INT, tverse INT, tend INT, note TEXT, created TEXT);
             CREATE TABLE IF NOT EXISTS hidden_xrefs(id INTEGER PRIMARY KEY, fbook TEXT, fchapter INT, fverse INT, tbook TEXT, tchapter INT, tverse INT, hidden TEXT);
+            CREATE TABLE IF NOT EXISTS last_position(id INTEGER PRIMARY KEY CHECK(id=1), book TEXT, chapter INT);
             CREATE TABLE IF NOT EXISTS prayers(id INTEGER PRIMARY KEY, text TEXT, book TEXT, chapter INT, verse INT, created TEXT, answered TEXT, note TEXT);
             """);
         // documents can live in the same folders as marks (added later; older vaults are migrated here)
@@ -61,6 +62,13 @@ public sealed class VaultStore : SqliteDb
     }
 
     // ---- reading progress -------------------------------------------------------------------------------------------
+
+    /// <summary>Where the user last read in this vault (shown as "continue" on the start page); null in a vault never read in.</summary>
+    public (string Book, int Chapter)? GetLastPosition() =>
+        Query("SELECT book,chapter FROM last_position WHERE id=1", _ => { }, r => (r.GetString(0), r.GetInt32(1))).Cast<(string, int)?>().FirstOrDefault();
+
+    public void SetLastPosition(string book, int chapter) =>
+        Exec("INSERT OR REPLACE INTO last_position(id,book,chapter) VALUES(1,$b,$c)", c => { c.Parameters.AddWithValue("$b", book); c.Parameters.AddWithValue("$c", chapter); });
 
     public HashSet<(string Book, int Chapter)> GetReadChapters() =>
         Query("SELECT book,chapter FROM read_chapters", _ => { }, r => (r.GetString(0), r.GetInt32(1))).ToHashSet();

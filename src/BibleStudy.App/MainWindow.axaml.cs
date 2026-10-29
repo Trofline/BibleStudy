@@ -219,7 +219,8 @@ public partial class MainWindow : Window
 
     void ShowHome()
     {
-        Home.Resume = _curBook == "" ? null : (_curBook, _curChapter, $"{BookName(_curBook)} {_curChapter}");
+        // each vault remembers its own place; a new or empty vault has none
+        Home.Resume = _vault.GetLastPosition() is { } last && _books.Any(b => b.Id == last.Book) ? (last.Book, last.Chapter, $"{BookName(last.Book)} {last.Chapter}") : null;
         var recent = new List<(string, string, string, Action)>();
         var votd = VerseOfTheDay();
         recent.Add((L("Vers des Tages"), Label(votd), L("Klicken zum Lesen"), () => _ = GoToAsync(votd.Book, votd.Chapter, votd.Verse)));
@@ -337,6 +338,7 @@ public partial class MainWindow : Window
             // a text selection belongs to the chapter it was made in (kept, its offsets would mark the same verse number of the next chapter)
             if (_curBook != b.Id || _curChapter != ch.Number) _selection = null;
             _curBook = b.Id; _curChapter = ch.Number; _selected = null;
+            if (ReaderHost.IsVisible) { try { _vault.SetLastPosition(_curBook, _curChapter); } catch (Exception) { /* a convenience; never block reading */ } }
             ThreadPane.SelectedVerse = null;
             CollabSendLocation(focusVerse);
             _curChapterData = ch;

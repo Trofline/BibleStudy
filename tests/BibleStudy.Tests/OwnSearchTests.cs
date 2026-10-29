@@ -19,6 +19,17 @@ public class OwnSearchTests : IDisposable
     static readonly VerseRef Joh316 = new("JHN", 3, 16);
 
     [Fact]
+    public void LastPosition_BelongsToItsVault()
+    {
+        Assert.Null(_v.GetLastPosition());   // a new vault has no "continue" place
+        _v.SetLastPosition("JHN", 3);
+        _v.SetLastPosition("ROM", 8);
+        Assert.Equal(("ROM", 8), _v.GetLastPosition());
+        var other = new VaultStore(Path.Combine(_dir, "other.db"), "O");
+        Assert.Null(other.GetLastPosition());
+    }
+
+    [Fact]
     public void Search_FindsEverythingOwn_AndNeedsAllWords()
     {
         _v.SetNote(Joh316, "Gottes Liebe zur Welt");

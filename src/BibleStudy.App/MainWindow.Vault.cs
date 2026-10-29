@@ -55,7 +55,7 @@ public partial class MainWindow
         _sermonVault = null; if (TabActive(PrayerTab)) BuildPrayerUi(); RefreshLists(); RefreshDocs(); RefreshQueue(); RefreshTodos(); RefreshVaultUi();
         if (_windows.TryGetValue("group:Dokumente", out var docs)) docs.SelectAction?.Invoke(docs.Current);
         if (_windows.TryGetValue("group:Predigt", out var sermon)) sermon.SelectAction?.Invoke(sermon.Current);
-        if (Home.IsVisible) Home.Show(_books, _read, Home.OpenBook);
+        if (Home.IsVisible) ShowHome();   // "continue" and "keep working" belong to the vault just opened
         await ShowChapterAsync(_selected);
     }
 
