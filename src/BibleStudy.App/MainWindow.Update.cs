@@ -117,7 +117,7 @@ public partial class MainWindow
         var canInstall = OperatingSystem.IsWindows() && (AppPaths.IsInstalled || AppPaths.IsPortable);   // the self-installing update is Windows only; elsewhere the download page opens
         if (!canInstall)
         {
-            if (manual) { try { Process.Start(new ProcessStartInfo(info.PageUrl) { UseShellExecute = true }); } catch { /* no browser */ } }
+            if (manual && !OperatingSystem.IsWindows()) { try { Process.Start(new ProcessStartInfo(info.PageUrl) { UseShellExecute = true }); } catch { /* no browser */ } }
             return;
         }
         if (manual) { await InstallUpdateAsync(info); return; }
