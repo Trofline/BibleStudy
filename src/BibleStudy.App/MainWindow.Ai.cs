@@ -89,7 +89,8 @@ public partial class MainWindow
     {
         chat.Cts?.Cancel();
         _chats.Remove(chat);
-        if (_chats.Count == 0) { NewChat(); return; }
+        // closing the last conversation leaves a fresh empty one; numbering starts over, otherwise every ✕ on it counted one up
+        if (_chats.Count == 0) { _chatCounter = 0; NewChat(); return; }
         if (chat == _chat) SwitchChat(_chats[^1]); else RebuildChatBar();
     }
 
