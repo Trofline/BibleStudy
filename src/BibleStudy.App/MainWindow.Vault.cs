@@ -21,6 +21,7 @@ public partial class MainWindow
     Mark? _editMark;
     string _editColor = PresetColors[0];
     bool _vaultUiLoading;
+    bool _switchingVault;
 
     // ---- vaults -----------------------------------------------------------------------------------------------------
 
@@ -56,7 +57,9 @@ public partial class MainWindow
         if (_windows.TryGetValue("group:Dokumente", out var docs)) docs.SelectAction?.Invoke(docs.Current);
         if (_windows.TryGetValue("group:Predigt", out var sermon)) sermon.SelectAction?.Invoke(sermon.Current);
         if (Home.IsVisible) ShowHome();   // "continue" and "keep working" belong to the vault just opened
-        await ShowChapterAsync(_selected);
+        _switchingVault = true;   // the chapter that stays on screen was not read in the new vault
+        try { await ShowChapterAsync(_selected); }
+        finally { _switchingVault = false; }
     }
 
     async Task CreateVaultAsync()

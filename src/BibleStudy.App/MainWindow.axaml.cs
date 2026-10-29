@@ -5,6 +5,7 @@ using Avalonia.Controls.Documents;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Media;
+using Avalonia.VisualTree;
 using BibleStudy.Core.Import;
 using BibleStudy.Core.Models;
 using BibleStudy.Core.Providers;
@@ -118,6 +119,7 @@ public partial class MainWindow : Window
         Home.ReadChanged += SetRead;
 
         ActualThemeVariantChanged += async (_, _) => await ShowChapterAsync(_selected); // highlight opacity depends on the theme
+        ReaderScroll.AddHandler(PointerPressedEvent, OnReaderBackgroundPressed, Avalonia.Interactivity.RoutingStrategies.Tunnel);
         ReaderScroll.SizeChanged += (_, _) => FitReader();
         StudyBtn.IsCheckedChanged += async (_, _) => await OnStudyToggledAsync();
 
@@ -338,7 +340,7 @@ public partial class MainWindow : Window
             // a text selection belongs to the chapter it was made in (kept, its offsets would mark the same verse number of the next chapter)
             if (_curBook != b.Id || _curChapter != ch.Number) _selection = null;
             _curBook = b.Id; _curChapter = ch.Number; _selected = null;
-            if (ReaderHost.IsVisible) { try { _vault.SetLastPosition(_curBook, _curChapter); } catch (Exception) { /* a convenience; never block reading */ } }
+            if (ReaderHost.IsVisible && !_switchingVault) { try { _vault.SetLastPosition(_curBook, _curChapter); } catch (Exception) { /* a convenience; never block reading */ } }
             ThreadPane.SelectedVerse = null;
             CollabSendLocation(focusVerse);
             _curChapterData = ch;
@@ -659,6 +661,17 @@ public partial class MainWindow : Window
         if (_indepGrid is not null) _indepGrid.Height = Math.Max(160, ReaderPanel.Height - 70);
         var reserve = 0.0;
         ReaderPanel.Width = _singleColumn ? Math.Clamp(ReaderScroll.Bounds.Width - 64 - reserve, 320, _settings.ReaderWidth) : double.NaN;
+    }
+
+    /// <summary>A click into empty space (not on a verse, button or scroll bar) takes the selection away again.</summary>
+    void OnReaderBackgroundPressed(object? sender, PointerPressedEventArgs e)
+    {
+        if (_selected is null || !e.GetCurrentPoint(ReaderScroll).Properties.IsLeftButtonPressed) return;
+        var verseBoxes = _verseBoxes.Values.Concat(_colBoxes.SelectMany(d => d.Values)).ToHashSet();
+        for (var v = e.Source as Avalonia.Visual; v is not null && !ReferenceEquals(v, ReaderScroll); v = v.GetVisualParent())   // Avalonia.VisualTree
+            if (v is Border b && verseBoxes.Contains(b) || v is Button or Avalonia.Controls.Primitives.ScrollBar or ComboBox or TextBox or SelectableTextBlock) return;
+        _selected = null; Paint();
+        ThreadPane.SelectedVerse = null;
     }
 
     void SelectVerse(int n)
