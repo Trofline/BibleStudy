@@ -152,10 +152,11 @@ public partial class MainWindow
         catch (Exception ex) { StrongInfo.Text = L("Wörterbuch nicht verfügbar: ") + ex.Message; }
     }
 
-    Task ShowStrongDetailAsync(StrongsEntry e)
+    async Task ShowStrongDetailAsync(StrongsEntry e)
     {
         StrongDetail.Children.Clear();
         StrongDetail.Children.Add(StudyCard(e));
+        var stepTask = StepCardAsync(e.Id);
         var padded = $"{e.Id[0]}{int.Parse(e.Id[1..]):D4}";
         var occurrences = new Button { Content = L("Alle Vorkommen"), Margin = new(0, 0, 8, 0) };
         occurrences.Click += async (_, _) => await ShowConcordanceAsync(padded, $"{e.Id}  {e.Lemma}");
@@ -167,7 +168,7 @@ public partial class MainWindow
             await AiSendOrStopAsync();
         };
         StrongDetail.Children.Add(new StackPanel { Orientation = Avalonia.Layout.Orientation.Horizontal, Children = { occurrences, deeper } });
-        return Task.CompletedTask;
+        if (await stepTask is { } step && StrongDetail.Children.Count > 0) StrongDetail.Children.Insert(1, step);   // right under the dictionary card
     }
 
     async Task AskClaudeToCheckAsync()

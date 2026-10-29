@@ -12,6 +12,8 @@ public sealed record QueueItem(long Id, VerseRef Ref, string Label);
 /// <summary>A note or linked file of the knowledge base. Notes have text; linked files have a path (and their text, if it could be read).</summary>
 public sealed record Document(long Id, string Title, string Body, string? Path, bool IsTemplate, DateTime Updated, IReadOnlyList<string> Tags, long? FolderId = null);
 public sealed record MyXref(long Id, VerseRef From, VerseRef To, int EndVerse, string Note);
+/// <summary>A printed cross reference the user has judged wrong and hidden for good (it is hidden in both directions).</summary>
+public sealed record HiddenXref(long Id, VerseRef From, VerseRef To);
 public sealed record TodoItem(long Id, string Text, bool Done, VerseRef? Ref);
 public sealed record Prayer(long Id, string Text, VerseRef? Ref, DateTime Created, DateTime? Answered, string Note);
 
@@ -47,6 +49,7 @@ public sealed class VaultStore : SqliteDb
             CREATE TABLE IF NOT EXISTS doc_tags(doc_id INT, tag TEXT, PRIMARY KEY(doc_id, tag));
             CREATE TABLE IF NOT EXISTS todos(id INTEGER PRIMARY KEY, text TEXT, done INT, book TEXT, chapter INT, verse INT, created TEXT);
             CREATE TABLE IF NOT EXISTS my_xrefs(id INTEGER PRIMARY KEY, fbook TEXT, fchapter INT, fverse INT, tbook TEXT, tchapter INT, tverse INT, tend INT, note TEXT, created TEXT);
+            CREATE TABLE IF NOT EXISTS hidden_xrefs(id INTEGER PRIMARY KEY, fbook TEXT, fchapter INT, fverse INT, tbook TEXT, tchapter INT, tverse INT, hidden TEXT);
             CREATE TABLE IF NOT EXISTS prayers(id INTEGER PRIMARY KEY, text TEXT, book TEXT, chapter INT, verse INT, created TEXT, answered TEXT, note TEXT);
             """);
         // documents can live in the same folders as marks (added later; older vaults are migrated here)
@@ -233,6 +236,26 @@ public sealed class VaultStore : SqliteDb
     }
 
     public void DeleteMyXref(long id) => Exec("DELETE FROM my_xrefs WHERE id=$i", c => c.Parameters.AddWithValue("$i", id));
+
+    // ---- hidden cross references ------------------------------------------------------------------------------------
+
+    public List<HiddenXref> GetHiddenXrefs() =>
+        Query("SELECT id,fbook,fchapter,fverse,tbook,tchapter,tverse FROM hidden_xrefs ORDER BY id", _ => { },
+            r => new HiddenXref(r.GetInt64(0), new VerseRef(r.GetString(1), r.GetInt32(2), r.GetInt32(3)), new VerseRef(r.GetString(4), r.GetInt32(5), r.GetInt32(6))));
+
+    /// <summary>Hides the pair for good (once; the other direction counts as the same pair).</summary>
+    public void HideXref(VerseRef from, VerseRef to)
+    {
+        if (GetHiddenXrefs().Any(h => (h.From == from && h.To == to) || (h.From == to && h.To == from))) return;
+        Exec("INSERT INTO hidden_xrefs(fbook,fchapter,fverse,tbook,tchapter,tverse,hidden) VALUES($fb,$fc,$fv,$tb,$tc,$tv,$t)", c =>
+        {
+            c.Parameters.AddWithValue("$fb", from.Book); c.Parameters.AddWithValue("$fc", from.Chapter); c.Parameters.AddWithValue("$fv", from.Verse);
+            c.Parameters.AddWithValue("$tb", to.Book); c.Parameters.AddWithValue("$tc", to.Chapter); c.Parameters.AddWithValue("$tv", to.Verse);
+            c.Parameters.AddWithValue("$t", DateTime.UtcNow.ToString("o"));
+        });
+    }
+
+    public void UnhideXref(long id) => Exec("DELETE FROM hidden_xrefs WHERE id=$i", c => c.Parameters.AddWithValue("$i", id));
 
     // ---- queue ------------------------------------------------------------------------------------------------------
 

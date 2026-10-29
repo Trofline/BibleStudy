@@ -24,8 +24,15 @@ public static partial class BibleImporters
             ".md" or ".markdown" => ReadMarkdown(path, languageCode),
             ".txt" or ".csv" or ".tsv" => ReadTextLines(path, languageCode),
             ".json" => ReadJson(path, languageCode),
-            ".html" or ".htm" => ReadCsvOfflineHtml(path, progress),
-            _ => throw new NotSupportedException("Unterstützt: e-Sword und MySword (.bblx, .mybible), Zefania, OSIS und USX (.xml), USFM (.usfm, .sfm, .zip), Markdown, Text, CSV, JSON und die Offline-HTML von csv-bibel.de."),
+            ".html" or ".htm" or ".xhtml" => ReadHtmlFile(path, languageCode, progress),
+            ".epub" => ReadEpub(path, languageCode),
+            ".docx" => ReadDocx(path, languageCode),
+            ".odt" => ReadOdt(path, languageCode),
+            ".rtf" => ReadRtf(path, languageCode),
+            ".fb2" => ReadFb2(path, languageCode),
+            ".pdf" => ReadPdf(path, languageCode),
+            ".azw" or ".azw3" or ".mobi" or ".prc" or ".kfx" or ".lbxlls" or ".logos4" => throw ProtectedFormat(ext),
+            _ => throw new NotSupportedException(L("Dieses Dateiformat wird nicht unterstützt. Unterstützt sind: e-Sword und MySword, Zefania, OSIS, USX, USFM, EPUB, Word, OpenDocument, RTF, FictionBook, PDF, Markdown, Text, CSV, JSON und Webseiten (HTML).")),
         };
     }
 

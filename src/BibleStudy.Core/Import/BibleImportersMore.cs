@@ -321,11 +321,14 @@ public static partial class BibleImporters
     /// Markdown: headings name the book ("# Genesis", "# 1. Mose") and the chapter ("## 1", "## Kapitel 1", "## Psalm 23");
     /// a verse is a line that starts with its number (also **1**, &lt;sup&gt;1&lt;/sup&gt;, "1." or "1 "). Lines with a full reference ("Joh 3,16 …") work too.
     /// </summary>
-    public static ParsedBible ReadMarkdown(string path, string languageCode)
+    public static ParsedBible ReadMarkdown(string path, string languageCode) => ReadMarkdownLines(File.ReadAllLines(path), Path.GetFileNameWithoutExtension(path), languageCode);
+
+    /// <summary>The same reader for text that another format was turned into (headings as "#" lines, verse numbers as &lt;sup&gt;).</summary>
+    static ParsedBible ReadMarkdownLines(IEnumerable<string> lines, string name, string languageCode)
     {
         var c = new Collector();
         string? book = null; var chapter = 0; var lastVerse = 0;
-        foreach (var raw in File.ReadAllLines(path))
+        foreach (var raw in lines)
         {
             var line = raw.Trim();
             if (line.Length == 0 || line.StartsWith("---") || line.StartsWith("```")) continue;
@@ -370,7 +373,7 @@ public static partial class BibleImporters
             { NextVerse(n); c.Add(book, chapter, lastVerse, vm.Groups["t"].Value); }
             else if (book is not null && chapter > 0 && lastVerse > 0) c.Add(book, chapter, lastVerse, line);   // a verse that continues in the next line
         }
-        return c.Done(Path.GetFileNameWithoutExtension(path), languageCode);
+        return c.Done(name, languageCode);
 
         // verse 1 after higher verses without a heading in between: the next chapter has begun
         void NextVerse(int n) { if (n == 1 && lastVerse > 1) chapter++; lastVerse = n; }

@@ -37,6 +37,7 @@ public partial class MainWindow : Window
     readonly HttpClient _http;
     bool _building;
     readonly StrongsDictionary _strongs;
+    readonly StepLexicon _step;
     readonly SyntaxProvider _syntax;
     readonly MeaningTranslator _meanings;
     int _fontSize = 22;
@@ -78,6 +79,7 @@ public partial class MainWindow : Window
         CreatePlugins();
         _provider = new CompositeProvider(_hello, _local, _pluginProvider);
         _strongs = new StrongsDictionary(http, Path.Combine(_root, "cache"));
+        _step = new StepLexicon(http, Path.Combine(_root, "cache"));
         _syntax = new SyntaxProvider(http, Path.Combine(_root, "cache"));
         _meanings = new MeaningTranslator(Path.Combine(_root, "cache"));
         _store = new UserStore(Path.Combine(_root, "user.db"));
@@ -335,6 +337,7 @@ public partial class MainWindow : Window
             // a text selection belongs to the chapter it was made in (kept, its offsets would mark the same verse number of the next chapter)
             if (_curBook != b.Id || _curChapter != ch.Number) _selection = null;
             _curBook = b.Id; _curChapter = ch.Number; _selected = null;
+            ThreadPane.SelectedVerse = null;
             CollabSendLocation(focusVerse);
             _curChapterData = ch;
             LoadChapterMarks();
@@ -527,6 +530,7 @@ public partial class MainWindow : Window
                 StatusText.Text = L("Lade Wörterbuch …");
                 var e = await _strongs.LookupAsync(id);
                 StudyPanel.Children.Add(e is null ? new TextBlock { Text = id + L(": kein Eintrag") } : StudyCard(e));
+                if (e is not null && await StepCardAsync(id) is { } step) StudyPanel.Children.Add(step);
                 var all = new Button { Content = L("Alle Vorkommen"), HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Left };
                 var conc = $"{id}  {e?.Lemma}  „{span.Word.Trim()}“";
                 all.Click += async (_, _) => await ShowConcordanceAsync(id, conc);
@@ -535,7 +539,7 @@ public partial class MainWindow : Window
             catch (Exception ex) { StudyPanel.Children.Add(new TextBlock { Text = L("{0}: Wörterbuch nicht verfügbar ({1})", id, ex.Message), TextWrapping = TextWrapping.Wrap }); }
         }
         await AddWordExtrasAsync(span);
-        var note = new TextBlock { Text = StrongsDictionary.Attribution, FontSize = 11, TextWrapping = TextWrapping.Wrap };
+        var note = new TextBlock { Text = StrongsDictionary.Attribution + "  " + StepLexicon.Attribution, FontSize = 11, TextWrapping = TextWrapping.Wrap };
         note.Bind(TextBlock.ForegroundProperty, this.GetResourceObservable("BsMuted"));
         StudyPanel.Children.Add(note);
         StatusText.Text = "";
@@ -658,6 +662,7 @@ public partial class MainWindow : Window
     void SelectVerse(int n)
     {
         _selected = n; Paint();
+        ThreadPane.SelectedVerse = n;
         var r = new VerseRef(_curBook, _curChapter, n);
         if (_noteRef != r) SaveNoteDraft();
         NoteTarget.Text = L("Notiz zu ") + Label(r);
@@ -688,6 +693,7 @@ public partial class MainWindow : Window
                 else refs.AddRange(incoming.Take(dir == "Both" ? 15 : 20));
             }
             refs = refs.GroupBy(x => x.Target).Select(g => g.First()).ToList();
+            refs = VisibleXrefs(r, refs);   // minus what you hid for good
             if (TranslationBox.SelectedItem is not TranslationInfo t) return;
             var texts = await Task.WhenAll(refs.Select(x => VerseTextAsync(t.Id, x)));
             if (_selected != r.Verse || _curBook != r.Book || _curChapter != r.Chapter) return; // user moved on

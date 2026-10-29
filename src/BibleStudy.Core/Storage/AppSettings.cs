@@ -86,6 +86,10 @@ public sealed class AppSettings
     public Dictionary<string, string> AllowedPlugins { get; set; } = [];
     /// <summary>Order of the work tabs at the top (keys of the tabs), as the user dragged them.</summary>
     public List<string> TabOrder { get; set; } = [];
+    /// <summary>The one-time note about where the data comes from has been read (version of the note).</summary>
+    public string SourcesNoticeSeen { get; set; } = "";
+    /// <summary>Show the STEPBible brief lexicon under the Strong entries.</summary>
+    public bool ShowStepLexicon { get; set; } = true;
     public Dictionary<string, WindowBounds> Windows { get; set; } = [];
     public Dictionary<string, LayoutPreset> Layouts { get; set; } = [];
     public LayoutPreset? LastLayout { get; set; }

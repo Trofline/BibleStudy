@@ -174,7 +174,12 @@ public partial class MainWindow
     {
         _chapterRefs = null;
         if (!_xrefInText && !_threadOn) return;
-        try { _chapterRefs = await _hello.GetChapterCrossRefsAsync(book, chapter); }
+        try
+        {
+            var all = await _hello.GetChapterCrossRefsAsync(book, chapter);
+            // the ones you hid are left out (a copy: the cached data stays as it came)
+            _chapterRefs = all.ToDictionary(p => p.Key, p => VisibleXrefs(new VerseRef(book, chapter, p.Key), p.Value));
+        }
         catch (HttpRequestException) { /* offline and not cached: the views simply stay empty */ }
     }
 
@@ -186,7 +191,11 @@ public partial class MainWindow
         var wrap = new WrapPanel { Margin = new(30, 0, 0, 6) };
         foreach (var x in mine) wrap.Children.Add(MyXrefChip(x, verse, translationId));   // your own come first and stand out
         foreach (var r in refs.Take(6))
-            wrap.Children.Add(Chip(Label(r.Target) + (r.EndVerse > r.Target.Verse ? "–" + r.EndVerse : ""), () => _ = GoToAsync(r.Target.Book, r.Target.Chapter, r.Target.Verse), translationId, r));
+        {
+            var chip = Chip(Label(r.Target) + (r.EndVerse > r.Target.Verse ? "–" + r.EndVerse : ""), () => _ = GoToAsync(r.Target.Book, r.Target.Chapter, r.Target.Verse), translationId, r);
+            AttachHideXrefMenu(chip, new VerseRef(_curBook, _curChapter, verse), r.Target);
+            wrap.Children.Add(chip);
+        }
         if (refs.Count > 6) wrap.Children.Add(Chip($"+{refs.Count - 6}", () => SideTabs.SelectedIndex = 4, translationId, null));
         return wrap;
     }

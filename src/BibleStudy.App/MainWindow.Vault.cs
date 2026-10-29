@@ -48,6 +48,7 @@ public partial class MainWindow
         CloseEditor(); CloseDocument(); SaveNoteDraft();
         _noteRef = null; NoteEditor.Text = _noteLoaded = "";
         _vault = OpenVault(name);
+        RefreshHiddenXrefs();
         _settings.Vault = name; SaveSettings();
         _read = _vault.GetReadChapters();
         _myXrefKey = null;

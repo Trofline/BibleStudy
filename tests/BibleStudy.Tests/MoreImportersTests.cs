@@ -126,6 +126,99 @@ public class MoreImportersTests : IDisposable
         SqliteConnection.ClearAllPools();
     }
 
+    static string HtmlBody() => "<h1>1. Mose</h1><h2>Kapitel 1</h2>" + string.Concat(Verses.Select(v => v % 2 == 0 ? $"<p><sup>{v}</sup> Vers {v} Text mit Wörtern.</p>" : $"<p><span class=\"verse\">{v}</span> Vers {v} Text mit Wörtern.</p>"));
+
+    [Fact]
+    public void Html_And_Epub_AreRead_InSpineOrder()
+    {
+        Check(BibleImporters.Read(File_("b.html", "<html><head><title>x</title><style>p{}</style></head><body>" + HtmlBody() + "</body></html>"), "de"));
+
+        Directory.CreateDirectory(_dir);
+        var epub = Path.Combine(_dir, "b.epub");
+        using (var z = ZipFile.Open(epub, ZipArchiveMode.Create))
+        {
+            void Add(string name, string text) { var e = z.CreateEntry(name); using var w = new StreamWriter(e.Open(), new UTF8Encoding(false)); w.Write(text); }
+            Add("META-INF/container.xml", "<container xmlns=\"urn:oasis:names:tc:opendocument:xmlns:container\"><rootfiles><rootfile full-path=\"OEBPS/content.opf\"/></rootfiles></container>");
+            Add("OEBPS/content.opf", "<package xmlns=\"http://www.idpf.org/2007/opf\"><manifest><item id=\"a\" href=\"a.xhtml\"/><item id=\"b\" href=\"b%20x.xhtml\"/></manifest><spine><itemref idref=\"a\"/><itemref idref=\"b\"/></spine></package>");
+            var all = HtmlBody();
+            var cut = all.IndexOf("<p><sup>4</sup>", StringComparison.Ordinal);
+            Add("OEBPS/a.xhtml", "<html><body>" + all[..cut] + "</body></html>");
+            Add("OEBPS/b x.xhtml", "<html><body>" + all[cut..] + "</body></html>");   // the second page comes later in the spine than its name suggests
+        }
+        Check(BibleImporters.Read(epub, "de"));
+    }
+
+    [Fact]
+    public void Epub_WithCopyProtection_IsRefused()
+    {
+        Directory.CreateDirectory(_dir);
+        foreach (var (name, entry, content) in new[] { ("rights.epub", "META-INF/rights.xml", "<rights/>"), ("enc.epub", "META-INF/encryption.xml", "<encryption xmlns=\"urn:oasis:names:tc:opendocument:xmlns:container\"><EncryptedData><CipherData><CipherReference URI=\"OEBPS/a.xhtml\"/></CipherData></EncryptedData></encryption>") })
+        {
+            var p = Path.Combine(_dir, name);
+            using (var z = ZipFile.Open(p, ZipArchiveMode.Create)) { var e = z.CreateEntry(entry); using var w = new StreamWriter(e.Open()); w.Write(content); }
+            Assert.Contains("kopiergeschützt", Assert.Throws<InvalidDataException>(() => BibleImporters.Read(p, "de")).Message);
+        }
+        // an obfuscated font is no copy protection
+        var fontOnly = Path.Combine(_dir, "font.epub");
+        using (var z = ZipFile.Open(fontOnly, ZipArchiveMode.Create))
+        {
+            var e = z.CreateEntry("META-INF/encryption.xml"); using (var w = new StreamWriter(e.Open())) w.Write("<encryption xmlns=\"urn:oasis:names:tc:opendocument:xmlns:container\"><EncryptedData><CipherData><CipherReference URI=\"OEBPS/f.otf\"/></CipherData></EncryptedData></encryption>");
+            var p = z.CreateEntry("OEBPS/a.xhtml"); using (var w = new StreamWriter(p.Open(), new UTF8Encoding(false))) w.Write("<html><body>" + HtmlBody() + "</body></html>");
+        }
+        Check(BibleImporters.Read(fontOnly, "de"));
+
+        foreach (var ext in new[] { ".azw3", ".mobi", ".kfx", ".lbxlls" })
+            Assert.Contains("kopiergeschützt", Assert.Throws<NotSupportedException>(() => BibleImporters.Read("x" + ext, "de")).Message);
+    }
+
+    [Fact]
+    public void Docx_Odt_Rtf_Fb2_AreRead()
+    {
+        Directory.CreateDirectory(_dir);
+        var w = "http://schemas.openxmlformats.org/wordprocessingml/2006/main";
+        var docx = Path.Combine(_dir, "b.docx");
+        using (var z = ZipFile.Open(docx, ZipArchiveMode.Create))
+        {
+            var e = z.CreateEntry("word/document.xml"); using var s = new StreamWriter(e.Open(), new UTF8Encoding(false));
+            s.Write($"<w:document xmlns:w=\"{w}\"><w:body><w:p><w:pPr><w:pStyle w:val=\"Heading1\"/></w:pPr><w:r><w:t>1. Mose</w:t></w:r></w:p><w:p><w:r><w:t>Kapitel 1</w:t></w:r></w:p>"
+                + string.Concat(Verses.Select(v => $"<w:p><w:r><w:rPr><w:vertAlign w:val=\"superscript\"/></w:rPr><w:t>{v}</w:t></w:r><w:r><w:t xml:space=\"preserve\"> Vers {v} Text mit Wörtern.</w:t></w:r></w:p>")) + "</w:body></w:document>");
+        }
+        Check(BibleImporters.Read(docx, "de"));
+
+        var odt = Path.Combine(_dir, "b.odt");
+        using (var z = ZipFile.Open(odt, ZipArchiveMode.Create))
+        {
+            var e = z.CreateEntry("content.xml"); using var s = new StreamWriter(e.Open(), new UTF8Encoding(false));
+            s.Write("<office:document-content xmlns:office=\"urn:oasis:names:tc:opendocument:xmlns:office:1.0\" xmlns:text=\"urn:oasis:names:tc:opendocument:xmlns:text:1.0\" xmlns:style=\"urn:oasis:names:tc:opendocument:xmlns:style:1.0\" xmlns:fo=\"urn:oasis:names:tc:opendocument:xmlns:xsl-fo-compatible:1.0\">"
+                + "<office:automatic-styles><style:style style:name=\"T1\" style:family=\"text\"><style:text-properties style:text-position=\"super 58%\"/></style:style></office:automatic-styles><office:body><office:text><text:h>1. Mose</text:h><text:p>Kapitel 1</text:p>"
+                + string.Concat(Verses.Select(v => $"<text:p><text:span text:style-name=\"T1\">{v}</text:span> Vers {v} Text <text:note><text:note-body><text:p>Fußnote</text:p></text:note-body></text:note>mit Wörtern.</text:p>")) + "</office:text></office:body></office:document-content>");
+        }
+        Check(BibleImporters.Read(odt, "de"));
+
+        var rtf = @"{\rtf1\ansi{\fonttbl{\f0 Arial;}}\pard 1. Mose\par Kapitel 1\par " + string.Concat(Verses.Select(v => $@"{{\super {v}}} Vers {v} Text mit W\'f6rtern.\par ")) + "}";
+        Check(BibleImporters.Read(File_("b.rtf", rtf), "de"));
+
+        var fb2 = "<FictionBook><body><section><title><p>1. Mose</p></title><p>Kapitel 1</p>" + string.Concat(Verses.Select(v => $"<p><sup>{v}</sup> Vers {v} Text mit Wörtern.</p>")) + "</section></body></FictionBook>";
+        Check(BibleImporters.Read(File_("b.fb2", fb2), "de"));
+    }
+
+    [Fact]
+    public void Pdf_IsRead_ByLines()
+    {
+        var builder = new UglyToad.PdfPig.Writer.PdfDocumentBuilder();
+        var font = builder.AddStandard14Font(UglyToad.PdfPig.Fonts.Standard14Fonts.Standard14Font.Helvetica);
+        var page = builder.AddPage(UglyToad.PdfPig.Content.PageSize.A4);
+        var lines = new List<string> { "Genesis", "Kapitel 1" };
+        lines.AddRange(Verses.Select(v => $"{v} Vers {v} Text mit Woertern."));
+        for (var i = 0; i < lines.Count; i++) page.AddText(lines[i], 11, new UglyToad.PdfPig.Core.PdfPoint(50, 800 - 20 * i), font);
+        var path = Path.Combine(_dir, "b.pdf");
+        Directory.CreateDirectory(_dir);
+        File.WriteAllBytes(path, builder.Build());
+        var b = BibleImporters.Read(path, "de");
+        Assert.Equal(12, b.Verses.Count);
+        Assert.Equal("Vers 3 Text mit Woertern.", string.Concat(b.Verses.First(v => v.Verse == 3).Segments.Select(s => s.Text)));
+    }
+
     [Theory]
     [InlineData("1. Mose", "GEN")]
     [InlineData("Joh", "JHN")]

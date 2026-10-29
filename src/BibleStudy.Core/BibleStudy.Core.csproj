@@ -8,6 +8,7 @@
 
   <ItemGroup>
     <PackageReference Include="SIPSorcery" Version="10.0.17" />
+    <PackageReference Include="UglyToad.PdfPig" Version="1.7.0-custom-5" />
     <Using Include="BibleStudy.Core.Loc" Static="true" />
     <PackageReference Include="Microsoft.Data.Sqlite" Version="10.0.14" />
   </ItemGroup>

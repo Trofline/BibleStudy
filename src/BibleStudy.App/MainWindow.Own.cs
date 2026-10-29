@@ -1,6 +1,7 @@
 using Avalonia.Controls;
 using Avalonia.Layout;
 using BibleStudy.Core.Models;
+using BibleStudy.Core.Providers;
 using BibleStudy.Core.Storage;
 
 namespace BibleStudy.App;
@@ -53,5 +54,23 @@ public partial class MainWindow
             StatusText.Text = L("Fehlerprotokoll: {0}", ErrorLog.Path);
         }
         catch (Exception ex) { StatusText.Text = L("Das Fehlerprotokoll ließ sich nicht öffnen: {0}", ex.Message); }
+    }
+
+    /// <summary>The short meaning from the STEPBible lexicon under a word of the original text (Greek with the entry of Abbott-Smith); null when there is none or offline.</summary>
+    async Task<Control?> StepCardAsync(string id)
+    {
+        if (!_settings.ShowStepLexicon) return null;
+        StepEntry? e;
+        try { e = await _step.LookupAsync(id).WaitAsync(TimeSpan.FromSeconds(20)); }
+        catch (Exception ex) when (ex is HttpRequestException or TimeoutException or IOException or OperationCanceledException) { return null; }
+        if (e is null || e.Gloss.Length == 0) return null;
+        var panel = new StackPanel { Spacing = 3 };
+        var head = new TextBlock { Text = L("STEPBible-Kurzlexikon"), Classes = { "eyebrow" } };
+        panel.Children.Add(head);
+        panel.Children.Add(new TextBlock { Text = $"{e.Word}  ·  {e.Translit}  ·  {e.Gloss}", FontWeight = Avalonia.Media.FontWeight.SemiBold, TextWrapping = Avalonia.Media.TextWrapping.Wrap });
+        if (e.Meaning.Length > 0) panel.Children.Add(new TextBlock { Text = Shorten(e.Meaning, 900), TextWrapping = Avalonia.Media.TextWrapping.Wrap, FontSize = 12.5, Opacity = 0.92 });
+        var card = new Border { Child = panel, Padding = new(12), CornerRadius = new(10), BorderThickness = new(1) };
+        card.Bind(Border.BorderBrushProperty, this.GetResourceObservable("BsBorder"));
+        return card;
     }
 }

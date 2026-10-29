@@ -20,12 +20,21 @@ public sealed class ThreadGraph : Control
     public event Action<string, IReadOnlyList<CrossRef>, Point>? Picked;
     public event Action? BuildRequested;
 
+    int? _selectedVerse;
+
+    /// <summary>The clicked verse: its threads stand out, the others fade, so one verse can be followed through the graph.</summary>
+    public int? SelectedVerse
+    {
+        get => _selectedVerse;
+        set { if (_selectedVerse == value) return; _selectedVerse = value; InvalidateVisual(); }
+    }
+
     public const double GraphWidth = 360;
     const double Gutter = 236, BarWidth = 8, Margin = 6;
     static readonly IBrush Muted = new SolidColorBrush(Color.Parse("#9a9890"));
     static readonly IBrush Text = new SolidColorBrush(Color.Parse("#ecebe6"));
 
-    sealed record Thread(double Y, double TargetY, int Genre, double Weight, CrossRef Ref, int BookIndex);
+    sealed record Thread(double Y, double TargetY, int Genre, double Weight, CrossRef Ref, int BookIndex, int Verse);
     sealed record Segment(int Book, double Top, double Bottom, int Genre);
 
     CrossRefGraph? _graph;
@@ -66,7 +75,7 @@ public sealed class ThreadGraph : Control
                 var node = g.Index(r.Target.Book, r.Target.Chapter);
                 if (node < 0) continue;
                 var mid = (links.IndexOf(node, r.Target.Verse) + links.IndexOf(node, Math.Max(r.Target.Verse, r.EndVerse)) + 1) / 2.0;
-                _threads.Add(new Thread(anchor.Y, YOf(mid), links.VerseGenre[links.IndexOf(node, r.Target.Verse)], ArcRenderer.VoteWeight(r.Score), r, g.BookIndexOf(node)));
+                _threads.Add(new Thread(anchor.Y, YOf(mid), links.VerseGenre[links.IndexOf(node, r.Target.Verse)], ArcRenderer.VoteWeight(r.Score), r, g.BookIndexOf(node), anchor.Verse));
             }
     }
 
@@ -87,17 +96,17 @@ public sealed class ThreadGraph : Control
         }
         if (_dirty || Math.Abs(_builtHeight - Bounds.Height) > 0.5) Build();
 
-        var emphasized = _hoverThread >= 0 ? _threads[_hoverThread] : null;
-        var hasEmphasis = emphasized is not null || _hoverBook >= 0;
+        var focus = _selectedVerse is int sv && _threads.Any(t => t.Verse == sv) ? _selectedVerse : null;   // nothing fades for a verse without threads
+        var hasEmphasis = _hoverThread >= 0 || _hoverBook >= 0 || focus is not null;
         var barLeft = Gutter + 2;
         for (var pass = 0; pass < 2; pass++)
             for (var i = 0; i < _threads.Count; i++)
             {
                 var t = _threads[i];
-                var hot = i == _hoverThread || t.BookIndex == _hoverBook;
+                var hot = i == _hoverThread || t.BookIndex == _hoverBook || (focus is int fv && t.Verse == fv);
                 if (hot != (pass == 1)) continue; // emphasized threads on top
                 var color = ArcRenderer.GenreColor(t.Genre);
-                var alpha = hot ? 0.95 : hasEmphasis ? 0.06 + 0.1 * t.Weight : 0.18 + 0.5 * t.Weight;
+                var alpha = hot ? 0.95 : hasEmphasis ? 0.04 + 0.06 * t.Weight : 0.18 + 0.5 * t.Weight;
                 var geometry = new StreamGeometry();
                 using (var ctx = geometry.Open())
                 {

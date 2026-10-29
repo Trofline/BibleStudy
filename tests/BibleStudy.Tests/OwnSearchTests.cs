@@ -1,4 +1,5 @@
 using BibleStudy.Core.Models;
+using BibleStudy.Core.Providers;
 using BibleStudy.Core.Storage;
 using Microsoft.Data.Sqlite;
 
@@ -71,6 +72,18 @@ public class OwnSearchTests : IDisposable
     }
 
     [Fact]
+    public void HiddenXrefs_AreKept_InBothDirections_AndCanBeTakenBack()
+    {
+        var a = Joh316; var b = new VerseRef("ROM", 5, 8);
+        _v.HideXref(a, b);
+        _v.HideXref(b, a);                                  // the same pair the other way round: not stored twice
+        var h = Assert.Single(_v.GetHiddenXrefs());
+        Assert.Equal((a, b), (h.From, h.To));
+        _v.UnhideXref(h.Id);
+        Assert.Empty(_v.GetHiddenXrefs());
+    }
+
+    [Fact]
     public void VerseRanges_KnowTheEnd()
     {
         var r = DocumentLinks.VerseRanges("Siehe Joh 3,14-18 und Röm 8,28.").ToList();
@@ -87,4 +100,29 @@ public class OwnSearchTests : IDisposable
     }
 
     public void Dispose() { SqliteConnection.ClearAllPools(); try { Directory.Delete(_dir, true); } catch { } }
+}
+
+public class StepLexiconTests
+{
+    [Fact]
+    public void Parse_ReadsGreekRowsWithMeaning_AndHebrewWithGlossOnly()
+    {
+        var greek = "Header text\nEStrong#\tx\n" +
+            "G0026\tG0026 =\tG0026\tἀγάπη\tagapē\tG:N-F\tlove\t <b>ἀγάπη</b>, -ης, ἡ <BR /> <b>love, goodwill</b>. <ref='Rom.5.8'>Rom.5:8;</ref> <BR />__1. Of men\n" +
+            "G0026\tG0026B\tG0026\tother\tx\tG:N\tsecond row\tignored\n" +
+            "G2264G\tG2264G\tG2264G\tἩρῴδης\tHērōdēs\tN\tHerod\tHerod the Great\n";   // names with letters: not a plain Strong number
+        var g = StepLexicon.Parse(greek, 'G');
+        var e = g[26];
+        Assert.Equal(("G26", "ἀγάπη", "agapē", "love"), (e.Id, e.Word, e.Translit, e.Gloss));
+        Assert.Contains("love, goodwill", e.Meaning);
+        Assert.Contains("Rom.5:8", e.Meaning);
+        Assert.DoesNotContain("<", e.Meaning);
+        Assert.Contains("\n", e.Meaning);
+        Assert.False(g.ContainsKey(2264));
+
+        var hebrew = "H0430\tH0430G = a Name of\tH3068G\tאֱלֹהִים\te.lo.him\tH:N-M\tGod\tThis name means \"gods\"<BR>Another name of ...\n";
+        var h = StepLexicon.Parse(hebrew, 'H')[430];
+        Assert.Equal("God", h.Gloss);
+        Assert.Equal("", h.Meaning);   // the long Hebrew definitions need the permission of their owner and are not used
+    }
 }

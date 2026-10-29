@@ -620,7 +620,7 @@
                             <Border Classes="card"><StackPanel Spacing="8">
                                 <TextBlock Classes="eyebrow" Text="EIGENE ÜBERSETZUNG IMPORTIEREN" />
                                 <TextBlock Classes="caption" TextWrapping="Wrap"
-                                           Text="Für Bibeltexte, die du rechtmäßig besitzt und die nicht frei verfügbar sind (z. B. die Elberfelder Edition CSV). Unterstützt: e-Sword und MySword (.bblx, .mybible), Zefania, OSIS und USX (.xml), USFM (.usfm, .sfm oder ZIP), Markdown, Text, CSV, JSON und die Offline-HTML der CSV-Bibel (mit Strong-Nummern und Fußnoten). Kopiergeschützte Formate (Kindle, Logos) lassen sich nicht einlesen. Der Text bleibt nur auf diesem Rechner und dient deiner privaten Nutzung; gib ihn nicht weiter und lege ihn nicht in ein öffentliches Repository." />
+                                           Text="Für Bibeltexte, die du besitzt und die nicht frei verfügbar sind. Unterstützt: e-Sword und MySword (.bblx, .mybible), Zefania, OSIS, USX, USFM, EPUB, Word (.docx), OpenDocument (.odt), RTF, FictionBook (.fb2), PDF, Webseiten (HTML), Markdown, Text, CSV, JSON und die Offline-HTML der CSV-Bibel. Die Erkennung von Büchern, Kapiteln und Versen ist bei Büchern und Dokumenten eine Schätzung: Prüfe das Ergebnis. Kopiergeschützte Dateien (DRM, z. B. Kindle und Logos) werden nicht gelesen, und BibleStudy entfernt keinen Kopierschutz. Der Text bleibt nur auf diesem Rechner. Benutzung auf eigene Gefahr: Du allein bist dafür verantwortlich, dass du eine Datei so nutzen darfst. Das Projekt prüft die Dateien nicht und übernimmt keine Haftung für das, was du damit tust." />
                                 <StackPanel Orientation="Horizontal" Spacing="8">
                                     <TextBox x:Name="ImportLangBox" Width="70" Text="de" Watermark="Sprache" ToolTip.Tip="Sprachcode der Datei, z. B. de oder en (bei der CSV-Datei automatisch Deutsch)" />
                                     <Button x:Name="ImportBibleBtn" Content="Datei wählen …" />
@@ -638,6 +638,20 @@
                                 <Button x:Name="OfflineBtn" Content="Gewählte Übersetzung offline verfügbar machen" HorizontalAlignment="Left" />
                                 <TextBlock Classes="caption" TextWrapping="Wrap"
                                            Text="Es werden nur Texte geladen, die die Quelle zur freien Nutzung anbietet; Lizenz und Namensnennung stehen unten in der Fußzeile. Die Daten liegen lokal und gehören dir." />
+                            </StackPanel></Border>
+
+                            <Border Classes="card"><StackPanel Spacing="8">
+                                <TextBlock Classes="eyebrow" Text="QUELLEN UND DATEN" />
+                                <TextBlock Classes="caption" TextWrapping="Wrap" Text="Woher jede Information im Programm stammt und was du damit tun darfst. Nichts davon ist im Programm eingebaut: Es wird erst geladen, wenn du es brauchst, und liegt dann im Zwischenspeicher auf deinem Computer." />
+                                <WrapPanel>
+                                    <Button x:Name="SourcesCopyBtn" Content="Liste kopieren" Margin="0,0,6,6" ToolTip.Tip="Kopiert die Liste als Text, zum Beispiel für einen Fehlerbericht" />
+                                    <Button x:Name="SourcesCacheBtn" Content="Zwischenspeicher öffnen" Margin="0,0,6,6" ToolTip.Tip="Zeigt den Ordner mit den geladenen Daten; du kannst ihn gefahrlos löschen, er füllt sich bei Bedarf neu" />
+                                    <Button x:Name="SourcesNoticeBtn" Content="Hinweis zur Herkunft noch einmal lesen" Margin="0,0,6,6" />
+                                    <Button x:Name="HiddenXrefsBtn" Content="Ausgeblendete Querverweise …" Margin="0,0,6,6" ToolTip.Tip="Querverweise, die du als falsch oder unpassend ausgeblendet hast; hier kannst du sie zurückholen" />
+                                </WrapPanel>
+                                <TextBlock x:Name="SourcesNote" Classes="caption" TextWrapping="Wrap" />
+                                <CheckBox x:Name="ShowStepCheck" Content="STEPBible-Kurzlexikon unter den Strong-Einträgen anzeigen" />
+                                <StackPanel x:Name="SourcesList" Spacing="8" />
                             </StackPanel></Border>
 
                             <Border Classes="card"><StackPanel Spacing="8">

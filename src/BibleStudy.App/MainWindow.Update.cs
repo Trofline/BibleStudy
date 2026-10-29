@@ -34,6 +34,8 @@ public partial class MainWindow
         InitFeedback();
         InitPlugins();
         InitNotes();
+        InitSources();
+        InitHiddenXrefs();
         // once per start, a few seconds after launch so that the reader is up first
         if (_settings.AutoUpdate)
         {

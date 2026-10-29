@@ -152,6 +152,7 @@ public partial class MainWindow
             var target = x;
             var head = new Button { Classes = { "ghost" }, Padding = new(0), Content = $"{Label(x.Target)}{(x.EndVerse > x.Target.Verse ? "–" + x.EndVerse : "")}", FontWeight = FontWeight.SemiBold, Foreground = Res("BsAccent") };
             head.Click += async (_, _) => await GoToAsync(target.Target.Book, target.Target.Chapter, target.Target.Verse);
+            AttachHideXrefMenu(head, r, target.Target);
             xrefs.Children.Add(new StackPanel { Children = { head, new TextBlock { Text = t, TextWrapping = TextWrapping.Wrap, Opacity = 0.85 } } });
         }
         if (xr.Count == 0) xrefs.Children.Add(Muted(L("Keine Querverweise gefunden.")));
@@ -179,7 +180,7 @@ public partial class MainWindow
     {
         try
         {
-            var refs = (await _hello.GetCrossReferencesAsync(r.Book, r.Chapter, r.Verse)).Take(8).ToList();
+            var refs = VisibleXrefs(r, await _hello.GetCrossReferencesAsync(r.Book, r.Chapter, r.Verse)).Take(8).ToList();
             var texts = await Task.WhenAll(refs.Select(x => VerseTextAsync(translationId, x)));
             return refs.Zip(texts).ToList();
         }
