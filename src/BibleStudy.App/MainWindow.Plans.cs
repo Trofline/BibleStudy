@@ -25,7 +25,15 @@ public partial class MainWindow
         new("gospels30", L("Die vier Evangelien in 30 Tagen"), L("89 Kapitel, etwa 3 am Tag"), 30, b => Gospels.Contains(b.Id)),
         new("psalms30", L("Psalmen in 30 Tagen"), L("150 Psalmen, 5 am Tag"), 30, b => b.Id == "PSA"),
         new("proverbs31", L("Sprüche in 31 Tagen"), L("Ein Kapitel pro Tag"), 31, b => b.Id == "PRO"),
+        new("ot365", L("Altes Testament in einem Jahr"), L("929 Kapitel, etwa 2 bis 3 am Tag"), 365, b => BookIndex(b) < 39),
+        new("bible730", L("Bibel in zwei Jahren"), L("Alle 1189 Kapitel, etwa 1 bis 2 am Tag – gemütlich"), 730, _ => true),
+        new("paul30", L("Die Briefe des Paulus in 30 Tagen"), L("87 Kapitel von Römer bis Philemon, etwa 3 am Tag"), 30, b => PaulBooks.Contains(b.Id)),
+        new("wisdom60", L("Weisheit und Dichtung in 60 Tagen"), L("Hiob, Psalmen, Sprüche, Prediger, Hoheslied: 243 Kapitel"), 60, b => WisdomBooks.Contains(b.Id)),
+        new("prophets90", L("Die Propheten in 90 Tagen"), L("Jesaja bis Maleachi: 261 Kapitel, etwa 3 am Tag"), 90, b => BookIndex(b) is >= 22 and < 39),
     ];
+
+    static readonly string[] PaulBooks = ["ROM", "1CO", "2CO", "GAL", "EPH", "PHP", "COL", "1TH", "2TH", "1TI", "2TI", "TIT", "PHM"];
+    static readonly string[] WisdomBooks = ["JOB", "PSA", "PRO", "ECC", "SNG"];
 
     int BookIndex(BookInfo b) => _books.ToList().IndexOf(b);
 
@@ -96,6 +104,16 @@ public partial class MainWindow
             list.Children.Add(chip);
         }
         PlanPanel.Children.Add(list);
+
+        // one click to the next thing to read: the first unread chapter of the days up to today (or of this day)
+        var upTo = Math.Min(today, plan.Days);
+        var next1 = Enumerable.Range(1, Math.Max(upTo, day)).SelectMany(d => PlanDay(plan, d)).FirstOrDefault(c => !_read.Contains(c));
+        if (next1 != default)
+        {
+            var go = new Button { Content = L("Weiterlesen: {0} {1}", BookName(next1.Book), next1.Chapter), Classes = { "primary" }, HorizontalAlignment = HorizontalAlignment.Stretch, Margin = new(0, 6, 0, 0) };
+            go.Click += async (_, _) => await GoToAsync(next1.Book, next1.Chapter);
+            PlanPanel.Children.Add(go);
+        }
 
         var allDone = chapters.All(c => _read.Contains(c));
         var finish = new Button { Content = allDone ? L("Tag erledigt ✓") : L("Alle Kapitel dieses Tages als gelesen markieren"), Classes = { "primary" }, HorizontalAlignment = HorizontalAlignment.Stretch };

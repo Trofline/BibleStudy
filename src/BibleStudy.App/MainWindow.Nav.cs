@@ -45,11 +45,11 @@ public partial class MainWindow
         new(K("Notizen"), "M12 20h9 M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z",
         [
             new(2, K("Notizen"), L("Schreibe eine kurze Notiz zum angeklickten Vers. Darunter stehen alle deine Notizen; Klick springt zur Stelle.")),
+            new(1, K("Merken"), L("Verse, die du gemerkt oder markiert hast, in Ordnern und mit Tags. Klick springt zur Stelle.")),
         ]),
         new(K("Dokumente"), "M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z M14 2v6h6 M8 13h8 M8 17h8",
         [
             new(KnowledgeTab, K("Schreiben"), L("Eigene Texte und verknüpfte Dateien. Verse wie „Joh 3,16“ und [[Titel]] werden zu Links.")),
-            new(1, K("Ordner"), L("Deine Ordner mit Dokumenten (📄) und markierten Versen. Klick öffnet das Dokument bzw. springt zur Stelle. ⋯ legt Ordner und Dokumente an.")),
         ], Windowed: true),
         new(K("Predigt"), "M4 21h16 M6 21V8l6-5 6 5v13 M12 3v5 M10 21v-5h4v5",
         [

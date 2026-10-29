@@ -38,7 +38,7 @@ public partial class MainWindow
         CollabPanel.Children.Add(new TextBlock { Text = L("GEMEINSAM STUDIEREN"), Classes = { "eyebrow" } });
         if (!CollabConsented) { BuildCollabConsent(); return; }
         if (_peer?.IsOpen == true) BuildCollabConnected(); else BuildCollabStart();
-        var revoke = new Button { Content = L("Zustimmung zurücknehmen"), Classes = { "tool" }, Padding = new(10, 0), HorizontalAlignment = HorizontalAlignment.Left, Margin = new(0, 12, 0, 0) };
+        var revoke = new Button { Content = L("Zustimmung zurücknehmen"), Classes = { "tool" }, Width = double.NaN, Padding = new(10, 0), HorizontalAlignment = HorizontalAlignment.Left, Margin = new(0, 12, 0, 0) };
         revoke.Click += (_, _) => RevokeCollabConsent();
         CollabPanel.Children.Add(revoke);
     }
@@ -184,7 +184,7 @@ public partial class MainWindow
         var head = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 8 };
         head.Children.Add(new Border { Width = 10, Height = 10, CornerRadius = new(5), Background = new SolidColorBrush(Color.Parse("#30A46C")), VerticalAlignment = VerticalAlignment.Center });
         head.Children.Add(new TextBlock { Text = _peerName.Length > 0 ? L("Verbunden mit {0}", _peerName) : L("Verbunden"), FontWeight = FontWeight.SemiBold, VerticalAlignment = VerticalAlignment.Center });
-        var leave = new Button { Content = L("Trennen"), Classes = { "tool" }, Padding = new(10, 0) };
+        var leave = new Button { Content = L("Trennen"), Classes = { "tool" }, Width = double.NaN, Padding = new(10, 0) };
         leave.Click += (_, _) => { _peer?.Dispose(); _peer = null; _follow = false; BuildCollabUi(); };
         var top = new DockPanel();
         DockPanel.SetDock(leave, Dock.Right);
@@ -257,7 +257,7 @@ public partial class MainWindow
         var r = new VerseRef(_curBook, _curChapter, v);
         var translation = (TranslationBox.SelectedItem as TranslationInfo)?.ShortName ?? "";
         // text of a privately imported translation (private use only) is never sent: only the place, the other person reads it in their own Bible
-        var isPrivate = TranslationBox.SelectedItem is TranslationInfo { Id: var tid } && BibleStudy.Core.Import.LocalBibleStore.Owns(tid);
+        var isPrivate = TranslationBox.SelectedItem is TranslationInfo { Id: var tid } && (BibleStudy.Core.Import.LocalBibleStore.Owns(tid) || BibleStudy.Core.Plugins.PluginBibleProvider.Owns(tid));
         CollabSend(new { t = "verse", book = r.Book, chapter = r.Chapter, verse = r.Verse, text = isPrivate ? "" : VerseTextOf(v).Trim(), translation = isPrivate ? "" : translation });
         AddCollabLog(L("Du hast {0} geteilt.", Label(r)), mine: true, system: true);
     }
@@ -340,9 +340,9 @@ public partial class MainWindow
     {
         if (_books.All(b => b.Id != book) || chapter < 1 || verse < 1) return;
         var r = new VerseRef(book, chapter, verse);
-        var go = new Button { Content = L("Hingehen"), Classes = { "tool" }, Padding = new(10, 0) };
+        var go = new Button { Content = L("Hingehen"), Classes = { "tool" }, Width = double.NaN, Padding = new(10, 0) };
         go.Click += async (_, _) => await GoToAsync(book, chapter, verse);
-        var keep = new Button { Content = L("Merken"), Classes = { "tool" }, Padding = new(10, 0) };
+        var keep = new Button { Content = L("Merken"), Classes = { "tool" }, Width = double.NaN, Padding = new(10, 0) };
         keep.Click += (_, _) =>
         {
             _vault.AddMark(Mark.AnyTranslation, r, -1, -1, text, _settings.DefaultColor, L("Geteilt von {0}", _peerName.Length > 0 ? _peerName : L("einer anderen Person")), null, AutoTags(r));
@@ -365,7 +365,7 @@ public partial class MainWindow
     void ShowSharedDocument(string title, string body)
     {
         if (title.Trim().Length == 0) return;
-        var save = new Button { Content = L("Als Kopie speichern"), Classes = { "tool" }, Padding = new(10, 0), HorizontalAlignment = HorizontalAlignment.Left };
+        var save = new Button { Content = L("Als Kopie speichern"), Classes = { "tool" }, Width = double.NaN, Padding = new(10, 0), HorizontalAlignment = HorizontalAlignment.Left };
         save.Click += (_, _) =>
         {
             // always a new document, tagged with its origin; nothing of the existing documents is touched

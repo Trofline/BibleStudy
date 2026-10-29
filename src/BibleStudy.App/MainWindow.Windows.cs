@@ -191,7 +191,7 @@ public partial class MainWindow
     {
         TabStrip.Children.Clear();
         TabStrip.Children.Add(MakeTab(L("Lesen"), null, "M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"));
-        foreach (var d in _windows.Values.Where(w => !w.Side).ToList())
+        foreach (var d in _windows.Values.Where(w => !w.Side).OrderBy(w => _settings.TabOrder.IndexOf(w.Key) is var i and >= 0 ? i : int.MaxValue).ToList())
         {
             var g = NavGroups.First(x => "group:" + x.Name == d.Key);
             TabStrip.Children.Add(MakeTab(L(d.Title), d.Key, g.Icon, closable: true));
@@ -233,18 +233,45 @@ public partial class MainWindow
 
         Point? from = null; var dragged = false;
         b.AddHandler(PointerPressedEvent, (object? _, PointerPressedEventArgs e) => { if (key is not null && e.GetCurrentPoint(b).Properties.IsLeftButtonPressed) { from = e.GetPosition(this); dragged = false; } }, RoutingStrategies.Tunnel | RoutingStrategies.Bubble, true);
-        b.PointerReleased += (_, _) => from = null;
+        b.Tag = key;
+        var reordered = false;
+        b.PointerReleased += (_, _) =>
+        {
+            from = null;
+            if (!reordered) return;
+            // the order the user dragged the tabs into is kept
+            _settings.TabOrder = TabStrip.Children.OfType<Button>().Select(x => x.Tag as string).OfType<string>().ToList();
+            SaveSettings();
+        };
         b.PointerMoved += (_, e) =>
         {
             if (from is null || dragged || key is null) return;
             var pos = e.GetPosition(this);
             var top = TabBar.TranslatePoint(new Point(0, 0), this)?.Y ?? 60;
-            if (pos.Y < top + TabBar.Bounds.Height + 34 && pos.Y > top - 34) return;
+            if (pos.Y < top + TabBar.Bounds.Height + 34 && pos.Y > top - 34)
+            {
+                // still in the tab strip: moving sideways past a neighbour's middle swaps the two, like tabs in the Explorer
+                var x = e.GetPosition(TabStrip).X;
+                if (Math.Abs(pos.X - from.Value.X) < 6 && !reordered) return;
+                var kids = TabStrip.Children;
+                var at = kids.IndexOf(b);
+                for (var j = 0; j < kids.Count; j++)
+                {
+                    if (j == at || kids[j] is not Button { Tag: string } other) continue;
+                    var mid = other.Bounds.Left + other.Bounds.Width / 2;
+                    if (x < other.Bounds.Left || x > other.Bounds.Right) continue;
+                    if ((j > at && x > mid) || (j < at && x < mid)) { kids.Move(at, j); reordered = true; }
+                    break;
+                }
+                return;
+            }
+            reordered = false;
             dragged = true; from = null; e.Pointer.Capture(null);
             OpenWorkWindow(NavGroups.First(g => "group:" + g.Name == key), this.PointToScreen(pos) - new PixelPoint(160, 20));
         };
         b.Click += (_, _) =>
         {
+            if (reordered) { reordered = false; return; }
             if (dragged) { dragged = false; return; }
             if (key is null) { ShowReader(); return; }
             OpenWork(NavGroups.First(g => "group:" + g.Name == key));
@@ -299,25 +326,61 @@ public partial class MainWindow
         };
 
         // dragging the loose window back over the tab strip (or the side panel for side tabs) docks it again
-        var timer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(650) };
-        timer.Tick += (_, _) =>
+        // A window that was just torn out must not fly straight back in: it only docks again after it has been outside the zone once
+        // (tearing out ends right below the tab strip, where the zone is). While it is moved, the zone is shown.
+        var armed = false;
+        bool InZone()
         {
-            timer.Stop();
-            if (!_windows.ContainsKey(d.Key) || d.Win is null) return;
             var target = d.Side ? SidePanel : (Control)TabBar;
-            if (!target.IsVisible) return;
+            if (!target.IsVisible) return false;
             var scale = RenderScaling;
             var pad = d.Side ? 0 : (int)(20 * scale);
             var topLeft = target.PointToScreen(new Point(0, 0));
             var rect = new PixelRect(topLeft.X, topLeft.Y - pad, (int)(target.Bounds.Width * scale), (int)(target.Bounds.Height * scale) + 2 * pad);
             var center = new PixelPoint(win.Position.X + (int)(win.Bounds.Width * scale / 2), win.Position.Y + (int)(14 * scale));
-            if (rect.Contains(center)) { d.Redock = true; win.Close(); }
+            return rect.Contains(center);
+        }
+        var timer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(650) };
+        timer.Tick += (_, _) =>
+        {
+            timer.Stop();
+            ShowDockZone(d, false, false);
+            if (!_windows.ContainsKey(d.Key) || d.Win is null) return;
+            if (InZone()) { if (armed) { d.Redock = true; win.Close(); } }
+            else armed = true;
         };
-        win.PositionChanged += (_, _) => { timer.Stop(); timer.Start(); };
+        win.PositionChanged += (_, _) =>
+        {
+            timer.Stop(); timer.Start();
+            var inside = InZone();
+            if (!inside) armed = true;
+            ShowDockZone(d, true, inside && armed);   // faint while moving, strong when letting go would dock it
+        };
+        win.Closed += (_, _) => ShowDockZone(d, false, false);
 
         win.Show(this);
         RebuildTabStrip();
         SyncNav();
+    }
+
+    /// <summary>
+    /// Shows where a loose window docks again: the tab strip (or the side panel for a side tab) is tinted while the window is moved,
+    /// and clearly so when letting go would dock it.
+    /// </summary>
+    void ShowDockZone(Detached d, bool on, bool strong)
+    {
+        var target = d.Side ? (Border)SidePanel : TabBar;
+        if (!on)
+        {
+            target.Bind(Border.BackgroundProperty, this.GetResourceObservable("BsSurface"));
+            target.Bind(Border.BorderBrushProperty, this.GetResourceObservable("BsBorder"));
+            target.BorderThickness = d.Side ? new Thickness(1, 0, 0, 0) : new Thickness(0, 0, 0, 1);
+            return;
+        }
+        var accent = (Res("BsAccent") as ISolidColorBrush)?.Color ?? Colors.Goldenrod;
+        target.Background = new SolidColorBrush(accent, strong ? 0.30 : 0.12);
+        target.BorderBrush = new SolidColorBrush(accent, strong ? 1.0 : 0.6);
+        target.BorderThickness = d.Side ? new Thickness(strong ? 5 : 3, 0, 0, 0) : new Thickness(0, 0, 0, strong ? 5 : 3);
     }
 
     void SaveWindowState(string key, Window w)

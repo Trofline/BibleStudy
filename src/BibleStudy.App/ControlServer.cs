@@ -21,6 +21,8 @@ public sealed class ControlServer : IDisposable
     readonly string _token = Convert.ToHexString(RandomNumberGenerator.GetBytes(16));
 
     public int Port { get; private set; }
+    /// <summary>The secret that goes with every call (header X-Token). Plugins the user has allowed receive it, nothing else does.</summary>
+    public string Token => _token;
 
     public ControlServer(Func<string, JsonElement, Task<object?>> handler, string infoPath)
     {

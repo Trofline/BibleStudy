@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using System.Runtime.InteropServices;
+using Avalonia.Controls;
 using BibleStudy.Core;
 
 namespace BibleStudy.App;
@@ -19,6 +20,20 @@ public partial class MainWindow
         IdeaBtn.Click += (_, _) => OpenTicket("enhancement", L("Idee: "), L("**Meine Idee**\n\n\n**Wozu wäre sie gut?**\n"));
         FeedbackBtn.Click += (_, _) => OpenTicket("feedback", L("Feedback: "), L("**Das gefällt mir**\n\n\n**Das könnte besser sein**\n"));
         IdeasListBtn.Click += (_, _) => OpenUrl(IssuesUrl);
+        ErrorLogBtn.Click += (_, _) => ShowErrorLog();
+        // the bug symbol in the top bar: the same things as in the settings, one click away
+        FeedbackTopBtn.Click += (_, _) =>
+        {
+            var menu = new MenuFlyout();
+            void Item(string header, Action run) { var i = new MenuItem { Header = header }; i.Click += (_, _) => run(); menu.Items.Add(i); }
+            Item(L("Fehler melden …"), () => BugBtn.RaiseEvent(new Avalonia.Interactivity.RoutedEventArgs(Button.ClickEvent)));
+            Item(L("Idee vorschlagen …"), () => IdeaBtn.RaiseEvent(new Avalonia.Interactivity.RoutedEventArgs(Button.ClickEvent)));
+            Item(L("Feedback geben …"), () => FeedbackBtn.RaiseEvent(new Avalonia.Interactivity.RoutedEventArgs(Button.ClickEvent)));
+            menu.Items.Add(new Separator());
+            Item(L("Ideen und Fehler ansehen …"), () => OpenUrl(IssuesUrl));
+            Item(L("Letzten Fehler anzeigen"), ShowErrorLog);
+            menu.ShowAt(FeedbackTopBtn);
+        };
         // the installer makes the entry itself; a portable or development copy must not bend it to another program file
         StartMenuBtn.IsVisible = OperatingSystem.IsWindows() && !AppPaths.IsInstalled;
         StartMenuBtn.Click += (_, _) => StartMenuInfo.Text = AddStartMenuEntry();

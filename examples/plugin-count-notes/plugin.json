@@ -1,0 +1,15 @@
+{
+  "id": "example-count-notes",
+  "name": "Beispiel: Notizen zählen",
+  "version": "1.0",
+  "author": "BibleStudy",
+  "description": "Zeigt, wie ein Plugin mit BibleStudy zusammenarbeitet: ein Befehl im Suchfeld (Strg+K), der über die Schnittstelle deine Notizen liest und zählt. Verändert nichts.",
+  "contentNotice": "Liefert keine Bibeltexte. Liest nur deine eigenen Notizen und zeigt eine Zahl an.",
+  "provides": ["commands"],
+  "commands": [
+    { "id": "count-notes", "title": "Notizen zählen" },
+    { "id": "open-john-3-16", "title": "Johannes 3,16 aufschlagen" }
+  ],
+  "command": "node",
+  "args": ["main.js"]
+}

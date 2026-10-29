@@ -3,7 +3,7 @@ using Microsoft.Data.Sqlite;
 
 namespace BibleStudy.Core.Storage;
 
-public sealed record Note(VerseRef Ref, string Text);
+public sealed record Note(VerseRef Ref, string Text, long? FolderId = null);
 public sealed record Folder(long Id, string Name)
 {
     public override string ToString() => Name;
@@ -50,6 +50,9 @@ public sealed class VaultStore : SqliteDb
             CREATE TABLE IF NOT EXISTS prayers(id INTEGER PRIMARY KEY, text TEXT, book TEXT, chapter INT, verse INT, created TEXT, answered TEXT, note TEXT);
             """);
         // documents can live in the same folders as marks (added later; older vaults are migrated here)
+        // notes can be put into folders as well (older vaults are migrated here)
+        if (Query("SELECT 1 FROM pragma_table_info('notes') WHERE name='folder_id'", _ => { }, _ => 1).Count == 0)
+            Exec("ALTER TABLE notes ADD COLUMN folder_id INT");
         if (Query("SELECT 1 FROM pragma_table_info('documents') WHERE name='folder_id'", _ => { }, _ => 1).Count == 0)
             Exec("ALTER TABLE documents ADD COLUMN folder_id INT");
     }
@@ -76,16 +79,25 @@ public sealed class VaultStore : SqliteDb
     // ---- notes ------------------------------------------------------------------------------------------------------
 
     public List<Note> GetNotes() =>
-        Query("SELECT book,chapter,verse,text FROM notes ORDER BY book,chapter,verse", _ => { },
-            r => new Note(new VerseRef(r.GetString(0), r.GetInt32(1), r.GetInt32(2)), r.GetString(3)));
+        Query("SELECT book,chapter,verse,text,folder_id FROM notes ORDER BY book,chapter,verse", _ => { },
+            r => new Note(new VerseRef(r.GetString(0), r.GetInt32(1), r.GetInt32(2)), r.GetString(3), r.IsDBNull(4) ? null : r.GetInt64(4)));
 
-    /// <summary>Saves the note; empty text deletes it.</summary>
+    /// <summary>Saves the note; empty text deletes it. The folder of an existing note stays as it is.</summary>
     public void SetNote(VerseRef v, string text)
     {
         void P(SqliteCommand c) { c.Parameters.AddWithValue("$b", v.Book); c.Parameters.AddWithValue("$c", v.Chapter); c.Parameters.AddWithValue("$v", v.Verse); }
         if (string.IsNullOrWhiteSpace(text)) { Exec("DELETE FROM notes WHERE book=$b AND chapter=$c AND verse=$v", P); return; }
-        Exec("INSERT OR REPLACE INTO notes VALUES($b,$c,$v,$x,$t)", c => { P(c); c.Parameters.AddWithValue("$x", text); c.Parameters.AddWithValue("$t", DateTime.UtcNow.ToString("o")); });
+        Exec("INSERT INTO notes(book,chapter,verse,text,updated) VALUES($b,$c,$v,$x,$t) ON CONFLICT(book,chapter,verse) DO UPDATE SET text=excluded.text, updated=excluded.updated",
+            c => { P(c); c.Parameters.AddWithValue("$x", text); c.Parameters.AddWithValue("$t", DateTime.UtcNow.ToString("o")); });
     }
+
+    /// <summary>Puts a note into a folder (null = out of every folder).</summary>
+    public void SetNoteFolder(VerseRef v, long? folderId) =>
+        Exec("UPDATE notes SET folder_id=$f WHERE book=$b AND chapter=$c AND verse=$v", c =>
+        {
+            c.Parameters.AddWithValue("$f", (object?)folderId ?? DBNull.Value);
+            c.Parameters.AddWithValue("$b", v.Book); c.Parameters.AddWithValue("$c", v.Chapter); c.Parameters.AddWithValue("$v", v.Verse);
+        });
 
     // ---- folders ----------------------------------------------------------------------------------------------------
 
@@ -111,6 +123,7 @@ public sealed class VaultStore : SqliteDb
     {
         Exec("UPDATE marks SET folder_id=NULL WHERE folder_id=$i", c => c.Parameters.AddWithValue("$i", id));
         Exec("UPDATE documents SET folder_id=NULL WHERE folder_id=$i", c => c.Parameters.AddWithValue("$i", id));
+        Exec("UPDATE notes SET folder_id=NULL WHERE folder_id=$i", c => c.Parameters.AddWithValue("$i", id));
         Exec("DELETE FROM folders WHERE id=$i", c => c.Parameters.AddWithValue("$i", id));
     }
 

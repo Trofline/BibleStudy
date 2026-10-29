@@ -187,6 +187,13 @@ public partial class MainWindow
     void RefreshSearchHistory()
     {
         SearchHistoryPanel.Children.Clear();
+        if (_settings.SearchHistory.Count > 0)
+        {
+            var clear = new Button { Content = "✕", Classes = { "tool" }, Width = 24, Height = 24, FontSize = 11, Margin = new(0, 0, 6, 4) };
+            ToolTip.SetTip(clear, L("Suchverlauf löschen"));
+            clear.Click += (_, _) => { _settings.SearchHistory.Clear(); SaveSettings(); RefreshSearchHistory(); };
+            SearchHistoryPanel.Children.Add(clear);
+        }
         foreach (var q in _settings.SearchHistory.Take(6))
         {
             var b = new Button { Content = q.Length > 26 ? q[..26] + "…" : q, Classes = { "tool" }, Width = double.NaN, Padding = new(8, 0), Height = 24, FontSize = 11, Margin = new(0, 0, 4, 4), Opacity = 0.8 };

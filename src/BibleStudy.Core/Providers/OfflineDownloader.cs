@@ -8,6 +8,8 @@ public static class OfflineDownloader
     public static async Task<IReadOnlyList<Chapter>> DownloadAsync(IBibleProvider provider, string translationId,
         IProgress<(int Done, int Total)>? progress = null, CancellationToken ct = default)
     {
+        // a plugin delivers chapter by chapter on request; fetching a whole translation through it is not what it is for
+        if (Plugins.PluginBibleProvider.Owns(translationId)) throw new NotSupportedException(L("Für Übersetzungen aus Plugins gibt es kein Laden für offline und keinen Strong-Index."));
         var books = await provider.GetBooksAsync(translationId, ct);
         var jobs = books.SelectMany(b => Enumerable.Range(1, b.NumberOfChapters).Select(c => (Book: b.Id, Chapter: c))).ToList();
         var results = new Chapter?[jobs.Count];

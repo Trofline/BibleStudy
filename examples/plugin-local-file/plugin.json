@@ -1,0 +1,10 @@
+{
+  "id": "example-local-file",
+  "name": "Beispiel: Bibeltext aus einer eigenen Datei",
+  "version": "1.0",
+  "author": "BibleStudy",
+  "description": "Zeigt, wie ein Plugin aufgebaut ist: liest eine kleine Datei bible.json neben dem Plugin und liefert daraus eine Übersetzung.",
+  "contentNotice": "Enthält nur die gemeinfreie King James Version (1. Mose 1,1-5).",
+  "command": "node",
+  "args": ["main.js"]
+}

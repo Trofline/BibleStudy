@@ -75,7 +75,8 @@ public partial class MainWindow : Window
         var http = _http = new HttpClient();
         _hello = new HelloAoProvider(http, Path.Combine(_root, "cache"));
         _local = new LocalBibleStore(Path.Combine(_root, "local.db"));
-        _provider = new CompositeProvider(_hello, _local);
+        CreatePlugins();
+        _provider = new CompositeProvider(_hello, _local, _pluginProvider);
         _strongs = new StrongsDictionary(http, Path.Combine(_root, "cache"));
         _syntax = new SyntaxProvider(http, Path.Combine(_root, "cache"));
         _meanings = new MeaningTranslator(Path.Combine(_root, "cache"));
@@ -143,7 +144,7 @@ public partial class MainWindow : Window
         InitSearch();
         InitKeyboards();
         InitSavedSearches();
-        foreach (var list in new[] { SearchList, NoteList, XrefList, ConcList }) list.SelectionChanged += OnEntryPicked;
+        foreach (var list in new[] { SearchList, XrefList, ConcList }) list.SelectionChanged += OnEntryPicked;
         InitVault();
         InitAi();
         InitGraph();
@@ -610,14 +611,16 @@ public partial class MainWindow : Window
     /// <summary>Selected verse: soft accent fill; bookmarked verse: accent bar on the left. Otherwise the hover style applies.</summary>
     void Paint()
     {
-        var soft = Res("BsAccentSoft");
+        // The clicked verse only gets a neutral gray veil and bar: a color means "saved with this color", so a selection must never look like one.
+        var ink = (Res("BsText") as ISolidColorBrush)?.Color ?? Colors.Gray;
         foreach (var (n, box) in _verseBoxes.Concat(_colBoxes.SelectMany(d => d)))
         {
             var whole = _wholeMarks.TryGetValue(n, out var hex) ? Color.Parse(hex) : (Color?)null;
-            if (n == _selected) box.Background = soft;
-            else if (whole is { } c) box.Background = new SolidColorBrush(c, 0.14);
+            var selected = n == _selected;
+            if (whole is { } c) box.Background = new SolidColorBrush(c, 0.14);
+            else if (selected) box.Background = new SolidColorBrush(ink, 0.07);
             else box.ClearValue(Border.BackgroundProperty);
-            box.BorderBrush = n == _selected ? (Res("BsAccent") ?? Brushes.Gray) : whole is { } c2 ? new SolidColorBrush(c2) : Brushes.Transparent;
+            box.BorderBrush = selected ? new SolidColorBrush(ink, 0.55) : whole is { } c2 ? new SolidColorBrush(c2) : Brushes.Transparent;
         }
     }
 
@@ -660,6 +663,8 @@ public partial class MainWindow : Window
         NoteTarget.Text = L("Notiz zu ") + Label(r);
         NoteEditor.Text = _noteLoaded = _vault.GetNotes().FirstOrDefault(x => x.Ref == r)?.Text ?? "";
         _noteRef = r;
+        LoadNoteFolderBox(r);
+        RefreshNotesTree();   // the row of this note is shown as the current one
         _ = ShowXrefsAsync(r);
         if (TabActive(GrundtextTab)) _ = ShowGrundtextAsync(r);
         if (TabActive(GuideTab)) _ = ShowGuideAsync(r);
@@ -745,7 +750,7 @@ public partial class MainWindow : Window
     {
         var text = NoteEditor.Text ?? "";
         if (_noteRef is not { } r || text == _noteLoaded || string.IsNullOrWhiteSpace(text)) return;
-        _vault.SetNote(r, text);
+        _vault.SetNote(r, text); if (SelectedNoteFolder() is long f1) _vault.SetNoteFolder(r, f1);
         _noteLoaded = text;
         StatusText.Text = L("Notiz zu {0} gespeichert.", Label(r));
         RefreshLists();
@@ -754,7 +759,7 @@ public partial class MainWindow : Window
     async Task SaveNoteAsync(string text)
     {
         if (_selected is not int v) { StatusText.Text = L("Erst einen Vers anklicken."); return; }
-        _vault.SetNote(new VerseRef(_curBook, _curChapter, v), text);
+        _vault.SetNote(new VerseRef(_curBook, _curChapter, v), text); if (!string.IsNullOrWhiteSpace(text) && SelectedNoteFolder() is long f2) _vault.SetNoteFolder(new VerseRef(_curBook, _curChapter, v), f2);
         _noteLoaded = text;
         RefreshLists();
         await ShowChapterAsync(v);
@@ -763,13 +768,7 @@ public partial class MainWindow : Window
     void RefreshLists()
     {
         RefreshCollection();
-        var noteRows = _vault.GetNotes();
-        NotesEmpty.IsVisible = noteRows.Count == 0;
-        NoteList.ItemsSource = noteRows.Select(n =>
-        {
-            var t = n.Text.ReplaceLineEndings(" ");
-            return new Entry(n.Ref, $"{Label(n.Ref)}\n{(t.Length > 100 ? t[..100] + "…" : t)}");
-        }).ToList();
+        RefreshNotesTree();
     }
 
     async void OnEntryPicked(object? sender, SelectionChangedEventArgs e)

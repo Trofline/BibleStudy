@@ -153,15 +153,16 @@ public sealed class LocalBibleStore : SqliteDb, IBibleProvider
 }
 
 /// <summary>Combines the web provider and the locally imported translations behind one interface.</summary>
-public sealed class CompositeProvider(IBibleProvider web, LocalBibleStore local) : IBibleProvider
+public sealed class CompositeProvider(IBibleProvider web, LocalBibleStore local, IBibleProvider? plugins = null) : IBibleProvider
 {
     public string Name => web.Name;
 
-    IBibleProvider For(string id) => LocalBibleStore.Owns(id) ? local : web;
+    IBibleProvider For(string id) => LocalBibleStore.Owns(id) ? local : plugins is not null && Plugins.PluginBibleProvider.Owns(id) ? plugins : web;
 
     public async Task<IReadOnlyList<TranslationInfo>> GetTranslationsAsync(CancellationToken ct = default)
     {
-        var mine = await local.GetTranslationsAsync(ct);
+        var mine = (await local.GetTranslationsAsync(ct)).ToList();
+        if (plugins is not null) mine.AddRange(await plugins.GetTranslationsAsync(ct));
         try { return [.. mine, .. await web.GetTranslationsAsync(ct)]; }
         catch (Exception e) when (e is HttpRequestException or TaskCanceledException && mine.Count > 0) { return mine; } // offline or timed out: imported translations still work
     }

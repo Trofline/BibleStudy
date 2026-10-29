@@ -34,6 +34,14 @@ public partial class MainWindow
         _palette.Child = frame;
         ((Panel)QuickJumpBox.Parent!).Children.Add(_palette);
 
+        // a click anywhere else closes the list (a click on an empty area does not move the focus, so the focus-lost rule below never fired)
+        AddHandler(PointerPressedEvent, (object? _, PointerPressedEventArgs e) =>
+        {
+            if (!_palette.IsOpen || QuickJumpBox.IsPointerOver || _paletteList.IsPointerOver) return;
+            _palette.IsOpen = false;
+            if (QuickJumpBox.IsFocused) Focus();
+        }, Avalonia.Interactivity.RoutingStrategies.Tunnel, handledEventsToo: true);
+        Deactivated += (_, _) => _palette.IsOpen = false;   // switching to another program also closes it
         QuickJumpBox.TextChanged += (_, _) => _ = RefreshPaletteAsync();
         QuickJumpBox.GotFocus += (_, _) => _ = RefreshPaletteAsync();
         QuickJumpBox.LostFocus += (_, _) => DispatcherTimer.RunOnce(() => { if (!QuickJumpBox.IsFocused && !_paletteList.IsPointerOver) _palette.IsOpen = false; }, TimeSpan.FromMilliseconds(180));
@@ -98,6 +106,12 @@ public partial class MainWindow
             var n = name;
             yield return C(L("Layout laden: {0}", LayoutLabel(n)), () => { ApplyLayout(FindLayout(n)!, n); return Task.CompletedTask; });
         }
+        // commands of allowed plugins
+        foreach (var (plugin, command) in _plugins.Commands())
+        {
+            var p = plugin; var c = command;
+            yield return new PaletteItem(L("Plugin"), c.Title, p.Manifest.Name, () => RunPluginCommandAsync(p, c));
+        }
     }
 
     async Task RefreshPaletteAsync()
@@ -116,21 +130,12 @@ public partial class MainWindow
 
             items.AddRange(Commands().Where(c => c.Title.Contains(text, StringComparison.CurrentCultureIgnoreCase)).Take(5));
 
-            foreach (var d in _vault.GetDocuments(text).Take(6))
+            // everything of your own: documents, notes, highlights (with their notes and tags), prayers, to-dos, own cross references
+            foreach (var h in OwnSearch.Search(_vault, text, 8))
             {
-                var doc = d;
-                items.Add(new(L("Dokument"), doc.Title, Shorten(doc.Body.ReplaceLineEndings(" ").Replace("#", "").Replace("**", "").Trim(), 70), () =>
-                {
-                    OpenWork(NavGroups.First(g => g.Name == "Dokumente"), KnowledgeTab); OpenDocument(doc); return Task.CompletedTask;
-                }));
+                var hit = h;
+                items.Add(new(OwnKindLabel(hit.Kind), OwnTitle(hit), Shorten(hit.Snippet, 80), () => OpenOwn(hit)));
             }
-            foreach (var n in _vault.GetNotes().Where(n => n.Text.Contains(text, StringComparison.CurrentCultureIgnoreCase)).Take(5))
-            {
-                var note = n;
-                items.Add(new(L("Notiz"), Label(note.Ref), Shorten(note.Text.ReplaceLineEndings(" "), 70), () => GoToAsync(note.Ref.Book, note.Ref.Chapter, note.Ref.Verse)));
-            }
-            foreach (var pr in _vault.GetPrayers().Where(x => x.Text.Contains(text, StringComparison.CurrentCultureIgnoreCase)).Take(3))
-                items.Add(new(L("Gebet"), Shorten(pr.Text.ReplaceLineEndings(" "), 70), "", () => { OpenWork(NavGroups.First(g => g.Name == "Planen"), PrayerTab); return Task.CompletedTask; }));
 
             items.Add(new(L("Suche"), L("Im Bibeltext suchen: {0}", text), "", () => QuickJumpAsync(text)));
         }

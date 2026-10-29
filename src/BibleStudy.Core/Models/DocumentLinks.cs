@@ -27,6 +27,19 @@ public static partial class DocumentLinks
         return result;
     }
 
+    /// <summary>Verse references with their last verse ("Joh 3,14-18" → 3,14 to 18; a single verse ends where it starts).</summary>
+    public static IReadOnlyList<(VerseRef First, int EndVerse)> VerseRanges(string body)
+    {
+        var result = new List<(VerseRef, int)>();
+        foreach (Match m in Verse().Matches(body))
+        {
+            if (!Names.Value.TryGetValue(Normalize(m.Groups["b"].Value), out var book)) continue;
+            var first = new VerseRef(book, int.Parse(m.Groups["c"].Value), int.Parse(m.Groups["v"].Value));
+            result.Add((first, m.Groups["e"].Success ? Math.Max(first.Verse, int.Parse(m.Groups["e"].Value)) : first.Verse));
+        }
+        return result;
+    }
+
     /// <summary>Where verse references stand in the text: position, length and the (first) verse, for making them clickable.</summary>
     public static IReadOnlyList<(int Index, int Length, VerseRef Ref)> VerseSpans(string text)
     {
@@ -71,6 +84,6 @@ public static partial class DocumentLinks
 
     [GeneratedRegex(@"\[\[(?<t>[^\]|#]+)(?:[|#][^\]]*)?\]\]")] private static partial Regex Wiki();
 
-    [GeneratedRegex(@"(?<![\p{L}\d])(?<b>(?:[1-3]\s?\.?\s?)?\p{L}{1,20}\.?)\s*(?<c>\d{1,3})\s*[,:]\s*(?<v>\d{1,3})(?:\s*[-–]\s*\d{1,3})?")]
+    [GeneratedRegex(@"(?<![\p{L}\d])(?<b>(?:[1-3]\s?\.?\s?)?\p{L}{1,20}\.?)\s*(?<c>\d{1,3})\s*[,:]\s*(?<v>\d{1,3})(?:\s*[-–]\s*(?<e>\d{1,3}))?")]
     private static partial Regex Verse();
 }

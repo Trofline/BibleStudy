@@ -82,6 +82,10 @@ public sealed class AppSettings
     public bool CategoriesSeeded { get; set; }
     public string Commentary { get; set; } = "matthew-henry";
     public Dictionary<string, string> KeyBindings { get; set; } = [];
+    /// <summary>Plugins the user has allowed: plugin id → fingerprint of its plugin.json at the time (a changed plugin must be allowed again).</summary>
+    public Dictionary<string, string> AllowedPlugins { get; set; } = [];
+    /// <summary>Order of the work tabs at the top (keys of the tabs), as the user dragged them.</summary>
+    public List<string> TabOrder { get; set; } = [];
     public Dictionary<string, WindowBounds> Windows { get; set; } = [];
     public Dictionary<string, LayoutPreset> Layouts { get; set; } = [];
     public LayoutPreset? LastLayout { get; set; }

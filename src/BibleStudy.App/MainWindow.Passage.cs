@@ -3,6 +3,7 @@ using Avalonia.Input;
 using Avalonia.Layout;
 using Avalonia.Media;
 using BibleStudy.Core.Models;
+using BibleStudy.Core.Storage;
 
 namespace BibleStudy.App;
 
@@ -91,16 +92,12 @@ public partial class MainWindow
         if (mine.Children.Count == 0) mine.Children.Add(Muted(L("Noch nichts. Rechtsklick auf einen Vers bietet Markieren, Notiz und Dokument an.")));
         GuidePanel.Children.Add(mine);
 
-        // documents that mention the verse
-        var docs = _vault.GetDocuments().Where(d => DocumentLinks.VerseRefs(d.Body).Contains(r)).ToList();
-        GuidePanel.Children.Add(Eyebrow(L("In deinen Dokumenten ({0})", docs.Count)));
-        var docChips = new WrapPanel();
-        foreach (var d in docs.Take(20))
-        {
-            var doc = d;
-            docChips.Children.Add(Chip(d.Title, () => { SideTabs.SelectedIndex = KnowledgeTab; OpenDocument(doc); }, current?.Id ?? "", null));
-        }
-        GuidePanel.Children.Add(docs.Count == 0 ? Muted(L("Kein Dokument erwähnt diesen Vers.")) : docChips);
+        // everything else you wrote that is about this verse (documents, notes on other verses, prayers, own cross references; ranges count)
+        var about = OwnSearch.About(_vault, r).Where(h => !(h.Kind == OwnKind.Note && h.Ref == r) && !(h.Kind == OwnKind.Mark && h.Ref == r)).ToList();
+        GuidePanel.Children.Add(Eyebrow(L("Wo du darüber geschrieben hast ({0})", about.Count)));
+        if (about.Count == 0) GuidePanel.Children.Add(Muted(L("Nichts anderes von dir erwähnt diesen Vers.")));
+        else foreach (var h in about.Take(25)) GuidePanel.Children.Add(OwnRow(h));
+        if (about.Count > 25) GuidePanel.Children.Add(Muted(L("… und {0} weitere. Das Suchfeld oben (Strg+K) findet alles Eigene.", about.Count - 25)));
 
         // other translations
         GuidePanel.Children.Add(Eyebrow(L("Übersetzungen im Vergleich")));
@@ -164,7 +161,7 @@ public partial class MainWindow
     async Task<List<(string Name, string Text)>> CompareTranslationsAsync(VerseRef r, TranslationInfo? current)
     {
         var picks = _all.Where(t => t.Id != current?.Id && (t.LanguageName == current?.LanguageName || t.Id == "eng_kjv"))
-            .OrderBy(t => t.Id.StartsWith("local:") ? 0 : t.Id == "eng_kjv" ? 2 : 1).Take(6).ToList();
+            .OrderBy(t => (t.Id.StartsWith("local:") || t.Id.StartsWith("plugin:")) ? 0 : t.Id == "eng_kjv" ? 2 : 1).Take(6).ToList();
         var tasks = picks.Select(async t =>
         {
             try

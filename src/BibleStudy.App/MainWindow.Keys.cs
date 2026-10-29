@@ -3,6 +3,7 @@ using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Layout;
 using Avalonia.Media;
+using Avalonia.VisualTree;
 
 namespace BibleStudy.App;
 
@@ -42,6 +43,7 @@ public partial class MainWindow
         ];
         BuildKeysPanel();
         ResetKeysBtn.Click += (_, _) => { _settings.KeyBindings.Clear(); SaveSettings(); BuildKeysPanel(); };
+        KeysTopBtn.Click += (_, _) => ShowKeysWindow();
     }
 
     string GestureOf(KeyAction a) => _settings.KeyBindings.TryGetValue(a.Id, out var g) ? g : a.Default;
@@ -63,9 +65,20 @@ public partial class MainWindow
         return (m.HasFlag(KeyModifiers.Control) ? "Ctrl+" : "") + (m.HasFlag(KeyModifiers.Alt) ? "Alt+" : "") + (m.HasFlag(KeyModifiers.Shift) ? "Shift+" : "") + key;
     }
 
+    readonly List<StackPanel> _keyPanels = [];
+
+    /// <summary>Redraws every list of shortcuts that is open (the settings page and the shortcut window).</summary>
     void BuildKeysPanel()
     {
-        KeysPanel.Children.Clear(); _keyButtons.Clear();
+        _keyButtons.Clear();
+        _keyPanels.RemoveAll(p => !p.IsAttachedToVisualTree() && p != KeysPanel);
+        if (!_keyPanels.Contains(KeysPanel)) _keyPanels.Add(KeysPanel);
+        foreach (var panel in _keyPanels) FillKeys(panel);
+    }
+
+    void FillKeys(StackPanel panel)
+    {
+        panel.Children.Clear();
         foreach (var a in _keyActions)
         {
             var action = a;
@@ -79,7 +92,7 @@ public partial class MainWindow
             DockPanel.SetDock(b, Dock.Right);
             row.Children.Add(b);
             row.Children.Add(new TextBlock { Text = a.Label, VerticalAlignment = VerticalAlignment.Center, TextWrapping = TextWrapping.Wrap, Margin = new(0, 0, 8, 0) });
-            KeysPanel.Children.Add(row);
+            panel.Children.Add(row);
         }
     }
 
@@ -111,5 +124,38 @@ public partial class MainWindow
         if (hit is null || (typing && !hit.WhenTyping)) return;
         e.Handled = true;
         await hit.Run();
+    }
+
+    Window? _keysWindow;
+
+    /// <summary>All keyboard shortcuts in a window of their own (from the keyboard symbol in the top bar): look them up and change them.</summary>
+    void ShowKeysWindow()
+    {
+        if (_keysWindow is not null) { _keysWindow.Activate(); return; }
+        var panel = new StackPanel { Spacing = 0 };
+        var reset = new Button { Content = L("Alle auf Standard zurücksetzen"), Margin = new(0, 12, 0, 0), HorizontalAlignment = HorizontalAlignment.Left };
+        reset.Click += (_, _) => { _settings.KeyBindings.Clear(); SaveSettings(); BuildKeysPanel(); };
+        var content = new StackPanel
+        {
+            Margin = new(22, 18),
+            Children =
+            {
+                new TextBlock { Text = L("Tastenkürzel"), FontSize = 20, FontWeight = FontWeight.SemiBold, Margin = new(0, 0, 0, 4) },
+                new TextBlock { Text = L("Klicke auf ein Kürzel, drücke dann die neue Tastenkombination (Esc bricht ab, Entf löscht)."), Classes = { "caption" }, TextWrapping = TextWrapping.Wrap, Margin = new(0, 0, 0, 10) },
+                panel, reset,
+            },
+        };
+        var win = new Window
+        {
+            Title = L("BibleStudy – {0}", L("Tastenkürzel")), Width = 560, Height = 640, MinWidth = 380, MinHeight = 300, Background = Res("BsSurface"), Icon = Icon,
+            WindowStartupLocation = WindowStartupLocation.CenterOwner, Content = new ScrollViewer { Content = content },
+        };
+        // the window is its own top level: keys pressed there while recording a shortcut go to the same logic as in the main window
+        win.AddHandler(KeyDownEvent, (object? s, KeyEventArgs e) => { if (_capturing is not null) OnShortcut(s, e); }, Avalonia.Interactivity.RoutingStrategies.Tunnel);
+        win.Closed += (_, _) => { _keysWindow = null; _capturing = null; _keyPanels.Remove(panel); };
+        _keysWindow = win;
+        _keyPanels.Add(panel);
+        FillKeys(panel);
+        win.Show(this);
     }
 }

@@ -118,12 +118,6 @@ public partial class MainWindow
         void AddItem(string text, Action act) { var i = new MenuItem { Header = text }; i.Click += (_, _) => act(); more.Items.Add(i); }
         AddItem(L("Alle Ordner aufklappen"), () => { _foldersTouched = true; foreach (var f in _vault.GetFolders()) _openFolders.Add(f.Id); _openFolders.Add(0); ApplyCollectionFilter(); });
         AddItem(L("Alle Ordner zuklappen"), () => { _foldersTouched = true; _openFolders.Clear(); ApplyCollectionFilter(); });
-        AddItem(L("Neues Dokument im gewählten Ordner"), () =>
-        {
-            _newDocFolder = (FolderFilterBox.SelectedItem as Folder)?.Id;
-            SideTabs.SelectedIndex = KnowledgeTab;
-            OpenDocument(new Document(0, "", "", null, false, DateTime.Now, [], _newDocFolder));
-        });
         AddItem(L("Neuer Ordner …"), () => { NewFolderBox.IsVisible = true; NewFolderBox.Focus(); });
         AddItem(L("Gewählten Ordner löschen"), () => { if (DeleteFolderBtn.IsVisible) DeleteFolderBtn.RaiseEvent(new Avalonia.Interactivity.RoutedEventArgs(Button.ClickEvent)); });
         MarksMoreBtn.Flyout = more;
@@ -245,7 +239,7 @@ public partial class MainWindow
         else
         {
             _vault.AddMark(Mark.AnyTranslation, verse, -1, -1, VerseTextOf(v), _settings.DefaultColor, "", null, AutoTags(verse));
-            StatusText.Text = L("{0} gemerkt – zu finden im Reiter „Ordner“.", Label(verse));   // the selection color hides the mark's color, so say it
+            StatusText.Text = L("{0} gemerkt – zu finden unter „Notizen → Merken“.", Label(verse));   // the selection color hides the mark's color, so say it
         }
         LoadChapterMarks(); Paint(); RefreshCollection();
     }
@@ -345,6 +339,8 @@ public partial class MainWindow
         _vaultUiLoading = false;
         DeleteFolderBtn.IsVisible = FolderFilterBox.SelectedItem is Folder;
         ApplyCollectionFilter();
+        RefreshNotesTree();   // the folders of the notes
+        if (_noteRef is { } nr) LoadNoteFolderBox(nr); else { _noteFolderLoading = true; NoteFolderBox.ItemsSource = new List<object> { L("(kein Ordner)") }.Concat(folders).ToList(); NoteFolderBox.SelectedIndex = 0; _noteFolderLoading = false; }
     }
 
     readonly HashSet<long> _openFolders = [];
@@ -371,8 +367,8 @@ public partial class MainWindow
         var folders = _vault.GetFolders().OrderBy(f => f.Name, Comparer<string>.Create(NaturalCompare)).ToList();
         var rows = new List<Entry>();
         var tagFilter = TagFilterBox.SelectedIndex > 0 ? TagFilterBox.SelectedItem as string : null;
-        var docs = _vault.GetDocuments(tag: tagFilter)
-            .Where(d => FolderFilterBox.SelectedIndex == 1 ? d.FolderId is null : folder is null || d.FolderId == folder).ToList();
+        // documents have their own tree under "Dokumente"; saved verses and highlights live here
+        var docs = new List<Document>();
         // few folders: start expanded; many: collapsed (until the user decides)
         if (!_foldersTouched) { _openFolders.Clear(); if (folders.Count <= 3 || folder is not null) foreach (var f in folders) _openFolders.Add(f.Id); _openFolders.Add(0); }
         foreach (var (id, name) in folders.Select(f => (f.Id, f.Name)).Append((0L, L("Ohne Ordner"))))

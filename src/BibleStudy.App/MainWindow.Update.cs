@@ -32,6 +32,8 @@ public partial class MainWindow
         RemoveAppBtn.Click += async (_, _) => await RemoveProgramAsync();
         InitBackup();
         InitFeedback();
+        InitPlugins();
+        InitNotes();
         // once per start, a few seconds after launch so that the reader is up first
         if (_settings.AutoUpdate)
         {
