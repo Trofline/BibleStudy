@@ -92,24 +92,21 @@ public partial class MainWindow
 
     // ---- books --------------------------------------------------------------------------------------------------------
 
-    void ShowBookPicker()
+    /// <summary>The main book button: choosing a book opens the chapters of that book right away (one click less).</summary>
+    void ShowBookPicker() => ShowBookPicker(BookBtn, (BookBox.SelectedItem as BookInfo)?.Id, book =>
+    {
+        var sameBook = (BookBox.SelectedItem as BookInfo)?.Id == book.Id;
+        var chapter = sameBook ? (int)(ChapterBox.Value ?? 1) : 1;
+        BookBox.SelectedItem = book;   // shows chapter 1 already; the chapter list below only refines it
+        if (book.NumberOfChapters > 1) ShowChapterPicker(ChapterBtn, book, chapter, c => ChapterBox.Value = c);
+    });
+
+    /// <summary>Book grid under any button. <paramref name="reset"/> adds a first tile (for a column that may follow the main text again).</summary>
+    void ShowBookPicker(Control anchor, string? current, Action<BookInfo> pick, (string Label, Action Do)? reset = null)
     {
         if (_books.Count == 0) return;
         Flyout? flyout = null;
-        var current = (BookBox.SelectedItem as BookInfo)?.Id;
-        void Section(StackPanel into, string title, IEnumerable<BookInfo> books)
-        {
-            var list = books.OrderBy(b => b.Order).ToList();
-            if (list.Count == 0) return;
-            into.Children.Add(PickerHeading(title));
-            var wrap = new WrapPanel();
-            foreach (var b in list)
-            {
-                var book = b;
-                wrap.Children.Add(PickerTile(ShortBook(b), b.Id == current, () => { BookBox.SelectedItem = book; flyout!.Hide(); }, 90, BookColorAt(_books, b.Id), 42, b.CommonName));
-            }
-            into.Children.Add(wrap);
-        }
+        void Choose(BookInfo book) { flyout!.Hide(); Avalonia.Threading.Dispatcher.UIThread.Post(() => pick(book)); }
         var search = new TextBox { Watermark = L("Tippen zum Filtern, z. B. „Joh“ + Enter"), Margin = new(0, 0, 0, 6) };
         var tiles = new StackPanel();
         List<BookInfo> shown = [];
@@ -132,17 +129,23 @@ public partial class MainWindow
                 foreach (var b in list)
                 {
                     var book = b; shown.Add(b);
-                    wrap.Children.Add(PickerTile(ShortBook(b), b.Id == current || (q.Length > 0 && shown.Count == 1), () => { BookBox.SelectedItem = book; flyout!.Hide(); }, 90, BookColorAt(_books, b.Id), 42, b.CommonName));
+                    wrap.Children.Add(PickerTile(ShortBook(b), b.Id == current || (q.Length > 0 && shown.Count == 1), () => Choose(book), 90, BookColorAt(_books, b.Id), 42, b.CommonName));
                 }
                 tiles.Children.Add(wrap);
             }
         }
         search.TextChanged += (_, _) => Fill();
-        search.KeyDown += (_, e) => { if (e.Key == Avalonia.Input.Key.Enter && shown.Count > 0) { e.Handled = true; BookBox.SelectedItem = shown[0]; flyout!.Hide(); } };
+        search.KeyDown += (_, e) => { if (e.Key == Avalonia.Input.Key.Enter && shown.Count > 0) { e.Handled = true; Choose(shown[0]); } };
         Fill();
         var panel = new StackPanel { Width = 640, Children = { search, tiles } };
+        if (reset is { } r)
+        {
+            var back = new Button { Content = r.Label, HorizontalAlignment = HorizontalAlignment.Left, Margin = new(0, 0, 0, 6) };
+            back.Click += (_, _) => { flyout!.Hide(); r.Do(); };
+            panel.Children.Insert(0, back);
+        }
         flyout = NewPickerFlyout(new ScrollViewer { Content = panel, MaxHeight = Math.Max(300, Bounds.Height - 130), HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled });
-        flyout.ShowAt(BookBtn);
+        flyout.ShowAt(anchor);
         search.Focus();
     }
 
@@ -150,9 +153,12 @@ public partial class MainWindow
 
     void ShowChapterPicker()
     {
-        if (BookBox.SelectedItem is not BookInfo book) return;
+        if (BookBox.SelectedItem is BookInfo book) ShowChapterPicker(ChapterBtn, book, (int)(ChapterBox.Value ?? 1), c => ChapterBox.Value = c);
+    }
+
+    void ShowChapterPicker(Control anchor, BookInfo book, int current, Action<int> pick)
+    {
         Flyout? flyout = null;
-        var current = (int)(ChapterBox.Value ?? 1);
         var color = BookColorAt(_books, book.Id);
         var panel = new StackPanel { Width = Math.Min(620, 70 + Math.Ceiling(Math.Sqrt(book.NumberOfChapters)) * 56) };
         panel.Children.Add(PickerHeading(L("{0} – Kapitel wählen", book.CommonName)));
@@ -160,7 +166,7 @@ public partial class MainWindow
         number.KeyDown += (_, e) =>
         {
             if (e.Key != Avalonia.Input.Key.Enter || !int.TryParse(number.Text, out var n)) return;
-            e.Handled = true; ChapterBox.Value = Math.Clamp(n, 1, book.NumberOfChapters); flyout!.Hide();
+            e.Handled = true; flyout!.Hide(); pick(Math.Clamp(n, 1, book.NumberOfChapters));
         };
         panel.Children.Add(number);
         var wrap = new WrapPanel();
@@ -168,12 +174,12 @@ public partial class MainWindow
         {
             var chapter = c;
             var read = _read.Contains((book.Id, c));
-            var tile = PickerTile(c.ToString(), c == current, () => { ChapterBox.Value = chapter; flyout!.Hide(); }, 50, read ? color : null, 40, read ? "gelesen" : null);
+            var tile = PickerTile(c.ToString(), c == current, () => { flyout!.Hide(); pick(chapter); }, 50, read ? color : null, 40, read ? "gelesen" : null);
             wrap.Children.Add(tile);
         }
         panel.Children.Add(wrap);
         flyout = NewPickerFlyout(new ScrollViewer { Content = panel, MaxHeight = Math.Max(300, Bounds.Height - 130), HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled });
-        flyout.ShowAt(ChapterBtn);
+        flyout.ShowAt(anchor);
         number.Focus();
     }
 

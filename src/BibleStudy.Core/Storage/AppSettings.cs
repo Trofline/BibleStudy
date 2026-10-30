@@ -59,6 +59,8 @@ public sealed class AppSettings
     public string AiContext { get; set; } = DefaultAiContext;
     public string AiModel { get; set; } = "";
     public bool XrefInText { get; set; }
+    /// <summary>Cross references with fewer votes are not shown in the text and in the graph beside it (0 = all). The list in the side panel stays complete.</summary>
+    public int XrefMinVotes { get; set; }
     public double SideWidth { get; set; } = 430;
     public bool SideOpen { get; set; } = true;
     public bool ThreadGraph { get; set; }

@@ -14,7 +14,8 @@ public sealed record Document(long Id, string Title, string Body, string? Path, 
 public sealed record MyXref(long Id, VerseRef From, VerseRef To, int EndVerse, string Note);
 /// <summary>A printed cross reference the user has judged wrong and hidden for good (it is hidden in both directions).</summary>
 public sealed record HiddenXref(long Id, VerseRef From, VerseRef To);
-public sealed record TodoItem(long Id, string Text, bool Done, VerseRef? Ref);
+/// <summary>One line of the checklist. A sub-task has the id of its task in ParentId; Pos is the place among its siblings.</summary>
+public sealed record TodoItem(long Id, string Text, bool Done, VerseRef? Ref, long? ParentId = null, DateOnly? Due = null, long Pos = 0);
 public sealed record Prayer(long Id, string Text, VerseRef? Ref, DateTime Created, DateTime? Answered, string Note);
 
 /// <summary>A highlighted word range (Start/End are offsets into the verse text of that translation) or a whole verse (Start = -1).</summary>
@@ -63,6 +64,10 @@ public sealed class VaultStore : SqliteDb
             Exec("ALTER TABLE notes ADD COLUMN folder_id INT");
         if (Query("SELECT 1 FROM pragma_table_info('documents') WHERE name='folder_id'", _ => { }, _ => 1).Count == 0)
             Exec("ALTER TABLE documents ADD COLUMN folder_id INT");
+        // the checklist got sub-tasks, a due date and an order of its own
+        foreach (var (column, type) in new[] { ("parent_id", "INT"), ("due", "TEXT"), ("pos", "INT") })
+            if (Query($"SELECT 1 FROM pragma_table_info('todos') WHERE name='{column}'", _ => { }, _ => 1).Count == 0)
+                Exec($"ALTER TABLE todos ADD COLUMN {column} {type}");
     }
 
     // ---- reading progress -------------------------------------------------------------------------------------------
@@ -327,22 +332,64 @@ public sealed class VaultStore : SqliteDb
 
     // ---- to-dos -----------------------------------------------------------------------------------------------------
 
+    /// <summary>All lines in the order the user put them (older vaults have no order yet: then the order of creation counts).</summary>
     public List<TodoItem> GetTodos() =>
-        Query("SELECT id,text,done,book,chapter,verse FROM todos ORDER BY done, id", _ => { },
-            r => new TodoItem(r.GetInt64(0), r.GetString(1), r.GetInt32(2) != 0, r.IsDBNull(3) ? null : new VerseRef(r.GetString(3), r.GetInt32(4), r.GetInt32(5))));
+        Query("SELECT id,text,done,book,chapter,verse,parent_id,due,COALESCE(pos,id) FROM todos ORDER BY COALESCE(pos,id), id", _ => { },
+            r => new TodoItem(r.GetInt64(0), r.GetString(1), r.GetInt32(2) != 0, r.IsDBNull(3) ? null : new VerseRef(r.GetString(3), r.GetInt32(4), r.GetInt32(5)),
+                r.IsDBNull(6) ? null : r.GetInt64(6), !r.IsDBNull(7) && DateOnly.TryParseExact(r.GetString(7), "yyyy-MM-dd", out var due) ? due : null, r.GetInt64(8)));
 
-    public void AddTodo(string text, VerseRef? r) =>
-        Exec("INSERT INTO todos(text,done,book,chapter,verse,created) VALUES($x,0,$b,$c,$v,$t)", c =>
+    /// <summary>Adds a line at the end of its list (or of the sub-tasks of <paramref name="parentId"/>).</summary>
+    public void AddTodo(string text, VerseRef? r, long? parentId = null, DateOnly? due = null) =>
+        Exec("INSERT INTO todos(text,done,book,chapter,verse,created,parent_id,due,pos) VALUES($x,0,$b,$c,$v,$t,$p,$u,(SELECT COALESCE(MAX(COALESCE(pos,id)),0)+1 FROM todos))", c =>
         {
             c.Parameters.AddWithValue("$x", text.Trim());
             c.Parameters.AddWithValue("$b", r is { } v ? v.Book : DBNull.Value); c.Parameters.AddWithValue("$c", r is { } v2 ? v2.Chapter : DBNull.Value);
             c.Parameters.AddWithValue("$v", r is { } v3 ? v3.Verse : DBNull.Value); c.Parameters.AddWithValue("$t", DateTime.UtcNow.ToString("o"));
+            c.Parameters.AddWithValue("$p", (object?)parentId ?? DBNull.Value);
+            c.Parameters.AddWithValue("$u", due is { } d ? d.ToString("yyyy-MM-dd") : DBNull.Value);
         });
 
+    /// <summary>Ticking a task ticks its sub-tasks too; taking the tick away leaves them as they are.</summary>
     public void SetTodoDone(long id, bool done) =>
-        Exec("UPDATE todos SET done=$d WHERE id=$i", c => { c.Parameters.AddWithValue("$d", done ? 1 : 0); c.Parameters.AddWithValue("$i", id); });
+        Exec("UPDATE todos SET done=$d WHERE id=$i OR (parent_id=$i AND $d=1)", c => { c.Parameters.AddWithValue("$d", done ? 1 : 0); c.Parameters.AddWithValue("$i", id); });
 
-    public void DeleteTodo(long id) => Exec("DELETE FROM todos WHERE id=$i", c => c.Parameters.AddWithValue("$i", id));
+    public void SetTodoText(long id, string text)
+    {
+        if (string.IsNullOrWhiteSpace(text)) return;
+        Exec("UPDATE todos SET text=$x WHERE id=$i", c => { c.Parameters.AddWithValue("$x", text.Trim()); c.Parameters.AddWithValue("$i", id); });
+    }
+
+    public void SetTodoDue(long id, DateOnly? due) =>
+        Exec("UPDATE todos SET due=$u WHERE id=$i", c => { c.Parameters.AddWithValue("$u", due is { } d ? d.ToString("yyyy-MM-dd") : DBNull.Value); c.Parameters.AddWithValue("$i", id); });
+
+    public void SetTodoRef(long id, VerseRef r) =>
+        Exec("UPDATE todos SET book=$b,chapter=$c,verse=$v WHERE id=$i", c =>
+        {
+            c.Parameters.AddWithValue("$b", r.Book); c.Parameters.AddWithValue("$c", r.Chapter); c.Parameters.AddWithValue("$v", r.Verse); c.Parameters.AddWithValue("$i", id);
+        });
+
+    /// <summary>Moves a line one place up (-1) or down (+1) among the lines that are shown together with it (same parent, same state).</summary>
+    public void MoveTodo(long id, int direction)
+    {
+        var all = GetTodos();
+        if (all.FirstOrDefault(t => t.Id == id) is not { } me) return;
+        var siblings = all.Where(t => t.ParentId == me.ParentId && t.Done == me.Done).ToList();
+        var i = siblings.FindIndex(t => t.Id == id); var j = i + Math.Sign(direction);
+        if (i < 0 || j < 0 || j >= siblings.Count) return;
+        var places = siblings.Select(t => t.Pos).Order().ToList();   // the same set of places, handed out in the new order
+        (siblings[i], siblings[j]) = (siblings[j], siblings[i]);
+        using var con = Open(); using var tx = con.BeginTransaction(); using var cmd = con.CreateCommand();
+        cmd.CommandText = "UPDATE todos SET pos=$p WHERE id=$i";
+        var pp = cmd.Parameters.Add("$p", SqliteType.Integer); var pi = cmd.Parameters.Add("$i", SqliteType.Integer);
+        for (var k = 0; k < siblings.Count; k++) { pp.Value = places[k]; pi.Value = siblings[k].Id; cmd.ExecuteNonQuery(); }
+        tx.Commit();
+    }
+
+    /// <summary>Deletes a line together with its sub-tasks.</summary>
+    public void DeleteTodo(long id) => Exec("DELETE FROM todos WHERE id=$i OR parent_id=$i", c => c.Parameters.AddWithValue("$i", id));
+
+    /// <summary>Removes everything that is ticked (and the sub-tasks of ticked tasks).</summary>
+    public void ClearDoneTodos() => Exec("DELETE FROM todos WHERE done=1 OR parent_id IN (SELECT id FROM todos WHERE done=1)");
 
 
     // ---- prayer list --------------------------------------------------------------------------------------------------

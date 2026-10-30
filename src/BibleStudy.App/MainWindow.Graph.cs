@@ -161,7 +161,12 @@ public partial class MainWindow
             _threadOn = thread.IsChecked == true; _settings.ThreadGraph = _threadOn; SaveSettings();
             await ShowChapterAsync(_selected);
         };
-        flyout.Content = new StackPanel { Spacing = 8, Children = { inText, thread } };
+        var votes = new NumericUpDown { Minimum = 0, Maximum = 1000, Increment = 10, FormatString = "0", Value = _settings.XrefMinVotes, Width = 130 };
+        var before = _settings.XrefMinVotes;
+        votes.ValueChanged += (_, _) => { _settings.XrefMinVotes = (int)(votes.Value ?? 0); SaveSettings(); };
+        flyout.Closed += async (_, _) => { if (_settings.XrefMinVotes != before) await ShowChapterAsync(_selected); };   // redraw once, not at every click
+        var votesHelp = new TextBlock { Text = L("Nur Querverweise mit mindestens so vielen Stimmen im Text zeigen (0 = alle, 100 = nur die wichtigsten). Die Liste im Seitenfeld bleibt vollständig."), Classes = { "caption" }, TextWrapping = TextWrapping.Wrap, MaxWidth = 300 };
+        flyout.Content = new StackPanel { Spacing = 8, Children = { inText, thread, new TextBlock { Text = L("Mindestens Stimmen:"), Margin = new(0, 6, 0, 0) }, votes, votesHelp } };
         flyout.ShowAt(ViewBtn);
     }
 
@@ -176,7 +181,9 @@ public partial class MainWindow
         {
             var all = await _hello.GetChapterCrossRefsAsync(book, chapter);
             // the ones you hid are left out (a copy: the cached data stays as it came)
-            _chapterRefs = all.ToDictionary(p => p.Key, p => VisibleXrefs(new VerseRef(book, chapter, p.Key), p.Value));
+            // the best voted come first, and only the ones with enough votes stay (setting "important only")
+            _chapterRefs = all.ToDictionary(p => p.Key, p => VisibleXrefs(new VerseRef(book, chapter, p.Key), p.Value)
+                .Where(x => x.Score >= _settings.XrefMinVotes).OrderByDescending(x => x.Score).ToList());
         }
         catch (HttpRequestException) { /* offline and not cached: the views simply stay empty */ }
     }

@@ -20,6 +20,10 @@ public partial class MainWindow
     Grid? _indepGrid;
     readonly List<Dictionary<int, Border>> _colBoxes = [];
     readonly List<ScrollViewer> _colScrolls = [];
+    /// <summary>Per column: the passage text when it differs from the main text (shown in the header), and whether it does.</summary>
+    List<string?> _colPassage = [];
+    readonly List<bool> _colForeign = [];
+    bool IsForeign(int col) => col > 0 && col < _colForeign.Count && _colForeign[col];
     Border? _syncPill;
     bool _settingSyncCheck;
 
@@ -28,7 +32,7 @@ public partial class MainWindow
     Border ColumnHeader(TranslationInfo t, Chapter? c, int i)
     {
         var color = ColumnColor(i);
-        var name = new TextBlock { Text = t.ShortName + (c is null ? L(" (Kapitel nicht verfügbar)") : ""), FontWeight = FontWeight.Bold, FontSize = 14, TextTrimming = TextTrimming.CharacterEllipsis };
+        var name = new TextBlock { Text = t.ShortName + (i < _colPassage.Count && _colPassage[i] is { } passage ? " · " + passage : "") + (c is null ? L(" (Kapitel nicht verfügbar)") : ""), FontWeight = FontWeight.Bold, FontSize = 14, TextTrimming = TextTrimming.CharacterEllipsis };
         var sub = new TextBlock { Text = t.LanguageName, FontSize = 11.5, Opacity = 0.7, TextTrimming = TextTrimming.CharacterEllipsis };
         return new Border
         {
@@ -59,11 +63,11 @@ public partial class MainWindow
         ParallelHeader.IsVisible = true;
     }
 
-    Border MakeVerseBox(Control content, int n)
+    Border MakeVerseBox(Control content, int n, bool foreign = false)
     {
         var box = new Border { Child = content, Padding = new(10, 3), CornerRadius = new(8), BorderThickness = new(3, 0, 0, 0), BorderBrush = Brushes.Transparent, Classes = { "verse" } };
-        box.AddHandler(PointerPressedEvent, (object? _, PointerPressedEventArgs e) => OnVersePressed(n, e), RoutingStrategies.Tunnel, handledEventsToo: true);
-        box.AddHandler(PointerReleasedEvent, (object? _, PointerReleasedEventArgs e) => CaptureSelection(e), RoutingStrategies.Tunnel, handledEventsToo: true);
+        box.AddHandler(PointerPressedEvent, (object? _, PointerPressedEventArgs e) => OnVersePressed(n, e, foreign), RoutingStrategies.Tunnel, handledEventsToo: true);
+        if (!foreign) box.AddHandler(PointerReleasedEvent, (object? _, PointerReleasedEventArgs e) => CaptureSelection(e), RoutingStrategies.Tunnel, handledEventsToo: true);
         return box;
     }
 
@@ -78,12 +82,14 @@ public partial class MainWindow
             var boxes = i == 0 ? _verseBoxes : new Dictionary<int, Border>();
             if (i > 0) _colBoxes.Add(boxes);
             var color = ColumnColor(i);
+            var foreign = i > 0 && i < _colPassage.Count && _colPassage[i] is not null;   // another book or chapter than the main text: read-only reference
+            _colForeign.Add(foreign);
             foreach (var v in cols[i].C?.Verses ?? [])
             {
                 var num = v.Number;
                 var cell = VerseCell(v, num, cols[i].T, size, i == 0 && noted.Contains(num), notes[i],
-                    _chapterMarks.Where(m => m.Ref.Verse == num && !m.WholeVerse && m.TranslationId == cols[i].T.Id).ToList());
-                var box = MakeVerseBox(i == 0 && XrefChips(num, primary.Id) is { } chips ? new StackPanel { Children = { cell, chips } } : cell, num);
+                    foreign ? [] : _chapterMarks.Where(m => m.Ref.Verse == num && !m.WholeVerse && m.TranslationId == cols[i].T.Id).ToList());
+                var box = MakeVerseBox(i == 0 && XrefChips(num, primary.Id) is { } chips ? new StackPanel { Children = { cell, chips } } : cell, num, foreign);
                 boxes[num] = box; panel.Children.Add(box);
             }
             var scroll = new ScrollViewer { Content = panel };
@@ -117,7 +123,7 @@ public partial class MainWindow
 
     void MirrorScroll(int src)
     {
-        if (!_independent || src >= _colIds.Count || !_settings.ParallelSyncIds.Contains(_colIds[src])) return;
+        if (!_independent || src >= _colIds.Count || IsForeign(src) || !_settings.ParallelSyncIds.Contains(_colIds[src])) return;
         var scroll = _colScrolls[src];
         if (_mirrorExpect.TryGetValue(src, out var expected) && Math.Abs(scroll.Offset.Y - expected) < 2) { _mirrorExpect.Remove(src); return; }
         if (scroll.Content is not Control content) return;
@@ -129,7 +135,7 @@ public partial class MainWindow
         var delta = scroll.Offset.Y - top;
         for (var j = 0; j < _colScrolls.Count; j++)
         {
-            if (j == src || !_settings.ParallelSyncIds.Contains(_colIds[j]) || _colScrolls[j].Content is not Control other) continue;
+            if (j == src || IsForeign(j) || !_settings.ParallelSyncIds.Contains(_colIds[j]) || _colScrolls[j].Content is not Control other) continue;
             var boxes = BoxesOf(j);
             var target = boxes.Where(b => b.Key >= v).OrderBy(b => b.Key).Select(b => b.Value).FirstOrDefault();
             if (target?.TranslatePoint(new Point(0, 0), other) is not { } q) continue;
@@ -189,6 +195,22 @@ public partial class MainWindow
         };
         panel.Children.Add(apply);
         fly.ShowAt(anchor);
+    }
+
+    // ---- a column with a passage of its own ----------------------------------------------------------------------------
+
+    void UpdatePassageButton(ExtraColumn col) =>
+        col.PassageBtn.Content = new TextBlock { TextTrimming = TextTrimming.CharacterEllipsis, Text = col.Own is { } o ? $"{BookName(o.Book)} {o.Chapter}" : L("Wie links"), FontWeight = col.Own is null ? FontWeight.Normal : FontWeight.SemiBold, Opacity = col.Own is null ? 0.7 : 1 };
+
+    /// <summary>Book, then chapter, for one column; the main text keeps its place.</summary>
+    void ChooseColumnPassage(ExtraColumn col)
+    {
+        async Task Apply((string Book, int Chapter)? own) { col.Own = own; UpdatePassageButton(col); await ShowChapterAsync(_selected); }
+        ShowBookPicker(col.PassageBtn, col.Own?.Book ?? (BookBox.SelectedItem as BookInfo)?.Id, book =>
+        {
+            if (book.NumberOfChapters > 1) ShowChapterPicker(col.PassageBtn, book, col.Own is { } o && o.Book == book.Id ? o.Chapter : 1, c => _ = Apply((book.Id, c)));
+            else _ = Apply((book.Id, 1));
+        }, (L("Wie die Hauptspalte (folgt dem Text links)"), () => _ = Apply(null)));
     }
 
     void RecolorPills()

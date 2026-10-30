@@ -24,9 +24,12 @@ public sealed record Entry(VerseRef Ref, string Display, long? Id = null, string
 }
 
 /// <summary>An additional translation shown next to the main one.</summary>
-public sealed record ExtraColumn(ComboBox Lang, ComboBox Trans, Control Root)
+public sealed record ExtraColumn(ComboBox Lang, ComboBox Trans, Control Root, Button PassageBtn)
 {
     public TranslationInfo? Translation => Trans.SelectedItem as TranslationInfo;
+
+    /// <summary>A passage of its own (for example Genesis next to Daniel); null = the column shows the same passage as the main text.</summary>
+    public (string Book, int Chapter)? Own { get; set; }
 }
 
 public partial class MainWindow : Window
@@ -307,6 +310,7 @@ public partial class MainWindow : Window
     async Task LoadBooksAsync()
     {
         if (TranslationBox.SelectedItem is not TranslationInfo t) return;
+        var keepVerse = _selected;   // switching the translation must not throw you out of the verse you were reading
         try
         {
             _loading = true;
@@ -321,7 +325,7 @@ public partial class MainWindow : Window
         if (Home.IsVisible) Home.Show(_books, _read, Home.OpenBook);
         if (SideTabs.SelectedIndex == SettingsTab) UpdateOfflineInfo();
         RefreshLists();
-        await ShowChapterAsync();
+        await ShowChapterAsync(keepVerse);
     }
 
     async Task ShowChapterAsync(int? focusVerse = null)
@@ -333,9 +337,10 @@ public partial class MainWindow : Window
         try
         {
             var number = (int)(ChapterBox.Value ?? 1);
-            var extraTs = _extras.Select(e => e.Translation).OfType<TranslationInfo>().ToList();
+            var extraCols = _extras.Where(e => e.Translation is not null).ToList();
+            var extraTs = extraCols.Select(e => e.Translation!).ToList();
             var primaryTask = _provider.GetChapterAsync(t.Id, b.Id, number);
-            var extraTasks = extraTs.Select(c => TryAsync(_provider.GetChapterAsync(c.Id, b.Id, number))).ToList();
+            var extraTasks = extraCols.Select(e => TryAsync(_provider.GetChapterAsync(e.Translation!.Id, e.Own?.Book ?? b.Id, e.Own?.Chapter ?? number))).ToList();
             var ch = await primaryTask;
             var cols = new List<(TranslationInfo T, Chapter? C)> { (t, ch) };
             cols.AddRange(extraTs.Zip(await Task.WhenAll(extraTasks), (c, x) => (c, x)));
@@ -355,8 +360,10 @@ public partial class MainWindow : Window
             ReaderPanel.Children.Clear(); _verseBoxes.Clear();
             if (_animKey != $"{_curBook}{_curChapter}") { _animKey = $"{_curBook}{_curChapter}"; AnimateIn(ReaderPanel); }
             _singleColumn = cols.Count == 1;
-            _independent = cols.Count > 1 && !_settings.ParallelSync;
-            _colBoxes.Clear(); _colScrolls.Clear(); _colIds.Clear(); _mirrorExpect.Clear(); _indepGrid = null;
+            // a column with a passage of its own cannot run verse by verse next to the others: it gets its own scroller
+            _colPassage = [null, .. extraCols.Select(e => e.Own is { } o ? $"{BookName(o.Book)} {o.Chapter}" : null)];
+            _independent = cols.Count > 1 && (!_settings.ParallelSync || extraCols.Any(e => e.Own is not null));
+            _colBoxes.Clear(); _colScrolls.Clear(); _colIds.Clear(); _colForeign.Clear(); _mirrorExpect.Clear(); _indepGrid = null;
             ParallelHeader.IsVisible = false;
             FitReader();
             var kicker = new TextBlock { Text = b.CommonName.ToUpperInvariant(), FontSize = 13, FontWeight = FontWeight.SemiBold, LetterSpacing = 3, Margin = new(8, 0, 0, 0) };
@@ -504,12 +511,15 @@ public partial class MainWindow : Window
     /// <summary>Translucent so the text stays readable on both themes.</summary>
     IBrush HighlightBrush(string hex) => new SolidColorBrush(Color.Parse(hex), ActualThemeVariant == Avalonia.Styling.ThemeVariant.Dark ? 0.45 : 0.55);
 
-    void OnVersePressed(int verse, PointerPressedEventArgs e)
+    void OnVersePressed(int verse, PointerPressedEventArgs e, bool foreign = false)
     {
-        SelectVerse(verse);
-        if (e.GetCurrentPoint(this).Properties.IsRightButtonPressed && _verseBoxes.TryGetValue(verse, out var anchor))
+        if (!foreign)   // a column with another passage is only for reading and word study: its verse numbers are not those of the main text
         {
-            e.Handled = true; ShowVerseMenu(verse, anchor); return;
+            SelectVerse(verse);
+            if (e.GetCurrentPoint(this).Properties.IsRightButtonPressed && _verseBoxes.TryGetValue(verse, out var anchor))
+            {
+                e.Handled = true; ShowVerseMenu(verse, anchor); return;
+            }
         }
         if (e.Source is not SelectableTextBlock { Tag: CellInfo cell } tb) return;
         var hit = tb.TextLayout.HitTestPoint(e.GetPosition(tb)).TextPosition;
@@ -592,13 +602,17 @@ public partial class MainWindow : Window
         var trans = new ComboBox { Width = 210 };
         var remove = new Button { Width = 32, Height = 32, Classes = { "tool" }, Content = new Icon { Data = Geometry.Parse("M18 6L6 18 M6 6l12 12"), IconSize = 16 } };
         ToolTip.SetTip(remove, L("Spalte entfernen"));
+        var passage = new Button { Classes = { "tool" }, Width = double.NaN, MinWidth = 70, MaxWidth = 150, Height = 32, Padding = new(10, 0), VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center, Margin = new(6, 0, 2, 0) };
+        ToolTip.SetTip(passage, L("Andere Bibelstelle in dieser Spalte lesen, z. B. 1. Mose neben Daniel. Die Spalte läuft dann für sich."));
         var dot = new Border { Width = 12, Height = 12, CornerRadius = new(6), VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center, Margin = new(10, 0, 4, 0) };
         var root = new Border
         {
             Classes = { "pill" }, Margin = new(16, 8, 0, 8),
-            Child = new StackPanel { Orientation = Avalonia.Layout.Orientation.Horizontal, Children = { dot, lang, trans, remove } },
+            Child = new StackPanel { Orientation = Avalonia.Layout.Orientation.Horizontal, Children = { dot, lang, trans, passage, remove } },
         };
-        var col = new ExtraColumn(lang, trans, root);
+        var col = new ExtraColumn(lang, trans, root, passage);
+        UpdatePassageButton(col);
+        passage.Click += (_, _) => ChooseColumnPassage(col);
 
         lang.SelectionChanged += (_, _) =>
         {
@@ -626,7 +640,7 @@ public partial class MainWindow : Window
     {
         // The clicked verse only gets a neutral gray veil and bar: a color means "saved with this color", so a selection must never look like one.
         var ink = (Res("BsText") as ISolidColorBrush)?.Color ?? Colors.Gray;
-        foreach (var (n, box) in _verseBoxes.Concat(_colBoxes.SelectMany(d => d)))
+        foreach (var (n, box) in _verseBoxes.Concat(_colBoxes.Where((_, k) => !IsForeign(k + 1)).SelectMany(d => d)))
         {
             var whole = _wholeMarks.TryGetValue(n, out var hex) ? Color.Parse(hex) : (Color?)null;
             var selected = n == _selected;
@@ -646,6 +660,7 @@ public partial class MainWindow : Window
             {
                 for (var j = 0; j < _colScrolls.Count; j++)
                 {
+                    if (IsForeign(j)) continue;
                     var dict = j == 0 ? _verseBoxes : _colBoxes[j - 1];
                     if (dict.TryGetValue(verse, out var cb) && _colScrolls[j].Content is Control content && cb.TranslatePoint(new Point(0, 0), content) is { } q)
                         _colScrolls[j].Offset = new Vector(0, Math.Max(0, q.Y - 40));

@@ -45,6 +45,9 @@
                             <TextBlock x:Name="VaultTopText" FontSize="12.5" FontWeight="Medium" VerticalAlignment="Center" MaxWidth="110" TextTrimming="CharacterEllipsis" />
                         </StackPanel>
                     </Button>
+                    <Button x:Name="TodoTopBtn" Classes="tool" ToolTip.Tip="Meine To-Dos: eine freie Liste zum Abhaken">
+                        <local:Icon Data="M21 10.5V19a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h12.5 m9 11 3 3L22 4" />
+                    </Button>
                     <Button x:Name="FeedbackTopBtn" Classes="tool" ToolTip.Tip="Fehler melden, Idee vorschlagen, Rückmeldung geben">
                         <local:Icon Data="M8 2l1.88 1.88 M14.12 3.88L16 2 M9 7.13v-1a3.003 3.003 0 1 1 6 0v1 M12 20c-3.3 0-6-2.7-6-6v-3a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v3c0 3.3-2.7 6-6 6z M12 20v-9 M6.53 9C4.6 8.8 3 7.1 3 5 M6 13H2 M3 21c0-2.1 1.7-3.9 3.8-4 M20.97 5c0 2.1-1.6 3.8-3.5 4 M22 13h-4 M17.2 17c2.1.1 3.8 1.9 3.8 4" />
                     </Button>
@@ -358,7 +361,15 @@
                     <DockPanel Margin="16,14,12,12">
                         <StackPanel DockPanel.Dock="Top" Spacing="8" Margin="0,0,0,8">
                             <TextBox x:Name="TodoBox" Watermark="Neue Aufgabe, Enter zum Hinzufügen" />
-                            <CheckBox x:Name="TodoVerseCheck" Content="Angeklickten Vers anhängen" />
+                            <WrapPanel>
+                                <CheckBox x:Name="TodoVerseCheck" Content="Angeklickten Vers anhängen" Margin="0,0,12,0" />
+                                <CalendarDatePicker x:Name="TodoDue" Watermark="Fällig am (optional)" Width="190" />
+                            </WrapPanel>
+                            <Grid ColumnDefinitions="*,Auto">
+                                <ProgressBar x:Name="TodoBar" Minimum="0" Maximum="1" Height="6" VerticalAlignment="Center" />
+                                <TextBlock x:Name="TodoCount" Grid.Column="1" Classes="caption" Margin="10,0,0,0" />
+                            </Grid>
+                            <Button x:Name="TodoClearBtn" Content="Erledigte entfernen" HorizontalAlignment="Left" IsVisible="False" />
                         </StackPanel>
                         <ScrollViewer><StackPanel x:Name="TodoPanel" Spacing="4" Margin="0,0,8,0" /></ScrollViewer>
                     </DockPanel>

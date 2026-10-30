@@ -144,6 +144,7 @@ public partial class MainWindow
         QueueList.SelectionChanged += async (_, _) => { if (QueueList.SelectedItem is Entry e) await GoToAsync(e.Ref.Book, e.Ref.Chapter, e.Ref.Verse); };
         XrefQueueBtn.Click += (_, _) => { if (_xrefs.Count > 0) AddToQueue(_xrefs.Select(x => x.Target)); };
         TodoBox.KeyDown += (_, e) => { if (e.Key == Key.Enter) AddTodo(); };
+        InitTodos();
 
         VaultBox.SelectionChanged += async (_, _) => { if (!_vaultUiLoading && VaultBox.SelectedItem is string n && n != _vault.Name) await SwitchVaultAsync(n); };
         NewVaultBtn.Click += async (_, _) => await CreateVaultAsync();
@@ -478,45 +479,5 @@ public partial class MainWindow
         RefreshQueue();
         QueueInfo.Text = L("Jetzt: {0} · noch {1} offen", first.Label, _vault.GetQueue().Count);
         await GoToAsync(first.Ref.Book, first.Ref.Chapter, first.Ref.Verse);
-    }
-
-    // ---- to-dos -----------------------------------------------------------------------------------------------------
-
-    void AddTodo()
-    {
-        var text = TodoBox.Text?.Trim();
-        if (string.IsNullOrEmpty(text)) return;
-        VerseRef? r = TodoVerseCheck.IsChecked == true && _selected is int v ? new VerseRef(_curBook, _curChapter, v) : null;
-        _vault.AddTodo(text, r);
-        TodoBox.Text = "";
-        RefreshTodos();
-    }
-
-    void RefreshTodos()
-    {
-        TodoPanel.Children.Clear();
-        if (_vault.GetTodos().Count == 0) TodoPanel.Children.Add(new TextBlock { Text = L("Noch keine Aufgaben. Schreibe oben eine hinein, z. B. „Römer 8 vergleichen“; auf Wunsch hängt sie den angeklickten Vers an."), TextWrapping = TextWrapping.Wrap, Opacity = 0.65, Margin = new(2, 8) });
-        foreach (var t in _vault.GetTodos())
-        {
-            var id = t.Id;
-            var label = new TextBlock { Text = t.Text, TextWrapping = TextWrapping.Wrap, Opacity = t.Done ? 0.55 : 1, TextDecorations = t.Done ? TextDecorations.Strikethrough : null };
-            var check = new CheckBox { IsChecked = t.Done, Content = label, VerticalAlignment = VerticalAlignment.Center };
-            check.IsCheckedChanged += (_, _) => { _vault.SetTodoDone(id, check.IsChecked == true); RefreshTodos(); };
-            var delete = new Button { Classes = { "tool" }, Width = 28, Height = 28, Content = new Icon { Data = Geometry.Parse("M18 6L6 18 M6 6l12 12"), IconSize = 14 } };
-            ToolTip.SetTip(delete, L("Aufgabe löschen"));
-            delete.Click += (_, _) => { _vault.DeleteTodo(id); RefreshTodos(); };
-            var row = new DockPanel();
-            DockPanel.SetDock(delete, Dock.Right);
-            row.Children.Add(delete);
-            if (t.Ref is { } r)
-            {
-                var link = new Button { Content = Label(r), FontSize = 12, Padding = new(8, 2), Margin = new(0, 0, 4, 0) };
-                link.Click += async (_, _) => await GoToAsync(r.Book, r.Chapter, r.Verse);
-                DockPanel.SetDock(link, Dock.Right);
-                row.Children.Add(link);
-            }
-            row.Children.Add(check);
-            TodoPanel.Children.Add(row);
-        }
     }
 }

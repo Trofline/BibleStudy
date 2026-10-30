@@ -61,8 +61,8 @@ public class UserStoreTests : IDisposable
         s.ClearQueue(); Assert.Empty(s.GetQueue());
         s.AddTodo("Psalm 23 auswendig lernen", new VerseRef("PSA", 23, 1)); s.AddTodo("Offenbarung lesen", null);
         var t = s.GetTodos(); s.SetTodoDone(t[0].Id, true);
-        Assert.True(s.GetTodos().Last().Done);   // done items sort last
-        Assert.Null(s.GetTodos()[0].Ref);
+        Assert.True(s.GetTodos().Single(x => x.Id == t[0].Id).Done);   // the order stays yours; the list shows the done ones in their own section
+        Assert.Equal("Psalm 23 auswendig lernen", s.GetTodos()[0].Text);
         s.DeleteTodo(t[1].Id); Assert.Single(s.GetTodos());
     }
 
