@@ -92,3 +92,21 @@ A call is `POST` with `{"tool": "<name>", "args": {…}}` and answers JSON. It i
 
 * `examples/plugin-local-file` – a translation plugin (Node.js) that reads a small file next to it.
 * `examples/plugin-count-notes` – commands that work with the program itself: counts your notes, opens a passage. Copy one as a starting point.
+
+## Dialogs and Strong's numbers (for plugins with commands)
+
+A command request must be answered within 30 seconds. A plugin that has more to do answers at once and works in the background; for talking to the user it calls these tools of the local interface:
+
+| Tool | Arguments | Answer |
+|---|---|---|
+| `ui_message` | `title`, `text`, `buttons` (list of labels, default OK) | `{"button": 0}` – the index of the pressed button; waits until the window is closed |
+| `ui_choose` | `title`, `text`, `options` (`[{"id","label"}]`), `ok`, `cancel` | `{"id": "…"}` – the chosen id, or `null` if the user cancelled |
+| `ui_status` | `text` | shows `text` in the status bar (progress) |
+| `get_chapter_strongs` | `translation`, `book`, `chapter` | verses with `text` and `words` (`[{"w": "Gott", "s": ["H430"] or null}]`) – the words of the verse in order, with Strong's numbers where the translation has them |
+| `set_strongs_overlay` | `translation`, `reference`, `book`, `chapter`, `verses` (`[{"number", "tags": {"<word position>": ["G2316"]}}]`) | adds **estimated** Strong's numbers to a translation that has none (word position = index in the `words` list). They are kept apart from the text and shown with a dashed yellow underline |
+| `commit_strongs_overlay` | `translation` | writes the numbers to disk and redraws the text |
+| `list_strongs_overlays` / `remove_strongs_overlay` | – / `translation` | lists or removes the added numbers |
+
+`list_translations` tells in `hasStrongs` whether a translation has Strong's numbers (and `estimated` if they were added afterwards).
+
+`plugins/strongs-adder` in this repository is a complete example (C#): it compares a translation with one that has Strong's numbers and adds an estimate. It is also offered as a ready-made zip in every release.

@@ -209,6 +209,14 @@ public partial class MainWindow
                 SetRead(book.Id, [ArgInt(a, "chapter") ?? 1], ArgBool(a, "read") ?? true);
                 return new { ok = true };
             }
+            case "get_chapter_strongs": return await GetChapterStrongsAsync(a);
+            case "set_strongs_overlay": return await SetStrongsOverlayAsync(a);
+            case "commit_strongs_overlay": if (ArgStr(a, "translation") is { } ct) _overlay.Commit(ct); else _overlay.CommitAll(); await ShowChapterAsync(_selected); return new { ok = true };
+            case "remove_strongs_overlay": if (ArgStr(a, "translation") is { } rt) { _overlay.Remove(rt); await ShowChapterAsync(_selected); } return new { ok = true };
+            case "list_strongs_overlays": return new { overlays = _overlay.List().Select(o => new { translation = o.Id, reference = o.Reference, created = o.Created }) };
+            case "ui_message": return await PluginMessageAsync(a);
+            case "ui_choose": return await PluginChooseAsync(a);
+            case "ui_status": StatusText.Text = ArgStr(a, "text") ?? ""; return new { ok = true };
             default: return Err($"Unknown tool '{tool}'.");
         }
     }
@@ -225,7 +233,7 @@ public partial class MainWindow
             };
         var list = _all.Where(t => string.Equals(t.LanguageName, language, StringComparison.OrdinalIgnoreCase) || string.Equals(t.Language, language, StringComparison.OrdinalIgnoreCase)
                                    || t.LanguageName.StartsWith(language, StringComparison.OrdinalIgnoreCase)).Take(120).ToList();
-        return new { translations = list.Select(t => new { id = t.Id, shortName = t.ShortName, name = t.Name, license = t.License.PublicDomain ? "public domain" : t.LicenseUrl, hasStrongs = (bool?)null }) };
+        return new { translations = list.Select(t => new { id = t.Id, shortName = t.ShortName, name = t.Name, license = t.License.PublicDomain ? "public domain" : t.LicenseUrl, hasStrongs = (bool?)(StrongsSupport.Known.Contains(t.Id) ? true : _overlay.Has(t.Id) ? true : null), estimated = _overlay.Has(t.Id) }) };
     }
 
     async Task<object> GetPassageAsync(JsonElement a)

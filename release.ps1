@@ -43,6 +43,19 @@ To remove the program: Settings > Updates and program > "Remove portable version
 "@
 [IO.Compression.ZipFile]::CreateFromDirectory((Join-Path $rel 'stage'), "$rel\BibleStudy-Portable-$Version.zip", 'Optimal', $false)
 
+Write-Host "== Plugins (Windows): one zip per folder in .\plugins, to unpack into the program's plugin folder"
+foreach ($dir in Get-ChildItem (Join-Path $root 'plugins') -Directory) {
+    $proj = Get-ChildItem $dir.FullName -Filter *.csproj | Select-Object -First 1
+    if (-not $proj) { continue }
+    $pjson = Get-Content (Join-Path $dir.FullName 'plugin.json') -Raw | ConvertFrom-Json
+    $pstage = Join-Path $rel "pstage\$($pjson.id)"
+    dotnet publish $proj.FullName -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:EnableCompressionInSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -p:DebugType=none -o $pstage
+    if ($LASTEXITCODE) { throw "publish plugin $($pjson.id) failed" }
+    Copy-Item (Join-Path $dir.FullName 'plugin.json'), (Join-Path $dir.FullName 'README.md') $pstage
+    [IO.Compression.ZipFile]::CreateFromDirectory((Join-Path $rel 'pstage'), "$rel\BibleStudy-Plugin-$($pjson.id)-$($pjson.version).zip", 'Optimal', $false)
+    Remove-Item -LiteralPath (Join-Path $rel 'pstage') -Recurse -Force
+}
+
 Write-Host "== Linux and macOS packages (not tested by the build; see README-Unix.txt in each)"
 foreach ($rid in 'linux-x64', 'osx-arm64', 'osx-x64') {
     $u = Join-Path $rel "unix-$rid\BibleStudy"

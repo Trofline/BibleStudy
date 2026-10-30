@@ -1,7 +1,9 @@
 using Avalonia.Controls;
 using Avalonia.Layout;
 using Avalonia.Media;
+using Avalonia.VisualTree;
 using BibleStudy.Core;
+using BibleStudy.Core.Models;
 using BibleStudy.Core.Plugins;
 
 namespace BibleStudy.App;
@@ -44,7 +46,7 @@ public partial class MainWindow
             OpenUrl(_plugins.Dir);
         };
         PluginsHelpBtn.Click += (_, _) => OpenUrl("https://github.com/Trofline/BibleStudy/blob/main/PLUGINS.md");
-        PluginsReloadBtn.Click += async (_, _) => { await ReloadTranslationsAsync(null); BuildPluginList(); };
+        PluginsReloadBtn.Click += async (_, _) => { await RefreshPluginTranslationsAsync(); BuildPluginList(); };
         BuildPluginList();
     }
 
@@ -82,6 +84,49 @@ public partial class MainWindow
         }
     }
 
+    bool _quietPickers;
+
+    /// <summary>
+    /// Re-reads the translation list after plugins changed without touching what the user is doing: the open chapter, the settings page and its scroll
+    /// position stay as they are. Only if the open translation itself is gone, the program falls back to the normal reload.
+    /// </summary>
+    async Task RefreshPluginTranslationsAsync()
+    {
+        var fresh = await _provider.GetTranslationsAsync();
+        if (fresh.Select(t => t.Id).SequenceEqual(_all.Select(t => t.Id))) return;   // nothing changed: nothing to redraw
+        var current = TranslationBox.SelectedItem as TranslationInfo;
+        if (current is not null && fresh.All(t => t.Id != current.Id))
+        {
+            // the open translation itself is gone, so the reader has to reload; the user is taken back to the plugin list afterwards
+            var inSettings = _activeWork == "group:Mehr";
+            await ReloadTranslationsAsync(null);
+            if (inSettings)
+            {
+                OpenWork(NavGroups.First(g => g.Name == "Mehr"), SettingsTab);
+                Avalonia.Threading.Dispatcher.UIThread.Post(() => PluginsList.BringIntoView(), Avalonia.Threading.DispatcherPriority.Background);
+            }
+            return;
+        }
+        var scroll = PluginsList.GetVisualAncestors().OfType<ScrollViewer>().FirstOrDefault();
+        var offset = scroll?.Offset;
+        _quietPickers = true;
+        try
+        {
+            _all = fresh;
+            _langs = _all.Select(x => x.LanguageName).Where(l => l != "").Distinct().Order().ToList();
+            LanguageBox.ItemsSource = _langs;
+            if (current is not null)
+            {
+                LanguageBox.SelectedItem = current.LanguageName;
+                _pendingTranslation = current.Id;
+                FillTranslations();
+            }
+        }
+        finally { _quietPickers = false; }
+        UpdatePickerLabels();
+        if (scroll is not null && offset is { } o) Avalonia.Threading.Dispatcher.UIThread.Post(() => scroll.Offset = o, Avalonia.Threading.DispatcherPriority.Background);
+    }
+
     bool _pluginBusy;
 
     async Task SetPluginAllowedAsync(PluginInfo plugin, bool allow, CheckBox box)
@@ -110,7 +155,7 @@ public partial class MainWindow
                 _plugins.Stop(m.Id);
             }
             SaveSettings();
-            await ReloadTranslationsAsync(null);
+            await RefreshPluginTranslationsAsync();
             BuildPluginList();
         }
         finally { _pluginBusy = false; }

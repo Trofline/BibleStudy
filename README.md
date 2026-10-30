@@ -25,6 +25,7 @@ The guiding principle is **Scripture alone**: the Bible text comes first. Commen
 - **Study together:** connect directly with one other person (encrypted, no server, no account, free): chat, share verses and documents, follow each other's place; set up by swapping two short codes
 - **Backups:** manual or scheduled, to a folder of your choice
 - **AI integration (optional):** MCP server so that Claude can operate the program
+- **Plugins:** extra translations, commands and program access (see [PLUGINS.md](PLUGINS.md)). Ready-made plugins are in the [`plugins`](plugins) folder and in each release, for example **Strong-Nummern ergänzen** (adds an *estimated* Strong's numbering to translations that have none; no guarantee, please check)
 
 ## Installation
 

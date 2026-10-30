@@ -114,22 +114,20 @@ public partial class MainWindow
 
     // ---- word study without Strong's tags -------------------------------------------------------------------------
 
-    /// <summary>Strong's numbers exist only in some translations; otherwise the KJV is added as a column so the study still works.</summary>
+    /// <summary>Strong's numbers exist only in some translations; if the open one has none, the user picks one that has them and it is added as a column.</summary>
     async Task OnStudyToggledAsync()
     {
-        var hasStrongs = TranslationBox.SelectedItem is TranslationInfo cur && (LocalBibleStore.Owns(cur.Id)
-            ? _curChapterData?.Verses.Any(v => v.Segments.Any(s => s.Strongs is { Count: > 0 })) ?? false
-            : _hello.MayHaveStrongs(cur.Id));
-        if (StudyBtn.IsChecked == true && TranslationBox.SelectedItem is TranslationInfo t && !hasStrongs)
+        if (StudyBtn.IsChecked == true && TranslationBox.SelectedItem is TranslationInfo t && !TranslationHasStrongs(t)
+            && !_extras.Any(e => e.Translation is { } x && TranslationHasStrongs(x)))
         {
-            var kjv = _all.FirstOrDefault(x => x.Id == "eng_kjv");
-            if (kjv is not null && !_extras.Any(e => e.Translation?.Id == kjv.Id) && _extras.Count < MaxExtras)
+            if (_extras.Count >= MaxExtras) StatusText.Text = L("Wortstudie: {0} hat keine Strong-Nummern. Entferne eine Spalte und schalte die Wortstudie noch einmal ein.", t.ShortName);
+            else if (await PickStrongsTranslationAsync(t) is { } chosen)
             {
-                StatusText.Text = L("Wortstudie: {0} hat keine Strong-Nummern. Die KJV wurde als Spalte hinzugefügt; dort sind die Wörter anklickbar.", t.ShortName);
-                AddColumn(kjv);
+                StatusText.Text = L("Wortstudie: {0} hat keine Strong-Nummern. Als Spalte wurde {1} hinzugefügt; dort sind die Wörter anklickbar.", t.ShortName, chosen.Name);
+                AddColumn(chosen);
                 return;
             }
-            StatusText.Text = L("Wortstudie: {0} hat keine Strong-Nummern. Nutze eine Spalte mit KJV (Parallel +).", t.ShortName);
+            else { StudyBtn.IsChecked = false; return; }   // no choice: no word study (the switch handler redraws the text)
         }
         await ShowChapterAsync(_selected);
     }

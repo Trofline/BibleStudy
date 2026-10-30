@@ -21,6 +21,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\src\BibleStudy.Core\BibleStudy.Core.csproj" />
     <ProjectReference Include="..\..\tools\BibleStudy.L10n\BibleStudy.L10n.csproj" />
+    <ProjectReference Include="..\..\plugins\strongs-adder\StrongsAdder.csproj" />
   </ItemGroup>
 
 </Project>

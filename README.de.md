@@ -26,6 +26,7 @@ verknüpfen, Predigten vorbereiten – alles offline nutzbar und ohne Konto.
 - **Reiter wie im Explorer**, Layouts (Desktops), frei belegbare Tastenkürzel
 - **Mehrsprachig:** Oberfläche auf Englisch, Deutsch, Spanisch, Französisch und Russisch (KI-erstellte Übersetzungen, Korrekturen willkommen; weitere Sprachen als JSON-Datei im Ordner `lang` ergänzbar)
 - **KI-Anbindung (optional):** MCP-Server, damit Claude das Programm bedienen kann
+- **Plugins:** zusätzliche Übersetzungen, Befehle und Zugriff auf das Programm (siehe [PLUGINS.md](PLUGINS.md)). Fertige Plugins liegen im Ordner [`plugins`](plugins) und in jedem Release, zum Beispiel **Strong-Nummern ergänzen** (fügt Übersetzungen ohne Strong-Nummern eine *geschätzte* Nummerierung hinzu; keine Garantie, bitte prüfen)
 
 ## Installation
 

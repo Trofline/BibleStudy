@@ -14,8 +14,8 @@ public sealed record BookInfo(string Id, string Name, string CommonName, int Ord
     public override string ToString() => CommonName;
 }
 
-/// <summary>Text fragment of a verse; WordsOfJesus marks red-letter text.</summary>
-public sealed record Segment(string Text, bool WordsOfJesus = false, IReadOnlyList<string>? Strongs = null, int? NoteId = null);
+/// <summary>Text fragment of a verse (WordsOfJesus marks red-letter text); Strongs are the numbers of its word, Estimated marks numbers that were added afterwards (not from the source).</summary>
+public sealed record Segment(string Text, bool WordsOfJesus = false, IReadOnlyList<string>? Strongs = null, int? NoteId = null, bool Estimated = false);
 
 public sealed record Verse(int Number, IReadOnlyList<Segment> Segments)
 {

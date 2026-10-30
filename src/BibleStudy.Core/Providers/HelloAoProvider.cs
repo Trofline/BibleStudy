@@ -15,15 +15,20 @@ public sealed class HelloAoProvider(HttpClient http, string cacheDir) : IBiblePr
     public async Task<IReadOnlyList<TranslationInfo>> GetTranslationsAsync(CancellationToken ct = default)
     {
         using var doc = await GetJsonAsync("/api/available_translations.json", ct);
-        return doc.RootElement.GetProperty("translations").EnumerateArray().Select(t =>
+        // The server does not give every translation a "license" block (a missing one used to break the whole list), and an
+        // odd entry must not take the others down: everything optional, entries without an id are skipped.
+        return doc.RootElement.GetProperty("translations").EnumerateArray().Where(t => t.ValueKind == JsonValueKind.Object && Str(t, "id") != "").Select(t =>
         {
-            var l = t.GetProperty("license");
-            var lic = new LicenseInfo(Str(l, "attribution"), Str(l, "commercialUse"), Str(l, "derivatives"),
-                l.TryGetProperty("copyleft", out var c) && c.ValueKind == JsonValueKind.True,
-                l.TryGetProperty("publicDomain", out var p) && p.ValueKind == JsonValueKind.True);
+            var hasLicense = t.TryGetProperty("license", out var l) && l.ValueKind == JsonValueKind.Object;
+            var notice = Str(t, "licenseNotice");
+            var lic = hasLicense
+                ? new LicenseInfo(Str(l, "attribution"), Str(l, "commercialUse"), Str(l, "derivatives"),
+                    l.TryGetProperty("copyleft", out var c) && c.ValueKind == JsonValueKind.True,
+                    l.TryGetProperty("publicDomain", out var p) && p.ValueKind == JsonValueKind.True)
+                : new LicenseInfo(notice != "" ? notice : "-", "-", "-", false, false);
             return new TranslationInfo(Str(t, "id"), Str(t, "name"), Str(t, "englishName"), Str(t, "shortName"),
                 Str(t, "language"), Str(t, "languageEnglishName"), Str(t, "textDirection"),
-                Str(t, "licenseUrl"), Str(t, "website"), lic, t.TryGetProperty("numberOfBooks", out var n) ? n.GetInt32() : 0);
+                Str(t, "licenseUrl"), Str(t, "website"), lic, t.TryGetProperty("numberOfBooks", out var n) && n.ValueKind == JsonValueKind.Number ? n.GetInt32() : 0);
         }).ToList();
     }
 

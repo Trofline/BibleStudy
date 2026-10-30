@@ -157,6 +157,9 @@ public sealed class CompositeProvider(IBibleProvider web, LocalBibleStore local,
 {
     public string Name => web.Name;
 
+    /// <summary>Strong's numbers added afterwards to translations that have none (see StrongsOverlay).</summary>
+    public StrongsOverlay? Overlay { get; set; }
+
     IBibleProvider For(string id) => LocalBibleStore.Owns(id) ? local : plugins is not null && Plugins.PluginBibleProvider.Owns(id) ? plugins : web;
 
     public async Task<IReadOnlyList<TranslationInfo>> GetTranslationsAsync(CancellationToken ct = default)
@@ -168,6 +171,10 @@ public sealed class CompositeProvider(IBibleProvider web, LocalBibleStore local,
     }
 
     public Task<IReadOnlyList<BookInfo>> GetBooksAsync(string translationId, CancellationToken ct = default) => For(translationId).GetBooksAsync(translationId, ct);
-    public Task<Chapter> GetChapterAsync(string translationId, string bookId, int chapter, CancellationToken ct = default) => For(translationId).GetChapterAsync(translationId, bookId, chapter, ct);
+    public async Task<Chapter> GetChapterAsync(string translationId, string bookId, int chapter, CancellationToken ct = default)
+    {
+        var result = await For(translationId).GetChapterAsync(translationId, bookId, chapter, ct);
+        return Overlay is not null && Overlay.Has(translationId) ? Overlay.Apply(result) : result;
+    }
     public Task<IReadOnlyList<VerseText>> GetAllVersesAsync(string translationId, CancellationToken ct = default) => For(translationId).GetAllVersesAsync(translationId, ct);
 }

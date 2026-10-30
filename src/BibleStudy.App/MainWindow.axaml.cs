@@ -78,7 +78,9 @@ public partial class MainWindow : Window
         _hello = new HelloAoProvider(http, Path.Combine(_root, "cache"));
         _local = new LocalBibleStore(Path.Combine(_root, "local.db"));
         CreatePlugins();
-        _provider = new CompositeProvider(_hello, _local, _pluginProvider);
+        _overlay = new StrongsOverlay(Path.Combine(_root, "strongs-overlay"));
+        _provider = new CompositeProvider(_hello, _local, _pluginProvider) { Overlay = _overlay };
+        Closed += (_, _) => _overlay.CommitAll();
         _strongs = new StrongsDictionary(http, Path.Combine(_root, "cache"));
         _step = new StepLexicon(http, Path.Combine(_root, "cache"));
         _syntax = new SyntaxProvider(http, Path.Combine(_root, "cache"));
@@ -123,8 +125,8 @@ public partial class MainWindow : Window
         ReaderScroll.SizeChanged += (_, _) => FitReader();
         StudyBtn.IsCheckedChanged += async (_, _) => await OnStudyToggledAsync();
 
-        LanguageBox.SelectionChanged += (_, _) => FillTranslations();
-        TranslationBox.SelectionChanged += async (_, _) => await LoadBooksAsync();
+        LanguageBox.SelectionChanged += (_, _) => { if (!_quietPickers) FillTranslations(); };
+        TranslationBox.SelectionChanged += async (_, _) => { if (!_quietPickers) await LoadBooksAsync(); };
         BookBox.SelectionChanged += async (_, _) =>
         {
             if (BookBox.SelectedItem is not BookInfo b) return;
@@ -484,7 +486,7 @@ public partial class MainWindow : Window
                 if (s.Strongs is { Count: > 0 })
                 {
                     spans.Add(new WordSpan(pos, pos + piece.Length, [.. s.Strongs], s.Text));
-                    if (study) run.TextDecorations = TextDecorations.Underline;
+                    if (study) run.TextDecorations = s.Estimated ? EstimatedUnderline : TextDecorations.Underline;
                 }
                 runs.Add(new RunMap(pos, from, piece.Length));
                 Add(run);
@@ -673,6 +675,12 @@ public partial class MainWindow : Window
         _selected = null; Paint();
         ThreadPane.SelectedVerse = null;
     }
+
+    /// <summary>Numbers that were added afterwards are only an estimate: a dashed yellow line instead of a solid one.</summary>
+    static readonly Avalonia.Media.TextDecorationCollection EstimatedUnderline =
+    [
+        new TextDecoration { Location = TextDecorationLocation.Underline, Stroke = new SolidColorBrush(Color.Parse("#E0A526")), StrokeThickness = 1.5, StrokeDashArray = [2, 2] },
+    ];
 
     void SelectVerse(int n)
     {
