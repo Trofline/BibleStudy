@@ -53,7 +53,7 @@ public partial class MainWindow
         _settings.Vault = name; SaveSettings();
         _read = _vault.GetReadChapters();
         _myXrefKey = null;
-        _sermonVault = null; if (TabActive(PrayerTab)) BuildPrayerUi(); RefreshLists(); RefreshDocs(); RefreshQueue(); RefreshTodos(); RefreshVaultUi();
+        _sermonVault = null; if (TabActive(PrayerTab)) BuildPrayerUi(); RefreshLists(); RefreshDocs(); RefreshQueue(); RefreshTodos(); RefreshBookmarks(); RefreshVaultUi();
         if (_windows.TryGetValue("group:Dokumente", out var docs)) docs.SelectAction?.Invoke(docs.Current);
         if (_windows.TryGetValue("group:Predigt", out var sermon)) sermon.SelectAction?.Invoke(sermon.Current);
         if (Home.IsVisible) ShowHome();   // "continue" and "keep working" belong to the vault just opened
@@ -150,13 +150,15 @@ public partial class MainWindow
         AutoTagCheck.IsChecked = _settings.AutoTagBook;
         AutoTagCheck.IsCheckedChanged += (_, _) => { _settings.AutoTagBook = AutoTagCheck.IsChecked == true; SaveSettings(); };
         BuildDefaultColorPanel();
-        RefreshVaultUi(); RefreshQueue(); RefreshTodos();
+        RefreshVaultUi(); RefreshQueue(); RefreshTodos(); RefreshBookmarks();
+        DeleteVaultBtn.Click += async (_, _) => await DeleteVaultAsync();
     }
 
     // ---- highlights -------------------------------------------------------------------------------------------------
 
     void LoadChapterMarks()
     {
+        LoadChapterBookmarks();
         _chapterMarks = _vault.GetMarks(_curBook, _curChapter);
         _wholeMarks = _chapterMarks.Where(m => m.WholeVerse).GroupBy(m => m.Ref.Verse).ToDictionary(g => g.Key, g => g.Last().Color);
     }
@@ -234,20 +236,6 @@ public partial class MainWindow
     }
 
     /// <summary>Quick save of the whole clicked verse in the default color; again removes it.</summary>
-    void ToggleBookmark()
-    {
-        if (_selected is not int v) { StatusText.Text = L("Erst einen Vers anklicken."); return; }
-        var existing = _chapterMarks.Where(m => m.WholeVerse && m.Ref.Verse == v).ToList();
-        var verse = new VerseRef(_curBook, _curChapter, v);
-        if (existing.Count > 0) { foreach (var m in existing) _vault.DeleteMark(m.Id); StatusText.Text = L("{0} nicht mehr gemerkt.", Label(verse)); }
-        else
-        {
-            _vault.AddMark(Mark.AnyTranslation, verse, -1, -1, VerseTextOf(v), _settings.DefaultColor, "", null, AutoTags(verse));
-            StatusText.Text = L("{0} gemerkt – zu finden unter „Notizen → Merken“.", Label(verse));   // the selection color hides the mark's color, so say it
-        }
-        LoadChapterMarks(); Paint(); RefreshCollection();
-    }
-
     Border Swatch(string hex, Action<string> pick, bool selected = false, double size = 26)
     {
         var b = new Border

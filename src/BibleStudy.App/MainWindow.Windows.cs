@@ -73,6 +73,7 @@ public partial class MainWindow
         else if (index == PrayerTab) BuildPrayerUi();
         else if (index == LearnTab) BuildLearnUi();
         else if (index == MemoryTab) BuildMemoryUi();
+        else if (index == BookmarksTab) RefreshBookmarks();
         else if (index == CollabTab && (CollabPanel.Children.Count == 0 || _peer?.IsOpen != true)) BuildCollabUi();
         else if (index == AnalysisTab) BuildAnalysisUi();
         else if (index == SermonTab && (_sermonVault != _vault.Name || SermonPanel.Children.Count == 0)) BuildSermonUi();

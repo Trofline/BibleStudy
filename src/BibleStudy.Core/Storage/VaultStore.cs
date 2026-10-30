@@ -18,6 +18,9 @@ public sealed record TodoItem(long Id, string Text, bool Done, VerseRef? Ref);
 public sealed record Prayer(long Id, string Text, VerseRef? Ref, DateTime Created, DateTime? Answered, string Note);
 
 /// <summary>A highlighted word range (Start/End are offsets into the verse text of that translation) or a whole verse (Start = -1).</summary>
+/// <summary>A verse in the plain "Merkliste" (bookmark list): the place and the text as it was when saved.</summary>
+public sealed record Bookmark(long Id, VerseRef Ref, string Text, string Created);
+
 public sealed record Mark(long Id, string TranslationId, VerseRef Ref, int Start, int End, string Text, string Color, string Note,
     long? FolderId, IReadOnlyList<string> Tags)
 {
@@ -50,6 +53,7 @@ public sealed class VaultStore : SqliteDb
             CREATE TABLE IF NOT EXISTS todos(id INTEGER PRIMARY KEY, text TEXT, done INT, book TEXT, chapter INT, verse INT, created TEXT);
             CREATE TABLE IF NOT EXISTS my_xrefs(id INTEGER PRIMARY KEY, fbook TEXT, fchapter INT, fverse INT, tbook TEXT, tchapter INT, tverse INT, tend INT, note TEXT, created TEXT);
             CREATE TABLE IF NOT EXISTS hidden_xrefs(id INTEGER PRIMARY KEY, fbook TEXT, fchapter INT, fverse INT, tbook TEXT, tchapter INT, tverse INT, hidden TEXT);
+            CREATE TABLE IF NOT EXISTS bookmarks(id INTEGER PRIMARY KEY, book TEXT, chapter INT, verse INT, text TEXT, created TEXT, UNIQUE(book, chapter, verse));
             CREATE TABLE IF NOT EXISTS last_position(id INTEGER PRIMARY KEY CHECK(id=1), book TEXT, chapter INT);
             CREATE TABLE IF NOT EXISTS prayers(id INTEGER PRIMARY KEY, text TEXT, book TEXT, chapter INT, verse INT, created TEXT, answered TEXT, note TEXT);
             """);
@@ -264,6 +268,37 @@ public sealed class VaultStore : SqliteDb
     }
 
     public void UnhideXref(long id) => Exec("DELETE FROM hidden_xrefs WHERE id=$i", c => c.Parameters.AddWithValue("$i", id));
+
+    // ---- bookmarks: a plain list of verses to jump back to (no notes, colors or folders) -----------------------------------
+
+    public List<Bookmark> GetBookmarks() =>
+        Query("SELECT id,book,chapter,verse,text,created FROM bookmarks ORDER BY id DESC", _ => { },
+            r => new Bookmark(r.GetInt64(0), new VerseRef(r.GetString(1), r.GetInt32(2), r.GetInt32(3)), r.IsDBNull(4) ? "" : r.GetString(4), r.IsDBNull(5) ? "" : r.GetString(5)));
+
+    public HashSet<int> GetBookmarkedVerses(string book, int chapter) =>
+        Query("SELECT verse FROM bookmarks WHERE book=$b AND chapter=$c", c => { c.Parameters.AddWithValue("$b", book); c.Parameters.AddWithValue("$c", chapter); }, r => r.GetInt32(0)).ToHashSet();
+
+    /// <summary>Bookmarks the verse, or removes the bookmark if it is there already. Returns true if it is bookmarked now.</summary>
+    public bool ToggleBookmark(VerseRef v, string text)
+    {
+        var exists = Query("SELECT 1 FROM bookmarks WHERE book=$b AND chapter=$c AND verse=$v", c => Bind(c, v), _ => 1).Count > 0;
+        if (exists) { Exec("DELETE FROM bookmarks WHERE book=$b AND chapter=$c AND verse=$v", c => Bind(c, v)); return false; }
+        Exec("INSERT INTO bookmarks(book,chapter,verse,text,created) VALUES($b,$c,$v,$t,$d)", c => { Bind(c, v); c.Parameters.AddWithValue("$t", text); c.Parameters.AddWithValue("$d", DateTime.UtcNow.ToString("o")); });
+        return true;
+    }
+
+    static void Bind(SqliteCommand c, VerseRef v) { c.Parameters.AddWithValue("$b", v.Book); c.Parameters.AddWithValue("$c", v.Chapter); c.Parameters.AddWithValue("$v", v.Verse); }
+
+    public void RemoveBookmark(long id) => Exec("DELETE FROM bookmarks WHERE id=$i", c => c.Parameters.AddWithValue("$i", id));
+
+    // ---- delete everything in this vault ---------------------------------------------------------------------------------------
+
+    /// <summary>Empties the vault completely (notes, highlights, folders, documents, lists, prayers, reading progress). Cannot be undone.</summary>
+    public void Wipe()
+    {
+        foreach (var table in new[] { "notes", "read_chapters", "folders", "marks", "mark_tags", "queue", "documents", "doc_tags", "todos", "my_xrefs", "hidden_xrefs", "prayers", "bookmarks", "last_position" })
+            Exec($"DELETE FROM {table}");
+    }
 
     // ---- queue ------------------------------------------------------------------------------------------------------
 

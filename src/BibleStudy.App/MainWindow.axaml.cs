@@ -203,6 +203,8 @@ public partial class MainWindow : Window
             LanguageBox.SelectedItem = wanted?.LanguageName ?? _langs.FirstOrDefault();
         }
         catch (Exception ex) { StatusText.Text = L("Fehler: ") + ex.Message; }
+        // after "Restart program" the user is taken back to the settings page
+        if (Environment.GetCommandLineArgs().Contains("--open-settings")) OpenWork(NavGroups.First(g => g.Name == "Mehr"), SettingsTab);
     }
 
     void FillTranslations()
@@ -458,7 +460,8 @@ public partial class MainWindow : Window
             pos += run.Text!.Length;
         }
         var numSize = _settings.VerseNumbers == "Normal" ? size * 0.8 : 14;
-        var num = new Run(_settings.VerseNumbers == "Hidden" ? (hasNote ? "✎ " : "") : number + (hasNote ? "✎" : "") + " ") { FontSize = numSize, FontWeight = FontWeight.Bold, BaselineAlignment = _settings.VerseNumbers == "Normal" ? BaselineAlignment.Baseline : BaselineAlignment.Top };
+        var star = _chapterBookmarks.Contains(number) ? "★" : "";   // on the Merkliste
+        var num = new Run(_settings.VerseNumbers == "Hidden" ? (hasNote ? "✎ " : "") + (star.Length > 0 ? star + " " : "") : number + (hasNote ? "✎" : "") + star + " ") { FontSize = numSize, FontWeight = FontWeight.Bold, BaselineAlignment = _settings.VerseNumbers == "Normal" ? BaselineAlignment.Baseline : BaselineAlignment.Top };
         num.Bind(TextElement.ForegroundProperty, this.GetResourceObservable("BsVerseNumber"));
         Add(num);
         foreach (var s in v.Segments)

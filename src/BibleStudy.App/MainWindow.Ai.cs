@@ -49,9 +49,11 @@ public partial class MainWindow
             await AiSendOrStopAsync();
         }, Avalonia.Interactivity.RoutingStrategies.Tunnel);
         AiNewBtn.Click += (_, _) => NewChat();
+        InitAiSave();
 
         AiContextBox.Text = _settings.AiContext;
         AiContextBox.LostFocus += (_, _) => { _settings.AiContext = AiContextBox.Text ?? ""; SaveSettings(); };
+        AiContextResetBtn.Click += (_, _) => { AiContextBox.Text = _settings.AiContext = BibleStudy.Core.Storage.AppSettings.DefaultAiContext; SaveSettings(); };
         AiModelBox.Text = _settings.AiModel;
         AiModelBox.LostFocus += (_, _) => { _settings.AiModel = AiModelBox.Text?.Trim() ?? ""; SaveSettings(); };
 
@@ -125,16 +127,19 @@ public partial class MainWindow
     SelectableTextBlock AddAssistantText(AiChat chat)
     {
         var tb = new SelectableTextBlock { TextWrapping = TextWrapping.Wrap };
+        tb.ContextMenu = ChatMenu(chat, tb);
         chat.Messages.Children.Add(tb);
         return tb;
     }
 
     void AddUserMessage(AiChat chat, string text)
     {
+        var userText = new SelectableTextBlock { Text = text, TextWrapping = TextWrapping.Wrap };
+        userText.ContextMenu = ChatMenu(chat, userText);
         var bubble = new Border
         {
             Padding = new(12, 8), CornerRadius = new(12), Margin = new(28, 0, 0, 0), HorizontalAlignment = HorizontalAlignment.Right,
-            Child = new SelectableTextBlock { Text = text, TextWrapping = TextWrapping.Wrap },
+            Child = userText,
         };
         bubble.Bind(Border.BackgroundProperty, this.GetResourceObservable("BsAccentSoft"));
         chat.Messages.Children.Add(bubble);

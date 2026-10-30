@@ -156,7 +156,7 @@
                         <Button x:Name="MarkBtn" Classes="toolx" ToolTip.Tip="Markierten Text oder Vers einfärben">
                             <StackPanel Orientation="Horizontal" Spacing="6"><local:Icon Data="m9 11-6 6v3h9l3-3 M22 12l-4.6 4.6a2 2 0 0 1-2.8 0l-5.2-5.2a2 2 0 0 1 0-2.8L14 4" IconSize="17" VerticalAlignment="Center" /><TextBlock Text="Markieren" VerticalAlignment="Center" /></StackPanel>
                         </Button>
-                        <Button x:Name="BookmarkBtn" Classes="toolx" ToolTip.Tip="Ganzen Vers speichern / entfernen (Strg+D)">
+                        <Button x:Name="BookmarkBtn" Classes="toolx" ToolTip.Tip="Vers merken oder nicht mehr merken (Strg+D): kommt in die Merkliste, ohne Notiz">
                             <StackPanel Orientation="Horizontal" Spacing="6"><local:Icon Data="M19 21l-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" IconSize="17" VerticalAlignment="Center" /><TextBlock Text="Merken" VerticalAlignment="Center" /></StackPanel>
                         </Button>
                     </StackPanel></Border>
@@ -259,7 +259,7 @@
                             <Button x:Name="DeleteFolderBtn" IsVisible="False" Width="0" Height="0" />
                         </Grid>
                         <TextBox x:Name="NewFolderBox" Grid.Row="1" IsVisible="False" Watermark="Name des neuen Ordners, Enter zum Anlegen" Margin="0,0,0,8" />
-                        <TextBlock x:Name="MarksEmpty" Grid.Row="3" Classes="caption" TextWrapping="Wrap" IsVisible="False" Margin="2,8" Text="Noch keine Markierungen. Wähle im Text ein Wort oder einen Vers und klicke oben auf „Markieren“ (Farbe wählen) oder „Merken“." />
+                        <TextBlock x:Name="MarksEmpty" Grid.Row="3" Classes="caption" TextWrapping="Wrap" IsVisible="False" Margin="2,8" Text="Noch keine Markierungen. Wähle im Text ein Wort oder einen Vers und klicke oben auf „Markieren“ (Farbe wählen)." />
                         <ListBox x:Name="MarksList" Grid.Row="3" ItemTemplate="{StaticResource EntryTpl}" ScrollViewer.HorizontalScrollBarVisibility="Disabled" />
                         <Border x:Name="MarkEditor" Grid.Row="4" IsVisible="False" Margin="0,8,0,0" Padding="10" CornerRadius="12" Background="{DynamicResource BsSurface2}">
                             <StackPanel Spacing="6">
@@ -490,6 +490,7 @@
                     <Grid RowDefinitions="Auto,*,Auto" Margin="16,14,12,12">
                         <DockPanel Margin="0,0,0,8">
                             <Button x:Name="AiNewBtn" DockPanel.Dock="Right" Content="＋ Neues Gespräch" FontSize="12" Padding="10,4" VerticalAlignment="Center" />
+                            <Button x:Name="AiSaveBtn" DockPanel.Dock="Right" Content="Gespräch speichern" FontSize="12" Padding="10,4" Margin="0,0,6,0" VerticalAlignment="Center" ToolTip.Tip="Das ganze Gespräch als Dokument im Vault speichern, zum Beleg. Einzelne Antworten oder markierten Text speicherst du mit Rechtsklick." />
                             <WrapPanel x:Name="AiChatBar" />
                         </DockPanel>
                         <ScrollViewer x:Name="AiScroll" Grid.Row="1" />
@@ -614,6 +615,7 @@
                                     <TextBox x:Name="NewVaultBox" Width="170" Watermark="Name des neuen Vaults" />
                                     <Button x:Name="NewVaultBtn" Content="Anlegen" />
                                 </StackPanel>
+                                <Button x:Name="DeleteVaultBtn" Content="Diesen Vault löschen …" HorizontalAlignment="Left" ToolTip.Tip="Löscht den oben gewählten Vault mit allem, was darin ist. Vorher wird eine Sicherung angelegt." />
                                 <TextBlock x:Name="VaultInfo" Classes="caption" TextWrapping="Wrap" />
                             </StackPanel></Border>
 
@@ -709,8 +711,9 @@
                                 <TextBlock Classes="eyebrow" Text="KI UND MCP" />
                                 <TextBlock Classes="caption" TextWrapping="Wrap" Text="Das KI-Fenster nutzt deine lokal installierte Claude-Code-App mit deiner Anmeldung: kein API-Schlüssel, keine API-Kosten durch das Programm. Claude sieht nur die Bibel-Werkzeuge dieses Programms." />
                                 <TextBlock x:Name="AiCliInfo" Classes="caption" TextWrapping="Wrap" />
-                                <TextBlock Text="Hintergrund für Claude (frei änderbar)" />
-                                <TextBox x:Name="AiContextBox" AcceptsReturn="True" TextWrapping="Wrap" Height="80" />
+                                <TextBlock Text="Anweisung für Claude (frei änderbar, wird jedem Gespräch vorangestellt)" TextWrapping="Wrap" />
+                                <TextBox x:Name="AiContextBox" AcceptsReturn="True" TextWrapping="Wrap" Height="240" />
+                                <Button x:Name="AiContextResetBtn" Content="Standardtext wiederherstellen" HorizontalAlignment="Left" />
                                 <TextBox x:Name="AiModelBox" Watermark="Modell (leer = deine Standardeinstellung), z. B. sonnet" />
                                 <TextBlock Text="MCP-Server für andere Programme (z. B. Claude Code)" />
                                 <TextBox x:Name="McpCommandBox" IsReadOnly="True" TextWrapping="Wrap" />
@@ -720,9 +723,10 @@
                             <Border Classes="card"><StackPanel Spacing="8">
                                 <TextBlock Classes="eyebrow" Text="UPDATES UND PROGRAMM" />
                                 <TextBlock x:Name="VersionText" Classes="caption" TextWrapping="Wrap" />
-                                <CheckBox x:Name="AutoUpdateCheck" Content="Bei jedem Start nach Updates suchen (eine Anfrage an GitHub, es werden keine Daten gesendet)" />
+                                <CheckBox x:Name="AutoUpdateCheck" Content="Bei jedem Start nach Updates suchen (eine Anfrage an GitHub, es werden keine Daten gesendet). Installiert wird nie ohne deine Zustimmung." />
                                 <WrapPanel>
                                     <Button x:Name="CheckUpdateBtn" Content="Jetzt nach Updates suchen" Margin="0,0,6,6" />
+                                    <Button x:Name="RestartBtn" Content="Programm neu starten" Margin="0,0,6,6" ToolTip.Tip="Beendet BibleStudy und startet es sofort neu; du landest wieder hier in den Einstellungen." />
                                     <Button x:Name="RemoveAppBtn" Content="Programm entfernen …" Margin="0,0,6,6" IsVisible="False" />
                                 </WrapPanel>
                                 <TextBlock x:Name="UpdateStatus" Classes="caption" TextWrapping="Wrap" />
@@ -842,6 +846,9 @@
                 </TabItem>
                 <TabItem Header="Auswendig lernen">
                     <ScrollViewer><StackPanel x:Name="MemoryPanel" Spacing="8" Margin="16,10,12,16" /></ScrollViewer>
+                </TabItem>
+                <TabItem Header="Merkliste">
+                    <ScrollViewer><StackPanel x:Name="BookmarkPanel" Spacing="0" Margin="16,14,12,16" /></ScrollViewer>
                 </TabItem>
             </TabControl>
             </DockPanel>

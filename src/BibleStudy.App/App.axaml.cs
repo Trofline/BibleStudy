@@ -28,9 +28,6 @@ public partial class App : Application
                 AppSettings st;
                 try { st = AppSettings.Load(path); } catch { st = new(); }
 
-                // a downloaded update is installed before anything else opens (the installer starts the program again)
-                if (UpdateApply.TryApply(st, launch: true)) { Environment.Exit(0); return; }
-
                 if (st.TermsAccepted.StartsWith(TermsWindow.Version + "|", StringComparison.Ordinal)) StartMain(desktop, st);
                 else
                 {

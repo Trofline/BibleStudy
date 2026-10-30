@@ -89,13 +89,17 @@ public partial class MainWindow
         foreach (var q in _vault.GetQueue()) queue.AppendLine($"- [ ] {q.Label}");
         Write(L("Leseliste") + ".md", queue.ToString());
 
+        var bookmarks = new StringBuilder("# " + L("Merkliste") + "\n\n");
+        foreach (var b in _vault.GetBookmarks().OrderBy(b => BookOrder(b.Ref.Book)).ThenBy(b => b.Ref.Chapter).ThenBy(b => b.Ref.Verse)) bookmarks.AppendLine($"- {Label(b.Ref)}");
+        Write(L("Merkliste") + ".md", bookmarks.ToString());
+
         var todos = new StringBuilder("# " + L("Aufgaben") + "\n\n");
         foreach (var t in _vault.GetTodos()) todos.AppendLine($"- [{(t.Done ? "x" : " ")}] {t.Text}{(t.Ref is { } r ? $" ({Label(r)})" : "")}");
         Write(L("Aufgaben") + ".md", todos.ToString());
 
         var start = new StringBuilder($"# {_vault.Name}\n\n{L("Export aus BibleStudy vom {0:dd.MM.yyyy HH:mm}.", DateTime.Now)}\n\n## {L("Dokumente")}\n");
         foreach (var d in docs.OrderBy(d => d.Title)) start.AppendLine($"- [[{docFiles[d.Id]}]]");
-        start.AppendLine($"\n## {L("Weitere")}\n- [[{L("Notizen")}]]\n- [[{L("Leseliste")}]]\n- [[{L("Aufgaben")}]]");
+        start.AppendLine($"\n## {L("Weitere")}\n- [[{L("Notizen")}]]\n- [[{L("Merkliste")}]]\n- [[{L("Leseliste")}]]\n- [[{L("Aufgaben")}]]");
         foreach (var f in markFiles.Order()) start.AppendLine($"- [[{f}]] ({L("Markierungen")})");   // only folders that have marks have a file
         Write("Start.md", start.ToString());
         return files;

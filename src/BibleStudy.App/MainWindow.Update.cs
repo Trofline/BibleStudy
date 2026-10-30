@@ -30,6 +30,9 @@ public partial class MainWindow
         RemoveAppBtn.IsVisible = OperatingSystem.IsWindows() && (AppPaths.IsPortable || AppPaths.IsInstalled);
         RemoveAppBtn.Content = AppPaths.IsPortable ? L("Portable-Version entfernen …") : L("Deinstallieren …");
         RemoveAppBtn.Click += async (_, _) => await RemoveProgramAsync();
+        RestartBtn.Click += (_, _) => RestartProgram();
+        // older versions downloaded updates in the background and installed them without asking: nothing waiting is installed any more
+        if (_settings.PendingUpdateFile is { } waiting) { try { File.Delete(waiting); } catch (IOException) { } _settings.PendingUpdateFile = null; _settings.PendingUpdateVersion = null; SaveSettings(); }
         InitBackup();
         InitFeedback();
         InitPlugins();
@@ -40,13 +43,9 @@ public partial class MainWindow
         if (_settings.AutoUpdate)
         {
             DispatcherTimer.RunOnce(async () => await CheckForUpdateAsync(manual: false), TimeSpan.FromSeconds(10));
-            // programs that stay open for days (tray) look again now and then; a program hidden in the tray applies a waiting update
             var again = new DispatcherTimer { Interval = TimeSpan.FromHours(6) };
             again.Tick += async (_, _) => await CheckForUpdateAsync(manual: false);
             again.Start();
-            var tray = new DispatcherTimer { Interval = TimeSpan.FromMinutes(2) };
-            tray.Tick += (_, _) => { if (!IsVisible && UpdateApply.HasPending(_settings) && ApplyPendingUpdate(launch: true)) { _exiting = true; Close(); } };
-            tray.Start();
         }
     }
 
@@ -132,15 +131,15 @@ public partial class MainWindow
     // ---- updating ------------------------------------------------------------------------------------------------------------
 
     /// <summary>
-    /// Updating needs no question: the check runs by itself (at start and every few hours), a newer version is downloaded in the background
-    /// after the data was backed up, and installed at the next exit or start (see <see cref="UpdateApply"/>).
-    /// The "Check now" button installs at once and restarts.
+    /// Nothing is installed without the user's say: the check runs by itself (at start and every few hours), a newer version is only offered
+    /// in a question ("Install" / "Later"), and only the click on "Install" backs up the data, downloads and installs.
     /// </summary>
+    string? _askedUpdate;   // the version that was offered in this run: "Later" is not asked again until the next start
+
     async Task CheckForUpdateAsync(bool manual)
     {
         if (_updating) return;
         _updater ??= new Updater(_http);
-        if (!manual && UpdateApply.HasPending(_settings)) { UpdateStatus.Text = L("Update {0} ist geladen und wird beim nächsten Beenden oder Start installiert.", _settings.PendingUpdateVersion); return; }
         UpdateStatus.Text = L("Suche nach Updates …");
         UpdateInfo? info;
         try { info = await _updater.CheckAsync(AppPaths.Version, AppPaths.IsPortable); }
@@ -149,29 +148,21 @@ public partial class MainWindow
         if (info is null) { UpdateStatus.Text = manual ? L("Du hast die neueste Version ({0}).", AppPaths.Version) : ""; return; }
         UpdateStatus.Text = L("Neue Version {0} verfügbar.", info.Version);
 
+        // a check that runs by itself asks once per version and never while the program sits in the tray
+        if (!manual && (_askedUpdate == info.Version || !IsVisible)) return;
+        _askedUpdate = info.Version;
+
         var canInstall = OperatingSystem.IsWindows() && (AppPaths.IsInstalled || AppPaths.IsPortable);   // the self-installing update is Windows only; elsewhere the download page opens
         if (!canInstall)
         {
-            if (manual && !OperatingSystem.IsWindows()) { try { Process.Start(new ProcessStartInfo(info.PageUrl) { UseShellExecute = true }); } catch { /* no browser */ } }
+            var open = await AskAsync(L("Neue Version {0}", info.Version), L("BibleStudy {0} ist erschienen (du hast {1}). Auf diesem System lädst du das neue Paket selbst herunter. Soll die Download-Seite geöffnet werden?", info.Version, AppPaths.Version), L("Seite öffnen"), L("Später"));
+            if (open == 0) { try { Process.Start(new ProcessStartInfo(info.PageUrl) { UseShellExecute = true }); } catch { /* no browser */ } }
             return;
         }
-        if (manual) { await InstallUpdateAsync(info); return; }
-        await DownloadUpdateInBackgroundAsync(info);
-    }
-
-    async Task DownloadUpdateInBackgroundAsync(UpdateInfo info)
-    {
-        _updating = true;
-        try
-        {
-            await Task.Run(() => BackupData("vor-Update-" + info.Version));
-            var progress = new Progress<double>(p => UpdateStatus.Text = L("Lade Update {0} … {1:P0}", info.Version, p));
-            var file = await _updater!.DownloadAsync(info, progress);
-            _settings.PendingUpdateFile = file; _settings.PendingUpdateVersion = info.Version; SaveSettings();
-            UpdateStatus.Text = L("Update {0} ist geladen und wird beim nächsten Beenden oder Start installiert.", info.Version);
-        }
-        catch (Exception ex) { UpdateStatus.Text = L("Update fehlgeschlagen, deine Daten sind unverändert: ") + ex.Message; }
-        finally { _updating = false; }
+        var answer = await AskAsync(L("Neue Version {0}", info.Version),
+            L("BibleStudy {0} ist erschienen (du hast {1}). Möchtest du es jetzt installieren?\n\nVorher wird eine Sicherung deiner Daten angelegt, danach startet das Programm neu. Ohne deine Zustimmung wird nichts installiert.", info.Version, AppPaths.Version),
+            L("Installieren"), L("Später"));
+        if (answer == 0) await InstallUpdateAsync(info);
     }
 
     async Task InstallUpdateAsync(UpdateInfo info)
@@ -197,8 +188,20 @@ public partial class MainWindow
         }
     }
 
-    /// <summary>Called when the program ends or has been sitting in the tray: installs a downloaded update. Returns true when it started.</summary>
-    bool ApplyPendingUpdate(bool launch) => UpdateApply.TryApply(_settings, launch);
+    /// <summary>Ends the program and starts it again a moment later (this one must have ended first: both use the same files); it opens on the settings page.</summary>
+    void RestartProgram()
+    {
+        var exe = Environment.ProcessPath;
+        if (exe is null || Path.GetFileNameWithoutExtension(exe).Equals("dotnet", StringComparison.OrdinalIgnoreCase)) { UpdateStatus.Text = L("Neustart nicht möglich: Das Programm wurde nicht über seine eigene Startdatei gestartet."); return; }
+        try
+        {
+            Process.Start(OperatingSystem.IsWindows()
+                ? new ProcessStartInfo("cmd.exe", $"/c ping 127.0.0.1 -n 3 >nul & start \"\" \"{exe}\" --open-settings") { CreateNoWindow = true, UseShellExecute = false }
+                : new ProcessStartInfo("/bin/sh", $"-c \"sleep 2; exec '{exe.Replace("'", "'\\''")}' --open-settings\"") { UseShellExecute = false });
+        }
+        catch (Exception ex) when (ex is System.ComponentModel.Win32Exception or InvalidOperationException) { UpdateStatus.Text = L("Neustart nicht möglich: ") + ex.Message; return; }
+        _exiting = true; Close();
+    }
 
     // ---- removing the program --------------------------------------------------------------------------------------------------
 

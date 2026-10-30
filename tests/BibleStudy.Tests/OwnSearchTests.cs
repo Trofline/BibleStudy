@@ -137,3 +137,36 @@ public class StepLexiconTests
         Assert.Equal("", h.Meaning);   // the long Hebrew definitions need the permission of their owner and are not used
     }
 }
+
+public class BookmarkTests : IDisposable
+{
+    readonly string _dir = Path.Combine(Path.GetTempPath(), "bs_" + Guid.NewGuid().ToString("N"));
+    public BookmarkTests() => Directory.CreateDirectory(_dir);
+    public void Dispose() { Microsoft.Data.Sqlite.SqliteConnection.ClearAllPools(); try { Directory.Delete(_dir, true); } catch (IOException) { } }
+
+    [Fact]
+    public void Bookmarks_AreAPlainList_ThatTogglesAndListsNewestFirst()
+    {
+        var v = new VaultStore(Path.Combine(_dir, "v.db"), "T");
+        var joh = new VerseRef("JHN", 3, 16); var rom = new VerseRef("ROM", 8, 28);
+        Assert.True(v.ToggleBookmark(joh, "Denn also hat Gott …"));
+        Assert.True(v.ToggleBookmark(rom, "Wir wissen aber …"));
+        Assert.Equal([rom, joh], v.GetBookmarks().Select(b => b.Ref).ToArray());
+        Assert.Equal([16], v.GetBookmarkedVerses("JHN", 3).ToArray());
+        Assert.False(v.ToggleBookmark(joh, ""));                                   // a second press removes it again
+        Assert.Single(v.GetBookmarks());
+        Assert.Empty(v.GetMarks());                                                // a bookmark is not a highlight
+    }
+
+    [Fact]
+    public void Wipe_EmptiesTheWholeVault()
+    {
+        var v = new VaultStore(Path.Combine(_dir, "w.db"), "W");
+        var r = new VerseRef("JHN", 3, 16);
+        v.SetNote(r, "Notiz"); v.ToggleBookmark(r, "x"); v.AddDocument("Doc", "Text", null, false, []); v.AddTodo("t", null); v.AddPrayer("p", null);
+        v.AddMark("*", r, -1, -1, "x", "#FFD54F", "", null, []); v.SetRead("JHN", [3], true); v.AddFolder("F"); v.SetLastPosition("JHN", 3);
+        v.Wipe();
+        Assert.Empty(v.GetNotes()); Assert.Empty(v.GetBookmarks()); Assert.Empty(v.GetDocuments()); Assert.Empty(v.GetTodos()); Assert.Empty(v.GetPrayers());
+        Assert.Empty(v.GetMarks()); Assert.Empty(v.GetReadChapters()); Assert.Empty(v.GetFolders()); Assert.Null(v.GetLastPosition());
+    }
+}
