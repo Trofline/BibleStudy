@@ -9,12 +9,12 @@ A plugin for BibleStudy that adds Strong's numbers to a translation that has non
 
 ## Installation
 
-1. Download `BibleStudy-Plugin-strongs-adder-<version>.zip` from the [Releases](https://github.com/Trofline/BibleStudy/releases) page.
+1. Download the file for your system from the [Releases](https://github.com/Trofline/BibleStudy/releases) page: `BibleStudy-Plugin-strongs-adder-<version>-Windows.zip`, `…-Linux-x64.tar.gz`, `…-macOS-arm64.zip` (Apple silicon) or `…-macOS-x64.zip` (Intel).
 2. Unpack it into the plugin folder (*Settings → Plugins → Open plugin folder*), so that the folder `strongs-adder` is in there.
 3. Click *Reload*, read the notice and tick *Allow this plugin*.
 4. Press **Ctrl+K** and run **Strong-Nummern ergänzen** (*Add Strong's numbers*).
 
-The release is built for Windows (64 bit). On other systems build it yourself: `dotnet publish plugins/strongs-adder -c Release -r <linux-x64|osx-arm64|…> --self-contained true -p:PublishSingleFile=true`, and put the program, `plugin.json` into one folder (adjust `command` in `plugin.json`).
+**Linux and macOS:** the packages were built on Windows and are **not tested** on these systems (please report problems). If the plugin does not start: in a terminal in the plugin folder run `chmod +x strongs-adder/StrongsAdder` (newer BibleStudy versions do this themselves), and on macOS `xattr -dr com.apple.quarantine strongs-adder` (the program is not signed).
 
 ## How it works
 

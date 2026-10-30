@@ -190,7 +190,7 @@ static class Program
             for (var ch = 1; ch <= count; ch++)
             {
                 learned++;
-                if (learned % 5 == 0 || ch == 1) await Status(T($"Vorlage lesen: {name} {ch} ({100 * learned / total} %)", $"Reading the reference: {name} {ch} ({100 * learned / total}%)"));
+                if (learned % 5 == 0 || ch == 1) await Status(T($"Strong-Nummern, Schritt 1 von 2 (Vorlage lesen): {name} {ch} – {100 * learned / total} %", $"Strong's numbers, step 1 of 2 (reading the reference): {name} {ch} – {100 * learned / total}%"));
                 try
                 {
                     var reference = await Host("get_chapter_strongs", new JsonObject { ["translation"] = lang.Reference, ["book"] = book, ["chapter"] = ch });
@@ -205,7 +205,7 @@ static class Program
             for (var ch = 1; ch <= count; ch++)
             {
                 done++;
-                if (done % 5 == 0 || ch == 1) await Status(T($"Strong-Nummern ergänzen: {name} {ch} ({100 * done / total} %)", $"Adding Strong's numbers: {name} {ch} ({100 * done / total}%)"));
+                if (done % 5 == 0 || ch == 1) await Status(T($"Strong-Nummern, Schritt 2 von 2 (ergänzen): {name} {ch} – {100 * done / total} %", $"Strong's numbers, step 2 of 2 (adding): {name} {ch} – {100 * done / total}%"));
                 try
                 {
                     var own = await Host("get_chapter_strongs", new JsonObject { ["translation"] = pick, ["book"] = book, ["chapter"] = ch });

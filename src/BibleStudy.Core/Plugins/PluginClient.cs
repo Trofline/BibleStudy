@@ -64,7 +64,14 @@ public sealed class ProcessTransport(PluginManifest manifest, string dir, Func<I
 
     Process Start()
     {
-        var info = new ProcessStartInfo(ResolveCommand(manifest.Command, dir))
+        var program = ResolveCommand(manifest.Command, dir);
+        // a zip made on Windows carries no "executable" flag: set it for a program inside the plugin folder (Linux/macOS)
+        if (!OperatingSystem.IsWindows() && File.Exists(program))
+        {
+            try { File.SetUnixFileMode(program, File.GetUnixFileMode(program) | UnixFileMode.UserExecute | UnixFileMode.GroupExecute | UnixFileMode.OtherExecute); }
+            catch (Exception e) when (e is IOException or UnauthorizedAccessException) { /* the start below reports what is wrong */ }
+        }
+        var info = new ProcessStartInfo(program)
         {
             WorkingDirectory = dir, RedirectStandardInput = true, RedirectStandardOutput = true, RedirectStandardError = true,
             StandardInputEncoding = new UTF8Encoding(false), StandardOutputEncoding = Encoding.UTF8, UseShellExecute = false, CreateNoWindow = true,

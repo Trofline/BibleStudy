@@ -1,7 +1,7 @@
 {
   "id": "strongs-adder",
   "name": "Strong-Nummern ergänzen",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "author": "BibleStudy",
   "description": "Ergänzt Strong-Nummern nachträglich in einer Übersetzung, die keine hat (Deutsch, Englisch, Spanisch, Französisch). Die Nummern werden durch Wortvergleich mit einer Übersetzung geschätzt, die sie hat. Das ist KEINE Garantie für Fehlerfreiheit: bitte prüfen. Befehle im Suchfeld (Strg+K).",
   "contentNotice": "Liefert keine Bibeltexte und verändert keinen Text. Es speichert nur Strong-Nummern (Wortposition und Nummer) für die gewählte Übersetzung auf deinem Computer. Die Nummern sind eine Schätzung und können falsch sein.",
