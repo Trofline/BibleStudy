@@ -2,7 +2,9 @@
 using Avalonia.Controls;
 using Avalonia.Layout;
 using Avalonia.Media;
+using BibleStudy.Core;
 using BibleStudy.Core.Models;
+using BibleStudy.Core.Storage;
 
 namespace BibleStudy.App;
 
@@ -30,7 +32,20 @@ public partial class MainWindow
         new("paul30", L("Die Briefe des Paulus in 30 Tagen"), L("87 Kapitel von Römer bis Philemon, etwa 3 am Tag"), 30, b => PaulBooks.Contains(b.Id)),
         new("wisdom60", L("Weisheit und Dichtung in 60 Tagen"), L("Hiob, Psalmen, Sprüche, Prediger, Hoheslied: 243 Kapitel"), 60, b => WisdomBooks.Contains(b.Id)),
         new("prophets90", L("Die Propheten in 90 Tagen"), L("Jesaja bis Maleachi: 261 Kapitel, etwa 3 am Tag"), 90, b => BookIndex(b) is >= 22 and < 39),
+        ..CustomPlans(),
     ];
+
+    /// <summary>The plan the user made, if any: a stretch of books (in the order of the books) over a number of days.</summary>
+    IEnumerable<PlanDef> CustomPlans()
+    {
+        if (_settings.CustomPlan is not { } cp || _books.Count == 0) return [];
+        int from = _books.ToList().FindIndex(b => b.Id == cp.FromBook), to = _books.ToList().FindIndex(b => b.Id == cp.ToBook);
+        if (from < 0 || to < from) return [];
+        var chapters = _books.Skip(from).Take(to - from + 1).Sum(b => b.NumberOfChapters);
+        var about = L("{0} Kapitel, etwa {1} am Tag", chapters, Math.Max(1, (int)Math.Round((double)chapters / Math.Max(1, cp.Days))));
+        return [new("custom", cp.Name.Length > 0 ? cp.Name : $"{BookName(cp.FromBook)} – {BookName(cp.ToBook)}", about, Math.Max(1, cp.Days), b => BookIndex(b) >= from && BookIndex(b) <= to)];
+    }
+
 
     static readonly string[] PaulBooks = ["ROM", "1CO", "2CO", "GAL", "EPH", "PHP", "COL", "1TH", "2TH", "1TI", "2TI", "TIT", "PHM"];
     static readonly string[] WisdomBooks = ["JOB", "PSA", "PRO", "ECC", "SNG"];
@@ -41,8 +56,7 @@ public partial class MainWindow
     List<(string Book, int Chapter)> PlanDay(PlanDef plan, int day)
     {
         var chapters = _books.Where(plan.Books).SelectMany(b => Enumerable.Range(1, b.NumberOfChapters).Select(c => (b.Id, c))).ToList();
-        int from = (int)((long)(day - 1) * chapters.Count / plan.Days), to = (int)((long)day * chapters.Count / plan.Days);
-        return chapters.Skip(from).Take(to - from).ToList();
+        return ReadingPlans.Day(chapters, plan.Days, day);
     }
 
     int _planDayShown;
@@ -63,6 +77,7 @@ public partial class MainWindow
                 btn.Click += (_, _) => { _settings.PlanId = pl.Id; _settings.PlanStart = DateTime.Today.ToString("yyyy-MM-dd"); _settings.PlanDoneDays = []; _planDayShown = 0; SaveSettings(); BuildPlanUi(); };
                 PlanPanel.Children.Add(btn);
             }
+            PlanPanel.Children.Add(CustomPlanForm());
             return;
         }
 
@@ -135,12 +150,54 @@ public partial class MainWindow
     }
 
     /// <summary>Consecutive days (ending today or yesterday) on which a plan day was finished.</summary>
-    int PlanStreak()
+    int PlanStreak() =>
+        ReadingPlans.Streak(_settings.PlanDoneDays.Select(d => DateTime.TryParse(d, out var t) ? t : (DateTime?)null).OfType<DateTime>(), DateTime.Today);
+
+    /// <summary>The card on the start page: what is next in the reading plan today (null without a running plan).</summary>
+    (string Label, string Hint, Action Go)? PlanTodayCard()
     {
-        var days = _settings.PlanDoneDays.Select(d => DateTime.TryParse(d, out var t) ? t.Date : (DateTime?)null).Where(d => d is not null).Select(d => d!.Value).ToHashSet();
-        var cursor = days.Contains(DateTime.Today) ? DateTime.Today : DateTime.Today.AddDays(-1);
-        var n = 0;
-        while (days.Contains(cursor)) { n++; cursor = cursor.AddDays(-1); }
-        return n;
+        var plan = Plans.FirstOrDefault(p => p.Id == _settings.PlanId);
+        if (plan is null || _books.Count == 0 || !DateTime.TryParse(_settings.PlanStart, System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.None, out var start)) return null;
+        var today = ReadingPlans.DayOf(start, DateTime.Today, plan.Days);
+        var next = Enumerable.Range(1, today).SelectMany(d => PlanDay(plan, d)).FirstOrDefault(c => !_read.Contains(c));
+        var hint = L("{0} · Tag {1} von {2}", plan.Name, today, plan.Days);
+        if (next == default) return (L("Heute erledigt ✓"), hint, () => OpenWork(NavGroups.First(g => g.Name == "Planen"), PlanTab));
+        return (L("Weiterlesen: {0} {1}", BookName(next.Book), next.Chapter), hint, () => _ = GoToAsync(next.Book, next.Chapter));
+    }
+
+    /// <summary>Own plan: a stretch of books over a number of days.</summary>
+    Control CustomPlanForm()
+    {
+        var names = _books.Select(b => b.CommonName).ToList();
+        var from = new ComboBox { ItemsSource = names, SelectedIndex = Math.Max(0, _books.ToList().FindIndex(b => b.Id == "MAT")), MinWidth = 140 };
+        var to = new ComboBox { ItemsSource = names, SelectedIndex = Math.Max(0, _books.ToList().FindIndex(b => b.Id == "JHN")), MinWidth = 140 };
+        var days = new NumericUpDown { Minimum = 1, Maximum = 1500, Value = 30, Increment = 1, FormatString = "0", Width = 130 };
+        var name = new TextBox { Watermark = L("Name (freiwillig)") };
+        var info = new TextBlock { Classes = { "caption" }, TextWrapping = TextWrapping.Wrap };
+        void Show()
+        {
+            int a = from.SelectedIndex, b = to.SelectedIndex;
+            if (a < 0 || b < a) { info.Text = L("Das erste Buch muss vor dem letzten stehen."); return; }
+            var count = _books.Skip(a).Take(b - a + 1).Sum(x => x.NumberOfChapters);
+            var perDay = count / Math.Max(1, (double)(days.Value ?? 1));
+            info.Text = L("{0} Kapitel, etwa {1} am Tag", count, perDay.ToString("0.#"));
+        }
+        from.SelectionChanged += (_, _) => Show(); to.SelectionChanged += (_, _) => Show(); days.ValueChanged += (_, _) => Show();
+        var start = new Button { Content = L("Eigenen Plan starten"), Classes = { "primary" }, HorizontalAlignment = HorizontalAlignment.Left };
+        start.Click += (_, _) =>
+        {
+            int a = from.SelectedIndex, b = to.SelectedIndex;
+            if (a < 0 || b < a) return;
+            _settings.CustomPlan = new CustomPlan { Name = name.Text?.Trim() ?? "", FromBook = _books[a].Id, ToBook = _books[b].Id, Days = (int)(days.Value ?? 30) };
+            _settings.PlanId = "custom"; _settings.PlanStart = DateTime.Today.ToString("yyyy-MM-dd"); _settings.PlanDoneDays = []; _planDayShown = 0;
+            SaveSettings(); BuildPlanUi();
+        };
+        Show();
+        return new Expander
+        {
+            Header = L("Eigener Plan: von Buch zu Buch in so vielen Tagen"), Margin = new(0, 6, 0, 0),
+            Content = new StackPanel { Spacing = 6, Margin = new(0, 8, 0, 0), Children = { new WrapPanel { Children = { new TextBlock { Text = L("Von"), VerticalAlignment = VerticalAlignment.Center, Margin = new(0, 0, 6, 0) }, from, new TextBlock { Text = L("bis"), VerticalAlignment = VerticalAlignment.Center, Margin = new(8, 0, 6, 0) }, to } },
+                new StackPanel { Orientation = Orientation.Horizontal, Spacing = 8, Children = { new TextBlock { Text = L("in"), VerticalAlignment = VerticalAlignment.Center }, days, new TextBlock { Text = L("Tagen"), VerticalAlignment = VerticalAlignment.Center } } }, name, info, start } },
+        };
     }
 }

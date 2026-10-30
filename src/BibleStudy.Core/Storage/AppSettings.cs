@@ -128,6 +128,12 @@ public sealed class AppSettings
     /// <summary>A downloaded update that is installed automatically at the next start or exit.</summary>
     public string? PendingUpdateFile { get; set; }
     public string? PendingUpdateVersion { get; set; }
+    /// <summary>The user's own reading plan: a stretch of books spread over a number of days (plan id "custom").</summary>
+    public CustomPlan? CustomPlan { get; set; }
+    /// <summary>The tour through the program is still to be shown: true from the first start until it was seen or skipped (never for installations that existed before the tour).</summary>
+    public bool TourPending { get; set; }
+    /// <summary>Whether the question about a weekly backup was asked already (it is asked once, when backups are off).</summary>
+    public bool BackupAsked { get; set; }
     public string? PlanId { get; set; }
     public string? PlanStart { get; set; }
     public List<string> PlanDoneDays { get; set; } = [];
@@ -145,7 +151,9 @@ public sealed class AppSettings
     {
         try
         {
-            var s = File.Exists(path) ? JsonSerializer.Deserialize<AppSettings>(File.ReadAllText(path)) ?? new() : new();
+            var existed = File.Exists(path);
+            var s = existed ? JsonSerializer.Deserialize<AppSettings>(File.ReadAllText(path)) ?? new() : new();
+            if (!existed) { s.TourPending = true; s.BackupSchedule = "weekly"; s.BackupAsked = true; }   // new installations back up weekly from the start
             if (s.AiContext == OldDefaultAiContext) s.AiContext = DefaultAiContext;   // never changed by the user: the new default replaces it
             return s;
         }
@@ -161,6 +169,15 @@ public sealed class AppSettings
         File.WriteAllText(tmp, JsonSerializer.Serialize(this, Json));
         File.Move(tmp, path, overwrite: true);
     }
+}
+
+/// <summary>A reading plan the user made: from one book to another (in the order of the books), spread over <see cref="Days"/> days.</summary>
+public sealed class CustomPlan
+{
+    public string Name { get; set; } = "";
+    public string FromBook { get; set; } = "";
+    public string ToBook { get; set; } = "";
+    public int Days { get; set; } = 30;
 }
 
 /// <summary>A search kept under a name: the text and the options it was made with.</summary>

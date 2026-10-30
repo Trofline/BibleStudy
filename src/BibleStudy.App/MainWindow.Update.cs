@@ -34,6 +34,7 @@ public partial class MainWindow
         // older versions downloaded updates in the background and installed them without asking: nothing waiting is installed any more
         if (_settings.PendingUpdateFile is { } waiting) { try { File.Delete(waiting); } catch (IOException) { } _settings.PendingUpdateFile = null; _settings.PendingUpdateVersion = null; SaveSettings(); }
         InitBackup();
+        InitTour();
         InitFeedback();
         InitPlugins();
         InitNotes();

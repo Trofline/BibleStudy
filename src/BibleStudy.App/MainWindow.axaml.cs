@@ -232,6 +232,7 @@ public partial class MainWindow : Window
         Home.Resume = _vault.GetLastPosition() is { } last && _books.Any(b => b.Id == last.Book) ? (last.Book, last.Chapter, $"{BookName(last.Book)} {last.Chapter}") : null;
         var recent = new List<(string, string, string, Action)>();
         var votd = VerseOfTheDay();
+        if (PlanTodayCard() is { } planCard) recent.Add((L("Heute dran"), planCard.Label, planCard.Hint, planCard.Go));   // the running reading plan comes first
         recent.Add((L("Vers des Tages"), Label(votd), L("Klicken zum Lesen"), () => _ = GoToAsync(votd.Book, votd.Chapter, votd.Verse)));
         var dueCards = Memory.Ids.Count(i => Memory.IsDue(i, DateTime.Now));
         if (dueCards > 0) recent.Add((L("Auswendig lernen"), L("{0} Verse fällig", dueCards), L("Klicken zum Üben"), () => OpenWork(NavGroups.First(g => g.Name == "Planen"), MemoryTab)));

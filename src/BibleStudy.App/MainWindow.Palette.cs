@@ -85,6 +85,7 @@ public partial class MainWindow
         Task Work(string group, int? tab = null) { OpenWork(NavGroups.First(g => g.Name == group), tab); return Task.CompletedTask; }
         Task Side(int tab) { SetPanelOpen(true); SideTabs.SelectedIndex = tab; return Task.CompletedTask; }
         yield return C(L("Startseite"), () => { ShowHome(); return Task.CompletedTask; });
+        yield return C(L("Rundgang starten"), () => { DispatcherTimer.RunOnce(StartTour, TimeSpan.FromMilliseconds(350)); return Task.CompletedTask; });   // after the command list has closed: two popups at once confuse the renderer
         yield return C(L("Einstellungen"), () => Work("Mehr", SettingsTab));
         yield return C(L("Neue Notiz"), () => { OpenWork(NavGroups.First(g => g.Name == "Dokumente"), KnowledgeTab); OpenDocument(new Document(0, "", "", null, false, DateTime.Now, [])); return Task.CompletedTask; });
         yield return C(L("Lesepläne"), () => Work("Planen", PlanTab));

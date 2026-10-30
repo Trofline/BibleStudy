@@ -20,6 +20,7 @@ namespace BibleStudy.App;
 sealed class SplashWindow : Window
 {
     static SplashWindow? _current;
+    public static bool IsShowing => _current is not null;
 
     // The bar eases from 2 % towards 97 % over this time; Done() finishes it from wherever it is.
     const double GrowSeconds = 3.6;
