@@ -20,7 +20,7 @@ verknüpfen, Predigten vorbereiten – alles offline nutzbar und ohne Konto.
 - **Morphologie und Syntax** des Urtextes (Griechisch und Hebräisch): Zeit, Fall, Person …, Satzbau mit Subjekt, Verb, Objekt …
 - **Analyse-Werkzeuge:** Schlüsselwörter und einmalige Wörter je Kapitel, verwandte Wörter, Verteilung eines Wortes über die Bibel
 - **Dokumente mit Kategorien**, Studienvorlagen und Wissensgraph
-- **Linux und macOS:** Pakete werden mit gebaut (ungetestet), siehe Releases
+- **Linux und macOS:** Pakete werden mit gebaut (auf Windows gebaut; bisher nur auf einem Intel-Mac gestartet, sonst ungetestet), mit Schritt-für-Schritt-Anleitung im Paket (`README-macOS.txt`, `README-Linux.txt`), siehe Releases
 - **Griechisch und Hebräisch lernen:** Alphabet, Buchstaben-Quiz, Vokabeltrainer mit Wiederholung
 - **Drucken / PDF** für Dokumente, Lesepläne, Gebete und Predigt; Predigt-Folien als Vollbild-Show
 - **Reiter wie im Explorer**, Layouts (Desktops), frei belegbare Tastenkürzel

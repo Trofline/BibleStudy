@@ -14,7 +14,7 @@ A plugin for BibleStudy that adds Strong's numbers to a translation that has non
 3. Click *Reload*, read the notice and tick *Allow this plugin*.
 4. Press **Ctrl+K** and run **Strong-Nummern ergänzen** (*Add Strong's numbers*).
 
-**Linux and macOS:** the packages were built on Windows and are **not tested** on these systems (please report problems). If the plugin does not start: in a terminal in the plugin folder run `chmod +x strongs-adder/StrongsAdder` (newer BibleStudy versions do this themselves), and on macOS `xattr -dr com.apple.quarantine strongs-adder` (the program is not signed).
+**Linux and macOS:** the packages were built on Windows and are **not tested** on these systems (please report problems). BibleStudy makes the plugin program startable by itself (executable flag, and on macOS it removes the "downloaded" mark and signs it locally). Needs BibleStudy 1.0.17 or newer for this; with older versions run `chmod +x strongs-adder/StrongsAdder` and, on macOS, `xattr -dr com.apple.quarantine strongs-adder` and `codesign --force --sign - strongs-adder/StrongsAdder` in the plugin folder.
 
 ## How it works
 

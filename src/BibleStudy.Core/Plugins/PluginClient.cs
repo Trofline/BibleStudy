@@ -62,15 +62,38 @@ public sealed class ProcessTransport(PluginManifest manifest, string dir, Func<I
         return full;
     }
 
+    /// <summary>
+    /// Linux/macOS: a zip made on Windows may lack the "executable" flag, and on macOS a program from the internet is killed unless it is signed
+    /// and not marked as downloaded. The user has allowed this plugin explicitly, so its program is made startable here.
+    /// </summary>
+    static void PrepareUnixProgram(string program)
+    {
+        if (OperatingSystem.IsWindows() || !File.Exists(program)) return;
+        try { File.SetUnixFileMode(program, File.GetUnixFileMode(program) | UnixFileMode.UserExecute | UnixFileMode.GroupExecute | UnixFileMode.OtherExecute); }
+        catch (Exception e) when (e is IOException or UnauthorizedAccessException) { /* the start reports what is wrong */ }
+        if (!OperatingSystem.IsMacOS()) return;
+        Run("xattr", "-d", "com.apple.quarantine", program);
+        if (Run("codesign", "--verify", program) != 0) Run("codesign", "--force", "--sign", "-", program);
+    }
+
+    static int Run(string file, params string[] args)
+    {
+        try
+        {
+            var info = new ProcessStartInfo(file) { UseShellExecute = false, CreateNoWindow = true, RedirectStandardOutput = true, RedirectStandardError = true };
+            foreach (var a in args) info.ArgumentList.Add(a);
+            using var p = Process.Start(info);
+            if (p is null) return -1;
+            p.StandardOutput.ReadToEnd(); p.StandardError.ReadToEnd();
+            return p.WaitForExit(20000) ? p.ExitCode : -1;
+        }
+        catch (Exception e) when (e is IOException or System.ComponentModel.Win32Exception or InvalidOperationException) { return -1; }
+    }
+
     Process Start()
     {
         var program = ResolveCommand(manifest.Command, dir);
-        // a zip made on Windows carries no "executable" flag: set it for a program inside the plugin folder (Linux/macOS)
-        if (!OperatingSystem.IsWindows() && File.Exists(program))
-        {
-            try { File.SetUnixFileMode(program, File.GetUnixFileMode(program) | UnixFileMode.UserExecute | UnixFileMode.GroupExecute | UnixFileMode.OtherExecute); }
-            catch (Exception e) when (e is IOException or UnauthorizedAccessException) { /* the start below reports what is wrong */ }
-        }
+        PrepareUnixProgram(program);
         var info = new ProcessStartInfo(program)
         {
             WorkingDirectory = dir, RedirectStandardInput = true, RedirectStandardOutput = true, RedirectStandardError = true,

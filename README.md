@@ -35,7 +35,7 @@ Download a file from [Releases](https://github.com/Trofline/BibleStudy/releases)
 |---|---|
 | `BibleStudy-Setup-x.y.z.exe` | Windows installer (no admin rights needed), with uninstaller and automatic updates |
 | `BibleStudy-Portable-x.y.z.zip` | Windows portable version: unpack and run; all data lives in the `Data` folder next to it |
-| `BibleStudy-Linux-x64-x.y.z.tar.gz`, `BibleStudy-macOS-*-x.y.z.zip` | Linux and macOS packages (built on Windows, **untested**; see `README-Unix.txt` inside) |
+| `BibleStudy-Linux-x64-x.y.z.tar.gz`, `BibleStudy-macOS-arm64-x.y.z.zip` (Apple chip), `BibleStudy-macOS-x64-x.y.z.zip` (Intel) | Linux and macOS packages (built on Windows; the program was started on one Intel Mac so far, other systems are untested). Step-by-step instructions are inside: `README-macOS.txt` (German and English; on the Mac you start `Start-BibleStudy.command`) or `README-Linux.txt` |
 
 **Your data is protected:** when installed, it lives in `%LOCALAPPDATA%\BibleStudy`, separate from the program. Updates and reinstalls never
 touch it, and a backup is made before every update. When you uninstall (or remove the portable version) you are always asked whether to keep your data.
