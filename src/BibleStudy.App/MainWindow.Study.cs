@@ -170,6 +170,7 @@ public partial class MainWindow
         StrongDetail.Children.Add(new StackPanel { Orientation = Avalonia.Layout.Orientation.Horizontal, Children = { occurrences, deeper } });
         if (await stepTask is { } step && StrongDetail.Children.Count > 0) StrongDetail.Children.Insert(1, step);
         if (e.Id[0] == 'H' && await BdbCardAsync(e.Id) is { } bdbCard && StrongDetail.Children.Count > 1) StrongDetail.Children.Add(bdbCard);   // right under the dictionary card
+        if (e.Id[0] == 'G' && await LsjCardAsync(e.Id) is { } lsjCard && StrongDetail.Children.Count > 1) StrongDetail.Children.Add(lsjCard);
     }
 
     async Task AskClaudeToCheckAsync()

@@ -1854,5 +1854,11 @@
   "Fehlende Texte gespeichert in: {0}\nNach der Übersetzung als {1}.json speichern und importieren; sie werden zu den vorhandenen hinzugefügt.": "Недостающие тексты сохранены в: {0}\nПосле перевода сохраните как {1}.json и импортируйте; тексты добавятся к существующим.",
   "Als Bild speichern": "Сохранить как изображение",
   "Syntaxbaum": "Синтаксическое дерево",
-  "Strg + Mausrad: zoomen. Farbe des Rahmens = Satzrolle.": "Ctrl + колесо мыши: масштаб. Цвет рамки = роль в предложении."
+  "Strg + Mausrad: zoomen. Farbe des Rahmens = Satzrolle.": "Ctrl + колесо мыши: масштаб. Цвет рамки = роль в предложении.",
+  "Das LSJ-Lexikon konnte nicht geladen werden: {0}": "Не удалось загрузить словарь LSJ: {0}",
+  "Liddell-Scott-Jones (ausführlich)": "Лиддел–Скотт–Джонс (подробно)",
+  "Quelle: Liddell-Scott-Jones, Greek-English Lexicon, bearbeitet von Tyndale House Cambridge (STEPBible), CC BY 4.0": "Источник: Liddell-Scott-Jones, Greek-English Lexicon, редакция Tyndale House Cambridge (STEPBible), CC BY 4.0",
+  "LSJ-Lexikon (Griechisch)": "Словарь LSJ (греческий)",
+  "Ausführliche Wörterbucheinträge zu griechischen Wörtern (unter dem Strong-Eintrag, auf Englisch).": "Подробные словарные статьи для греческих слов (под статьёй Стронга, на английском).",
+  "Liddell-Scott-Jones, Greek-English Lexicon, bearbeitet von Tyndale House (Grundlage: Perseus Digital Library)": "Liddell-Scott-Jones, Greek-English Lexicon, редакция Tyndale House (на основе Perseus Digital Library)"
 }

@@ -1854,5 +1854,11 @@
   "Fehlende Texte gespeichert in: {0}\nNach der Übersetzung als {1}.json speichern und importieren; sie werden zu den vorhandenen hinzugefügt.": "Textes manquants enregistrés dans : {0}\nAprès la traduction, enregistrez en {1}.json et importez ; ils s'ajoutent aux textes existants.",
   "Als Bild speichern": "Enregistrer comme image",
   "Syntaxbaum": "Arbre syntaxique",
-  "Strg + Mausrad: zoomen. Farbe des Rahmens = Satzrolle.": "Ctrl + molette : zoom. Couleur du cadre = rôle dans la phrase."
+  "Strg + Mausrad: zoomen. Farbe des Rahmens = Satzrolle.": "Ctrl + molette : zoom. Couleur du cadre = rôle dans la phrase.",
+  "Das LSJ-Lexikon konnte nicht geladen werden: {0}": "Le lexique LSJ n'a pas pu être chargé : {0}",
+  "Liddell-Scott-Jones (ausführlich)": "Liddell-Scott-Jones (détaillé)",
+  "Quelle: Liddell-Scott-Jones, Greek-English Lexicon, bearbeitet von Tyndale House Cambridge (STEPBible), CC BY 4.0": "Source : Liddell-Scott-Jones, Greek-English Lexicon, édité par Tyndale House Cambridge (STEPBible), CC BY 4.0",
+  "LSJ-Lexikon (Griechisch)": "Lexique LSJ (grec)",
+  "Ausführliche Wörterbucheinträge zu griechischen Wörtern (unter dem Strong-Eintrag, auf Englisch).": "Entrées détaillées du dictionnaire pour les mots grecs (sous l'entrée Strong, en anglais).",
+  "Liddell-Scott-Jones, Greek-English Lexicon, bearbeitet von Tyndale House (Grundlage: Perseus Digital Library)": "Liddell-Scott-Jones, Greek-English Lexicon, édité par Tyndale House (d'après la Perseus Digital Library)"
 }
