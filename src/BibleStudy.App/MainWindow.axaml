@@ -45,6 +45,9 @@
                             <TextBlock x:Name="VaultTopText" FontSize="12.5" FontWeight="Medium" VerticalAlignment="Center" MaxWidth="110" TextTrimming="CharacterEllipsis" />
                         </StackPanel>
                     </Button>
+                    <Button x:Name="ModeTopBtn" Classes="ghost" Margin="0,0,6,0" ToolTip.Tip="Zwischen Advanced (alles) und Easy (nur das Wichtigste) wechseln">
+                        <TextBlock x:Name="ModeTopText" FontSize="12.5" FontWeight="SemiBold" VerticalAlignment="Center" />
+                    </Button>
                     <Button x:Name="TodoTopBtn" Classes="tool" ToolTip.Tip="Meine To-Dos: eine freie Liste zum Abhaken">
                         <local:Icon Data="M21 10.5V19a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h12.5 m9 11 3 3L22 4" />
                     </Button>
@@ -863,6 +866,10 @@
                         <StackPanel DockPanel.Dock="Top" Spacing="6" Margin="0,0,0,8">
                             <Border Classes="pill"><ComboBox x:Name="CommentaryBox" HorizontalAlignment="Stretch">
                             </ComboBox></Border>
+                            <Grid ColumnDefinitions="*,Auto">
+                                <TextBox x:Name="CommentarySearchBox" Watermark="Im ganzen Kommentar suchen" />
+                                <Button x:Name="CommentarySearchBtn" Grid.Column="1" Content="Suchen" Margin="6,0,0,0" />
+                            </Grid>
                             <TextBlock x:Name="CommentaryInfo" Classes="caption" TextWrapping="Wrap" />
                         </StackPanel>
                         <ScrollViewer x:Name="CommentaryScroll"><StackPanel x:Name="CommentaryPanel" Spacing="10" Margin="0,0,8,0" /></ScrollViewer>

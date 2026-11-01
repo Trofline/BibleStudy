@@ -1825,5 +1825,21 @@
   "Reise: {0}": "Journey: {0}",
   "Noch einmal": "Once more",
   "Klick auf einen Ort: nur dieses Buch in der Liste zeigen.": "Click a place to show only that book in the list.",
-  "Ende der Reise: {0} Vorkommen in {1} Büchern": "End of the journey: {0} occurrences in {1} books"
+  "Ende der Reise: {0} Vorkommen in {1} Büchern": "End of the journey: {0} occurrences in {1} books",
+  "Zwischen Advanced (alles) und Easy (nur das Wichtigste) wechseln": "Switch between Advanced (everything) and Easy (only the essentials)",
+  "Einfach-Modus: nur das Wichtigste. Mit „Easy“ oben wieder zurück zu „Advanced“.": "Easy mode: only the essentials. Use “Easy” at the top to go back to “Advanced”.",
+  "Advanced: alle Funktionen sind wieder da.": "Advanced: all functions are back.",
+  "Einfach-Modus ist an. Klick: alle Funktionen zeigen (Advanced).": "Easy mode is on. Click to show all functions (Advanced).",
+  "Alle Funktionen sind sichtbar. Klick: aufgeräumte Oberfläche (Easy).": "All functions are visible. Click for a tidy interface (Easy).",
+  "Easy": "Easy",
+  "Advanced": "Advanced",
+  "▶ Zeitreise": "▶ Time travel",
+  "⏸ Pause": "⏸ Pause",
+  "Im ganzen Kommentar suchen": "Search the whole commentary",
+  "Der Kommentar wird gerade eingelesen – bitte kurz warten.": "The commentary is being read – please wait a moment.",
+  "Einmalig: {0} wird eingelesen … {1}/{2} Kapitel": "Once only: reading {0} … {1}/{2} chapters",
+  "Keine Treffer in {0}.": "No hits in {0}.",
+  "{0} Treffer in {1}{2}": "{0} hits in {1}{2}",
+  " (die ersten 100)": " (the first 100)",
+  "← Zurück zum Kapitel": "← Back to the chapter"
 }

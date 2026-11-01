@@ -38,6 +38,8 @@ public partial class MainWindow
         InitPatchNotes();
         InitTopBar();
         InitReadingAids();
+        InitCommentarySearch();
+        InitEasyMode();
         InitAutomation();
         InitOllama();
         InitLanguageImport();

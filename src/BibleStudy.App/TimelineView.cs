@@ -67,8 +67,27 @@ public sealed class TimelineView : UserControl
             _eras.Children.Add(b);
         }
         _ruler.Picked += e => Select(e, fromRuler: true);
-        _list.SelectionChanged += (_, _) => { if (_list.SelectedIndex is >= 0 and var i && i < _shown.Count) Select(_shown[i], fromRuler: false); };
+        _list.SelectionChanged += (_, _) => { if (_list.SelectedIndex is >= 0 and var i && i < _shown.Count) { Select(_shown[i], fromRuler: false); SyncSlider(i); } };
 
+        // time travel: a slider over the years and a play button that steps through the events (the map follows)
+        _play = new Button { Content = L("▶ Zeitreise"), Margin = new(16, 0, 8, 6) };
+        _slider = new Slider { Minimum = 0, Maximum = 1, Width = 360, VerticalAlignment = VerticalAlignment.Center };
+        _year = new TextBlock { VerticalAlignment = VerticalAlignment.Center, Margin = new(10, 0, 0, 6), FontWeight = FontWeight.SemiBold };
+        _slider.ValueChanged += (_, e) =>
+        {
+            if (_sliderSetting || _shown.Count == 0) return;
+            var i = Math.Clamp((int)Math.Round(e.NewValue), 0, _shown.Count - 1);
+            if (_list.SelectedIndex != i) _list.SelectedIndex = i;
+        };
+        _play.Click += (_, _) => ToggleTravel();
+        _travel = new Avalonia.Threading.DispatcherTimer { Interval = TimeSpan.FromSeconds(3.2) };
+        _travel.Tick += (_, _) =>
+        {
+            var next = _list.SelectedIndex + 1;
+            if (next >= _shown.Count) { StopTravel(); return; }
+            _list.SelectedIndex = next; _list.ScrollIntoView(next);
+        };
+        var travelRow = new StackPanel { Orientation = Orientation.Horizontal, Children = { _play, _slider, _year } };
         var right = new DockPanel();
         var info = new StackPanel { Margin = new(16, 8, 16, 4), Spacing = 4, Children = { _title, _meta, _people, _placesText, _chips } };
         DockPanel.SetDock(info, Dock.Top);
@@ -83,7 +102,7 @@ public sealed class TimelineView : UserControl
         body.Children.Add(right);
 
         var root = new DockPanel();
-        foreach (var c in new Control[] { head, _eras, _ruler }) { DockPanel.SetDock(c, Dock.Top); root.Children.Add(c); }
+        foreach (var c in new Control[] { head, _eras, travelRow, _ruler }) { DockPanel.SetDock(c, Dock.Top); root.Children.Add(c); }
         DockPanel.SetDock(_hint, Dock.Top); root.Children.Add(_hint);
         _source.Text = $"{Core.Providers.HelloAoProvider.TimelineAttribution} · {WorldMap.Attribution}";
         DockPanel.SetDock(_source, Dock.Bottom); root.Children.Add(_source);
@@ -112,10 +131,31 @@ public sealed class TimelineView : UserControl
         var (_, from, to) = Eras[_era];
         _shown = _all.Where(e => e.Year >= from && e.Year <= to).ToList();
         _list.ItemsSource = _shown.Select(e => $"{YearText(e.Year)}   {e.Name}").ToList();
+        StopTravel(); SyncSlider(-1);
         _ruler.SetEvents(_shown);
         foreach (var b in _eras.Children.OfType<Button>()) b.Classes.Set("active", b.Content as string == Eras[_era].Name);
     }
 
+
+    Button? _play; Slider? _slider; TextBlock? _year; Avalonia.Threading.DispatcherTimer? _travel; bool _sliderSetting;
+
+    void ToggleTravel()
+    {
+        if (_travel!.IsEnabled) { StopTravel(); return; }
+        if (_shown.Count == 0) return;
+        if (_list.SelectedIndex < 0 || _list.SelectedIndex >= _shown.Count - 1) _list.SelectedIndex = 0;
+        _play!.Content = L("⏸ Pause"); _travel.Start();
+    }
+
+    void StopTravel() { _travel?.Stop(); if (_play is not null) _play.Content = L("▶ Zeitreise"); }
+
+    /// <summary>The slider follows the chosen event.</summary>
+    void SyncSlider(int index)
+    {
+        if (_slider is null || _shown.Count == 0) return;
+        _sliderSetting = true; _slider.Maximum = Math.Max(1, _shown.Count - 1); _slider.Value = Math.Max(0, index); _sliderSetting = false;
+        if (index >= 0 && index < _shown.Count) _year!.Text = YearText(_shown[index].Year);
+    }
     static string YearText(int y) => y < 0 ? L("{0} v. Chr.", -y) : y == 0 ? "0" : L("{0} n. Chr.", y);
 
     async void Select(TimelineEvent e, bool fromRuler)

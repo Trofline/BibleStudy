@@ -1,0 +1,28 @@
+# Flatpak manifest draft for Flathub – PREPARED, NOT SUBMITTED, NOT TESTED (needs a Linux machine: flatpak-builder + flatpak run).
+# Flathub rules to check before submitting: app id matches the GitHub account (io.github.Trofline.BibleStudy), metainfo.xml with
+# screenshots and license, .desktop file, icon. Submit as a pull request to https://github.com/flathub/flathub (Elias decides when).
+app-id: io.github.Trofline.BibleStudy
+runtime: org.freedesktop.Platform
+runtime-version: '24.08'
+sdk: org.freedesktop.Sdk
+command: biblestudy
+finish-args:
+  - --share=network
+  - --socket=x11
+  - --socket=wayland
+  - --device=dri
+  - --filesystem=xdg-documents
+modules:
+  - name: biblestudy
+    buildsystem: simple
+    build-commands:
+      - cp -r BibleStudy /app/BibleStudy
+      - install -Dm755 biblestudy.sh /app/bin/biblestudy
+    sources:
+      - type: archive
+        url: https://github.com/Trofline/BibleStudy/releases/download/v1.0.21/BibleStudy-Linux-x64-1.0.21.tar.gz
+        sha256: 357cc9d8cef3a0610286f462c382b50bf6335783eaab337190fa974a5c7ce927
+      - type: script
+        dest-filename: biblestudy.sh
+        commands:
+          - exec /app/BibleStudy/BibleStudy "$@"

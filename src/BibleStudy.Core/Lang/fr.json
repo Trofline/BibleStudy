@@ -1825,5 +1825,21 @@
   "Reise: {0}": "Voyage : {0}",
   "Noch einmal": "Encore une fois",
   "Klick auf einen Ort: nur dieses Buch in der Liste zeigen.": "Clique sur un lieu pour n’afficher que ce livre dans la liste.",
-  "Ende der Reise: {0} Vorkommen in {1} Büchern": "Fin du voyage : {0} occurrences dans {1} livres"
+  "Ende der Reise: {0} Vorkommen in {1} Büchern": "Fin du voyage : {0} occurrences dans {1} livres",
+  "Zwischen Advanced (alles) und Easy (nur das Wichtigste) wechseln": "Basculer entre Advanced (tout) et Easy (l’essentiel seulement)",
+  "Einfach-Modus: nur das Wichtigste. Mit „Easy“ oben wieder zurück zu „Advanced“.": "Mode simple : l’essentiel seulement. Avec « Easy » en haut, tu reviens à « Advanced ».",
+  "Advanced: alle Funktionen sind wieder da.": "Advanced : toutes les fonctions sont de retour.",
+  "Einfach-Modus ist an. Klick: alle Funktionen zeigen (Advanced).": "Le mode simple est activé. Clic : afficher toutes les fonctions (Advanced).",
+  "Alle Funktionen sind sichtbar. Klick: aufgeräumte Oberfläche (Easy).": "Toutes les fonctions sont visibles. Clic : interface épurée (Easy).",
+  "Easy": "Easy",
+  "Advanced": "Advanced",
+  "▶ Zeitreise": "▶ Voyage dans le temps",
+  "⏸ Pause": "⏸ Pause",
+  "Im ganzen Kommentar suchen": "Chercher dans tout le commentaire",
+  "Der Kommentar wird gerade eingelesen – bitte kurz warten.": "Le commentaire est en cours de lecture – patiente un instant.",
+  "Einmalig: {0} wird eingelesen … {1}/{2} Kapitel": "Une seule fois : lecture de {0} … {1}/{2} chapitres",
+  "Keine Treffer in {0}.": "Aucun résultat dans {0}.",
+  "{0} Treffer in {1}{2}": "{0} résultats dans {1}{2}",
+  " (die ersten 100)": " (les 100 premiers)",
+  "← Zurück zum Kapitel": "← Retour au chapitre"
 }

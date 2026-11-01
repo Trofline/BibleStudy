@@ -36,7 +36,8 @@ Regeln für die Abarbeitung:
   - Stand: Kontrastmodus, lesbare Schrift und Schriftzoom sind da; die komplette Tastaturbedienung ist noch offen (kommt mit Screenreader-Phase)
 - [x] Hebräisch: Vokale und Akzente einzeln ausblenden, richtige Rechts-nach-links-Darstellung (in den Einstellungen wählbar)
   - Stand: Vokale/Akzente einzeln ausblendbar; Rechts-nach-links gilt automatisch im Grundtext (kein eigener Schalter)
-- [ ] Kommentare (nur frei lizenzierte) + Volltextsuche in den Kommentaren
+- [x] Kommentare (nur frei lizenzierte) + Volltextsuche in den Kommentaren
+  - Stand: Kommentare gab es schon (Liste mit Lizenz je Kommentar); neu: „Im ganzen Kommentar suchen“ (liest den Kommentar einmal ein, danach offline)
 
 ## Phase 4 · v1.2.0 – Bücher und Grundtext
 - [x] BDB-Lexikon (Hebräisch): Open Scriptures Hebrew Lexicon, Text gemeinfrei, Datei CC BY 4.0; erscheint unter dem Strong-Eintrag hebräischer Wörter, mit Quellenangabe
@@ -64,13 +65,15 @@ Regeln für die Abarbeitung:
   - Stand: Knopf „Reise durch die Bibel“ in der Konkordanz (Strong-Wort): ein Licht wandert durch alle Bücher, Bücher mit Treffern leuchten auf; Klick filtert auf das Buch
 - [ ] Gedanken-Landkarte: Syntaxbäume → Satzdiagramm / Argumentationsbaum, farbig
 - [ ] Zeitreise-Karte: Zeitregler, Orte/Wege/Reiche erscheinen und verschwinden, gleichzeitig lebende Personen
+  - Stand: Zeitregler und „Zeitreise“-Abspielen in der Zeitleiste (Ereignisse nacheinander, Karte folgt). Offen: Orte/Reiche erscheinen und verschwinden, gleichzeitig lebende Personen
 - [ ] Liquid-Glass-Design und Animationen (abschaltbar, respektiert „Bewegung reduzieren“)
-- [ ] Minimalistischer Stil („Einfach-Modus“ / Easy Mode): aufgeräumte Oberfläche mit nur dem Wichtigsten (Lesen, Suchen, Notizen), alles andere ausgeblendet und mit einem Schalter wieder einblendbar. Oben in der Leiste ein Button, der zwischen „Advanced“ und „Easy“ umschaltet (Wahl wird gemerkt)
+- [x] Minimalistischer Stil („Einfach-Modus“ / Easy Mode): aufgeräumte Oberfläche mit nur dem Wichtigsten (Lesen, Suchen, Notizen), alles andere ausgeblendet und mit einem Schalter wieder einblendbar. Oben in der Leiste ein Button, der zwischen „Advanced“ und „Easy“ umschaltet (Wahl wird gemerkt)
+  - Stand: Knopf „Advanced/Easy“ oben in der Leiste; Easy zeigt nur Suche, Notizen, Vers-Übersicht, Einstellungen und Hilfe und blendet einige Knöpfe aus (wird gemerkt)
 
 ## Phase 8 · Verteilung (braucht Elias)
-- [ ] winget-Manifest vorbereiten (Pull Request erst nach Rückfrage)
-- [ ] Scoop-Bucket, danach Flathub-Paket vorbereiten
-- [ ] Code-Signierung über SignPath Foundation (Antrag für Open Source – Elias muss ihn stellen)
+- [x] winget-Manifest vorbereiten (Pull Request erst nach Rückfrage) (packaging/winget, siehe packaging/VERTEILUNG.md)
+- [x] Scoop-Bucket und Flathub-Entwurf vorbereitet (packaging/scoop, packaging/flatpak; Flatpak ungetestet)
+- [ ] Code-Signierung über SignPath Foundation (Antrag für Open Source – Elias muss ihn stellen) – Vorbereitung in packaging/VERTEILUNG.md, Antrag stellt Elias
 - [ ] Microsoft-Store-Signatur/-Paket (Entwicklerkonto nötig)
 
 ## Zusatz (Wünsche von Elias, nach Phase 8 einsortieren oder früher ziehen)

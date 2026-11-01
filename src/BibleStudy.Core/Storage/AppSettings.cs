@@ -61,6 +61,8 @@ public sealed class AppSettings
     /// <summary>"claude" (Claude Code, with the Bible tools) or "ollama" (a local model, nothing leaves the computer).</summary>
     public string AiEngine { get; set; } = "claude";
     public string OllamaModel { get; set; } = "";
+    /// <summary>Easy mode (only the essentials) or Advanced (everything).</summary>
+    public bool EasyMode { get; set; }
     /// <summary>The setup window of the first start was shown (once per installation).</summary>
     public bool SetupShown { get; set; }
     public bool XrefInText { get; set; }

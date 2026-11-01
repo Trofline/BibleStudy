@@ -1825,5 +1825,21 @@
   "Reise: {0}": "Viaje: {0}",
   "Noch einmal": "Otra vez",
   "Klick auf einen Ort: nur dieses Buch in der Liste zeigen.": "Haz clic en un lugar para mostrar solo ese libro en la lista.",
-  "Ende der Reise: {0} Vorkommen in {1} Büchern": "Fin del viaje: {0} apariciones en {1} libros"
+  "Ende der Reise: {0} Vorkommen in {1} Büchern": "Fin del viaje: {0} apariciones en {1} libros",
+  "Zwischen Advanced (alles) und Easy (nur das Wichtigste) wechseln": "Cambiar entre Advanced (todo) y Easy (solo lo esencial)",
+  "Einfach-Modus: nur das Wichtigste. Mit „Easy“ oben wieder zurück zu „Advanced“.": "Modo fácil: solo lo esencial. Con «Easy» arriba vuelves a «Advanced».",
+  "Advanced: alle Funktionen sind wieder da.": "Advanced: todas las funciones han vuelto.",
+  "Einfach-Modus ist an. Klick: alle Funktionen zeigen (Advanced).": "El modo fácil está activado. Clic: mostrar todas las funciones (Advanced).",
+  "Alle Funktionen sind sichtbar. Klick: aufgeräumte Oberfläche (Easy).": "Todas las funciones están visibles. Clic: interfaz ordenada (Easy).",
+  "Easy": "Easy",
+  "Advanced": "Advanced",
+  "▶ Zeitreise": "▶ Viaje en el tiempo",
+  "⏸ Pause": "⏸ Pausa",
+  "Im ganzen Kommentar suchen": "Buscar en todo el comentario",
+  "Der Kommentar wird gerade eingelesen – bitte kurz warten.": "Se está leyendo el comentario; espera un momento.",
+  "Einmalig: {0} wird eingelesen … {1}/{2} Kapitel": "Solo una vez: leyendo {0} … {1}/{2} capítulos",
+  "Keine Treffer in {0}.": "Sin resultados en {0}.",
+  "{0} Treffer in {1}{2}": "{0} resultados en {1}{2}",
+  " (die ersten 100)": " (los primeros 100)",
+  "← Zurück zum Kapitel": "← Volver al capítulo"
 }

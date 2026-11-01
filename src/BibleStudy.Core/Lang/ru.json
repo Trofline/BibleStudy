@@ -1825,5 +1825,21 @@
   "Reise: {0}": "Путешествие: {0}",
   "Noch einmal": "Ещё раз",
   "Klick auf einen Ort: nur dieses Buch in der Liste zeigen.": "Нажмите на место, чтобы показать в списке только эту книгу.",
-  "Ende der Reise: {0} Vorkommen in {1} Büchern": "Конец пути: {0} употреблений в {1} книгах"
+  "Ende der Reise: {0} Vorkommen in {1} Büchern": "Конец пути: {0} употреблений в {1} книгах",
+  "Zwischen Advanced (alles) und Easy (nur das Wichtigste) wechseln": "Переключение между Advanced (всё) и Easy (только главное)",
+  "Einfach-Modus: nur das Wichtigste. Mit „Easy“ oben wieder zurück zu „Advanced“.": "Простой режим: только главное. Кнопка «Easy» вверху вернёт «Advanced».",
+  "Advanced: alle Funktionen sind wieder da.": "Advanced: все функции снова на месте.",
+  "Einfach-Modus ist an. Klick: alle Funktionen zeigen (Advanced).": "Простой режим включён. Нажмите, чтобы показать все функции (Advanced).",
+  "Alle Funktionen sind sichtbar. Klick: aufgeräumte Oberfläche (Easy).": "Все функции видны. Нажмите для упрощённого интерфейса (Easy).",
+  "Easy": "Easy",
+  "Advanced": "Advanced",
+  "▶ Zeitreise": "▶ Путешествие во времени",
+  "⏸ Pause": "⏸ Пауза",
+  "Im ganzen Kommentar suchen": "Искать по всему комментарию",
+  "Der Kommentar wird gerade eingelesen – bitte kurz warten.": "Комментарий загружается — подождите немного.",
+  "Einmalig: {0} wird eingelesen … {1}/{2} Kapitel": "Один раз: чтение {0} … {1}/{2} глав",
+  "Keine Treffer in {0}.": "Нет результатов в {0}.",
+  "{0} Treffer in {1}{2}": "Результатов в {1}: {0}{2}",
+  " (die ersten 100)": " (первые 100)",
+  "← Zurück zum Kapitel": "← Назад к главе"
 }
