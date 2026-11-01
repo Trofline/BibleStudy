@@ -33,6 +33,7 @@ public partial class MainWindow
             if (folders.Count == 0 || folders[0].TryGetLocalPath() is not { } p) return;
             _settings.BackupFolder = p; SaveSettings(); ShowBackupState();
         };
+        BackupSyncBtn.Click += (_, _) => ShowSyncthingMenu();
         BackupNowBtn.Click += async (_, _) => await RunBackupAsync(manual: true);
         ShowBackupState();
         // a while after the start (the reader comes first), then every hour
@@ -40,6 +41,38 @@ public partial class MainWindow
         var timer = new DispatcherTimer { Interval = TimeSpan.FromHours(1) };
         timer.Tick += async (_, _) => await AutoBackupIfDueAsync();
         timer.Start();
+    }
+
+    /// <summary>The folders of a Syncthing on this computer: a click puts the backups in a sub-folder there, Syncthing then carries them to the other devices.</summary>
+    void ShowSyncthingMenu()
+    {
+        var folders = SyncFolders.Find();
+        var menu = new MenuFlyout();
+        if (folders.Count == 0)
+        {
+            menu.Items.Add(new MenuItem { Header = L("Kein Syncthing gefunden. Installiere es von syncthing.net, lege einen Ordner an und wähle ihn dann hier."), IsEnabled = false });
+            var open = new MenuItem { Header = L("syncthing.net öffnen") };
+            open.Click += (_, _) => OpenUrl("https://syncthing.net");
+            menu.Items.Add(open);
+        }
+        foreach (var f in folders)
+        {
+            var folder = f;
+            var item = new MenuItem { Header = $"{folder.Label}  ({folder.Path})" };
+            item.Click += (_, _) =>
+            {
+                try
+                {
+                    var target = Path.Combine(folder.Path, "BibleStudy-Sicherungen");
+                    Directory.CreateDirectory(target);
+                    _settings.BackupFolder = target; SaveSettings(); ShowBackupState();
+                    StatusText.Text = L("Sicherungen gehen jetzt nach: {0}", target);
+                }
+                catch (Exception ex) when (ex is IOException or UnauthorizedAccessException) { StatusText.Text = L("Der Ordner ist nicht beschreibbar: {0}", ex.Message); }
+            };
+            menu.Items.Add(item);
+        }
+        menu.ShowAt(BackupSyncBtn);
     }
 
     void ShowBackupState()

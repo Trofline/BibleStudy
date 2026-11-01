@@ -278,6 +278,20 @@ public static partial class BibleImporters
         {
             using var pdf = UglyToad.PdfPig.PdfDocument.Open(path);
             if (pdf.IsEncrypted) throw Protected();   // not opened even when it could be: that would be removing a protection
+            // a printed Bible (columns, running heads, verse numbers in a bold small font) is read by its layout first
+            var layout = PdfBibleLayout.Read(pdf.GetPages().Select(p => new PdfPageWords(p.Width, p.GetWords().Select(w =>
+            {
+                var f = w.Letters[0].FontName ?? "";
+                return new PdfWord(w.Text, w.BoundingBox.Left, w.BoundingBox.Bottom, w.Letters[0].PointSize,
+                    f.Contains("Semibold", StringComparison.OrdinalIgnoreCase) || f.Contains("Bold", StringComparison.OrdinalIgnoreCase),
+                    f.Contains("Italic", StringComparison.OrdinalIgnoreCase) || f.Contains("Oblique", StringComparison.OrdinalIgnoreCase));
+            }).ToList())), BookFromName);
+            if (layout is not null)
+            {
+                var c = new Collector();
+                foreach (var (b, ch, v, t) in layout) c.Add(b, ch, v, t);
+                return c.Done(Path.GetFileNameWithoutExtension(path), languageCode);
+            }
             foreach (var page in pdf.GetPages())
                 // the words of a page as lines: same baseline = same line, top to bottom, left to right
                 foreach (var row in page.GetWords().GroupBy(w => Math.Round(w.BoundingBox.Bottom / 3)).OrderByDescending(g => g.Key))

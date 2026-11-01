@@ -1,0 +1,351 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>BibleStudy – Scripture alone. Studied deeply.</title>
+<meta name="description" content="Free, open-source Bible study for Windows, Linux and macOS. Original text, parallel translations, your own knowledge vault – offline, no account, legal sources only.">
+<meta name="color-scheme" content="light dark">
+<link rel="icon" href="img/app.png">
+<style>
+@font-face{font-family:"Crimson Text";src:url(fonts/CrimsonText-Regular.ttf);font-weight:400;font-display:swap}
+@font-face{font-family:"Crimson Text";src:url(fonts/CrimsonText-Italic.ttf);font-weight:400;font-style:italic;font-display:swap}
+@font-face{font-family:"Crimson Text";src:url(fonts/CrimsonText-SemiBold.ttf);font-weight:600;font-display:swap}
+
+:root{
+  --bg:#F6F1E6; --bg2:#EFE8D8; --surface:#FFFCF6; --line:#E2D9C5; --text:#24201A; --muted:#6B6354;
+  --accent:#8A4F0F; --accent-soft:#F0DFBF; --accent-fg:#FFFCF6; --verse:#A0651C; --jesus:#A8281F;
+  --glow:rgba(160,101,28,.28); --shadow:0 30px 80px -20px rgba(80,50,10,.35), 0 8px 24px -8px rgba(80,50,10,.18);
+  --ui:system-ui,"Segoe UI",Roboto,sans-serif; --serif:"Crimson Text",Georgia,serif;
+}
+:root[data-theme=dark]{
+  --bg:#0F1216; --bg2:#13171C; --surface:#161A20; --line:#262D37; --text:#ECE7DA; --muted:#9AA2AD;
+  --accent:#E3B65F; --accent-soft:#3A3120; --accent-fg:#161A20; --verse:#D9A94F; --jesus:#FF9A8F;
+  --glow:rgba(227,182,95,.22); --shadow:0 30px 90px -20px rgba(0,0,0,.8), 0 0 0 1px rgba(255,255,255,.04);
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme]){
+    --bg:#0F1216; --bg2:#13171C; --surface:#161A20; --line:#262D37; --text:#ECE7DA; --muted:#9AA2AD;
+    --accent:#E3B65F; --accent-soft:#3A3120; --accent-fg:#161A20; --verse:#D9A94F; --jesus:#FF9A8F;
+    --glow:rgba(227,182,95,.22); --shadow:0 30px 90px -20px rgba(0,0,0,.8), 0 0 0 1px rgba(255,255,255,.04);
+  }
+}
+*{box-sizing:border-box;margin:0}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text);font:17px/1.6 var(--ui);-webkit-font-smoothing:antialiased;overflow-x:hidden;transition:background .4s,color .4s}
+a{color:inherit}
+.wrap{max-width:1160px;margin:0 auto;padding:0 20px}
+:focus-visible{outline:3px solid var(--accent);outline-offset:3px;border-radius:6px}
+
+/* ambient glow */
+.aura{position:fixed;inset:0;pointer-events:none;z-index:0;overflow:hidden}
+.aura i{position:absolute;border-radius:50%;filter:blur(110px);background:var(--glow);opacity:.8;animation:drift 22s ease-in-out infinite alternate}
+.aura i:nth-child(1){width:620px;height:620px;left:-160px;top:-120px}
+.aura i:nth-child(2){width:520px;height:520px;right:-120px;top:30vh;animation-delay:-8s;opacity:.55}
+.aura i:nth-child(3){width:560px;height:560px;left:30vw;top:130vh;animation-delay:-14s;opacity:.4}
+@keyframes drift{to{transform:translate(80px,60px) scale(1.15)}}
+main,header,footer{position:relative;z-index:1}
+
+/* nav */
+nav{position:sticky;top:0;z-index:20;backdrop-filter:blur(14px) saturate(1.4);background:color-mix(in srgb,var(--bg) 72%,transparent);border-bottom:1px solid color-mix(in srgb,var(--line) 70%,transparent)}
+nav .wrap{display:flex;align-items:center;gap:20px;height:64px}
+.brand{display:flex;align-items:center;gap:10px;font:600 1.35rem var(--serif);text-decoration:none;letter-spacing:.2px}
+.brand img{width:30px;height:30px;border-radius:8px}
+nav .links{margin-left:auto;display:flex;gap:22px;align-items:center;font-size:.95rem}
+nav .links a{text-decoration:none;color:var(--muted);transition:color .2s}
+nav .links a:hover{color:var(--text)}
+.btn{display:inline-flex;align-items:center;gap:8px;padding:12px 22px;border-radius:12px;font-weight:600;text-decoration:none;border:1px solid var(--line);background:var(--surface);color:var(--text);transition:transform .2s,box-shadow .2s,border-color .2s;cursor:pointer;font-size:1rem}
+.btn:hover{transform:translateY(-2px);border-color:var(--accent)}
+.btn.main{background:linear-gradient(180deg,color-mix(in srgb,var(--accent) 88%,#fff),var(--accent));color:var(--accent-fg);border-color:transparent;box-shadow:0 10px 30px -8px var(--glow),inset 0 1px 0 rgba(255,255,255,.3)}
+.btn.main:hover{box-shadow:0 16px 40px -8px var(--glow),inset 0 1px 0 rgba(255,255,255,.3)}
+.theme{width:42px;height:42px;padding:0;justify-content:center;border-radius:50%}
+.theme svg{width:20px;height:20px}
+.sun{display:none}
+:root[data-theme=dark] .sun{display:block}:root[data-theme=dark] .moon{display:none}
+@media (prefers-color-scheme:dark){:root:not([data-theme]) .sun{display:block}:root:not([data-theme]) .moon{display:none}}
+
+/* hero */
+.hero{padding:84px 0 40px;text-align:center}
+.eyebrow{display:inline-block;padding:6px 14px;border:1px solid var(--line);border-radius:99px;background:var(--surface);color:var(--muted);font-size:.85rem;letter-spacing:.06em;text-transform:uppercase}
+h1{font:600 clamp(2.8rem,8vw,5.6rem)/1.02 var(--serif);margin:22px auto 18px;max-width:14ch;letter-spacing:-.01em}
+h1 em{font-style:italic;font-weight:400;color:var(--accent);background:linear-gradient(100deg,var(--accent),var(--jesus));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+.lead{max-width:640px;margin:0 auto;color:var(--muted);font-size:1.2rem}
+.cta{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-top:32px}
+.facts{display:flex;gap:10px 22px;justify-content:center;flex-wrap:wrap;margin-top:22px;color:var(--muted);font-size:.92rem}
+.facts span::before{content:"✓ ";color:var(--accent);font-weight:700}
+
+/* app window mockup */
+.stage{margin:56px auto 0;perspective:1600px}
+.win{background:var(--surface);border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow);overflow:hidden;text-align:left;transform:rotateX(5deg);transform-origin:50% 100%;transition:transform .8s cubic-bezier(.2,.8,.2,1)}
+.stage:hover .win{transform:rotateX(0)}
+.bar{display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--bg2);border-bottom:1px solid var(--line);font-size:.82rem;color:var(--muted)}
+.dots{display:flex;gap:6px}.dots b{width:11px;height:11px;border-radius:50%;background:var(--line)}
+.pill{padding:5px 12px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--text)}
+.pill.q{margin-left:auto;min-width:150px;color:var(--muted)}
+.tabs{display:flex;gap:2px;padding:8px 12px 0;background:var(--bg2);font-size:.8rem}
+.tabs span{padding:7px 14px;border-radius:9px 9px 0 0;color:var(--muted)}
+.tabs .on{background:var(--surface);color:var(--accent);font-weight:600}
+.body{display:grid;grid-template-columns:1fr 330px;min-height:430px}
+.read{padding:30px 40px;font-family:var(--serif);font-size:1.28rem;line-height:1.75}
+.read h4{font:600 2rem var(--serif);margin-bottom:6px}
+.read h4 small{display:block;font:400 .85rem var(--ui);color:var(--muted);letter-spacing:.08em;text-transform:uppercase}
+.v{font:600 .7rem var(--ui);color:var(--verse);vertical-align:super;margin-right:3px}
+.j{color:var(--jesus)}
+mark{background:color-mix(in srgb,var(--accent) 28%,transparent);color:inherit;border-radius:4px;padding:0 3px}
+.strong{border-bottom:1.5px dotted var(--accent);cursor:pointer}
+.side{border-left:1px solid var(--line);background:var(--bg2);padding:18px;font-size:.9rem;display:flex;flex-direction:column;gap:12px}
+.side .tag{font:600 .72rem var(--ui);letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px 14px}
+.greek{font:600 1.9rem var(--serif);color:var(--accent)}
+.bars{display:flex;align-items:flex-end;gap:3px;height:54px;margin-top:6px}
+.bars i{flex:1;background:linear-gradient(var(--accent),color-mix(in srgb,var(--accent) 30%,transparent));border-radius:3px 3px 0 0;min-height:3px}
+@media(max-width:860px){.body{grid-template-columns:1fr}.side{display:none}.read{padding:22px}.win{transform:none}}
+
+/* sections */
+section{padding:96px 0 10px}
+.kicker{color:var(--accent);font:600 .85rem var(--ui);letter-spacing:.14em;text-transform:uppercase}
+h2{font:600 clamp(2rem,5vw,3.4rem)/1.08 var(--serif);margin:10px 0 14px;max-width:18ch}
+.sub{color:var(--muted);max-width:620px;font-size:1.1rem}
+.split{display:grid;grid-template-columns:1fr 1.15fr;gap:48px;align-items:center;margin-top:44px}
+.split.rev{grid-template-columns:1.15fr 1fr}.split.rev .copy{order:2}
+@media(max-width:860px){.split,.split.rev{grid-template-columns:1fr;gap:26px}.split.rev .copy{order:0}}
+.copy ul{list-style:none;padding:0;margin-top:18px;display:grid;gap:10px}
+.copy li{padding-left:28px;position:relative;color:var(--muted)}
+.copy li::before{content:"";position:absolute;left:0;top:.55em;width:14px;height:2px;background:var(--accent);border-radius:2px}
+.copy li b{color:var(--text);font-weight:600}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:18px;box-shadow:var(--shadow);overflow:hidden}
+.panel .bar{font-size:.78rem}
+
+/* parallel */
+.par{display:grid;grid-template-columns:repeat(3,1fr);font:1.02rem/1.6 var(--serif)}
+.par div{padding:18px;border-right:1px solid var(--line)}.par div:last-child{border:0}
+.par h5{font:600 .72rem var(--ui);letter-spacing:.1em;text-transform:uppercase;color:var(--accent);margin-bottom:8px}
+.diff{background:color-mix(in srgb,var(--jesus) 18%,transparent);border-radius:3px}
+@media(max-width:560px){.par{grid-template-columns:1fr}.par div{border-right:0;border-bottom:1px solid var(--line)}}
+
+/* graph */
+svg.graph{display:block;width:100%;height:auto;background:radial-gradient(circle at 50% 45%,color-mix(in srgb,var(--accent) 12%,transparent),transparent 65%)}
+.graph line{stroke:var(--line);stroke-width:1.5}
+.graph .hot{stroke:var(--accent);stroke-width:2;opacity:.8}
+.graph circle{fill:var(--surface);stroke:var(--accent);stroke-width:2}
+.graph .core{fill:var(--accent)}
+.graph text{fill:var(--text);font:600 12px var(--ui)}
+.graph .pulse{animation:pulse 3.4s ease-in-out infinite;transform-box:fill-box;transform-origin:center}
+@keyframes pulse{50%{transform:scale(1.18)}}
+
+/* map/timeline */
+.map{height:310px;position:relative;background:
+  radial-gradient(ellipse 36% 26% at 62% 52%,color-mix(in srgb,var(--accent) 18%,var(--bg2)),transparent 72%),
+  radial-gradient(ellipse 30% 40% at 30% 40%,color-mix(in srgb,var(--accent) 12%,var(--bg2)),transparent 70%),var(--bg2)}
+.map svg{position:absolute;inset:0;width:100%;height:100%}
+.route{fill:none;stroke:var(--accent);stroke-width:2.5;stroke-dasharray:6 7;animation:dash 24s linear infinite}
+@keyframes dash{to{stroke-dashoffset:-260}}
+.pin{fill:var(--accent)}.map text{fill:var(--text);font:600 12px var(--ui)}
+.time{padding:14px 18px;border-top:1px solid var(--line);display:flex;gap:14px;align-items:center;font-size:.8rem;color:var(--muted)}
+.time .track{flex:1;height:6px;background:var(--line);border-radius:6px;position:relative}
+.time .track::after{content:"";position:absolute;left:0;top:0;bottom:0;width:62%;background:var(--accent);border-radius:6px}
+.time .track::before{content:"";position:absolute;left:62%;top:50%;width:16px;height:16px;margin:-8px 0 0 -8px;border-radius:50%;background:var(--surface);border:3px solid var(--accent);z-index:1}
+
+/* vault */
+.vault{display:grid;grid-template-columns:200px 1fr;min-height:300px}
+.vault .tree{background:var(--bg2);border-right:1px solid var(--line);padding:14px;font-size:.88rem;color:var(--muted);display:grid;gap:7px;align-content:start}
+.vault .tree b{color:var(--text)}
+.vault .note{padding:22px;font-size:.98rem}
+.vault h4{font:600 1.5rem var(--serif);margin-bottom:8px}
+.wl{color:var(--accent);text-decoration:underline;text-decoration-style:dotted}
+.chip{display:inline-block;padding:2px 10px;border-radius:99px;background:var(--accent-soft);color:var(--accent);font-size:.78rem;font-weight:600;margin:2px 4px 2px 0}
+@media(max-width:560px){.vault{grid-template-columns:1fr}.vault .tree{display:none}}
+
+/* feature grid */
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px;margin-top:40px}
+.f{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:22px;transition:transform .25s,border-color .25s,box-shadow .25s}
+.f:hover{transform:translateY(-4px);border-color:var(--accent);box-shadow:0 18px 40px -18px var(--glow)}
+.f i{display:grid;place-items:center;width:44px;height:44px;border-radius:12px;background:var(--accent-soft);color:var(--accent);font-style:normal;font-size:1.3rem;margin-bottom:12px}
+.f b{display:block;font:600 1.25rem var(--serif);margin-bottom:4px}
+.f p{color:var(--muted);font-size:.96rem}
+
+/* trust */
+.trust{margin-top:90px;padding:44px;border:1px solid var(--line);border-radius:24px;background:linear-gradient(135deg,var(--surface),var(--bg2));display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:30px}
+.trust h3{font:600 1.4rem var(--serif);margin-bottom:6px}
+.trust p{color:var(--muted);font-size:.97rem}
+.big{text-align:center;padding:110px 0 40px}
+.big h2{margin:10px auto 14px;max-width:16ch}
+footer{margin-top:70px;border-top:1px solid var(--line);padding:30px 0 50px;color:var(--muted);font-size:.9rem}
+footer .wrap{display:flex;flex-wrap:wrap;gap:12px 28px;justify-content:space-between}
+footer a{text-decoration:none}footer a:hover{color:var(--text)}
+
+/* reveal */
+.rv{opacity:0;transform:translateY(26px);transition:opacity .8s,transform .8s cubic-bezier(.2,.8,.2,1)}
+.rv.in{opacity:1;transform:none}
+@media(prefers-reduced-motion:reduce){.rv{opacity:1;transform:none;transition:none}.aura i,.route,.graph .pulse{animation:none}html{scroll-behavior:auto}.win{transform:none}}
+@media(max-width:700px){nav .links a:not(.btn){display:none}}
+</style>
+</head>
+<body>
+<div class="aura" aria-hidden="true"><i></i><i></i><i></i></div>
+
+<nav>
+  <div class="wrap">
+    <a class="brand" href="#top"><img src="img/app.png" alt="">BibleStudy</a>
+    <div class="links">
+      <a href="#read">Read</a><a href="#original">Original text</a><a href="#vault">Your vault</a><a href="#together">Together</a><a href="#trust">Trust</a>
+      <a class="btn main" href="https://github.com/Trofline/BibleStudy/releases/latest" style="padding:9px 18px">Download</a>
+      <button class="btn theme" id="theme" aria-label="Switch light / dark">
+        <svg class="moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
+        <svg class="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+      </button>
+    </div>
+  </div>
+</nav>
+
+<header id="top" class="hero">
+  <div class="wrap">
+    <span class="eyebrow">Free · Open source · Offline</span>
+    <h1>Scripture alone. <em>Studied deeply.</em></h1>
+    <p class="lead">A serious Bible study workbench for Windows, Linux and macOS. Greek and Hebrew, parallel translations, cross references and your own knowledge vault – with no account, no subscription and only legal sources.</p>
+    <div class="cta">
+      <a class="btn main" href="https://github.com/Trofline/BibleStudy/releases/latest">⬇ Download for free</a>
+      <a class="btn" href="https://github.com/Trofline/BibleStudy">★ View on GitHub</a>
+    </div>
+    <div class="facts"><span>No account</span><span>No tracking</span><span>Works offline</span><span>5 languages</span><span>Free forever</span></div>
+
+    <div class="stage rv">
+      <div class="win" role="img" aria-label="BibleStudy showing John 1 with a word study of the Greek word logos">
+        <div class="bar"><div class="dots"><b></b><b></b><b></b></div><span class="pill">Johannes 1</span><span class="pill">BSB</span><span class="pill q">⌕ Go to … Ctrl+K</span></div>
+        <div class="tabs"><span class="on">Reader</span><span>Parallel</span><span>Search</span><span>Vault</span><span>Map</span></div>
+        <div class="body">
+          <div class="read">
+            <h4><small>Gospel of John</small>Chapter 1</h4>
+            <p><span class="v">1</span>In the beginning was the <span class="strong"><mark>Word</mark></span>, and the Word was with God, and the Word was God. <span class="v">2</span>He was with God in the beginning. <span class="v">3</span>Through Him all things were made, and without Him nothing was made that has been made. <span class="v">4</span>In Him was life, and that life was the light of men.</p>
+            <p style="margin-top:10px"><span class="v">38</span>Jesus turned and saw them following. <span class="j">“What do you want?”</span> He asked.</p>
+          </div>
+          <div class="side">
+            <div class="tag">Word study · G3056</div>
+            <div class="card"><div class="greek">λόγος</div><div style="color:var(--muted)">logos · noun, masculine</div><p style="margin-top:6px">word, speech, reason – the divine expression of God.</p></div>
+            <div class="tag">Where it occurs</div>
+            <div class="card"><div class="bars"><i style="height:14%"></i><i style="height:22%"></i><i style="height:30%"></i><i style="height:12%"></i><i style="height:40%"></i><i style="height:100%"></i><i style="height:64%"></i><i style="height:70%"></i><i style="height:34%"></i><i style="height:18%"></i><i style="height:48%"></i><i style="height:26%"></i></div><div style="color:var(--muted);margin-top:6px">330 times in the New Testament</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<main>
+<section id="read" class="wrap">
+  <div class="rv"><div class="kicker">Read &amp; compare</div><h2>Every translation, side by side.</h2><p class="sub">Open as many free translations as you like in parallel columns. Differences light up, scrolling stays in sync, and the words of Jesus can have their own color.</p></div>
+  <div class="split rev rv">
+    <div class="panel"><div class="bar"><div class="dots"><b></b><b></b><b></b></div><span>Parallel · Romans 8:1</span></div>
+      <div class="par">
+        <div><h5>BSB</h5>Therefore, there is now <span class="diff">no condemnation</span> for those who are in Christ Jesus.</div>
+        <div><h5>KJV</h5>There is therefore now <span class="diff">no condemnation</span> to them which are in Christ Jesus, who walk not after the flesh.</div>
+        <div><h5>WEB</h5>There is therefore now <span class="diff">no condemnation</span> to those who are in Christ Jesus, who don’t walk according to the flesh.</div>
+      </div></div>
+    <div class="copy"><ul><li><b>Parallel columns</b> with their own passage per column</li><li><b>Differences highlighted</b> between translations</li><li><b>Full-text search</b> – words, phrases, Strong’s numbers, people and places</li><li><b>Ctrl+K</b> opens any passage or command instantly</li></ul></div>
+  </div>
+</section>
+
+<section id="original" class="wrap">
+  <div class="rv"><div class="kicker">Original text</div><h2>Go back to the Greek and Hebrew.</h2><p class="sub">Click a word and see the original, its meaning, every occurrence – and how the sentence is built.</p></div>
+  <div class="split rv">
+    <div class="copy"><ul><li><b>Morphology</b> – tense, case, person for every word</li><li><b>Syntax</b> – subject, verb and object of each clause</li><li><b>Strong’s dictionary</b> and word distribution across all books</li><li><b>Learn Greek &amp; Hebrew</b> – alphabets, quiz, spaced-repetition vocabulary</li></ul></div>
+    <div class="panel"><div class="bar"><div class="dots"><b></b><b></b><b></b></div><span>Syntax · John 1:1</span></div>
+      <svg class="graph" viewBox="0 0 560 300" role="img" aria-label="Syntax tree of John 1:1">
+        <line x1="280" y1="50" x2="130" y2="150"/><line x1="280" y1="50" x2="280" y2="150" class="hot"/><line x1="280" y1="50" x2="430" y2="150"/>
+        <line x1="130" y1="150" x2="70" y2="250"/><line x1="130" y1="150" x2="190" y2="250"/><line x1="430" y1="150" x2="370" y2="250"/><line x1="430" y1="150" x2="490" y2="250"/>
+        <circle class="core pulse" cx="280" cy="50" r="22"/><text x="280" y="55" text-anchor="middle" style="fill:var(--accent-fg)">ἦν</text>
+        <circle cx="130" cy="150" r="20"/><text x="130" y="155" text-anchor="middle">Subject</text>
+        <circle cx="280" cy="150" r="20" class="pulse"/><text x="280" y="155" text-anchor="middle">Verb</text>
+        <circle cx="430" cy="150" r="20"/><text x="430" y="155" text-anchor="middle">Predicate</text>
+        <text x="70" y="275" text-anchor="middle">ὁ λόγος</text><text x="190" y="275" text-anchor="middle">ἐν ἀρχῇ</text><text x="370" y="275" text-anchor="middle">πρὸς τὸν θεόν</text><text x="490" y="275" text-anchor="middle">θεὸς</text>
+        <circle cx="70" cy="250" r="9"/><circle cx="190" cy="250" r="9"/><circle cx="370" cy="250" r="9"/><circle cx="490" cy="250" r="9"/>
+      </svg></div>
+  </div>
+  <div class="split rev rv">
+    <div class="panel"><div class="bar"><div class="dots"><b></b><b></b><b></b></div><span>Knowledge graph · cross references</span></div>
+      <svg class="graph" viewBox="0 0 560 320" role="img" aria-label="Network of cross references around John 1:1">
+        <g><line x1="280" y1="160" x2="90" y2="70" class="hot"/><line x1="280" y1="160" x2="470" y2="60" class="hot"/><line x1="280" y1="160" x2="500" y2="190"/><line x1="280" y1="160" x2="420" y2="285"/><line x1="280" y1="160" x2="130" y2="270"/><line x1="280" y1="160" x2="40" y2="180"/><line x1="90" y1="70" x2="130" y2="270"/><line x1="470" y1="60" x2="500" y2="190"/><line x1="420" y1="285" x2="500" y2="190"/><line x1="280" y1="160" x2="280" y2="30"/><line x1="280" y1="30" x2="470" y2="60"/></g>
+        <circle class="core pulse" cx="280" cy="160" r="26"/><text x="280" y="164" text-anchor="middle" style="fill:var(--accent-fg)">Joh 1,1</text>
+        <circle cx="90" cy="70" r="17"/><text x="90" y="50" text-anchor="middle">1 Mo 1,1</text>
+        <circle cx="470" cy="60" r="17"/><text x="470" y="40" text-anchor="middle">Kol 1,16</text>
+        <circle cx="500" cy="190" r="15"/><text x="500" y="218" text-anchor="middle">Hebr 1,2</text>
+        <circle cx="420" cy="285" r="15"/><text x="420" y="312" text-anchor="middle">Offb 19,13</text>
+        <circle cx="130" cy="270" r="15"/><text x="130" y="298" text-anchor="middle">Ps 33,6</text>
+        <circle cx="40" cy="180" r="13"/><text x="40" y="206" text-anchor="middle">Spr 8,22</text>
+        <circle cx="280" cy="30" r="13"/><text x="280" y="14" text-anchor="middle">Joh 17,5</text>
+      </svg></div>
+    <div class="copy"><div class="kicker">Connections</div><h2 style="font-size:2.2rem;max-width:none">See how Scripture explains Scripture.</h2><ul><li><b>Cross references</b> as graph, network and arc diagram</li><li><b>People &amp; places</b> of the Bible dictionary</li><li><b>Timeline with map</b>, journeys and a family tree</li></ul></div>
+  </div>
+  <div class="split rv" style="margin-top:56px">
+    <div class="copy"><div class="kicker">Places &amp; time</div><h2 style="font-size:2.2rem;max-width:none">Follow the journeys.</h2><ul><li><b>Map</b> of places, hits and routes</li><li><b>Timeline</b> from Abraham to the apostles</li></ul></div>
+    <div class="panel"><div class="bar"><div class="dots"><b></b><b></b><b></b></div><span>Map · Paul’s second journey</span></div>
+      <div class="map"><svg viewBox="0 0 560 310" preserveAspectRatio="none" aria-hidden="true">
+        <path class="route" d="M370 200 C340 170 320 150 290 140 S230 110 200 120 S150 150 120 140"/>
+        <g><circle class="pin" cx="370" cy="200" r="7"/><text x="380" y="218">Antioch</text>
+        <circle class="pin" cx="290" cy="140" r="6"/><text x="300" y="132">Tarsus</text>
+        <circle class="pin" cx="200" cy="120" r="6"/><text x="208" y="110">Philippi</text>
+        <circle class="pin" cx="120" cy="140" r="7"/><text x="90" y="166">Corinth</text></g></svg></div>
+      <div class="time"><span>50 AD</span><div class="track"></div><span>52 AD</span></div></div>
+  </div>
+</section>
+
+<section id="vault" class="wrap">
+  <div class="rv"><div class="kicker">Your vault</div><h2>Your notes. Linked to the text.</h2><p class="sub">Highlight, write, tag and link – like Obsidian, but wired into the Bible. Everything stays on your computer, as plain files you own.</p></div>
+  <div class="split rev rv">
+    <div class="panel"><div class="vault">
+      <div class="tree"><b>▾ Sermons</b><span>&nbsp;&nbsp;Light of the world</span><span>&nbsp;&nbsp;Romans 8</span><b>▾ Study notes</b><span>&nbsp;&nbsp;The Word (Logos)</span><b>▸ Prayer list</b></div>
+      <div class="note"><h4>The Word (Logos)</h4><p style="color:var(--muted)">See <span class="wl">[[Johannes 1,1]]</span> and <span class="wl">[[Genesis 1,1]]</span>: the same opening, the same act of creating by speaking.</p><p style="margin-top:10px"><span class="chip">#christology</span><span class="chip">#creation</span><span class="chip">#john</span></p><p style="margin-top:12px;font-family:var(--serif);font-style:italic;font-size:1.1rem">“In the beginning was the Word …”</p></div>
+    </div></div>
+    <div class="copy"><ul><li><b>Highlights, notes, documents</b> with folders, categories and tags</li><li><b>Wiki links</b> and a knowledge graph of everything you wrote</li><li><b>Sermon editor</b> with outline, handout, slides and PDF export</li><li><b>Reading plans</b>, to-dos, prayer list and backups</li></ul></div>
+  </div>
+</section>
+
+<section id="together" class="wrap">
+  <div class="grid">
+    <div class="f rv"><i>⇄</i><b>Study together</b><p>Connect directly with one person – encrypted, no server, no account. Chat, share verses, follow each other’s place.</p></div>
+    <div class="f rv"><i>⌘</i><b>Plugins &amp; AI (optional)</b><p>Extend the program with plugins. An MCP server lets your own Claude operate it – nothing leaves your machine unless you want it.</p></div>
+    <div class="f rv"><i>◐</i><b>Light &amp; dark</b><p>Warm paper or deep night, many accent colors, a distraction-free focus mode and your own color for the words of Jesus.</p></div>
+    <div class="f rv"><i>文</i><b>5 languages</b><p>English, Deutsch, Español, Français and Русский – more can be added as a simple JSON file.</p></div>
+    <div class="f rv"><i>⟲</i><b>Safe updates</b><p>Updates are only installed with your consent, after a backup – and you can go back to any earlier version.</p></div>
+    <div class="f rv"><i>♡</i><b>Free, forever</b><p>No ads, no subscription, no account. Open source for anyone to read, improve and share.</p></div>
+  </div>
+
+  <div class="trust rv" id="trust">
+    <div><h3>Legal sources only</h3><p>Every translation and dataset is public domain or freely licensed. The license is shown in the program – under <i>Settings → Sources and licenses</i> and in every footer.</p></div>
+    <div><h3>Your data stays yours</h3><p>Notes, vaults and settings live on your computer. The program only goes online to fetch texts you ask for and to look for updates. No analytics.</p></div>
+    <div><h3>Open and honest</h3><p>Not code-signed yet, so Windows may warn on the first start (“More info → Run anyway”). Every release comes with checksums.</p></div>
+  </div>
+</section>
+
+<div class="big wrap rv">
+  <h2>Open your Bible. Dig in.</h2>
+  <p class="sub" style="margin:0 auto">Download takes a minute. No sign-up. Windows, Linux and macOS.</p>
+  <div class="cta"><a class="btn main" href="https://github.com/Trofline/BibleStudy/releases/latest">⬇ Download for free</a><a class="btn" href="https://github.com/Trofline/BibleStudy/blob/main/README.de.md">Auf Deutsch lesen</a></div>
+</div>
+</main>
+
+<footer>
+  <div class="wrap">
+    <span>© BibleStudy – open source, see <a href="https://github.com/Trofline/BibleStudy/blob/main/LICENSE"><u>LICENSE</u></a></span>
+    <span><a href="https://github.com/Trofline/BibleStudy"><u>GitHub</u></a> · <a href="https://github.com/Trofline/BibleStudy/blob/main/THIRD-PARTY-NOTICES.md"><u>Third-party notices</u></a> · <a href="https://github.com/Trofline/BibleStudy/blob/main/ROADMAP.md"><u>Roadmap</u></a></span>
+    <span style="flex-basis:100%;font-size:.82rem">The graphics on this page are illustrations of the program’s windows. Fonts: Crimson Text (SIL OFL).</span>
+  </div>
+</footer>
+
+<script>
+(function(){
+  var root=document.documentElement, key="bs-theme";
+  try{var s=localStorage.getItem(key); if(s) root.setAttribute("data-theme",s);}catch(e){}
+  document.getElementById("theme").addEventListener("click",function(){
+    var dark=root.getAttribute("data-theme")==="dark"||(!root.getAttribute("data-theme")&&matchMedia("(prefers-color-scheme: dark)").matches);
+    var next=dark?"light":"dark"; root.setAttribute("data-theme",next);
+    try{localStorage.setItem(key,next);}catch(e){}
+  });
+  var els=document.querySelectorAll(".rv");
+  if(!("IntersectionObserver" in window)){els.forEach(function(e){e.classList.add("in")});return;}
+  var io=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){e.target.classList.add("in");io.unobserve(e.target);}})},{threshold:.12});
+  els.forEach(function(e){io.observe(e)});
+})();
+</script>
+</body>
+</html>

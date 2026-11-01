@@ -41,6 +41,8 @@ public partial class MainWindow
         Item(L("Querverweise"), () => Open(4));
         Item(L("Eigenen Querverweis setzen …"), () => ShowMyXrefEditor(r, anchor));
         Item(L("Grundtext Wort für Wort"), () => { Open(GrundtextTab); _ = ShowGrundtextAsync(r); });
+        var marked = MarkedText(anchor);
+        Item(marked.Length > 0 ? L("Wort erklären: {0}", marked) : L("Wort erklären (erst ein Wort im Text markieren)"), () => _ = ExplainWordAsync(marked), marked.Length > 0);
         Item(L("Vorlesen"), ToggleSpeak);
         menu.ShowAt(anchor, showAtPointer: true);
     }
@@ -50,6 +52,38 @@ public partial class MainWindow
     TextBlock Eyebrow(string text) => new() { Text = text.ToUpperInvariant(), Classes = { "eyebrow" }, Margin = new(0, 6, 0, 0) };
 
     TextBlock Muted(string text) => new() { Text = text, Classes = { "caption" }, TextWrapping = TextWrapping.Wrap };
+
+    async Task FillGuideEntitiesAsync(VerseRef r, int version, WrapPanel people, WrapPanel places, WrapPanel keywords)
+    {
+        void Empty(WrapPanel p, string text) => p.Children.Add(new TextBlock { Text = text, Classes = { "caption" } });
+        try
+        {
+            var all = await _hello.GetChapterLexiconAsync(r.Book, r.Chapter);
+            if (version != _guideVersion) return;
+            foreach (var (item, verses) in all.Where(x => x.Verses.Contains(r.Verse)).OrderByDescending(x => x.Item.References))
+            {
+                var it = item;
+                var chip = new Button { Content = it.Name, Classes = { "tool" }, Width = double.NaN, Padding = new(10, 0), Margin = new(0, 0, 6, 6) };
+                ToolTip.SetTip(chip, L("{0} Erwähnungen · öffnet das Lexikon", it.References));
+                chip.Click += (_, _) => { OpenWork(NavGroups.First(g => g.Name == "Bücher"), LexiconTab); _ = ShowLexEntryAsync(it); };
+                (it.Kind == "places" ? places : people).Children.Add(chip);
+            }
+        }
+        catch { /* offline: the rest of the page stays */ }
+        if (version != _guideVersion) return;
+        if (people.Children.Count == 0) Empty(people, L("Keine Personen in diesem Vers."));
+        if (places.Children.Count == 0) Empty(places, L("Keine Orte in diesem Vers."));
+
+        // key words: the words of the verse that are marked as key words of the chapter (needs the Strong index of the analysis)
+        try
+        {
+            if (_analyzer is null) { Empty(keywords, L("Für diesen Vers gibt es keine Strong-Daten.")); return; }
+            var inVerse = _analyzer.WordsOf(r).Select(w => w.Id).ToHashSet();
+            var keys = _analyzer.Keywords(r.Book, r.Chapter).Where(k => inVerse.Contains(k.Id)).Select(k => (k.Id, (string?)$"{k.InChapter}×")).ToList();
+            await FillChipsAsync(keywords, keys, L("Keine auffälligen Wörter."));
+        }
+        catch { /* no key words */ }
+    }
 
     async Task ShowGuideAsync(VerseRef r)
     {
@@ -106,6 +140,9 @@ public partial class MainWindow
         compare.Children.Add(Muted(L("Lade …")));
         // cross references
         GuidePanel.Children.Add(Eyebrow(L("Querverweise")));
+        var starBtn = new Button { Content = L("Als Stern zeigen"), HorizontalAlignment = HorizontalAlignment.Left };
+        starBtn.Click += async (_, _) => await ShowXrefStarAsync(r);
+        GuidePanel.Children.Add(starBtn);
         var xrefs = new StackPanel { Spacing = 6 };
         GuidePanel.Children.Add(xrefs);
         xrefs.Children.Add(Muted(L("Lade …")));
@@ -114,6 +151,15 @@ public partial class MainWindow
         var orig = new Button { Content = L("Wort für Wort im Grundtext öffnen"), HorizontalAlignment = HorizontalAlignment.Left };
         orig.Click += (_, _) => { SideTabs.SelectedIndex = GrundtextTab; _ = ShowGrundtextAsync(r); };
         GuidePanel.Children.Add(orig);
+
+        // people, places and key words of exactly this verse (they fill in when the data is there)
+        GuidePanel.Children.Add(Eyebrow(L("Personen")));
+        var people = new WrapPanel(); GuidePanel.Children.Add(people);
+        GuidePanel.Children.Add(Eyebrow(L("Orte")));
+        var places = new WrapPanel(); GuidePanel.Children.Add(places);
+        GuidePanel.Children.Add(Eyebrow(L("Schlüsselwörter dieses Verses")));
+        var keywords = new WrapPanel(); GuidePanel.Children.Add(keywords);
+        _ = FillGuideEntitiesAsync(r, version, people, places, keywords);
 
         var compareTask = CompareTranslationsAsync(r, current);
         var xrefTask = GuideXrefsAsync(r, current?.Id ?? "");

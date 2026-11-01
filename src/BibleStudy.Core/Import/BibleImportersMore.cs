@@ -57,6 +57,8 @@ public static partial class BibleImporters
             "Matt:MAT Mark:MRK Luke:LUK John:JHN Acts:ACT Rom:ROM 1Cor:1CO 2Cor:2CO Gal:GAL Eph:EPH Phil:PHP Col:COL 1Thess:1TH 2Thess:2TH 1Tim:1TI 2Tim:2TI Titus:TIT Phlm:PHM Heb:HEB Jas:JAS 1Pet:1PE 2Pet:2PE 1John:1JN 2John:2JN 3John:3JN Jude:JUD Rev:REV " +
             "Ge:GEN Ex:EXO Le:LEV Nu:NUM Dt:DEU Jos:JOS Jdg:JDG 1Sa:1SA 2Sa:2SA 1Ki:1KI 2Ki:2KI 1Ch:1CH 2Ch:2CH Ne:NEH Es:EST Pr:PRO Ec:ECC So:SNG Is:ISA Eze:EZK Da:DAN Ho:HOS Jl:JOL Am:AMO Ob:OBA Jon:JON Mi:MIC Na:NAM Zep:ZEP Zec:ZEC Mt:MAT Mk:MRK Lk:LUK Jn:JHN Ro:ROM 1Co:1CO 2Co:2CO Ga:GAL Php:PHP 1Th:1TH 2Th:2TH 1Ti:1TI 2Ti:2TI Tit:TIT Phm:PHM He:HEB Jam:JAS 1Pe:1PE 2Pe:2PE 1Jn:1JN 2Jn:2JN 3Jn:3JN Re:REV Psalm:PSA Psalms:PSA";
         foreach (var pair in extra.Split(' ')) { var p = pair.Split(':'); Put(p[0], p[1]); }
+        // names as printed in German Bibles (running heads, titles)
+        foreach (var (alias, id) in new[] { ("1. Chronik", "1CH"), ("2. Chronik", "2CH"), ("Hohelied", "SNG"), ("Das Hohelied", "SNG"), ("Das Hohelied Salomos", "SNG"), ("Klagelieder Jeremias", "LAM"), ("Die Klagelieder Jeremias", "LAM"), ("Die Klagelieder", "LAM"), ("Psalmen", "PSA"), ("Die Psalmen", "PSA"), ("Offenbarung des Johannes", "REV") }) Put(alias, id);
         return d;
     }
 

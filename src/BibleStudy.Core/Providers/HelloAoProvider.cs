@@ -14,7 +14,7 @@ public sealed class HelloAoProvider(HttpClient http, string cacheDir) : IBiblePr
 
     public async Task<IReadOnlyList<TranslationInfo>> GetTranslationsAsync(CancellationToken ct = default)
     {
-        using var doc = await GetJsonAsync("/api/available_translations.json", ct);
+        using var doc = await GetJsonAsync(TranslationListPath, ct);
         // The server does not give every translation a "license" block (a missing one used to break the whole list), and an
         // odd entry must not take the others down: everything optional, entries without an id are skipped.
         return doc.RootElement.GetProperty("translations").EnumerateArray().Where(t => t.ValueKind == JsonValueKind.Object && Str(t, "id") != "").Select(t =>
@@ -323,6 +323,17 @@ public sealed class HelloAoProvider(HttpClient http, string cacheDir) : IBiblePr
     static string Str(JsonElement e, string name) =>
         e.TryGetProperty(name, out var v) && v.ValueKind == JsonValueKind.String ? v.GetString()! : "";
 
+    const string TranslationListPath = "/api/available_translations.json";
+    const string MirrorUrl = "https://raw.githubusercontent.com/Trofline/BibleStudy/main/src/BibleStudy.Core/Data/available_translations.json";
+
+    async Task<JsonDocument?> FallbackTranslationListAsync(CancellationToken ct)
+    {
+        try { return JsonDocument.Parse(await http.GetByteArrayAsync(MirrorUrl, ct)); }
+        catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException or JsonException) { /* next: the built-in copy */ }
+        await using var s = typeof(HelloAoProvider).Assembly.GetManifestResourceStream("data/available_translations.json");
+        return s is null ? null : await JsonDocument.ParseAsync(s, cancellationToken: ct);
+    }
+
     async Task<JsonDocument> GetJsonAsync(string path, CancellationToken ct)
     {
         var file = Path.Combine(cacheDir, path.TrimStart('/').Replace('/', Path.DirectorySeparatorChar));
@@ -332,7 +343,14 @@ public sealed class HelloAoProvider(HttpClient http, string cacheDir) : IBiblePr
             try { return JsonDocument.Parse(await File.ReadAllBytesAsync(file, ct)); }
             catch (JsonException) { try { File.Delete(file); } catch (IOException) { } }
         }
-        var bytes = await http.GetByteArrayAsync(Base + path, ct);
+        byte[] bytes;
+        try { bytes = await http.GetByteArrayAsync(Base + path, ct); JsonDocument.Parse(bytes).Dispose(); }
+        catch (Exception ex) when (path == TranslationListPath && ex is HttpRequestException or TaskCanceledException or JsonException)
+        {
+            // the server fails now and then: the list of translations (with licenses) then comes from our copy (newer one in the
+            // repository, otherwise the one built into the program). It is not stored in the cache, so the next start asks the server again.
+            return await FallbackTranslationListAsync(ct) ?? throw ex;
+        }
         var doc = JsonDocument.Parse(bytes);   // only a complete, readable answer is kept
         Directory.CreateDirectory(Path.GetDirectoryName(file)!);
         var tmp = file + ".tmp";

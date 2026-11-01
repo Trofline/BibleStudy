@@ -1,6 +1,7 @@
 ﻿using Avalonia.Animation;
 using Avalonia.Animation.Easings;
 using Avalonia.Controls;
+using Avalonia.Styling;
 using Avalonia.Media;
 using Avalonia.Media.Transformation;
 using Avalonia.Threading;
@@ -37,23 +38,33 @@ public partial class MainWindow
 
     bool _closeAnimating, _closeAnimated;
 
-    /// <summary>The window content shrinks slightly and fades out (about 0.18 s) before the program closes or goes to the tray.</summary>
+    /// <summary>
+    /// The goodbye: the window content lifts a little, shrinks, blurs and dissolves (about half a second), then a short pause with the
+    /// empty window before the program closes or goes to the tray.
+    /// </summary>
     async Task PlayCloseAnimationAsync()
     {
         if (Content is not Control root) return;
-        root.Transitions =
-        [
-            new DoubleTransition { Property = OpacityProperty, Duration = TimeSpan.FromMilliseconds(150), Easing = new CubicEaseIn() },
-            new TransformOperationsTransition { Property = RenderTransformProperty, Duration = TimeSpan.FromMilliseconds(170), Easing = new CubicEaseIn() },
-        ];
+        root.Transitions = null;
+        var anim = new Animation
+        {
+            Duration = TimeSpan.FromMilliseconds(520), Easing = new CubicEaseIn(), FillMode = FillMode.Forward,
+            Children =
+            {
+                new KeyFrame { Cue = new Cue(0), Setters = { new Setter(OpacityProperty, 1.0), new Setter(RenderTransformProperty, TransformOperations.Parse("scale(1) translate(0px, 0px)")), new Setter(EffectProperty, new ImmutableBlurEffect(0)) } },
+                new KeyFrame { Cue = new Cue(0.55), Setters = { new Setter(OpacityProperty, 0.75), new Setter(RenderTransformProperty, TransformOperations.Parse("scale(0.96) translate(0px, -10px)")), new Setter(EffectProperty, new ImmutableBlurEffect(6)) } },
+                new KeyFrame { Cue = new Cue(1), Setters = { new Setter(OpacityProperty, 0.0), new Setter(RenderTransformProperty, TransformOperations.Parse("scale(0.88) translate(0px, -26px)")), new Setter(EffectProperty, new ImmutableBlurEffect(22)) } },
+            },
+        };
+        try { await anim.RunAsync(root); }
+        catch { /* an animation that cannot run must not keep the program from closing */ }
         root.Opacity = 0;
-        root.RenderTransform = TransformOperations.Parse("scale(0.96)");
-        await Task.Delay(185);
+        await Task.Delay(120);
     }
 
     void ResetAfterCloseAnimation()
     {
         if (Content is not Control root) return;
-        root.Transitions = null; root.Opacity = 1; root.RenderTransform = null;
+        root.Transitions = null; root.Opacity = 1; root.RenderTransform = null; root.Effect = null;
     }
 }

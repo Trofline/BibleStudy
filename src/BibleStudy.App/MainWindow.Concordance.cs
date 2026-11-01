@@ -60,6 +60,13 @@ public partial class MainWindow
         // distribution over the books
         ConcBooks.Children.Clear();
         var perBook = all.Where(o => _concForm is null || CleanWord(o.Word) == _concForm).GroupBy(o => o.Ref.Book).ToDictionary(g => g.Key, g => g.Count());
+        // the journey of the word through all books
+        if (perBook.Count > 1)
+        {
+            var journey = new Button { Content = L("▶ Reise durch die Bibel"), Classes = { "tool" }, Width = double.NaN, Height = 24, Padding = new(8, 0), FontSize = 11, Margin = new(0, 0, 8, 4) };
+            journey.Click += (_, _) => ShowWordJourney(t);
+            ConcBooks.Children.Add(journey);
+        }
         if (perBook.Count > 1)
             foreach (var b in _books.Where(b => perBook.ContainsKey(b.Id)))
             {

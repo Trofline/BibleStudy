@@ -58,6 +58,11 @@ public sealed class AppSettings
 
     public string AiContext { get; set; } = DefaultAiContext;
     public string AiModel { get; set; } = "";
+    /// <summary>"claude" (Claude Code, with the Bible tools) or "ollama" (a local model, nothing leaves the computer).</summary>
+    public string AiEngine { get; set; } = "claude";
+    public string OllamaModel { get; set; } = "";
+    /// <summary>The setup window of the first start was shown (once per installation).</summary>
+    public bool SetupShown { get; set; }
     public bool XrefInText { get; set; }
     /// <summary>Cross references with fewer votes are not shown in the text and in the graph beside it (0 = all). The list in the side panel stays complete.</summary>
     public int XrefMinVotes { get; set; }
@@ -85,6 +90,13 @@ public sealed class AppSettings
     public int ReaderWidth { get; set; } = 760;
     public string VerseNumbers { get; set; } = "Small";   // Small | Normal | Hidden
     public bool JesusRed { get; set; } = true;
+    /// <summary>Own color of the words of Jesus as #RRGGBB; empty = the program default.</summary>
+    public string JesusColor { get; set; } = "";
+    /// <summary>Reading aids: stronger contrast, a plain wide-spaced typeface (easier with dyslexia), Hebrew without vowel signs / accents.</summary>
+    public bool HighContrast { get; set; }
+    public bool ReadableText { get; set; }
+    public bool HebrewVowels { get; set; } = true;
+    public bool HebrewAccents { get; set; } = true;
     public bool Justify { get; set; }
     public bool ScrollMarksRead { get; set; }
     public bool ChapterHeading { get; set; } = true;
@@ -96,6 +108,7 @@ public sealed class AppSettings
     public bool ParallelSync { get; set; } = true;
     /// <summary>With independent columns: the translations whose columns still scroll together (verse by verse). Empty = none.</summary>
     public List<string> ParallelSyncIds { get; set; } = [];
+    public List<ParallelPreset> ParallelPresets { get; set; } = [];
     /// <summary>Commentaries are human writings (Calvin, Henry …), not Scripture: hidden unless switched on.</summary>
     public bool ShowCommentaries { get; set; }
     /// <summary>Translate the English word data (glosses, dictionary entries) into the program language with the local Claude (cached).</summary>
@@ -132,6 +145,9 @@ public sealed class AppSettings
     public CustomPlan? CustomPlan { get; set; }
     /// <summary>The tour through the program is still to be shown: true from the first start until it was seen or skipped (never for installations that existed before the tour).</summary>
     public bool TourPending { get; set; }
+
+    /// <summary>The version whose patch notes were shown last (after an update they are shown once).</summary>
+    public string? LastSeenVersion { get; set; }
     /// <summary>Whether the question about a weekly backup was asked already (it is asked once, when backups are off).</summary>
     public bool BackupAsked { get; set; }
     public string? PlanId { get; set; }
@@ -190,4 +206,18 @@ public sealed class SavedSearch
     public int Range { get; set; }
     public bool Original { get; set; }
     public bool CaseSensitive { get; set; }
+}
+
+/// <summary>One saved arrangement of the parallel columns: which translations (and own passages) next to the main text, in this order.</summary>
+public sealed class ParallelPreset
+{
+    public string Name { get; set; } = "";
+    public List<ParallelPresetColumn> Columns { get; set; } = [];
+}
+
+public sealed class ParallelPresetColumn
+{
+    public string TranslationId { get; set; } = "";
+    public string? Book { get; set; }
+    public int Chapter { get; set; }
 }

@@ -86,6 +86,8 @@ public partial class MainWindow
         Task Side(int tab) { SetPanelOpen(true); SideTabs.SelectedIndex = tab; return Task.CompletedTask; }
         yield return C(L("Startseite"), () => { ShowHome(); return Task.CompletedTask; });
         yield return C(L("Rundgang starten"), () => { DispatcherTimer.RunOnce(StartTour, TimeSpan.FromMilliseconds(350)); return Task.CompletedTask; });   // after the command list has closed: two popups at once confuse the renderer
+        yield return C(L("Patch Notes"), ShowPatchNotesAsync);
+        yield return C(L("Projekt auf GitHub öffnen"), () => { OpenUrl(ProjectUrl); return Task.CompletedTask; });
         yield return C(L("Einstellungen"), () => Work("Mehr", SettingsTab));
         yield return C(L("Neue Notiz"), () => { OpenWork(NavGroups.First(g => g.Name == "Dokumente"), KnowledgeTab); OpenDocument(new Document(0, "", "", null, false, DateTime.Now, [])); return Task.CompletedTask; });
         yield return C(L("Lesepläne"), () => Work("Planen", PlanTab));
@@ -121,7 +123,7 @@ public partial class MainWindow
         var text = QuickJumpBox.Text?.Trim() ?? "";
         var items = new List<PaletteItem>();
 
-        if (text.Length == 0) items.AddRange(Commands().Take(8));
+        if (text.Length == 0) items.AddRange(Commands());   // all of them: the list scrolls
         else
         {
             if (PassageParser.Parse(text, out var parsed) is { Count: > 0 } p)
@@ -129,7 +131,7 @@ public partial class MainWindow
             else if (DocumentLinks.BookId(text) is { } book && _books.FirstOrDefault(b => b.Id == book) is { } bk)
                 items.Add(new(L("Stelle"), bk.CommonName, L("Gehe zu"), () => GoToAsync(book, 1)));
 
-            items.AddRange(Commands().Where(c => c.Title.Contains(text, StringComparison.CurrentCultureIgnoreCase)).Take(5));
+            items.AddRange(Commands().Where(c => c.Title.Contains(text, StringComparison.CurrentCultureIgnoreCase)).Take(25));
 
             // everything of your own: documents, notes, highlights (with their notes and tags), prayers, to-dos, own cross references
             foreach (var h in OwnSearch.Search(_vault, text, 8))

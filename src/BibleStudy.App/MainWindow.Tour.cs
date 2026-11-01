@@ -3,6 +3,7 @@ using Avalonia.Controls;
 using Avalonia.Layout;
 using Avalonia.Media;
 using Avalonia.Threading;
+using BibleStudy.Core;
 
 namespace BibleStudy.App;
 
@@ -23,13 +24,22 @@ public partial class MainWindow
         DispatcherTimer.RunOnce(() => OfferTour(), TimeSpan.FromSeconds(6));
     }
 
+    async Task RunSetupThenTourAsync()
+    {
+        await RunSetupWizardAsync();
+        if (_exiting) return;
+        OfferTour();
+    }
+
     void OfferTour()
     {
         if (!IsVisible || _touring) return;
         // another window (notice, update question) is open: try again a little later
         if (OwnedWindows.Count > 0 || SplashWindow.IsShowing) { DispatcherTimer.RunOnce(() => OfferTour(), TimeSpan.FromSeconds(5)); return; }
-        if (_settings.TourPending) { StartTour(); return; }
-        if (!_settings.BackupAsked && _settings.BackupSchedule == "off") _ = AskForBackupAsync();
+        if (_settings.TourPending && !_settings.SetupShown) { _settings.SetupShown = true; SaveSettings(); _ = RunSetupThenTourAsync(); return; }
+        if (_settings.TourPending) { _settings.LastSeenVersion = AppPaths.Version; StartTour(); return; }   // a new installation has nothing "new" to read
+        if (!_settings.BackupAsked && _settings.BackupSchedule == "off") { _ = AskForBackupAsync(); return; }
+        _ = ShowPatchNotesIfNewAsync();
     }
 
     /// <summary>Asked once: whoever had the program before and has no backup yet. The answer is kept either way.</summary>

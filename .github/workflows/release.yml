@@ -1,0 +1,27 @@
+name: Release build
+
+# Push a tag like v1.0.21: builds all packages (Windows installer, portable, Linux, macOS, plugins) with release.ps1
+# and attaches them to a DRAFT release. Nothing becomes public until you press "Publish" on GitHub.
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+      - name: Build all packages
+        shell: pwsh
+        run: ./release.ps1 -Version ("${{ github.ref_name }}".TrimStart("v"))
+      - name: Draft release with the files
+        uses: softprops/action-gh-release@v2
+        with:
+          draft: true
+          files: release/*

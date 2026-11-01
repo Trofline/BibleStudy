@@ -1,0 +1,19 @@
+name: Build and test
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+      - name: Build
+        run: dotnet build BibleStudy.slnx -c Release --nologo
+      - name: Test (includes the check that every text is translated)
+        run: dotnet test tests/BibleStudy.Tests/BibleStudy.Tests.csproj -c Release --nologo --no-build

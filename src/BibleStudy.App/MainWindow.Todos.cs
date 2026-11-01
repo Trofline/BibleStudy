@@ -176,7 +176,7 @@ public partial class MainWindow
 
         var more = new Button { Classes = { "tool" }, Width = 28, Height = 28, Content = new Icon { Data = Geometry.Parse("M5 12h.01 M12 12h.01 M19 12h.01"), IconSize = 16 } };
         ToolTip.SetTip(more, L("Mehr: bearbeiten, Unteraufgabe, Datum, verschieben"));
-        var menu = new ContextMenu();
+        var menu = new MenuFlyout();   // a flyout of its own: a context menu attached to the row cannot be opened on another control
         MenuItem Item(string header, Action act) { var m = new MenuItem { Header = header }; m.Click += (_, _) => act(); menu.Items.Add(m); return m; }
         Item(L("Bearbeiten"), () => { _todoEditing = id; RefreshTodos(); });
         if (!child) Item(L("Unteraufgabe hinzufügen"), () => { _todoAddingTo = id; RefreshTodos(); });
@@ -184,8 +184,8 @@ public partial class MainWindow
         if (index > 0) Item(L("Nach oben"), () => { _vault.MoveTodo(id, -1); RefreshTodos(); });
         if (index < count - 1) Item(L("Nach unten"), () => { _vault.MoveTodo(id, 1); RefreshTodos(); });
         if (t.Ref is null && _selected is int sel) Item(L("Angeklickten Vers anhängen"), () => { _vault.SetTodoRef(id, new VerseRef(_curBook, _curChapter, sel)); RefreshTodos(); });
-        more.Click += (_, _) => menu.Open(more);
-        row.ContextMenu = menu;
+        more.Click += (_, _) => menu.ShowAt(more);
+        row.ContextFlyout = menu;
         tools.Children.Add(more);
 
         var delete = new Button { Classes = { "tool" }, Width = 28, Height = 28, Content = new Icon { Data = Geometry.Parse("M18 6L6 18 M6 6l12 12"), IconSize = 14 } };

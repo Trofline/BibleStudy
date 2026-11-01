@@ -62,7 +62,7 @@ public partial class MainWindow
 
     Control WordCell(InterlinearWord w)
     {
-        var original = new TextBlock { Text = w.Text, FontSize = 22, FontFamily = UiSerif, HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center, FlowDirection = w.IsHebrew ? FlowDirection.RightToLeft : FlowDirection.LeftToRight };
+        var original = new TextBlock { Text = Heb(w.Text), FontSize = 22, FontFamily = UiSerif, HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center, FlowDirection = w.IsHebrew ? FlowDirection.RightToLeft : FlowDirection.LeftToRight };
         original.Bind(TextBlock.ForegroundProperty, this.GetResourceObservable("BsAccent"));
         var translit = new TextBlock { Text = w.Translit, FontSize = 11, HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center };
         translit.Bind(TextBlock.ForegroundProperty, this.GetResourceObservable("BsMuted"));
@@ -168,7 +168,8 @@ public partial class MainWindow
             await AiSendOrStopAsync();
         };
         StrongDetail.Children.Add(new StackPanel { Orientation = Avalonia.Layout.Orientation.Horizontal, Children = { occurrences, deeper } });
-        if (await stepTask is { } step && StrongDetail.Children.Count > 0) StrongDetail.Children.Insert(1, step);   // right under the dictionary card
+        if (await stepTask is { } step && StrongDetail.Children.Count > 0) StrongDetail.Children.Insert(1, step);
+        if (e.Id[0] == 'H' && await BdbCardAsync(e.Id) is { } bdbCard && StrongDetail.Children.Count > 1) StrongDetail.Children.Add(bdbCard);   // right under the dictionary card
     }
 
     async Task AskClaudeToCheckAsync()

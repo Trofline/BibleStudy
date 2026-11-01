@@ -53,6 +53,25 @@ public partial class MainWindow
         WidthSlider.ValueChanged += (_, e) => { _settings.ReaderWidth = (int)e.NewValue; WidthLabel.Text = L("Textbreite: {0}", _settings.ReaderWidth); if (_qolReady) { FitReader(); SaveSettings(); } };
         VerseNumberBox.SelectionChanged += (_, _) => { _settings.VerseNumbers = VerseNumberModes[Math.Max(0, VerseNumberBox.SelectedIndex)]; Redraw(); };
         JesusRedCheck.IsCheckedChanged += (_, _) => { _settings.JesusRed = JesusRedCheck.IsChecked == true; Redraw(); };
+        // own color for the words of Jesus: fixed choices, the first one ("" ) is the program default that follows the theme
+        void BuildJesusColors()
+        {
+            JesusColorPanel.Children.Clear();
+            foreach (var hex in new[] { "", "#C62828", "#8B1A1A", "#D9480F", "#B8860B", "#2E7D32", "#1565C0", "#6A1B9A", "#6D4C41" })
+            {
+                var chosen = hex == _settings.JesusColor;
+                var dot = new Border
+                {
+                    Width = 26, Height = 26, CornerRadius = new(13), Margin = new(0, 4, 8, 4), Cursor = new Cursor(StandardCursorType.Hand),
+                    BorderThickness = new(chosen ? 3 : 1), BorderBrush = chosen ? Res("BsText") : Res("BsBorder"),
+                };
+                if (hex.Length == 0) dot.Bind(Border.BackgroundProperty, this.GetResourceObservable("BsJesus")); else dot.Background = new SolidColorBrush(Color.Parse(hex));
+                var captured = hex;
+                dot.PointerPressed += (_, _) => { _settings.JesusColor = captured; BuildJesusColors(); Redraw(); };
+                JesusColorPanel.Children.Add(dot);
+            }
+        }
+        BuildJesusColors();
         JustifyCheck.IsCheckedChanged += (_, _) => { _settings.Justify = JustifyCheck.IsChecked == true; Redraw(); };
         HeadingCheck.IsCheckedChanged += (_, _) => { _settings.ChapterHeading = HeadingCheck.IsChecked == true; Redraw(); };
         ScrollReadCheck.IsCheckedChanged += (_, _) => { _settings.ScrollMarksRead = ScrollReadCheck.IsChecked == true; SaveSettings(); };
@@ -61,7 +80,7 @@ public partial class MainWindow
         ResetSettingsBtn.Click += (_, _) =>
         {
             FontSlider.Value = 22; LineSlider.Value = 1.7; WidthSlider.Value = 760; FontBox.SelectedItem = ReaderFonts[0]; VerseNumberBox.SelectedIndex = 0;
-            JesusRedCheck.IsChecked = true; JustifyCheck.IsChecked = false; HeadingCheck.IsChecked = true; ApplyAccent("Messing"); BuildAccentPanel();
+            JesusRedCheck.IsChecked = true; _settings.JesusColor = ""; BuildJesusColors(); JustifyCheck.IsChecked = false; HeadingCheck.IsChecked = true; ApplyAccent("Messing"); BuildAccentPanel();
         };
 
         // reading: mark as read at the end of the chapter
@@ -156,8 +175,11 @@ public partial class MainWindow
     {
         if (_selected is not int v || TopLevel.GetTopLevel(this)?.Clipboard is not { } clipboard) { StatusText.Text = L("Erst einen Vers anklicken."); return; }
         var r = new VerseRef(_curBook, _curChapter, v);
-        var tr = (TranslationBox.SelectedItem as TranslationInfo)?.ShortName ?? "";
-        await clipboard.SetTextAsync($"„{VerseTextOf(v).Trim()}“ – {Label(r)} ({tr})");
+        var info = TranslationBox.SelectedItem as TranslationInfo;
+        var tr = info?.ShortName ?? "";
+        // source with the license: the address of the license text unless the translation is public domain
+        var license = info is { License.PublicDomain: false, LicenseUrl: { Length: > 0 } url } ? "\n" + url : "";
+        await clipboard.SetTextAsync($"„{VerseTextOf(v).Trim()}“ – {Label(r)} ({tr}){license}");
         StatusText.Text = L("{0} kopiert.", Label(r));
     }
 

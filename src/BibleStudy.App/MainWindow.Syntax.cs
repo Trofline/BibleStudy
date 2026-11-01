@@ -13,6 +13,7 @@ public partial class MainWindow
     static readonly FontFamily HebrewFont = new("Ezra SIL, SBL Hebrew, David, Times New Roman, Segoe UI, Arial");
     readonly StackPanel _syntaxView = new() { Spacing = 6 };
     bool _syntaxOutline;   // false = morphology, true = sentence structure
+    bool _syntaxTree;      // sentence structure as a tree diagram (with _syntaxOutline)
 
     static readonly Dictionary<string, string> GrammarTerms = new(StringComparer.OrdinalIgnoreCase)
     {
@@ -38,13 +39,13 @@ public partial class MainWindow
     async Task ShowSyntaxAsync()
     {
         _syntaxView.Children.Clear();
-        _syntaxView.Children.Add(new TextBlock { Text = L("Grammatik und Satzbau (Urtext)"), FontWeight = FontWeight.SemiBold, TextWrapping = TextWrapping.Wrap, Margin = new(0, 8, 0, 0) });
+        _syntaxView.Children.Add(new TextBlock { Text = L("Grammatik und Syntax (Urtext)"), FontWeight = FontWeight.SemiBold, TextWrapping = TextWrapping.Wrap, Margin = new(0, 8, 0, 0) });
         var modes = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 6 };
-        foreach (var (outline, label) in new[] { (false, L("Morphologie")), (true, L("Satzbau")) })
+        foreach (var (outline, tree, label) in new[] { (false, false, L("Morphologie")), (true, false, L("Syntax")), (true, true, L("Baum")) })
         {
             var b = new Button { Classes = { "seg" }, Content = label };
-            b.Classes.Set("active", outline == _syntaxOutline);
-            b.Click += async (_, _) => { _syntaxOutline = outline; await ShowSyntaxAsync(); };
+            b.Classes.Set("active", outline == _syntaxOutline && tree == _syntaxTree);
+            b.Click += async (_, _) => { _syntaxOutline = outline; _syntaxTree = tree; await ShowSyntaxAsync(); };
             modes.Children.Add(b);
         }
         _syntaxView.Children.Add(modes);
@@ -62,7 +63,7 @@ public partial class MainWindow
         _syntaxView.Children.Remove(status);
         if (data is null || data.Words.Count == 0) { _syntaxView.Children.Add(new TextBlock { Text = L("Für diesen Vers gibt es keine Syntaxdaten."), Classes = { "caption" } }); return; }
 
-        if (_syntaxOutline) AddOutline(data); else AddMorphology(data);
+        if (_syntaxOutline && _syntaxTree) AddTree(data); else if (_syntaxOutline) AddOutline(data); else AddMorphology(data);
         var glosses = data.Words.Select(w => w.Gloss).Concat(data.Outline.Select(l => l.Gloss)).Where(g => g.Length > 0).ToList();
         if (glosses.Any(_meanings.IsMissing)) _ = WarmMeaningsAsync(glosses, () => _ = ShowSyntaxAsync());
         _syntaxView.Children.Add(new TextBlock { Text = SyntaxProvider.Attribution, Classes = { "caption" }, TextWrapping = TextWrapping.Wrap });
@@ -72,7 +73,7 @@ public partial class MainWindow
     {
         foreach (var w in data.Words)
         {
-            var head = new TextBlock { Text = w.Text, FontSize = w.Hebrew ? 26 : 20, FontFamily = w.Hebrew ? HebrewFont : ScriptureFont, FlowDirection = w.Hebrew ? FlowDirection.RightToLeft : FlowDirection.LeftToRight, HorizontalAlignment = HorizontalAlignment.Left };
+            var head = new TextBlock { Text = w.Hebrew ? Heb(w.Text) : w.Text, FontSize = w.Hebrew ? 26 : 20, FontFamily = w.Hebrew ? HebrewFont : ScriptureFont, FlowDirection = w.Hebrew ? FlowDirection.RightToLeft : FlowDirection.LeftToRight, HorizontalAlignment = HorizontalAlignment.Left };
             head.Bind(TextBlock.ForegroundProperty, this.GetResourceObservable("BsAccent"));
             var sub = new TextBlock { Text = string.Join("  ·  ", new[] { w.Translit, w.Strong, Mean(w.Gloss) }.Where(s => s.Length > 0)), Classes = { "caption" }, TextWrapping = TextWrapping.Wrap };
             var grammar = string.Join(" · ", new[] { Term(w.PartOfSpeech) }.Concat(w.Features.Select(f => Term(f.Value))).Where(s => s.Length > 0));
@@ -106,7 +107,7 @@ public partial class MainWindow
                 {
                     Children =
                     {
-                        new TextBlock { Text = line.Text, FontSize = hebrew ? 22 : 17, FontFamily = hebrew ? HebrewFont : ScriptureFont, TextWrapping = TextWrapping.Wrap, FlowDirection = hebrew ? FlowDirection.RightToLeft : FlowDirection.LeftToRight, HorizontalAlignment = hebrew ? HorizontalAlignment.Right : HorizontalAlignment.Left },
+                        new TextBlock { Text = hebrew ? Heb(line.Text) : line.Text, FontSize = hebrew ? 22 : 17, FontFamily = hebrew ? HebrewFont : ScriptureFont, TextWrapping = TextWrapping.Wrap, FlowDirection = hebrew ? FlowDirection.RightToLeft : FlowDirection.LeftToRight, HorizontalAlignment = hebrew ? HorizontalAlignment.Right : HorizontalAlignment.Left },
                         new TextBlock { Text = Mean(line.Gloss), Classes = { "caption" }, TextWrapping = TextWrapping.Wrap },
                     },
                 };

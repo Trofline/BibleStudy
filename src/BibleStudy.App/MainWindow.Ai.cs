@@ -22,6 +22,7 @@ public partial class MainWindow
         public string Status = "";
         public string Draft = "";
         public readonly StackPanel Messages = new() { Spacing = 10, Margin = new(0, 0, 8, 0) };
+        public readonly List<BibleStudy.Core.OllamaMessage> History = [];
     }
 
     readonly List<AiChat> _chats = [];
@@ -157,6 +158,7 @@ public partial class MainWindow
         var chat = _chat;
         if (chat.Busy) { chat.Cts?.Cancel(); return; }
         var text = AiInput.Text?.Trim();
+        if (_settings.AiEngine == "ollama" && !string.IsNullOrEmpty(text)) { await AiSendOllamaAsync(chat, text); return; }
         if (string.IsNullOrEmpty(text)) return;
         var exe = ClaudeCli.FindExecutable();
         if (exe is null) { AiStatus.Text = L("Claude Code wurde nicht gefunden (siehe Einstellungen)."); return; }

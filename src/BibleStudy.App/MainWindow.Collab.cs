@@ -88,9 +88,17 @@ public partial class MainWindow
     {
         _peer?.Dispose();
         var peer = new CollabPeer();
-        peer.Connected += () => OnUi(() => { if (_peer != peer) return; CollabSend(new { t = "hello", name = _settings.CollabName }); BuildCollabUi(); });
+        var wasOpen = false;
+        peer.Connected += () => OnUi(() => { if (_peer != peer) return; wasOpen = true; CollabSend(new { t = "hello", name = _settings.CollabName }); BuildCollabUi(); });
         peer.Received += m => OnUi(() => { if (_peer == peer) HandleCollab(m); });
-        peer.Closed += _ => OnUi(() => { if (_peer != peer) return; _peer = null; _follow = false; AddCollabLog(L("Die Verbindung wurde beendet."), system: true); if (CollabPanel.Children.Count > 0) BuildCollabUi(); });
+        // Only a connection that really stood ends the page. Before that the library reports "failed/closed" on its own (e.g. while the
+        // other person still has to paste the code); rebuilding the page then wiped the half-finished invitation after ~15 seconds.
+        peer.Closed += _ => OnUi(() =>
+        {
+            if (_peer != peer || !wasOpen) return;
+            _peer = null; _follow = false; AddCollabLog(L("Die Verbindung wurde beendet."), system: true);
+            if (CollabPanel.Children.Count > 0) BuildCollabUi();
+        });
         _peer = peer;
         return peer;
     }

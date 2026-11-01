@@ -430,7 +430,7 @@ public partial class MainWindow : Window
 
     // Crimson Text (SIL OFL) is bundled; system serif fonts cover Greek/Hebrew glyphs it lacks.
     static readonly FontFamily UiSerif = new("avares://BibleStudy.App/Assets/Fonts#Crimson Text, Cambria, Georgia, serif");
-    FontFamily ScriptureFont => _settings.ReaderFont switch
+    FontFamily ScriptureFont => _settings.ReadableText ? new FontFamily("Verdana, Tahoma, Segoe UI, sans-serif") : _settings.ReaderFont switch
     {
         "Crimson Text" => UiSerif,
         var name => new FontFamily(name + ", Cambria, Georgia, serif"),
@@ -451,7 +451,7 @@ public partial class MainWindow : Window
     {
         var tb = new SelectableTextBlock
         {
-            TextWrapping = TextWrapping.Wrap, FontSize = size, LineHeight = size * _settings.LineSpacing, Margin = new(0, 0, 12, 0),
+            TextWrapping = TextWrapping.Wrap, FontSize = size, LineHeight = size * _settings.LineSpacing, Margin = new(0, 0, 12, 0), LetterSpacing = _settings.ReadableText ? size * 0.05 : 0,
             TextAlignment = _settings.Justify ? TextAlignment.Justify : TextAlignment.Left,
             FontFamily = ScriptureFont,
             FlowDirection = t.TextDirection == "rtl" ? FlowDirection.RightToLeft : FlowDirection.LeftToRight,
@@ -492,7 +492,8 @@ public partial class MainWindow : Window
                 var piece = s.Text[points[i]..points[i + 1]];
                 var from = raw + points[i];
                 var run = new Run(piece);
-                if (s.WordsOfJesus && _settings.JesusRed) run.Bind(TextElement.ForegroundProperty, this.GetResourceObservable("BsJesus"));
+                if (s.WordsOfJesus && _settings.JesusRed && Color.TryParse(_settings.JesusColor, out var jesusColor)) run.Foreground = new SolidColorBrush(jesusColor);
+                else if (s.WordsOfJesus && _settings.JesusRed) run.Bind(TextElement.ForegroundProperty, this.GetResourceObservable("BsJesus"));
                 if (marks.FirstOrDefault(m => m.Start <= from && m.End >= from + piece.Length) is { } mark) run.Background = HighlightBrush(mark.Color);
                 if (s.Strongs is { Count: > 0 })
                 {
@@ -606,13 +607,16 @@ public partial class MainWindow : Window
         var passage = new Button { Classes = { "tool" }, Width = double.NaN, MinWidth = 70, MaxWidth = 150, Height = 32, Padding = new(10, 0), VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center, Margin = new(6, 0, 2, 0) };
         ToolTip.SetTip(passage, L("Andere Bibelstelle in dieser Spalte lesen, z. B. 1. Mose neben Daniel. Die Spalte läuft dann für sich."));
         var dot = new Border { Width = 12, Height = 12, CornerRadius = new(6), VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center, Margin = new(10, 0, 4, 0) };
+        var moveLeft = new Button { Width = 24, Height = 32, Classes = { "tool" }, Content = "‹" };
+        var moveRight = new Button { Width = 24, Height = 32, Classes = { "tool" }, Content = "›" };
+        ToolTip.SetTip(moveLeft, L("Spalte nach links")); ToolTip.SetTip(moveRight, L("Spalte nach rechts"));
         var root = new Border
         {
             Classes = { "pill" }, Margin = new(16, 8, 0, 8),
-            Child = new StackPanel { Orientation = Avalonia.Layout.Orientation.Horizontal, Children = { dot, lang, trans, passage, remove } },
+            Child = new StackPanel { Orientation = Avalonia.Layout.Orientation.Horizontal, Children = { dot, moveLeft, moveRight, lang, trans, passage, remove } },
         };
         var col = new ExtraColumn(lang, trans, root, passage);
-        UpdatePassageButton(col);
+        UpdatePassageButton(col); AttachColumnMove(col, dot, moveLeft, moveRight);
         passage.Click += (_, _) => ChooseColumnPassage(col);
 
         lang.SelectionChanged += (_, _) =>
@@ -631,6 +635,7 @@ public partial class MainWindow : Window
         };
         EnsureSyncPill();
         if (!ParallelBar.Children.Contains(_syncPill!)) ParallelBar.Children.Insert(0, _syncPill!);
+        EnsurePresetPill(); if (!ParallelBar.Children.Contains(_presetPill!)) ParallelBar.Children.Insert(1, _presetPill!);
         _extras.Add(col); ParallelBar.Children.Add(root); RecolorPills();
         ParallelBar.IsVisible = true;
         lang.SelectedItem = preset?.LanguageName ?? LanguageBox.SelectedItem;

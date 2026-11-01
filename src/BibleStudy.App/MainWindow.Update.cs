@@ -35,6 +35,12 @@ public partial class MainWindow
         if (_settings.PendingUpdateFile is { } waiting) { try { File.Delete(waiting); } catch (IOException) { } _settings.PendingUpdateFile = null; _settings.PendingUpdateVersion = null; SaveSettings(); }
         InitBackup();
         InitTour();
+        InitPatchNotes();
+        InitTopBar();
+        InitReadingAids();
+        InitAutomation();
+        InitOllama();
+        InitLanguageImport();
         InitFeedback();
         InitPlugins();
         InitNotes();
@@ -146,7 +152,7 @@ public partial class MainWindow
         try { info = await _updater.CheckAsync(AppPaths.Version, AppPaths.IsPortable); }
         catch (Exception ex) { UpdateStatus.Text = manual ? L("Update-Suche nicht möglich: ") + ex.Message : ""; return; }
         _settings.LastUpdateCheck = DateTime.Today.ToString("yyyy-MM-dd"); SaveSettings();
-        if (info is null) { UpdateStatus.Text = manual ? L("Du hast die neueste Version ({0}).", AppPaths.Version) : ""; return; }
+        if (info is null) { UpdateStatus.Text = L("Du hast die neueste Version ({0}).", AppPaths.Version); return; }
         UpdateStatus.Text = L("Neue Version {0} verfügbar.", info.Version);
 
         // a check that runs by itself asks once per version and never while the program sits in the tray
