@@ -282,7 +282,6 @@
   "Das Fehlerprotokoll ließ sich nicht öffnen: {0}": "No se pudo abrir el registro de errores: {0}",
   "Das KI-Fenster nutzt deine lokal installierte Claude-Code-App mit deiner Anmeldung: kein API-Schlüssel, keine API-Kosten durch das Programm. Claude sieht nur die Bibel-Werkzeuge dieses Programms.": "La ventana de IA usa tu aplicación Claude Code instalada localmente con tu inicio de sesión: sin clave de API ni costes de API a través del programa. Claude solo ve las herramientas bíblicas de este programa.",
   "Das Laden ist fehlgeschlagen: ": "Error al cargar: ",
-  "Das Open-Source-Projekt auf GitHub öffnen": "Abrir el proyecto de código abierto en GitHub",
   "Das Plugin antwortet nicht (nach {0} Sekunden abgebrochen).": "El complemento no responde (cancelado tras {0} segundos).",
   "Das Plugin hat auf eine andere Anfrage geantwortet.": "El complemento respondió a otra petición.",
   "Das Plugin hat kein Kapitel geliefert.": "El complemento no entregó ningún capítulo.",
