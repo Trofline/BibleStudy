@@ -1845,7 +1845,6 @@
   "Du hast {0} Markierungen aus {1} gesendet.": "Вы отправили выделений: {0} из {1}.",
   "{0} sendet {1} Markierungen aus {2}": "{0} отправляет выделения ({1}) из {2}",
   "Übernommen ✓": "Принято ✓",
-  "Glas-Design (durchscheinende Flächen, wo das System es kann)": "Стеклянный дизайн (полупрозрачные поверхности, где система это позволяет)",
   "Stärke der Animationen": "Сила анимации",
   "Dezent": "Лёгкая",
   "Groß": "Сильная",
@@ -1870,5 +1869,6 @@
   "Lesarten der griechischen Ausgaben": "Разночтения греческих изданий",
   "Textkritik (Neues Testament)": "Текстология (Новый Завет)",
   "Wo die großen griechischen Ausgaben (Nestle-Aland, Tyndale House, SBL, Textus Receptus, Byzantinischer Text u. a.) in einem Vers voneinander abweichen.": "Где основные греческие издания (Нестле–Аланд, Tyndale House, SBL, Textus Receptus, византийский текст и др.) расходятся в стихе.",
-  "Forschungsinstitut für Bibelwissenschaft (TAGNT-Daten)": "Институт библейских исследований (данные TAGNT)"
+  "Forschungsinstitut für Bibelwissenschaft (TAGNT-Daten)": "Институт библейских исследований (данные TAGNT)",
+  "Liquid-Glas-Design (Glasränder mit Prisma-Schimmer, Milchglas-Flächen, weiche Schatten)": "Дизайн «жидкое стекло» (стеклянные края с призматическим отливом, матовые поверхности, мягкие тени)"
 }

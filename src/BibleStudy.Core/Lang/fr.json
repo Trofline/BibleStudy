@@ -1845,7 +1845,6 @@
   "Du hast {0} Markierungen aus {1} gesendet.": "Tu as envoyé {0} surlignages de {1}.",
   "{0} sendet {1} Markierungen aus {2}": "{0} envoie {1} surlignages de {2}",
   "Übernommen ✓": "Repris ✓",
-  "Glas-Design (durchscheinende Flächen, wo das System es kann)": "Design verre (surfaces translucides là où le système le permet)",
   "Stärke der Animationen": "Intensité des animations",
   "Dezent": "Discrète",
   "Groß": "Grande",
@@ -1870,5 +1869,6 @@
   "Lesarten der griechischen Ausgaben": "Variantes des éditions grecques",
   "Textkritik (Neues Testament)": "Critique textuelle (Nouveau Testament)",
   "Wo die großen griechischen Ausgaben (Nestle-Aland, Tyndale House, SBL, Textus Receptus, Byzantinischer Text u. a.) in einem Vers voneinander abweichen.": "Où les grandes éditions grecques (Nestle-Aland, Tyndale House, SBL, Textus Receptus, texte byzantin, etc.) diffèrent dans un verset.",
-  "Forschungsinstitut für Bibelwissenschaft (TAGNT-Daten)": "Institut de recherche biblique (données TAGNT)"
+  "Forschungsinstitut für Bibelwissenschaft (TAGNT-Daten)": "Institut de recherche biblique (données TAGNT)",
+  "Liquid-Glas-Design (Glasränder mit Prisma-Schimmer, Milchglas-Flächen, weiche Schatten)": "Design verre liquide (bords de verre à reflet prismatique, surfaces dépolies, ombres douces)"
 }

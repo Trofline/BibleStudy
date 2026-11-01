@@ -1845,7 +1845,6 @@
   "Du hast {0} Markierungen aus {1} gesendet.": "You sent {0} highlights from {1}.",
   "{0} sendet {1} Markierungen aus {2}": "{0} sends {1} highlights from {2}",
   "Übernommen ✓": "Taken over ✓",
-  "Glas-Design (durchscheinende Flächen, wo das System es kann)": "Glass design (translucent surfaces where the system supports it)",
   "Stärke der Animationen": "Animation strength",
   "Dezent": "Subtle",
   "Groß": "Big",
@@ -1870,5 +1869,6 @@
   "Lesarten der griechischen Ausgaben": "Variant readings of the Greek editions",
   "Textkritik (Neues Testament)": "Text criticism (New Testament)",
   "Wo die großen griechischen Ausgaben (Nestle-Aland, Tyndale House, SBL, Textus Receptus, Byzantinischer Text u. a.) in einem Vers voneinander abweichen.": "Where the major Greek editions (Nestle-Aland, Tyndale House, SBL, Textus Receptus, Byzantine text and others) differ in a verse.",
-  "Forschungsinstitut für Bibelwissenschaft (TAGNT-Daten)": "Research institute for biblical studies (TAGNT data)"
+  "Forschungsinstitut für Bibelwissenschaft (TAGNT-Daten)": "Research institute for biblical studies (TAGNT data)",
+  "Liquid-Glas-Design (Glasränder mit Prisma-Schimmer, Milchglas-Flächen, weiche Schatten)": "Liquid glass design (glass rims with a prism shimmer, frosted surfaces, soft shadows)"
 }

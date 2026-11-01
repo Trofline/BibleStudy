@@ -1845,7 +1845,6 @@
   "Du hast {0} Markierungen aus {1} gesendet.": "Enviaste {0} subrayados de {1}.",
   "{0} sendet {1} Markierungen aus {2}": "{0} envía {1} subrayados de {2}",
   "Übernommen ✓": "Incorporado ✓",
-  "Glas-Design (durchscheinende Flächen, wo das System es kann)": "Diseño de cristal (superficies translúcidas donde el sistema lo permita)",
   "Stärke der Animationen": "Intensidad de las animaciones",
   "Dezent": "Discreta",
   "Groß": "Grande",
@@ -1870,5 +1869,6 @@
   "Lesarten der griechischen Ausgaben": "Variantes de las ediciones griegas",
   "Textkritik (Neues Testament)": "Crítica textual (Nuevo Testamento)",
   "Wo die großen griechischen Ausgaben (Nestle-Aland, Tyndale House, SBL, Textus Receptus, Byzantinischer Text u. a.) in einem Vers voneinander abweichen.": "Dónde difieren en un versículo las principales ediciones griegas (Nestle-Aland, Tyndale House, SBL, Textus Receptus, texto bizantino y otras).",
-  "Forschungsinstitut für Bibelwissenschaft (TAGNT-Daten)": "Instituto de investigación bíblica (datos TAGNT)"
+  "Forschungsinstitut für Bibelwissenschaft (TAGNT-Daten)": "Instituto de investigación bíblica (datos TAGNT)",
+  "Liquid-Glas-Design (Glasränder mit Prisma-Schimmer, Milchglas-Flächen, weiche Schatten)": "Diseño de cristal líquido (bordes de cristal con destello de prisma, superficies esmeriladas, sombras suaves)"
 }

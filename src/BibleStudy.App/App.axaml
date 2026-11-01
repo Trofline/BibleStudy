@@ -385,6 +385,43 @@
             <Setter Property="Opacity" Value="0.82" />
         </Style>
 
+
+        <!-- Liquid glass (window class "glass", setting "Glas-Design"): glass rim with prism tint, soft shadow, lifting hover -->
+        <Style Selector="Window.glass Border.pill, Window.glass Border.card">
+            <Setter Property="BorderThickness" Value="1.2" />
+            <Setter Property="CornerRadius" Value="16" />
+            <Setter Property="BoxShadow" Value="0 10 28 0 #30000000, inset 0 1 0 0 #80FFFFFF, inset 0 -1 0 0 #26FFFFFF" />
+            <Setter Property="BorderBrush">
+                <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
+                    <GradientStop Color="#E6FFFFFF" Offset="0" />
+                    <GradientStop Color="#55A8D8FF" Offset="0.25" />
+                    <GradientStop Color="#18FFFFFF" Offset="0.55" />
+                    <GradientStop Color="#55FFB6E6" Offset="0.8" />
+                    <GradientStop Color="#B3FFFFFF" Offset="1" />
+                </LinearGradientBrush>
+            </Setter>
+        </Style>
+        <Style Selector="Window.glass Button:not(.tool):not(.pillbtn):not(.primary):not(.toolx):not(.picker):not(.caption):not(.rail):not(.seg):not(.ghost):not(.wtab) /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="CornerRadius" Value="999" />
+            <Setter Property="BorderThickness" Value="1.2" />
+            <Setter Property="BoxShadow" Value="0 6 18 0 #28000000, inset 0 1 0 0 #99FFFFFF" />
+            <Setter Property="BorderBrush">
+                <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
+                    <GradientStop Color="#F0FFFFFF" Offset="0" />
+                    <GradientStop Color="#50A8D8FF" Offset="0.3" />
+                    <GradientStop Color="#14FFFFFF" Offset="0.6" />
+                    <GradientStop Color="#55FFB6E6" Offset="0.85" />
+                    <GradientStop Color="#C0FFFFFF" Offset="1" />
+                </LinearGradientBrush>
+            </Setter>
+        </Style>
+        <Style Selector="Window.glass Button:not(.tool):not(.pillbtn):not(.primary):not(.toolx):not(.picker):not(.caption):not(.rail):not(.seg):not(.ghost):not(.wtab):pointerover">
+            <Setter Property="RenderTransform" Value="scale(1.035)" />
+        </Style>
+        <Style Selector="Window.glass ToggleButton.pillbtn /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="CornerRadius" Value="999" />
+        </Style>
+
         <!-- Verse rows in the reader -->
         <Style Selector="Border.verse:pointerover">
             <Setter Property="Background" Value="{DynamicResource BsSurface2}" />
