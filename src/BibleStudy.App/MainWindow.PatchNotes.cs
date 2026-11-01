@@ -22,7 +22,6 @@ public partial class MainWindow
         VersionChipText.Text = "v" + AppPaths.Version;
         VersionChip.Click += async (_, _) => await ShowPatchNotesAsync();
         PatchNotesBtn.Click += async (_, _) => await ShowPatchNotesAsync();
-        GitHubTopBtn.Click += (_, _) => OpenUrl(ProjectUrl);
         GitHubBtn.Click += (_, _) => OpenUrl(ProjectUrl);
         UpdateChip.Click += async (_, _) => await CheckForUpdateAsync(manual: true);
         // the state of the updates also in the status bar: the same text as on the settings page, short when everything is fine

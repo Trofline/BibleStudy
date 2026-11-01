@@ -43,7 +43,7 @@ public partial class MainWindow
         InitAutomation();
         InitOllama();
         InitLanguageImport();
-        InitFeedback();
+        InitFeedback(); InitSettingsLayout();
         InitPlugins();
         InitNotes();
         InitSources();
