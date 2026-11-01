@@ -1841,5 +1841,11 @@
   "Keine Treffer in {0}.": "Нет результатов в {0}.",
   "{0} Treffer in {1}{2}": "Результатов в {1}: {0}{2}",
   " (die ersten 100)": " (первые 100)",
-  "← Zurück zum Kapitel": "← Назад к главе"
+  "← Zurück zum Kapitel": "← Назад к главе",
+  "Markierungen dieses Kapitels teilen": "Поделиться выделениями этой главы",
+  "In diesem Kapitel gibt es noch keine Markierungen von dir.": "В этой главе у вас пока нет выделений.",
+  "Du hast {0} Markierungen aus {1} gesendet.": "Вы отправили выделений: {0} из {1}.",
+  "{0} sendet {1} Markierungen aus {2}": "{0} отправляет выделения ({1}) из {2}",
+  "Übernommen ✓": "Принято ✓",
+  "Glas-Design (durchscheinende Flächen, wo das System es kann)": "Стеклянный дизайн (полупрозрачные поверхности, где система это позволяет)"
 }

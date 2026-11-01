@@ -58,6 +58,7 @@ Regeln für die Abarbeitung:
 
 ## Phase 6 · v1.4.0 – Gemeinsam studieren
 - [ ] Gemeinsame Markierungen und gemeinsame Vaults (Cursor/Auswahl der anderen sichtbar)
+  - Stand: „Markierungen dieses Kapitels teilen“ (Empfänger übernimmt per Klick). Offen: gemeinsame Vaults, sichtbare Cursor/Auswahl der anderen
 - [ ] Live-Stunde: alle haben dieselbe Ansicht, sichtbare Cursor und Markierungen
 
 ## Phase 7 · v1.5.0 – Große Ansichten
@@ -67,6 +68,7 @@ Regeln für die Abarbeitung:
 - [ ] Zeitreise-Karte: Zeitregler, Orte/Wege/Reiche erscheinen und verschwinden, gleichzeitig lebende Personen
   - Stand: Zeitregler und „Zeitreise“-Abspielen in der Zeitleiste (Ereignisse nacheinander, Karte folgt). Offen: Orte/Reiche erscheinen und verschwinden, gleichzeitig lebende Personen
 - [ ] Liquid-Glass-Design und Animationen (abschaltbar, respektiert „Bewegung reduzieren“)
+  - Stand: Einstellung „Glas-Design“ (durchscheinende Flächen + unscharfer Hintergrund, wo das System es kann). Offen: Glas-Effekte an Karten/Dialogen, Animationsstufen, „Bewegung reduzieren“ des Systems beachten
 - [x] Minimalistischer Stil („Einfach-Modus“ / Easy Mode): aufgeräumte Oberfläche mit nur dem Wichtigsten (Lesen, Suchen, Notizen), alles andere ausgeblendet und mit einem Schalter wieder einblendbar. Oben in der Leiste ein Button, der zwischen „Advanced“ und „Easy“ umschaltet (Wahl wird gemerkt)
   - Stand: Knopf „Advanced/Easy“ oben in der Leiste; Easy zeigt nur Suche, Notizen, Vers-Übersicht, Einstellungen und Hilfe und blendet einige Knöpfe aus (wird gemerkt)
 

@@ -1841,5 +1841,11 @@
   "Keine Treffer in {0}.": "No hits in {0}.",
   "{0} Treffer in {1}{2}": "{0} hits in {1}{2}",
   " (die ersten 100)": " (the first 100)",
-  "← Zurück zum Kapitel": "← Back to the chapter"
+  "← Zurück zum Kapitel": "← Back to the chapter",
+  "Markierungen dieses Kapitels teilen": "Share the highlights of this chapter",
+  "In diesem Kapitel gibt es noch keine Markierungen von dir.": "You have no highlights in this chapter yet.",
+  "Du hast {0} Markierungen aus {1} gesendet.": "You sent {0} highlights from {1}.",
+  "{0} sendet {1} Markierungen aus {2}": "{0} sends {1} highlights from {2}",
+  "Übernommen ✓": "Taken over ✓",
+  "Glas-Design (durchscheinende Flächen, wo das System es kann)": "Glass design (translucent surfaces where the system supports it)"
 }

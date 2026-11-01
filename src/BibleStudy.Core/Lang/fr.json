@@ -1841,5 +1841,11 @@
   "Keine Treffer in {0}.": "Aucun résultat dans {0}.",
   "{0} Treffer in {1}{2}": "{0} résultats dans {1}{2}",
   " (die ersten 100)": " (les 100 premiers)",
-  "← Zurück zum Kapitel": "← Retour au chapitre"
+  "← Zurück zum Kapitel": "← Retour au chapitre",
+  "Markierungen dieses Kapitels teilen": "Partager les surlignages de ce chapitre",
+  "In diesem Kapitel gibt es noch keine Markierungen von dir.": "Tu n’as pas encore de surlignage dans ce chapitre.",
+  "Du hast {0} Markierungen aus {1} gesendet.": "Tu as envoyé {0} surlignages de {1}.",
+  "{0} sendet {1} Markierungen aus {2}": "{0} envoie {1} surlignages de {2}",
+  "Übernommen ✓": "Repris ✓",
+  "Glas-Design (durchscheinende Flächen, wo das System es kann)": "Design verre (surfaces translucides là où le système le permet)"
 }

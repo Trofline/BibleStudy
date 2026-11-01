@@ -212,9 +212,11 @@ public partial class MainWindow
         var actions = new WrapPanel();
         var verse = new Button { Content = L("Diesen Vers teilen"), Margin = new(0, 0, 8, 6) };
         verse.Click += (_, _) => ShareSelectedVerse();
+        var marksBtn = new Button { Content = L("Markierungen dieses Kapitels teilen"), Margin = new(0, 0, 8, 6) };
+        marksBtn.Click += (_, _) => ShareChapterMarks();
         var doc = new Button { Content = L("Dokument teilen ▾"), Margin = new(0, 0, 8, 6) };
         doc.Click += (_, _) => ShowShareDocMenu(doc);
-        actions.Children.Add(verse); actions.Children.Add(doc);
+        actions.Children.Add(verse); actions.Children.Add(marksBtn); actions.Children.Add(doc);
         CollabPanel.Children.Add(actions);
 
         var input = new TextBox { Watermark = L("Nachricht schreiben, Enter sendet"), MaxLength = 2000, AcceptsReturn = false };
@@ -322,6 +324,9 @@ public partial class MainWindow
                 }
                 case "verse":
                     ShowSharedVerse(Str("book", 8), Int("chapter"), Int("verse"), Str("text", 4000), Str("translation", 20));
+                    break;
+                case "marks":
+                    if (root.TryGetProperty("items", out var markItems)) ShowSharedMarks(Str("book", 8), Int("chapter"), markItems);
                     break;
                 case "doc":
                     ShowSharedDocument(Str("title", 200), Str("body", MaxSharedBody));

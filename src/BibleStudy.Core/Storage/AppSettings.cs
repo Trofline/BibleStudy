@@ -96,6 +96,8 @@ public sealed class AppSettings
     public string JesusColor { get; set; } = "";
     /// <summary>Reading aids: stronger contrast, a plain wide-spaced typeface (easier with dyslexia), Hebrew without vowel signs / accents.</summary>
     public bool HighContrast { get; set; }
+    /// <summary>"Glass" design: translucent surfaces with the blurred desktop behind (Windows/macOS where the system supports it).</summary>
+    public bool GlassDesign { get; set; }
     public bool ReadableText { get; set; }
     public bool HebrewVowels { get; set; } = true;
     public bool HebrewAccents { get; set; } = true;

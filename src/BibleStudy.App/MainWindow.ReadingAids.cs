@@ -29,6 +29,9 @@ public partial class MainWindow
     {
         HighContrastCheck.IsChecked = _settings.HighContrast; ReadableTextCheck.IsChecked = _settings.ReadableText;
         HebrewVowelsCheck.IsChecked = _settings.HebrewVowels; HebrewAccentsCheck.IsChecked = _settings.HebrewAccents;
+        GlassCheck.IsChecked = _settings.GlassDesign;
+        GlassCheck.IsCheckedChanged += (_, _) => { _settings.GlassDesign = GlassCheck.IsChecked == true; ApplyGlass(); SaveSettings(); };
+        ApplyGlass();
         async void Redraw() { SaveSettings(); await ShowChapterAsync(_selected); }
         HighContrastCheck.IsCheckedChanged += (_, _) => { _settings.HighContrast = HighContrastCheck.IsChecked == true; ApplyContrast(); SaveSettings(); };
         ReadableTextCheck.IsCheckedChanged += (_, _) => { _settings.ReadableText = ReadableTextCheck.IsChecked == true; Redraw(); };
@@ -54,6 +57,29 @@ public partial class MainWindow
                 if (!_plainColors.ContainsKey((variant, key))) _plainColors[(variant, key)] = d.TryGetValue(key, out var old) ? old : null;
                 if (_settings.HighContrast) d[key] = new SolidColorBrush(Color.Parse(hex));
                 else if (_plainColors[(variant, key)] is { } original) d[key] = original;
+            }
+        }
+    }
+}
+
+public partial class MainWindow
+{
+    readonly Dictionary<(ThemeVariant, string), object?> _solidColors = [];
+
+    /// <summary>Glass design: the window may blur what is behind it and the big surfaces turn slightly translucent. Off = the plain colors again.</summary>
+    void ApplyGlass()
+    {
+        var on = _settings.GlassDesign;
+        TransparencyLevelHint = on ? [WindowTransparencyLevel.AcrylicBlur, WindowTransparencyLevel.Mica, WindowTransparencyLevel.Blur] : [WindowTransparencyLevel.None];
+        var res = Application.Current!.Resources;
+        foreach (var variant in new[] { ThemeVariant.Light, ThemeVariant.Dark })
+        {
+            if (!res.ThemeDictionaries.TryGetValue(variant, out var provider) || provider is not ResourceDictionary d) continue;
+            foreach (var (key, alpha) in new[] { ("BsBackground", 0.72), ("BsSurface", 0.80), ("BsSurface2", 0.85) })
+            {
+                if (!_solidColors.ContainsKey((variant, key))) _solidColors[(variant, key)] = d.TryGetValue(key, out var old) ? old : null;
+                if (on && _solidColors[(variant, key)] is SolidColorBrush plain) d[key] = new SolidColorBrush(plain.Color, alpha);
+                else if (_solidColors[(variant, key)] is { } original) d[key] = original;
             }
         }
     }

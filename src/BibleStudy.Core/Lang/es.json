@@ -1841,5 +1841,11 @@
   "Keine Treffer in {0}.": "Sin resultados en {0}.",
   "{0} Treffer in {1}{2}": "{0} resultados en {1}{2}",
   " (die ersten 100)": " (los primeros 100)",
-  "← Zurück zum Kapitel": "← Volver al capítulo"
+  "← Zurück zum Kapitel": "← Volver al capítulo",
+  "Markierungen dieses Kapitels teilen": "Compartir los subrayados de este capítulo",
+  "In diesem Kapitel gibt es noch keine Markierungen von dir.": "Aún no tienes subrayados en este capítulo.",
+  "Du hast {0} Markierungen aus {1} gesendet.": "Enviaste {0} subrayados de {1}.",
+  "{0} sendet {1} Markierungen aus {2}": "{0} envía {1} subrayados de {2}",
+  "Übernommen ✓": "Incorporado ✓",
+  "Glas-Design (durchscheinende Flächen, wo das System es kann)": "Diseño de cristal (superficies translúcidas donde el sistema lo permita)"
 }
