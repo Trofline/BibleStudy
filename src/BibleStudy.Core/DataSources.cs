@@ -22,6 +22,8 @@ public static class DataSources
             "Open Scriptures Hebrew Lexicon Project", "CC BY 4.0", "https://github.com/openscriptures/HebrewLexicon", L("Brown-Driver-Briggs Hebrew and English Lexicon (1906, gemeinfrei)")),
         new(L("LSJ-Lexikon (Griechisch)"), L("Ausführliche Wörterbucheinträge zu griechischen Wörtern (unter dem Strong-Eintrag, auf Englisch)."),
             "STEPBible, Tyndale House Cambridge", "CC BY 4.0", "https://github.com/STEPBible/STEPBible-Data", L("Liddell-Scott-Jones, Greek-English Lexicon, bearbeitet von Tyndale House (Grundlage: Perseus Digital Library)")),
+        new(L("Textkritik (Neues Testament)"), L("Wo die großen griechischen Ausgaben (Nestle-Aland, Tyndale House, SBL, Textus Receptus, Byzantinischer Text u. a.) in einem Vers voneinander abweichen."),
+            "STEPBible, Tyndale House Cambridge", "CC BY 4.0", "https://github.com/STEPBible/STEPBible-Data", L("Forschungsinstitut für Bibelwissenschaft (TAGNT-Daten)")),
         new(L("Syntax und Morphologie"), L("Syntax und Grammatik des griechischen Neuen Testaments (Nestle 1904) und der hebräischen Bibel (Westminster-Kodex): Satzrollen-Suche, Grundtext-Ansicht."),
             "MACULA Greek / Hebrew, Biblica und Clear Bible", "CC BY 4.0", "https://github.com/Clear-Bible", L("Gemeinnützige Organisationen; Grundlage sind der griechische Text von Nestle (1904) und der Westminster-Kodex")),
         new(L("Interlinear"), L("Wort für Wort: Grundtext, Umschrift und englische Bedeutung."),

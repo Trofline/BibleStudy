@@ -42,9 +42,9 @@ Regeln für die Abarbeitung:
 ## Phase 4 · v1.2.0 – Bücher und Grundtext
 - [x] BDB-Lexikon (Hebräisch): Open Scriptures Hebrew Lexicon, Text gemeinfrei, Datei CC BY 4.0; erscheint unter dem Strong-Eintrag hebräischer Wörter, mit Quellenangabe
 - [x] LSJ (Griechisch): nur aus dem Original der Perseus Digital Library (PerseusDL/lexica, CC BY-SA 4.0, Beta-Code-Umwandlung selbst schreiben). NICHT die Celano-Fassung (CC BY-NC-SA). Vorher prüfen, dass die LSJ-Dateien selbst unter CC BY-SA stehen; Größe beachten (nur bei Bedarf laden) — Stand: stattdessen die LSJ-Fassung von Tyndale House (STEPBible, CC BY 4.0, Lizenz in der Datei geprüft) unter dem griechischen Strong-Eintrag; wird beim ersten Öffnen geladen (ca. 24 MB)
-- [ ] Fachlexika: Auswahl nur nach Lizenzprüfung
+- [ ] Fachlexika: Auswahl nur nach Lizenzprüfung — Stand: gemeinfreie Kandidaten Easton, Smith, ISBE 1915, Nave (CCEL); Quelle als sauber lesbare Datei noch zu finden
 - [ ] Septuaginta: griechischer Text nur, wenn eine klar freie Quelle gefunden wird (CCAT/Rahlfs-Dateien sind NICHT geeignet: Nutzererklärung + NC). Bis dahin: die gemeinfreien englischen Fassungen (Brenton, LXX2012, Updated Brenton) sind über die Bibelliste schon lesbar; Knopf „Septuaginta neben Hebräisch/Hauptübersetzung“ als Parallel-Preset
-- [ ] Textkritik: Lesarten/Varianten anzeigen, wo freie Daten existieren
+- [x] Textkritik: Lesarten/Varianten anzeigen, wo freie Daten existieren — Stand: Neues Testament über das Vers-Menü „Lesarten der griechischen Ausgaben“ (STEPBible TAGNT, Tyndale House, CC BY 4.0, Lizenz in der Datei gelesen); Altes Testament (TAHOT) noch nicht
 
 ## Phase 5 · v1.3.0 – Einrichtung, KI, Sync, Barrierefreiheit
 - [x] Erststart-Assistent: Sprache → empfohlene Übersetzung → Kommentare und Datensätze mit einem Klick laden (mit Fortschritt, abbrechbar)

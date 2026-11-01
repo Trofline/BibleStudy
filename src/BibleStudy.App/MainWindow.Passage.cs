@@ -2,6 +2,7 @@
 using Avalonia.Input;
 using Avalonia.Layout;
 using Avalonia.Media;
+using BibleStudy.Core;
 using BibleStudy.Core.Models;
 using BibleStudy.Core.Storage;
 
@@ -43,6 +44,7 @@ public partial class MainWindow
         Item(L("Grundtext Wort für Wort"), () => { Open(GrundtextTab); _ = ShowGrundtextAsync(r); });
         var marked = MarkedText(anchor);
         Item(marked.Length > 0 ? L("Wort erklären: {0}", marked) : L("Wort erklären (erst ein Wort im Text markieren)"), () => _ = ExplainWordAsync(marked), marked.Length > 0);
+        if (TextVariants.IsNewTestament(r.Book)) Item(L("Lesarten der griechischen Ausgaben"), () => _ = ShowVariantsAsync(r));
         Item(L("Vorlesen"), ToggleSpeak);
         menu.ShowAt(anchor, showAtPointer: true);
     }

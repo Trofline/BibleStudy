@@ -1860,5 +1860,15 @@
   "Quelle: Liddell-Scott-Jones, Greek-English Lexicon, bearbeitet von Tyndale House Cambridge (STEPBible), CC BY 4.0": "Source: Liddell-Scott-Jones, Greek-English Lexicon, edited by Tyndale House Cambridge (STEPBible), CC BY 4.0",
   "LSJ-Lexikon (Griechisch)": "LSJ lexicon (Greek)",
   "Ausführliche Wörterbucheinträge zu griechischen Wörtern (unter dem Strong-Eintrag, auf Englisch).": "Detailed dictionary entries for Greek words (below the Strong entry, in English).",
-  "Liddell-Scott-Jones, Greek-English Lexicon, bearbeitet von Tyndale House (Grundlage: Perseus Digital Library)": "Liddell-Scott-Jones, Greek-English Lexicon, edited by Tyndale House (based on the Perseus Digital Library)"
+  "Liddell-Scott-Jones, Greek-English Lexicon, bearbeitet von Tyndale House (Grundlage: Perseus Digital Library)": "Liddell-Scott-Jones, Greek-English Lexicon, edited by Tyndale House (based on the Perseus Digital Library)",
+  "Lesarten": "Variant readings",
+  "In diesem Vers stimmen die großen griechischen Ausgaben überein (oder die Unterschiede ändern die Übersetzung nicht).": "In this verse the major Greek editions agree (or the differences do not change the translation).",
+  "steht in: {0}": "found in: {0}",
+  "Andere Lesart: {0}": "Other reading: {0}",
+  "Quelle: {0}": "Source: {0}",
+  "Die Lesarten konnten nicht geladen werden: {0}": "The variant readings could not be loaded: {0}",
+  "Lesarten der griechischen Ausgaben": "Variant readings of the Greek editions",
+  "Textkritik (Neues Testament)": "Text criticism (New Testament)",
+  "Wo die großen griechischen Ausgaben (Nestle-Aland, Tyndale House, SBL, Textus Receptus, Byzantinischer Text u. a.) in einem Vers voneinander abweichen.": "Where the major Greek editions (Nestle-Aland, Tyndale House, SBL, Textus Receptus, Byzantine text and others) differ in a verse.",
+  "Forschungsinstitut für Bibelwissenschaft (TAGNT-Daten)": "Research institute for biblical studies (TAGNT data)"
 }
