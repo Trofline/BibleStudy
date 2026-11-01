@@ -188,7 +188,7 @@ footer a{text-decoration:none}footer a:hover{color:var(--text)}
   <div class="wrap">
     <a class="brand" href="#top"><img src="img/app.png" alt="">BibleStudy</a>
     <div class="links">
-      <a href="#read">Read</a><a href="#original">Original text</a><a href="#vault">Your vault</a><a href="#together">Together</a><a href="#trust">Trust</a>
+      <a href="#read">Read</a><a href="#original">Original text</a><a href="#vault">Your vault</a><a href="#together">Together</a><a href="#language">Your language</a><a href="#trust">Trust</a>
       <a class="btn main" href="https://github.com/Trofline/BibleStudy/releases/latest" style="padding:9px 18px">Download</a>
       <button class="btn theme" id="theme" aria-label="Switch light / dark">
         <svg class="moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
@@ -317,6 +317,25 @@ footer a{text-decoration:none}footer a:hover{color:var(--text)}
   </div>
 </section>
 
+<section id="language" class="wrap">
+  <h2>Add your own language</h2>
+  <p class="sub">Your language is missing? Any AI can translate the program for you in a few minutes.</p>
+  <ol class="rv" style="max-width:720px;line-height:1.7">
+    <li>In BibleStudy open <i>Settings → Language → Save template and AI instruction</i>.</li>
+    <li>Give both files to an AI (for example Claude) and paste the text below, with your language instead of <b>&lt;language&gt;</b>.</li>
+    <li>Save the answer as a file named with the language code, for example <code>it.json</code>.</li>
+    <li>Import it under <i>Settings → Language → Import language file</i> and restart.</li>
+  </ol>
+  <pre class="rv" id="aiprompt" style="max-width:720px;white-space:pre-wrap;padding:16px;border:1px solid var(--line,#8884);border-radius:12px;font-size:.88rem">Translate the program texts in the attached JSON file into &lt;language&gt;.
+1. Keep every KEY exactly as it is. Translate only the VALUES.
+2. Set "@name" to the name of the language written in that language itself.
+3. Keep placeholders such as {0}, {1}, {2:N0} and line breaks (\n) exactly, and the same number of them.
+4. Keep symbols and arrows and shortcut names (Ctrl+K). Keep proper names; Bible book names follow the usual names in the language.
+5. Use the friendly, short style of a program interface. Words on buttons stay short.
+6. Answer with the complete JSON file only, nothing before or after, valid JSON (UTF-8).</pre>
+  <p><button class="btn" id="copyprompt" type="button">Copy text</button> <span style="opacity:.7;font-size:.9rem">Texts without a translation stay German – nothing breaks. After an update you can export only the missing texts.</span></p>
+</section>
+
 <div class="big wrap rv">
   <h2>Open your Bible. Dig in.</h2>
   <p class="sub" style="margin:0 auto">Download takes a minute. No sign-up. Windows, Linux and macOS.</p>
@@ -333,6 +352,7 @@ footer a{text-decoration:none}footer a:hover{color:var(--text)}
 </footer>
 
 <script>
+document.getElementById("copyprompt").addEventListener("click",function(){var b=this;navigator.clipboard.writeText(document.getElementById("aiprompt").innerText).then(function(){b.textContent="Copied ✓";});});
 (function(){
   var root=document.documentElement, key="bs-theme";
   try{var s=localStorage.getItem(key); if(s) root.setAttribute("data-theme",s);}catch(e){}

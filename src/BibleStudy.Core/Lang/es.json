@@ -1814,7 +1814,6 @@
   "Diese Übersetzung jetzt für die Offline-Nutzung laden (einige Minuten, geht auch später)": "Cargar ahora esta traducción para usarla sin conexión (unos minutos, también se puede hacer luego)",
   "Querverweise laden (für Graphen und die Vers-Übersicht)": "Cargar las referencias cruzadas (para los gráficos y la vista general del versículo)",
   "Los geht’s": "Vamos",
-  "Überspringen": "Omitir",
   "1. Sprache des Programms": "1. Idioma del programa",
   "2. Übersetzung zum Lesen": "2. Traducción para leer",
   "3. Daten gleich laden": "3. Cargar datos ahora",
@@ -1838,7 +1837,6 @@
   "Im ganzen Kommentar suchen": "Buscar en todo el comentario",
   "Der Kommentar wird gerade eingelesen – bitte kurz warten.": "Se está leyendo el comentario; espera un momento.",
   "Einmalig: {0} wird eingelesen … {1}/{2} Kapitel": "Solo una vez: leyendo {0} … {1}/{2} capítulos",
-  "Keine Treffer in {0}.": "Sin resultados en {0}.",
   "{0} Treffer in {1}{2}": "{0} resultados en {1}{2}",
   " (die ersten 100)": " (los primeros 100)",
   "← Zurück zum Kapitel": "← Volver al capítulo",
@@ -1847,5 +1845,14 @@
   "Du hast {0} Markierungen aus {1} gesendet.": "Enviaste {0} subrayados de {1}.",
   "{0} sendet {1} Markierungen aus {2}": "{0} envía {1} subrayados de {2}",
   "Übernommen ✓": "Incorporado ✓",
-  "Glas-Design (durchscheinende Flächen, wo das System es kann)": "Diseño de cristal (superficies translúcidas donde el sistema lo permita)"
+  "Glas-Design (durchscheinende Flächen, wo das System es kann)": "Diseño de cristal (superficies translúcidas donde el sistema lo permita)",
+  "Stärke der Animationen": "Intensidad de las animaciones",
+  "Dezent": "Discreta",
+  "Groß": "Grande",
+  "Nur fehlende Texte exportieren": "Exportar solo los textos que faltan",
+  "Aktuelle Sprache: {0} % übersetzt ({1} von {2} Texten).": "Idioma actual: {0} % traducido ({1} de {2} textos).",
+  "Fehlende Texte gespeichert in: {0}\nNach der Übersetzung als {1}.json speichern und importieren; sie werden zu den vorhandenen hinzugefügt.": "Textos que faltan guardados en: {0}\nTras traducir, guárdalo como {1}.json e impórtalo; se añaden a los existentes.",
+  "Als Bild speichern": "Guardar como imagen",
+  "Syntaxbaum": "Árbol sintáctico",
+  "Strg + Mausrad: zoomen. Farbe des Rahmens = Satzrolle.": "Ctrl + rueda del ratón: zoom. Color del borde = función en la frase."
 }

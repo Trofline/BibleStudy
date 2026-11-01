@@ -83,13 +83,13 @@ Regeln für die Abarbeitung:
 - [x] Syntax als Baum-Diagramm (Reiter „Baum“ in der Syntax-Ansicht) zusätzlich zu Liste und Morphologie
 - [x] Querverweis-Stern (Vers in der Mitte, stärkste Querverweise außen; Knopf „Als Stern zeigen“ in der Vers-Übersicht) zusätzlich zu den bestehenden Graphen
 - [x] Neue Beenden-Animation (hochgleiten, verkleinern, verwischen, auflösen)
-- [ ] Beenden-Animation und Einstiegs-Animation in den Einstellungen wählbar (aus / dezent / groß)
-- [ ] Stern-Ansicht: zweite Ebene (Verbindungen zwischen den Nachbarn), Ziehen der Knoten, Export als Bild
-- [ ] Syntaxbaum: Export als Bild/SVG, Farben je Satzrolle, Zoomen
+- [x] Beenden-Animation und Einstiegs-Animation in den Einstellungen wählbar (aus / dezent / groß) — Stand: Einstellung „Stärke der Animationen“ (Dezent / Groß), aus bleibt aus; Einstiegs-Animation nur dezent verkleinert
+- [ ] Stern-Ansicht: zweite Ebene (Verbindungen zwischen den Nachbarn), Ziehen der Knoten, Export als Bild — Stand: Export als Bild ist da (Knopf im Fenster); zweite Ebene und Ziehen fehlen
+- [x] Syntaxbaum: Export als Bild/SVG, Farben je Satzrolle, Zoomen — Stand: PNG-Export, Rahmenfarbe je Rolle, Strg+Mausrad-Zoom (SVG nicht)
 - [ ] Sprachpakete teilen: Ordner `lang/` im Repo für Community-Sprachen (Pull Requests), Auswahl „Sprachen aus dem Internet laden“ in den Einstellungen
-- [ ] Sprachdateien: Prüfung auf Vollständigkeit mit Fortschrittsanzeige („87 % übersetzt“), fehlende Texte als neue Vorlage exportieren (nur das Fehlende an die KI geben)
+- [x] Sprachdateien: Prüfung auf Vollständigkeit mit Fortschrittsanzeige („87 % übersetzt“), fehlende Texte als neue Vorlage exportieren (nur das Fehlende an die KI geben) — Stand: Prozentanzeige in den Einstellungen, „Nur fehlende Texte exportieren“, Import fügt zu vorhandenen Texten hinzu
 - [ ] Pages: echte Screenshots statt Zeichnungen, Deutsch/Englisch-Umschalter, Seite „Neuigkeiten“ aus den Release-Texten
-- [ ] Pages: Anleitung „Eigene Sprache hinzufügen“ mit fertigem KI-Text zum Kopieren
+- [x] Pages: Anleitung „Eigene Sprache hinzufügen“ mit fertigem KI-Text zum Kopieren
 - [ ] Wort-Reise und Zeitreise-Karte auch als kleine animierte Vorschau auf der Startseite der App
 - [ ] Startseite der App: „Heute“-Karte mit Tageslesung, Vers des Tages als schönes Bild (teilen mit Quelle und Lizenz)
 - [ ] Gespeicherte Parallel-Anordnungen auch mit Hauptübersetzung und Sprache, Tastenkürzel zum Wechseln

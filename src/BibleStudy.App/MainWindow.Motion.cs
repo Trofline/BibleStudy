@@ -22,6 +22,7 @@ public partial class MainWindow
             new DoubleTransition { Property = OpacityProperty, Duration = TimeSpan.FromMilliseconds(200), Easing = new CubicEaseOut() },
             new TransformOperationsTransition { Property = RenderTransformProperty, Duration = TimeSpan.FromMilliseconds(260), Easing = new CubicEaseOut() },
         ];
+        if (_settings.AnimationLevel == 0) { dx /= 3; dy /= 3; }
         c.Opacity = 0;
         c.RenderTransform = TransformOperations.Parse(FormattableString.Invariant($"translate({dx}px, {dy}px)"));
         void Go() { c.Opacity = 1; c.RenderTransform = TransformOperations.Parse("translate(0px, 0px)"); }
@@ -46,6 +47,22 @@ public partial class MainWindow
     {
         if (Content is not Control root) return;
         root.Transitions = null;
+        if (_settings.AnimationLevel == 0)
+        {
+            // subtle: a short fade only
+            var fade = new Animation
+            {
+                Duration = TimeSpan.FromMilliseconds(180), Easing = new CubicEaseIn(), FillMode = FillMode.Forward,
+                Children =
+                {
+                    new KeyFrame { Cue = new Cue(0), Setters = { new Setter(OpacityProperty, 1.0) } },
+                    new KeyFrame { Cue = new Cue(1), Setters = { new Setter(OpacityProperty, 0.0) } },
+                },
+            };
+            try { await fade.RunAsync(root); } catch { /* must not keep the program from closing */ }
+            root.Opacity = 0;
+            return;
+        }
         var anim = new Animation
         {
             Duration = TimeSpan.FromMilliseconds(520), Easing = new CubicEaseIn(), FillMode = FillMode.Forward,

@@ -71,5 +71,36 @@ public static partial class LanguageFiles
         return Regex.IsMatch(stem, "^[a-z]{2,3}(-[a-z0-9]{2,4})?$") ? stem : null;
     }
 
+    /// <summary>How many of the program's texts a language has really translated (a text equal to the German original does not count).</summary>
+    public static (int Done, int Total) Progress(string code)
+    {
+        var known = Loc.Texts(Loc.DefaultCode).Keys;
+        var have = Loc.Texts(code);
+        var done = known.Count(k => have.TryGetValue(k, out var v) && v.Length > 0 && v != k);
+        return (done, known.Count());
+    }
+
+    /// <summary>A template with only the texts a language still lacks (so an AI gets just that part).</summary>
+    public static string MissingTemplate(string code, string languageName)
+    {
+        var have = Loc.Texts(code);
+        var all = new Dictionary<string, string> { ["@name"] = languageName };
+        foreach (var key in Loc.Texts(Loc.DefaultCode).Keys.OrderBy(k => k, StringComparer.Ordinal))
+            if (!have.TryGetValue(key, out var v) || v.Length == 0 || v == key) all[key] = key;
+        return JsonSerializer.Serialize(all, Pretty);
+    }
+
+    /// <summary>Adds the newly translated texts to an earlier file of the same language (the newer wins, nothing is lost).</summary>
+    public static Checked Merge(string? existingJson, Checked added)
+    {
+        if (string.IsNullOrWhiteSpace(existingJson)) return added;
+        Dictionary<string, string>? old;
+        try { old = JsonSerializer.Deserialize<Dictionary<string, string>>(existingJson); } catch (JsonException) { return added; }
+        if (old is null) return added;
+        var texts = new Dictionary<string, string>(old);
+        foreach (var (k, v) in added.Texts) if (k.StartsWith('@') || v != k || !texts.ContainsKey(k)) texts[k] = v;
+        return added with { Texts = texts };
+    }
+
     public static string Serialize(Checked c) => JsonSerializer.Serialize(c.Texts, Pretty);
 }

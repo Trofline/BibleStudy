@@ -1814,7 +1814,6 @@
   "Diese Übersetzung jetzt für die Offline-Nutzung laden (einige Minuten, geht auch später)": "Charger cette traduction maintenant pour une utilisation hors ligne (quelques minutes, possible aussi plus tard)",
   "Querverweise laden (für Graphen und die Vers-Übersicht)": "Charger les renvois (pour les graphiques et l’aperçu du verset)",
   "Los geht’s": "C’est parti",
-  "Überspringen": "Passer",
   "1. Sprache des Programms": "1. Langue du programme",
   "2. Übersetzung zum Lesen": "2. Traduction à lire",
   "3. Daten gleich laden": "3. Charger les données maintenant",
@@ -1838,7 +1837,6 @@
   "Im ganzen Kommentar suchen": "Chercher dans tout le commentaire",
   "Der Kommentar wird gerade eingelesen – bitte kurz warten.": "Le commentaire est en cours de lecture – patiente un instant.",
   "Einmalig: {0} wird eingelesen … {1}/{2} Kapitel": "Une seule fois : lecture de {0} … {1}/{2} chapitres",
-  "Keine Treffer in {0}.": "Aucun résultat dans {0}.",
   "{0} Treffer in {1}{2}": "{0} résultats dans {1}{2}",
   " (die ersten 100)": " (les 100 premiers)",
   "← Zurück zum Kapitel": "← Retour au chapitre",
@@ -1847,5 +1845,14 @@
   "Du hast {0} Markierungen aus {1} gesendet.": "Tu as envoyé {0} surlignages de {1}.",
   "{0} sendet {1} Markierungen aus {2}": "{0} envoie {1} surlignages de {2}",
   "Übernommen ✓": "Repris ✓",
-  "Glas-Design (durchscheinende Flächen, wo das System es kann)": "Design verre (surfaces translucides là où le système le permet)"
+  "Glas-Design (durchscheinende Flächen, wo das System es kann)": "Design verre (surfaces translucides là où le système le permet)",
+  "Stärke der Animationen": "Intensité des animations",
+  "Dezent": "Discrète",
+  "Groß": "Grande",
+  "Nur fehlende Texte exportieren": "Exporter seulement les textes manquants",
+  "Aktuelle Sprache: {0} % übersetzt ({1} von {2} Texten).": "Langue actuelle : {0} % traduit ({1} sur {2} textes).",
+  "Fehlende Texte gespeichert in: {0}\nNach der Übersetzung als {1}.json speichern und importieren; sie werden zu den vorhandenen hinzugefügt.": "Textes manquants enregistrés dans : {0}\nAprès la traduction, enregistrez en {1}.json et importez ; ils s'ajoutent aux textes existants.",
+  "Als Bild speichern": "Enregistrer comme image",
+  "Syntaxbaum": "Arbre syntaxique",
+  "Strg + Mausrad: zoomen. Farbe des Rahmens = Satzrolle.": "Ctrl + molette : zoom. Couleur du cadre = rôle dans la phrase."
 }

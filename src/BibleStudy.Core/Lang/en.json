@@ -1814,7 +1814,6 @@
   "Diese Übersetzung jetzt für die Offline-Nutzung laden (einige Minuten, geht auch später)": "Load this translation now for offline use (a few minutes, also possible later)",
   "Querverweise laden (für Graphen und die Vers-Übersicht)": "Load cross references (for the graphs and the verse overview)",
   "Los geht’s": "Let’s go",
-  "Überspringen": "Skip",
   "1. Sprache des Programms": "1. Language of the program",
   "2. Übersetzung zum Lesen": "2. Translation to read",
   "3. Daten gleich laden": "3. Load data now",
@@ -1838,7 +1837,6 @@
   "Im ganzen Kommentar suchen": "Search the whole commentary",
   "Der Kommentar wird gerade eingelesen – bitte kurz warten.": "The commentary is being read – please wait a moment.",
   "Einmalig: {0} wird eingelesen … {1}/{2} Kapitel": "Once only: reading {0} … {1}/{2} chapters",
-  "Keine Treffer in {0}.": "No hits in {0}.",
   "{0} Treffer in {1}{2}": "{0} hits in {1}{2}",
   " (die ersten 100)": " (the first 100)",
   "← Zurück zum Kapitel": "← Back to the chapter",
@@ -1847,5 +1845,14 @@
   "Du hast {0} Markierungen aus {1} gesendet.": "You sent {0} highlights from {1}.",
   "{0} sendet {1} Markierungen aus {2}": "{0} sends {1} highlights from {2}",
   "Übernommen ✓": "Taken over ✓",
-  "Glas-Design (durchscheinende Flächen, wo das System es kann)": "Glass design (translucent surfaces where the system supports it)"
+  "Glas-Design (durchscheinende Flächen, wo das System es kann)": "Glass design (translucent surfaces where the system supports it)",
+  "Stärke der Animationen": "Animation strength",
+  "Dezent": "Subtle",
+  "Groß": "Big",
+  "Nur fehlende Texte exportieren": "Export only missing texts",
+  "Aktuelle Sprache: {0} % übersetzt ({1} von {2} Texten).": "Current language: {0} % translated ({1} of {2} texts).",
+  "Fehlende Texte gespeichert in: {0}\nNach der Übersetzung als {1}.json speichern und importieren; sie werden zu den vorhandenen hinzugefügt.": "Missing texts saved in: {0}\nAfter translating, save as {1}.json and import it; the texts are added to the existing ones.",
+  "Als Bild speichern": "Save as picture",
+  "Syntaxbaum": "Syntax tree",
+  "Strg + Mausrad: zoomen. Farbe des Rahmens = Satzrolle.": "Ctrl + mouse wheel: zoom. Border color = sentence role."
 }

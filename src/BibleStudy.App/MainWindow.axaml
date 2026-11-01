@@ -548,6 +548,8 @@
                                     <Button x:Name="LangTemplateBtn" Content="Vorlage und KI-Anweisung speichern" Margin="0,0,8,6" />
                                     <Button x:Name="LangImportBtn" Content="Sprachdatei importieren …" Margin="0,0,8,6" />
                                 </WrapPanel>
+                                <Button x:Name="LangMissingBtn" Content="Nur fehlende Texte exportieren" Margin="0,0,8,6" />
+                                <TextBlock x:Name="LangProgressText" Classes="caption" TextWrapping="Wrap" />
                                 <TextBlock x:Name="LangImportInfo" Classes="caption" TextWrapping="Wrap" />
                                 <Grid ColumnDefinitions="110,*" RowDefinitions="Auto,Auto" >
                                     <TextBlock Text="Design" VerticalAlignment="Center" />
@@ -591,6 +593,13 @@
                                 <CheckBox x:Name="CommentariesCheck" Content="Kommentare anzeigen (Menschenwerk, nicht der Bibeltext; gilt nach Neustart)" />
                                 <CheckBox x:Name="JustifyCheck" Content="Blocksatz" />
                                 <CheckBox x:Name="AnimationsCheck" Content="Animationen (Seitenleiste, Reiter, Kapitel gleiten sanft ein)" />
+                                <StackPanel Orientation="Horizontal" Spacing="10">
+                                    <TextBlock Text="Stärke der Animationen" VerticalAlignment="Center" />
+                                    <Border Classes="pill"><ComboBox x:Name="AnimLevelBox" Width="150" SelectedIndex="1">
+                                        <ComboBoxItem Content="Dezent" />
+                                        <ComboBoxItem Content="Groß" />
+                                    </ComboBox></Border>
+                                </StackPanel>
                                 <CheckBox x:Name="HeadingCheck" Content="Großes Kapitel-Kopfstück (sonst schlicht)" />
                                 <TextBlock Classes="caption" Text="Programmsymbol (Fenster, Taskleiste, Titelleiste, Startbild)" />
                                 <WrapPanel x:Name="LogoPanel" />

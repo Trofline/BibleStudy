@@ -75,14 +75,59 @@ public partial class MainWindow
             }
             var box = new Border { Width = boxW, Height = boxH, CornerRadius = new(10), BorderThickness = new(clause ? 2 : 1), Padding = new(4, 2), Child = stack };
             box.Bind(Border.BackgroundProperty, this.GetResourceObservable(clause ? "BsAccentSoft" : "BsSurface"));
-            box.Bind(Border.BorderBrushProperty, this.GetResourceObservable(clause ? "BsAccent" : "BsBorder"));
+            if (!clause && n.Line.Role is { Length: > 0 }) { box.BorderBrush = RoleBrush(n.Line.Role); box.BorderThickness = new(2); }
+            else box.Bind(Border.BorderBrushProperty, this.GetResourceObservable(clause ? "BsAccent" : "BsBorder"));
             ToolTip.SetTip(box, $"{label}  {n.Line.Text}  {Mean(n.Line.Gloss)}".Trim());
             Canvas.SetLeft(box, n.X); Canvas.SetTop(box, n.Level * levelH);
             canvas.Children.Add(box);
             foreach (var k in n.Kids) Box(k);
         }
         foreach (var r in roots) Box(r);
-        _syntaxView.Children.Add(new ScrollViewer { Content = canvas, HorizontalScrollBarVisibility = Avalonia.Controls.Primitives.ScrollBarVisibility.Auto, VerticalScrollBarVisibility = Avalonia.Controls.Primitives.ScrollBarVisibility.Disabled });
+
+        // zoom with Ctrl + mouse wheel; the picture can be saved as PNG
+        canvas.Background = Res("BsBackground");
+        var scale = new ScaleTransform(1, 1);
+        var zoomHost = new LayoutTransformControl { Child = canvas, LayoutTransform = scale };
+        var scroller = new ScrollViewer { Content = zoomHost, HorizontalScrollBarVisibility = Avalonia.Controls.Primitives.ScrollBarVisibility.Auto, VerticalScrollBarVisibility = Avalonia.Controls.Primitives.ScrollBarVisibility.Auto };
+        scroller.PointerWheelChanged += (_, e) =>
+        {
+            if (!e.KeyModifiers.HasFlag(KeyModifiers.Control)) return;
+            var s = Math.Clamp(scale.ScaleX * (e.Delta.Y > 0 ? 1.1 : 1 / 1.1), 0.4, 3);
+            scale.ScaleX = scale.ScaleY = s; e.Handled = true;
+        };
+        var save = new Button { Content = L("Als Bild speichern"), HorizontalAlignment = HorizontalAlignment.Left, Margin = new(0, 0, 0, 6) };
+        save.Click += (_, _) => ExportControlImage(canvas, L("Syntaxbaum") + "_" + Label(new VerseRef(_curBook, _curChapter, _selected ?? 1)));
+        _syntaxView.Children.Add(new TextBlock { Text = L("Strg + Mausrad: zoomen. Farbe des Rahmens = Satzrolle."), Classes = { "caption" } });
+        _syntaxView.Children.Add(save);
+        _syntaxView.Children.Add(scroller);
+    }
+
+    static readonly string[] RolePalette = ["#4C9F70", "#D9822B", "#5B7FD1", "#C45A8E", "#8A6BC4", "#2FA1A8", "#B8A11F", "#C9514A"];
+
+    /// <summary>The same role always gets the same color (so the tree can be read at a glance).</summary>
+    static IBrush RoleBrush(string role)
+    {
+        var sum = 0; foreach (var ch in role) sum = (sum * 31 + ch) & 0xFFFF;
+        return new SolidColorBrush(Color.Parse(RolePalette[sum % RolePalette.Length]));
+    }
+
+    /// <summary>Saves a control as a PNG picture (twice the size, sharp) into the export folder and opens it.</summary>
+    void ExportControlImage(Control c, string baseName)
+    {
+        try
+        {
+            var w = (int)Math.Ceiling(c.Bounds.Width); var h = (int)Math.Ceiling(c.Bounds.Height);
+            if (w < 2 || h < 2) return;
+            var bmp = new Avalonia.Media.Imaging.RenderTargetBitmap(new PixelSize(w * 2, h * 2), new Vector(192, 192));
+            bmp.Render(c);
+            var name = string.Concat(baseName.Select(ch => char.IsLetterOrDigit(ch) ? ch : '_'));
+            Directory.CreateDirectory(ExportFolder);
+            var path = System.IO.Path.Combine(ExportFolder, name + ".png");
+            bmp.Save(path);
+            StatusText.Text = L("Bild gespeichert: {0}", path);
+            try { System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(path) { UseShellExecute = true }); } catch { /* the path is in the status line */ }
+        }
+        catch (Exception ex) { StatusText.Text = L("Fehler: ") + ex.Message; }
     }
 
     // ---- cross reference star ------------------------------------------------------------------------------------------------
@@ -135,7 +180,12 @@ public partial class MainWindow
         var hint = new TextBlock { Text = L("Stern aus den wichtigsten Querverweisen. Klick auf einen Knoten: hingehen."), Classes = { "caption" }, TextWrapping = TextWrapping.Wrap, Margin = new(0, 0, 0, 8) };
         var dock = new DockPanel { Margin = new(16) };
         DockPanel.SetDock(hint, Dock.Top);
+        var saveStar = new Button { Content = L("Als Bild speichern"), HorizontalAlignment = HorizontalAlignment.Left, Margin = new(0, 0, 0, 8) };
+        saveStar.Click += (_, _) => ExportControlImage(canvas, L("Querverweis-Stern") + "_" + Label(r));
+        DockPanel.SetDock(saveStar, Dock.Top);
+        canvas.Background = Res("BsBackground");
         dock.Children.Add(hint);
+        dock.Children.Add(saveStar);
         dock.Children.Add(new Viewbox { Child = canvas, Stretch = Stretch.Uniform });
         var win = new Window { Title = L("Querverweis-Stern") + " · " + Label(r), Width = 720, Height = 760, MinWidth = 380, MinHeight = 400, Background = Res("BsBackground"), Icon = Icon, WindowStartupLocation = WindowStartupLocation.CenterOwner, Content = dock };
         win.Closed += (_, _) => _starWindow = null;
