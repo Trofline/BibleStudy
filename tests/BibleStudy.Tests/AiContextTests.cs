@@ -12,7 +12,7 @@ public class AiContextTests : IDisposable
     public void NewInstallation_StartsWithTheBibleOnlyInstruction()
     {
         var s = AppSettings.Load(_file);   // no file: the defaults
-        Assert.StartsWith("Du legst biblische Texte ausschließlich aus der Bibel selbst aus", s.AiContext);
+        Assert.StartsWith("You interpret biblical texts exclusively from the Bible itself", s.AiContext);
         Assert.DoesNotContain("adventistisch", s.AiContext);
     }
 
