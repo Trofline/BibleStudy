@@ -108,6 +108,34 @@ Rechtsklick auf einen Vers → **Kapitel-Bericht** (oder Strg+K → „Kapitel-B
 
 *Als Markdown kopieren* legt den ganzen Bericht in die Zwischenablage, etwa für ein Dokument oder eine Predigtvorbereitung. Teile ohne Daten (kein Internet, Übersetzung noch nicht für die Suche geladen) fehlen, der Rest bleibt.
 
+### Gleiche Wörter hervorheben
+
+Bei eingeschalteter **Wortstudie** (Knopf oben in der Leiste) leuchten beim **Darüberfahren** mit der Maus alle Wörter des Kapitels auf, die zum Wort unter dem Zeiger gehören:
+
+- **lila:** gleiche Strong-Nummer **und** gleiches Wort,
+- **grün:** gleiche Strong-Nummer, aber ein anderes Wort (der Grundtext-Begriff wird hier anders übersetzt),
+- **blau:** gleiches Wort, aber eine andere Strong-Nummer (aus dem Deutschen allein nicht zu erkennen, im Grundtext aber ein anderes Wort). Blau ist aus, weil es bei häufigen Wörtern viel Farbe macht.
+
+Der Zeiger zeigt dazu die Strong-Nummer, die Grundform, die Aussprache, eine kurze Bedeutung und, wenn die Analyse-Daten geladen sind, wie oft das Wort in der Bibel steht.
+
+**Rechtsklick auf ein Wort** bietet unter anderem:
+
+- **Hervorhebung fixieren:** die Farben bleiben stehen, auch wenn du die Maus wegnimmst oder das Kapitel wechselst. Mehrere Wörter lassen sich fixieren.
+- **Nächstes / Vorheriges markiertes Wort:** springt der Reihe nach durch alle markierten Stellen des Kapitels.
+- **Alle Hervorhebungen lösen.**
+- Die Schalter **lila / grün / blau**, welche Farben überhaupt gezeigt werden.
+
+Das geht nur bei Übersetzungen mit Strong-Nummern (zum Beispiel KJV); bei den anderen gibt es nichts zu verknüpfen.
+
+### Vorkommen als Diagramm
+
+In der Wortstudie (Wort anklicken) gibt es den Knopf **Vorkommen als Diagramm**. Das Fenster zeigt:
+
+- einen **Balken für jedes Buch** des passenden Testaments (hebräische Nummern: Altes, griechische: Neues Testament) mit der Zahl der Vorkommen; ein Klick auf einen Balken springt zur ersten Stelle in diesem Buch,
+- einen **Ring** mit den Wörtern, mit denen die KJV den Begriff übersetzt, samt Zahlen.
+
+Gezählt wird nach den Strong-Nummern der KJV. Beim ersten Mal baut das Programm dafür einmalig den Index auf (wie im Reiter Analyse).
+
 ## 4.13 Griechisch und Hebräisch lernen
 
 Wer tiefer einsteigen will, lernt die Schriften selbst: *Planen → Sprachen* (siehe [Kapitel 7](07-planen.md)).

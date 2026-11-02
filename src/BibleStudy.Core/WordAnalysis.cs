@@ -83,6 +83,25 @@ public sealed partial class WordAnalyzer
         return scored.OrderByDescending(s => s.Score).Take(top).Select(s => (s.Id, s.Shared)).ToList();
     }
 
+    /// <summary>How often the word occurs in each book (book id → count), for the distribution chart.</summary>
+    public IReadOnlyDictionary<string, int> BookCounts(string id) =>
+        Occurrences(id).GroupBy(r => r.Book).ToDictionary(g => g.Key, g => g.Count());
+
+    /// <summary>The words the translation uses for this number, most frequent first (lower case), for the ring chart.</summary>
+    public IReadOnlyList<(string Word, int Count)> Renderings(string id)
+    {
+        var counts = new Dictionary<string, int>();
+        foreach (var r in Occurrences(id).Distinct())
+            if (_words.TryGetValue(r, out var list))
+                foreach (var (wid, word) in list)
+                    if (wid == id)
+                    {
+                        var w = word.Trim().Trim('.', ',', ';', ':', '!', '?', '(', ')').ToLowerInvariant();
+                        if (w.Length > 0) counts[w] = counts.GetValueOrDefault(w) + 1;
+                    }
+        return counts.OrderByDescending(c => c.Value).ThenBy(c => c.Key, StringComparer.Ordinal).Select(c => (c.Key, c.Value)).ToList();
+    }
+
     /// <summary>The words that characterize a chapter: frequent in it, but not frequent everywhere (tf × idf).</summary>
     public IReadOnlyList<(string Id, int InChapter, int Total)> Keywords(string book, int chapter, int top = 14)
     {

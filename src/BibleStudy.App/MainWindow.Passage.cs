@@ -20,12 +20,13 @@ public partial class MainWindow
 
     // ---- right-click menu on a verse ----------------------------------------------------------------------------------
 
-    void ShowVerseMenu(int verse, Control anchor)
+    void ShowVerseMenu(int verse, Control anchor, WordSpan? word = null)
     {
         var r = new VerseRef(_curBook, _curChapter, verse);
         var menu = new MenuFlyout();
         void Item(string text, Action act, bool enabled = true) { var i = new MenuItem { Header = text, IsEnabled = enabled }; i.Click += (_, _) => act(); menu.Items.Add(i); }
         void Open(int tab) { SetPanelOpen(true); SideTabs.SelectedIndex = tab; }
+        if (word is { Strongs.Length: > 0 }) AddWordMenuItems(menu, word);
         Item(L("{0} – Vers-Übersicht", Label(r)), () => { Open(GuideTab); _ = ShowGuideAsync(r); });
         menu.Items.Add(new Separator());
         var picked = PickedText(anchor);

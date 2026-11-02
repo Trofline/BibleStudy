@@ -113,6 +113,11 @@ public sealed class AppSettings
     /// <summary>Own color per parallel column position ("#RRGGBB"); empty or missing = the standard color.</summary>
     public List<string> ParallelColors { get; set; } = [];
 
+    /// <summary>Which words light up when a word is hovered or pinned: same Strong number and word, same number only, same word only.</summary>
+    public bool MarkBoth { get; set; } = true;
+    public bool MarkStrong { get; set; } = true;
+    public bool MarkWord { get; set; }
+
     /// <summary>Names the user gave to translations (imported or ready-made), by translation id. Empty fields keep the original name.</summary>
     public Dictionary<string, TranslationAlias> TranslationAliases { get; set; } = [];
     public List<ParallelPreset> ParallelPresets { get; set; } = [];

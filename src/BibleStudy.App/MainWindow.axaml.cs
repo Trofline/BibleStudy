@@ -358,7 +358,7 @@ public partial class MainWindow : Window
             var noted = _vault.GetNotes().Where(n => n.Ref.Book == _curBook && n.Ref.Chapter == _curChapter).Select(n => n.Ref.Verse).ToHashSet();
             var size = cols.Count > 2 ? _fontSize - 3 : _fontSize;
 
-            ReaderPanel.Children.Clear(); _verseBoxes.Clear();
+            ReaderPanel.Children.Clear(); _verseBoxes.Clear(); _wordCells.Clear(); _hoverSpan = null;
             if (_animKey != $"{_curBook}{_curChapter}") { _animKey = $"{_curBook}{_curChapter}"; AnimateIn(ReaderPanel); }
             _singleColumn = cols.Count == 1;
             // a column with a passage of its own cannot run verse by verse next to the others: it gets its own scroller
@@ -390,6 +390,7 @@ public partial class MainWindow : Window
                 ReaderPanel.Children.Add(box);
             }
             Paint();
+            ApplyWordMarks();
             ShowThread(_threadOn && cols.Count == 1);
             if (focusVerse is int fv && _verseBoxes.ContainsKey(fv)) { SelectVerse(fv); ScrollToVerse(fv); }
             else ReaderScroll.Offset = default;
@@ -437,7 +438,7 @@ public partial class MainWindow : Window
     };
 
     /// <summary>Clickable word range inside a verse cell (for the word study).</summary>
-    sealed record WordSpan(int Start, int End, string[] Strongs, string Word, string? Note = null);
+    sealed record WordSpan(int Start, int End, string[] Strongs, string Word, string? Note = null, Run? Run = null, IBrush? Base = null);
 
     static string NoteLetter(int i) => i < 26 ? ((char)('a' + i)).ToString() : NoteLetter(i / 26 - 1) + NoteLetter(i % 26);
 
@@ -499,7 +500,7 @@ public partial class MainWindow : Window
                 if (marks.FirstOrDefault(m => m.Start <= from && m.End >= from + piece.Length) is { } mark) run.Background = HighlightBrush(mark.Color);
                 if (s.Strongs is { Count: > 0 })
                 {
-                    spans.Add(new WordSpan(pos, pos + piece.Length, [.. s.Strongs], s.Text));
+                    spans.Add(new WordSpan(pos, pos + piece.Length, [.. s.Strongs], s.Text, null, run, run.Background));
                     if (study) run.TextDecorations = s.Estimated ? EstimatedUnderline : TextDecorations.Underline;
                 }
                 runs.Add(new RunMap(pos, from, piece.Length));
@@ -509,6 +510,12 @@ public partial class MainWindow : Window
         }
         Add(new Run(" "));
         tb.Tag = new CellInfo(spans, runs, number, t.Id, string.Concat(v.Segments.Where(x => x.NoteId is null).Select(x => x.Text)));
+        if (study && spans.Any(x => x.Run is not null))
+        {
+            _wordCells.Add(tb);
+            tb.PointerMoved += (_, e) => OnWordHover(tb, e);
+            tb.PointerExited += (_, _) => OnWordHover(tb, null);
+        }
         return tb;
     }
 
@@ -522,7 +529,7 @@ public partial class MainWindow : Window
             SelectVerse(verse);
             if (e.GetCurrentPoint(this).Properties.IsRightButtonPressed && _verseBoxes.TryGetValue(verse, out var anchor))
             {
-                e.Handled = true; ShowVerseMenu(verse, anchor); return;
+                e.Handled = true; ShowVerseMenu(verse, anchor, SpanUnder(e)); return;
             }
         }
         if (e.Source is not SelectableTextBlock { Tag: CellInfo cell } tb) return;
@@ -557,7 +564,10 @@ public partial class MainWindow : Window
                 var all = new Button { Content = L("Alle Vorkommen"), HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Left };
                 var conc = $"{id}  {e?.Lemma}  „{span.Word.Trim()}“";
                 all.Click += async (_, _) => await ShowConcordanceAsync(id, conc);
-                StudyPanel.Children.Add(all);
+                var chart = new Button { Content = L("Vorkommen als Diagramm"), HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Left, Margin = new(6, 0, 0, 0) };
+                var chartWord = span.Word;
+                chart.Click += async (_, _) => await ShowWordChartAsync(id, chartWord);
+                StudyPanel.Children.Add(new WrapPanel { Children = { all, chart } });
             }
             catch (Exception ex) { StudyPanel.Children.Add(new TextBlock { Text = L("{0}: Wörterbuch nicht verfügbar ({1})", id, ex.Message), TextWrapping = TextWrapping.Wrap }); }
         }
