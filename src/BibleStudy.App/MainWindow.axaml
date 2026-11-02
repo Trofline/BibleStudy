@@ -582,7 +582,6 @@
                                 <CheckBox x:Name="JesusRedCheck" Content="Worte Jesu farbig hervorheben" />
                                 <TextBlock Classes="caption" Text="Farbe der Worte Jesu (unabhängig vom Farbschema)" />
                                 <WrapPanel x:Name="JesusColorPanel" />
-                                <CheckBox x:Name="GlassCheck" Content="Liquid-Glas-Design (Glasränder mit Prisma-Schimmer, Milchglas-Flächen, weiche Schatten)" />
                                 <CheckBox x:Name="HighContrastCheck" Content="Hoher Kontrast (Text, Rahmen und Hinweise kräftiger)" />
                                 <CheckBox x:Name="ReadableTextCheck" Content="Leichter lesbare Schrift (schlicht, mit mehr Buchstabenabstand, z. B. bei Legasthenie)" />
                                 <CheckBox x:Name="HebrewVowelsCheck" Content="Hebräisch: Vokalzeichen anzeigen" />
