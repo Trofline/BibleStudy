@@ -26,7 +26,7 @@ public partial class MainWindow
         var menu = new MenuFlyout();
         MenuItem Make(string text, Action act, bool enabled = true) { var i = new MenuItem { Header = text, IsEnabled = enabled }; i.Click += (_, _) => act(); return i; }
         void Item(string text, Action act, bool enabled = true) => menu.Items.Add(Make(text, act, enabled));
-        MenuItem Group(string title, params Control[] children) { var g = new MenuItem { Header = title }; foreach (var c in children) g.Items.Add(c); return g; }
+        MenuItem Group(string title, params Control[] children) { var g = new MenuItem { Header = SubHeader(title) }; foreach (var c in children) g.Items.Add(c); return g; }
         void Open(int tab) { SetPanelOpen(true); SideTabs.SelectedIndex = tab; }
 
         // the word under the pointer comes first: pin it, or look it up

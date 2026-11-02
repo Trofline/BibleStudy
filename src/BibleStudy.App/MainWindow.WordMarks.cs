@@ -21,6 +21,17 @@ public partial class MainWindow
     WordSpan? _hoverSpan;
     int _markCursor = -1;
 
+    /// <summary>The header of a menu entry that opens a submenu: the text and an arrow at the right end, so it can be told from the plain entries.</summary>
+    static Control SubHeader(string text)
+    {
+        var grid = new Grid { ColumnDefinitions = new("*,Auto"), MinWidth = 150 };
+        var label = new TextBlock { Text = text, VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center };
+        var arrow = new TextBlock { Text = "›", FontSize = 18, FontWeight = FontWeight.Bold, Margin = new(18, -2, 0, 0), VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center };
+        Grid.SetColumn(arrow, 1);
+        grid.Children.Add(label); grid.Children.Add(arrow);
+        return grid;
+    }
+
     static string NormWord(string w) => new string(w.Where(char.IsLetterOrDigit).ToArray()).ToLowerInvariant();
 
     static string PinKey(WordSpan s) => string.Join(",", s.Strongs.Order()) + "|" + NormWord(s.Word);
@@ -119,7 +130,7 @@ public partial class MainWindow
             StatusText.Text = _pinned.Count == 0 ? L("Keine fixierten Hervorhebungen.") : L("{0} Wörter in diesem Kapitel markiert. Rechtsklick auf ein Wort: nächstes markiertes Wort.", MarkedSpans().Count);
         }));
 
-        var sub = new MenuItem { Header = L("Wort „{0}“ · {1}", word, ids) };
+        var sub = new MenuItem { Header = SubHeader(L("Wort „{0}“ · {1}", word, ids)) };
         sub.Items.Add(Make(L("{0} nachschlagen", ids), () => _ = ShowStudyAsync(w)));
         sub.Items.Add(Make(L("Vorkommen als Diagramm"), () => _ = ShowWordChartAsync(w.Strongs[0], w.Word)));
         if (_pinned.Count > 0)
@@ -130,7 +141,7 @@ public partial class MainWindow
             sub.Items.Add(Make(L("Alle Hervorhebungen lösen"), () => { _pinned.Clear(); _markCursor = -1; ApplyWordMarks(); }));
         }
         sub.Items.Add(new Separator());
-        var colors = new MenuItem { Header = L("Angezeigte Farben") };
+        var colors = new MenuItem { Header = SubHeader(L("Angezeigte Farben")) };
         colors.Items.Add(Toggle(L("Strong und Wort gleich (lila)"), _settings.MarkBoth, v => _settings.MarkBoth = v));
         colors.Items.Add(Toggle(L("Nur Strong gleich (grün)"), _settings.MarkStrong, v => _settings.MarkStrong = v));
         colors.Items.Add(Toggle(L("Nur Wort gleich (blau)"), _settings.MarkWord, v => _settings.MarkWord = v));
