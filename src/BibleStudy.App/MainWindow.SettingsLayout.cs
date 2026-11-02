@@ -18,8 +18,6 @@ public partial class MainWindow
 
     void InitSettingsLayout()
     {
-        SettingsStack.MaxWidth = 820;
-        SettingsStack.HorizontalAlignment = HorizontalAlignment.Left;
         var cards = SettingsStack.Children.OfType<Border>()
             .Where(b => b.Classes.Contains("card") && b.Child is StackPanel sp && sp.Children.Count > 0 && sp.Children[0] is TextBlock tb && tb.Classes.Contains("eyebrow"))
             .ToList();
