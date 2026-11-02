@@ -1872,5 +1872,13 @@
   "Farbe jeder Spalte": "Цвет каждой колонки",
   "Farben der Spalten ändern": "Изменить цвета колонок",
   "Standard": "Стандартный",
-  "Markierten Text kopieren": "Копировать выделенный текст"
+  "Markierten Text kopieren": "Копировать выделенный текст",
+  "Dokumentation": "Документация",
+  "Das ausführliche Handbuch: jede Funktion, jedes Tastenkürzel, Anwendung und Strategien. Mit Inhaltsverzeichnis und Suche.": "Полное руководство: каждая функция, каждое сочетание клавиш, применение и стратегии. С оглавлением и поиском.",
+  "Das Handbuch ist in diesem Paket nicht enthalten. Du findest es auf GitHub.": "Руководство не входит в этот пакет. Его можно найти на GitHub.",
+  "Im Handbuch suchen …": "Искать в руководстве …",
+  "Als .md-Datei öffnen": "Открыть как файл .md",
+  "Schreibt das ganze Handbuch als eine Markdown-Datei und öffnet sie": "Записывает всё руководство в один файл Markdown и открывает его",
+  "Inhalt": "Оглавление",
+  "Handbuch konnte nicht geöffnet werden: {0}": "Не удалось открыть руководство: {0}"
 }

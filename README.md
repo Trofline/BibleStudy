@@ -5,7 +5,7 @@
 Free, open-source Bible study software for Windows, Linux and macOS (C#, .NET 10, Avalonia). Read, compare, highlight, link notes and
 documents, analyze the original text, prepare sermons – works offline, no account needed.
 
-*[Deutsche Version](README.de.md)*
+*[Deutsche Version](README.de.md)* · *[Handbuch (German, full manual)](docs/handbuch/README.md)*
 
 The guiding principle is **Scripture alone**: the Bible text comes first. Commentaries (human writings) are hidden unless you switch them on.
 

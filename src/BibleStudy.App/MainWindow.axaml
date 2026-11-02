@@ -918,6 +918,9 @@
                 <TabItem Header="Lesezeichen">
                     <ScrollViewer><StackPanel x:Name="BookmarkPanel" Spacing="0" Margin="16,14,12,16" /></ScrollViewer>
                 </TabItem>
+                <TabItem Header="Dokumentation">
+                    <Grid x:Name="HandbookHost" Margin="0,6,0,0" />
+                </TabItem>
             </TabControl>
             </DockPanel>
         </Border>

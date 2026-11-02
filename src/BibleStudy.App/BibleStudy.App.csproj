@@ -11,6 +11,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <EmbeddedResource Include="../../docs/handbuch/*.md" LogicalName="Handbuch/%(Filename)%(Extension)" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Using Include="BibleStudy.Core.Loc" Static="true" />
     <Using Include="BibleStudy.Core.Loc" Alias="Loc" />
   </ItemGroup>

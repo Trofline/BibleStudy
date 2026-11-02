@@ -1872,5 +1872,13 @@
   "Farbe jeder Spalte": "Color de cada columna",
   "Farben der Spalten ändern": "Cambiar los colores de las columnas",
   "Standard": "Estándar",
-  "Markierten Text kopieren": "Copiar el texto marcado"
+  "Markierten Text kopieren": "Copiar el texto marcado",
+  "Dokumentation": "Documentación",
+  "Das ausführliche Handbuch: jede Funktion, jedes Tastenkürzel, Anwendung und Strategien. Mit Inhaltsverzeichnis und Suche.": "El manual completo: cada función, cada atajo, uso y estrategias. Con índice y búsqueda.",
+  "Das Handbuch ist in diesem Paket nicht enthalten. Du findest es auf GitHub.": "El manual no está incluido en este paquete. Lo encuentras en GitHub.",
+  "Im Handbuch suchen …": "Buscar en el manual …",
+  "Als .md-Datei öffnen": "Abrir como archivo .md",
+  "Schreibt das ganze Handbuch als eine Markdown-Datei und öffnet sie": "Escribe todo el manual como un archivo Markdown y lo abre",
+  "Inhalt": "Contenido",
+  "Handbuch konnte nicht geöffnet werden: {0}": "No se pudo abrir el manual: {0}"
 }

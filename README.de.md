@@ -5,7 +5,7 @@
 Freie, quelloffene Bibelstudien-Software für Windows, Linux und macOS (C#, .NET 10, Avalonia). Lesen, vergleichen, markieren, Notizen und Dokumente
 verknüpfen, Predigten vorbereiten – alles offline nutzbar und ohne Konto.
 
-*[English version](README.md)*
+*[English version](README.md)* · *[Das Handbuch](docs/handbuch/README.md): jede Funktion, jedes Tastenkürzel, Strategien*
 
 ## Was kann es?
 

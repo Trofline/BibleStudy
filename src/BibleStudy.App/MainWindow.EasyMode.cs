@@ -8,7 +8,7 @@ namespace BibleStudy.App;
 /// </summary>
 public partial class MainWindow
 {
-    static readonly HashSet<int> EasySideTabs = [0, 2, 12, 13];
+    static readonly HashSet<int> EasySideTabs = [0, 2, 12, 13, HandbookTab];
 
     void InitEasyMode()
     {

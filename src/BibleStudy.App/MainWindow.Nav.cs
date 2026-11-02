@@ -80,6 +80,7 @@ public partial class MainWindow
         [
             new(SettingsTab, K("Einstellungen"), L("Aussehen, Verhalten, Vault, Sicherung, eigene Übersetzungen.")),
             new(13, K("Hilfe"), L("So funktioniert das Programm.")),
+            new(HandbookTab, K("Dokumentation"), L("Das ausführliche Handbuch: jede Funktion, jedes Tastenkürzel, Anwendung und Strategien. Mit Inhaltsverzeichnis und Suche.")),
             new(14, K("Maße & Info"), L("Maße, Gewichte und Abkürzungen aus der Bibel.")),
         ], Windowed: true),
     ];

@@ -1872,5 +1872,13 @@
   "Farbe jeder Spalte": "Color of each column",
   "Farben der Spalten ändern": "Change column colors",
   "Standard": "Default",
-  "Markierten Text kopieren": "Copy marked text"
+  "Markierten Text kopieren": "Copy marked text",
+  "Dokumentation": "Documentation",
+  "Das ausführliche Handbuch: jede Funktion, jedes Tastenkürzel, Anwendung und Strategien. Mit Inhaltsverzeichnis und Suche.": "The full handbook: every feature, every shortcut, how to use it and strategies. With a table of contents and search.",
+  "Das Handbuch ist in diesem Paket nicht enthalten. Du findest es auf GitHub.": "The handbook is not part of this package. You can find it on GitHub.",
+  "Im Handbuch suchen …": "Search the handbook …",
+  "Als .md-Datei öffnen": "Open as .md file",
+  "Schreibt das ganze Handbuch als eine Markdown-Datei und öffnet sie": "Writes the whole handbook as one Markdown file and opens it",
+  "Inhalt": "Contents",
+  "Handbuch konnte nicht geöffnet werden: {0}": "Could not open the handbook: {0}"
 }
