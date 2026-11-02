@@ -15,8 +15,12 @@ Die Suche ist das mächtigste Werkzeug im Programm. Du findest sie in der Leiste
 | `Haus*` | Platzhalter am Ende: Haus, Hauses, Häuser … (Wortanfang) |
 | `*keit` | Platzhalter am Anfang: Wortende |
 | `*geist*` | Wortteil |
+| `Gnade NAH5 Wahrheit` | beide höchstens **5 Wörter** voneinander entfernt, in beliebiger Reihenfolge |
+| `Herr DANN3 Gott` | Gott steht **nach** Herr, höchstens 3 Wörter dahinter |
 | `L=gehen` | alle Formen der **Grundform** (ging, gingen, gegangen) |
 | `L~haus` | Grundform, Groß-/Kleinschreibung egal |
+
+**Wortabstand:** `NAH` und `DANN` brauchen immer eine Zahl (`NAH1` bis `NAH999`); ein Wort daneben zählt als Abstand 1. Beide Seiten dürfen Wendungen, Gruppen, Grundformen oder Strong-Nummern sein, zum Beispiel `"Reich Gottes" NAH10 (Gleichnis / Senfkorn)`. Englisch geht auch: `NEAR5`, `THEN3`. Ohne Zahl bleibt „dann“ ein ganz gewöhnliches Suchwort.
 
 Satzzeichen an Suchwörtern (Komma, Bindestrich) werden ignoriert: `Gnade,` findet dasselbe wie `Gnade`. Ein einzelnes überzähliges `)` wirft die Wörter dahinter nicht mehr aus der Suche.
 
@@ -92,6 +96,16 @@ Unter der Trefferliste:
 - **Orte auf der Karte:** zeigt, wo die genannten Orte liegen (größerer Punkt = mehr Verse).
 
 Ein Klick auf einen Treffer springt zur Stelle; die Treffer sind markiert.
+
+### Wortstatistik
+
+Der Knopf **Wortstatistik** unter den Treffern öffnet ein Fenster mit drei Auswertungen:
+
+- **Nachbarwörter:** welche Wörter auffällig oft in der Nähe der Treffer stehen (3, 5 oder 10 Wörter Abstand). Gerechnet wird mit dem Log-Likelihood-Test nach Dunning: Häufige Füllwörter wie „und“ fallen heraus, nur wirklich auffällige Partner bleiben. Ein Klick auf ein Wort sucht beide zusammen, zum Beispiel `(Gnade) NAH5 Rechtfertigung`.
+- **Schlüsselwörter:** welche Wörter das **aufgeschlagene Buch** ausmachen, verglichen mit dem Rest der Bibel (der Römerbrief etwa ist voller „Gesetz“, „Glaube“, „gerecht“). Ein Klick sucht das Wort.
+- **Seltene Wörter:** Wörter des Buches, die in der ganzen Übersetzung nur **einmal** vorkommen. Ein Klick springt zur Stelle.
+
+Die Zahlen gelten für die gerade gewählte Übersetzung. Für Hapax im Sinne der Sprachwissenschaft (nur einmal im Grundtext) brauchst du die Strong-Nummern und die Konkordanz.
 
 ## 3.10 Grammatiksuche und Satzrollen
 

@@ -16,6 +16,8 @@ public sealed record StrongWordNode(string Id, string Word) : SearchNode;
 public sealed record NotNode(SearchNode Inner) : SearchNode;
 public sealed record AndNode(IReadOnlyList<SearchNode> Items) : SearchNode;
 public sealed record OrNode(IReadOnlyList<SearchNode> Items) : SearchNode;
+/// <summary>Gnade NAH5 Wahrheit: both within 5 words of each other, in either order. Gnade DANN5 Wahrheit: Wahrheit follows Gnade within 5 words.</summary>
+public sealed record NearNode(SearchNode Left, SearchNode Right, int Words, bool Ordered) : SearchNode;
 
 public static partial class SearchQuery
 {
@@ -64,6 +66,7 @@ public static partial class SearchQuery
     static bool HasPositive(SearchNode n) => n switch
     {
         NotNode => false,
+        NearNode => true,
         AndNode a => a.Items.Any(HasPositive),
         OrNode o => o.Items.Any(HasPositive),
         _ => true,
@@ -134,15 +137,30 @@ public static partial class SearchQuery
     static SearchNode? ParseOr(List<Tok> t, ref int p)
     {
         var items = new List<SearchNode>();
-        var first = ParseUnary(t, ref p);
+        var first = ParseNear(t, ref p);
         if (first is not null) items.Add(first);
         while (p < t.Count && t[p].Kind == K.Or)
         {
             p++;
-            var next = ParseUnary(t, ref p);
+            var next = ParseNear(t, ref p);
             if (next is not null) items.Add(next);
         }
         return items.Count switch { 0 => null, 1 => items[0], _ => new OrNode(items) };
+    }
+
+    /// <summary>unary (NAH5 | DANN5 unary)*: the number is required (a bare "dann" is an ordinary word of the text).</summary>
+    static SearchNode? ParseNear(List<Tok> t, ref int p)
+    {
+        var left = ParseUnary(t, ref p);
+        while (left is not null && p < t.Count && t[p].Kind == K.Term && !t[p].Quoted && NearRx().Match(t[p].Text) is { Success: true } m)
+        {
+            p++;
+            var right = ParseUnary(t, ref p);
+            if (right is null) break;
+            var ordered = m.Groups["k"].Value.ToUpperInvariant() is "DANN" or "THEN";
+            left = new NearNode(left, right, Math.Clamp(int.Parse(m.Groups["n"].Value), 1, 999), ordered);
+        }
+        return left;
     }
 
     static SearchNode? ParseUnary(List<Tok> t, ref int p)
@@ -195,6 +213,7 @@ public static partial class SearchQuery
         return words.Count switch { 0 => null, 1 => new WordNode(words[0]), _ => new PhraseNode(words) };
     }
 
+    [GeneratedRegex(@"^(?<k>NAH|NEAR|DANN|THEN)(?<n>\d{1,3})$")] private static partial Regex NearRx();
     [GeneratedRegex(@"^[GgHh]\d{1,4}[a-cA-C]?$")] private static partial Regex StrongRx();
     [GeneratedRegex(@"^[Ll](?<m>[=~])(?<w>.+)$")] private static partial Regex LemmaRx();
     [GeneratedRegex(@"^[Oo]=(?<w>.+)$")] private static partial Regex OriginalRx();

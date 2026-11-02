@@ -178,6 +178,7 @@ public static class SearchEngine
     {
         StrongNode or StrongWordNode or OriginalNode => true,
         NotNode x => UsesStrongs(x.Inner),
+        NearNode nn => UsesStrongs(nn.Left) || UsesStrongs(nn.Right),
         AndNode a => a.Items.Any(UsesStrongs),
         OrNode o => o.Items.Any(UsesStrongs),
         _ => false,
@@ -221,6 +222,7 @@ public static class SearchEngine
                 return hit;
             }
             case NotNode x: return !Eval(x.Inner, v, c, []);
+            case NearNode nn: return Near(nn, v, c, spans);
             case AndNode a:
             {
                 var tmp = new List<(int, int)>();
@@ -236,6 +238,47 @@ public static class SearchEngine
             }
             default: return false;
         }
+    }
+
+    /// <summary>The first and last word (by position in the verse) that a character span touches.</summary>
+    internal static (int First, int Last) WordRange(CorpusVerse v, (int Start, int Len) s)
+    {
+        int first = -1, last = -1;
+        for (var i = 0; i < v.Words.Length; i++)
+        {
+            if (v.Words[i].Start + v.Words[i].Len <= s.Start) continue;
+            if (v.Words[i].Start >= s.Start + s.Len) break;
+            if (first < 0) first = i;
+            last = i;
+        }
+        return (first, last);
+    }
+
+    /// <summary>Both sides occur in the verse and at least one pair stands within the given number of words (adjacent words are 1 apart).</summary>
+    static bool Near(NearNode n, CorpusVerse v, Ctx c, List<(int, int)> spans)
+    {
+        var a = new List<(int, int)>(); var b = new List<(int, int)>();
+        if (!Eval(n.Left, v, c, a) || !Eval(n.Right, v, c, b)) return false;
+        var keep = new List<(int, int)>();
+        foreach (var sa in Merge(a))
+        {
+            var (aFirst, aLast) = WordRange(v, sa);
+            if (aFirst < 0) continue;
+            foreach (var sb in Merge(b))
+            {
+                var (bFirst, bLast) = WordRange(v, sb);
+                if (bFirst < 0) continue;
+                int distance;
+                if (bFirst > aLast) distance = bFirst - aLast;
+                else if (!n.Ordered && aFirst > bLast) distance = aFirst - bLast;
+                else continue;   // overlapping, or in the wrong order for DANN
+                if (distance > n.Words) continue;
+                keep.Add(sa); keep.Add(sb);
+            }
+        }
+        if (keep.Count == 0) return false;
+        spans.AddRange(keep);
+        return true;
     }
 
     /// <summary>Tests one word of the text against a search word: wildcards (*) or the chosen match mode.</summary>

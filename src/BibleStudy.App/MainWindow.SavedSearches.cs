@@ -37,16 +37,17 @@ public partial class MainWindow
         if (SearchQueueBtn.Parent is Panel actions)
         {
             var at = actions.Children.IndexOf(SearchQueueBtn) + 1;
-            actions.Children.Insert(at, new WrapPanel { Children = { _hitsDocBtn, _hitsCsvBtn, _hitsMapBtn } });
+            actions.Children.Insert(at, new WrapPanel { Children = { _hitsDocBtn, _hitsCsvBtn, _hitsMapBtn, _hitsStatsBtn } });
         }
         _saveSearchBtn.Flyout = BuildSaveFlyout();
         _savedListBtn.Click += (_, _) => ShowSavedMenu();
         _hitsDocBtn.Click += (_, _) => SaveHitsAsDocument();
         _hitsCsvBtn.Click += (_, _) => ExportHitsCsv();
         _hitsMapBtn.Click += async (_, _) => await ShowHitsOnMapAsync();
+        InitWordStats();
     }
 
-    void UpdateHitActions(bool visible) { _hitsDocBtn.IsVisible = visible; _hitsCsvBtn.IsVisible = visible; _hitsMapBtn.IsVisible = visible; }
+    void UpdateHitActions(bool visible) { _hitsDocBtn.IsVisible = visible; _hitsCsvBtn.IsVisible = visible; _hitsMapBtn.IsVisible = visible; _hitsStatsBtn.IsVisible = visible; }
 
     async Task ShowHitsOnMapAsync()
     {

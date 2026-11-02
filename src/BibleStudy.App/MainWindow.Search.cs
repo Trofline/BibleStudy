@@ -69,6 +69,8 @@ public partial class MainWindow
         (L("\"Engel des HERRN\""), L("Wendung: Wörter direkt hintereinander")),
         (L("Gnade / Wahrheit"), L("ODER: eines der Wörter oder beide")),
         (L("Gnade -Wahrheit"), L("Minus schließt ein Wort aus")),
+        (L("Gnade NAH5 Wahrheit"), L("Abstand: beide höchstens 5 Wörter voneinander entfernt, in beliebiger Reihenfolge (NAH1 bis NAH999)")),
+        (L("Herr DANN3 Gott"), L("Reihenfolge: Gott steht nach Herr, höchstens 3 Wörter dahinter")),
         (L("(L=hüten / L=weiden) (Schaf / Herde)"), L("Gruppen in Klammern, mit Grundformen")),
         (L("L=gehen"), L("Grundform: findet ging, gegangen, geht …")),
         (L("L=Haus*"), L("Platzhalter *: Hausbewohner, Hausgeborene …")),
