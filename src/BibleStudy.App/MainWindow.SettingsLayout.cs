@@ -21,6 +21,7 @@ public partial class MainWindow
             var panel = (StackPanel)card.Child!;
             var title = (TextBlock)panel.Children[0];
             panel.Children.RemoveAt(0);
+            card.Child = null;   // the panel moves into the fold-out, so it must leave the card first
             var header = new TextBlock { Text = title.Text, Classes = { "eyebrow" }, VerticalAlignment = VerticalAlignment.Center };
             var ex = new Expander { Header = header, Content = panel, IsExpanded = expanders.Count == 0, HorizontalContentAlignment = HorizontalAlignment.Stretch, Padding = new(0, 6, 0, 0) };
             card.Child = ex;
