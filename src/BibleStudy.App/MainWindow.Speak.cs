@@ -202,7 +202,13 @@ public partial class MainWindow
                         await NaturalVoice.SynthesizeAsync(_root, voice, chunks[i], wav, ct);
                         ready[i].TrySetResult(wav);
                     }
-                    catch (Exception ex) { for (var j = i; j < ready.Length; j++) ready[j].TrySetException(ex); return; }
+                    catch (Exception ex)
+                    {
+                        // only the piece being played is waited for; the others are cancelled so that no unobserved error is left
+                        if (ex is OperationCanceledException) ready[i].TrySetCanceled(); else ready[i].TrySetException(ex);
+                        for (var j = i + 1; j < ready.Length; j++) ready[j].TrySetCanceled();
+                        return;
+                    }
                 }
             }, ct);
             for (var i = 0; i < chunks.Count; i++)

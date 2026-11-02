@@ -63,20 +63,41 @@ public partial class MainWindow
             root.Opacity = 0;
             return;
         }
-        var anim = new Animation
+        // like an old tube TV switching off: the picture collapses to a glowing line, the line to a point, the point goes out.
+        // (Avalonia has no animator for RenderTransform, so the frames are set here.)
+        try
         {
-            Duration = TimeSpan.FromMilliseconds(520), Easing = new CubicEaseIn(), FillMode = FillMode.Forward,
-            Children =
+            root.RenderTransformOrigin = Avalonia.RelativePoint.Center;
+            await RunFramesAsync(260, t =>
             {
-                new KeyFrame { Cue = new Cue(0), Setters = { new Setter(OpacityProperty, 1.0), new Setter(RenderTransformProperty, TransformOperations.Parse("scale(1) translate(0px, 0px)")), new Setter(EffectProperty, new ImmutableBlurEffect(0)) } },
-                new KeyFrame { Cue = new Cue(0.55), Setters = { new Setter(OpacityProperty, 0.75), new Setter(RenderTransformProperty, TransformOperations.Parse("scale(0.96) translate(0px, -10px)")), new Setter(EffectProperty, new ImmutableBlurEffect(6)) } },
-                new KeyFrame { Cue = new Cue(1), Setters = { new Setter(OpacityProperty, 0.0), new Setter(RenderTransformProperty, TransformOperations.Parse("scale(0.88) translate(0px, -26px)")), new Setter(EffectProperty, new ImmutableBlurEffect(22)) } },
-            },
-        };
-        try { await anim.RunAsync(root); }
-        catch { /* an animation that cannot run must not keep the program from closing */ }
+                var e = t * t * t;
+                root.RenderTransform = new ScaleTransform(1, 1 - 0.996 * e);
+                root.Effect = new ImmutableDropShadowEffect(0, 0, 40 * e, Colors.White, e);
+            });
+            await RunFramesAsync(300, t =>
+            {
+                var e = t * t * t;
+                root.RenderTransform = new ScaleTransform(1 - 0.99 * e, 0.004);
+                root.Effect = new ImmutableDropShadowEffect(0, 0, 40 + 10 * e, Colors.White, 1);
+                root.Opacity = t < 0.75 ? 1 : 1 - (t - 0.75) / 0.25;
+            });
+        }
+        catch (Exception ex) { ErrorLog.Write(ex); /* an animation that cannot run must not keep the program from closing */ }
         root.Opacity = 0;
-        await Task.Delay(120);
+        await Task.Delay(60);
+    }
+
+    /// <summary>Calls <paramref name="step"/> with 0..1 for the given time, about 60 times a second.</summary>
+    static async Task RunFramesAsync(int ms, Action<double> step)
+    {
+        var clock = System.Diagnostics.Stopwatch.StartNew();
+        while (true)
+        {
+            var t = Math.Min(1, clock.Elapsed.TotalMilliseconds / ms);
+            step(t);
+            if (t >= 1) return;
+            await Task.Delay(8);
+        }
     }
 
     void ResetAfterCloseAnimation()
