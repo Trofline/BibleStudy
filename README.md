@@ -7,14 +7,14 @@
   <a href="https://github.com/Trofline/BibleStudy/actions/workflows/codeql.yml"><img alt="CodeQL" src="https://github.com/Trofline/BibleStudy/actions/workflows/codeql.yml/badge.svg"></a>
   <img alt="Platforms" src="https://img.shields.io/badge/Windows%20%C2%B7%20Linux%20%C2%B7%20macOS-555">
 </p>
-<p align="center"><a href="https://trofline.github.io/BibleStudy/">Website</a> · <a href="https://github.com/Trofline/BibleStudy/releases/latest">Download</a> · <a href="https://github.com/Trofline/BibleStudy/wiki">Wiki</a> · <a href="docs/handbuch/README.md">Handbuch</a></p>
+<p align="center"><a href="https://trofline.github.io/BibleStudy/">Website</a> · <a href="https://github.com/Trofline/BibleStudy/releases/latest">Download</a> · <a href="https://github.com/Trofline/BibleStudy/wiki">Wiki</a> · <a href="docs/handbook/README.md">Handbook</a></p>
 
 # BibleStudy
 
 Free, open-source Bible study software for Windows, Linux and macOS (C#, .NET 10, Avalonia). Read, compare, highlight, link notes and
 documents, analyze the original text, prepare sermons – works offline, no account needed.
 
-*[Deutsche Version](README.de.md)* · *[Handbuch (German, full manual)](docs/handbuch/README.md)*
+*[Deutsche Version](README.de.md)* · *[Handbook (full manual)](docs/handbook/README.md)* · *[Handbuch (Deutsch)](docs/handbuch/README.md)*
 
 The guiding principle is **Scripture alone**: the Bible text comes first. Commentaries (human writings) are hidden unless you switch them on.
 

@@ -19,7 +19,9 @@ namespace BibleStudy.App;
 public partial class MainWindow
 {
     const int HandbookTab = 26;
-    const string HandbookUrl = "https://github.com/Trofline/BibleStudy/tree/main/docs/handbuch";
+    // German is the original; every other language reads the English handbook.
+    static bool HandbookGerman => Loc.Code == "de";
+    static string HandbookUrl => "https://github.com/Trofline/BibleStudy/tree/main/docs/" + (HandbookGerman ? "handbuch" : "handbook");
 
     sealed record HbChapter(string File, string Title, string Text);
 
@@ -36,15 +38,16 @@ public partial class MainWindow
     {
         if (_hbChapters is not null) return _hbChapters;
         var asm = Assembly.GetExecutingAssembly();
+        var prefix = HandbookGerman ? "Handbuch/" : "Handbook/";
         _hbChapters = asm.GetManifestResourceNames()
-            .Where(n => Regex.IsMatch(n, @"^Handbuch/\d\d-.*\.md$")).Order()
+            .Where(n => n.StartsWith(prefix, StringComparison.Ordinal) && Regex.IsMatch(n, @"/\d\d-.*\.md$")).Order()
             .Select(n =>
             {
                 using var s = asm.GetManifestResourceStream(n)!;
                 using var r = new StreamReader(s, Encoding.UTF8);
                 var text = r.ReadToEnd();
                 var title = Regex.Match(text, @"^#\s+(.+)$", RegexOptions.Multiline) is { Success: true } m ? m.Groups[1].Value.Trim() : n;
-                return new HbChapter(n["Handbuch/".Length..], title, text);
+                return new HbChapter(n[prefix.Length..], title, text);
             }).ToList();
         return _hbChapters;
     }
@@ -71,12 +74,12 @@ public partial class MainWindow
         DockPanel.SetDock(_hbSearch, Dock.Top);
         tocPanel.Children.Add(_hbSearch); tocPanel.Children.Add(_hbToc);
 
-        var file = new Button { Content = L("Als .md-Datei öffnen"), Classes = { "tool" }, Padding = new(10, 0), Height = 28 };
+        var file = new Button { Content = L("Als .md-Datei öffnen"), Classes = { "tool" }, Width = double.NaN, Padding = new(10, 0), Height = 28 };
         ToolTip.SetTip(file, L("Schreibt das ganze Handbuch als eine Markdown-Datei und öffnet sie"));
         file.Click += (_, _) => OpenHandbookFile();
-        var web = new Button { Content = L("Auf GitHub ansehen"), Classes = { "tool" }, Padding = new(10, 0), Height = 28 };
+        var web = new Button { Content = L("Auf GitHub ansehen"), Classes = { "tool" }, Width = double.NaN, Padding = new(10, 0), Height = 28 };
         web.Click += (_, _) => OpenUrl(HandbookUrl);
-        var toggle = new ToggleButton { Content = L("Inhalt"), IsChecked = true, Classes = { "tool" }, Padding = new(10, 0), Height = 28 };
+        var toggle = new ToggleButton { Content = L("Inhalt"), IsChecked = true, Classes = { "tool" }, Width = double.NaN, Padding = new(10, 0), Height = 28 };
         var bar = new WrapPanel { Margin = new(14, 0, 14, 6) };
         bar.Children.Add(toggle); bar.Children.Add(file); bar.Children.Add(web);
 
@@ -177,16 +180,16 @@ public partial class MainWindow
     {
         try
         {
-            var sb = new StringBuilder("# BibleStudy – Handbuch\n\n");
+            var sb = new StringBuilder(HandbookGerman ? "# BibleStudy – Handbuch\n\n" : "# BibleStudy – Handbook\n\n");
             foreach (var c in HandbookChapters()) sb.Append("- ").Append(c.Title).Append('\n');
             sb.Append('\n');
             foreach (var c in HandbookChapters())
             {
-                var text = Regex.Replace(c.Text, @"\[([^\]]+)\]\((\d\d)-[^)]*\.md[^)]*\)", m => $"{m.Groups[1].Value} (Kapitel {int.Parse(m.Groups[2].Value)})");
+                var text = Regex.Replace(c.Text, @"\[([^\]]+)\]\((\d\d)-[^)]*\.md[^)]*\)", m => $"{m.Groups[1].Value} ({(HandbookGerman ? "Kapitel" : "chapter")} {int.Parse(m.Groups[2].Value)})");
                 text = Regex.Replace(text, @"\[([^\]]+)\]\(\.\./\.\./([^)]+)\)", "$1 (https://github.com/Trofline/BibleStudy/blob/main/$2)");
                 sb.Append(text.TrimEnd()).Append("\n\n---\n\n");
             }
-            var path = Path.Combine(AppPaths.Root, "Handbuch.md");
+            var path = Path.Combine(AppPaths.Root, HandbookGerman ? "Handbuch.md" : "Handbook.md");
             Directory.CreateDirectory(AppPaths.Root);
             File.WriteAllText(path, sb.ToString(), new UTF8Encoding(true));
             Process.Start(new ProcessStartInfo(path) { UseShellExecute = true });

@@ -12,6 +12,7 @@
 
   <ItemGroup>
     <EmbeddedResource Include="../../docs/handbuch/*.md" LogicalName="Handbuch/%(Filename)%(Extension)" />
+    <EmbeddedResource Include="../../docs/handbook/*.md" LogicalName="Handbook/%(Filename)%(Extension)" />
   </ItemGroup>
 
   <ItemGroup>
