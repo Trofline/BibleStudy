@@ -249,7 +249,7 @@ public partial class MainWindow
             if (_settings.TranslationAliases.ContainsKey(tr.Id))
             {
                 var reset = new MenuItem { Header = L("Ursprünglichen Namen wiederherstellen") };
-                reset.Click += async (_, _) => { flyout!.Hide(); _settings.TranslationAliases.Remove(tr.Id); SaveSettings(); await ReloadTranslationsAsync(TranslationId()); };
+                reset.Click += async (_, _) => { flyout!.Hide(); _settings.TranslationAliases.Remove(tr.Id); _aliasRemoved.Add(tr.Id); SaveSettings(); await ReloadTranslationsAsync(TranslationId()); };
                 menu.Items.Add(reset);
             }
             b.ContextFlyout = menu;

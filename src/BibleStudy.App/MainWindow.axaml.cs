@@ -160,6 +160,7 @@ public partial class MainWindow : Window
         InitPanel();
         InitStudy();
         InitAudio();
+        InitSpeakSpeed();
         InitStrongSearch();
         InitImport();
         InitKnowledge();
@@ -224,6 +225,7 @@ public partial class MainWindow : Window
 
     void SaveSettings()
     {
+        KeepAliasesOfOtherInstances();
         try { _settings.Save(_settingsPath); } catch (Exception ex) when (ex is IOException or UnauthorizedAccessException) { /* settings are a convenience; never crash on save */ }
     }
 

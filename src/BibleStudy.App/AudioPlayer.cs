@@ -18,6 +18,15 @@ sealed class AudioPlayer : IDisposable
     public TimeSpan Length { get; private set; }
     public bool CanSeek => OperatingSystem.IsWindows();
 
+    /// <summary>Playing speed (1 = normal). Changes at once on Windows; elsewhere with the next chapter.</summary>
+    public double Speed { get; private set; } = 1;
+
+    public void SetSpeed(double speed)
+    {
+        Speed = Math.Clamp(speed, 0.5, 3);
+        if (_mciOpen) Mci($"set {Alias} speed {(int)Math.Round(Speed * 1000)}");
+    }
+
     const string Alias = "bsaudio";
     bool _mciOpen;
     Process? _proc;
@@ -58,11 +67,12 @@ sealed class AudioPlayer : IDisposable
             Mci($"set {Alias} time format milliseconds");
             if (long.TryParse(MciText($"status {Alias} length"), out var ms)) Length = TimeSpan.FromMilliseconds(ms);
             if (!Mci($"play {Alias}")) { Stop(); State = PlayState.Failed; return false; }
+            if (Speed != 1) Mci($"set {Alias} speed {(int)Math.Round(Speed * 1000)}");
             State = PlayState.Playing;
             return true;
         }
 
-        var (exe, args) = Command(path);
+        var (exe, args) = Command(path, Speed);
         if (exe is null) { Error = "no player"; State = PlayState.Failed; return false; }
         try
         {
@@ -79,17 +89,18 @@ sealed class AudioPlayer : IDisposable
     }
 
     /// <summary>The player program for this system, or null when none is installed.</summary>
-    public static bool HasPlayer => OperatingSystem.IsWindows() || Command("x.mp3").Exe is not null;
+    public static bool HasPlayer => OperatingSystem.IsWindows() || Command("x.mp3", 1).Exe is not null;
 
-    static (string? Exe, string[] Args) Command(string path)
+    static (string? Exe, string[] Args) Command(string path, double speed)
     {
-        if (OperatingSystem.IsMacOS()) return ("afplay", [path]);
+        var x = speed.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture);
+        if (OperatingSystem.IsMacOS()) return ("afplay", speed == 1 ? [path] : ["-r", x, path]);
         (string, string[])[] candidates =
         [
-            ("mpv", ["--no-video", "--really-quiet", path]),
-            ("ffplay", ["-nodisp", "-autoexit", "-loglevel", "quiet", path]),
+            ("mpv", ["--no-video", "--really-quiet", $"--speed={x}", path]),
+            ("ffplay", ["-nodisp", "-autoexit", "-loglevel", "quiet", "-af", $"atempo={x}", path]),
             ("mpg123", ["-q", path]),
-            ("cvlc", ["--play-and-exit", "--intf", "dummy", path]),
+            ("cvlc", ["--play-and-exit", "--intf", "dummy", $"--rate={x}", path]),
         ];
         var dirs = (Environment.GetEnvironmentVariable("PATH") ?? "").Split(Path.PathSeparator, StringSplitOptions.RemoveEmptyEntries);
         foreach (var (exe, args) in candidates)

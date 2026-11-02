@@ -26,6 +26,10 @@ public partial class MainWindow
 
     string AudioCache => Path.Combine(_root, "cache");
 
+    static readonly double[] AudioSpeeds = [0.75, 1, 1.25, 1.5, 1.75, 2];
+
+    void ShowAudioSpeed() => AudioSpeedBtn.Content = _audio.Speed.ToString("0.##", System.Globalization.CultureInfo.CurrentCulture) + "×";
+
     void InitAudio()
     {
         _audioTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(250) };
@@ -48,6 +52,14 @@ public partial class MainWindow
         AudioNextBtn.Click += async (_, _) => { if (AudioBible.Next(_audioBook, _audioChapter) is { } n) await PlayOtherAsync(n); };
         AudioPrevBtn.Click += async (_, _) => { if (AudioBible.Previous(_audioBook, _audioChapter) is { } p) await PlayOtherAsync(p); };
         AudioCloseBtn.Click += (_, _) => StopAudio();
+        _audio.SetSpeed(_settings.AudioSpeed);
+        ShowAudioSpeed();
+        AudioSpeedBtn.Click += (_, _) =>
+        {
+            var next = AudioSpeeds.FirstOrDefault(v => v > _audio.Speed + 0.01);
+            _settings.AudioSpeed = next == 0 ? AudioSpeeds[0] : next;
+            _audio.SetSpeed(_settings.AudioSpeed); SaveSettings(); ShowAudioSpeed();
+        };
         AudioSlider.PropertyChanged += (_, e) =>
         {
             if (e.Property == Avalonia.Controls.Primitives.RangeBase.ValueProperty && !_audioSetting && _audio.CanSeek && AudioSlider.IsPointerOver)

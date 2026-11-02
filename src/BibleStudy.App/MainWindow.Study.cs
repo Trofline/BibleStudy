@@ -205,11 +205,39 @@ public partial class MainWindow
                 catch (ArgumentException) { StatusText.Text = L("Keine Windows-Stimme für {0} installiert; es wird die Standardstimme genutzt.", t.LanguageName); }
             _speech.SpeakAsync(text);
             SpeakBtn.IsChecked = true;
+            StatusText.Text = L("Tempo ändern: Rechtsklick auf „Vorlesen“.");
         }
         catch (Exception ex) { StatusText.Text = L("Vorlesen nicht möglich: ") + ex.Message; SpeakBtn.IsChecked = false; }
     }
 
-    void OnSpeakCompleted(object? sender, SpeakCompletedEventArgs e) => Avalonia.Threading.Dispatcher.UIThread.Post(() => SpeakBtn.IsChecked = false);
+    bool _speakRestart;
+
+    void OnSpeakCompleted(object? sender, SpeakCompletedEventArgs e) => Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+    {
+        if (_speakRestart) { _speakRestart = false; ToggleSpeak(); return; }
+        SpeakBtn.IsChecked = false;
+    });
+
+    /// <summary>Right click on "Listen aloud": the speed can be changed here; when it is speaking it starts again with the new speed.</summary>
+    void InitSpeakSpeed()
+    {
+        var label = new TextBlock { Text = L("Vorlesen: Geschwindigkeit {0:+0;-0;normal}", _settings.SpeakRate), Classes = { "caption" } };
+        var slider = new Slider { Minimum = -5, Maximum = 8, Value = _settings.SpeakRate, TickFrequency = 1, IsSnapToTickEnabled = true, Width = 220 };
+        var changed = false;
+        slider.ValueChanged += (_, e) =>
+        {
+            _settings.SpeakRate = (int)e.NewValue; changed = true;
+            label.Text = L("Vorlesen: Geschwindigkeit {0:+0;-0;normal}", _settings.SpeakRate);
+            SpeakSlider.Value = _settings.SpeakRate; SaveSettings();
+        };
+        var flyout = new Flyout { Content = new StackPanel { Spacing = 6, Margin = new(4), Children = { label, slider } } };
+        flyout.Opened += (_, _) => { slider.Value = _settings.SpeakRate; changed = false; };
+        flyout.Closed += (_, _) =>
+        {
+            if (changed && _speech is { State: SynthesizerState.Speaking }) { _speakRestart = true; _speech.SpeakAsyncCancelAll(); }
+        };
+        SpeakBtn.ContextFlyout = flyout;
+    }
 
     // ---- backup -------------------------------------------------------------------------------------------------------
 

@@ -220,6 +220,7 @@
                     <Button x:Name="AudioNextBtn" Classes="tool" Width="36" Height="32" ToolTip.Tip="Nächstes Kapitel anhören">
                         <local:Icon Data="M5 4l10 8-10 8z M19 5v14" IconSize="16" />
                     </Button>
+                    <Button x:Name="AudioSpeedBtn" Classes="tool" Width="52" Height="32" ToolTip.Tip="Abspieltempo ändern" />
                 </StackPanel>
                 <Slider x:Name="AudioSlider" Grid.Column="1" Minimum="0" Maximum="1" Value="0" VerticalAlignment="Center" />
                 <TextBlock x:Name="AudioTime" Grid.Column="2" Classes="caption" VerticalAlignment="Center" MinWidth="86" TextAlignment="Center" />
@@ -647,7 +648,7 @@
                                 <TextBlock Text="Standard-Markierfarbe" Margin="0,4,0,0" />
                                 <WrapPanel x:Name="DefaultColorPanel" />
                                 <TextBlock x:Name="SpeakLabel" Text="Vorlesen: Geschwindigkeit" Margin="0,4,0,0" />
-                                <Slider x:Name="SpeakSlider" Minimum="-5" Maximum="5" Value="0" TickFrequency="1" IsSnapToTickEnabled="True" />
+                                <Slider x:Name="SpeakSlider" Minimum="-5" Maximum="8" Value="0" TickFrequency="1" IsSnapToTickEnabled="True" />
                                 <StackPanel Orientation="Horizontal" Spacing="8" Margin="0,4,0,0">
                                     <Button x:Name="ClearHistoryBtn" Content="Suchverlauf löschen" />
                                     <Button x:Name="ResetSettingsBtn" Content="Darstellung zurücksetzen" />

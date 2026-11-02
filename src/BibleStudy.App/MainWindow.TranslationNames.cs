@@ -21,6 +21,22 @@ public partial class MainWindow
             : t).ToList();
     }
 
+    readonly HashSet<string> _aliasRemoved = [];
+
+    /// <summary>A second running copy (installed and development, say) must not wipe the names this one never saw: names found in the file are kept unless this copy removed them.</summary>
+    void KeepAliasesOfOtherInstances()
+    {
+        try
+        {
+            if (!File.Exists(_settingsPath)) return;
+            var disk = System.Text.Json.JsonSerializer.Deserialize<AppSettings>(File.ReadAllText(_settingsPath));
+            if (disk is null) return;
+            foreach (var (id, a) in disk.TranslationAliases)
+                if (!_settings.TranslationAliases.ContainsKey(id) && !_aliasRemoved.Contains(id)) _settings.TranslationAliases[id] = a;
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or System.Text.Json.JsonException) { }
+    }
+
     string? TranslationId() => (TranslationBox.SelectedItem as TranslationInfo)?.Id;
 
     void ShowRenameTranslation(TranslationInfo t)
@@ -50,7 +66,7 @@ public partial class MainWindow
         save.Click += async (_, _) =>
         {
             var n = (name.Text ?? "").Trim(); var s = (shortName.Text ?? "").Trim();
-            if (n.Length == 0 && s.Length == 0) _settings.TranslationAliases.Remove(t.Id);
+            if (n.Length == 0 && s.Length == 0) { _settings.TranslationAliases.Remove(t.Id); _aliasRemoved.Add(t.Id); }
             else _settings.TranslationAliases[t.Id] = new TranslationAlias { Name = n, Short = s };
             SaveSettings();
             win.Close();
