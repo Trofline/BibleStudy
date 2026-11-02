@@ -112,7 +112,7 @@ public partial class MainWindow
         _quietPickers = true;
         try
         {
-            _all = fresh;
+            _all = Named(fresh);
             _langs = _all.Select(x => x.LanguageName).Where(l => l != "").Distinct().Order().ToList();
             LanguageBox.ItemsSource = _langs;
             if (current is not null)

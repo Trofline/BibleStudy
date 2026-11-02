@@ -1926,5 +1926,13 @@
   "Wortarten": "Classes de mots",
   "Worauf dieses Kapitel verweist": "Vers quoi renvoie ce chapitre",
   "Wörter, die sonst nirgends vorkommen": "Mots qui n'apparaissent nulle part ailleurs",
-  "Zustand": "État"
+  "Zustand": "État",
+  "Ursprünglichen Namen wiederherstellen": "Rétablir le nom d'origine",
+  "Rechtsklick auf eine Übersetzung: eigenen Namen vergeben": "Clic droit sur une traduction : lui donner son propre nom",
+  "Übersetzung umbenennen": "Renommer la traduction",
+  "Ursprünglich: {0} ({1})": "Origine : {0} ({1})",
+  "Name": "Nom",
+  "Kurzname (erscheint oben in der Leiste)": "Nom court (affiché dans la barre du haut)",
+  "Leer lassen heißt: der ursprüngliche Name bleibt.": "Laisse vide pour garder le nom d'origine.",
+  "Name gespeichert.": "Nom enregistré."
 }

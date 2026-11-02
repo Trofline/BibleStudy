@@ -197,7 +197,7 @@ public partial class MainWindow : Window
         {
             SplashWindow.Report(0.6, L("Lade Übersetzungen …"));
             StatusText.Text = L("Lade Übersetzungen …");
-            _all = await _provider.GetTranslationsAsync();
+            _all = Named(await _provider.GetTranslationsAsync());
             _langs = _all.Select(t => t.LanguageName).Where(l => l != "").Distinct().Order().ToList();
             LanguageBox.ItemsSource = _langs;
             var wanted = _all.FirstOrDefault(t => t.Id == (_settings.TranslationId ?? "deu_elbbk")) ?? _all.FirstOrDefault(t => t.Id == "eng_kjv");

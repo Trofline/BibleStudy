@@ -150,6 +150,7 @@ public partial class MainWindow
             back.Click += (_, _) => { flyout!.Hide(); r.Do(); };
             panel.Children.Insert(0, back);
         }
+        panel.Children.Add(new TextBlock { Text = L("Rechtsklick auf eine Übersetzung: eigenen Namen vergeben"), Classes = { "caption" }, Margin = new(2, 4, 0, 0), Width = 700 });
         flyout = NewPickerFlyout(new ScrollViewer { Content = panel, MaxHeight = Math.Max(300, Bounds.Height - 130), HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled });
         flyout.ShowAt(anchor);
         search.Focus();
@@ -241,6 +242,17 @@ public partial class MainWindow
                 Background = t.Id == current ? Res("BsAccentSoft") : Res("BsSurface2"), Foreground = Res("BsText") };
             b.Classes.Add("ghost");
             b.Click += (_, _) => { TranslationBox.SelectedItem = tr; flyout!.Hide(); };
+            var menu = new MenuFlyout();
+            var rename = new MenuItem { Header = L("Umbenennen …") };
+            rename.Click += (_, _) => { flyout!.Hide(); ShowRenameTranslation(tr); };
+            menu.Items.Add(rename);
+            if (_settings.TranslationAliases.ContainsKey(tr.Id))
+            {
+                var reset = new MenuItem { Header = L("Ursprünglichen Namen wiederherstellen") };
+                reset.Click += async (_, _) => { flyout!.Hide(); _settings.TranslationAliases.Remove(tr.Id); SaveSettings(); await ReloadTranslationsAsync(TranslationId()); };
+                menu.Items.Add(reset);
+            }
+            b.ContextFlyout = menu;
             panel.Children.Add(b);
         }
         flyout = NewPickerFlyout(new ScrollViewer { Content = panel, Width = 720, MaxHeight = Math.Max(300, Bounds.Height - 130), HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled });

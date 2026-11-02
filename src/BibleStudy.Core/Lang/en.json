@@ -1926,5 +1926,13 @@
   "Wortarten": "Parts of speech",
   "Worauf dieses Kapitel verweist": "What this chapter points to",
   "Wörter, die sonst nirgends vorkommen": "Words that occur nowhere else",
-  "Zustand": "State"
+  "Zustand": "State",
+  "Ursprünglichen Namen wiederherstellen": "Restore the original name",
+  "Rechtsklick auf eine Übersetzung: eigenen Namen vergeben": "Right-click a translation: give it your own name",
+  "Übersetzung umbenennen": "Rename translation",
+  "Ursprünglich: {0} ({1})": "Original: {0} ({1})",
+  "Name": "Name",
+  "Kurzname (erscheint oben in der Leiste)": "Short name (shown in the bar at the top)",
+  "Leer lassen heißt: der ursprüngliche Name bleibt.": "Leave empty to keep the original name.",
+  "Name gespeichert.": "Name saved."
 }

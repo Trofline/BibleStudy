@@ -71,7 +71,7 @@ public partial class MainWindow
     /// <summary>Reloads the translation list and optionally switches to one of them.</summary>
     async Task ReloadTranslationsAsync(string? select)
     {
-        _all = await _provider.GetTranslationsAsync();
+        _all = Named(await _provider.GetTranslationsAsync());
         _langs = _all.Select(x => x.LanguageName).Where(l => l != "").Distinct().Order().ToList();
         LanguageBox.ItemsSource = _langs;
         var target = _all.FirstOrDefault(x => x.Id == (select ?? (TranslationBox.SelectedItem as TranslationInfo)?.Id)) ?? _all.FirstOrDefault(x => x.Id == "eng_kjv");

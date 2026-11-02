@@ -22,6 +22,8 @@ Der Lesefortschritt gehört zum aktiven **Vault** (siehe [Kapitel 15](15-sicheru
 
 Die verfügbaren Übersetzungen hängen von den freien Quellen ab; welche gerade zur Wahl stehen, siehst du im Übersetzungs-Knopf, gruppiert nach Sprache. Jede Übersetzung hat eine eigene Lizenz, die in der Fußzeile steht. Ist sie nicht gemeinfrei, steht beim Kopieren eines Verses die Adresse des Lizenztextes mit dabei.
 
+**Eigene Namen:** Rechtsklick auf eine Übersetzung im Übersetzungs-Knopf → *Umbenennen …*. Du vergibst einen **Namen** und einen **Kurznamen** (der steht oben in der Leiste), zum Beispiel „Lutherbibel (Studium)“ und „Luther-S“. Das hilft vor allem bei mehreren ähnlichen oder importierten Übersetzungen. Leere Felder behalten den ursprünglichen Namen; *Ursprünglichen Namen wiederherstellen* nimmt die Änderung zurück. Die Namen gelten in der ganzen Oberfläche, auch in der Parallelansicht.
+
 **Eigene Übersetzung importieren:** *Einstellungen → Eigene Übersetzung importieren → Datei wählen …*. Importierte Texte bleiben auf deinem Computer und sind nur für deinen privaten Gebrauch gedacht. Unter „Importierte Übersetzungen“ entfernst du sie wieder.
 
 ## 2.4 Verse anklicken

@@ -112,6 +112,9 @@ public sealed class AppSettings
     public List<string> ParallelSyncIds { get; set; } = [];
     /// <summary>Own color per parallel column position ("#RRGGBB"); empty or missing = the standard color.</summary>
     public List<string> ParallelColors { get; set; } = [];
+
+    /// <summary>Names the user gave to translations (imported or ready-made), by translation id. Empty fields keep the original name.</summary>
+    public Dictionary<string, TranslationAlias> TranslationAliases { get; set; } = [];
     public List<ParallelPreset> ParallelPresets { get; set; } = [];
     /// <summary>Commentaries are human writings (Calvin, Henry …), not Scripture: hidden unless switched on.</summary>
     public bool ShowCommentaries { get; set; }
@@ -230,4 +233,10 @@ public sealed class ParallelPresetColumn
     public string TranslationId { get; set; } = "";
     public string? Book { get; set; }
     public int Chapter { get; set; }
+}
+
+public sealed class TranslationAlias
+{
+    public string Name { get; set; } = "";
+    public string Short { get; set; } = "";
 }

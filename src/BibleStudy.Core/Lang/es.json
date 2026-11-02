@@ -1926,5 +1926,13 @@
   "Wortarten": "Clases de palabras",
   "Worauf dieses Kapitel verweist": "A qué remite este capítulo",
   "Wörter, die sonst nirgends vorkommen": "Palabras que no aparecen en ningún otro lugar",
-  "Zustand": "Estado"
+  "Zustand": "Estado",
+  "Ursprünglichen Namen wiederherstellen": "Restaurar el nombre original",
+  "Rechtsklick auf eine Übersetzung: eigenen Namen vergeben": "Clic derecho en una traducción: darle un nombre propio",
+  "Übersetzung umbenennen": "Renombrar traducción",
+  "Ursprünglich: {0} ({1})": "Original: {0} ({1})",
+  "Name": "Nombre",
+  "Kurzname (erscheint oben in der Leiste)": "Nombre corto (aparece en la barra superior)",
+  "Leer lassen heißt: der ursprüngliche Name bleibt.": "Déjalo vacío para mantener el nombre original.",
+  "Name gespeichert.": "Nombre guardado."
 }

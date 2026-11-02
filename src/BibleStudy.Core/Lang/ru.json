@@ -1926,5 +1926,13 @@
   "Wortarten": "Части речи",
   "Worauf dieses Kapitel verweist": "На что ссылается эта глава",
   "Wörter, die sonst nirgends vorkommen": "Слова, которых больше нигде нет",
-  "Zustand": "Состояние"
+  "Zustand": "Состояние",
+  "Ursprünglichen Namen wiederherstellen": "Вернуть исходное название",
+  "Rechtsklick auf eine Übersetzung: eigenen Namen vergeben": "Правый щелчок по переводу: дать своё название",
+  "Übersetzung umbenennen": "Переименовать перевод",
+  "Ursprünglich: {0} ({1})": "Исходное: {0} ({1})",
+  "Name": "Название",
+  "Kurzname (erscheint oben in der Leiste)": "Короткое название (в верхней панели)",
+  "Leer lassen heißt: der ursprüngliche Name bleibt.": "Оставь пустым, чтобы сохранить исходное название.",
+  "Name gespeichert.": "Название сохранено."
 }
