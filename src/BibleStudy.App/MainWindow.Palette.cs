@@ -86,6 +86,7 @@ public partial class MainWindow
         Task Side(int tab) { SetPanelOpen(true); SideTabs.SelectedIndex = tab; return Task.CompletedTask; }
         yield return C(L("Startseite"), () => { ShowHome(); return Task.CompletedTask; });
         yield return C(L("Rundgang starten"), () => { DispatcherTimer.RunOnce(StartTour, TimeSpan.FromMilliseconds(350)); return Task.CompletedTask; });   // after the command list has closed: two popups at once confuse the renderer
+        yield return C(L("Kapitel-Bericht"), ShowChapterReportAsync);
         yield return C(L("Patch Notes"), ShowPatchNotesAsync);
         yield return C(L("Projekt auf GitHub öffnen"), () => { OpenUrl(ProjectUrl); return Task.CompletedTask; });
         yield return C(L("Einstellungen"), () => Work("Mehr", SettingsTab));

@@ -82,13 +82,17 @@ public static class TextStats
 
     /// <summary>The words that are typical for the given books compared with all the others, strongest first.</summary>
     public static List<WordScore> KeyWords(IReadOnlyList<CorpusVerse> corpus, IReadOnlyCollection<string> books, int top = 40, Dictionary<string, int>? freq = null)
+        => KeyWords(corpus, v => books.Contains(v.Ref.Book), top, freq);
+
+    /// <summary>The same for any part of the text (a chapter, a passage); <paramref name="minCount"/> is how often a word has to occur there.</summary>
+    public static List<WordScore> KeyWords(IReadOnlyList<CorpusVerse> corpus, Func<CorpusVerse, bool> part, int top = 40, Dictionary<string, int>? freq = null, int minCount = 3)
     {
         freq ??= Frequencies(corpus);
-        var inside = Frequencies(corpus.Where(v => books.Contains(v.Ref.Book)));
+        var inside = Frequencies(corpus.Where(part));
         var c = inside.Values.Sum(x => (long)x);
         var d = freq.Values.Sum(x => (long)x) - c;
         if (c == 0 || d == 0) return [];
-        return inside.Where(kv => kv.Value >= 3 && Worth(kv.Key))
+        return inside.Where(kv => kv.Value >= minCount && Worth(kv.Key))
             .Select(kv =>
             {
                 var total = freq.GetValueOrDefault(kv.Key, kv.Value);
@@ -102,10 +106,13 @@ public static class TextStats
 
     /// <summary>Words of the given books that occur nowhere else in the text (hapax legomena of this translation), in text order.</summary>
     public static List<RareWord> Rare(IReadOnlyList<CorpusVerse> corpus, IReadOnlyCollection<string> books, int max = 300, Dictionary<string, int>? freq = null)
+        => Rare(corpus, v => books.Contains(v.Ref.Book), max, freq);
+
+    public static List<RareWord> Rare(IReadOnlyList<CorpusVerse> corpus, Func<CorpusVerse, bool> part, int max = 300, Dictionary<string, int>? freq = null)
     {
         freq ??= Frequencies(corpus);
         var found = new List<RareWord>();
-        foreach (var v in corpus.Where(v => books.Contains(v.Ref.Book)))
+        foreach (var v in corpus.Where(part))
             for (var i = 0; i < v.Words.Length && found.Count < max; i++)
             {
                 var w = v.Word(i, true);

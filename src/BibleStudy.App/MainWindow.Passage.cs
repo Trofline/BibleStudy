@@ -43,6 +43,7 @@ public partial class MainWindow
         Item(L("Zur Leseliste"), () => AddToQueue([r]));
         Item(L("Zum To-do hinzufügen"), () => { _vault.AddTodo(L("{0} studieren", Label(r)), r); RefreshTodos(); StatusText.Text = L("To-do zu {0} angelegt.", Label(r)); });
         menu.Items.Add(new Separator());
+        Item(L("Kapitel-Bericht"), () => _ = ShowChapterReportAsync());
         Item(L("Querverweise"), () => Open(4));
         Item(L("Eigenen Querverweis setzen …"), () => ShowMyXrefEditor(r, anchor));
         Item(L("Grundtext Wort für Wort"), () => { Open(GrundtextTab); _ = ShowGrundtextAsync(r); });

@@ -26,7 +26,7 @@ public partial class MainWindow
         ["nominative"] = K("Nominativ"), ["genitive"] = K("Genitiv"), ["dative"] = K("Dativ"), ["accusative"] = K("Akkusativ"), ["vocative"] = K("Vokativ"),
         ["comparative"] = K("Komparativ"), ["superlative"] = K("Superlativ"),
         ["absolute"] = K("Absolutus"), ["construct"] = K("Konstruktus"),
-        ["noun"] = K("Nomen"), ["verb"] = K("Verb"), ["adj"] = K("Adjektiv"), ["adv"] = K("Adverb"), ["det"] = K("Artikel"), ["pron"] = K("Pronomen"), ["prep"] = K("Präposition"),
+        ["art"] = K("Artikel"), ["om"] = K("Akkusativzeichen"), ["ij"] = K("Interjektion"), ["noun"] = K("Nomen"), ["verb"] = K("Verb"), ["adj"] = K("Adjektiv"), ["adv"] = K("Adverb"), ["det"] = K("Artikel"), ["pron"] = K("Pronomen"), ["prep"] = K("Präposition"),
         ["conj"] = K("Konjunktion"), ["cj"] = K("Konjunktion"), ["ptcl"] = K("Partikel"), ["num"] = K("Zahlwort"), ["intj"] = K("Interjektion"), ["rel"] = K("Relativpronomen"),
         ["s"] = K("Subjekt"), ["v"] = K("Verb (Prädikat)"), ["o"] = K("Objekt"), ["io"] = K("Indirektes Objekt"), ["o2"] = K("Zweites Objekt"), ["adv_role"] = K("Adverbiale Bestimmung"),
         ["p"] = K("Prädikatsergänzung"), ["pp"] = K("Präpositionalphrase"), ["vc"] = K("Verbalergänzung"), ["aux"] = K("Hilfsverb"),

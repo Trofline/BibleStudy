@@ -16,7 +16,11 @@ public partial class MainWindow
     readonly StackPanel _grammarView = new() { Spacing = 6 };
     bool _grammarBuilt;
     List<GrammarWord>? _greekWords;
+    List<GrammarWord>? _hebrewWords;
     readonly Dictionary<string, ComboBox> _grammarBoxes = [];
+    WrapPanel? _grammarFields;
+    ComboBox? _grammarLang;
+    bool Hebrew => _grammarLang?.SelectedIndex == 1;
     TextBox? _grammarWord;
 
     static readonly (string Key, string Label, string[] Values)[] GrammarFields =
@@ -31,19 +35,49 @@ public partial class MainWindow
         ("case", K("Fall"), ["nominative", "genitive", "dative", "accusative", "vocative"]),
     ];
 
+    static readonly (string Key, string Label, string[] Values)[] HebrewGrammarFields =
+    [
+        ("class", K("Wortart"), ["verb", "noun", "adj", "adv", "art", "pron", "prep", "cj", "num", "om", "rel", "ij"]),
+        ("tense", K("Verbform"), ["qatal", "yiqtol", "wayyiqtol", "weqatal", "imperative", "jussive", "infinitive construct", "infinitive absolute", "participle active", "participle passive"]),
+        ("voice", K("Stamm"), ["qal", "niphal", "piel", "pual", "hiphil", "hophal", "hithpael"]),
+        ("person", K("Person"), ["first", "second", "third"]),
+        ("number", K("Zahl"), ["singular", "plural", "dual"]),
+        ("gender", K("Geschlecht"), ["masculine", "feminine", "common"]),
+        ("case", K("Zustand"), ["absolute", "construct"]),
+    ];
+
+    void FillGrammarFields()
+    {
+        if (_grammarFields is null) return;
+        _grammarFields.Children.Clear();
+        _grammarBoxes.Clear();
+        foreach (var (key, label, values) in Hebrew ? HebrewGrammarFields : GrammarFields)
+        {
+            var box = new ComboBox { Width = 150, ItemsSource = new[] { L("(egal)") }.Concat(values.Select(Term)).ToList(), SelectedIndex = 0 };
+            _grammarBoxes[key] = box;
+            _grammarFields.Children.Add(new StackPanel { Margin = new(0, 0, 8, 6), Children = { new TextBlock { Text = L(label), Classes = { "caption" } }, new Border { Classes = { "pill" }, Child = box } } });
+        }
+    }
+
+    /// <summary>The words of the chosen language: downloaded on first use (Greek 27 books, Hebrew about 930 chapters), then read from the cache.</summary>
+    async Task<List<GrammarWord>> GrammarWordsAsync(TextBlock status)
+    {
+        var progress = new Progress<(int Done, int Total)>(p => status.Text = L("Lade Grammatikdaten … {0}/{1}", p.Done, p.Total));
+        if (Hebrew) return _hebrewWords ??= await _syntax.LoadHebrewWordsAsync(progress);
+        return _greekWords ??= await _syntax.LoadGreekWordsAsync(progress);
+    }
+
     void EnsureGrammarSearch()
     {
         if (_grammarBuilt) return;
         _grammarBuilt = true;
-        _grammarView.Children.Add(new TextBlock { Text = L("Grammatik-Suche (Neues Testament)"), FontWeight = FontWeight.SemiBold, TextWrapping = TextWrapping.Wrap, Margin = new(0, 12, 0, 0) });
-        var fields = new WrapPanel();
-        foreach (var (key, label, values) in GrammarFields)
-        {
-            var box = new ComboBox { Width = 150, ItemsSource = new[] { L("(egal)") }.Concat(values.Select(Term)).ToList(), SelectedIndex = 0 };
-            _grammarBoxes[key] = box;
-            fields.Children.Add(new StackPanel { Margin = new(0, 0, 8, 6), Children = { new TextBlock { Text = L(label), Classes = { "caption" } }, new Border { Classes = { "pill" }, Child = box } } });
-        }
-        _grammarView.Children.Add(fields);
+        _grammarView.Children.Add(new TextBlock { Text = L("Grammatik-Suche"), FontWeight = FontWeight.SemiBold, TextWrapping = TextWrapping.Wrap, Margin = new(0, 12, 0, 0) });
+        _grammarLang = new ComboBox { Width = 260, ItemsSource = new[] { L("Griechisch (Neues Testament)"), L("Hebräisch (Altes Testament)") }, SelectedIndex = 0 };
+        _grammarLang.SelectionChanged += (_, _) => FillGrammarFields();
+        _grammarView.Children.Add(new StackPanel { Margin = new(0, 0, 0, 6), Children = { new TextBlock { Text = L("Sprache"), Classes = { "caption" } }, new Border { Classes = { "pill" }, HorizontalAlignment = HorizontalAlignment.Left, Child = _grammarLang } } });
+        _grammarFields = new WrapPanel();
+        FillGrammarFields();
+        _grammarView.Children.Add(_grammarFields);
         _grammarWord = new TextBox { Watermark = L("Grundform oder Strong-Nummer (optional), z. B. G26") };
         _grammarView.Children.Add(_grammarWord);
         var go = new Button { Content = L("Suchen"), Classes = { "primary" }, HorizontalAlignment = HorizontalAlignment.Left };
@@ -53,7 +87,7 @@ public partial class MainWindow
         _grammarView.Children.Add(result);
 
         // ---- clause search: roles in the same clause ------------------------------------------------------------------------
-        _grammarView.Children.Add(new TextBlock { Text = L("Satzrollen-Suche (Neues Testament)"), FontWeight = FontWeight.SemiBold, TextWrapping = TextWrapping.Wrap, Margin = new(0, 18, 0, 0) });
+        _grammarView.Children.Add(new TextBlock { Text = L("Satzrollen-Suche"), FontWeight = FontWeight.SemiBold, TextWrapping = TextWrapping.Wrap, Margin = new(0, 18, 0, 0) });
         _grammarView.Children.Add(new TextBlock { Text = L("Findet Sätze, in denen alle Rollen zusammen vorkommen, z. B. Subjekt Jesus und Objekt Petrus. Das Wort kann eine Strong-Nummer, die griechische Grundform oder die englische Bedeutung sein; leer heißt: irgendein Wort in dieser Rolle."), Classes = { "caption" }, TextWrapping = TextWrapping.Wrap });
         var rows = new StackPanel { Spacing = 6 };
         var roleResult = new StackPanel { Spacing = 6 };
@@ -86,9 +120,8 @@ public partial class MainWindow
     {
         string? Pick(string key)
         {
-            var box = _grammarBoxes[key];
-            if (box.SelectedIndex <= 0) return null;
-            return GrammarFields.First(f => f.Key == key).Values[box.SelectedIndex - 1];
+            if (!_grammarBoxes.TryGetValue(key, out var box) || box.SelectedIndex <= 0) return null;
+            return (Hebrew ? HebrewGrammarFields : GrammarFields).First(f => f.Key == key).Values[box.SelectedIndex - 1];
         }
         return new GrammarQuery(Pick("class"), Pick("tense"), Pick("voice"), Pick("mood"), Pick("person"), Pick("number"), Pick("gender"), Pick("case"), _grammarWord?.Text);
     }
@@ -107,13 +140,9 @@ public partial class MainWindow
         result.Children.Add(status);
         try
         {
-            if (_greekWords is null)
-            {
-                var progress = new Progress<(int Done, int Total)>(p => status.Text = L("Lade Grammatikdaten … {0}/{1}", p.Done, p.Total));
-                _greekWords = await _syntax.LoadGreekWordsAsync(progress);
-            }
+            var words = await GrammarWordsAsync(status);
             var conditions = _roleRows.Select(r => new RoleCondition(RoleNames[Math.Max(0, r.Role.SelectedIndex)].Code, string.IsNullOrWhiteSpace(r.Term.Text) ? null : r.Term.Text!.Trim())).ToList();
-            var hits = await Task.Run(() => ClauseSearch.Run(_greekWords, conditions));
+            var hits = await Task.Run(() => ClauseSearch.Run(words, conditions));
             result.Children.Clear();
             if (hits.Count == 0) { result.Children.Add(new TextBlock { Text = L("Keine Treffer."), Classes = { "caption" } }); return; }
             result.Children.Add(new TextBlock { Text = L("{0} Sätze", hits.Count), FontWeight = FontWeight.SemiBold });
@@ -124,7 +153,7 @@ public partial class MainWindow
                 var line = new StackPanel { Spacing = 2 };
                 var open = FilterChip(Label(new VerseRef(h.Book, h.Chapter, h.Verse)), false, HomeView.ColorOf(h.Book), () => _ = GoToAsync(hit.Book, hit.Chapter, hit.Verse), L("Springt zur Stelle"));
                 line.Children.Add(open);
-                line.Children.Add(new TextBlock { Text = h.Text, FontFamily = ScriptureFont, TextWrapping = TextWrapping.Wrap, Opacity = 0.85 });
+                line.Children.Add(new TextBlock { Text = h.Text, FontFamily = Hebrew ? HebrewFont : ScriptureFont, TextWrapping = TextWrapping.Wrap, Opacity = 0.85 });
                 result.Children.Add(line);
             }
             if (hits.Count > 60) result.Children.Add(new TextBlock { Text = L(" (erste {0} angezeigt)", 60), Classes = { "caption" } });
@@ -141,13 +170,9 @@ public partial class MainWindow
         result.Children.Add(status);
         try
         {
-            if (_greekWords is null)
-            {
-                var progress = new Progress<(int Done, int Total)>(p => status.Text = L("Lade Grammatikdaten … {0}/{1}", p.Done, p.Total));
-                _greekWords = await _syntax.LoadGreekWordsAsync(progress);
-            }
+            var words = await GrammarWordsAsync(status);
             var query = ReadGrammarQuery();
-            var hits = await Task.Run(() => _greekWords.Where(query.Matches).ToList());
+            var hits = await Task.Run(() => words.Where(query.Matches).ToList());
             result.Children.Clear();
             if (hits.Count == 0) { result.Children.Add(new TextBlock { Text = L("Keine Treffer."), Classes = { "caption" } }); return; }
 

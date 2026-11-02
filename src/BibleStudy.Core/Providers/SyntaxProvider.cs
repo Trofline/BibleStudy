@@ -108,19 +108,104 @@ public sealed class SyntaxProvider(HttpClient http, string cacheDir)
         return all;
     }
 
-    public static List<GrammarWord> ParseWords(string xml, string book)
+    /// <summary>
+    /// The words of one MACULA file. For Hebrew the fields are used like this: Tense = verb form (qatal, yiqtol, wayyiqtol, imperative, participle active …),
+    /// Voice = stem (qal, niphal, piel …), Case = state (absolute, construct).
+    /// </summary>
+    public static List<GrammarWord> ParseWords(string xml, string book, bool hebrew = false)
     {
         var result = new List<GrammarWord>();
         var clauseIds = new Dictionary<XElement, int>();
         foreach (var w in XDocument.Parse(xml).Descendants("w"))
         {
             if (w.Attribute("ref")?.Value is not { } r || RefPattern.Match(r) is not { Success: true } m) continue;
-            result.Add(new GrammarWord(book, int.Parse(m.Groups[1].Value), int.Parse(m.Groups[2].Value), w.Value.Trim(), (string?)w.Attribute("lemma") ?? "", Strong(w, false),
-                Gloss(w, false), (string?)w.Attribute("class") ?? "", (string?)w.Attribute("tense"), (string?)w.Attribute("voice"), (string?)w.Attribute("mood"),
-                (string?)w.Attribute("person"), (string?)w.Attribute("number"), (string?)w.Attribute("gender"), (string?)w.Attribute("case"),
+            var cls = (string?)w.Attribute("class") ?? "";
+            result.Add(new GrammarWord(book, int.Parse(m.Groups[1].Value), int.Parse(m.Groups[2].Value), w.Value.Trim(), (string?)w.Attribute("lemma") ?? "", Strong(w, hebrew),
+                Gloss(w, hebrew), cls,
+                hebrew ? (cls == "verb" ? (string?)w.Attribute("type") : null) : (string?)w.Attribute("tense"),
+                hebrew ? (string?)w.Attribute("stem") : (string?)w.Attribute("voice"),
+                hebrew ? null : (string?)w.Attribute("mood"),
+                (string?)w.Attribute("person"), (string?)w.Attribute("number"), (string?)w.Attribute("gender"),
+                hebrew ? (string?)w.Attribute("state") : (string?)w.Attribute("case"),
                 RoleOf(w), ClauseOf(w, clauseIds)));
         }
         return result;
+    }
+
+    /// <summary>The words of one chapter with their grammar (Greek: the book file is read, Hebrew: the chapter file); empty when there is no data for the book.</summary>
+    public async Task<List<GrammarWord>> LoadChapterWordsAsync(string book, int chapter, CancellationToken ct = default)
+    {
+        bool hebrew;
+        string file, url;
+        if (Find(GreekBooks, book) is { } g) { hebrew = false; file = g + ".xml"; url = GreekBase + file; }
+        else if (Find(HebrewBooks, book) is { } h) { hebrew = true; file = $"{h}-{chapter:D3}-lowfat.xml"; url = HebrewBase + file; }
+        else return [];
+        var path = Path.Combine(cacheDir, "macula", file);
+        string xml;
+        if (File.Exists(path)) xml = await File.ReadAllTextAsync(path, ct);
+        else
+        {
+            xml = await http.GetStringAsync(url, ct);
+            Directory.CreateDirectory(Path.GetDirectoryName(path)!);
+            await SafeFile.WriteAllTextAsync(path, xml);
+        }
+        return await Task.Run(() => ParseWords(xml, book, hebrew).Where(w => w.Chapter == chapter).ToList(), ct);
+    }
+
+    /// <summary>Hebrew chapter counts as MACULA (Leningrad Codex numbering) has them; a chapter that does not exist is skipped.</summary>
+    static readonly (string Id, int Chapters)[] HebrewChapters =
+    [
+        ("GEN", 50), ("EXO", 40), ("LEV", 27), ("NUM", 36), ("DEU", 34), ("JOS", 24), ("JDG", 21), ("RUT", 4), ("1SA", 31), ("2SA", 24), ("1KI", 22), ("2KI", 25),
+        ("1CH", 29), ("2CH", 36), ("EZR", 10), ("NEH", 13), ("EST", 10), ("JOB", 42), ("PSA", 150), ("PRO", 31), ("ECC", 12), ("SNG", 8), ("ISA", 66), ("JER", 52),
+        ("LAM", 5), ("EZK", 48), ("DAN", 12), ("HOS", 14), ("JOL", 4), ("AMO", 9), ("OBA", 1), ("JON", 4), ("MIC", 7), ("NAM", 3), ("HAB", 3), ("ZEP", 3),
+        ("HAG", 2), ("ZEC", 14), ("MAL", 3),
+    ];
+
+    /// <summary>All words of the Hebrew Old Testament with their grammar (about 930 chapter files, downloaded once and then read from the cache).</summary>
+    public async Task<List<GrammarWord>> LoadHebrewWordsAsync(IProgress<(int Done, int Total)>? progress = null, CancellationToken ct = default)
+    {
+        var jobs = HebrewChapters.SelectMany(b => Enumerable.Range(1, b.Chapters).Select(c => (b.Id, Chapter: c))).ToList();
+        var parts = new List<GrammarWord>?[jobs.Count];
+        var done = 0;
+        using var gate = new SemaphoreSlim(8);
+        await Task.WhenAll(jobs.Select(async (job, i) =>
+        {
+            await gate.WaitAsync(ct);
+            try
+            {
+                var name = Find(HebrewBooks, job.Id)!;
+                var file = $"{name}-{job.Chapter:D3}-lowfat.xml";
+                var path = Path.Combine(cacheDir, "macula", file);
+                string xml;
+                if (File.Exists(path)) xml = await File.ReadAllTextAsync(path, ct);
+                else
+                {
+                    try { xml = await http.GetStringAsync(HebrewBase + file, ct); }
+                    catch (HttpRequestException) { return; }   // a chapter that is not there
+                    Directory.CreateDirectory(Path.GetDirectoryName(path)!);
+                    await SafeFile.WriteAllTextAsync(path, xml);
+                }
+                parts[i] = await Task.Run(() => ParseWords(xml, job.Id, true), ct);
+            }
+            finally { gate.Release(); progress?.Report((Interlocked.Increment(ref done), jobs.Count)); }
+        }));
+
+        // clause numbers are only unique inside one file: shift them so they are unique inside the book
+        var all = new List<GrammarWord>(300_000);
+        var offset = 0; string? current = null;
+        foreach (var part in parts)
+        {
+            if (part is null || part.Count == 0) continue;
+            if (part[0].Book != current) { current = part[0].Book; offset = 0; }
+            var max = 0;
+            foreach (var w in part)
+            {
+                max = Math.Max(max, w.Clause);
+                all.Add(w.Clause > 0 ? w with { Clause = w.Clause + offset } : w);
+            }
+            offset += max;
+        }
+        return all;
     }
 
     /// <summary>The syntactic role (s subject, o object, io indirect object, v verb, p predicate, adv adverbial …) of the word or of the closest phrase around it.</summary>

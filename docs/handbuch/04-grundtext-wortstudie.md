@@ -49,15 +49,17 @@ Zusätzlich gibt es **deutsche Synonyme** (Quelle: openthesaurus.de, CC BY-SA 4.
 
 ## 4.7 Morphologie und Syntax
 
-Im Neuen Testament (und in Teilen des Alten) kennt das Programm zu jedem Wort die **Morphologie**: Wortart, Zeit, Modus, Genus Verbi, Person, Zahl, Geschlecht, Fall. Die **Syntax** zeigt den Satzbau mit Subjekt, Verb, Objekt und so weiter.
+Im Neuen Testament (Griechisch) und im Alten Testament (Hebräisch) kennt das Programm zu jedem Wort die **Morphologie**: Wortart, Zeit, Modus, Genus Verbi, Person, Zahl, Geschlecht, Fall. Die **Syntax** zeigt den Satzbau mit Subjekt, Verb, Objekt und so weiter.
 
 ### Grammatiksuche
 
 Unter *Vers → Analyse → Grammatik* suchst du nach grammatischen Merkmalen. Du wählst Wortart, Zeit, Modus, Genus Verbi, Person, Zahl, Geschlecht und Fall und kannst eine Grundform oder Strong-Nummer (zum Beispiel G26) dazusetzen. So findest du etwa alle Aorist-Passiv-Partizipien oder alle Imperative eines bestimmten Verbs.
 
+Oben wählst du die **Sprache**. Bei *Hebräisch (Altes Testament)* ändern sich die Felder: statt Zeit, Modus und Genus Verbi gibt es **Verbform** (qatal, yiqtol, wayyiqtol, weqatal, Imperativ, Jussiv, Infinitiv, Partizip), **Stamm** (Qal, Niphal, Piel, Pual, Hiphil, Hophal, Hithpael) und **Zustand** (Absolutus, Konstruktus). So findest du zum Beispiel alle Hiphil-Verben im wayyiqtol oder alle Konstruktus-Formen eines Nomens. Die hebräischen Daten (ungefähr 930 Kapiteldateien) werden beim ersten Gebrauch einmal geladen und dann aus dem Zwischenspeicher gelesen. Eine Grundform darf auch ohne Vokalzeichen getippt werden.
+
 ### Satzrollen-Suche
 
-Die Satzrollen-Suche findet Sätze, in denen alle gewählten Rollen zusammen vorkommen, zum Beispiel *Subjekt Jesus* und *Objekt Petrus*. Das Wort kann eine Strong-Nummer sein, die griechische Grundform oder die englische Bedeutung; leer heißt: irgendein Wort in dieser Rolle.
+Die Satzrollen-Suche findet Sätze, in denen alle gewählten Rollen zusammen vorkommen, zum Beispiel *Subjekt Jesus* und *Objekt Petrus*. Das Wort kann eine Strong-Nummer sein, die Grundform (griechisch oder hebräisch) oder die englische Bedeutung; leer heißt: irgendein Wort in dieser Rolle. Sie gilt für die Sprache, die du darüber gewählt hast, also auch für den hebräischen Satzbau des Alten Testaments.
 
 ## 4.8 Der Reiter „Analyse“
 
@@ -91,6 +93,20 @@ Die Querverweise lassen sich auch als Graph ansehen (siehe [Kapitel 9](09-graphe
 ## 4.12 Die Vers-Übersicht
 
 Rechtsklick auf einen Vers → Vers-Übersicht (oder Strg+G): alles zum angeklickten Vers auf einen Blick, nämlich deine Notizen und Dokumente dazu, andere Übersetzungen, Querverweise sowie Personen, Orte und Schlüsselwörter des Verses.
+
+### Kapitel-Bericht
+
+Rechtsklick auf einen Vers → **Kapitel-Bericht** (oder Strg+K → „Kapitel-Bericht“): eine Seite mit allem, was das Programm zum aufgeschlagenen Kapitel weiß.
+
+- **In Zahlen:** Verse, Wörter und verschiedene Wörter.
+- **Typische Wörter:** was dieses Kapitel im Vergleich zur ganzen Bibel ausmacht (Log-Likelihood-Test), mit Klick zur Suche.
+- **Wörter, die sonst nirgends vorkommen:** die einmaligen Wörter der Übersetzung.
+- **Personen und Orte** mit Klick ins Lexikon.
+- **Grundtext in Zahlen:** Wortarten, Verbformen und die häufigsten Wörter (Griechisch und Hebräisch).
+- **Worauf dieses Kapitel verweist:** die Kapitel, auf die die Querverweise der Verse am stärksten zeigen.
+- **Deine Arbeit:** Zahl deiner Notizen und Markierungen.
+
+*Als Markdown kopieren* legt den ganzen Bericht in die Zwischenablage, etwa für ein Dokument oder eine Predigtvorbereitung. Teile ohne Daten (kein Internet, Übersetzung noch nicht für die Suche geladen) fehlen, der Rest bleibt.
 
 ## 4.13 Griechisch und Hebräisch lernen
 
