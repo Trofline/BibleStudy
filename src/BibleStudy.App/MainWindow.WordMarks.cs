@@ -21,21 +21,8 @@ public partial class MainWindow
     WordSpan? _hoverSpan;
     int _markCursor = -1;
 
-    /// <summary>The header of a first-level menu entry that opens a submenu: the text and an arrow at the right end (the theme draws no arrow there, only on deeper levels).</summary>
-    Control SubHeader(string text)
-    {
-        var grid = new Grid { ColumnDefinitions = new("*,Auto"), MinWidth = 215 };
-        var label = new TextBlock { Text = text, VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center };
-        // a drawn chevron like the one the theme shows on the deeper levels, not a text character
-        var arrow = new Avalonia.Controls.Shapes.Path
-        {
-            Data = Geometry.Parse("M 1,1 L 6,6 L 1,11"), Stroke = Res("BsText") as IBrush ?? Brushes.White, StrokeThickness = 1.8, StrokeLineCap = PenLineCap.Round, StrokeJoin = PenLineJoin.Round,
-            Width = 8, Height = 12, Margin = new(18, 0, 0, 0), VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center,
-        };
-        Grid.SetColumn(arrow, 1);
-        grid.Children.Add(label); grid.Children.Add(arrow);
-        return grid;
-    }
+    /// <summary>The header of a menu entry that opens a submenu. The theme draws the arrow at the right end by itself; the minimum width only gives it room (in a narrow menu it was cut off).</summary>
+    static Control SubHeader(string text) => new TextBlock { Text = text, MinWidth = 215, VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center };
 
     static string NormWord(string w) => new string(w.Where(char.IsLetterOrDigit).ToArray()).ToLowerInvariant();
 
