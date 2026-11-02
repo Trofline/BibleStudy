@@ -1428,7 +1428,7 @@
   "Vorlesen nicht möglich: ": "Не удалось читать вслух: ",
   "Vorlesen: Geschwindigkeit": "Чтение вслух: скорость",
   "Vorlesen: Geschwindigkeit {0:+0;-0;normal}": "Чтение вслух: скорость {0:+0;-0;normal}",
-  "Vorlesen: angeklickten Vers oder das ganze Kapitel": "Читать вслух: выбранный стих или всю главу",
+  "Vorlesen: ab dem angeklickten Vers bis zum Kapitelende, sonst das ganze Kapitel": "Читать вслух: от выбранного стиха до конца главы, иначе всю главу",
   "Was geteilt wird": "Что передаётся",
   "Was lerne ich daraus?": "Чему это меня учит?",
   "Was sollen alle mitnehmen?": "Что должны вынести все?",

@@ -112,7 +112,7 @@ public partial class MainWindow
         if (!OperatingSystem.IsWindows()) { StatusText.Text = L("Vorlesen ist derzeit nur unter Windows verfügbar."); SpeakBtn.IsChecked = false; return; }
         if (_speechMode) { StopSpeak(); return; }
         if (_curChapterData is null || TranslationBox.SelectedItem is not TranslationInfo t) { SpeakBtn.IsChecked = false; return; }
-        var verses = _selected is int v ? _curChapterData.Verses.Where(x => x.Number == v) : _curChapterData.Verses;
+        var verses = _selected is int v ? _curChapterData.Verses.Where(x => x.Number >= v) : _curChapterData.Verses;
         var text = string.Join(" ", verses.Select(x => x.Text));
         if (string.IsNullOrWhiteSpace(text)) { SpeakBtn.IsChecked = false; return; }
         StopAudio();

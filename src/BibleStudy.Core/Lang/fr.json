@@ -1428,7 +1428,7 @@
   "Vorlesen nicht möglich: ": "Lecture à voix haute impossible : ",
   "Vorlesen: Geschwindigkeit": "Lecture à voix haute : vitesse",
   "Vorlesen: Geschwindigkeit {0:+0;-0;normal}": "Lecture à voix haute : vitesse {0:+0;-0;normale}",
-  "Vorlesen: angeklickten Vers oder das ganze Kapitel": "Lire à voix haute : le verset cliqué ou tout le chapitre",
+  "Vorlesen: ab dem angeklickten Vers bis zum Kapitelende, sonst das ganze Kapitel": "Lire à voix haute : du verset cliqué à la fin du chapitre, sinon tout le chapitre",
   "Was geteilt wird": "Ce qui est partagé",
   "Was lerne ich daraus?": "Qu'est-ce que j'en retiens ?",
   "Was sollen alle mitnehmen?": "Que doivent retenir tous les auditeurs ?",

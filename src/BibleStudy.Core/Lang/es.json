@@ -1428,7 +1428,7 @@
   "Vorlesen nicht möglich: ": "No se puede leer en voz alta: ",
   "Vorlesen: Geschwindigkeit": "Leer en voz alta: velocidad",
   "Vorlesen: Geschwindigkeit {0:+0;-0;normal}": "Leer en voz alta: velocidad {0:+0;-0;normal}",
-  "Vorlesen: angeklickten Vers oder das ganze Kapitel": "Leer en voz alta: el versículo seleccionado o todo el capítulo",
+  "Vorlesen: ab dem angeklickten Vers bis zum Kapitelende, sonst das ganze Kapitel": "Leer en voz alta: desde el versículo seleccionado hasta el final del capítulo, si no, todo el capítulo",
   "Was geteilt wird": "Qué se comparte",
   "Was lerne ich daraus?": "¿Qué aprendo de esto?",
   "Was sollen alle mitnehmen?": "¿Qué debe llevarse todo el mundo?",

@@ -1428,7 +1428,7 @@
   "Vorlesen nicht möglich: ": "Cannot read aloud: ",
   "Vorlesen: Geschwindigkeit": "Read aloud: speed",
   "Vorlesen: Geschwindigkeit {0:+0;-0;normal}": "Read aloud: speed {0:+0;-0;normal}",
-  "Vorlesen: angeklickten Vers oder das ganze Kapitel": "Read aloud: the clicked verse or the whole chapter",
+  "Vorlesen: ab dem angeklickten Vers bis zum Kapitelende, sonst das ganze Kapitel": "Read aloud: from the clicked verse to the end of the chapter, otherwise the whole chapter",
   "Was geteilt wird": "What is shared",
   "Was lerne ich daraus?": "What do I learn from this?",
   "Was sollen alle mitnehmen?": "What should everyone take away?",

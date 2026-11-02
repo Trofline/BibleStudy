@@ -157,7 +157,7 @@
                         <ToggleButton x:Name="StudyBtn" Classes="toolx" ToolTip.Tip="Wortstudie: Wörter mit Strong-Nummer antippen">
                             <StackPanel Orientation="Horizontal" Spacing="9"><local:Icon Data="m5 8 6 6 M4 14l6-6 2-3 M2 5h12 M7 2h1 m22 22-5-10-5 10 M14 18h6" IconSize="17" VerticalAlignment="Center" /><TextBlock Text="Wortstudie" VerticalAlignment="Center" /></StackPanel>
                         </ToggleButton>
-                        <ToggleButton x:Name="SpeakBtn" Classes="toolx" ToolTip.Tip="Vorlesen: angeklickten Vers oder das ganze Kapitel">
+                        <ToggleButton x:Name="SpeakBtn" Classes="toolx" ToolTip.Tip="Vorlesen: ab dem angeklickten Vers bis zum Kapitelende, sonst das ganze Kapitel">
                             <StackPanel Orientation="Horizontal" Spacing="6"><local:Icon Data="M11 5L6 9H2v6h4l5 4z M15.5 8.5a5 5 0 0 1 0 7 M19 5a10 10 0 0 1 0 14" IconSize="17" VerticalAlignment="Center" /><TextBlock Text="Vorlesen" VerticalAlignment="Center" /></StackPanel>
                         </ToggleButton>
                         <ToggleButton x:Name="AudioBtn" Classes="toolx" ToolTip.Tip="Hörbibel: dieses Kapitel anhören (gesprochene Aufnahme, englisch)">
