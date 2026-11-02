@@ -23,7 +23,7 @@ Your language is missing? Save the **template with the AI instruction**, have an
 - **Translate word meanings into my language** (AI).
 - **Show commentaries** (human work, not the Bible text; takes effect after a restart).
 - **Animations:** sidebar, tabs, and chapters slide in smoothly; strength from *Subtle* to *Big*.
-- **Closing animation:** how the program says goodbye: *Soft* (zoom out), *Subtle* (fade only), *Tube TV*, *Particle dissolve* (the window crumbles into sand and blows away) or *None*.
+- **Closing animation:** how the program says goodbye: *Soft* (zoom out), *Blur* (drift out of focus), *Subtle* (fade only), *Tube TV*, *Particle dissolve* (the window crumbles into sand and blows away) or *None*.
 - **Large chapter header** (otherwise plain).
 - **Program icon** for window, taskbar, title bar, and splash screen.
 - **Reset appearance.**

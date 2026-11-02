@@ -44,7 +44,7 @@ public partial class MainWindow
         Classes.Set("noanim", !_settings.Animations);
         AnimLevelBox.SelectedIndex = Math.Clamp(_settings.AnimationLevel, 0, 1);
         AnimLevelBox.SelectionChanged += (_, _) => { if (AnimLevelBox.SelectedIndex >= 0) { _settings.AnimationLevel = AnimLevelBox.SelectedIndex; SaveSettings(); } };
-        CloseAnimBox.ItemsSource = new[] { L("Weich (wegzoomen)"), L("Dezent (nur ausblenden)"), L("Röhrenfernseher"), L("Partikel-Auflösung (Sand)"), L("Keine") };
+        CloseAnimBox.ItemsSource = new[] { L("Weich (wegzoomen)"), L("Unscharf (verschwimmen)"), L("Dezent (nur ausblenden)"), L("Röhrenfernseher"), L("Partikel-Auflösung (Sand)"), L("Keine") };
         CloseAnimBox.SelectedIndex = Math.Max(0, Array.IndexOf(CloseStyles, CloseStyle));
         CloseAnimBox.SelectionChanged += (_, _) => { if (CloseAnimBox.SelectedIndex >= 0) { _settings.CloseAnimation = CloseStyles[CloseAnimBox.SelectedIndex]; SaveSettings(); PrepareCloseTransparency(); } };
         PrepareCloseTransparency();

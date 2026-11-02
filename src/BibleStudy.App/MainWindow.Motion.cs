@@ -39,7 +39,7 @@ public partial class MainWindow
 
     bool _closeAnimating, _closeAnimated;
 
-    static readonly string[] CloseStyles = ["soft", "fade", "tube", "dissolve", "none"];
+    static readonly string[] CloseStyles = ["soft", "blur", "fade", "tube", "dissolve", "none"];
 
     /// <summary>The chosen way of saying goodbye; "none" when the animations are off.</summary>
     string CloseStyle => !_settings.Animations ? "none"
@@ -56,6 +56,7 @@ public partial class MainWindow
             switch (CloseStyle)
             {
                 case "fade": await RunFramesAsync(180, t => root.Opacity = 1 - t * t); break;
+                case "blur": await PlayBlurAsync(root); break;
                 case "tube": await PlayTubeAsync(root); break;
                 case "dissolve": await PlayDissolveAsync(root); break;
                 case "none": return;
@@ -79,6 +80,21 @@ public partial class MainWindow
             root.RenderTransform = new ScaleTransform(scale, scale);
             root.Opacity = 1 - fade;
             Opacity = 1 - fade * fade;                   // the window itself goes out a little later
+        });
+    }
+
+    /// <summary>The picture drifts out of focus: it blurs more and more, grows a little towards the viewer and fades out.</summary>
+    async Task PlayBlurAsync(Control root)
+    {
+        root.RenderTransformOrigin = Avalonia.RelativePoint.Center;
+        await RunFramesAsync(480, t =>
+        {
+            var e = t * t * (3 - 2 * t);
+            var scale = 1 + 0.05 * e;
+            root.RenderTransform = new ScaleTransform(scale, scale);
+            root.Effect = new ImmutableBlurEffect(Math.Round(34 * e));   // whole numbers only: the picture is not made anew for every fraction
+            root.Opacity = t < 0.35 ? 1 : 1 - Math.Pow((t - 0.35) / 0.65, 1.5);
+            Opacity = t < 0.7 ? 1 : 1 - (t - 0.7) / 0.3;
         });
     }
 
