@@ -1964,5 +1964,22 @@
   "Angezeigte Farben": "Colors shown",
   "Wie die KJV das Wort übersetzt (Englisches in Klammern)": "How the KJV translates the word (English in brackets)",
   "Der Standardtext ist ein Ausgangspunkt mit klarem Standpunkt (die Bibel allein ist Maßstab). Ändere oder leere ihn nach Belieben, oder wähle „Neutral“.": "The default text is a starting point with a clear stance (the Bible alone is the measure). Change or clear it as you like, or choose “Neutral”.",
-  "Neutral (ohne Standpunkt)": "Neutral (no stance)"
+  "Neutral (ohne Standpunkt)": "Neutral (no stance)",
+  "{0} {1} · {2}, gelesen von {3}": "{0} {1} · {2}, read by {3}",
+  "{0} {1} · lade …": "{0} {1} · loading …",
+  "Abspielen nicht möglich: {0}": "Cannot play: {0}",
+  "Aufnahme konnte nicht geladen werden: {0}": "The recording could not be loaded: {0}",
+  "Die Aufnahme ist die englische {0}; der Text daneben bleibt in deiner Übersetzung.": "The recording is the English {0}; the text beside it stays in your translation.",
+  "Ende der Hörbibel.": "End of the audio Bible.",
+  "Für dieses Buch gibt es keine Aufnahme.": "There is no recording of this book.",
+  "Hörbibel beenden": "Close the audio Bible",
+  "Hörbibel: dieses Kapitel anhören (gesprochene Aufnahme, englisch)": "Audio Bible: listen to this chapter (spoken recording, English)",
+  "Hören": "Listen",
+  "Kein Audio-Player gefunden. Installiere mpv, ffplay oder mpg123.": "No audio player found. Install mpv, ffplay or mpg123.",
+  "Nächstes Kapitel anhören": "Listen to the next chapter",
+  "Pause / weiter": "Pause / resume",
+  "Voriges Kapitel anhören": "Listen to the previous chapter",
+  "Hörbibel": "Audio Bible",
+  "Gesprochene Aufnahme der Bibel, Kapitel für Kapitel, auf Englisch. Sie wird erst geladen, wenn du „Hören“ drückst, und bleibt danach zum Hören ohne Netz auf deinem Computer (höchstens 400 MB; die ältesten Kapitel werden gelöscht).": "A spoken recording of the Bible, chapter by chapter, in English. It is only downloaded when you press “Listen”, and then stays on your computer so you can listen without a network (at most 400 MB; the oldest chapters are deleted).",
+  "World English Bible; Text und Aufnahme sind gemeinfrei (Public Domain)": "World English Bible; text and recording are in the public domain"
 }

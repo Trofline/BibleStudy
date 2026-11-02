@@ -86,7 +86,7 @@ Von links nach rechts (einige Knöpfe erscheinen nur im Advanced-Modus):
 
 ### Werkzeugzeile über dem Text
 
-**Gelesen**, **A− / A+** (Schriftgröße), **Ansicht**, **Graph**, **Karte**, **Zeitleiste**, **Stammbaum**, **Parallel**, **Wortstudie**, **Vorlesen**, **Markieren**, **Merken**.
+**Gelesen**, **A− / A+** (Schriftgröße), **Ansicht**, **Graph**, **Karte**, **Zeitleiste**, **Stammbaum**, **Parallel**, **Wortstudie**, **Vorlesen**, **Hören**, **Markieren**, **Merken**.
 
 ### Lesebereich und rechte Leiste
 

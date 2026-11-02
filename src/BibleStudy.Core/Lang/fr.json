@@ -1964,5 +1964,22 @@
   "Angezeigte Farben": "Couleurs affichées",
   "Wie die KJV das Wort übersetzt (Englisches in Klammern)": "Comment la KJV traduit le mot (anglais entre parenthèses)",
   "Der Standardtext ist ein Ausgangspunkt mit klarem Standpunkt (die Bibel allein ist Maßstab). Ändere oder leere ihn nach Belieben, oder wähle „Neutral“.": "Le texte par défaut est un point de départ avec une position claire (la Bible seule fait autorité). Modifie-le ou vide-le à ta guise, ou choisis « Neutre ».",
-  "Neutral (ohne Standpunkt)": "Neutre (sans position)"
+  "Neutral (ohne Standpunkt)": "Neutre (sans position)",
+  "{0} {1} · {2}, gelesen von {3}": "{0} {1} · {2}, lu par {3}",
+  "{0} {1} · lade …": "{0} {1} · chargement …",
+  "Abspielen nicht möglich: {0}": "Lecture impossible : {0}",
+  "Aufnahme konnte nicht geladen werden: {0}": "L’enregistrement n’a pas pu être chargé : {0}",
+  "Die Aufnahme ist die englische {0}; der Text daneben bleibt in deiner Übersetzung.": "L’enregistrement est la {0} en anglais ; le texte à côté reste dans ta traduction.",
+  "Ende der Hörbibel.": "Fin de la Bible audio.",
+  "Für dieses Buch gibt es keine Aufnahme.": "Il n’y a pas d’enregistrement de ce livre.",
+  "Hörbibel beenden": "Fermer la Bible audio",
+  "Hörbibel: dieses Kapitel anhören (gesprochene Aufnahme, englisch)": "Bible audio : écouter ce chapitre (enregistrement parlé, en anglais)",
+  "Hören": "Écouter",
+  "Kein Audio-Player gefunden. Installiere mpv, ffplay oder mpg123.": "Aucun lecteur audio trouvé. Installe mpv, ffplay ou mpg123.",
+  "Nächstes Kapitel anhören": "Écouter le chapitre suivant",
+  "Pause / weiter": "Pause / reprendre",
+  "Voriges Kapitel anhören": "Écouter le chapitre précédent",
+  "Hörbibel": "Bible audio",
+  "Gesprochene Aufnahme der Bibel, Kapitel für Kapitel, auf Englisch. Sie wird erst geladen, wenn du „Hören“ drückst, und bleibt danach zum Hören ohne Netz auf deinem Computer (höchstens 400 MB; die ältesten Kapitel werden gelöscht).": "Un enregistrement parlé de la Bible, chapitre par chapitre, en anglais. Il n’est téléchargé que lorsque tu appuies sur « Écouter », puis reste sur ton ordinateur pour l’écouter sans réseau (400 Mo au plus ; les chapitres les plus anciens sont supprimés).",
+  "World English Bible; Text und Aufnahme sind gemeinfrei (Public Domain)": "World English Bible ; le texte et l’enregistrement sont dans le domaine public"
 }

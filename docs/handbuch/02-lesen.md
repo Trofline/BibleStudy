@@ -109,6 +109,16 @@ Unter *Einstellungen → Darstellung* findest du:
 
 Der Knopf **Vorlesen** liest den angeklickten Vers oder das ganze Kapitel vor. Die Geschwindigkeit stellst du in den Einstellungen ein. Vorlesen nutzt die Stimmen deines Betriebssystems.
 
+## 2.9a Hörbibel
+
+Der Knopf **Hören** spielt eine **gesprochene Aufnahme** des Kapitels ab, das du gerade liest. Anders als Vorlesen ist das keine Computerstimme, sondern ein echter Sprecher: die **World English Bible**, gelesen von Winfred W. Henson. Text und Aufnahme sind gemeinfrei (Public Domain) und liegen bei eBible.org.
+
+- Unten erscheint ein Player: **voriges Kapitel**, **Pause / weiter**, **nächstes Kapitel**, ein Regler zum Springen und die Zeit. Das **×** beendet die Hörbibel.
+- Am Ende eines Kapitels geht es mit dem nächsten weiter, auch über Buchgrenzen hinweg. Der Text im Leser blättert mit, solange er das Kapitel zeigt, das gerade läuft. Ist in den Einstellungen „Kapitel beim Weiterblättern (▶) als gelesen markieren“ an, wird ein zu Ende gehörtes Kapitel als gelesen markiert.
+- Die Aufnahme ist **englisch**, auch wenn du eine deutsche Übersetzung liest; die Spalten daneben bleiben in deiner Übersetzung. Es gibt Aufnahmen aller 66 Bücher, aber keine Zeitmarken: Du kannst nicht bei einem bestimmten Vers einsteigen.
+- Ein Kapitel wird geladen, wenn du es zum ersten Mal hörst (3 bis 12 MB, je nach Länge und Verbindung ein paar Sekunden). Das nächste Kapitel wird schon im Hintergrund geholt. Gehörte Kapitel bleiben im Cache und laufen danach **auch ohne Netz**. Der Cache umfasst höchstens 400 MB; die am längsten nicht gehörten Kapitel werden zuerst gelöscht.
+- **Windows** braucht nichts Zusätzliches. Unter **macOS** spielt das mitgelieferte `afplay`, unter **Linux** muss einer der Player `mpv`, `ffplay`, `mpg123` oder `cvlc` installiert sein. Springen im Regler und die Gesamtdauer gibt es nur unter Windows. Linux und macOS sind dafür noch nicht ausgiebig getestet.
+
 ## 2.10 Der Lesezeichen-Stern
 
 Verse mit Lesezeichen tragen einen Stern ★ neben der Versnummer. Mehr dazu in [Kapitel 5](05-notizen-markierungen-lesezeichen.md).

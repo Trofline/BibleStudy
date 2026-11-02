@@ -159,6 +159,7 @@ public partial class MainWindow : Window
         InitGraph();
         InitPanel();
         InitStudy();
+        InitAudio();
         InitStrongSearch();
         InitImport();
         InitKnowledge();

@@ -1964,5 +1964,22 @@
   "Angezeigte Farben": "Показываемые цвета",
   "Wie die KJV das Wort übersetzt (Englisches in Klammern)": "Как KJV переводит слово (английское в скобках)",
   "Der Standardtext ist ein Ausgangspunkt mit klarem Standpunkt (die Bibel allein ist Maßstab). Ändere oder leere ihn nach Belieben, oder wähle „Neutral“.": "Текст по умолчанию — отправная точка с ясной позицией (мерило — одна лишь Библия). Измени или очисти его, или выбери «Нейтрально».",
-  "Neutral (ohne Standpunkt)": "Нейтрально (без позиции)"
+  "Neutral (ohne Standpunkt)": "Нейтрально (без позиции)",
+  "{0} {1} · {2}, gelesen von {3}": "{0} {1} · {2}, читает {3}",
+  "{0} {1} · lade …": "{0} {1} · загрузка …",
+  "Abspielen nicht möglich: {0}": "Не удаётся воспроизвести: {0}",
+  "Aufnahme konnte nicht geladen werden: {0}": "Не удалось загрузить запись: {0}",
+  "Die Aufnahme ist die englische {0}; der Text daneben bleibt in deiner Übersetzung.": "Запись — английская {0}; текст рядом остаётся в твоём переводе.",
+  "Ende der Hörbibel.": "Конец аудиоБиблии.",
+  "Für dieses Buch gibt es keine Aufnahme.": "Для этой книги нет записи.",
+  "Hörbibel beenden": "Закрыть аудиоБиблию",
+  "Hörbibel: dieses Kapitel anhören (gesprochene Aufnahme, englisch)": "АудиоБиблия: слушать эту главу (устная запись, на английском)",
+  "Hören": "Слушать",
+  "Kein Audio-Player gefunden. Installiere mpv, ffplay oder mpg123.": "Аудиоплеер не найден. Установи mpv, ffplay или mpg123.",
+  "Nächstes Kapitel anhören": "Слушать следующую главу",
+  "Pause / weiter": "Пауза / дальше",
+  "Voriges Kapitel anhören": "Слушать предыдущую главу",
+  "Hörbibel": "АудиоБиблия",
+  "Gesprochene Aufnahme der Bibel, Kapitel für Kapitel, auf Englisch. Sie wird erst geladen, wenn du „Hören“ drückst, und bleibt danach zum Hören ohne Netz auf deinem Computer (höchstens 400 MB; die ältesten Kapitel werden gelöscht).": "Устная запись Библии по главам, на английском. Она загружается только когда ты нажимаешь «Слушать», и затем остаётся на компьютере для прослушивания без сети (не более 400 МБ; самые старые главы удаляются).",
+  "World English Bible; Text und Aufnahme sind gemeinfrei (Public Domain)": "World English Bible; текст и запись находятся в общественном достоянии"
 }

@@ -86,7 +86,7 @@ From left to right (some buttons only appear in Advanced mode):
 
 ### Toolbar Above the Text
 
-**Read**, **A− / A+** (Font size), **View**, **Graph**, **Map**, **Timeline**, **Family tree**, **Parallel**, **Word study**, **Read aloud**, **Highlight**, **Bookmark**.
+**Read**, **A− / A+** (Font size), **View**, **Graph**, **Map**, **Timeline**, **Family tree**, **Parallel**, **Word study**, **Read aloud**, **Listen**, **Highlight**, **Bookmark**.
 
 ### Reading Area and Right Sidebar
 

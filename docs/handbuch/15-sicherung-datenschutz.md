@@ -38,7 +38,7 @@ Das Programm schreibt Dateien **atomar**: Erst entsteht eine temporäre Datei, d
 ## 15.4 Datenschutz
 
 - **Kein Konto, keine Anmeldung, keine Telemetrie.** Das Programm fragt nur bei GitHub nach Updates.
-- Das Programm enthält keine Bibeltexte; es lädt sie von ihren Originalquellen, wenn du sie brauchst.
+- Das Programm enthält keine Bibeltexte; es lädt sie von ihren Originalquellen, wenn du sie brauchst. Dasselbe gilt für die Hörbibel (eBible.org): Ein Kapitel wird erst geladen, wenn du es hören willst.
 - Deine Notizen, Dokumente und Markierungen verlassen den Computer nicht, außer du sendest sie bewusst (Zusammen studieren, Export).
 - **KI:** Mit Claude Code geht deine Frage an Anthropic (über deine eigene Anmeldung). Mit **Ollama** bleibt alles lokal.
 - **Feedback:** Ein Ticket ist öffentlich auf GitHub. Es wird nichts gesendet, bevor du es dort selbst abschickst.

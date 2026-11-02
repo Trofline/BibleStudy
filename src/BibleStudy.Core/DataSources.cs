@@ -38,6 +38,8 @@ public static class DataSources
             "OpenThesaurus", L("Lizenz: siehe die Webseite"), "https://www.openthesaurus.de"),
         new(L("Kommentare"), L("Freie Bibelkommentare, nur wenn du sie in den Einstellungen einschaltest (Kommentare sind Auslegung von Menschen, nicht Schrift)."),
             "Free Use Bible API und die Autoren der Werke", L("je Werk: siehe Lizenz-Link in der Bücherliste"), "https://bible.helloao.org"),
+        new(L("Hörbibel"), L("Gesprochene Aufnahme der Bibel, Kapitel für Kapitel, auf Englisch. Sie wird erst geladen, wenn du „Hören“ drückst, und bleibt danach zum Hören ohne Netz auf deinem Computer (höchstens 400 MB; die ältesten Kapitel werden gelöscht)."),
+            "eBible.org, read by Winfred W. Henson", L("gemeinfrei"), AudioBible.SourceUrl, L("World English Bible; Text und Aufnahme sind gemeinfrei (Public Domain)")),
         new(L("Übersetzte Wörterbuchtexte"), L("Die Texte von Strong und Interlinear gibt es nur englisch. Wenn du Claude Code hast, übersetzt es kurze Einträge in deine Sprache. Das ist eine KI-Übersetzung und wird so gekennzeichnet; sie bleibt auf deinem Computer."),
             L("dein eigenes Claude Code"), L("keine fremden Daten"), "https://claude.com/claude-code"),
         new(L("Eigene Importe"), L("Bibeldateien, die du selbst besitzt und einliest, und Texte von Plugins, die du erlaubst. Sie bleiben auf deinem Computer, werden nie weitergegeben und nicht geprüft."),

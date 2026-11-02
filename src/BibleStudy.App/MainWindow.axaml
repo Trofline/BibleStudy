@@ -160,6 +160,9 @@
                         <ToggleButton x:Name="SpeakBtn" Classes="toolx" ToolTip.Tip="Vorlesen: angeklickten Vers oder das ganze Kapitel">
                             <StackPanel Orientation="Horizontal" Spacing="6"><local:Icon Data="M11 5L6 9H2v6h4l5 4z M15.5 8.5a5 5 0 0 1 0 7 M19 5a10 10 0 0 1 0 14" IconSize="17" VerticalAlignment="Center" /><TextBlock Text="Vorlesen" VerticalAlignment="Center" /></StackPanel>
                         </ToggleButton>
+                        <ToggleButton x:Name="AudioBtn" Classes="toolx" ToolTip.Tip="Hörbibel: dieses Kapitel anhören (gesprochene Aufnahme, englisch)">
+                            <StackPanel Orientation="Horizontal" Spacing="6"><local:Icon Data="M3 14v-4a9 9 0 0 1 18 0v4 M3 14h3a1 1 0 0 1 1 1v4a1 1 0 0 1-1 1H5a2 2 0 0 1-2-2z M21 14h-3a1 1 0 0 0-1 1v4a1 1 0 0 0 1 1h1a2 2 0 0 0 2-2z" IconSize="17" VerticalAlignment="Center" /><TextBlock Text="Hören" VerticalAlignment="Center" /></StackPanel>
+                        </ToggleButton>
                     </StackPanel></Border>
                     <Border Classes="pill"><StackPanel Orientation="Horizontal">
                         <Button x:Name="MarkBtn" Classes="toolx" ToolTip.Tip="Markierten Text oder Vers einfärben">
@@ -200,6 +203,28 @@
                 <Button x:Name="VersionChip" Grid.Column="2" Classes="ghost" Padding="8,0" MinHeight="0" Height="22" Margin="4,0,0,0" ToolTip.Tip="Versionsnummer. Klicken: Patch Notes (was ist neu).">
                     <TextBlock x:Name="VersionChipText" Classes="caption" VerticalAlignment="Center" />
                 </Button>
+            </Grid>
+        </Border>
+
+        <!-- Audio Bible player (shown while a chapter is played) -->
+        <Border x:Name="AudioBar" DockPanel.Dock="Bottom" IsVisible="False" Padding="16,6" Background="{DynamicResource BsSurface}"
+                BorderBrush="{DynamicResource BsBorder}" BorderThickness="0,1,0,0">
+            <Grid ColumnDefinitions="Auto,*,Auto,Auto,Auto" ColumnSpacing="12">
+                <StackPanel Orientation="Horizontal" Spacing="4" VerticalAlignment="Center">
+                    <Button x:Name="AudioPrevBtn" Classes="tool" Width="36" Height="32" ToolTip.Tip="Voriges Kapitel anhören">
+                        <local:Icon Data="M19 20L9 12l10-8z M5 19V5" IconSize="16" />
+                    </Button>
+                    <Button x:Name="AudioPlayBtn" Classes="tool" Width="40" Height="32" ToolTip.Tip="Pause / weiter">
+                        <local:Icon x:Name="AudioPlayIcon" Data="M6 4l14 8-14 8z" IconSize="18" />
+                    </Button>
+                    <Button x:Name="AudioNextBtn" Classes="tool" Width="36" Height="32" ToolTip.Tip="Nächstes Kapitel anhören">
+                        <local:Icon Data="M5 4l10 8-10 8z M19 5v14" IconSize="16" />
+                    </Button>
+                </StackPanel>
+                <Slider x:Name="AudioSlider" Grid.Column="1" Minimum="0" Maximum="1" Value="0" VerticalAlignment="Center" />
+                <TextBlock x:Name="AudioTime" Grid.Column="2" Classes="caption" VerticalAlignment="Center" MinWidth="86" TextAlignment="Center" />
+                <TextBlock x:Name="AudioTitle" Grid.Column="3" Classes="caption" VerticalAlignment="Center" MaxWidth="460" TextTrimming="CharacterEllipsis" ToolTip.Tip="{Binding #AudioTitle.Text}" />
+                <Button x:Name="AudioCloseBtn" Grid.Column="4" Classes="tool" Width="32" Height="32" Content="×" FontSize="18" ToolTip.Tip="Hörbibel beenden" />
             </Grid>
         </Border>
 

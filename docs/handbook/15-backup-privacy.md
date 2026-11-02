@@ -38,7 +38,7 @@ The program writes files **atomically**: first a temporary file is created, whic
 ## 15.4 Privacy
 
 - **No account, no sign-in, no telemetry.** The program only contacts GitHub to check for updates.
-- The program contains no Bible texts; it downloads them from their original sources when you need them.
+- The program contains no Bible texts; it downloads them from their original sources when you need them. The same goes for the audio Bible (eBible.org): a chapter is only downloaded when you want to hear it.
 - Your notes, documents and highlights never leave your computer unless you deliberately send them (Study together, export).
 - **AI:** With Claude Code, your question goes to Anthropic (through your own sign-in). With **Ollama**, everything stays local.
 - **Feedback:** A ticket is public on GitHub. Nothing is sent until you submit it there yourself.

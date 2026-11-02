@@ -39,6 +39,7 @@ Das Programm enthält keine Bibeltexte. Alles wird bei Bedarf von der Originalqu
 - **Liddell-Scott-Jones**, bearbeitet von Tyndale House Cambridge (STEPBible), CC BY 4.0
 - **Easton's Bible Dictionary** über Theographic
 - **openthesaurus.de**, CC BY-SA 4.0 (deutsche Synonyme)
+- **eBible.org**, World English Bible, gesprochen von Winfred W. Henson, gemeinfrei (Hörbibel)
 
 Grundsatz bei neuen Quellen: nur gemeinfrei oder frei lizenziert (CC BY, CC BY-SA, CC0) von bekannten Stellen, nichts mit Einschränkung auf nichtkommerzielle Nutzung und nichts mit unklarer Lizenz.
 

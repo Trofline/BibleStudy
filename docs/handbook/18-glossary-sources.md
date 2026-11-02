@@ -39,6 +39,7 @@ The program contains no Bible texts. Everything is loaded from the original sour
 - **Liddell-Scott-Jones**, edited by Tyndale House Cambridge (STEPBible), CC BY 4.0
 - **Easton's Bible Dictionary** via Theographic
 - **openthesaurus.de**, CC BY-SA 4.0 (German synonyms)
+- **eBible.org**, World English Bible read by Winfred W. Henson, public domain (audio Bible)
 
 Principle for new sources: only public domain or freely licensed (CC BY, CC BY-SA, CC0) from well-known providers, nothing restricted to non-commercial use and nothing with an unclear license.
 

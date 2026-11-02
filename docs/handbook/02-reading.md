@@ -109,6 +109,16 @@ Under *Settings → Appearance* you will find:
 
 The **Read aloud** button reads aloud the verse you clicked or the whole chapter. You set the speed in the settings. Read aloud uses the voices of your operating system.
 
+## 2.9a Audio Bible
+
+The **Listen** button plays a **spoken recording** of the chapter you are reading. Unlike Read aloud this is not a computer voice but a real speaker: the **World English Bible**, read by Winfred W. Henson. Text and recording are in the public domain and are hosted by eBible.org.
+
+- A player appears at the bottom: **previous chapter**, **pause / resume**, **next chapter**, a slider to jump around, and the time. The **×** closes the audio Bible.
+- At the end of a chapter it continues with the next one, across book borders as well. The text in the reader turns the page with it as long as it shows the chapter that is playing. If “Mark chapter as read when turning forward (▶)” is on in the settings, a chapter you listened to the end is marked as read.
+- The recording is **English**, even if you read a German translation; the columns next to it stay in your translation. All 66 books are recorded, but there are no time marks: you cannot start at a particular verse.
+- A chapter is downloaded the first time you listen to it (3 to 12 MB, a few seconds depending on length and connection). The next chapter is fetched in the background already. Chapters you have heard stay in the cache and then play **without a network**. The cache holds at most 400 MB; the chapters not played for the longest time are deleted first.
+- **Windows** needs nothing extra. On **macOS** the built-in `afplay` plays it; on **Linux** one of the players `mpv`, `ffplay`, `mpg123` or `cvlc` has to be installed. Jumping with the slider and the total duration exist on Windows only. Linux and macOS have not been tested much yet.
+
 ## 2.10 The bookmark star
 
 Verses with a bookmark carry a star ★ next to the verse number. More on this in [Chapter 5](05-notes-highlights-bookmarks.md).
