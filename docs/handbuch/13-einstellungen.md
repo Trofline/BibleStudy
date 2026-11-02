@@ -15,7 +15,7 @@ Deine Sprache fehlt? Speichere die **Vorlage mit der KI-Anweisung**, lass sie vo
 ## 13.2 Darstellung
 
 - **Design:** System, Hell, Dunkel.
-- **Akzentfarbe** des Programms.
+- **Akzentfarbe** des Programms: sechs fertige Farben oder mit **+** eine eigene (Farbwähler mit Vorschau; Hell und Dunkel werden so angepasst, dass Schrift lesbar bleibt). Eigene Farben entfernst du per Rechtsklick.
 - **Schrift:** Größe, Zeilenabstand, Blocksatz, leichter lesbare Schrift (zum Beispiel bei Legasthenie), hoher Kontrast.
 - **Versnummern:** klein hochgestellt, normal im Text, ausblenden.
 - **Worte Jesu** farbig hervorheben, mit eigener Farbe (unabhängig vom Farbschema).

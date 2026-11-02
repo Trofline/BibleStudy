@@ -1993,5 +1993,7 @@
   "Für {0} gibt es keine natürliche Stimme; es wird die Windows-Stimme genutzt.": "Il n’y a pas de voix naturelle pour {0} ; la voix de Windows est utilisée.",
   "Natürliche Stimme wird geladen: {0}": "Téléchargement de la voix naturelle : {0}",
   "Piper (Stimmen zum Vorlesen)": "Piper (voix pour la lecture à voix haute)",
-  "Programm MIT; Stimmen (CC0, gemeinfrei, Apache-2.0 oder CC BY 4.0): Thorsten, LJ Speech, Cori, Bryce, John, Norman, DaveFX, Claude, SIWIS, Gilles, Denis, Dmitri. Wird erst geladen, wenn du die natürliche Stimme wählst.": "Programme MIT ; voix (CC0, domaine public, Apache-2.0 ou CC BY 4.0) : Thorsten, LJ Speech, Cori, Bryce, John, Norman, DaveFX, Claude, SIWIS, Gilles, Denis, Dmitri. Téléchargé seulement quand tu choisis la voix naturelle."
+  "Programm MIT; Stimmen (CC0, gemeinfrei, Apache-2.0 oder CC BY 4.0): Thorsten, LJ Speech, Cori, Bryce, John, Norman, DaveFX, Claude, SIWIS, Gilles, Denis, Dmitri. Wird erst geladen, wenn du die natürliche Stimme wählst.": "Programme MIT ; voix (CC0, domaine public, Apache-2.0 ou CC BY 4.0) : Thorsten, LJ Speech, Cori, Bryce, John, Norman, DaveFX, Claude, SIWIS, Gilles, Denis, Dmitri. Téléchargé seulement quand tu choisis la voix naturelle.",
+  "Eigene Akzentfarbe wählen": "Choisir ta propre couleur d’accent",
+  "Die Farbe wird für Hell und Dunkel so angepasst, dass Schrift darauf lesbar bleibt.": "La couleur est ajustée pour le clair et le sombre afin que le texte reste lisible."
 }

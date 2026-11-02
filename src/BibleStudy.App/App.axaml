@@ -83,6 +83,7 @@
 
     <Application.Styles>
         <FluentTheme />
+        <StyleInclude Source="avares://Avalonia.Controls.ColorPicker/Themes/Fluent/Fluent.xaml" />
 
         <!-- Icon buttons -->
         <Style Selector="Button.tool, ToggleButton.tool">

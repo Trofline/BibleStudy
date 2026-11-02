@@ -15,7 +15,7 @@ Your language is missing? Save the **template with the AI instruction**, have an
 ## 13.2 Appearance
 
 - **Theme:** System, Light, Dark.
-- **Accent color** of the program.
+- **Accent color** of the program: six ready-made colors or your own with **+** (color picker with preview; light and dark are adjusted so text stays readable). Remove your own colors with a right click.
 - **Font:** size, line spacing, justified text, an easier-to-read font (for example for dyslexia), high contrast.
 - **Verse numbers:** small superscript, normal in the text, hidden.
 - **Words of Jesus** highlighted in color, with their own color (independent of the color scheme).

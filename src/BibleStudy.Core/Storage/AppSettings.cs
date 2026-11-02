@@ -124,7 +124,8 @@ public sealed class AppSettings
     public bool Justify { get; set; }
     public bool ScrollMarksRead { get; set; }
     public bool ChapterHeading { get; set; } = true;
-    public string Accent { get; set; } = "Messing";
+    public string Accent { get; set; } = "Messing";   // a ready-made name or a colour of the user ("#RRGGBB")
+    public List<string> CustomAccents { get; set; } = [];
     public int SpeakRate { get; set; }
     public double AudioSpeed { get; set; } = 1;
     public string SpeakVoice { get; set; } = "windows";   // windows | natural (Piper)

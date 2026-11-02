@@ -1,5 +1,6 @@
 ﻿using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Controls.Primitives;
 using Avalonia.Input;
 using Avalonia.Input.Platform;
 using Avalonia.Interactivity;
@@ -107,11 +108,40 @@ public partial class MainWindow
 
     // ---- accent color -------------------------------------------------------------------------------------------------
 
+    /// <summary>The colours of a ready-made accent, or of an own one ("#RRGGBB": made readable on paper and on the dark background).</summary>
+    static (string Name, string Light, string Dark) AccentOf(string name)
+    {
+        var known = Accents.FirstOrDefault(a => a.Name == name);
+        if (known.Name is not null) return known;
+        if (name.StartsWith('#') && Color.TryParse(name, out var c))
+            return (name, HexOf(Readable(c, Color.Parse("#FFFCF6"), Colors.Black)), HexOf(Readable(c, Color.Parse("#161A20"), Colors.White)));
+        return Accents[0];
+    }
+
+    static double Luminance(Color c)
+    {
+        static double F(byte v) { var x = v / 255.0; return x <= 0.03928 ? x / 12.92 : Math.Pow((x + 0.055) / 1.055, 2.4); }
+        return 0.2126 * F(c.R) + 0.7152 * F(c.G) + 0.0722 * F(c.B);
+    }
+
+    /// <summary>The colour, moved towards <paramref name="toward"/> just far enough that text in it can be read on <paramref name="background"/> (contrast 4.5).</summary>
+    static Color Readable(Color c, Color background, Color toward)
+    {
+        for (var t = 0.0; t <= 1.0001; t += 0.04)
+        {
+            var m = Mix(c, toward, t);
+            var l1 = Luminance(m) + 0.05; var l2 = Luminance(background) + 0.05;
+            if ((Math.Max(l1, l2) / Math.Min(l1, l2)) >= 4.5) return m;
+        }
+        return toward;
+    }
+
     void BuildAccentPanel()
     {
         AccentPanel.Children.Clear();
-        foreach (var (name, light, dark) in Accents)
+        foreach (var (name, light, dark) in Accents.Concat(_settings.CustomAccents.Where(h => Color.TryParse(h, out _)).Select(AccentOf)))
         {
+            var custom = name.StartsWith('#');
             var dot = new Border
             {
                 Width = 26, Height = 26, CornerRadius = new(13), Margin = new(0, 0, 8, 0), Cursor = new Cursor(StandardCursorType.Hand),
@@ -122,18 +152,79 @@ public partial class MainWindow
                 },
                 BorderThickness = new(name == _settings.Accent ? 3 : 1), BorderBrush = name == _settings.Accent ? Res("BsText") : Res("BsBorder"),
             };
-            ToolTip.SetTip(dot, L(name));
+            ToolTip.SetTip(dot, custom ? name : L(name));
             var captured = name;
-            dot.PointerPressed += (_, _) => { ApplyAccent(captured); BuildAccentPanel(); };
+            dot.PointerPressed += (_, e) =>
+            {
+                if (e.GetCurrentPoint(dot).Properties.IsRightButtonPressed) return;
+                ApplyAccent(captured); BuildAccentPanel();
+            };
+            if (custom)
+            {
+                var remove = new MenuItem { Header = L("Entfernen") };
+                remove.Click += (_, _) =>
+                {
+                    _settings.CustomAccents.Remove(captured);
+                    if (_settings.Accent == captured) ApplyAccent("Messing");
+                    SaveSettings(); BuildAccentPanel();
+                };
+                dot.ContextMenu = new ContextMenu { ItemsSource = new[] { remove } };
+            }
             AccentPanel.Children.Add(dot);
         }
+        var add = new Border
+        {
+            Width = 26, Height = 26, CornerRadius = new(13), Margin = new(0, 0, 8, 0), Cursor = new Cursor(StandardCursorType.Hand),
+            BorderThickness = new(1), BorderBrush = Res("BsBorder"),
+            Child = new TextBlock { Text = "+", HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center, VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center, FontSize = 16 },
+        };
+        ToolTip.SetTip(add, L("Eigene Akzentfarbe wählen"));
+        add.PointerPressed += (_, _) => ShowCustomAccent();
+        AccentPanel.Children.Add(add);
     }
 
-    void ApplyAccent(string name)
+    /// <summary>A window with a colour picker; the program shows the colour at once and keeps the old one when the user cancels.</summary>
+    void ShowCustomAccent()
     {
-        var accent = Accents.FirstOrDefault(a => a.Name == name);
-        if (accent.Name is null) accent = Accents[0];
-        _settings.Accent = accent.Name;
+        var before = _settings.Accent;
+        var start = Color.TryParse(before, out var cur) ? cur : Color.Parse(AccentOf(before).Light);
+        var picker = new ColorView { Color = start, IsAlphaVisible = false };
+        var save = new Button { Content = L("Speichern"), Classes = { "primary" }, Margin = new(8, 0, 0, 0) };
+        var cancel = new Button { Content = L("Abbrechen") };
+        var hint = new TextBlock { Text = L("Die Farbe wird für Hell und Dunkel so angepasst, dass Schrift darauf lesbar bleibt."), Classes = { "caption" }, TextWrapping = Avalonia.Media.TextWrapping.Wrap };
+        var stack = new StackPanel
+        {
+            Spacing = 10, Margin = new(20),
+            Children =
+            {
+                new TextBlock { Text = L("Eigene Akzentfarbe wählen"), Classes = { "h2" } }, picker, hint,
+                new WrapPanel { HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Right, Children = { cancel, save } },
+            },
+        };
+        var win = new Window { Title = L("Eigene Akzentfarbe wählen"), Width = 420, SizeToContent = SizeToContent.Height, CanResize = false, Background = Res("BsSurface"), Icon = Icon, WindowStartupLocation = WindowStartupLocation.CenterOwner, Content = stack };
+        var saved = false;
+        var chosen = start;
+        picker.ColorChanged += (_, e) => { chosen = e.NewColor; ApplyAccent(HexOf(chosen), persist: false); };
+        save.Click += (_, _) =>
+        {
+            saved = true;
+            var hex = HexOf(chosen);
+            if (!_settings.CustomAccents.Contains(hex)) _settings.CustomAccents.Add(hex);
+            if (_settings.CustomAccents.Count > 8) _settings.CustomAccents.RemoveAt(0);
+            ApplyAccent(hex); BuildAccentPanel(); win.Close();
+        };
+        cancel.Click += (_, _) => win.Close();
+        win.Closed += (_, _) => { if (!saved) { ApplyAccent(before); BuildAccentPanel(); } };
+        win.Show(this);
+    }
+
+    static string HexOf(Color c) => $"#{c.R:X2}{c.G:X2}{c.B:X2}";
+
+    /// <summary>Sets the accent colour; with <paramref name="persist"/> false it is only shown (while the picker is open).</summary>
+    void ApplyAccent(string name, bool persist = true)
+    {
+        var accent = AccentOf(name);
+        if (persist) _settings.Accent = accent.Name;
         var res = Application.Current!.Resources;
         // Fluent derives sliders, check boxes and focus rings from the system accent
         var dark = ActualThemeVariant == ThemeVariant.Dark;
@@ -151,7 +242,7 @@ public partial class MainWindow
             d["TabItemHeaderForegroundSelected"] = solid; d["TabItemHeaderForegroundSelectedPointerOver"] = solid;
             d["TabItemHeaderBackgroundSelected"] = softBrush; d["TabItemHeaderBackgroundSelectedPointerOver"] = softBrush;
         }
-        SaveSettings();
+        if (persist) SaveSettings();
     }
 
     static Color Mix(Color a, Color b, double t) =>
