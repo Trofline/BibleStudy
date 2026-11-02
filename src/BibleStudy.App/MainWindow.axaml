@@ -775,7 +775,8 @@
                                 <TextBlock x:Name="AiCliInfo" Classes="caption" TextWrapping="Wrap" />
                                 <TextBlock Text="Anweisung für Claude (frei änderbar, wird jedem Gespräch vorangestellt)" TextWrapping="Wrap" />
                                 <TextBox x:Name="AiContextBox" AcceptsReturn="True" TextWrapping="Wrap" Height="240" />
-                                <Button x:Name="AiContextResetBtn" Content="Standardtext wiederherstellen" HorizontalAlignment="Left" />
+                                <TextBlock Classes="caption" TextWrapping="Wrap" Text="Der Standardtext ist ein Ausgangspunkt mit klarem Standpunkt (die Bibel allein ist Maßstab). Ändere oder leere ihn nach Belieben, oder wähle „Neutral“." />
+                                <WrapPanel><Button x:Name="AiContextResetBtn" Content="Standardtext wiederherstellen" Margin="0,0,8,0" /><Button x:Name="AiContextNeutralBtn" Content="Neutral (ohne Standpunkt)" /></WrapPanel>
                                 <TextBox x:Name="AiModelBox" Watermark="Modell (leer = deine Standardeinstellung), z. B. sonnet" />
                                 <TextBlock Text="KI-Motor" Margin="0,6,0,0" />
                                 <Border Classes="pill"><ComboBox x:Name="AiEngineBox" HorizontalAlignment="Stretch">

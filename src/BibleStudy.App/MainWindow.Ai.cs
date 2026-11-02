@@ -55,6 +55,7 @@ public partial class MainWindow
         AiContextBox.Text = _settings.AiContext;
         AiContextBox.LostFocus += (_, _) => { _settings.AiContext = AiContextBox.Text ?? ""; SaveSettings(); };
         AiContextResetBtn.Click += (_, _) => { AiContextBox.Text = _settings.AiContext = BibleStudy.Core.Storage.AppSettings.DefaultAiContext; SaveSettings(); };
+        AiContextNeutralBtn.Click += (_, _) => { AiContextBox.Text = _settings.AiContext = BibleStudy.Core.Storage.AppSettings.NeutralAiContext; SaveSettings(); };
         AiModelBox.Text = _settings.AiModel;
         AiModelBox.LostFocus += (_, _) => { _settings.AiModel = AiModelBox.Text?.Trim() ?? ""; SaveSettings(); };
 

@@ -1962,5 +1962,7 @@
   "Mehr mit diesem Vers": "Ещё со стихом",
   "Wort „{0}“ · {1}": "Слово «{0}» · {1}",
   "Angezeigte Farben": "Показываемые цвета",
-  "Wie die KJV das Wort übersetzt (Englisches in Klammern)": "Как KJV переводит слово (английское в скобках)"
+  "Wie die KJV das Wort übersetzt (Englisches in Klammern)": "Как KJV переводит слово (английское в скобках)",
+  "Der Standardtext ist ein Ausgangspunkt mit klarem Standpunkt (die Bibel allein ist Maßstab). Ändere oder leere ihn nach Belieben, oder wähle „Neutral“.": "Текст по умолчанию — отправная точка с ясной позицией (мерило — одна лишь Библия). Измени или очисти его, или выбери «Нейтрально».",
+  "Neutral (ohne Standpunkt)": "Нейтрально (без позиции)"
 }
