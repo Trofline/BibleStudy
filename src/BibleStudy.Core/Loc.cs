@@ -17,6 +17,9 @@ public static class Loc
 
     public static string Code { get; private set; } = "de";
 
+    /// <summary>Puts a quotation in the quote marks of the UI language (German „…“, otherwise “…”).</summary>
+    public static string Quote(string s) => Code == "de" ? $"„{s}“" : $"“{s}”";
+
     /// <summary>The default for new installations; the source text itself is German.</summary>
     public const string DefaultCode = "en";
 

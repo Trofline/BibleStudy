@@ -30,7 +30,8 @@ public sealed record Footnote(int NoteId, int Verse, string Text);
 /// <summary>One word of the original text with transliteration, grammar and the English meaning (Berean interlinear, public domain).</summary>
 public sealed record InterlinearWord(int Position, string Language, string Text, string Translit, string Parsing, string ParsingFull, string Strongs, string Gloss)
 {
-    public bool IsHebrew => Language == "hebrew";
+    /// <summary>Hebrew and Aramaic (right to left); the source may label Aramaic parts differently, so the script decides as well.</summary>
+    public bool IsHebrew => string.Equals(Language, "hebrew", StringComparison.OrdinalIgnoreCase) || Text.Any(c => c is >= '֐' and <= '׿');
 }
 
 /// <summary>One entry of Strong's dictionary (original-language word study).</summary>

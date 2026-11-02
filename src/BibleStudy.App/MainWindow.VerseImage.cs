@@ -20,7 +20,7 @@ public partial class MainWindow
         var accent = (Res("BsAccent") as ISolidColorBrush)?.Color ?? Color.Parse("#E3B65F");
         var size = text.Length switch { < 100 => 60, < 200 => 50, < 320 => 42, < 480 => 34, _ => 28 };
 
-        var quote = new TextBlock { Text = "„" + text + "“", FontSize = size, FontFamily = ScriptureFont, Foreground = Brushes.White, TextWrapping = TextWrapping.Wrap, LineHeight = size * 1.35, TextAlignment = TextAlignment.Center };
+        var quote = new TextBlock { Text = Loc.Quote(text), FontSize = size, FontFamily = ScriptureFont, Foreground = Brushes.White, TextWrapping = TextWrapping.Wrap, LineHeight = size * 1.35, TextAlignment = TextAlignment.Center };
         var reference = new TextBlock { Text = $"{Label(r)}  ·  {translation}", FontSize = 30, FontWeight = FontWeight.SemiBold, Foreground = new SolidColorBrush(accent), HorizontalAlignment = HorizontalAlignment.Center, Margin = new(0, 36, 0, 0) };
         var mark = new TextBlock { Text = "BibleStudy", FontSize = 20, Opacity = 0.45, Foreground = Brushes.White, HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Bottom, Margin = new(0, 0, 0, 40) };
         var root = new Grid

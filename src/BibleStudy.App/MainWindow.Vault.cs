@@ -402,7 +402,7 @@ public partial class MainWindow
         if (!detail) return label;
         var lines = new List<string>();
         var text = string.Join(" ", run.Select(r => r.Text));
-        if (!m.WholeVerse) lines.Add($"„{Shorten(m.Text, 100)}“"); else if (text.Length > 0) lines.Add(Shorten(text, run.Count > 1 ? 220 : 100));
+        if (!m.WholeVerse) lines.Add(Loc.Quote(Shorten(m.Text, 100))); else if (text.Length > 0) lines.Add(Shorten(text, run.Count > 1 ? 220 : 100));
         if (m.Note.Length > 0) lines.Add("✎ " + Shorten(m.Note.ReplaceLineEndings(" "), 100));
         if (m.Tags.Count > 0) lines.Add(string.Join("  ", m.Tags.Select(t => "#" + t)));
         return lines.Count == 0 ? label : label + "\n" + string.Join("\n", lines);
@@ -411,7 +411,7 @@ public partial class MainWindow
     string MarkDisplay(Mark m)
     {
         var lines = new List<string>();
-        if (!m.WholeVerse) lines.Add($"„{Shorten(m.Text, 100)}“");
+        if (!m.WholeVerse) lines.Add(Loc.Quote(Shorten(m.Text, 100)));
         else if (m.Text.Length > 0) lines.Add(Shorten(m.Text, 100));
         if (m.Note.Length > 0) lines.Add("✎ " + Shorten(m.Note.ReplaceLineEndings(" "), 100));
         if (m.Tags.Count > 0) lines.Add(string.Join("  ", m.Tags.Select(t => "#" + t)));

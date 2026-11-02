@@ -48,7 +48,7 @@ public partial class MainWindow
             var parts = new List<string>();
             if (entry is not null && entry.Translit.Length > 0) parts.Add(entry.Translit);
             if (definition.Length > 0) parts.Add(Mean(definition));
-            else if (word.Trim().Length > 0) parts.Add($"„{word.Trim()}“");
+            else if (word.Trim().Length > 0) parts.Add(Loc.Quote(word.Trim()));
             return string.Join("  ·  ", parts);
         }
         var subText = new TextBlock { Text = SubLine(), TextWrapping = TextWrapping.Wrap, Opacity = 0.85 };

@@ -552,7 +552,7 @@ public partial class MainWindow : Window
     {
         RevealSideTab(3);
         StudyPanel.Children.Clear();
-        StudyPanel.Children.Add(new TextBlock { Text = $"„{span.Word.Trim()}“", FontSize = 20, FontWeight = FontWeight.SemiBold, TextWrapping = TextWrapping.Wrap });
+        StudyPanel.Children.Add(new TextBlock { Text = Loc.Quote(span.Word.Trim()), FontSize = 20, FontWeight = FontWeight.SemiBold, TextWrapping = TextWrapping.Wrap });
         foreach (var id in span.Strongs)
         {
             try

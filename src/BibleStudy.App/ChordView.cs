@@ -29,7 +29,7 @@ sealed class ChordView : Control
         InvalidateVisual();
     }
 
-    static string Abbreviation(string id) { var i = Array.IndexOf(BookData.UsfmIds, id); return i >= 0 ? BookData.GermanAbbreviations[i] : id; }
+    static string Abbreviation(string id) => BookData.ShortName(id, Loc.Code) ?? id;
 
     IBrush Res(string key, IBrush fallback) => this.TryFindResource(key, ActualThemeVariant, out var v) && v is IBrush b ? b : fallback;
 

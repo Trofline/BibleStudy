@@ -136,7 +136,7 @@ public partial class MainWindow
                 if (_selected is not int v || TranslationBox.SelectedItem is not TranslationInfo t) { StatusText.Text = L("Klicke zuerst im Bibeltext einen Vers an."); return; }
                 var ch = await _provider.GetChapterAsync(t.Id, _curBook, _curChapter);
                 var text = ch.Verses.FirstOrDefault(x => x.Number == v)?.Text.Trim() ?? "";
-                var quote = $"„{text}“ ({BookName(_curBook)} {_curChapter},{v}, {t.ShortName})";
+                var quote = $"{Loc.Quote(text)} ({BookName(_curBook)} {_curChapter},{v}, {t.ShortName})";
                 notes.Text = string.IsNullOrWhiteSpace(notes.Text) ? quote : notes.Text.TrimEnd() + "\n\n" + quote;
             };
             var up = new Button { Content = "▲", Classes = { "tool" }, Width = 30 }; var down = new Button { Content = "▼", Classes = { "tool" }, Width = 30 };

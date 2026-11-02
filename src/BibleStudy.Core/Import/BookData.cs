@@ -33,6 +33,22 @@ public static class BookData
         "1. Kor", "2. Kor", "Gal", "Eph", "Phil", "Kol", "1. Thes", "2. Thes", "1. Tim", "2. Tim", "Tit", "Phlm", "Heb", "Jak", "1. Pet", "2. Pet", "1. Joh", "2. Joh", "3. Joh", "Jud", "Off",
     ];
 
+    /// <summary>Short English names for chart labels and tiles (same order as <see cref="UsfmIds"/>).</summary>
+    public static readonly string[] EnglishAbbreviations =
+    [
+        "Gen", "Exod", "Lev", "Num", "Deut", "Josh", "Judg", "Ruth", "1 Sam", "2 Sam", "1 Kgs", "2 Kgs", "1 Chr", "2 Chr", "Ezra", "Neh", "Esth", "Job", "Ps", "Prov", "Eccl", "Song",
+        "Isa", "Jer", "Lam", "Ezek", "Dan", "Hos", "Joel", "Amos", "Obad", "Jonah", "Mic", "Nah", "Hab", "Zeph", "Hag", "Zech", "Mal", "Matt", "Mark", "Luke", "John", "Acts", "Rom",
+        "1 Cor", "2 Cor", "Gal", "Eph", "Phil", "Col", "1 Thess", "2 Thess", "1 Tim", "2 Tim", "Titus", "Phlm", "Heb", "Jas", "1 Pet", "2 Pet", "1 John", "2 John", "3 John", "Jude", "Rev",
+    ];
+
+    /// <summary>Short book name for the UI language: German abbreviations in German, English ones otherwise; null for an unknown id.</summary>
+    public static string? ShortName(string usfm, string uiLanguageCode)
+    {
+        var i = Array.IndexOf(UsfmIds, usfm);
+        if (i < 0) return null;
+        return uiLanguageCode.StartsWith("de", StringComparison.OrdinalIgnoreCase) ? GermanAbbreviations[i] : EnglishAbbreviations[i];
+    }
+
     public static string NameOf(string usfm, string languageCode)
     {
         var i = Array.IndexOf(UsfmIds, usfm);

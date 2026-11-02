@@ -181,7 +181,7 @@ public partial class MainWindow
         var tr = info?.ShortName ?? "";
         // source with the license: the address of the license text unless the translation is public domain
         var license = info is { License.PublicDomain: false, LicenseUrl: { Length: > 0 } url } ? "\n" + url : "";
-        await clipboard.SetTextAsync($"„{VerseTextOf(v).Trim()}“ – {Label(r)} ({tr}){license}");
+        await clipboard.SetTextAsync($"{Loc.Quote(VerseTextOf(v).Trim())} – {Label(r)} ({tr}){license}");
         StatusText.Text = L("{0} kopiert.", Label(r));
     }
 

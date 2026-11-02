@@ -72,7 +72,7 @@ public partial class MainWindow
                 { texts.Add(nx.Text); last = nx; i++; }
                 var label = last == first ? Label(first.Ref) : $"{BookName(first.Ref.Book)} {first.Ref.Chapter},{first.Ref.Verse}–{last.Ref.Verse}";
                 sb.AppendLine($"## {label}");
-                sb.AppendLine($"> {(first.WholeVerse ? string.Join(" ", texts) : "„" + first.Text + "“")}").AppendLine();
+                sb.AppendLine($"> {(first.WholeVerse ? string.Join(" ", texts) : Loc.Quote(first.Text))}").AppendLine();
                 if (first.Note.Length > 0) sb.AppendLine(first.Note).AppendLine();
                 if (first.Tags.Count > 0) sb.AppendLine(string.Join(" ", first.Tags.Select(ObsidianTag)));
                 sb.AppendLine($"{L("Farbe:")} `{first.Color}`").AppendLine();
