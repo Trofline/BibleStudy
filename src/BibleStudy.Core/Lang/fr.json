@@ -1989,9 +1989,9 @@
   "Vorlesen: Stimme": "Lecture à voix haute : voix",
   "Windows-Stimme (technisch, ohne Download)": "Voix de Windows (robotique, sans téléchargement)",
   "Natürliche Stimme (Piper; lädt beim ersten Mal ca. 85 MB)": "Voix naturelle (Piper ; télécharge environ 85 Mo la première fois)",
-  "Piper läuft offline auf deinem Computer (nur Windows, 64 Bit). Stimmen: Deutsch Thorsten, Englisch LJ Speech, Spanisch DaveFX, Französisch SIWIS, Russisch Denis; alle frei lizenziert. Für andere Sprachen bleibt die Windows-Stimme.": "Piper fonctionne hors ligne sur ton ordinateur (Windows 64 bits uniquement). Voix : allemand Thorsten, anglais LJ Speech, espagnol DaveFX, français SIWIS, russe Denis ; toutes sous licence libre. Pour les autres langues, la voix de Windows reste utilisée.",
+  "Piper läuft offline auf deinem Computer (nur Windows, 64 Bit). Jede Stimme wird beim ersten Benutzen geladen (60 bis 115 MB); alle sind frei lizenziert. Für andere Sprachen bleibt die Windows-Stimme.": "Piper fonctionne hors ligne sur ton ordinateur (Windows 64 bits uniquement). Chaque voix est téléchargée à la première utilisation (60 à 115 Mo) ; toutes sont sous licence libre. Pour les autres langues, la voix de Windows reste utilisée.",
   "Für {0} gibt es keine natürliche Stimme; es wird die Windows-Stimme genutzt.": "Il n’y a pas de voix naturelle pour {0} ; la voix de Windows est utilisée.",
   "Natürliche Stimme wird geladen: {0}": "Téléchargement de la voix naturelle : {0}",
   "Piper (Stimmen zum Vorlesen)": "Piper (voix pour la lecture à voix haute)",
-  "Programm MIT; Stimmen: Thorsten (CC0), LJ Speech (gemeinfrei), DaveFX (CC0), SIWIS (CC BY 4.0), Denis (CC0). Wird erst geladen, wenn du die natürliche Stimme wählst.": "Programme MIT ; voix : Thorsten (CC0), LJ Speech (domaine public), DaveFX (CC0), SIWIS (CC BY 4.0), Denis (CC0). Téléchargé seulement quand tu choisis la voix naturelle."
+  "Programm MIT; Stimmen (CC0, gemeinfrei, Apache-2.0 oder CC BY 4.0): Thorsten, LJ Speech, Cori, Bryce, John, Norman, DaveFX, Claude, SIWIS, Gilles, Denis, Dmitri. Wird erst geladen, wenn du die natürliche Stimme wählst.": "Programme MIT ; voix (CC0, domaine public, Apache-2.0 ou CC BY 4.0) : Thorsten, LJ Speech, Cori, Bryce, John, Norman, DaveFX, Claude, SIWIS, Gilles, Denis, Dmitri. Téléchargé seulement quand tu choisis la voix naturelle."
 }

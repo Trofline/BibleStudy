@@ -10,26 +10,36 @@ namespace BibleStudy.Core;
 /// </summary>
 public static class NaturalVoice
 {
-    public sealed record Voice(string Language, string Id, string Name, string Folder, string License);
+    public sealed record Voice(string Language, string Id, string Name, string Folder, string License, int SizeMb = 63);
 
     public const string PiperUrl = "https://github.com/rhasspy/piper/releases/download/2023.11.14-2/piper_windows_amd64.zip";
     public const string VoiceBase = "https://huggingface.co/rhasspy/piper-voices/resolve/main/";
     public const string SourceUrl = "https://github.com/rhasspy/piper";
 
-    /// <summary>One voice per language (two-letter code), each with a licence that allows free use.</summary>
+    /// <summary>Voices with a licence that allows free use, several per language (two-letter code). The first one of a language is its default.</summary>
     public static readonly Voice[] Voices =
     [
         new("de", "de_DE-thorsten-medium", "Thorsten", "de/de_DE/thorsten/medium", "CC0"),
+        new("de", "de_DE-thorsten-high", "Thorsten high", "de/de_DE/thorsten/high", "CC0", 113),
+        new("de", "de_DE-thorsten_emotional-medium", "Thorsten emotional", "de/de_DE/thorsten_emotional/medium", "CC0", 76),
         new("en", "en_US-ljspeech-medium", "LJ Speech", "en/en_US/ljspeech/medium", "Public Domain"),
+        new("en", "en_GB-cori-high", "Cori (British) high", "en/en_GB/cori/high", "Public Domain", 114),
+        new("en", "en_US-bryce-medium", "Bryce", "en/en_US/bryce/medium", "Public Domain"),
+        new("en", "en_US-john-medium", "John", "en/en_US/john/medium", "Public Domain"),
+        new("en", "en_US-norman-medium", "Norman", "en/en_US/norman/medium", "Public Domain"),
         new("es", "es_ES-davefx-medium", "DaveFX", "es/es_ES/davefx/medium", "CC0"),
+        new("es", "es_MX-claude-high", "Claude (México) high", "es/es_MX/claude/high", "Apache-2.0"),
         new("fr", "fr_FR-siwis-medium", "SIWIS", "fr/fr_FR/siwis/medium", "CC BY 4.0"),
+        new("fr", "fr_FR-gilles-low", "Gilles", "fr/fr_FR/gilles/low", "CC0"),
         new("ru", "ru_RU-denis-medium", "Denis", "ru/ru_RU/denis/medium", "CC0"),
+        new("ru", "ru_RU-dmitri-medium", "Dmitri", "ru/ru_RU/dmitri/medium", "CC0"),
     ];
 
     public static bool IsAvailable => OperatingSystem.IsWindows() && Environment.Is64BitOperatingSystem
         && System.Runtime.InteropServices.RuntimeInformation.ProcessArchitecture == System.Runtime.InteropServices.Architecture.X64;
 
-    public static Voice? For(string? language) => Voices.FirstOrDefault(v => v.Language == language);
+    /// <summary>The chosen voice of the language, or its first one.</summary>
+    public static Voice? For(string? language, string? id = null) => Voices.FirstOrDefault(v => v.Language == language && v.Id == id) ?? Voices.FirstOrDefault(v => v.Language == language);
 
     static string Dir(string root) => Path.Combine(root, "cache", "voice");
     static string PiperExe(string root) => Path.Combine(Dir(root), "piper", "piper.exe");

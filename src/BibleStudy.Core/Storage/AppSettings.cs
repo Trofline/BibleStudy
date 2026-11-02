@@ -129,6 +129,7 @@ public sealed class AppSettings
     public double AudioSpeed { get; set; } = 1;
     public string SpeakVoice { get; set; } = "windows";   // windows | natural (Piper)
     public double NaturalSpeed { get; set; } = 1;
+    public Dictionary<string, string> SpeakVoiceIds { get; set; } = [];   // language (two letters) -> Piper voice
     public int SideTab { get; set; }
     public bool FocusMode { get; set; }
     /// <summary>Parallel columns scroll together verse by verse (true) or each column on its own (false).</summary>

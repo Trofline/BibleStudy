@@ -1989,9 +1989,9 @@
   "Vorlesen: Stimme": "Чтение вслух: голос",
   "Windows-Stimme (technisch, ohne Download)": "Голос Windows (механический, без загрузки)",
   "Natürliche Stimme (Piper; lädt beim ersten Mal ca. 85 MB)": "Естественный голос (Piper; в первый раз загружает около 85 МБ)",
-  "Piper läuft offline auf deinem Computer (nur Windows, 64 Bit). Stimmen: Deutsch Thorsten, Englisch LJ Speech, Spanisch DaveFX, Französisch SIWIS, Russisch Denis; alle frei lizenziert. Für andere Sprachen bleibt die Windows-Stimme.": "Piper работает на твоём компьютере без интернета (только Windows, 64 бит). Голоса: немецкий Thorsten, английский LJ Speech, испанский DaveFX, французский SIWIS, русский Denis; все со свободной лицензией. Для других языков остаётся голос Windows.",
+  "Piper läuft offline auf deinem Computer (nur Windows, 64 Bit). Jede Stimme wird beim ersten Benutzen geladen (60 bis 115 MB); alle sind frei lizenziert. Für andere Sprachen bleibt die Windows-Stimme.": "Piper работает на твоём компьютере без интернета (только Windows, 64 бит). Каждый голос загружается при первом использовании (60–115 МБ); все со свободной лицензией. Для других языков остаётся голос Windows.",
   "Für {0} gibt es keine natürliche Stimme; es wird die Windows-Stimme genutzt.": "Для языка {0} нет естественного голоса; используется голос Windows.",
   "Natürliche Stimme wird geladen: {0}": "Загрузка естественного голоса: {0}",
   "Piper (Stimmen zum Vorlesen)": "Piper (голоса для чтения вслух)",
-  "Programm MIT; Stimmen: Thorsten (CC0), LJ Speech (gemeinfrei), DaveFX (CC0), SIWIS (CC BY 4.0), Denis (CC0). Wird erst geladen, wenn du die natürliche Stimme wählst.": "Программа MIT; голоса: Thorsten (CC0), LJ Speech (общественное достояние), DaveFX (CC0), SIWIS (CC BY 4.0), Denis (CC0). Загружается только когда ты выбираешь естественный голос."
+  "Programm MIT; Stimmen (CC0, gemeinfrei, Apache-2.0 oder CC BY 4.0): Thorsten, LJ Speech, Cori, Bryce, John, Norman, DaveFX, Claude, SIWIS, Gilles, Denis, Dmitri. Wird erst geladen, wenn du die natürliche Stimme wählst.": "Программа MIT; голоса (CC0, общественное достояние, Apache-2.0 или CC BY 4.0): Thorsten, LJ Speech, Cori, Bryce, John, Norman, DaveFX, Claude, SIWIS, Gilles, Denis, Dmitri. Загружается только когда ты выбираешь естественный голос."
 }

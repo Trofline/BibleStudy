@@ -92,7 +92,17 @@ public partial class MainWindow
             _settings.SpeakVoice = SpeakVoiceBox.SelectedIndex == 1 ? "natural" : "windows";
             SaveSettings();
         };
-        SpeakVoiceInfo.Text = L("Piper läuft offline auf deinem Computer (nur Windows, 64 Bit). Stimmen: Deutsch Thorsten, Englisch LJ Speech, Spanisch DaveFX, Französisch SIWIS, Russisch Denis; alle frei lizenziert. Für andere Sprachen bleibt die Windows-Stimme.");
+        // one voice per language
+        foreach (var lang in NaturalVoice.Voices.Select(v => v.Language).Distinct())
+        {
+            var voices = NaturalVoice.Voices.Where(v => v.Language == lang).ToArray();
+            var name = CultureInfo.GetCultureInfo(lang).NativeName;
+            var box = new ComboBox { MinWidth = 320, ItemsSource = voices.Select(v => $"{v.Name} · {v.License} · {v.SizeMb} MB").ToArray() };
+            box.SelectedIndex = Math.Max(0, Array.IndexOf(voices, NaturalVoice.For(lang, _settings.SpeakVoiceIds.GetValueOrDefault(lang))));
+            box.SelectionChanged += (_, _) => { if (box.SelectedIndex >= 0) { _settings.SpeakVoiceIds[lang] = voices[box.SelectedIndex].Id; SaveSettings(); } };
+            SpeakVoicePanel.Children.Add(new StackPanel { Orientation = Avalonia.Layout.Orientation.Horizontal, Spacing = 10, Children = { new TextBlock { Text = char.ToUpper(name[0]) + name[1..], Width = 90, VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center }, box } });
+        }
+        SpeakVoiceInfo.Text = L("Piper läuft offline auf deinem Computer (nur Windows, 64 Bit). Jede Stimme wird beim ersten Benutzen geladen (60 bis 115 MB); alle sind frei lizenziert. Für andere Sprachen bleibt die Windows-Stimme.");
     }
 
     // ---- reading aloud ------------------------------------------------------------------------------------------------
@@ -109,7 +119,7 @@ public partial class MainWindow
         var culture = CultureInfo.GetCultures(CultureTypes.NeutralCultures).FirstOrDefault(c => c.ThreeLetterISOLanguageName == t.Language || c.Name == t.Language);
         if (_settings.SpeakVoice == "natural" && NaturalVoice.IsAvailable)
         {
-            if (NaturalVoice.For(culture?.TwoLetterISOLanguageName) is { } voice) { await SpeakNaturalAsync(text, voice); return; }
+            if (NaturalVoice.For(culture?.TwoLetterISOLanguageName, _settings.SpeakVoiceIds.GetValueOrDefault(culture?.TwoLetterISOLanguageName ?? "")) is { } voice) { await SpeakNaturalAsync(text, voice); return; }
             StatusText.Text = L("Für {0} gibt es keine natürliche Stimme; es wird die Windows-Stimme genutzt.", t.LanguageName);
         }
         SpeakWindows(text, culture, t);
