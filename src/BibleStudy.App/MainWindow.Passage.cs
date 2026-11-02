@@ -1,5 +1,6 @@
 ﻿using Avalonia.Controls;
 using Avalonia.Input;
+using Avalonia.Input.Platform;
 using Avalonia.Layout;
 using Avalonia.Media;
 using BibleStudy.Core;
@@ -27,6 +28,9 @@ public partial class MainWindow
         void Open(int tab) { SetPanelOpen(true); SideTabs.SelectedIndex = tab; }
         Item(L("{0} – Vers-Übersicht", Label(r)), () => { Open(GuideTab); _ = ShowGuideAsync(r); });
         menu.Items.Add(new Separator());
+        var picked = PickedText(anchor);
+        if (picked.Length > 0) Item(L("Markierten Text kopieren"), async () => { if (TopLevel.GetTopLevel(this)?.Clipboard is { } cb) await cb.SetTextAsync(picked); });
+        var marked = MarkedText(anchor);
         Item(L("Vers mit Stelle kopieren"), () => _ = CopyVerseAsync());
         Item(L("Als Bild exportieren"), ExportVerseImage);
         Item(L("Zum Auswendiglernen"), () => { Memory.Add(MemoryKey(r), DateTime.Now); StatusText.Text = L("{0} zum Auswendiglernen hinzugefügt.", Label(r)); });
@@ -37,12 +41,11 @@ public partial class MainWindow
         Item(_doc is null ? L("In offenes Dokument einfügen (kein Dokument offen)") : L("In „{0}“ einfügen", Shorten(_doc.Title, 30)),
              () => { Open(KnowledgeTab); InsertIntoDoc(L("> {0}\n> — {1}\n\n", VerseTextOf(verse).Trim(), Label(r)), null); }, _doc is not null);
         Item(L("Zur Leseliste"), () => AddToQueue([r]));
-        Item(L("Als Aufgabe merken"), () => { _vault.AddTodo(L("{0} studieren", Label(r)), r); RefreshTodos(); StatusText.Text = L("Aufgabe zu {0} angelegt.", Label(r)); });
+        Item(L("Zum To-do hinzufügen"), () => { _vault.AddTodo(L("{0} studieren", Label(r)), r); RefreshTodos(); StatusText.Text = L("To-do zu {0} angelegt.", Label(r)); });
         menu.Items.Add(new Separator());
         Item(L("Querverweise"), () => Open(4));
         Item(L("Eigenen Querverweis setzen …"), () => ShowMyXrefEditor(r, anchor));
         Item(L("Grundtext Wort für Wort"), () => { Open(GrundtextTab); _ = ShowGrundtextAsync(r); });
-        var marked = MarkedText(anchor);
         Item(marked.Length > 0 ? L("Wort erklären: {0}", marked) : L("Wort erklären (erst ein Wort im Text markieren)"), () => _ = ExplainWordAsync(marked), marked.Length > 0);
         if (TextVariants.IsNewTestament(r.Book)) Item(L("Lesarten der griechischen Ausgaben"), () => _ = ShowVariantsAsync(r));
         Item(L("Vorlesen"), ToggleSpeak);

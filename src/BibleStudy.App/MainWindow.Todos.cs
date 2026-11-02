@@ -30,7 +30,7 @@ public partial class MainWindow
     /// <summary>The same checklist as a small window from the top bar: write something, press Enter, tick it off. Reachable from everywhere.</summary>
     void ShowTodoPopup()
     {
-        var box = new TextBox { Watermark = L("Neue Aufgabe… (Enter)") };
+        var box = new TextBox { Watermark = L("Neues To-do… (Enter)") };
         var add = new Button { Content = L("Hinzufügen"), Classes = { "primary" }, Margin = new(8, 0, 0, 0) };
         void Add()
         {
@@ -44,7 +44,7 @@ public partial class MainWindow
         input.Children.Add(add); input.Children.Add(box);
         var list = new StackPanel { Spacing = 4 };
         var count = new TextBlock { Classes = { "caption" }, Margin = new(0, 0, 0, 6) };
-        var title = new TextBlock { Text = L("Meine To-Dos"), FontSize = 17, FontWeight = FontWeight.SemiBold, Margin = new(0, 0, 0, 10) };
+        var title = new TextBlock { Text = L("Meine To-dos"), FontSize = 17, FontWeight = FontWeight.SemiBold, Margin = new(0, 0, 0, 10) };
         var body = new StackPanel { Width = 420, Children = { title, input, count, new ScrollViewer { Content = list, MaxHeight = Math.Max(200, Bounds.Height - 340), HorizontalScrollBarVisibility = Avalonia.Controls.Primitives.ScrollBarVisibility.Disabled } } };
         var flyout = new Flyout { Content = body, Placement = PlacementMode.BottomEdgeAlignedRight };
         flyout.Closed += (_, _) => { _todoPopupList = null; _todoPopupCount = null; _todoEditing = null; _todoAddingTo = null; };
@@ -88,7 +88,7 @@ public partial class MainWindow
         panel.Children.Clear();
         if (all.Count == 0)
         {
-            panel.Children.Add(new TextBlock { Text = L("Noch keine Aufgaben. Schreibe oben eine hinein, z. B. „Römer 8 vergleichen“; auf Wunsch hängt sie den angeklickten Vers an und ein Datum."), TextWrapping = TextWrapping.Wrap, Opacity = 0.65, Margin = new(2, 8) });
+            panel.Children.Add(new TextBlock { Text = L("Noch keine To-dos. Schreibe oben eins hinein, z. B. „Römer 8 vergleichen“; auf Wunsch hängt es den angeklickten Vers an und ein Datum."), TextWrapping = TextWrapping.Wrap, Opacity = 0.65, Margin = new(2, 8) });
             return;
         }
         for (var i = 0; i < open.Count; i++) AddTodoWithKids(panel, open[i], kids, i, open.Count);
@@ -112,7 +112,7 @@ public partial class MainWindow
 
     Control SubTaskInput(long parent)
     {
-        var box = new TextBox { Watermark = L("Unteraufgabe, Enter zum Hinzufügen (Esc: abbrechen)"), Margin = new(34, 0, 0, 2) };
+        var box = new TextBox { Watermark = L("Teil-To-do, Enter zum Hinzufügen (Esc: abbrechen)"), Margin = new(34, 0, 0, 2) };
         box.AttachedToVisualTree += (_, _) => box.Focus();
         box.KeyDown += (_, e) =>
         {
@@ -175,11 +175,11 @@ public partial class MainWindow
         }
 
         var more = new Button { Classes = { "tool" }, Width = 28, Height = 28, Content = new Icon { Data = Geometry.Parse("M5 12h.01 M12 12h.01 M19 12h.01"), IconSize = 16 } };
-        ToolTip.SetTip(more, L("Mehr: bearbeiten, Unteraufgabe, Datum, verschieben"));
+        ToolTip.SetTip(more, L("Mehr: bearbeiten, Teil-To-do, Datum, verschieben"));
         var menu = new MenuFlyout();   // a flyout of its own: a context menu attached to the row cannot be opened on another control
         MenuItem Item(string header, Action act) { var m = new MenuItem { Header = header }; m.Click += (_, _) => act(); menu.Items.Add(m); return m; }
         Item(L("Bearbeiten"), () => { _todoEditing = id; RefreshTodos(); });
-        if (!child) Item(L("Unteraufgabe hinzufügen"), () => { _todoAddingTo = id; RefreshTodos(); });
+        if (!child) Item(L("Teil-To-do hinzufügen"), () => { _todoAddingTo = id; RefreshTodos(); });
         Item(L("Fälligkeitsdatum …"), () => ChooseTodoDue(more, t));
         if (index > 0) Item(L("Nach oben"), () => { _vault.MoveTodo(id, -1); RefreshTodos(); });
         if (index < count - 1) Item(L("Nach unten"), () => { _vault.MoveTodo(id, 1); RefreshTodos(); });
@@ -189,7 +189,7 @@ public partial class MainWindow
         tools.Children.Add(more);
 
         var delete = new Button { Classes = { "tool" }, Width = 28, Height = 28, Content = new Icon { Data = Geometry.Parse("M18 6L6 18 M6 6l12 12"), IconSize = 14 } };
-        ToolTip.SetTip(delete, child ? L("Unteraufgabe löschen") : L("Aufgabe löschen (mit ihren Unteraufgaben)"));
+        ToolTip.SetTip(delete, child ? L("Teil-To-do löschen") : L("To-do löschen (mit seinen Teil-To-dos)"));
         delete.Click += (_, _) => { _vault.DeleteTodo(id); RefreshTodos(); };
         tools.Children.Add(delete);
 

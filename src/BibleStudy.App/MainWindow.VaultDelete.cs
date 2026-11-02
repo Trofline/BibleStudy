@@ -10,7 +10,7 @@ public partial class MainWindow
         var name = VaultBox.SelectedItem as string ?? _vault.Name;
         var names = VaultNames();
         var only = names.Count <= 1;
-        var text = L("Der Vault „{0}“ wird endgültig gelöscht, mit allem, was darin ist: Markierungen, Notizen, Dokumente, Merkliste, Leseliste, Aufgaben, Gebete und dein Lesefortschritt.\n\nVorher legt das Programm eine Sicherung an. Danach lässt sich der Vault nur noch aus dieser Sicherung zurückholen.", name)
+        var text = L("Der Vault „{0}“ wird endgültig gelöscht, mit allem, was darin ist: Markierungen, Notizen, Dokumente, Lesezeichen, Leseliste, To-dos, Gebete und dein Lesefortschritt.\n\nVorher legt das Programm eine Sicherung an. Danach lässt sich der Vault nur noch aus dieser Sicherung zurückholen.", name)
             + (only ? "\n\n" + L("Es ist dein einziger Vault: Er wird geleert und bleibt als leerer Vault bestehen.") : "");
         if (await AskAsync(L("Vault löschen?"), text, L("Sicherung anlegen und löschen"), L("Abbrechen")) != 0) return;
 

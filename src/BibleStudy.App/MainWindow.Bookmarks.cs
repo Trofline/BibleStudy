@@ -25,7 +25,7 @@ public partial class MainWindow
         if (_selected is not int v) { StatusText.Text = L("Erst einen Vers anklicken."); return; }
         var verse = new VerseRef(_curBook, _curChapter, v);
         StatusText.Text = _vault.ToggleBookmark(verse, VerseTextOf(v))
-            ? L("{0} gemerkt – zu finden unter „Notizen → Merkliste“.", Label(verse))
+            ? L("{0} gemerkt – zu finden unter „Lesezeichen“ rechts.", Label(verse))
             : L("{0} nicht mehr gemerkt.", Label(verse));
         RefreshBookmarks();
         _ = ShowChapterAsync(_selected);   // the star next to the verse number
@@ -53,7 +53,7 @@ public partial class MainWindow
             var text = new TextBlock { Text = Shorten(bm.Text, 140), TextWrapping = TextWrapping.Wrap, FontSize = 12, MaxHeight = 36, TextTrimming = TextTrimming.CharacterEllipsis };
             text.Bind(TextBlock.ForegroundProperty, this.GetResourceObservable("BsMuted"));
             var remove = new Button { Content = "✕", Classes = { "tool" }, Width = 26, Height = 26, FontSize = 11, VerticalAlignment = VerticalAlignment.Center };
-            ToolTip.SetTip(remove, L("Aus der Merkliste entfernen"));
+            ToolTip.SetTip(remove, L("Lesezeichen entfernen"));
             remove.Click += (_, _) => { _vault.RemoveBookmark(bm.Id); RefreshBookmarks(); if (bm.Ref.Book == _curBook && bm.Ref.Chapter == _curChapter) _ = ShowChapterAsync(_selected); };
             var grid = new Grid { ColumnDefinitions = new("*,Auto") };
             grid.Children.Add(new StackPanel { Spacing = 2, Children = { title, text } });

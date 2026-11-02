@@ -456,6 +456,8 @@ public partial class MainWindow : Window
             FontFamily = ScriptureFont,
             FlowDirection = t.TextDirection == "rtl" ? FlowDirection.RightToLeft : FlowDirection.LeftToRight,
         };
+        // the verse menu is ours; the built-in one (a lone "Copy Ctrl+C") would sit on top of it
+        tb.AddHandler(ContextRequestedEvent, (_, e) => e.Handled = true, RoutingStrategies.Tunnel);
         if (v is null) return tb;
         var study = StudyBtn.IsChecked == true;
         var spans = new List<WordSpan>();
@@ -468,7 +470,7 @@ public partial class MainWindow : Window
             pos += run.Text!.Length;
         }
         var numSize = _settings.VerseNumbers == "Normal" ? size * 0.8 : 14;
-        var star = _chapterBookmarks.Contains(number) ? "★" : "";   // on the Merkliste
+        var star = _chapterBookmarks.Contains(number) ? "★" : "";   // on the Lesezeichen
         var num = new Run(_settings.VerseNumbers == "Hidden" ? (hasNote ? "✎ " : "") + (star.Length > 0 ? star + " " : "") : number + (hasNote ? "✎" : "") + star + " ") { FontSize = numSize, FontWeight = FontWeight.Bold, BaselineAlignment = _settings.VerseNumbers == "Normal" ? BaselineAlignment.Baseline : BaselineAlignment.Top };
         num.Bind(TextElement.ForegroundProperty, this.GetResourceObservable("BsVerseNumber"));
         Add(num);

@@ -46,7 +46,10 @@ public partial class MainWindow
         [
             new(2, K("Notizen"), L("Schreibe eine kurze Notiz zum angeklickten Vers. Darunter stehen alle deine Notizen; Klick springt zur Stelle.")),
             new(1, K("Markierungen"), L("Farbig markierte Wörter und Verse mit eigener Notiz, in Ordnern und mit Tags. Klick springt zur Stelle.")),
-            new(BookmarksTab, K("Merkliste"), L("Deine gemerkten Verse: einfach eine Liste zum späteren Zurückspringen, ohne Notizen.")),
+        ]),
+        new(K("Lesezeichen"), "M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z",
+        [
+            new(BookmarksTab, K("Lesezeichen"), L("Deine gemerkten Verse: einfach eine Liste zum späteren Zurückspringen, ohne Notizen.")),
         ]),
         new(K("Dokumente"), "M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z M14 2v6h6 M8 13h8 M8 17h8",
         [
@@ -59,7 +62,7 @@ public partial class MainWindow
         new(K("Planen"), "M10 12h11 M10 18h11 M10 6h11 M4 10h2 M4 6h1v4 M6 18H4c0-1 2-2 2-3s-1-1.5-2-1",
         [
             new(6, K("Leseliste"), L("Verse, die du der Reihe nach durchgehen willst.")),
-            new(7, K("Aufgaben"), L("Deine Aufgaben fürs Studium, auf Wunsch mit Vers.")),
+            new(7, K("To-dos"), L("Deine To-dos fürs Studium, auf Wunsch mit Vers.")),
             new(PrayerTab, K("Gebete"), L("Deine Gebetsliste: Anliegen mit Datum und Vers, erhörte Gebete abhaken und festhalten.")),
             new(PlanTab, K("Lesepläne"), L("Bibel in einem Jahr und weitere Pläne: jeden Tag ein paar Kapitel, mit Fortschritt und Serie.")),
             new(MemoryTab, K("Auswendig lernen"), L("Bibelverse auswendig lernen: Lücken wachsen mit dem Können, mit Wiederholung.")),
@@ -100,7 +103,7 @@ public partial class MainWindow
         var label = new TextBlock { Text = L("VAULT"), Classes = { "eyebrow" }, Margin = new(0, 0, 8, 0), VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center };
         Avalonia.Controls.DockPanel.SetDock(label, Avalonia.Controls.Dock.Left);
         _vaultBar = new Border { Child = new DockPanel { Children = { label, add, pill } }, IsVisible = false };
-        ToolTip.SetTip(_vaultBar, L("Ein Vault ist deine Mappe: Markierungen, Notizen, Dokumente, Leseliste und Aufgaben gehören immer zu einem Vault."));
+        ToolTip.SetTip(_vaultBar, L("Ein Vault ist deine Mappe: Markierungen, Notizen, Dokumente, Leseliste und To-dos gehören immer zu einem Vault."));
         SubNav.Children.Insert(0, _vaultBar);
         VaultTopBtn.Click += (_, _) =>
         {

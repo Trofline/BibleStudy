@@ -13,6 +13,13 @@ public partial class MainWindow
     Window? _wordHelp;
 
     /// <summary>The word (or short phrase) marked inside the verse the menu was opened on; empty when nothing is marked.</summary>
+    /// <summary>Everything marked with the mouse in the verse (no length limit), for copying.</summary>
+    static string PickedText(Control anchor)
+    {
+        var blocks = anchor is SelectableTextBlock own ? [own] : anchor.GetVisualDescendants().OfType<SelectableTextBlock>().ToList();
+        return blocks.Select(b => b.SelectedText).FirstOrDefault(t => !string.IsNullOrWhiteSpace(t))?.Trim() ?? "";
+    }
+
     static string MarkedText(Control anchor)
     {
         var blocks = anchor is SelectableTextBlock own ? [own] : anchor.GetVisualDescendants().OfType<SelectableTextBlock>().ToList();

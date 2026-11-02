@@ -48,7 +48,7 @@
                     <Button x:Name="ModeTopBtn" Classes="ghost" Margin="0,0,6,0" ToolTip.Tip="Zwischen Advanced (alles) und Easy (nur das Wichtigste) wechseln">
                         <TextBlock x:Name="ModeTopText" FontSize="12.5" FontWeight="SemiBold" VerticalAlignment="Center" />
                     </Button>
-                    <Button x:Name="TodoTopBtn" Classes="tool" ToolTip.Tip="Meine To-Dos: eine freie Liste zum Abhaken">
+                    <Button x:Name="TodoTopBtn" Classes="tool" ToolTip.Tip="Meine To-dos: eine freie Liste zum Abhaken">
                         <local:Icon Data="M21 10.5V19a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h12.5 m9 11 3 3L22 4" />
                     </Button>
                     <Button x:Name="FeedbackTopBtn" Classes="tool" ToolTip.Tip="Fehler melden, Idee vorschlagen, Rückmeldung geben">
@@ -165,7 +165,7 @@
                         <Button x:Name="MarkBtn" Classes="toolx" ToolTip.Tip="Markierten Text oder Vers einfärben">
                             <StackPanel Orientation="Horizontal" Spacing="6"><local:Icon Data="m9 11-6 6v3h9l3-3 M22 12l-4.6 4.6a2 2 0 0 1-2.8 0l-5.2-5.2a2 2 0 0 1 0-2.8L14 4" IconSize="17" VerticalAlignment="Center" /><TextBlock Text="Markieren" VerticalAlignment="Center" /></StackPanel>
                         </Button>
-                        <Button x:Name="BookmarkBtn" Classes="toolx" ToolTip.Tip="Vers merken oder nicht mehr merken (Strg+D): kommt in die Merkliste, ohne Notiz">
+                        <Button x:Name="BookmarkBtn" Classes="toolx" ToolTip.Tip="Vers merken oder nicht mehr merken (Strg+D): legt ein Lesezeichen an, ohne Notiz">
                             <StackPanel Orientation="Horizontal" Spacing="6"><local:Icon Data="M19 21l-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" IconSize="17" VerticalAlignment="Center" /><TextBlock Text="Merken" VerticalAlignment="Center" /></StackPanel>
                         </Button>
                     </StackPanel></Border>
@@ -371,11 +371,11 @@
                         <ListBox x:Name="QueueList" ItemTemplate="{StaticResource EntryTpl}" ScrollViewer.HorizontalScrollBarVisibility="Disabled" />
                     </DockPanel>
                 </TabItem>
-                <TabItem ToolTip.Tip="To-Do-Liste">
+                <TabItem ToolTip.Tip="To-do-Liste">
                     <TabItem.Header><local:Icon Data="M21 10.5V19a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h12.5 m9 11 3 3L22 4" /></TabItem.Header>
                     <DockPanel Margin="16,14,12,12">
                         <StackPanel DockPanel.Dock="Top" Spacing="8" Margin="0,0,0,8">
-                            <TextBox x:Name="TodoBox" Watermark="Neue Aufgabe, Enter zum Hinzufügen" />
+                            <TextBox x:Name="TodoBox" Watermark="Neues To-do, Enter zum Hinzufügen" />
                             <WrapPanel>
                                 <CheckBox x:Name="TodoVerseCheck" Content="Angeklickten Vers anhängen" Margin="0,0,12,0" />
                                 <CalendarDatePicker x:Name="TodoDue" Watermark="Fällig am (optional)" Width="190" />
@@ -658,7 +658,7 @@
 
                             <Border Classes="card"><StackPanel Spacing="8">
                                 <TextBlock Classes="eyebrow" Text="VAULT" />
-                                <TextBlock Classes="caption" TextWrapping="Wrap" Text="Ein Vault ist wie eine eigene Mappe für ein Studienprojekt: Markierungen, Notizen, Dokumente, Leseliste, Aufgaben und dein Lesefortschritt gehören immer zu genau einem Vault. Du kannst mehrere anlegen (z. B. „Predigt“ und „Privat“) und hier wechseln. Jeder Vault ist eine einzelne Datei." />
+                                <TextBlock Classes="caption" TextWrapping="Wrap" Text="Ein Vault ist wie eine eigene Mappe für ein Studienprojekt: Markierungen, Notizen, Dokumente, Leseliste, To-dos und dein Lesefortschritt gehören immer zu genau einem Vault. Du kannst mehrere anlegen (z. B. „Predigt“ und „Privat“) und hier wechseln. Jeder Vault ist eine einzelne Datei." />
                                 <Border Classes="pill" HorizontalAlignment="Left"><ComboBox x:Name="VaultBox" Width="220" /></Border>
                                 <StackPanel Orientation="Horizontal" Spacing="6">
                                     <TextBox x:Name="NewVaultBox" Width="170" Watermark="Name des neuen Vaults" />
@@ -733,11 +733,11 @@
 
                             <Border Classes="card"><StackPanel Spacing="8">
                                 <TextBlock Classes="eyebrow" Text="SICHERUNG" />
-                                <TextBlock Classes="caption" TextWrapping="Wrap" Text="Exportiert den aktiven Vault (Markierungen, Ordner, Tags, Notizen, Dokumente, Leseliste, Aufgaben, Lesefortschritt) und deine Einstellungen als eine ZIP-Datei. Beim Import entsteht ein neuer Vault." />
+                                <TextBlock Classes="caption" TextWrapping="Wrap" Text="Exportiert den aktiven Vault (Markierungen, Ordner, Tags, Notizen, Dokumente, Leseliste, To-dos, Lesefortschritt) und deine Einstellungen als eine ZIP-Datei. Beim Import entsteht ein neuer Vault." />
                                 <WrapPanel>
                                     <Button x:Name="ExportBtn" Content="Exportieren …" Margin="0,0,6,6" />
                                     <Button x:Name="ImportBtn" Content="Importieren …" Margin="0,0,6,6" />
-                                    <Button x:Name="ObsidianBtn" Content="Als Obsidian-Vault exportieren …" ToolTip.Tip="Schreibt Dokumente, Markierungen, Notizen, Leseliste und Aufgaben als Markdown-Ordner, den Obsidian direkt öffnet" />
+                                    <Button x:Name="ObsidianBtn" Content="Als Obsidian-Vault exportieren …" ToolTip.Tip="Schreibt Dokumente, Markierungen, Notizen, Leseliste und To-dos als Markdown-Ordner, den Obsidian direkt öffnet" />
                                     <Button x:Name="LicensesBtn" Content="Quellen und Lizenzen …" ToolTip.Tip="Woher alle Texte und Daten stammen und unter welcher Lizenz sie stehen" />
                                 </WrapPanel>
                                 <TextBlock x:Name="BackupInfo" Classes="caption" TextWrapping="Wrap" />
@@ -915,7 +915,7 @@
                 <TabItem Header="Auswendig lernen">
                     <ScrollViewer><StackPanel x:Name="MemoryPanel" Spacing="8" Margin="16,10,12,16" /></ScrollViewer>
                 </TabItem>
-                <TabItem Header="Merkliste">
+                <TabItem Header="Lesezeichen">
                     <ScrollViewer><StackPanel x:Name="BookmarkPanel" Spacing="0" Margin="16,14,12,16" /></ScrollViewer>
                 </TabItem>
             </TabControl>
