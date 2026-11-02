@@ -47,7 +47,15 @@ public static partial class SearchQuery
         error = null;
         var tokens = Tokenize(input);
         var pos = 0;
-        var node = ParseAnd(tokens, ref pos);
+        // a ")" without its "(" ends a group; at the top it is skipped, so the words after it still count
+        var parts = new List<SearchNode>();
+        while (pos < tokens.Count)
+        {
+            if (ParseAnd(tokens, ref pos) is { } part) parts.Add(part);
+            if (pos < tokens.Count && tokens[pos].Kind == K.Close) pos++;
+        }
+        var flat = parts.SelectMany(p => p is AndNode a ? a.Items : [p]).ToList();
+        var node = flat.Count switch { 0 => null, 1 => flat[0], _ => new AndNode(flat) };
         if (node is null) { error = L("Nichts zu suchen."); return null; }
         if (!HasPositive(node)) { error = L("Es braucht mindestens ein Suchwort, das vorkommen soll."); return null; }
         return node;

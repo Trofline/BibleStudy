@@ -49,7 +49,10 @@ public sealed class StrongsDictionary(HttpClient http, string cacheDir)
         {
             Task<Dictionary<int, StrongsEntry>> task;
             lock (_loaded) task = _loaded.TryGetValue(lang, out var t) ? t : _loaded[lang] = LoadAsync(lang, ct);
-            foreach (var e in (await task).Values)
+            Dictionary<int, StrongsEntry> table;
+            try { table = await task; }
+            catch { lock (_loaded) _loaded.Remove(lang); throw; }   // a failed download (offline) is tried again next time
+            foreach (var e in table.Values)
             {
                 int score;
                 if (Fold(e.Lemma) == needle || Fold(e.Translit) == needle) score = 0;

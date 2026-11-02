@@ -123,7 +123,8 @@ public sealed class HelloAoProvider(HttpClient http, string cacheDir) : IBiblePr
     {
         lock (_noWords) if (_noWords.Contains(translationId)) return null;
         try { return await GetJsonAsync($"/api/{translationId}/{bookId}/{chapter}.words.json", ct); }
-        catch (HttpRequestException) { lock (_noWords) _noWords.Add(translationId); return null; }
+        // only "not there" means the translation has no tags; a server or network hiccup must not switch word study off until the next start
+        catch (HttpRequestException ex) { if (ex.StatusCode == System.Net.HttpStatusCode.NotFound) lock (_noWords) _noWords.Add(translationId); return null; }
         // the word tags are extra: a slow or broken answer must not stop the chapter text from showing
         catch (Exception e) when (e is TaskCanceledException or JsonException && !ct.IsCancellationRequested) { return null; }
     }
@@ -353,9 +354,9 @@ public sealed class HelloAoProvider(HttpClient http, string cacheDir) : IBiblePr
         }
         var doc = JsonDocument.Parse(bytes);   // only a complete, readable answer is kept
         Directory.CreateDirectory(Path.GetDirectoryName(file)!);
-        var tmp = file + ".tmp";
+        var tmp = $"{file}.{Guid.NewGuid():N}.tmp";   // two loads of the same chapter at once must not write into the same file
         try { await File.WriteAllBytesAsync(tmp, bytes, CancellationToken.None); File.Move(tmp, file, overwrite: true); }
-        catch (IOException) { /* not cached this time; the text is shown anyway */ }
+        catch (IOException) { try { File.Delete(tmp); } catch (IOException) { } /* not cached this time; the text is shown anyway */ }
         return doc;
     }
 }

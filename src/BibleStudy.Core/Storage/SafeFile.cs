@@ -22,8 +22,8 @@ public static class SafeFile
     static void Swap(string path, Action<string> write)
     {
         if (Path.GetDirectoryName(path) is { Length: > 0 } dir) Directory.CreateDirectory(dir);
-        var tmp = path + ".tmp";
-        write(tmp);
-        File.Move(tmp, path, overwrite: true);
+        var tmp = $"{path}.{Guid.NewGuid():N}.tmp";   // two writers of the same file at once must not share the temporary file
+        try { write(tmp); File.Move(tmp, path, overwrite: true); }
+        catch { try { File.Delete(tmp); } catch (IOException) { } throw; }
     }
 }

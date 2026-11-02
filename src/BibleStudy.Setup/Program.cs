@@ -76,11 +76,12 @@ static class Installer
         using var payload = Assembly.GetExecutingAssembly().GetManifestResourceStream("payload.zip") ?? throw new InvalidOperationException(Tr.T("noPayload"));
         using var zip = new ZipArchive(payload);
         Directory.CreateDirectory(dir);
+        var inside = dir.TrimEnd(Path.DirectorySeparatorChar) + Path.DirectorySeparatorChar;   // "…\BibleStudy2" is not inside "…\BibleStudy"
         foreach (var entry in zip.Entries)
         {
             if (entry.FullName.EndsWith('/')) continue;
             var target = Path.GetFullPath(Path.Combine(dir, entry.FullName));
-            if (!target.StartsWith(dir, StringComparison.OrdinalIgnoreCase)) continue;   // no path tricks
+            if (!target.StartsWith(inside, StringComparison.OrdinalIgnoreCase)) continue;   // no path tricks
             Directory.CreateDirectory(Path.GetDirectoryName(target)!);
             entry.ExtractToFile(target, overwrite: true);
         }

@@ -35,6 +35,13 @@ public class SearchEngineTests
     }
 
     [Fact]
+    public void A_stray_closing_bracket_does_not_drop_the_words_after_it()
+    {
+        Assert.Equal([3], Hits("Gnade ) Wahrheit"));
+        Assert.Equal([4], Hits("(Gnade -Wahrheit) ) Herrn"));
+    }
+
+    [Fact]
     public void Punctuation_in_a_search_word_is_ignored()
     {
         Assert.Equal([3, 4], Hits("Gnade,"));

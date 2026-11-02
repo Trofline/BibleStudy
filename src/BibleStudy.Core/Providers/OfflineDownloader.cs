@@ -19,7 +19,7 @@ public static class OfflineDownloader
         {
             await gate.WaitAsync(ct);
             try { results[i] = await provider.GetChapterAsync(translationId, job.Book, job.Chapter, ct); }
-            catch (HttpRequestException) { }
+            catch (Exception e) when (e is HttpRequestException or TaskCanceledException && !ct.IsCancellationRequested) { /* one chapter that timed out must not stop the others */ }
             finally { gate.Release(); progress?.Report((Interlocked.Increment(ref done), jobs.Count)); }
         }));
         return results.OfType<Chapter>().ToList();

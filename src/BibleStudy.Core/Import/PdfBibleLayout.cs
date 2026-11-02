@@ -40,8 +40,10 @@ public static class PdfBibleLayout
         {
             var words = page.Words.Where(w => w.Text.Length > 0 && w.Left >= 0 && w.Left < page.Width).ToList();
             if (words.Count < 20) continue;
-            // the body size is the most common size of plain words
-            var bodySize = words.Where(w => !w.Bold && !w.Italic).GroupBy(w => Math.Round(w.Size * 2) / 2).OrderByDescending(g => g.Count()).First().Key;
+            // the body size is the most common size of plain words (a page with none, e.g. all in italics, is no Bible text)
+            var sizes = words.Where(w => !w.Bold && !w.Italic).GroupBy(w => Math.Round(w.Size * 2) / 2).OrderByDescending(g => g.Count()).FirstOrDefault();
+            if (sizes is null) continue;
+            var bodySize = sizes.Key;
             bool Near(double s, double target, double tol = 0.6) => Math.Abs(s - target) <= tol;
 
             // running head: bigger than the body, but not a book title (much bigger)
@@ -76,7 +78,7 @@ public static class PdfBibleLayout
             foreach (var w in words)
             {
                 if (w.Bottom >= headY - 2) continue;                           // running head and page number
-                var isNumber = w.Text.All(char.IsDigit) && w.Text.Length <= 3;
+                var isNumber = w.Text.All(char.IsAsciiDigit) && w.Text.Length <= 3;
                 if (w.Italic) { if (Near(w.Size, bodySize, 0.8)) body.Add(w); continue; }   // headings (italic, body size); footnote letters are smaller
                 if (w.Bold) { if (isNumber && w.Size >= bodySize - 1.6 && w.Size <= bodySize) body.Add(w); continue; }
                 if (w.Size < bodySize - 1.5 && w.Size > bodySize - 3.5 && w.Text.Length <= 4 && w.Text.All(char.IsUpper)) { body.Add(w); continue; }   // "ERR" in "HERR"

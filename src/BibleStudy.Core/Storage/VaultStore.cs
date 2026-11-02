@@ -18,10 +18,10 @@ public sealed record HiddenXref(long Id, VerseRef From, VerseRef To);
 public sealed record TodoItem(long Id, string Text, bool Done, VerseRef? Ref, long? ParentId = null, DateOnly? Due = null, long Pos = 0);
 public sealed record Prayer(long Id, string Text, VerseRef? Ref, DateTime Created, DateTime? Answered, string Note);
 
-/// <summary>A highlighted word range (Start/End are offsets into the verse text of that translation) or a whole verse (Start = -1).</summary>
 /// <summary>A verse in the plain "Merkliste" (bookmark list): the place and the text as it was when saved.</summary>
 public sealed record Bookmark(long Id, VerseRef Ref, string Text, string Created);
 
+/// <summary>A highlighted word range (Start/End are offsets into the verse text of that translation) or a whole verse (Start = -1).</summary>
 public sealed record Mark(long Id, string TranslationId, VerseRef Ref, int Start, int End, string Text, string Color, string Note,
     long? FolderId, IReadOnlyList<string> Tags)
 {

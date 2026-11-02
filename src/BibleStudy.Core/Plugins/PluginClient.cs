@@ -133,6 +133,12 @@ public sealed class ProcessTransport(PluginManifest manifest, string dir, Func<I
                 Kill();
                 throw new PluginException(L("Das Plugin antwortet nicht (nach {0} Sekunden abgebrochen).", (int)Timeout.TotalSeconds));
             }
+            catch (OperationCanceledException)
+            {
+                // cancelled by the caller: the answer may still come and would then be read as the answer to the next request
+                Kill();
+                throw;
+            }
             catch (IOException) { Kill(); throw new PluginException(L("Das Plugin wurde beendet.")); }
         }
         finally { _gate.Release(); }

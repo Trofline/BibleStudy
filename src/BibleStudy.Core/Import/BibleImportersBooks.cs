@@ -256,7 +256,13 @@ public static partial class BibleImporters
                     else if (word == "tab") Emit(" ");
                     else if (word == "super") super = true;
                     else if (word is "nosupersub") super = false;
-                    else if (word == "u" && int.TryParse(arg, out var code)) { Emit(char.ConvertFromUtf32(code < 0 ? code + 65536 : code)); if (k < rtf.Length && rtf[k] == '?') k++; }
+                    else if (word == "u" && int.TryParse(arg, out var code))
+                    {
+                        // characters outside the basic plane come as two \u codes (a surrogate pair); each half is passed on as it is
+                        var unit = code < 0 ? code + 65536 : code;
+                        if (unit is >= 0 and <= 0xFFFF) Emit(((char)unit).ToString());
+                        if (k < rtf.Length && rtf[k] == '?') k++;
+                    }
                     i = k - 1;
                 }
                 else i++;

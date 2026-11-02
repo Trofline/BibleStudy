@@ -21,6 +21,7 @@ public partial class MainWindow
 {
     const int CollabTab = 23;
     const int MaxSharedBody = 200_000;
+    const int MaxSentBody = 60_000;
 
     CollabPeer? _peer;
     string _peerName = "";
@@ -280,8 +281,10 @@ public partial class MainWindow
             var doc = d; var item = new MenuItem { Header = doc.Title };
             item.Click += (_, _) =>
             {
-                CollabSend(new { t = "doc", title = doc.Title, body = doc.Body.Length > MaxSharedBody ? doc.Body[..MaxSharedBody] : doc.Body });
-                AddCollabLog(L("Du hast das Dokument „{0}“ als Kopie gesendet.", doc.Title), mine: true, system: true);
+                // one message of the connection holds at most about 256 KB: a longer document is sent shortened, and the sender is told so
+                var shortened = doc.Body.Length > MaxSentBody;
+                CollabSend(new { t = "doc", title = doc.Title, body = shortened ? doc.Body[..MaxSentBody] : doc.Body });
+                AddCollabLog(L("Du hast das Dokument „{0}“ als Kopie gesendet.", doc.Title) + (shortened ? " " + L("Es war sehr lang und wurde gekürzt gesendet.") : ""), mine: true, system: true);
             };
             menu.Items.Add(item);
         }

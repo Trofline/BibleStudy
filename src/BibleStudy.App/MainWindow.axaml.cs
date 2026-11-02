@@ -83,7 +83,7 @@ public partial class MainWindow : Window
         CreatePlugins();
         _overlay = new StrongsOverlay(Path.Combine(_root, "strongs-overlay"));
         _provider = new CompositeProvider(_hello, _local, _pluginProvider) { Overlay = _overlay };
-        Closed += (_, _) => _overlay.CommitAll();
+        Closed += (_, _) => { try { _overlay.CommitAll(); } catch (Exception ex) when (ex is IOException or UnauthorizedAccessException) { ErrorLog.Write(ex); } };
         _strongs = new StrongsDictionary(http, Path.Combine(_root, "cache"));
         _step = new StepLexicon(http, Path.Combine(_root, "cache"));
         _syntax = new SyntaxProvider(http, Path.Combine(_root, "cache"));
@@ -223,7 +223,7 @@ public partial class MainWindow : Window
 
     void SaveSettings()
     {
-        try { _settings.Save(_settingsPath); } catch (IOException) { /* settings are a convenience; never crash on save */ }
+        try { _settings.Save(_settingsPath); } catch (Exception ex) when (ex is IOException or UnauthorizedAccessException) { /* settings are a convenience; never crash on save */ }
     }
 
     void ShowHome()

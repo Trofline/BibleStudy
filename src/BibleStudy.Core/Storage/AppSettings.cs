@@ -2,7 +2,6 @@
 
 namespace BibleStudy.Core.Storage;
 
-/// <summary>User settings, stored as JSON next to the data (exportable by copying the file).</summary>
 /// <summary>Position and size of a detached panel window (Tab = index of the side panel tab).</summary>
 public sealed record WindowBounds(int X, int Y, int W, int H, bool Maximized) { public string Key { get; set; } = ""; }
 
@@ -23,6 +22,7 @@ public sealed class LayoutPreset
     public string? ActiveWork { get; set; }                 // work tab shown in the main window ("group:Dokumente"), null = reading
 }
 
+/// <summary>User settings, stored as JSON next to the data (exportable by copying the file).</summary>
 public sealed class AppSettings
 {
     public string Theme { get; set; } = "Default";      // Default | Light | Dark
@@ -96,8 +96,6 @@ public sealed class AppSettings
     public string JesusColor { get; set; } = "";
     /// <summary>Reading aids: stronger contrast, a plain wide-spaced typeface (easier with dyslexia), Hebrew without vowel signs / accents.</summary>
     public bool HighContrast { get; set; }
-    /// <summary>"Glass" design: translucent surfaces with the blurred desktop behind (Windows/macOS where the system supports it).</summary>
-    public bool GlassDesign { get; set; }
     public bool ReadableText { get; set; }
     public bool HebrewVowels { get; set; } = true;
     public bool HebrewAccents { get; set; } = true;
@@ -171,26 +169,30 @@ public sealed class AppSettings
 
     public static AppSettings Load(string path)
     {
-        try
+        var existed = File.Exists(path);
+        string? json = null;
+        // a virus scanner or a sync program may hold the file for a moment: try again instead of starting with empty settings
+        // (they would be saved over the real ones soon after)
+        for (var attempt = 0; existed && json is null; attempt++)
         {
-            var existed = File.Exists(path);
-            var s = existed ? JsonSerializer.Deserialize<AppSettings>(File.ReadAllText(path)) ?? new() : new();
-            if (!existed) { s.TourPending = true; s.BackupSchedule = "weekly"; s.BackupAsked = true; }   // new installations back up weekly from the start
-            if (s.AiContext == OldDefaultAiContext) s.AiContext = DefaultAiContext;   // never changed by the user: the new default replaces it
-            return s;
+            try { json = File.ReadAllText(path); }
+            catch (IOException) when (attempt < 5) { Thread.Sleep(200); }
         }
-        catch (JsonException) { return new(); }
+        AppSettings s;
+        try { s = json is null ? new() : JsonSerializer.Deserialize<AppSettings>(json) ?? new(); }
+        catch (JsonException)
+        {
+            // an unreadable file is kept next to it, so nothing is lost when the defaults are saved over it
+            try { File.Copy(path, path + $".broken-{DateTime.Now:yyyyMMdd-HHmmss}", overwrite: true); } catch (IOException) { }
+            s = new();
+        }
+        if (!existed) { s.TourPending = true; s.BackupSchedule = "weekly"; s.BackupAsked = true; }   // new installations back up weekly from the start
+        if (s.AiContext == OldDefaultAiContext) s.AiContext = DefaultAiContext;   // never changed by the user: the new default replaces it
+        return s;
     }
 
-    public void Save(string path)
-    {
-        Directory.CreateDirectory(Path.GetDirectoryName(path)!);
-        // written next to it first and then swapped in: a crash or full disk while writing must not leave half a file
-        // (an unreadable file would mean all settings start from scratch)
-        var tmp = path + ".tmp";
-        File.WriteAllText(tmp, JsonSerializer.Serialize(this, Json));
-        File.Move(tmp, path, overwrite: true);
-    }
+    /// <summary>Written next to it first and then swapped in: a crash or full disk while writing must not leave half a file.</summary>
+    public void Save(string path) => SafeFile.WriteAllText(path, JsonSerializer.Serialize(this, Json));
 }
 
 /// <summary>A reading plan the user made: from one book to another (in the order of the books), spread over <see cref="Days"/> days.</summary>
