@@ -5,3 +5,7 @@ obj/
 release/
 build-out/
 /Export/
+
+# personal helper scripts, local only
+/_*.bat
+/publish-release.ps1
