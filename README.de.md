@@ -1,5 +1,14 @@
 <p align="center"><img src="src/BibleStudy.App/Assets/app.png" width="128" alt="BibleStudy logo"></p>
 
+<p align="center">
+  <a href="https://github.com/Trofline/BibleStudy/releases/latest"><img alt="Release" src="https://img.shields.io/github/v/release/Trofline/BibleStudy?color=c9a227"></a>
+  <a href="LICENSE"><img alt="License: MIT" src="https://img.shields.io/badge/license-MIT-blue"></a>
+  <a href="https://github.com/Trofline/BibleStudy/actions/workflows/build.yml"><img alt="Build" src="https://github.com/Trofline/BibleStudy/actions/workflows/build.yml/badge.svg"></a>
+  <a href="https://github.com/Trofline/BibleStudy/actions/workflows/codeql.yml"><img alt="CodeQL" src="https://github.com/Trofline/BibleStudy/actions/workflows/codeql.yml/badge.svg"></a>
+  <img alt="Platforms" src="https://img.shields.io/badge/Windows%20%C2%B7%20Linux%20%C2%B7%20macOS-555">
+</p>
+<p align="center"><a href="https://trofline.github.io/BibleStudy/">Website</a> · <a href="https://github.com/Trofline/BibleStudy/releases/latest">Download</a> · <a href="https://github.com/Trofline/BibleStudy/wiki">Wiki</a> · <a href="docs/handbuch/README.md">Handbuch</a></p>
+
 # BibleStudy
 
 Freie, quelloffene Bibelstudien-Software für Windows, Linux und macOS (C#, .NET 10, Avalonia). Lesen, vergleichen, markieren, Notizen und Dokumente
