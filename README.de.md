@@ -16,6 +16,13 @@ verknüpfen, Predigten vorbereiten – alles offline nutzbar und ohne Konto.
 
 *[English version](README.md)* · *[Das Handbuch](docs/handbuch/README.md): jede Funktion, jedes Tastenkürzel, Strategien*
 
+<p align="center"><img src="docs/img/tour.gif" alt="Kurze Tour: Lesen mit Wortstudie, Grundtext, Bogen-Diagramm, Netzwerk, Stammbaum" width="900"></p>
+
+<p align="center">
+  <img src="docs/img/occurrences.png" alt="Wo ein Wort im Alten Testament vorkommt" height="300">
+  <img src="docs/img/original-text.png" alt="Grundtext Wort für Wort mit Wörterbuch" height="300">
+</p>
+
 ## Was kann es?
 
 - **Lesen und vergleichen:** viele freie Übersetzungen, Parallelspalten, Unterschiede zwischen Übersetzungen farbig markiert

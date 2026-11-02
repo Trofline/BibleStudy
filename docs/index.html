@@ -78,6 +78,11 @@ h1 em{font-style:italic;font-weight:400;color:var(--accent);background:linear-gr
 .stage{margin:56px auto 0;perspective:1600px}
 .win{background:var(--surface);border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow);overflow:hidden;text-align:left;transform:rotateX(5deg);transform-origin:50% 100%;transition:transform .8s cubic-bezier(.2,.8,.2,1)}
 .stage:hover .win{transform:rotateX(0)}
+.win img{display:block;width:100%;height:auto}
+.shots{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:22px;margin-top:28px}
+.shots figure{margin:0;border:1px solid var(--line);border-radius:14px;overflow:hidden;background:var(--surface)}
+.shots img{display:block;width:100%;height:auto}
+.shots figcaption{padding:10px 14px;color:var(--muted);font-size:.92rem}
 .bar{display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--bg2);border-bottom:1px solid var(--line);font-size:.82rem;color:var(--muted)}
 .dots{display:flex;gap:6px}.dots b{width:11px;height:11px;border-radius:50%;background:var(--line)}
 .pill{padding:5px 12px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--text)}
@@ -210,28 +215,23 @@ footer a{text-decoration:none}footer a:hover{color:var(--text)}
     <div class="facts"><span>No account</span><span>No tracking</span><span>Works offline</span><span>5 languages</span><span>Free forever</span></div>
 
     <div class="stage rv">
-      <div class="win" role="img" aria-label="BibleStudy showing John 1 with a word study of the Greek word logos">
-        <div class="bar"><div class="dots"><b></b><b></b><b></b></div><span class="pill">Johannes 1</span><span class="pill">BSB</span><span class="pill q">⌕ Go to … Ctrl+K</span></div>
-        <div class="tabs"><span class="on">Reader</span><span>Parallel</span><span>Search</span><span>Vault</span><span>Map</span></div>
-        <div class="body">
-          <div class="read">
-            <h4><small>Gospel of John</small>Chapter 1</h4>
-            <p><span class="v">1</span>In the beginning was the <span class="strong"><mark>Word</mark></span>, and the Word was with God, and the Word was God. <span class="v">2</span>He was with God in the beginning. <span class="v">3</span>Through Him all things were made, and without Him nothing was made that has been made. <span class="v">4</span>In Him was life, and that life was the light of men.</p>
-            <p style="margin-top:10px"><span class="v">38</span>Jesus turned and saw them following. <span class="j">“What do you want?”</span> He asked.</p>
-          </div>
-          <div class="side">
-            <div class="tag">Word study · G3056</div>
-            <div class="card"><div class="greek">λόγος</div><div style="color:var(--muted)">logos · noun, masculine</div><p style="margin-top:6px">word, speech, reason – the divine expression of God.</p></div>
-            <div class="tag">Where it occurs</div>
-            <div class="card"><div class="bars"><i style="height:14%"></i><i style="height:22%"></i><i style="height:30%"></i><i style="height:12%"></i><i style="height:40%"></i><i style="height:100%"></i><i style="height:64%"></i><i style="height:70%"></i><i style="height:34%"></i><i style="height:18%"></i><i style="height:48%"></i><i style="height:26%"></i></div><div style="color:var(--muted);margin-top:6px">330 times in the New Testament</div></div>
-          </div>
-        </div>
-      </div>
+      <div class="win"><img src="img/reading.png" width="1920" height="1080" alt="BibleStudy: Daniel 7 in the KJV with the word study switched on, the Aramaic word for dominion explained on the right"></div>
     </div>
   </div>
 </header>
 
 <main>
+<section id="screens" class="wrap">
+  <div class="rv"><div class="kicker">See it</div><h2>A look at the program.</h2><p class="sub">Real screenshots, taken in the English version.</p></div>
+  <div class="shots rv">
+    <figure><img loading="lazy" src="img/occurrences.png" width="982" height="792" alt="Chart of where the Hebrew word for heaven occurs across the Old Testament"><figcaption>Where a word occurs, and how the KJV translates it</figcaption></figure>
+    <figure><img loading="lazy" src="img/original-text.png" width="1920" height="1080" alt="Genesis 1:1 word by word in Hebrew with transliteration and meaning"><figcaption>The original text word by word, with dictionary</figcaption></figure>
+    <figure><img loading="lazy" src="img/arc.png" width="1920" height="1080" alt="Arc diagram of the cross-references across all books of the Bible"><figcaption>Cross-references across the whole Bible</figcaption></figure>
+    <figure><img loading="lazy" src="img/network.png" width="1920" height="1080" alt="Network of passages connected to Genesis 1"><figcaption>The network around a chapter</figcaption></figure>
+    <figure><img loading="lazy" src="img/family-tree.png" width="1920" height="1080" alt="Family tree around Abraham"><figcaption>Family tree of Bible people</figcaption></figure>
+  </div>
+</section>
+
 <section id="read" class="wrap">
   <div class="rv"><div class="kicker">Read &amp; compare</div><h2>Every translation, side by side.</h2><p class="sub">Open as many free translations as you like in parallel columns. Differences light up, scrolling stays in sync, and the words of Jesus can have their own color.</p></div>
   <div class="split rev rv">
