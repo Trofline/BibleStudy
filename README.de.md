@@ -16,11 +16,11 @@ verknüpfen, Predigten vorbereiten – alles offline nutzbar und ohne Konto.
 
 *[English version](README.md)* · *[Das Handbuch](docs/handbuch/README.md): jede Funktion, jedes Tastenkürzel, Strategien*
 
-<p align="center"><img src="docs/img/tour.gif" alt="Kurze Tour: Lesen mit Wortstudie, Grundtext, Bogen-Diagramm, Netzwerk, Stammbaum" width="900"></p>
+<p align="center"><a href="docs/img/tour.gif"><img src="docs/img/tour.gif" alt="Kurze Tour: Lesen mit Wortstudie, Grundtext, Bogen-Diagramm, Netzwerk, Stammbaum" width="900"></a></p>
 
 <p align="center">
-  <img src="docs/img/occurrences.png" alt="Wo ein Wort im Alten Testament vorkommt" height="300">
-  <img src="docs/img/original-text.png" alt="Grundtext Wort für Wort mit Wörterbuch" height="300">
+  <a href="docs/img/occurrences.png"><img src="docs/img/occurrences.png" alt="Wo ein Wort im Alten Testament vorkommt" height="300"></a>
+  <a href="docs/img/original-text.png"><img src="docs/img/original-text.png" alt="Grundtext Wort für Wort mit Wörterbuch" height="300"></a>
 </p>
 
 ## Was kann es?

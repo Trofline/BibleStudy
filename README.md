@@ -18,11 +18,11 @@ documents, analyze the original text, prepare sermons – works offline, no acco
 
 The guiding principle is **Scripture alone**: the Bible text comes first. Commentaries (human writings) are hidden unless you switch them on.
 
-<p align="center"><img src="docs/img/tour.gif" alt="A short tour: reading with word study, original text, arc diagram, network, family tree" width="900"></p>
+<p align="center"><a href="docs/img/tour.gif"><img src="docs/img/tour.gif" alt="A short tour: reading with word study, original text, arc diagram, network, family tree" width="900"></a></p>
 
 <p align="center">
-  <img src="docs/img/occurrences.png" alt="Where a word occurs across the Old Testament" height="300">
-  <img src="docs/img/original-text.png" alt="Original text word by word with dictionary" height="300">
+  <a href="docs/img/occurrences.png"><img src="docs/img/occurrences.png" alt="Where a word occurs across the Old Testament" height="300"></a>
+  <a href="docs/img/original-text.png"><img src="docs/img/original-text.png" alt="Original text word by word with dictionary" height="300"></a>
 </p>
 
 ## Features
