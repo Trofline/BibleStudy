@@ -24,33 +24,51 @@ public partial class MainWindow
     {
         var r = new VerseRef(_curBook, _curChapter, verse);
         var menu = new MenuFlyout();
-        void Item(string text, Action act, bool enabled = true) { var i = new MenuItem { Header = text, IsEnabled = enabled }; i.Click += (_, _) => act(); menu.Items.Add(i); }
+        MenuItem Make(string text, Action act, bool enabled = true) { var i = new MenuItem { Header = text, IsEnabled = enabled }; i.Click += (_, _) => act(); return i; }
+        void Item(string text, Action act, bool enabled = true) => menu.Items.Add(Make(text, act, enabled));
+        MenuItem Group(string title, params Control[] children) { var g = new MenuItem { Header = title }; foreach (var c in children) g.Items.Add(c); return g; }
         void Open(int tab) { SetPanelOpen(true); SideTabs.SelectedIndex = tab; }
-        if (word is { Strongs.Length: > 0 }) AddWordMenuItems(menu, word);
+
+        // the word under the pointer comes first: pin it, or look it up
+        if (word is { Strongs.Length: > 0 })
+        {
+            AddWordMenuItems(menu, word);
+            menu.Items.Add(new Separator());
+        }
+
+        // what is done with a verse most often stays at the top
         Item(L("{0} – Vers-Übersicht", Label(r)), () => { Open(GuideTab); _ = ShowGuideAsync(r); });
-        menu.Items.Add(new Separator());
         var picked = PickedText(anchor);
         if (picked.Length > 0) Item(L("Markierten Text kopieren"), async () => { if (TopLevel.GetTopLevel(this)?.Clipboard is { } cb) await cb.SetTextAsync(picked); });
         var marked = MarkedText(anchor);
         Item(L("Vers mit Stelle kopieren"), () => _ = CopyVerseAsync());
-        Item(L("Als Bild exportieren"), ExportVerseImage);
-        Item(L("Zum Auswendiglernen"), () => { Memory.Add(MemoryKey(r), DateTime.Now); StatusText.Text = L("{0} zum Auswendiglernen hinzugefügt.", Label(r)); });
         Item(L("Markieren (Farbe wählen) …"), ShowColorFlyout);
-        Item(L("Merken / nicht mehr merken"), ToggleBookmark);
         Item(L("Notiz schreiben"), () => { Open(2); NoteEditor.Focus(); });
-        Item(L("Neues Dokument aus diesem Vers"), () => { Open(KnowledgeTab); NewDocumentFromVerse(); });
-        Item(_doc is null ? L("In offenes Dokument einfügen (kein Dokument offen)") : L("In „{0}“ einfügen", Shorten(_doc.Title, 30)),
-             () => { Open(KnowledgeTab); InsertIntoDoc(L("> {0}\n> — {1}\n\n", VerseTextOf(verse).Trim(), Label(r)), null); }, _doc is not null);
-        Item(L("Zur Leseliste"), () => AddToQueue([r]));
-        Item(L("Zum To-do hinzufügen"), () => { _vault.AddTodo(L("{0} studieren", Label(r)), r); RefreshTodos(); StatusText.Text = L("To-do zu {0} angelegt.", Label(r)); });
+        Item(L("Merken / nicht mehr merken"), ToggleBookmark);
         menu.Items.Add(new Separator());
-        Item(L("Kapitel-Bericht"), () => _ = ShowChapterReportAsync());
-        Item(L("Querverweise"), () => Open(4));
-        Item(L("Eigenen Querverweis setzen …"), () => ShowMyXrefEditor(r, anchor));
-        Item(L("Grundtext Wort für Wort"), () => { Open(GrundtextTab); _ = ShowGrundtextAsync(r); });
-        Item(marked.Length > 0 ? L("Wort erklären: {0}", marked) : L("Wort erklären (erst ein Wort im Text markieren)"), () => _ = ExplainWordAsync(marked), marked.Length > 0);
-        if (TextVariants.IsNewTestament(r.Book)) Item(L("Lesarten der griechischen Ausgaben"), () => _ = ShowVariantsAsync(r));
-        Item(L("Vorlesen"), ToggleSpeak);
+
+        // the rest in two groups
+        menu.Items.Add(Group(L("Mehr mit diesem Vers"),
+            Make(L("Als Bild exportieren"), ExportVerseImage),
+            Make(L("Zum Auswendiglernen"), () => { Memory.Add(MemoryKey(r), DateTime.Now); StatusText.Text = L("{0} zum Auswendiglernen hinzugefügt.", Label(r)); }),
+            Make(L("Zur Leseliste"), () => AddToQueue([r])),
+            Make(L("Zum To-do hinzufügen"), () => { _vault.AddTodo(L("{0} studieren", Label(r)), r); RefreshTodos(); StatusText.Text = L("To-do zu {0} angelegt.", Label(r)); }),
+            new Separator(),
+            Make(L("Neues Dokument aus diesem Vers"), () => { Open(KnowledgeTab); NewDocumentFromVerse(); }),
+            Make(_doc is null ? L("In offenes Dokument einfügen (kein Dokument offen)") : L("In „{0}“ einfügen", Shorten(_doc.Title, 30)),
+                () => { Open(KnowledgeTab); InsertIntoDoc(L("> {0}\n> — {1}\n\n", VerseTextOf(verse).Trim(), Label(r)), null); }, _doc is not null),
+            new Separator(),
+            Make(L("Vorlesen"), ToggleSpeak)));
+        var study = new List<Control>
+        {
+            Make(L("Kapitel-Bericht"), () => _ = ShowChapterReportAsync()),
+            Make(L("Querverweise"), () => Open(4)),
+            Make(L("Eigenen Querverweis setzen …"), () => ShowMyXrefEditor(r, anchor)),
+            Make(L("Grundtext Wort für Wort"), () => { Open(GrundtextTab); _ = ShowGrundtextAsync(r); }),
+            Make(marked.Length > 0 ? L("Wort erklären: {0}", marked) : L("Wort erklären (erst ein Wort im Text markieren)"), () => _ = ExplainWordAsync(marked), marked.Length > 0),
+        };
+        if (TextVariants.IsNewTestament(r.Book)) study.Add(Make(L("Lesarten der griechischen Ausgaben"), () => _ = ShowVariantsAsync(r)));
+        menu.Items.Add(Group(L("Studium"), [.. study]));
         menu.ShowAt(anchor, showAtPointer: true);
     }
 

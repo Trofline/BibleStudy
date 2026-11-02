@@ -1957,7 +1957,10 @@
   "Vorkommen als Diagramm": "Occurrences en graphique",
   "Vorkommen im Alten Testament": "Occurrences dans l'Ancien Testament",
   "Vorkommen im Neuen Testament": "Occurrences dans le Nouveau Testament",
-  "Wie die KJV das Wort übersetzt": "Comment la KJV traduit le mot",
   "übrige": "autres",
-  "Übersetzungen in {0} Vorkommen": "traductions dans {0} occurrences"
+  "Übersetzungen in {0} Vorkommen": "traductions dans {0} occurrences",
+  "Mehr mit diesem Vers": "Plus avec ce verset",
+  "Wort „{0}“ · {1}": "Mot « {0} » · {1}",
+  "Angezeigte Farben": "Couleurs affichées",
+  "Wie die KJV das Wort übersetzt (Englisches in Klammern)": "Comment la KJV traduit le mot (anglais entre parenthèses)"
 }

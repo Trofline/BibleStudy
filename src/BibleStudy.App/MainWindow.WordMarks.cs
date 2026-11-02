@@ -100,36 +100,42 @@ public partial class MainWindow
 
     void AddWordMenuItems(MenuFlyout menu, WordSpan w)
     {
-        void Item(string text, Action act) { var i = new MenuItem { Header = text }; i.Click += (_, _) => act(); menu.Items.Add(i); }
-        void Toggle(string text, bool on, Action<bool> set)
+        MenuItem Make(string text, Action act) { var i = new MenuItem { Header = text }; i.Click += (_, _) => act(); return i; }
+        MenuItem Toggle(string text, bool on, Action<bool> set)
         {
             var i = new MenuItem { Header = text, ToggleType = MenuItemToggleType.CheckBox, IsChecked = on };
             i.Click += (_, _) => { set(i.IsChecked); SaveSettings(); ApplyWordMarks(); };
-            menu.Items.Add(i);
+            return i;
         }
         var word = w.Word.Trim();
         var ids = string.Join(" · ", w.Strongs);
-        var pinned = _pinned.Any(p => PinKey(p) == PinKey(w));
-        Item(pinned ? L("Hervorhebung lösen: „{0}“", word) : L("Hervorhebung fixieren: „{0}“", word), () =>
+        // unpinning works from any place where the same word stands: whatever is pinned and belongs to this word (same number or same word) goes
+        var related = _pinned.Where(p => Compare(p, w) != SameKind.None).ToList();
+        menu.Items.Add(Make(related.Count > 0 ? L("Hervorhebung lösen: „{0}“", word) : L("Hervorhebung fixieren: „{0}“", word), () =>
         {
-            if (pinned) _pinned.RemoveAll(p => PinKey(p) == PinKey(w)); else _pinned.Add(w);
+            if (related.Count > 0) foreach (var p in related) _pinned.Remove(p); else _pinned.Add(w);
             _markCursor = -1;
             ApplyWordMarks();
             StatusText.Text = _pinned.Count == 0 ? L("Keine fixierten Hervorhebungen.") : L("{0} Wörter in diesem Kapitel markiert. Rechtsklick auf ein Wort: nächstes markiertes Wort.", MarkedSpans().Count);
-        });
+        }));
+
+        var sub = new MenuItem { Header = L("Wort „{0}“ · {1}", word, ids) };
+        sub.Items.Add(Make(L("{0} nachschlagen", ids), () => _ = ShowStudyAsync(w)));
+        sub.Items.Add(Make(L("Vorkommen als Diagramm"), () => _ = ShowWordChartAsync(w.Strongs[0], w.Word)));
         if (_pinned.Count > 0)
         {
-            Item(L("Nächstes markiertes Wort"), () => StepMark(1));
-            Item(L("Vorheriges markiertes Wort"), () => StepMark(-1));
-            Item(L("Alle Hervorhebungen lösen"), () => { _pinned.Clear(); _markCursor = -1; ApplyWordMarks(); });
+            sub.Items.Add(new Separator());
+            sub.Items.Add(Make(L("Nächstes markiertes Wort"), () => StepMark(1)));
+            sub.Items.Add(Make(L("Vorheriges markiertes Wort"), () => StepMark(-1)));
+            sub.Items.Add(Make(L("Alle Hervorhebungen lösen"), () => { _pinned.Clear(); _markCursor = -1; ApplyWordMarks(); }));
         }
-        menu.Items.Add(new Separator());
-        Item(L("{0} nachschlagen", ids), () => _ = ShowStudyAsync(w));
-        Item(L("Vorkommen als Diagramm"), () => _ = ShowWordChartAsync(w.Strongs[0], w.Word));
-        Toggle(L("Strong und Wort gleich (lila)"), _settings.MarkBoth, v => _settings.MarkBoth = v);
-        Toggle(L("Nur Strong gleich (grün)"), _settings.MarkStrong, v => _settings.MarkStrong = v);
-        Toggle(L("Nur Wort gleich (blau)"), _settings.MarkWord, v => _settings.MarkWord = v);
-        menu.Items.Add(new Separator());
+        sub.Items.Add(new Separator());
+        var colors = new MenuItem { Header = L("Angezeigte Farben") };
+        colors.Items.Add(Toggle(L("Strong und Wort gleich (lila)"), _settings.MarkBoth, v => _settings.MarkBoth = v));
+        colors.Items.Add(Toggle(L("Nur Strong gleich (grün)"), _settings.MarkStrong, v => _settings.MarkStrong = v));
+        colors.Items.Add(Toggle(L("Nur Wort gleich (blau)"), _settings.MarkWord, v => _settings.MarkWord = v));
+        sub.Items.Add(colors);
+        menu.Items.Add(sub);
     }
 
     /// <summary>The marked words of the chapter in reading order (cell, span).</summary>

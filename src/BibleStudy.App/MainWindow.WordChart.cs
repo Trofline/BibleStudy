@@ -41,11 +41,19 @@ public partial class MainWindow
         var head = new TextBlock { Text = id + (entry is null ? "" : "  ·  " + entry.Lemma), FontSize = 24, FontFamily = ScriptureFont, FontWeight = FontWeight.SemiBold };
         head.Bind(TextBlock.ForegroundProperty, this.GetResourceObservable("BsAccent"));
         stack.Children.Add(head);
-        var sub = new List<string>();
-        if (entry is not null && entry.Translit.Length > 0) sub.Add(entry.Translit);
-        if (entry is not null && entry.Definition.Length > 0) sub.Add(Mean(entry.Definition));
-        else if (word.Trim().Length > 0) sub.Add($"„{word.Trim()}“");
-        if (sub.Count > 0) stack.Children.Add(new TextBlock { Text = string.Join("  ·  ", sub), TextWrapping = TextWrapping.Wrap, Opacity = 0.85 });
+        // the dictionary text is English; it is shown in the program's language as soon as the translation is there
+        var definition = entry?.Definition ?? "";
+        string SubLine()
+        {
+            var parts = new List<string>();
+            if (entry is not null && entry.Translit.Length > 0) parts.Add(entry.Translit);
+            if (definition.Length > 0) parts.Add(Mean(definition));
+            else if (word.Trim().Length > 0) parts.Add($"„{word.Trim()}“");
+            return string.Join("  ·  ", parts);
+        }
+        var subText = new TextBlock { Text = SubLine(), TextWrapping = TextWrapping.Wrap, Opacity = 0.85 };
+        if (subText.Text.Length > 0) stack.Children.Add(subText);
+        if (definition.Length > 0) _ = WarmMeaningsAsync([definition], () => subText.Text = SubLine());
         stack.Children.Add(new TextBlock { Text = total == 0 ? L("Kommt in den Strong-Daten der KJV nicht vor.") : L("{0} Mal in {1} Versen", total, verses), FontWeight = FontWeight.SemiBold });
         if (total == 0) return;
 
@@ -68,17 +76,24 @@ public partial class MainWindow
         var renderings = analyzer.Renderings(id);
         if (renderings.Count > 0)
         {
-            stack.Children.Add(new TextBlock { Text = L("Wie die KJV das Wort übersetzt"), FontSize = 18, Margin = new(0, 14, 0, 0) });
+            stack.Children.Add(new TextBlock { Text = L("Wie die KJV das Wort übersetzt (Englisches in Klammern)"), FontSize = 18, Margin = new(0, 14, 0, 0) });
             var shown = renderings.Take(12).ToList();
             if (renderings.Count > 12) shown.Add((L("übrige"), renderings.Skip(12).Sum(r => r.Count)));
             var ring = new RenderingRing();
             ring.SetData(shown, renderings.Count.ToString(), L("Übersetzungen in {0} Vorkommen", renderings.Sum(r => r.Count)));
             var legend = new StackPanel { Spacing = 4, VerticalAlignment = VerticalAlignment.Center, Margin = new(24, 0, 0, 0) };
+            var others = renderings.Count > 12 ? shown.Count - 1 : -1;   // the "others" row is already in the program's language
+            var rows = new List<TextBlock>();
+            string RowText(int i) => i == others ? $"{shown[i].Word}  {shown[i].Count}×"
+                : Mean(shown[i].Word) is var m && m != shown[i].Word ? $"{m} ({shown[i].Word})  {shown[i].Count}×" : $"{shown[i].Word}  {shown[i].Count}×";
             for (var i = 0; i < shown.Count; i++)
             {
                 var dot = new Border { Width = 12, Height = 12, CornerRadius = new(6), Background = new SolidColorBrush(RenderingRing.ColorFor(i)), VerticalAlignment = VerticalAlignment.Center, Margin = new(0, 0, 8, 0) };
-                legend.Children.Add(new StackPanel { Orientation = Orientation.Horizontal, Children = { dot, new TextBlock { Text = $"{shown[i].Word}  {shown[i].Count}×" } } });
+                var row = new TextBlock { Text = RowText(i) };
+                rows.Add(row);
+                legend.Children.Add(new StackPanel { Orientation = Orientation.Horizontal, Children = { dot, row } });
             }
+            _ = WarmMeaningsAsync(shown.Where((_, i) => i != others).Select(x => x.Word), () => { for (var i = 0; i < rows.Count; i++) rows[i].Text = RowText(i); });
             stack.Children.Add(new StackPanel { Orientation = Orientation.Horizontal, Children = { ring, legend } });
         }
         stack.Children.Add(new TextBlock { Text = L("Gezählt nach den Strong-Nummern der KJV; andere Übersetzungen können abweichen."), Classes = { "caption" }, Margin = new(0, 10, 0, 0) });

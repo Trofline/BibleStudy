@@ -1957,7 +1957,10 @@
   "Vorkommen als Diagramm": "Случаи в виде диаграммы",
   "Vorkommen im Alten Testament": "Случаи в Ветхом Завете",
   "Vorkommen im Neuen Testament": "Случаи в Новом Завете",
-  "Wie die KJV das Wort übersetzt": "Как KJV переводит слово",
   "übrige": "прочие",
-  "Übersetzungen in {0} Vorkommen": "переводов в {0} случаях"
+  "Übersetzungen in {0} Vorkommen": "переводов в {0} случаях",
+  "Mehr mit diesem Vers": "Ещё со стихом",
+  "Wort „{0}“ · {1}": "Слово «{0}» · {1}",
+  "Angezeigte Farben": "Показываемые цвета",
+  "Wie die KJV das Wort übersetzt (Englisches in Klammern)": "Как KJV переводит слово (английское в скобках)"
 }

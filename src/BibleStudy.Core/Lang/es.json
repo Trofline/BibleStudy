@@ -1957,7 +1957,10 @@
   "Vorkommen als Diagramm": "Apariciones como gráfico",
   "Vorkommen im Alten Testament": "Apariciones en el Antiguo Testamento",
   "Vorkommen im Neuen Testament": "Apariciones en el Nuevo Testamento",
-  "Wie die KJV das Wort übersetzt": "Cómo traduce la KJV la palabra",
   "übrige": "otras",
-  "Übersetzungen in {0} Vorkommen": "versiones en {0} apariciones"
+  "Übersetzungen in {0} Vorkommen": "versiones en {0} apariciones",
+  "Mehr mit diesem Vers": "Más con este versículo",
+  "Wort „{0}“ · {1}": "Palabra «{0}» · {1}",
+  "Angezeigte Farben": "Colores mostrados",
+  "Wie die KJV das Wort übersetzt (Englisches in Klammern)": "Cómo traduce la KJV la palabra (inglés entre paréntesis)"
 }
