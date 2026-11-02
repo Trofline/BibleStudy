@@ -25,6 +25,20 @@ public class LocalizationTests
         Assert.True(missing.Count == 0, $"{missing.Count} texts missing in {code}, e.g.:\n" + string.Join("\n", missing.Take(15)));
     }
 
+    /// <summary>The icon rail on the right is about 64 px wide: a group name longer than this is cut off. Pick a shorter word instead of resizing.</summary>
+    const int MaxRailLabel = 10;
+
+    [Theory, MemberData(nameof(Languages))]
+    public void Rail_group_names_fit_the_rail(string code)
+    {
+        var nav = File.ReadAllText(Path.Combine(SrcRoot(), "BibleStudy.App", "MainWindow.Nav.cs"));
+        var names = System.Text.RegularExpressions.Regex.Matches(nav, @"new\(K\(""([^""]+)""\), ""M").Select(m => m.Groups[1].Value).ToList();
+        Assert.NotEmpty(names);
+        var map = Loc.Texts(code);
+        var tooLong = names.Select(n => (n, t: map.TryGetValue(n, out var v) && v.Length > 0 ? v : n)).Where(x => x.t.Length > MaxRailLabel).Select(x => $"{x.n} -> {x.t} ({x.t.Length})").ToList();
+        Assert.True(tooLong.Count == 0, "Rail names too long in " + code + ": " + string.Join(", ", tooLong));
+    }
+
     [Theory, MemberData(nameof(Languages))]
     public void Placeholders_match_the_source(string code)
     {

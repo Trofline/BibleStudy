@@ -47,7 +47,7 @@ public partial class MainWindow
             new(2, K("Notizen"), L("Schreibe eine kurze Notiz zum angeklickten Vers. Darunter stehen alle deine Notizen; Klick springt zur Stelle.")),
             new(1, K("Markierungen"), L("Farbig markierte Wörter und Verse mit eigener Notiz, in Ordnern und mit Tags. Klick springt zur Stelle.")),
         ]),
-        new(K("Lesezeichen"), "M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z",
+        new(K("Merken"), "M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z",
         [
             new(BookmarksTab, K("Lesezeichen"), L("Deine gemerkten Verse: einfach eine Liste zum späteren Zurückspringen, ohne Notizen.")),
         ]),
