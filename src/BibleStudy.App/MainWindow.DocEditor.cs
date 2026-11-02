@@ -279,7 +279,7 @@ public partial class MainWindow
         var m = BlockStart().Match(line);
         if (!m.Success || m.Groups["h"].Success || caret < s + m.Length) return false;   // headings do not continue; inside the marker Enter works as usual
         if (line[m.Length..].Trim().Length == 0) { Splice(s, e, "", s, s); return true; }
-        var next = m.Groups["n"].Success ? $"{int.Parse(m.Groups["n"].Value) + 1}. " : m.Groups["q"].Success ? "> " : m.Groups["b"].Value + " ";
+        var next = m.Groups["n"].Success ? $"{(long.TryParse(m.Groups["n"].Value, out var number) ? number + 1 : 1)}. ": m.Groups["q"].Success ? "> " : m.Groups["b"].Value + " ";
         Splice(caret, caret, "\n" + m.Groups["ind"].Value + next);
         return true;
     }

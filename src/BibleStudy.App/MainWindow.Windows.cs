@@ -39,8 +39,6 @@ public partial class MainWindow
     bool _revertingTab;
     bool _exiting;
 
-    static readonly string[] WorkTabs = [L("Bücher"), "Dokumente", "Predigt", "Planen"];
-
     NavGroup? GroupOf(int tabIndex) => NavGroups.FirstOrDefault(g => g.Tabs.Any(t => t.Index == tabIndex));
 
     string TabLabel(int index) => GroupOf(index) is { } g && g.Tabs.First(t => t.Index == index) is var t ? (g.Tabs.Length > 1 ? $"{L(g.Name)} – {L(t.Label)}" : L(g.Name)) : L("Fenster {0}", index);
@@ -307,7 +305,8 @@ public partial class MainWindow
 
     void OpenWindowFor(Detached d, PixelPoint? at)
     {
-        var saved = _settings.Windows.TryGetValue(d.Key, out var s) && s.W > 0 ? s : null;
+        // a place on a screen that is no longer connected would open the window where nobody can see it
+        var saved = _settings.Windows.TryGetValue(d.Key, out var s) && s.W > 0 && Screens.All.Any(sc => sc.WorkingArea.Contains(new PixelPoint(s.X + 40, s.Y + 20))) ? s : null;
         var win = new Window
         {
             Title = L("BibleStudy – {0}", L(d.Title)), Width = saved?.W ?? (d.Items.Count > 1 ? 640 : 520), Height = saved?.H ?? 800, MinWidth = 320, MinHeight = 240,
