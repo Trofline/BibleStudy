@@ -1,14 +1,14 @@
-# winget manifest (singleton form) for BibleStudy 1.0.21 – PREPARED, NOT SUBMITTED.
-# Submit as a pull request to https://github.com/microsoft/winget-pkgs under manifests/t/Trofline/BibleStudy/1.0.21/ (Elias decides when).
+# winget manifest (singleton form) for BibleStudy 1.2.3 - PREPARED, NOT SUBMITTED.
+# Submit as a pull request to https://github.com/microsoft/winget-pkgs under manifests/t/Trofline/BibleStudy/1.2.3/ (Elias decides when).
 # Check first with:  winget validate packaging\winget   and a test install:  winget install --manifest packaging\winget
 PackageIdentifier: Trofline.BibleStudy
-PackageVersion: 1.0.21
+PackageVersion: 1.2.3
 PackageLocale: en-US
 Publisher: Trofline
 PublisherUrl: https://github.com/Trofline
 PackageName: BibleStudy
 PackageUrl: https://github.com/Trofline/BibleStudy
-License: Open source (see LICENSE)
+License: MIT
 LicenseUrl: https://github.com/Trofline/BibleStudy/blob/main/LICENSE
 ShortDescription: Free, open-source Bible study software (Greek/Hebrew, parallel translations, notes), works offline.
 Moniker: biblestudy
@@ -18,11 +18,11 @@ Tags:
   - open-source
 InstallerType: exe
 InstallerSwitches:
-  Silent: --silent
-  SilentWithProgress: --silent
+  Silent: --silent --no-launch
+  SilentWithProgress: --silent --no-launch
 Installers:
   - Architecture: x64
-    InstallerUrl: https://github.com/Trofline/BibleStudy/releases/download/v1.0.21/BibleStudy-Setup-1.0.21.exe
-    InstallerSha256: F0A69C3D4AB43E495A272EEE47D268EDC9260F59FAC5C1EA68BD1D8A1FAD6E19
+    InstallerUrl: https://github.com/Trofline/BibleStudy/releases/download/v1.2.3/BibleStudy-Setup-1.2.3.exe
+    InstallerSha256: cdfefaf7dff6a404158ba69e9ef0d81b17097c95885bc08d9abdd392dfb02432
 ManifestType: singleton
 ManifestVersion: 1.6.0
