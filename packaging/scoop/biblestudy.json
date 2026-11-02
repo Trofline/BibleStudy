@@ -1,10 +1,10 @@
 {
-    "version": "1.2.3",
+    "version": "1.2.4",
     "description": "Free, open-source Bible study software (Greek/Hebrew, parallel translations, notes), works offline.",
     "homepage": "https://github.com/Trofline/BibleStudy",
     "license": "MIT",
-    "url": "https://github.com/Trofline/BibleStudy/releases/download/v1.2.3/BibleStudy-Portable-1.2.3.zip",
-    "hash": "a9e362273aa49fe3246988b457192e5a1e177cfe707e6716d8084c53e5706aa9",
+    "url": "https://github.com/Trofline/BibleStudy/releases/download/v1.2.4/BibleStudy-Portable-1.2.4.zip",
+    "hash": "47db7d90add03693f45b0a1f945d1f5a0422f2d91d14c0de625b9fbca88fe2c8",
     "extract_dir": "BibleStudy",
     "bin": "BibleStudy.App.exe",
     "shortcuts": [["BibleStudy.App.exe", "BibleStudy"]],
