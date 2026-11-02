@@ -1,6 +1,7 @@
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Layout;
+using Avalonia.Controls.Primitives;
 using Avalonia.Media;
 using Avalonia.Threading;
 using BibleStudy.Core;
@@ -121,13 +122,32 @@ public partial class MainWindow
         next.Click += (_, _) => Go(() => ShowTourStep(steps, i + 1));
         back.Click += (_, _) => Go(() => ShowTourStep(steps, i - 1));
         skip.Click += (_, _) => Go(FinishTour);
-        flyout.Closed += (_, _) => { if (!moved) FinishTour(); };   // a click somewhere else ends the tour
+        flyout.Closed += (_, _) => { HideTourRing(); if (!moved) FinishTour(); };   // a click somewhere else ends the tour
+        ShowTourRing(step.Anchor());
         flyout.ShowAt(step.Anchor());
+    }
+
+    Border? _tourRing;
+
+    /// <summary>A red frame around the button (or area) the bubble talks about, so it is clear what the text refers to.</summary>
+    void ShowTourRing(Control target)
+    {
+        HideTourRing();
+        if (AdornerLayer.GetAdornerLayer(target) is not { } layer) return;
+        _tourRing = new Border { BorderBrush = Brushes.Red, BorderThickness = new(2.5), CornerRadius = new(6), IsHitTestVisible = false };
+        AdornerLayer.SetAdornedElement(_tourRing, target);
+        layer.Children.Add(_tourRing);
+    }
+
+    void HideTourRing()
+    {
+        if (_tourRing?.Parent is Panel p) p.Children.Remove(_tourRing);
+        _tourRing = null;
     }
 
     void FinishTour()
     {
-        _touring = false;
+        _touring = false; HideTourRing();
         DispatcherTimer.RunOnce(() => { _palette.IsOpen = false; if (QuickJumpBox.IsFocused) Focus(); }, TimeSpan.FromMilliseconds(250));
         if (!_settings.TourPending) return;
         _settings.TourPending = false; SaveSettings();
