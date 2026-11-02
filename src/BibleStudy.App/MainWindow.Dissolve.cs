@@ -39,7 +39,7 @@ public partial class MainWindow
         var spark = Res("BsAccent") is ISolidColorBrush sb ? sb.Color : Color.Parse("#E3B65F");
 
         // the grains: small blocks of the picture, each with its own start, speed and whirl
-        var b = Math.Max(2, (int)Math.Ceiling(Math.Sqrt(pw * (double)ph / 520000.0)));
+        var b = Math.Max(3, (int)Math.Ceiling(Math.Sqrt(pw * (double)ph / 240000.0)));
         var cols = (pw + b - 1) / b; var rows = (ph + b - 1) / b; var n = cols * rows;
         const float Total = 1.7f;       // seconds until the last grain has let go
         var g = await Task.Run(() => MakeGrains(picture, stride, pw, ph, b, cols, rows, n, scale, Total, spark));
@@ -113,7 +113,7 @@ public partial class MainWindow
                 // the wave runs from the upper left to the lower right, ragged by big clumps and by single grains
                 var clump = 0.5 + 0.5 * Math.Sin(x * 8.0 + Math.Sin(y * 6.0) * 1.8) * Math.Cos(y * 10.0 - x * 3.0);
                 var front = x * 0.8 + y * 0.2;
-                g.T0[i] = (float)(0.03 + (front * 0.62 + clump * 0.22 + rnd.NextDouble() * 0.16) * total);
+                g.T0[i] = (float)(0.03 + (front * 0.66 + clump * 0.06 + rnd.NextDouble() * 0.2) * total);
                 g.Life[i] = (float)(0.7 + rnd.NextDouble() * 0.6);
                 // the wind: strongly to the right and a little up, grains differ a lot; a few are thrown far
                 var gust = rnd.NextDouble() < 0.12 ? 1.9 : 1.0;
@@ -121,7 +121,7 @@ public partial class MainWindow
                 g.Vy[i] = (float)(((rnd.NextDouble() - 0.5) * 620 - 150) * scale);
                 g.Swirl[i] = (float)((14 + rnd.NextDouble() * 46) * scale);
                 g.Phase[i] = (float)(rnd.NextDouble() * Math.PI * 2);
-                if (rnd.NextDouble() < 0.045)
+                if (rnd.NextDouble() < 0.028)
                 {
                     // a spark: the accent colour, brightened, and it flickers
                     g.Glow[i] = (float)(0.6 + rnd.NextDouble() * 0.4);
@@ -150,34 +150,71 @@ public partial class MainWindow
         return g;
     }
 
+    /// <summary>Where the grain is after <paramref name="travel"/> seconds of flight.</summary>
+    static void GrainPosition(Grains g, int i, float travel, double scale, out float x, out float y)
+    {
+        var age = Math.Clamp(travel / g.Life[i], 0f, 1f);
+        var e = age * age * (1.5f - 0.5f * age);                 // the grain first lets go slowly, then the wind takes it
+        x = g.X[i] + g.Vx[i] * travel * (0.25f + 0.75f * e) + (float)Math.Sin(travel * 8 + g.Phase[i]) * g.Swirl[i] * age;
+        y = g.Y[i] + g.Vy[i] * travel * e + (float)Math.Cos(travel * 6 + g.Phase[i]) * g.Swirl[i] * age + 70f * (float)scale * age * age;
+    }
+
     static void DrawGrain(Grains g, int i, float t, byte[] frame, int pw, int ph, int b, double scale)
     {
         var travel = t - g.T0[i];
         var age = travel / g.Life[i];
         if (age >= 1 || age < 0) return;
-        var e = age * age * (1.5f - 0.5f * age);                 // the grain first lets go slowly, then the wind takes it
-        var x = g.X[i] + g.Vx[i] * travel * (0.25f + 0.75f * e) + (float)Math.Sin(travel * 8 + g.Phase[i]) * g.Swirl[i] * age;
-        var y = g.Y[i] + g.Vy[i] * travel * e + (float)Math.Cos(travel * 6 + g.Phase[i]) * g.Swirl[i] * age + 70f * (float)scale * age * age;
         var alpha = age < 0.35f ? 1f : 1f - (age - 0.35f) / 0.65f;
         alpha *= alpha;
-        var size = Math.Max(1, (int)Math.Round(b * (1 - 0.5f * age)));
+        var radius = (float)(b * 0.62 * (1 - 0.45f * age));
         var col = g.Color[i];
-        if (g.Glow[i] > 0)
+        var spark = g.Glow[i] > 0;
+        if (spark)
         {
-            // a spark: a little bigger, flickering
-            alpha *= 0.6f + 0.4f * (float)Math.Sin(travel * 40 + g.Phase[i]);
-            alpha = Math.Max(0, alpha) * g.Glow[i] + (1 - g.Glow[i]) * alpha;
-            size += 1;
+            alpha *= 0.65f + 0.35f * (float)Math.Sin(travel * 40 + g.Phase[i]);
+            alpha = Math.Max(0, alpha);
+            radius *= 1.6f;
         }
-        uint a = col >> 24 & 255, rd = col >> 16 & 255, gr = col >> 8 & 255, bl = col & 255;
-        var f = (uint)(Math.Clamp(alpha, 0, 1) * 256);
-        var shaded = ((a * f >> 8) << 24) | ((rd * f >> 8) << 16) | ((gr * f >> 8) << 8) | (bl * f >> 8);
-        var px = (int)x; var py = (int)y;
-        for (var yy = Math.Max(0, py); yy < Math.Min(ph, py + size); yy++)
+        // a short streak behind the grain (motion blur): the same grain a moment ago, fainter
+        for (var s = 0; s < 3; s++)
         {
-            var row = yy * pw;
-            for (var xx = Math.Max(0, px); xx < Math.Min(pw, px + size); xx++)
-                MemoryMarshal.Write(frame.AsSpan((row + xx) * 4, 4), in shaded);
+            var tt = travel - s * 0.013f;
+            if (tt < 0) break;
+            GrainPosition(g, i, tt, scale, out var x, out var y);
+            Splat(frame, pw, ph, x, y, radius * (1 - 0.18f * s), col, alpha * (s == 0 ? 1f : s == 1 ? 0.5f : 0.25f));
+        }
+        if (spark && alpha > 0.05f)
+        {
+            // a soft glow around the spark
+            GrainPosition(g, i, travel, scale, out var x, out var y);
+            Splat(frame, pw, ph, x, y, radius * 3.2f, col, alpha * 0.16f);
+        }
+    }
+
+    /// <summary>A soft round dot, laid over what is there (premultiplied BGRA).</summary>
+    static void Splat(byte[] frame, int pw, int ph, float cx, float cy, float r, uint col, float alpha)
+    {
+        if (alpha <= 0.01f) return;
+        var x0 = Math.Max(0, (int)Math.Floor(cx - r - 1)); var x1 = Math.Min(pw - 1, (int)Math.Ceiling(cx + r + 1));
+        var y0 = Math.Max(0, (int)Math.Floor(cy - r - 1)); var y1 = Math.Min(ph - 1, (int)Math.Ceiling(cy + r + 1));
+        if (x1 < x0 || y1 < y0) return;
+        var px = MemoryMarshal.Cast<byte, uint>(frame.AsSpan());
+        float ca = (col >> 24 & 255) / 255f, cr = (col >> 16 & 255) / 255f, cg = (col >> 8 & 255) / 255f, cb = (col & 255) / 255f;
+        var rr = (r + 0.6f) * (r + 0.6f);
+        for (var y = y0; y <= y1; y++)
+        {
+            var dy = y + 0.5f - cy;
+            for (var x = x0; x <= x1; x++)
+            {
+                var dx = x + 0.5f - cx;
+                var d = 1 - (dx * dx + dy * dy) / rr;
+                if (d <= 0) continue;
+                var f = d * d * (3 - 2 * d) * alpha;            // bright in the middle, soft at the edge
+                var dst = px[y * pw + x];
+                var inv = 1 - ca * f;
+                uint A(float s, uint dch) => (uint)Math.Min(255f, s * f * 255f + dch * inv);
+                px[y * pw + x] = (A(ca, dst >> 24 & 255) << 24) | (A(cr, dst >> 16 & 255) << 16) | (A(cg, dst >> 8 & 255) << 8) | A(cb, dst & 255);
+            }
         }
     }
 
