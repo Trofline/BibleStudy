@@ -39,7 +39,7 @@ public partial class MainWindow
 
     bool _closeAnimating, _closeAnimated;
 
-    static readonly string[] CloseStyles = ["soft", "blur", "fade", "tube", "dissolve", "none"];
+    static readonly string[] CloseStyles = ["soft", "blur", "fade", "tube", "none"];
 
     /// <summary>The chosen way of saying goodbye; "none" when the animations are off.</summary>
     string CloseStyle => !_settings.Animations ? "none"
@@ -58,7 +58,6 @@ public partial class MainWindow
                 case "fade": await RunFramesAsync(180, t => root.Opacity = 1 - t * t); break;
                 case "blur": await PlayBlurAsync(root); break;
                 case "tube": await PlayTubeAsync(root); break;
-                case "dissolve": await PlayDissolveAsync(root); break;
                 case "none": return;
                 default: await PlaySoftAsync(root); break;
             }
@@ -132,7 +131,6 @@ public partial class MainWindow
 
     void ResetAfterCloseAnimation()
     {
-        _dissolveRestore?.Invoke(); _dissolveRestore = null;
         if (Content is not Control root) return;
         root.Transitions = null; root.Opacity = 1; root.RenderTransform = null; root.Effect = null; Opacity = 1;
     }
