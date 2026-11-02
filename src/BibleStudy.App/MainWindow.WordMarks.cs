@@ -21,10 +21,10 @@ public partial class MainWindow
     WordSpan? _hoverSpan;
     int _markCursor = -1;
 
-    /// <summary>The header of a menu entry that opens a submenu: the text and an arrow at the right end, so it can be told from the plain entries.</summary>
+    /// <summary>The header of a first-level menu entry that opens a submenu: the text and an arrow at the right end (the theme draws no arrow there, only on deeper levels).</summary>
     static Control SubHeader(string text)
     {
-        var grid = new Grid { ColumnDefinitions = new("*,Auto"), MinWidth = 150 };
+        var grid = new Grid { ColumnDefinitions = new("*,Auto"), MinWidth = 215 };
         var label = new TextBlock { Text = text, VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center };
         var arrow = new TextBlock { Text = "›", FontSize = 18, FontWeight = FontWeight.Bold, Margin = new(18, -2, 0, 0), VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center };
         Grid.SetColumn(arrow, 1);
@@ -141,7 +141,7 @@ public partial class MainWindow
             sub.Items.Add(Make(L("Alle Hervorhebungen lösen"), () => { _pinned.Clear(); _markCursor = -1; ApplyWordMarks(); }));
         }
         sub.Items.Add(new Separator());
-        var colors = new MenuItem { Header = SubHeader(L("Angezeigte Farben")) };
+        var colors = new MenuItem { Header = L("Angezeigte Farben") };
         colors.Items.Add(Toggle(L("Strong und Wort gleich (lila)"), _settings.MarkBoth, v => _settings.MarkBoth = v));
         colors.Items.Add(Toggle(L("Nur Strong gleich (grün)"), _settings.MarkStrong, v => _settings.MarkStrong = v));
         colors.Items.Add(Toggle(L("Nur Wort gleich (blau)"), _settings.MarkWord, v => _settings.MarkWord = v));
