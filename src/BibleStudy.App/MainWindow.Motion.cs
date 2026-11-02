@@ -63,28 +63,23 @@ public partial class MainWindow
             root.Opacity = 0;
             return;
         }
-        // like an old tube TV switching off: the picture collapses to a glowing line, the line to a point, the point goes out.
-        // (Avalonia has no animator for RenderTransform, so the frames are set here.)
+        // the picture sinks back and softly goes out: a small zoom out and a fade, the whole window fades with it.
+        // Only transform and opacity (cheap to draw, so it stays smooth); Avalonia has no animator for RenderTransform, so the frames are set here.
         try
         {
             root.RenderTransformOrigin = Avalonia.RelativePoint.Center;
-            await RunFramesAsync(260, t =>
+            await RunFramesAsync(340, t =>
             {
-                var e = t * t * t;
-                root.RenderTransform = new ScaleTransform(1, 1 - 0.996 * e);
-                root.Effect = new ImmutableDropShadowEffect(0, 0, 40 * e, Colors.White, e);
-            });
-            await RunFramesAsync(300, t =>
-            {
-                var e = t * t * t;
-                root.RenderTransform = new ScaleTransform(1 - 0.99 * e, 0.004);
-                root.Effect = new ImmutableDropShadowEffect(0, 0, 40 + 10 * e, Colors.White, 1);
-                root.Opacity = t < 0.75 ? 1 : 1 - (t - 0.75) / 0.25;
+                var move = 1 - Math.Pow(1 - t, 3);          // fast at first, then settling
+                var fade = t * t * (3 - 2 * t);             // smooth start and end
+                var scale = 1 - 0.07 * move;
+                root.RenderTransform = new ScaleTransform(scale, scale);
+                root.Opacity = 1 - fade;
+                Opacity = 1 - fade * fade;                   // the window itself goes out a little later
             });
         }
         catch (Exception ex) { ErrorLog.Write(ex); /* an animation that cannot run must not keep the program from closing */ }
-        root.Opacity = 0;
-        await Task.Delay(60);
+        root.Opacity = 0; Opacity = 0;
     }
 
     /// <summary>Calls <paramref name="step"/> with 0..1 for the given time, about 60 times a second.</summary>
@@ -103,6 +98,6 @@ public partial class MainWindow
     void ResetAfterCloseAnimation()
     {
         if (Content is not Control root) return;
-        root.Transitions = null; root.Opacity = 1; root.RenderTransform = null; root.Effect = null;
+        root.Transitions = null; root.Opacity = 1; root.RenderTransform = null; root.Effect = null; Opacity = 1;
     }
 }
