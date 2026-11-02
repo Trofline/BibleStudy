@@ -1880,5 +1880,7 @@
   "Als .md-Datei öffnen": "Ouvrir en fichier .md",
   "Schreibt das ganze Handbuch als eine Markdown-Datei und öffnet sie": "Écrit tout le manuel en un fichier Markdown et l’ouvre",
   "Inhalt": "Sommaire",
-  "Handbuch konnte nicht geöffnet werden: {0}": "Impossible d’ouvrir le manuel : {0}"
+  "Handbuch konnte nicht geöffnet werden: {0}": "Impossible d’ouvrir le manuel : {0}",
+  "Buch wählen": "Choisir le livre",
+  "Kapitel wählen": "Choisir le chapitre"
 }

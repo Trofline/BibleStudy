@@ -1880,5 +1880,7 @@
   "Als .md-Datei öffnen": "Открыть как файл .md",
   "Schreibt das ganze Handbuch als eine Markdown-Datei und öffnet sie": "Записывает всё руководство в один файл Markdown и открывает его",
   "Inhalt": "Оглавление",
-  "Handbuch konnte nicht geöffnet werden: {0}": "Не удалось открыть руководство: {0}"
+  "Handbuch konnte nicht geöffnet werden: {0}": "Не удалось открыть руководство: {0}",
+  "Buch wählen": "Выбрать книгу",
+  "Kapitel wählen": "Выбрать главу"
 }

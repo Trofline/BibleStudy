@@ -189,7 +189,7 @@ public partial class MainWindow
     {
         _settings.FocusMode = !_settings.FocusMode;
         var focus = _settings.FocusMode;
-        TopBar.IsVisible = !focus; TabBar.IsVisible = !focus; UpdateReadBar();
+        TopBar.IsVisible = !focus; TabBar.IsVisible = !focus; StatusBar.IsVisible = !focus; FocusBar.IsVisible = focus; UpdateReadBar();
         if (focus)
         {
             _preFocus = (WindowState, SidePanel.IsVisible);

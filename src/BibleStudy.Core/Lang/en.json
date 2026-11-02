@@ -1880,5 +1880,7 @@
   "Als .md-Datei öffnen": "Open as .md file",
   "Schreibt das ganze Handbuch als eine Markdown-Datei und öffnet sie": "Writes the whole handbook as one Markdown file and opens it",
   "Inhalt": "Contents",
-  "Handbuch konnte nicht geöffnet werden: {0}": "Could not open the handbook: {0}"
+  "Handbuch konnte nicht geöffnet werden: {0}": "Could not open the handbook: {0}",
+  "Buch wählen": "Choose book",
+  "Kapitel wählen": "Choose chapter"
 }

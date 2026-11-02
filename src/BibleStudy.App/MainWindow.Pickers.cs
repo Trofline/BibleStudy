@@ -44,6 +44,10 @@ public partial class MainWindow
         LangBtn.Click += (_, _) => ShowLanguagePicker();
         TransBtn.Click += (_, _) => ShowTranslationPicker();
         BookBtn.Click += (_, _) => ShowBookPicker();
+        FocusBookBtn.Click += (_, _) => ShowBookPicker(FocusBookBtn, FocusChapterBtn);
+        FocusChapterBtn.Click += (_, _) => ShowChapterPicker(FocusChapterBtn);
+        FocusPrevBtn.Click += (_, _) => PrevBtn.RaiseEvent(new Avalonia.Interactivity.RoutedEventArgs(Button.ClickEvent));
+        FocusNextBtn.Click += (_, _) => NextBtn.RaiseEvent(new Avalonia.Interactivity.RoutedEventArgs(Button.ClickEvent));
         ChapterBtn.Click += (_, _) => ShowChapterPicker();
         LanguageBox.SelectionChanged += (_, _) => UpdatePickerLabels();
         TranslationBox.SelectionChanged += (_, _) => UpdatePickerLabels();
@@ -68,6 +72,8 @@ public partial class MainWindow
         TransBtn.Content = PickerLabel(TranslationBox.SelectedItem is TranslationInfo t ? t.ShortName : L("Übersetzung"));
         BookBtn.Content = PickerLabel(BookBox.SelectedItem is BookInfo b ? b.CommonName : L("Buch"));
         ChapterBtn.Content = PickerLabel(((int)(ChapterBox.Value ?? 1)).ToString());
+        FocusBookBtn.Content = BookBox.SelectedItem is BookInfo fb ? fb.CommonName : L("Buch");
+        FocusChapterBtn.Content = ((int)(ChapterBox.Value ?? 1)).ToString();
     }
 
     Flyout NewPickerFlyout(Control content) => new() { Content = content, Placement = PlacementMode.BottomEdgeAlignedLeft };
@@ -93,12 +99,12 @@ public partial class MainWindow
     // ---- books --------------------------------------------------------------------------------------------------------
 
     /// <summary>The main book button: choosing a book opens the chapters of that book right away (one click less).</summary>
-    void ShowBookPicker() => ShowBookPicker(BookBtn, (BookBox.SelectedItem as BookInfo)?.Id, book =>
+    void ShowBookPicker(Control? bookAnchor = null, Control? chapterAnchor = null) => ShowBookPicker(bookAnchor ?? BookBtn, (BookBox.SelectedItem as BookInfo)?.Id, book =>
     {
         var sameBook = (BookBox.SelectedItem as BookInfo)?.Id == book.Id;
         var chapter = sameBook ? (int)(ChapterBox.Value ?? 1) : 1;
         BookBox.SelectedItem = book;   // shows chapter 1 already; the chapter list below only refines it
-        if (book.NumberOfChapters > 1) ShowChapterPicker(ChapterBtn, book, chapter, c => ChapterBox.Value = c);
+        if (book.NumberOfChapters > 1) ShowChapterPicker(chapterAnchor ?? ChapterBtn, book, chapter, c => ChapterBox.Value = c);
     });
 
     /// <summary>Book grid under any button. <paramref name="reset"/> adds a first tile (for a column that may follow the main text again).</summary>
@@ -151,9 +157,9 @@ public partial class MainWindow
 
     // ---- chapters -----------------------------------------------------------------------------------------------------
 
-    void ShowChapterPicker()
+    void ShowChapterPicker(Control? anchor = null)
     {
-        if (BookBox.SelectedItem is BookInfo book) ShowChapterPicker(ChapterBtn, book, (int)(ChapterBox.Value ?? 1), c => ChapterBox.Value = c);
+        if (BookBox.SelectedItem is BookInfo book) ShowChapterPicker(anchor ?? ChapterBtn, book, (int)(ChapterBox.Value ?? 1), c => ChapterBox.Value = c);
     }
 
     void ShowChapterPicker(Control anchor, BookInfo book, int current, Action<int> pick)

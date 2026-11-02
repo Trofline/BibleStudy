@@ -177,6 +177,17 @@
         <!-- Extra translation columns -->
         <WrapPanel x:Name="ParallelBar" DockPanel.Dock="Top" IsVisible="False" Background="{DynamicResource BsSurface}" />
 
+        <!-- Focus mode (F11): only chapter back / book and chapter / chapter forward -->
+        <Border x:Name="FocusBar" DockPanel.Dock="Bottom" IsVisible="False" Padding="16,6" Background="{DynamicResource BsSurface}"
+                BorderBrush="{DynamicResource BsBorder}" BorderThickness="0,1,0,0">
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Spacing="10">
+                <Button x:Name="FocusPrevBtn" Classes="tool" Width="44" Height="34" Content="&lt;" FontSize="18" ToolTip.Tip="Voriges Kapitel" />
+                <Button x:Name="FocusBookBtn" Classes="tool" Height="34" Padding="14,0" MinWidth="130" ToolTip.Tip="Buch wählen" />
+                <Button x:Name="FocusChapterBtn" Classes="tool" Height="34" Padding="14,0" MinWidth="56" ToolTip.Tip="Kapitel wählen" />
+                <Button x:Name="FocusNextBtn" Classes="tool" Width="44" Height="34" Content="&gt;" FontSize="18" ToolTip.Tip="Nächstes Kapitel" />
+            </StackPanel>
+        </Border>
+
         <!-- Footer: license information of the shown translations -->
         <Border x:Name="StatusBar" DockPanel.Dock="Bottom" Padding="16,6" Height="32" Background="{DynamicResource BsSurface}"
                 BorderBrush="{DynamicResource BsBorder}" BorderThickness="0,1,0,0">

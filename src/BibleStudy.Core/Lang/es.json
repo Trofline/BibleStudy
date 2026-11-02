@@ -1880,5 +1880,7 @@
   "Als .md-Datei öffnen": "Abrir como archivo .md",
   "Schreibt das ganze Handbuch als eine Markdown-Datei und öffnet sie": "Escribe todo el manual como un archivo Markdown y lo abre",
   "Inhalt": "Contenido",
-  "Handbuch konnte nicht geöffnet werden: {0}": "No se pudo abrir el manual: {0}"
+  "Handbuch konnte nicht geöffnet werden: {0}": "No se pudo abrir el manual: {0}",
+  "Buch wählen": "Elegir libro",
+  "Kapitel wählen": "Elegir capítulo"
 }
