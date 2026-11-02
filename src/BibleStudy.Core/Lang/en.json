@@ -1982,6 +1982,16 @@
   "Hörbibel": "Audio Bible",
   "Gesprochene Aufnahme der Bibel, Kapitel für Kapitel, auf Englisch. Sie wird erst geladen, wenn du „Hören“ drückst, und bleibt danach zum Hören ohne Netz auf deinem Computer (höchstens 400 MB; die ältesten Kapitel werden gelöscht).": "A spoken recording of the Bible, chapter by chapter, in English. It is only downloaded when you press “Listen”, and then stays on your computer so you can listen without a network (at most 400 MB; the oldest chapters are deleted).",
   "World English Bible; Text und Aufnahme sind gemeinfrei (Public Domain)": "World English Bible; text and recording are in the public domain",
-  "Abspieltempo ändern": "Change playback speed",
-  "Tempo": "Speed"
+  "Tempo": "Speed",
+  "Langsamer": "Slower",
+  "Schneller": "Faster",
+  "Normales Tempo": "Normal speed",
+  "Vorlesen: Stimme": "Read aloud: voice",
+  "Windows-Stimme (technisch, ohne Download)": "Windows voice (robotic, no download)",
+  "Natürliche Stimme (Piper; lädt beim ersten Mal ca. 85 MB)": "Natural voice (Piper; downloads about 85 MB the first time)",
+  "Piper läuft offline auf deinem Computer (nur Windows, 64 Bit). Stimmen: Deutsch Thorsten, Englisch LJ Speech, Spanisch DaveFX, Französisch SIWIS, Russisch Denis; alle frei lizenziert. Für andere Sprachen bleibt die Windows-Stimme.": "Piper runs offline on your computer (Windows, 64-bit only). Voices: German Thorsten, English LJ Speech, Spanish DaveFX, French SIWIS, Russian Denis; all freely licensed. For other languages the Windows voice is used.",
+  "Für {0} gibt es keine natürliche Stimme; es wird die Windows-Stimme genutzt.": "There is no natural voice for {0}; the Windows voice is used.",
+  "Natürliche Stimme wird geladen: {0}": "Loading the natural voice: {0}",
+  "Piper (Stimmen zum Vorlesen)": "Piper (voices for reading aloud)",
+  "Programm MIT; Stimmen: Thorsten (CC0), LJ Speech (gemeinfrei), DaveFX (CC0), SIWIS (CC BY 4.0), Denis (CC0). Wird erst geladen, wenn du die natürliche Stimme wählst.": "Program MIT; voices: Thorsten (CC0), LJ Speech (public domain), DaveFX (CC0), SIWIS (CC BY 4.0), Denis (CC0). Only downloaded when you choose the natural voice."
 }

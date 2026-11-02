@@ -27,7 +27,8 @@ sealed class AudioPlayer : IDisposable
         if (_mciOpen) Mci($"set {Alias} speed {(int)Math.Round(Speed * 1000)}");
     }
 
-    const string Alias = "bsaudio";
+    static int _instances;
+    readonly string Alias = "bsaudio" + Interlocked.Increment(ref _instances);   // each player has its own MCI name
     bool _mciOpen;
     Process? _proc;
     readonly Stopwatch _clock = new();

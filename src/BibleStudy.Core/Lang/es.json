@@ -1982,6 +1982,16 @@
   "Hörbibel": "Biblia en audio",
   "Gesprochene Aufnahme der Bibel, Kapitel für Kapitel, auf Englisch. Sie wird erst geladen, wenn du „Hören“ drückst, und bleibt danach zum Hören ohne Netz auf deinem Computer (höchstens 400 MB; die ältesten Kapitel werden gelöscht).": "Una grabación hablada de la Biblia, capítulo por capítulo, en inglés. Solo se descarga cuando pulsas «Escuchar» y después queda en tu ordenador para oírla sin red (como máximo 400 MB; se borran los capítulos más antiguos).",
   "World English Bible; Text und Aufnahme sind gemeinfrei (Public Domain)": "World English Bible; el texto y la grabación son de dominio público",
-  "Abspieltempo ändern": "Cambiar la velocidad",
-  "Tempo": "Velocidad"
+  "Tempo": "Velocidad",
+  "Langsamer": "Más lento",
+  "Schneller": "Más rápido",
+  "Normales Tempo": "Velocidad normal",
+  "Vorlesen: Stimme": "Leer en voz alta: voz",
+  "Windows-Stimme (technisch, ohne Download)": "Voz de Windows (robótica, sin descarga)",
+  "Natürliche Stimme (Piper; lädt beim ersten Mal ca. 85 MB)": "Voz natural (Piper; la primera vez descarga unos 85 MB)",
+  "Piper läuft offline auf deinem Computer (nur Windows, 64 Bit). Stimmen: Deutsch Thorsten, Englisch LJ Speech, Spanisch DaveFX, Französisch SIWIS, Russisch Denis; alle frei lizenziert. Für andere Sprachen bleibt die Windows-Stimme.": "Piper funciona sin conexión en tu ordenador (solo Windows, 64 bits). Voces: alemán Thorsten, inglés LJ Speech, español DaveFX, francés SIWIS, ruso Denis; todas con licencia libre. Para otros idiomas se usa la voz de Windows.",
+  "Für {0} gibt es keine natürliche Stimme; es wird die Windows-Stimme genutzt.": "No hay voz natural para {0}; se usa la voz de Windows.",
+  "Natürliche Stimme wird geladen: {0}": "Descargando la voz natural: {0}",
+  "Piper (Stimmen zum Vorlesen)": "Piper (voces para leer en voz alta)",
+  "Programm MIT; Stimmen: Thorsten (CC0), LJ Speech (gemeinfrei), DaveFX (CC0), SIWIS (CC BY 4.0), Denis (CC0). Wird erst geladen, wenn du die natürliche Stimme wählst.": "Programa MIT; voces: Thorsten (CC0), LJ Speech (dominio público), DaveFX (CC0), SIWIS (CC BY 4.0), Denis (CC0). Solo se descarga cuando eliges la voz natural."
 }

@@ -160,7 +160,7 @@ public partial class MainWindow : Window
         InitPanel();
         InitStudy();
         InitAudio();
-        InitSpeakSpeed();
+        InitSpeak();
         InitStrongSearch();
         InitImport();
         InitKnowledge();

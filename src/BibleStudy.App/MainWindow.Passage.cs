@@ -58,7 +58,7 @@ public partial class MainWindow
             Make(_doc is null ? L("In offenes Dokument einfügen (kein Dokument offen)") : L("In „{0}“ einfügen", Shorten(_doc.Title, 30)),
                 () => { Open(KnowledgeTab); InsertIntoDoc(L("> {0}\n> — {1}\n\n", VerseTextOf(verse).Trim(), Label(r)), null); }, _doc is not null),
             new Separator(),
-            Make(L("Vorlesen"), ToggleSpeak)));
+            Make(L("Vorlesen"), async () => await ToggleSpeakAsync())));
         var study = new List<Control>
         {
             Make(L("Kapitel-Bericht"), () => _ = ShowChapterReportAsync()),

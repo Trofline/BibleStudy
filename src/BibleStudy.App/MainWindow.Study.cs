@@ -30,10 +30,10 @@ public partial class MainWindow
         {
             if (SideTabs.SelectedIndex == GrundtextTab && _selected is int v) await ShowGrundtextAsync(new VerseRef(_curBook, _curChapter, v));
         };
-        SpeakBtn.Click += (_, _) => ToggleSpeak();
+        SpeakBtn.Click += async (_, _) => await ToggleSpeakAsync();
         ExportBtn.Click += async (_, _) => await ExportAsync();
         ImportBtn.Click += async (_, _) => await ImportAsync();
-        Closed += (_, _) => _speech?.Dispose();
+        Closed += (_, _) => { _speech?.Dispose(); _voiceCts?.Cancel(); _voice.Dispose(); };
     }
 
     // ---- original text ------------------------------------------------------------------------------------------------
@@ -181,72 +181,6 @@ public partial class MainWindow
         AiInput.Text = L("Prüfe Wort für Wort, ob die Übersetzung {0} ({1}) in {2} den Grundtext richtig und vollständig wiedergibt. ", t?.Name, t?.Id, Label(r)) +
                        L("Nutze get_interlinear und get_passage (translation={0}) und bei Bedarf get_strongs. Nenne Abweichungen, Nuancen und mögliche andere Wiedergaben, genau und knapp.", t?.Id);
         await AiSendOrStopAsync();
-    }
-
-    // ---- reading aloud ------------------------------------------------------------------------------------------------
-
-    void ToggleSpeak()
-    {
-        if (!OperatingSystem.IsWindows()) { StatusText.Text = L("Vorlesen ist derzeit nur unter Windows verfügbar."); SpeakBtn.IsChecked = false; return; }
-        if (_speech is { State: SynthesizerState.Speaking }) { _speech.SpeakAsyncCancelAll(); SpeakBtn.IsChecked = false; return; }
-        if (_curChapterData is null || TranslationBox.SelectedItem is not TranslationInfo t) { SpeakBtn.IsChecked = false; return; }
-        var verses = _selected is int v ? _curChapterData.Verses.Where(x => x.Number == v) : _curChapterData.Verses;
-        var text = string.Join(" ", verses.Select(x => x.Text));
-        if (string.IsNullOrWhiteSpace(text)) { SpeakBtn.IsChecked = false; return; }
-        try
-        {
-            _speech ??= new SpeechSynthesizer();
-            _speech.Rate = Math.Clamp(_settings.SpeakRate, -10, 10);
-            _speech.SpeakCompleted -= OnSpeakCompleted;
-            _speech.SpeakCompleted += OnSpeakCompleted;
-            var culture = CultureInfo.GetCultures(CultureTypes.NeutralCultures).FirstOrDefault(c => c.ThreeLetterISOLanguageName == t.Language || c.Name == t.Language);
-            if (culture is not null)
-                try { _speech.SelectVoiceByHints(VoiceGender.NotSet, VoiceAge.NotSet, 0, culture); }
-                catch (ArgumentException) { StatusText.Text = L("Keine Windows-Stimme für {0} installiert; es wird die Standardstimme genutzt.", t.LanguageName); }
-            StopAudio();
-            _speech.SpeakAsync(text);
-            SpeakBtn.IsChecked = true;
-            ShowBarMode(true); AudioBar.IsVisible = true;
-        }
-        catch (Exception ex) { StatusText.Text = L("Vorlesen nicht möglich: ") + ex.Message; SpeakBtn.IsChecked = false; }
-    }
-
-    bool _speakRestart;
-
-    void OnSpeakCompleted(object? sender, SpeakCompletedEventArgs e) => Avalonia.Threading.Dispatcher.UIThread.Post(() =>
-    {
-        if (_speakRestart) { _speakRestart = false; ToggleSpeak(); return; }
-        SpeakBtn.IsChecked = false;
-        if (_speechMode) AudioBar.IsVisible = false;
-    });
-
-    void StopSpeak()
-    {
-        if (!_speechMode) return;
-        _speakRestart = false;
-        if (_speech is { State: SynthesizerState.Speaking }) _speech.SpeakAsyncCancelAll();
-        SpeakBtn.IsChecked = false; AudioBar.IsVisible = false; _speechMode = false;
-    }
-
-    /// <summary>Right click on "Listen aloud": the speed can be changed here; when it is speaking it starts again with the new speed.</summary>
-    void InitSpeakSpeed()
-    {
-        var label = new TextBlock { Text = L("Vorlesen: Geschwindigkeit {0:+0;-0;normal}", _settings.SpeakRate), Classes = { "caption" } };
-        var slider = new Slider { Minimum = -5, Maximum = 8, Value = _settings.SpeakRate, TickFrequency = 1, IsSnapToTickEnabled = true, Width = 220 };
-        var changed = false;
-        slider.ValueChanged += (_, e) =>
-        {
-            _settings.SpeakRate = (int)e.NewValue; changed = true;
-            label.Text = L("Vorlesen: Geschwindigkeit {0:+0;-0;normal}", _settings.SpeakRate);
-            SpeakSlider.Value = _settings.SpeakRate; SaveSettings();
-        };
-        var flyout = new Flyout { Content = new StackPanel { Spacing = 6, Margin = new(4), Children = { label, slider } } };
-        flyout.Opened += (_, _) => { slider.Value = _settings.SpeakRate; changed = false; };
-        flyout.Closed += (_, _) =>
-        {
-            if (changed && _speech is { State: SynthesizerState.Speaking }) { _speakRestart = true; _speech.SpeakAsyncCancelAll(); }
-        };
-        SpeakBtn.ContextFlyout = flyout;
     }
 
     // ---- backup -------------------------------------------------------------------------------------------------------

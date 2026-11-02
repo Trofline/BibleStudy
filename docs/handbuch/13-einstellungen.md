@@ -35,6 +35,7 @@ Deine Sprache fehlt? Speichere die **Vorlage mit der KI-Anweisung**, lass sie vo
 - Beim Speichern den **Buchnamen als Tag** vergeben.
 - **Standard-Markierfarbe.**
 - **Vorlesen: Geschwindigkeit.**
+- **Vorlesen: Stimme.** Windows-Stimme oder natürliche Stimme (Piper, wird beim ersten Mal geladen).
 - **Suchverlauf löschen.**
 
 ## 13.4 Fenster und Layouts

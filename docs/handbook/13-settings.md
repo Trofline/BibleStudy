@@ -35,6 +35,7 @@ Your language is missing? Save the **template with the AI instruction**, have an
 - Assign the **book name as a tag** when saving.
 - **Default highlight color.**
 - **Read aloud: speed.**
+- **Read aloud: voice.** Windows voice or natural voice (Piper, downloaded the first time).
 - **Clear search history.**
 
 ## 13.4 Windows and layouts

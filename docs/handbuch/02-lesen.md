@@ -107,7 +107,7 @@ Unter *Einstellungen → Darstellung* findest du:
 
 ## 2.9 Vorlesen
 
-Der Knopf **Vorlesen** liest den angeklickten Vers oder das ganze Kapitel vor. Die Geschwindigkeit stellst du in den Einstellungen ein. Vorlesen nutzt die Stimmen deines Betriebssystems.
+Der Knopf **Vorlesen** liest den angeklickten Vers oder das ganze Kapitel vor. Beim Vorlesen erscheint unten eine Leiste mit **−**, **Tempo** und **+**: damit machst du es langsamer oder schneller (ein Klick auf „Tempo“ stellt das normale Tempo wieder ein), die Windows-Stimme liest dann an der Stelle weiter. Mit **×** hörst du auf. In den Einstellungen („Vorlesen: Stimme“) wählst du die Stimme: die **Windows-Stimme** (klingt technisch) oder eine **natürliche Stimme** mit Piper. Die natürliche Stimme läuft offline auf deinem Computer (nur Windows, 64 Bit) und wird beim ersten Mal geladen (ca. 85 MB). Es gibt sie für Deutsch (Thorsten), Englisch (LJ Speech), Spanisch (DaveFX), Französisch (SIWIS) und Russisch (Denis), alle frei lizenziert. Für andere Sprachen bleibt die Windows-Stimme.
 
 ## 2.9a Hörbibel
 

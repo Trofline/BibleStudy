@@ -107,7 +107,7 @@ Under *Settings → Appearance* you will find:
 
 ## 2.9 Read aloud
 
-The **Read aloud** button reads aloud the verse you clicked or the whole chapter. You set the speed in the settings. Read aloud uses the voices of your operating system.
+The **Read aloud** button reads aloud the verse you clicked or the whole chapter. While it reads, a bar appears at the bottom with **−**, **Speed** and **+**: slower or faster (a click on “Speed” goes back to normal; the Windows voice goes on at the same place). **×** stops. In the settings (“Read aloud: voice”) you choose the voice: the **Windows voice** (sounds robotic) or a **natural voice** made with Piper. The natural voice runs offline on your computer (Windows, 64-bit only) and is downloaded the first time (about 85 MB). It exists for German (Thorsten), English (LJ Speech), Spanish (DaveFX), French (SIWIS) and Russian (Denis), all freely licensed. For other languages the Windows voice is used.
 
 ## 2.9a Audio Bible
 

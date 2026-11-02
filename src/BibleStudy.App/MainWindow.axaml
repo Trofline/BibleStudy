@@ -220,7 +220,9 @@
                     <Button x:Name="AudioNextBtn" Classes="tool" Width="36" Height="32" ToolTip.Tip="Nächstes Kapitel anhören">
                         <local:Icon Data="M5 4l10 8-10 8z M19 5v14" IconSize="16" />
                     </Button>
-                    <Button x:Name="AudioSpeedBtn" Classes="tool" MinWidth="52" Height="32" Padding="8,0" ToolTip.Tip="Abspieltempo ändern" />
+                    <Button x:Name="AudioSlowerBtn" Classes="tool" Width="32" Height="32" Content="−" FontSize="18" ToolTip.Tip="Langsamer" Margin="8,0,0,0" />
+                    <Button x:Name="AudioSpeedBtn" Classes="tool" MinWidth="104" Height="32" Padding="10,0" ToolTip.Tip="Normales Tempo" />
+                    <Button x:Name="AudioFasterBtn" Classes="tool" Width="32" Height="32" Content="+" FontSize="18" ToolTip.Tip="Schneller" />
                 </StackPanel>
                 <Slider x:Name="AudioSlider" Grid.Column="1" Minimum="0" Maximum="1" Value="0" VerticalAlignment="Center" />
                 <TextBlock x:Name="AudioTime" Grid.Column="2" Classes="caption" VerticalAlignment="Center" MinWidth="86" TextAlignment="Center" />
@@ -649,6 +651,9 @@
                                 <WrapPanel x:Name="DefaultColorPanel" />
                                 <TextBlock x:Name="SpeakLabel" Text="Vorlesen: Geschwindigkeit" Margin="0,4,0,0" />
                                 <Slider x:Name="SpeakSlider" Minimum="-5" Maximum="8" Value="0" TickFrequency="1" IsSnapToTickEnabled="True" />
+                                <TextBlock Text="Vorlesen: Stimme" Margin="0,4,0,0" />
+                                <ComboBox x:Name="SpeakVoiceBox" MinWidth="320" />
+                                <TextBlock x:Name="SpeakVoiceInfo" Classes="caption" TextWrapping="Wrap" />
                                 <StackPanel Orientation="Horizontal" Spacing="8" Margin="0,4,0,0">
                                     <Button x:Name="ClearHistoryBtn" Content="Suchverlauf löschen" />
                                     <Button x:Name="ResetSettingsBtn" Content="Darstellung zurücksetzen" />
