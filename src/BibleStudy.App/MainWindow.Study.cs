@@ -203,9 +203,10 @@ public partial class MainWindow
             if (culture is not null)
                 try { _speech.SelectVoiceByHints(VoiceGender.NotSet, VoiceAge.NotSet, 0, culture); }
                 catch (ArgumentException) { StatusText.Text = L("Keine Windows-Stimme für {0} installiert; es wird die Standardstimme genutzt.", t.LanguageName); }
+            StopAudio();
             _speech.SpeakAsync(text);
             SpeakBtn.IsChecked = true;
-            StatusText.Text = L("Tempo ändern: Rechtsklick auf „Vorlesen“.");
+            ShowBarMode(true); AudioBar.IsVisible = true;
         }
         catch (Exception ex) { StatusText.Text = L("Vorlesen nicht möglich: ") + ex.Message; SpeakBtn.IsChecked = false; }
     }
@@ -216,7 +217,16 @@ public partial class MainWindow
     {
         if (_speakRestart) { _speakRestart = false; ToggleSpeak(); return; }
         SpeakBtn.IsChecked = false;
+        if (_speechMode) AudioBar.IsVisible = false;
     });
+
+    void StopSpeak()
+    {
+        if (!_speechMode) return;
+        _speakRestart = false;
+        if (_speech is { State: SynthesizerState.Speaking }) _speech.SpeakAsyncCancelAll();
+        SpeakBtn.IsChecked = false; AudioBar.IsVisible = false; _speechMode = false;
+    }
 
     /// <summary>Right click on "Listen aloud": the speed can be changed here; when it is speaking it starts again with the new speed.</summary>
     void InitSpeakSpeed()

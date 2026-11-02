@@ -220,7 +220,7 @@
                     <Button x:Name="AudioNextBtn" Classes="tool" Width="36" Height="32" ToolTip.Tip="Nächstes Kapitel anhören">
                         <local:Icon Data="M5 4l10 8-10 8z M19 5v14" IconSize="16" />
                     </Button>
-                    <Button x:Name="AudioSpeedBtn" Classes="tool" Width="52" Height="32" ToolTip.Tip="Abspieltempo ändern" />
+                    <Button x:Name="AudioSpeedBtn" Classes="tool" MinWidth="52" Height="32" Padding="8,0" ToolTip.Tip="Abspieltempo ändern" />
                 </StackPanel>
                 <Slider x:Name="AudioSlider" Grid.Column="1" Minimum="0" Maximum="1" Value="0" VerticalAlignment="Center" />
                 <TextBlock x:Name="AudioTime" Grid.Column="2" Classes="caption" VerticalAlignment="Center" MinWidth="86" TextAlignment="Center" />

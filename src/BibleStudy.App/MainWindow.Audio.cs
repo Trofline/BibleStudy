@@ -1,3 +1,4 @@
+using System.Speech.Synthesis;
 using System.Net.Http;
 using Avalonia.Controls;
 using Avalonia.Input;
@@ -28,7 +29,28 @@ public partial class MainWindow
 
     static readonly double[] AudioSpeeds = [0.75, 1, 1.25, 1.5, 1.75, 2];
 
-    void ShowAudioSpeed() => AudioSpeedBtn.Content = _audio.Speed.ToString("0.##", System.Globalization.CultureInfo.CurrentCulture) + "×";
+    static readonly int[] SpeakRates = [-4, -2, 0, 2, 4, 6, 8];
+    bool _speechMode;
+
+    /// <summary>The bar at the bottom serves both: the recording (chapter buttons, position) and reading aloud by Windows (speed and stop only).</summary>
+    void ShowBarMode(bool speech)
+    {
+        _speechMode = speech;
+        AudioPrevBtn.IsVisible = AudioPlayBtn.IsVisible = AudioNextBtn.IsVisible = AudioSlider.IsVisible = AudioTime.IsVisible = !speech;
+        if (speech) { AudioTitle.Text = L("Vorlesen"); ShowSpeakSpeed(); } else ShowAudioSpeed();
+    }
+
+    void ShowSpeakSpeed() => AudioSpeedBtn.Content = L("Tempo") + " " + (_settings.SpeakRate == 0 ? "±0" : _settings.SpeakRate.ToString("+0;−0"));
+
+    void CycleSpeakSpeed()
+    {
+        var next = SpeakRates.FirstOrDefault(v => v > _settings.SpeakRate, int.MinValue);
+        _settings.SpeakRate = next == int.MinValue ? SpeakRates[0] : next;
+        SpeakSlider.Value = _settings.SpeakRate; SaveSettings(); ShowSpeakSpeed();
+        if (_speech is { State: SynthesizerState.Speaking }) { _speakRestart = true; _speech.SpeakAsyncCancelAll(); }
+    }
+
+    void ShowAudioSpeed() => AudioSpeedBtn.Content = L("Tempo") + " " + _audio.Speed.ToString("0.##", System.Globalization.CultureInfo.CurrentCulture) + "×";
 
     void InitAudio()
     {
@@ -51,11 +73,12 @@ public partial class MainWindow
         };
         AudioNextBtn.Click += async (_, _) => { if (AudioBible.Next(_audioBook, _audioChapter) is { } n) await PlayOtherAsync(n); };
         AudioPrevBtn.Click += async (_, _) => { if (AudioBible.Previous(_audioBook, _audioChapter) is { } p) await PlayOtherAsync(p); };
-        AudioCloseBtn.Click += (_, _) => StopAudio();
+        AudioCloseBtn.Click += (_, _) => { if (_speechMode) StopSpeak(); else StopAudio(); };
         _audio.SetSpeed(_settings.AudioSpeed);
         ShowAudioSpeed();
         AudioSpeedBtn.Click += (_, _) =>
         {
+            if (_speechMode) { CycleSpeakSpeed(); return; }
             var next = AudioSpeeds.FirstOrDefault(v => v > _audio.Speed + 0.01);
             _settings.AudioSpeed = next == 0 ? AudioSpeeds[0] : next;
             _audio.SetSpeed(_settings.AudioSpeed); SaveSettings(); ShowAudioSpeed();
@@ -77,6 +100,7 @@ public partial class MainWindow
         var cts = _audioCts = new CancellationTokenSource();
         _audio.Stop();
         _audioBook = book; _audioChapter = chapter;
+        StopSpeak(); ShowBarMode(false);
         AudioBar.IsVisible = true; AudioBtn.IsChecked = true;
         AudioTitle.Text = L("{0} {1} · lade …", BookName(book), chapter);
         ShowAudioState();
