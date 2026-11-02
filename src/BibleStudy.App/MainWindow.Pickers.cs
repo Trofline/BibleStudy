@@ -253,7 +253,11 @@ public partial class MainWindow
                 menu.Items.Add(reset);
             }
             b.ContextFlyout = menu;
-            panel.Children.Add(b);
+            b.Margin = new(0);
+            var pen = new Button { Content = "✎", Classes = { "tool" }, Width = 28, Height = 28, Padding = new(0), HorizontalAlignment = HorizontalAlignment.Right, VerticalAlignment = VerticalAlignment.Top, Margin = new(0, 4, 4, 0) };
+            ToolTip.SetTip(pen, L("Umbenennen …"));
+            pen.Click += (_, _) => { flyout!.Hide(); ShowRenameTranslation(tr); };
+            panel.Children.Add(new Grid { Width = 340, Height = 52, Margin = new(0, 0, 6, 6), Children = { b, pen } });
         }
         flyout = NewPickerFlyout(new ScrollViewer { Content = panel, Width = 720, MaxHeight = Math.Max(300, Bounds.Height - 130), HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled });
         flyout.ShowAt(TransBtn);
