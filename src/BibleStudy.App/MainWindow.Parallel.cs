@@ -27,7 +27,66 @@ public partial class MainWindow
     Border? _syncPill;
     bool _settingSyncCheck;
 
-    Color ColumnColor(int i) => i == 0 ? (Res("BsAccent") as ISolidColorBrush)?.Color ?? Colors.Goldenrod : Color.Parse(ColumnColors[i % ColumnColors.Length]);
+    Color ColumnColor(int i)
+    {
+        if (i >= 0 && i < _settings.ParallelColors.Count && Color.TryParse(_settings.ParallelColors[i], out var own)) return own;
+        return i == 0 ? (Res("BsAccent") as ISolidColorBrush)?.Color ?? Colors.Goldenrod : Color.Parse(ColumnColors[i % ColumnColors.Length]);
+    }
+
+    static readonly string[] ColorChoices = ["#D4A017", "#14B8A6", "#A855F7", "#F43F5E", "#3B82F6", "#22C55E", "#F97316", "#EAB308", "#EC4899", "#94A3B8"];
+
+    void SetColumnColor(int i, string? hex)
+    {
+        while (_settings.ParallelColors.Count <= i) _settings.ParallelColors.Add("");
+        _settings.ParallelColors[i] = hex ?? "";
+        if (_settings.ParallelColors.All(string.IsNullOrEmpty)) _settings.ParallelColors.Clear();
+    }
+
+    /// <summary>One row per column: round swatches, an own hex value and back to the standard color.</summary>
+    void ShowColumnColors(Control anchor)
+    {
+        var names = new List<string>();
+        if (TranslationBox.SelectedItem is TranslationInfo primary) names.Add(primary.ShortName);
+        names.AddRange(_extras.Select(e => (e.Translation as TranslationInfo)?.ShortName ?? "?"));
+        var fly = new Flyout();
+        void Redraw()
+        {
+            var panel = new StackPanel { Spacing = 8, Width = 330 };
+            panel.Children.Add(new TextBlock { Text = L("Farbe jeder Spalte"), FontWeight = FontWeight.SemiBold });
+            for (var i = 0; i < names.Count; i++)
+            {
+                var col = i;
+                var row = new WrapPanel();
+                row.Children.Add(new TextBlock { Text = names[i], Width = 70, VerticalAlignment = VerticalAlignment.Center, Foreground = new SolidColorBrush(ColumnColor(i)), FontWeight = FontWeight.SemiBold, TextTrimming = TextTrimming.CharacterEllipsis });
+                foreach (var hex in ColorChoices)
+                {
+                    var chosen = ColumnColor(i) == Color.Parse(hex);
+                    var sw = new Button { Width = 22, Height = 22, Margin = new(2), Padding = new(0), CornerRadius = new(11), Background = new SolidColorBrush(Color.Parse(hex)), BorderBrush = chosen ? Brushes.White : Brushes.Transparent, BorderThickness = new(2) };
+                    sw.Click += async (_, _) => { SetColumnColor(col, hex); Redraw(); await ApplyColumnColorsAsync(); };
+                    row.Children.Add(sw);
+                }
+                var entry = new TextBox { Width = 84, Height = 26, Margin = new(2, 0, 0, 0), Watermark = "#RRGGBB", Text = i < _settings.ParallelColors.Count ? _settings.ParallelColors[i] : "" };
+                entry.LostFocus += async (_, _) =>
+                {
+                    var t = (entry.Text ?? "").Trim();
+                    if (t.Length == 0) SetColumnColor(col, null);
+                    else if (Color.TryParse(t.StartsWith('#') ? t : "#" + t, out var c)) SetColumnColor(col, "#" + c.ToString().Substring(3));
+                    else return;
+                    await ApplyColumnColorsAsync();
+                };
+                row.Children.Add(entry);
+                var reset = new Button { Classes = { "tool" }, Height = 26, Padding = new(8, 0), Content = L("Standard") };
+                reset.Click += async (_, _) => { SetColumnColor(col, null); Redraw(); await ApplyColumnColorsAsync(); };
+                row.Children.Add(reset);
+                panel.Children.Add(row);
+            }
+            fly.Content = panel;
+        }
+        Redraw();
+        fly.ShowAt(anchor);
+    }
+
+    async Task ApplyColumnColorsAsync() { RecolorPills(); await ShowChapterAsync(_selected); }
 
     Border ColumnHeader(TranslationInfo t, Chapter? c, int i)
     {
@@ -162,7 +221,10 @@ public partial class MainWindow
         var pick = new Button { Classes = { "tool" }, Width = 28, Height = 28, Content = new Icon { Data = Geometry.Parse("M4 6h16 M7 12h10 M10 18h4"), IconSize = 14 }, VerticalAlignment = VerticalAlignment.Center };
         ToolTip.SetTip(pick, L("Auswählen, welche Spalten zusammen scrollen"));
         pick.Click += (_, _) => ShowSyncChoice(pick, check);
-        _syncPill = new Border { Classes = { "pill" }, Margin = new(16, 8, 0, 8), Padding = new(12, 0, 4, 0), Child = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 4, Children = { check, pick } } };
+        var colors = new Button { Classes = { "tool" }, Width = 28, Height = 28, Content = new Icon { Data = Geometry.Parse("M12 3a9 9 0 1 0 0 18c1.1 0 2-.9 2-2 0-.5-.2-1-.5-1.3-.3-.3-.5-.8-.5-1.3 0-1.1.9-2 2-2h2.3a3.7 3.7 0 0 0 3.7-3.7C21 6.8 17 3 12 3z"), IconSize = 14 }, VerticalAlignment = VerticalAlignment.Center };
+        ToolTip.SetTip(colors, L("Farben der Spalten ändern"));
+        colors.Click += (_, _) => ShowColumnColors(colors);
+        _syncPill = new Border { Classes = { "pill" }, Margin = new(16, 8, 0, 8), Padding = new(12, 0, 4, 0), Child = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 4, Children = { check, pick, colors } } };
     }
 
     void ShowSyncChoice(Control anchor, CheckBox all)

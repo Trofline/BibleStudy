@@ -110,6 +110,8 @@ public sealed class AppSettings
     public bool ParallelSync { get; set; } = true;
     /// <summary>With independent columns: the translations whose columns still scroll together (verse by verse). Empty = none.</summary>
     public List<string> ParallelSyncIds { get; set; } = [];
+    /// <summary>Own color per parallel column position ("#RRGGBB"); empty or missing = the standard color.</summary>
+    public List<string> ParallelColors { get; set; } = [];
     public List<ParallelPreset> ParallelPresets { get; set; } = [];
     /// <summary>Commentaries are human writings (Calvin, Henry …), not Scripture: hidden unless switched on.</summary>
     public bool ShowCommentaries { get; set; }
