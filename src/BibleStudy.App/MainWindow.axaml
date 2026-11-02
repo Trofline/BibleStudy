@@ -636,6 +636,10 @@
                                         <ComboBoxItem Content="Groß" />
                                     </ComboBox></Border>
                                 </StackPanel>
+                                <StackPanel Orientation="Horizontal" Spacing="10">
+                                    <TextBlock Text="Schließ-Animation" VerticalAlignment="Center" />
+                                    <Border Classes="pill"><ComboBox x:Name="CloseAnimBox" MinWidth="260" /></Border>
+                                </StackPanel>
                                 <CheckBox x:Name="HeadingCheck" Content="Großes Kapitel-Kopfstück (sonst schlicht)" />
                                 <TextBlock Classes="caption" Text="Programmsymbol (Fenster, Taskleiste, Titelleiste, Startbild)" />
                                 <WrapPanel x:Name="LogoPanel" />

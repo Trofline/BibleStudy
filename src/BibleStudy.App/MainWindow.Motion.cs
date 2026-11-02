@@ -39,47 +39,66 @@ public partial class MainWindow
 
     bool _closeAnimating, _closeAnimated;
 
-    /// <summary>
-    /// The goodbye: the window content lifts a little, shrinks, blurs and dissolves (about half a second), then a short pause with the
-    /// empty window before the program closes or goes to the tray.
-    /// </summary>
+    static readonly string[] CloseStyles = ["soft", "fade", "tube", "dissolve", "none"];
+
+    /// <summary>The chosen way of saying goodbye; "none" when the animations are off.</summary>
+    string CloseStyle => !_settings.Animations ? "none"
+        : _settings.CloseAnimation is { Length: > 0 } c && CloseStyles.Contains(c) ? c
+        : _settings.AnimationLevel == 0 ? "fade" : "soft";
+
+    /// <summary>The goodbye, in the variant the user chose in the settings, before the program closes or goes to the tray.</summary>
     async Task PlayCloseAnimationAsync()
     {
         if (Content is not Control root) return;
         root.Transitions = null;
-        if (_settings.AnimationLevel == 0)
-        {
-            // subtle: a short fade only
-            var fade = new Animation
-            {
-                Duration = TimeSpan.FromMilliseconds(180), Easing = new CubicEaseIn(), FillMode = FillMode.Forward,
-                Children =
-                {
-                    new KeyFrame { Cue = new Cue(0), Setters = { new Setter(OpacityProperty, 1.0) } },
-                    new KeyFrame { Cue = new Cue(1), Setters = { new Setter(OpacityProperty, 0.0) } },
-                },
-            };
-            try { await fade.RunAsync(root); } catch { /* must not keep the program from closing */ }
-            root.Opacity = 0;
-            return;
-        }
-        // the picture sinks back and softly goes out: a small zoom out and a fade, the whole window fades with it.
-        // Only transform and opacity (cheap to draw, so it stays smooth); Avalonia has no animator for RenderTransform, so the frames are set here.
         try
         {
-            root.RenderTransformOrigin = Avalonia.RelativePoint.Center;
-            await RunFramesAsync(340, t =>
+            switch (CloseStyle)
             {
-                var move = 1 - Math.Pow(1 - t, 3);          // fast at first, then settling
-                var fade = t * t * (3 - 2 * t);             // smooth start and end
-                var scale = 1 - 0.07 * move;
-                root.RenderTransform = new ScaleTransform(scale, scale);
-                root.Opacity = 1 - fade;
-                Opacity = 1 - fade * fade;                   // the window itself goes out a little later
-            });
+                case "fade": await RunFramesAsync(180, t => root.Opacity = 1 - t * t); break;
+                case "tube": await PlayTubeAsync(root); break;
+                case "dissolve": await PlayDissolveAsync(root); break;
+                case "none": return;
+                default: await PlaySoftAsync(root); break;
+            }
         }
         catch (Exception ex) { ErrorLog.Write(ex); /* an animation that cannot run must not keep the program from closing */ }
         root.Opacity = 0; Opacity = 0;
+    }
+
+    /// <summary>The picture sinks back and softly goes out: a small zoom out and a fade, the whole window fades with it.
+    /// Only transform and opacity (cheap to draw, so it stays smooth); Avalonia has no animator for RenderTransform, so the frames are set here.</summary>
+    async Task PlaySoftAsync(Control root)
+    {
+        root.RenderTransformOrigin = Avalonia.RelativePoint.Center;
+        await RunFramesAsync(340, t =>
+        {
+            var move = 1 - Math.Pow(1 - t, 3);          // fast at first, then settling
+            var fade = t * t * (3 - 2 * t);             // smooth start and end
+            var scale = 1 - 0.07 * move;
+            root.RenderTransform = new ScaleTransform(scale, scale);
+            root.Opacity = 1 - fade;
+            Opacity = 1 - fade * fade;                   // the window itself goes out a little later
+        });
+    }
+
+    /// <summary>Like an old tube TV switching off: the picture collapses to a glowing line, the line to a point, the point goes out.</summary>
+    async Task PlayTubeAsync(Control root)
+    {
+        root.RenderTransformOrigin = Avalonia.RelativePoint.Center;
+        await RunFramesAsync(260, t =>
+        {
+            var e = t * t * t;
+            root.RenderTransform = new ScaleTransform(1, 1 - 0.996 * e);
+            root.Effect = new ImmutableDropShadowEffect(0, 0, 40 * e, Colors.White, e);
+        });
+        await RunFramesAsync(300, t =>
+        {
+            var e = t * t * t;
+            root.RenderTransform = new ScaleTransform(1 - 0.99 * e, 0.004);
+            root.Effect = new ImmutableDropShadowEffect(0, 0, 40 + 10 * e, Colors.White, 1);
+            root.Opacity = t < 0.75 ? 1 : 1 - (t - 0.75) / 0.25;
+        });
     }
 
     /// <summary>Calls <paramref name="step"/> with 0..1 for the given time, about 60 times a second.</summary>
@@ -97,6 +116,7 @@ public partial class MainWindow
 
     void ResetAfterCloseAnimation()
     {
+        _dissolveRestore?.Invoke(); _dissolveRestore = null;
         if (Content is not Control root) return;
         root.Transitions = null; root.Opacity = 1; root.RenderTransform = null; root.Effect = null; Opacity = 1;
     }

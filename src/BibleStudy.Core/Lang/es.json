@@ -1995,5 +1995,11 @@
   "Piper (Stimmen zum Vorlesen)": "Piper (voces para leer en voz alta)",
   "Programm MIT; Stimmen (CC0, gemeinfrei, Apache-2.0 oder CC BY 4.0): Thorsten, LJ Speech, Cori, Bryce, John, Norman, DaveFX, Claude, SIWIS, Gilles, Denis, Dmitri. Wird erst geladen, wenn du die natürliche Stimme wählst.": "Programa MIT; voces (CC0, dominio público, Apache-2.0 o CC BY 4.0): Thorsten, LJ Speech, Cori, Bryce, John, Norman, DaveFX, Claude, SIWIS, Gilles, Denis, Dmitri. Solo se descarga cuando eliges la voz natural.",
   "Eigene Akzentfarbe wählen": "Elegir tu propio color de acento",
-  "Die Farbe wird für Hell und Dunkel so angepasst, dass Schrift darauf lesbar bleibt.": "El color se ajusta para el modo claro y oscuro de modo que el texto siga siendo legible."
+  "Die Farbe wird für Hell und Dunkel so angepasst, dass Schrift darauf lesbar bleibt.": "El color se ajusta para el modo claro y oscuro de modo que el texto siga siendo legible.",
+  "Schließ-Animation": "Animación al cerrar",
+  "Weich (wegzoomen)": "Suave (alejar)",
+  "Dezent (nur ausblenden)": "Discreta (solo desvanecer)",
+  "Röhrenfernseher": "Televisor de tubo",
+  "Partikel-Auflösung (Sand)": "Disolución en partículas (arena)",
+  "Keine": "Ninguna"
 }

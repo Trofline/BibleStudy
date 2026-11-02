@@ -171,6 +171,7 @@ public sealed class AppSettings
     public bool Animations { get; set; } = true;
     /// <summary>How big the animations are when they are on: 0 = subtle, 1 = big (default).</summary>
     public int AnimationLevel { get; set; } = 1;
+    public string CloseAnimation { get; set; } = "";   // "" (by the strength of the animations) | soft | fade | tube | dissolve | none
     public string? Language { get; set; }                 // UI language code (en, de, es, fr …); null = default (en)
     public string Logo { get; set; } = "Book";            // Book (rounded square) | Circle
     public bool AutoUpdate { get; set; } = true;

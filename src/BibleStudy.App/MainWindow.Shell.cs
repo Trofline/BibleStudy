@@ -95,7 +95,7 @@ public partial class MainWindow
     {
         var toTray = !_exiting && _settings.CloseToTray && _tray is not null && _settings.Tray;
         if (_closeAnimating) { e.Cancel = true; return; }
-        if (!_closeAnimated && _settings.Animations && IsVisible && WindowState != WindowState.Minimized && e.CloseReason == WindowCloseReason.WindowClosing)
+        if (!_closeAnimated && CloseStyle != "none" && IsVisible && WindowState != WindowState.Minimized && e.CloseReason == WindowCloseReason.WindowClosing)
         {
             e.Cancel = true; _closeAnimating = true;
             Dispatcher.UIThread.Post(async () =>

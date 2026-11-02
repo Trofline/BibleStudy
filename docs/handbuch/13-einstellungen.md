@@ -23,6 +23,7 @@ Deine Sprache fehlt? Speichere die **Vorlage mit der KI-Anweisung**, lass sie vo
 - **Wortbedeutungen in meine Sprache übersetzen** (KI).
 - **Kommentare anzeigen** (Menschenwerk, nicht der Bibeltext; gilt nach Neustart).
 - **Animationen:** Seitenleiste, Reiter und Kapitel gleiten sanft ein; Stärke *Dezent* bis *Groß*.
+- **Schließ-Animation:** wie sich das Programm verabschiedet: *Weich* (wegzoomen), *Dezent* (nur ausblenden), *Röhrenfernseher*, *Partikel-Auflösung* (das Fenster zerfällt zu Sand und weht weg) oder *Keine*.
 - **Großes Kapitel-Kopfstück** (sonst schlicht).
 - **Programmsymbol** für Fenster, Taskleiste, Titelleiste und Startbild.
 - **Darstellung zurücksetzen.**

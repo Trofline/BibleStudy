@@ -44,6 +44,9 @@ public partial class MainWindow
         Classes.Set("noanim", !_settings.Animations);
         AnimLevelBox.SelectedIndex = Math.Clamp(_settings.AnimationLevel, 0, 1);
         AnimLevelBox.SelectionChanged += (_, _) => { if (AnimLevelBox.SelectedIndex >= 0) { _settings.AnimationLevel = AnimLevelBox.SelectedIndex; SaveSettings(); } };
+        CloseAnimBox.ItemsSource = new[] { L("Weich (wegzoomen)"), L("Dezent (nur ausblenden)"), L("Röhrenfernseher"), L("Partikel-Auflösung (Sand)"), L("Keine") };
+        CloseAnimBox.SelectedIndex = Math.Max(0, Array.IndexOf(CloseStyles, CloseStyle));
+        CloseAnimBox.SelectionChanged += (_, _) => { if (CloseAnimBox.SelectedIndex >= 0) { _settings.CloseAnimation = CloseStyles[CloseAnimBox.SelectedIndex]; SaveSettings(); } };
         HeadingCheck.IsChecked = _settings.ChapterHeading; ScrollReadCheck.IsChecked = _settings.ScrollMarksRead;
         LineLabel.Text = L("Zeilenabstand: {0:0.0}", _settings.LineSpacing); WidthLabel.Text = L("Textbreite: {0}", _settings.ReaderWidth);
         SpeakLabel.Text = L("Vorlesen: Geschwindigkeit {0:+0;-0;normal}", _settings.SpeakRate);
