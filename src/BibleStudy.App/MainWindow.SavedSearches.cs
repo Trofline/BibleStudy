@@ -45,6 +45,7 @@ public partial class MainWindow
         _hitsCsvBtn.Click += (_, _) => ExportHitsCsv();
         _hitsMapBtn.Click += async (_, _) => await ShowHitsOnMapAsync();
         InitWordStats();
+        InitCalculator();
     }
 
     void UpdateHitActions(bool visible) { _hitsDocBtn.IsVisible = visible; _hitsCsvBtn.IsVisible = visible; _hitsMapBtn.IsVisible = visible; _hitsStatsBtn.IsVisible = visible; }
