@@ -24,6 +24,7 @@ Eine Predigt wird als **normales Dokument** mit dem Tag „Predigt“ im aktuell
 ## 8.3 Ausgeben
 
 - **Als Handout (HTML) exportieren:** eine druckbare Fassung, die du im Browser drucken oder als PDF speichern kannst.
+- **Handout für Hörer (Drucken / PDF):** eine Seite zum Austeilen: Kernaussage, Gliederung mit den **ausgeschriebenen Bibelversen** (aus der gewählten Übersetzung) und linierten Feldern für eigene Notizen. Deine Notizen als Redner stehen nicht darin. Im Druckdialog „Als PDF speichern“ wählen.
 - **Als Folien (HTML) zeigen:** die Gliederung als Präsentation.
 - Druck/PDF-Export der Fassung.
 

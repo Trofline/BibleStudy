@@ -27,8 +27,13 @@ public static class NaturalVoice
         new("en", "en_US-bryce-medium", "Bryce", "en/en_US/bryce/medium", "Public Domain"),
         new("en", "en_US-john-medium", "John", "en/en_US/john/medium", "Public Domain"),
         new("en", "en_US-norman-medium", "Norman", "en/en_US/norman/medium", "Public Domain"),
+        new("en", "en_GB-alba-medium", "Alba (Scottish)", "en/en_GB/alba/medium", "CC BY 4.0"),
+        new("en", "en_US-kristin-medium", "Kristin", "en/en_US/kristin/medium", "Public Domain"),
+        new("en", "en_US-joe-medium", "Joe", "en/en_US/joe/medium", "CC0"),
+        new("en", "en_US-sam-medium", "Sam", "en/en_US/sam/medium", "Apache-2.0"),
         new("es", "es_ES-davefx-medium", "DaveFX", "es/es_ES/davefx/medium", "CC0"),
         new("es", "es_MX-claude-high", "Claude (México) high", "es/es_MX/claude/high", "Apache-2.0"),
+        new("es", "es_MX-ald-medium", "Ald (México)", "es/es_MX/ald/medium", "Unlicense"),
         new("fr", "fr_FR-siwis-medium", "SIWIS", "fr/fr_FR/siwis/medium", "CC BY 4.0"),
         new("fr", "fr_FR-gilles-low", "Gilles", "fr/fr_FR/gilles/low", "CC0"),
         new("ru", "ru_RU-denis-medium", "Denis", "ru/ru_RU/denis/medium", "CC0"),
@@ -127,6 +132,18 @@ public static class NaturalVoice
         }
         if (cur.Length > 0) parts.Add(cur.ToString());
         return parts;
+    }
+
+    /// <summary>Removes one voice (its model files); when it was the last one, the speech program goes too.</summary>
+    public static void Remove(string root, Voice v)
+    {
+        try
+        {
+            File.Delete(ModelPath(root, v)); File.Delete(ModelPath(root, v) + ".json");
+            if (!Voices.Any(x => IsReady(root, x))) Delete(root);
+        }
+        catch (IOException) { }
+        catch (UnauthorizedAccessException) { }
     }
 
     public static void Delete(string root) { try { var d = Dir(root); if (Directory.Exists(d)) Directory.Delete(d, true); } catch (IOException) { } catch (UnauthorizedAccessException) { } }

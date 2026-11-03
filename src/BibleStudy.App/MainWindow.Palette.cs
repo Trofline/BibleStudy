@@ -87,6 +87,7 @@ public partial class MainWindow
         yield return C(L("Startseite"), () => { ShowHome(); return Task.CompletedTask; });
         yield return C(L("Rundgang starten"), () => { DispatcherTimer.RunOnce(StartTour, TimeSpan.FromMilliseconds(350)); return Task.CompletedTask; });   // after the command list has closed: two popups at once confuse the renderer
         yield return C(L("Kapitel-Bericht"), ShowChapterReportAsync);
+        yield return C(L("Graph oder Ansicht als Bild in eigenem Fenster"), () => { PopOutCurrentView(); return Task.CompletedTask; });
         yield return C(L("Patch Notes"), ShowPatchNotesAsync);
         yield return C(L("Projekt auf GitHub öffnen"), () => { OpenUrl(ProjectUrl); return Task.CompletedTask; });
         yield return C(L("Einstellungen"), () => Work("Mehr", SettingsTab));
@@ -95,6 +96,9 @@ public partial class MainWindow
         yield return C(L("Gebete"), () => Work("Planen", PrayerTab));
         yield return C(L("Leseliste"), () => Work("Planen", 6));
         yield return C(L("Sprachen"), () => Work("Planen", LearnTab));
+        yield return C(L("Statistik"), () => Work("Planen", StatsTab));
+        yield return C(L("Satzdiagramm"), () => Side(SentenceTab));
+        yield return C(L("Perikopen-Analyse"), () => Side(PericopeTab));
         yield return C(L("Auswendig lernen"), () => Work("Planen", MemoryTab));
         yield return C(L("Gemeinsam studieren"), () => Side(CollabTab));
         yield return C(L("Verweis-Netz AT ↔ NT"), async () => { await ShowGraphAsync(); GraphPane.ShowOtNt(); });

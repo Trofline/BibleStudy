@@ -30,9 +30,17 @@ Rechte Leiste → **Zusammen → Zusammen studieren**.
 ## 10.4 Wenn es nicht klappt
 
 - Beide müssen **gleichzeitig online** sein.
-- Ein **VPN** oder eine **strenge Firewall** kann die Verbindung verhindern.
+- Die Verbindung geht **direkt von Computer zu Computer**, ohne Server dazwischen. Das klappt zuverlässig, wenn ihr **im selben Netzwerk** seid (zum Beispiel im selben WLAN). Über verschiedene Netzwerke hinweg klappt es nur, wenn eure Anschlüsse es zulassen. Bei Mobilfunk, Firmen-, Schul- und Hotelnetzen sowie bei manchen Providern (CGNAT) scheitert es oft.
+- Ein **VPN** oder eine **strenge Firewall** kann die Verbindung verhindern. Unter Windows beim ersten Start „Zugriff zulassen“ wählen; am Mac die Freigabe „Lokales Netzwerk“ erteilen.
 - Die Codes sind lang; kopiere sie vollständig und ohne Leerzeichen am Rand.
 - Versucht es mit einer neuen Einladung.
+
+### Wenn ihr nicht im selben Netzwerk seid
+
+Es gibt zwei Wege, die nicht in BibleStudy eingebaut sind:
+
+- **Ein privates Netzwerk wie ZeroTier oder Tailscale** (beide haben ein kostenloses Angebot für Privatpersonen, brauchen aber ein Konto). Beide installieren das Programm und treten demselben Netzwerk bei. Danach verhalten sich die Computer, als wären sie im selben WLAN. Erstellt dann neue Codes. Diese Programme sind eigenständige Produkte mit eigenen Lizenzen und Bedingungen; BibleStudy liefert sie nicht mit und ist nicht damit verbunden. Wir haben die Verbindung darüber noch nicht getestet.
+- **Ein eigener Relay-Server (TURN)**, der den Verkehr weiterleitet. Das ist für Fortgeschrittene und kostet in der Regel Geld oder eigenen Aufwand. Die Daten bleiben dabei verschlüsselt. In BibleStudy trägst du ihn im Reiter *Zusammen studieren* unter **Eigener Relay-Server (optional)** ein: Adresse (zum Beispiel `turn:server.example:3478`), Benutzername und Passwort. Am besten tragen beide dasselbe ein, und ihr erstellt danach neue Codes. Das Passwort wird unverschlüsselt in den Einstellungen gespeichert. Mit einem Relay-Server haben wir die Verbindung noch nicht getestet.
 
 ## 10.5 Strategien für Gruppen
 

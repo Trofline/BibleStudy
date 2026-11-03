@@ -1,0 +1,75 @@
+# Builds the macOS disk images (.dmg) for a release and attaches them to it.
+# It runs only when you start it by hand (Actions tab -> "macOS disk image" -> Run workflow, enter the tag of an existing release),
+# never for pull requests, pushes or tags, so no foreign code is run with the repository's token. Like the other workflows here.
+name: macOS disk image
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Release tag the disk images are attached to, e.g. v1.3.3"
+        required: true
+
+permissions:
+  contents: write   # needed only to attach the files to the release
+
+jobs:
+  dmg:
+    runs-on: macos-latest
+    strategy:
+      matrix:
+        rid: [osx-arm64, osx-x64]
+    env:
+      TAG: ${{ github.event.inputs.tag }}
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "10.0.x"
+
+      - name: Build the program
+        run: |
+          VERSION="${TAG#v}"
+          dotnet publish src/BibleStudy.App/BibleStudy.App.csproj -c Release -r ${{ matrix.rid }} --self-contained true -p:Version=$VERSION -p:DebugType=none -o stage/app
+          dotnet publish src/BibleStudy.Mcp/BibleStudy.Mcp.csproj -c Release -r ${{ matrix.rid }} --self-contained true -p:Version=$VERSION -p:DebugType=none -o stage/app/mcp
+
+      - name: Put it into an app bundle
+        run: |
+          VERSION="${TAG#v}"
+          APP="dmgroot/BibleStudy.app/Contents"
+          mkdir -p "$APP/MacOS" "$APP/Resources"
+          cp -R stage/app/. "$APP/MacOS/"
+          chmod +x "$APP/MacOS/BibleStudy" "$APP/MacOS/mcp/BibleStudy.Mcp"
+          sed "s/{VERSION}/$VERSION/g" packaging/macos/Info.plist > "$APP/Info.plist"
+          # the icon: PNG sizes in an .iconset, made into BibleStudy.icns by the system tool
+          mkdir BibleStudy.iconset
+          for s in 16 32 64 128 256 512; do
+            sips -z $s $s src/BibleStudy.App/Assets/app.png --out BibleStudy.iconset/icon_${s}x${s}.png >/dev/null
+          done
+          cp BibleStudy.iconset/icon_32x32.png   BibleStudy.iconset/icon_16x16@2x.png
+          cp BibleStudy.iconset/icon_64x64.png   BibleStudy.iconset/icon_32x32@2x.png
+          cp BibleStudy.iconset/icon_256x256.png BibleStudy.iconset/icon_128x128@2x.png
+          cp BibleStudy.iconset/icon_512x512.png BibleStudy.iconset/icon_256x256@2x.png
+          sips -z 1024 1024 src/BibleStudy.App/Assets/app.png --out BibleStudy.iconset/icon_512x512@2x.png >/dev/null
+          rm BibleStudy.iconset/icon_64x64.png
+          iconutil -c icns BibleStudy.iconset -o "$APP/Resources/BibleStudy.icns"
+          cp LICENSE THIRD-PARTY-NOTICES.md dmgroot/
+
+      - name: Sign locally (no Apple account, so only an "ad hoc" signature)
+        run: |
+          APP="dmgroot/BibleStudy.app"
+          find "$APP" -type f -exec sh -c 'file "$1" | grep -q Mach-O && codesign --force --sign - "$1"' _ {} \;
+          codesign --force --deep --sign - "$APP"
+          codesign --verify --deep --strict "$APP"
+
+      - name: Make the disk image
+        run: |
+          VERSION="${TAG#v}"
+          ARCH="${{ matrix.rid }}"; ARCH="${ARCH#osx-}"
+          ln -s /Applications dmgroot/Applications
+          hdiutil create -volname "BibleStudy $VERSION" -srcfolder dmgroot -ov -format UDZO "BibleStudy-macOS-$ARCH-$VERSION.dmg"
+          shasum -a 256 "BibleStudy-macOS-$ARCH-$VERSION.dmg" | tee "BibleStudy-macOS-$ARCH-$VERSION.dmg.sha256"
+
+      - name: Attach to the release
+        run: gh release upload "$TAG" BibleStudy-macOS-*.dmg BibleStudy-macOS-*.dmg.sha256 --clobber

@@ -14,7 +14,7 @@ namespace BibleStudy.App;
 /// </summary>
 public partial class MainWindow
 {
-    sealed record TourStep(Func<Control> Anchor, PlacementMode Placement, string Title, string Text, Func<Control?>? Extra = null);
+    sealed record TourStep(Func<Control> Anchor, PlacementMode Placement, string Title, string Text, Func<Control?>? Extra = null, Action? Prepare = null);
 
     bool _touring;
 
@@ -76,6 +76,19 @@ public partial class MainWindow
             new(() => SettingsTopBtn, PlacementMode.Bottom, L("Einstellungen, Hilfe und Sicherung"),
                 L("Hier stellst du Aussehen, Sicherung und Updates ein. Dieser Rundgang lässt sich unter Hilfe jederzeit neu starten. Das Programm installiert nie ohne deine Zustimmung."),
                 () => BackupExtra()),
+            // the tour goes on inside the settings (tab 12), the help page (13) and ends at the documentation
+            new(() => DownloadAllBtn, PlacementMode.Bottom, L("Alles auf einmal laden"),
+                L("Hier lädst du mit einem Klick alles, was sonst erst beim Gebrauch kommt: Übersetzungen, Wörterbücher, Grundtext-Daten, Querverweise und Stimmen. Am besten einmal am Anfang, dann wartest du später nie."),
+                null, () => OpenWork(NavGroups.First(g => g.Name == "Mehr"), SettingsTab)),
+            new(() => BackupScheduleBox, PlacementMode.Top, L("Automatische Sicherung"),
+                L("Deine Arbeit liegt nur auf diesem Computer. Hier stellst du ein, dass sie täglich, wöchentlich oder monatlich in einen Ordner deiner Wahl gesichert wird, zum Beispiel in einen Cloud-Ordner."),
+                null, () => OpenWork(NavGroups.First(g => g.Name == "Mehr"), SettingsTab)),
+            new(() => TourBtn, PlacementMode.Bottom, L("Hilfe"),
+                L("Die Hilfe erklärt kurz jede Funktion, vom Lesen über die Suche bis zum Zusammen-Studieren. Hier startest du diesen Rundgang auch wieder."),
+                null, () => OpenWork(NavGroups.First(g => g.Name == "Hilfe"), 13)),
+            new(() => (Control?)_hbSearch ?? Rail, PlacementMode.Bottom, L("Dokumentation"),
+                L("Das ausführliche Handbuch: jede Funktion, jedes Tastenkürzel, Anwendung und Strategien. Mit Inhaltsverzeichnis und Suche. Von hier aus kannst du alles Weitere selbst entdecken."),
+                null, () => OpenWork(NavGroups.First(g => g.Name == "Hilfe"), HandbookTab)),
         };
         ShowTourStep(steps, 0);
     }
@@ -95,9 +108,20 @@ public partial class MainWindow
         return button;
     }
 
-    void ShowTourStep(TourStep[] steps, int i)
+    void ShowTourStep(TourStep[] steps, int i, bool prepared = false)
     {
         _palette.IsOpen = false;   // closing a bubble hands the focus back to the quick-jump field, which would open its list under the next bubble
+        // a step inside the settings or the help needs that page open; the steps at the top need the reading page back
+        if (!prepared && i >= 0 && i < steps.Length && (steps[i].Prepare is not null || _activeWork is not null))
+        {
+            if (steps[i].Prepare is { } prepare) prepare(); else ShowReader();
+            DispatcherTimer.RunOnce(() =>
+            {
+                try { steps[i].Anchor().BringIntoView(); } catch { /* the anchor may not exist yet; the step is skipped below */ }
+                DispatcherTimer.RunOnce(() => ShowTourStep(steps, i, true), TimeSpan.FromMilliseconds(180));
+            }, TimeSpan.FromMilliseconds(350));
+            return;
+        }
         while (i < steps.Length && steps[i].Anchor() is { IsVisible: false } or { Bounds.Width: 0 }) i++;   // a button that is not there (hidden panel, other layout) is skipped
         if (i >= steps.Length) { FinishTour(); return; }
         var step = steps[i]; var last = i == steps.Length - 1;
@@ -148,6 +172,7 @@ public partial class MainWindow
     void FinishTour()
     {
         _touring = false; HideTourRing();
+        if (_activeWork is not null) ShowReader();   // the tour may have ended inside the settings
         DispatcherTimer.RunOnce(() => { _palette.IsOpen = false; if (QuickJumpBox.IsFocused) Focus(); }, TimeSpan.FromMilliseconds(250));
         if (!_settings.TourPending) return;
         _settings.TourPending = false; SaveSettings();

@@ -33,7 +33,7 @@ public partial class MainWindow
         SpeakBtn.Click += async (_, _) => await ToggleSpeakAsync();
         ExportBtn.Click += async (_, _) => await ExportAsync();
         ImportBtn.Click += async (_, _) => await ImportAsync();
-        Closed += (_, _) => { _speech?.Dispose(); _voiceCts?.Cancel(); _voice.Dispose(); };
+        Closed += (_, _) => { _speech?.Dispose(); _voiceCts?.Cancel(); _voice.Dispose(); BibleStudy.Core.OllamaClient.StopStarted(); };
     }
 
     // ---- original text ------------------------------------------------------------------------------------------------

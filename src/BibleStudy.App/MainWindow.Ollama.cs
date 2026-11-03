@@ -15,14 +15,24 @@ public partial class MainWindow
         AiEngineBox.SelectedIndex = _settings.AiEngine == "ollama" ? 1 : 0;
         OllamaModelBox.Text = _settings.OllamaModel;
         OllamaModelBox.IsVisible = OllamaCheckBtn.IsVisible = OllamaInfo.IsVisible = _settings.AiEngine == "ollama";
+        SyncMeaningEngine();
         AiEngineBox.SelectionChanged += (_, _) =>
         {
-            _settings.AiEngine = AiEngineBox.SelectedIndex == 1 ? "ollama" : "claude"; SaveSettings();
+            _settings.AiEngine = AiEngineBox.SelectedIndex == 1 ? "ollama" : "claude"; SaveSettings(); SyncMeaningEngine();
             OllamaModelBox.IsVisible = OllamaCheckBtn.IsVisible = OllamaInfo.IsVisible = _settings.AiEngine == "ollama";
             if (_settings.AiEngine == "ollama") _ = CheckOllamaAsync();
         };
-        OllamaModelBox.LostFocus += (_, _) => { _settings.OllamaModel = OllamaModelBox.Text?.Trim() ?? ""; SaveSettings(); };
+        OllamaModelBox.LostFocus += (_, _) => { _settings.OllamaModel = OllamaModelBox.Text?.Trim() ?? ""; SaveSettings(); SyncMeaningEngine(); };
         OllamaCheckBtn.Click += async (_, _) => await CheckOllamaAsync();
+    }
+
+    /// <summary>With the local AI chosen, the word meanings are translated by it too (offline); otherwise by Claude Code.</summary>
+    void SyncMeaningEngine()
+    {
+        var local = _settings.AiEngine == "ollama" && !string.IsNullOrWhiteSpace(_settings.OllamaModel);
+        _ollama ??= new OllamaClient(_http);
+        _meanings.Ollama = local ? _ollama : null;
+        _meanings.OllamaModel = local ? _settings.OllamaModel : null;
     }
 
     /// <summary>Looks for Ollama on this computer; if no model is chosen yet, the first installed one is taken.</summary>
@@ -32,7 +42,7 @@ public partial class MainWindow
         OllamaInfo.Text = L("Suche Ollama …");
         var models = await _ollama.ModelsAsync();
         if (models.Count == 0) { OllamaInfo.Text = L("Ollama antwortet nicht oder hat noch kein Modell. Installiere es von ollama.com, starte es und lade ein Modell, z. B. mit „ollama pull llama3.1“."); return; }
-        if (string.IsNullOrWhiteSpace(_settings.OllamaModel) || !models.Contains(_settings.OllamaModel)) { _settings.OllamaModel = models[0]; OllamaModelBox.Text = models[0]; SaveSettings(); }
+        if (string.IsNullOrWhiteSpace(_settings.OllamaModel) || !models.Contains(_settings.OllamaModel)) { _settings.OllamaModel = models[0]; OllamaModelBox.Text = models[0]; SaveSettings(); SyncMeaningEngine(); }
         OllamaInfo.Text = L("Ollama läuft. Installierte Modelle: {0}", string.Join(", ", models));
     }
 

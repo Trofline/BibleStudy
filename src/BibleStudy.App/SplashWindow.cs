@@ -42,7 +42,7 @@ sealed class SplashWindow : Window
         Transitions = [new DoubleTransition { Property = OpacityProperty, Duration = TimeSpan.FromMilliseconds(160), Easing = new CubicEaseOut() }];
 
         using var s = AssetLoader.Open(new Uri("avares://BibleStudy.App/Assets/" + (logo == "Circle" ? "app-circle.png" : "app.png")));
-        _logo = new Image { Source = new Bitmap(s), Width = 150, Height = 150, HorizontalAlignment = HorizontalAlignment.Center, RenderTransformOrigin = RelativePoint.Center };
+        _logo = new Image { Source = Bitmap.DecodeToWidth(s, 300), Width = 150, Height = 150, HorizontalAlignment = HorizontalAlignment.Center, RenderTransformOrigin = RelativePoint.Center };
 
         var track = new Border { Width = 280, Height = 4, CornerRadius = new(2), ClipToBounds = true, Background = new SolidColorBrush(Color.Parse("#ffffff"), 0.22), Child = _fill };
         var panel = new StackPanel

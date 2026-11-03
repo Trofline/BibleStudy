@@ -30,9 +30,17 @@ Right-hand bar → **Together → Study together**.
 ## 10.4 If it doesn't work
 
 - Both of you must be **online at the same time**.
-- A **VPN** or a **strict firewall** can prevent the connection.
+- The connection goes **directly from computer to computer**, with no server in between. This works reliably when you are **in the same network** (for example the same Wi-Fi). Across different networks it only works if your connections allow it. It often fails on mobile data, company, school and hotel networks, and with some providers (CGNAT).
+- A **VPN** or a **strict firewall** can prevent the connection. On Windows choose “Allow access” at the first start; on a Mac grant the “Local Network” permission.
 - The codes are long; copy them completely and without spaces at the beginning or end.
 - Try again with a new invitation.
+
+### If you are not in the same network
+
+There are two ways that are not built into BibleStudy:
+
+- **A private network such as ZeroTier or Tailscale** (both offer a free plan for individuals, but need an account). Both of you install the program and join the same network. Afterwards the computers behave as if they were on the same Wi-Fi. Then create new codes. These programs are independent products with their own licences and terms; BibleStudy does not ship them and is not affiliated with them. We have not yet tested the connection through them.
+- **Your own relay server (TURN)** that forwards the traffic. This is for advanced users and usually costs money or effort of your own. The data stays encrypted. In BibleStudy you enter it in the *Study together* tab under **Own relay server (optional)**: address (for example `turn:server.example:3478`), user name and password. Best if both of you enter the same, and then create new codes. The password is stored unencrypted in the settings. We have not yet tested the connection with a relay server.
 
 ## 10.5 Strategies for groups
 

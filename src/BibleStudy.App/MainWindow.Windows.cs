@@ -6,6 +6,7 @@ using Avalonia.Interactivity;
 using Avalonia.Layout;
 using Avalonia.Media;
 using Avalonia.Threading;
+using BibleStudy.Core.Models;
 using BibleStudy.Core.Storage;
 
 namespace BibleStudy.App;
@@ -72,7 +73,11 @@ public partial class MainWindow
         else if (index == LearnTab) BuildLearnUi();
         else if (index == MemoryTab) BuildMemoryUi();
         else if (index == BookmarksTab) RefreshBookmarks();
+        else if (index == StatsTab) BuildStatsUi();
+        else if (index == SentenceTab) _ = ShowSentenceAsync(true);
+        else if (index == PericopeTab) _ = ShowPericopeAsync(false);
         else if (index == HandbookTab) BuildHandbookUi();
+        else if (index == GrundtextTab && _selected is int gv) _ = ShowGrundtextAsync(new VerseRef(_curBook, _curChapter, gv));
         else if (index == CollabTab && CollabPanel.Children.Count == 0) BuildCollabUi();
         else if (index == AnalysisTab) BuildAnalysisUi();
         else if (index == SermonTab && (_sermonVault != _vault.Name || SermonPanel.Children.Count == 0)) BuildSermonUi();
@@ -104,6 +109,7 @@ public partial class MainWindow
 
         void Select(int index)
         {
+            if (!indices.Contains(index)) return;   // a tab of another work area would leave this one empty
             d.Current = index;
             for (var k = 0; k < items.Count; k++) items[k].Item3.IsVisible = indices[k] == index;
             foreach (var b in pills.Children.OfType<Button>()) b.Classes.Set("active", (int)b.Tag! == index);
@@ -202,9 +208,9 @@ public partial class MainWindow
         plus.Click += (_, _) =>
         {
             var menu = new MenuFlyout();
-            foreach (var name in new[] { "Bücher", "Dokumente", "Predigt", "Planen", "Mehr" })   // the inner names; the menu shows them translated
+            foreach (var name in new[] { "Bücher", "Dokumente", "Predigt", "Planen", "Studium", "Original", "Mehr", "Hilfe" })   // the inner names; the menu shows them translated
             {
-                var g = NavGroups.First(x => x.Name == name);
+                if (NavGroups.FirstOrDefault(x => x.Name == name) is not { } g) continue;
                 var item = new MenuItem { Header = name == "Mehr" ? L("Einstellungen") : L(name), IsEnabled = !_windows.ContainsKey("group:" + name) };
                 item.Click += (_, _) => OpenWork(g, name == "Mehr" ? SettingsTab : null);
                 menu.Items.Add(item);
@@ -558,6 +564,9 @@ public partial class MainWindow
         // the status bar stays, but steps aside while the mouse is over it (it would cover small things otherwise)
         StatusBar.PointerEntered += (_, _) => StatusBar.Opacity = 0;
         StatusBar.PointerExited += (_, _) => StatusBar.Opacity = 1;
+        // ... but over the version number it comes back (and shows the result of the update check)
+        VersionChip.PointerEntered += (_, _) => StatusBar.Opacity = 1;
+        VersionChip.PointerExited += (_, _) => { if (StatusBar.IsPointerOver) StatusBar.Opacity = 0; };
         // the search options and the hit chips never push the hit list out of the panel: they scroll within half of the height
         SearchDock.SizeChanged += (_, e) => SearchTopScroll.MaxHeight = Math.Max(160, e.NewSize.Height * 0.55);
         LayoutTopBtn.Click += (_, _) => ShowLayoutMenu();

@@ -145,6 +145,40 @@ public partial class MainWindow
         ExportPrint(_sermon.Title, sb.ToString(), SafeName(_sermon.Title, L("Predigt")));
     }
 
+    /// <summary>A handout for the listeners: key message, the outline with the Bible verses written out, and ruled space for their own notes.
+    /// The speaker's notes stay out of it. Opens the print dialog like the other print pages (choose "Save as PDF").</summary>
+    async Task PrintListenerHandoutAsync()
+    {
+        var t = TranslationBox.SelectedItem as TranslationInfo;
+        var cache = new Dictionary<(string, int), Chapter?>();
+        var sb = new StringBuilder("<style>.lines{height:" + "84px;background:repeating-linear-gradient(to bottom,transparent 0,transparent 27px,#bbb 27px,#bbb 28px);margin:6px 0 4px}"
+            + ".verse{margin:6px 0 2px;font-style:italic}.ref{color:#666;font-size:.85em;margin:0 0 8px}h2{break-before:auto}</style>");
+        sb.Append($"<h1>{H(_sermon.Title.Length > 0 ? _sermon.Title : L("Predigt"))}</h1><p class=\"meta\">{H(_sermon.Passage)}</p>");
+        if (_sermon.Message.Length > 0) sb.Append($"<blockquote>{H(_sermon.Message)}</blockquote>");
+        var n = 0;
+        foreach (var s in _sermon.Sections)
+        {
+            sb.Append($"<h2>{++n}. {H(s.Heading)}</h2>");
+            foreach (var key in s.Verses)
+            {
+                var p = key.Split('|');
+                var text = "";
+                if (t is not null && p.Length == 3 && int.TryParse(p[1], out var ch) && int.TryParse(p[2], out var vs))
+                {
+                    if (!cache.TryGetValue((p[0], ch), out var chapter))
+                        try { cache[(p[0], ch)] = chapter = await _provider.GetChapterAsync(t.Id, p[0], ch); } catch { cache[(p[0], ch)] = chapter = null; }
+                    text = chapter?.Verses.FirstOrDefault(v => v.Number == vs) is { } verse ? string.Concat(verse.Segments.Where(x => x.NoteId is null).Select(x => x.Text)).Trim() : "";
+                }
+                if (text.Length > 0) sb.Append($"<p class=\"verse\">{H(text)}</p>");
+                sb.Append($"<p class=\"ref\">{H(VerseLabel(key))}{(t is not null && text.Length > 0 ? " · " + H(t.ShortName) : "")}</p>");
+            }
+            sb.Append("<div class=\"lines\"></div>");
+        }
+        var myNotes = L("Meine Notizen");
+        sb.Append($"<h2>{H(myNotes)}</h2><div class=\"lines\" style=\"height:168px\"></div>");
+        ExportPrint(_sermon.Title, sb.ToString(), SafeName(_sermon.Title, L("Predigt")) + "-" + L("Handout"));
+    }
+
     // ---- slides --------------------------------------------------------------------------------------------------------
 
     async Task ExportSlidesAsync()

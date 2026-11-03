@@ -22,7 +22,7 @@ public partial class MainWindow
             var btn = new Button
             {
                 Classes = { "seg" }, Height = 52, Margin = new(0, 0, 8, 6), Padding = new(10, 0), Tag = key,
-                Content = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 8, Children = { new Image { Source = new Bitmap(s), Width = 36, Height = 36 }, new TextBlock { Text = L(name), VerticalAlignment = VerticalAlignment.Center } } },
+                Content = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 8, Children = { new Image { Source = Bitmap.DecodeToWidth(s, 128), Width = 36, Height = 36 }, new TextBlock { Text = L(name), VerticalAlignment = VerticalAlignment.Center } } },
             };
             btn.Click += (_, _) => ApplyLogo(k, save: true);
             LogoPanel.Children.Add(btn);
@@ -36,7 +36,7 @@ public partial class MainWindow
         _settings.Logo = key;
         Icon = MakeIcon(key);
         if (_tray is not null) _tray.Icon = Icon;
-        using (var s = AssetLoader.Open(new Uri("avares://BibleStudy.App/Assets/" + LogoAsset(key)))) LogoImage.Source = new Bitmap(s);
+        using (var s = AssetLoader.Open(new Uri("avares://BibleStudy.App/Assets/" + LogoAsset(key)))) LogoImage.Source = Bitmap.DecodeToWidth(s, 128);
         if (save) { SaveSettings(); MarkLogoButtons(); }
     }
 

@@ -28,6 +28,19 @@ public class CollabTests
         Assert.Equal("zurück", await back.Task.WaitAsync(TimeSpan.FromSeconds(10)));
     }
 
+    [Theory]
+    [InlineData("turn:relay.example.org:3478", "turn:relay.example.org:3478")]
+    [InlineData("relay.example.org:3478", "turn:relay.example.org:3478")]
+    [InlineData("  turns:relay.example.org:5349  ", "turns:relay.example.org:5349")]
+    public void A_typed_relay_address_is_completed(string typed, string expected) => Assert.Equal(expected, RelayServer.Parse(typed, "u", "p")!.Url);
+
+    [Theory]
+    [InlineData("")]
+    [InlineData("   ")]
+    [InlineData("stun:stun.example.org:3478")]
+    [InlineData("two words")]
+    public void An_unusable_relay_address_is_ignored(string typed) => Assert.Null(RelayServer.Parse(typed, "u", "p"));
+
     [Fact]
     public async Task A_wrong_code_is_refused()
     {

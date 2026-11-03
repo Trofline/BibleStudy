@@ -71,6 +71,10 @@ A **vault** is like a separate folder for a study project: highlights, notes, do
 
 *Make the chosen translation available offline* downloads it completely. Only texts that the source offers for free use are downloaded; the license and attribution are shown in the footer. The data is stored locally and belongs to you.
 
+**Download everything:** the button *Download everything …* (at the top of the data settings) opens a window with ticks for everything that is otherwise loaded on first use: the chosen translation or all in your language, cross references, the Strong, STEPBible, BDB and LSJ dictionaries, text criticism, the syntax data for Greek and Hebrew, the voices for reading aloud and a local AI model for Ollama. Everything is fetched one after another and you can keep working. That way you never wait later.
+
+**Translating without internet:** if you choose the engine *Ollama* under *AI and MCP*, the program also translates the English word meanings (for example in the sentence diagram) with the local model, without a network and without Claude Code. The quality depends on the model.
+
 ## 13.9 Sources and licenses
 
 Shows **where each piece of information comes from** and what you may do with it. None of it is built into the program: it is only downloaded when you need it, and is then kept in the cache. Buttons: *Copy list*, *Open cache folder*, *Read the note about the origin again*.

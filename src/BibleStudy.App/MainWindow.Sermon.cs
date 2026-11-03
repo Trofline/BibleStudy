@@ -166,9 +166,11 @@ public partial class MainWindow
         export.Click += (_, _) => ExportSermon();
         var print = new Button { Content = L("Drucken / PDF") };
         print.Click += (_, _) => PrintSermon();
+        var listeners = new Button { Content = L("Handout für Hörer (Drucken / PDF)") };
+        listeners.Click += async (_, _) => await PrintListenerHandoutAsync();
         var slides = new Button { Content = L("Als Folien (HTML) zeigen") };
         slides.Click += async (_, _) => await ExportSlidesAsync();
-        SermonPanel.Children.Add(new WrapPanel { Margin = new(0, 8, 0, 0), Children = { save, export, print, slides } });
+        SermonPanel.Children.Add(new WrapPanel { Margin = new(0, 8, 0, 0), Children = { save, export, print, listeners, slides } });
         SermonPanel.Children.Add(new TextBlock { Text = L("Die Predigt wird als Dokument mit dem Tag „Predigt“ im aktuellen Vault gespeichert und ist dort auch durchsuchbar und verlinkbar."), Classes = { "caption" }, TextWrapping = TextWrapping.Wrap });
     }
 

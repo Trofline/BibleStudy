@@ -18,12 +18,16 @@ public partial class MainWindow
     /// <summary>The book logo as a bitmap, used for the window, the taskbar and the tray.</summary>
     static string LogoAsset(string logo) => logo == "Circle" ? "app-circle.png" : "app.png";
 
+    // the logo files are large; the icon needs 256 pixels at most, and decoding the big picture several times made the start slow
+    static readonly Dictionary<string, WindowIcon> IconCache = [];
+
     static WindowIcon MakeIcon(string logo)
     {
+        if (IconCache.TryGetValue(logo, out var cached)) return cached;
         try
         {
             using var s = AssetLoader.Open(new Uri("avares://BibleStudy.App/Assets/" + LogoAsset(logo)));
-            return new WindowIcon(new Bitmap(s));
+            return IconCache[logo] = new WindowIcon(Bitmap.DecodeToWidth(s, 256));
         }
         catch { /* fall back to the drawn icon below */ }
         var rtb = new RenderTargetBitmap(new PixelSize(64, 64), new Vector(96, 96));

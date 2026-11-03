@@ -77,3 +77,14 @@ Der Reiter **Sprachen** bietet:
 - **Ein Anliegen pro Tag** in der Gebetsliste; sonntags die erhörten Gebete durchsehen.
 - **To-dos klein halten.** Ein To-do sollte in einer Sitzung machbar sein („Röm 8,1–11 beobachten“ statt „Römerbrief verstehen“).
 - **Einmal pro Woche** die Leseliste durchgehen und Lesezeichen aufräumen.
+
+## 7.8 Statistik
+
+Der Reiter **Statistik** (Gruppe *Planen*) zeigt, wie viel du gelesen hast:
+
+- den **Fortschritt** in der ganzen Bibel, im Alten und im Neuen Testament (gezählt werden Kapitel, die du als „Gelesen“ markiert hast),
+- die **Serie** (Tage in Folge) und die längste Serie, dazu die Kapitel der letzten 7 und 30 Tage und ein Balkenbild der letzten 12 Wochen,
+- wie viele Notizen, Markierungen, Dokumente, Lesezeichen und Gebete dein Vault enthält, und wie weit du beim Auswendiglernen bist,
+- jedes Buch mit Fortschritt als Balken.
+
+Die Zahlen werden nur auf deinem Computer aus deinem Vault berechnet. Das Datum wird gespeichert, ab dem ein Kapitel als gelesen markiert wurde; ältere Markierungen ohne Datum zählen nur beim Fortschritt.

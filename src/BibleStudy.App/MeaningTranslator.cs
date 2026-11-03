@@ -12,7 +12,7 @@ namespace BibleStudy.App;
 /// </summary>
 public sealed class MeaningTranslator(string cacheDir)
 {
-    const int Batch = 30;
+    int Batch => UsesOllama ? 10 : 30;   // small local models lose count in long lists
 
     readonly Dictionary<string, string> _cache = [];
     readonly HashSet<string> _failed = [];
@@ -22,11 +22,17 @@ public sealed class MeaningTranslator(string cacheDir)
 
     static readonly Dictionary<string, string> LanguageNames = new() { ["de"] = "German", ["es"] = "Spanish", ["fr"] = "French", ["ru"] = "Russian" };
 
+    /// <summary>A local model (Ollama) translates when it is set: no Claude Code and no internet needed.</summary>
+    public OllamaClient? Ollama { get; set; }
+    public string? OllamaModel { get; set; }
+    bool UsesOllama => Ollama is not null && !string.IsNullOrWhiteSpace(OllamaModel);
+
     public bool Available
     {
         get
         {
             if (Loc.Code == "en") return false;
+            if (UsesOllama) return true;
             if (!_exeSearched) { _exe = ClaudeCli.FindExecutable(); _exeSearched = true; }
             return _exe is not null;
         }
@@ -84,6 +90,20 @@ public sealed class MeaningTranslator(string cacheDir)
         var prompt = $"Translate each of these entries from a Greek/Hebrew Bible word dictionary from English into {language}. They are short glosses and definitions. "
                    + "Keep the meaning exact and concise, keep Strong's numbers (G123, H123), abbreviations and Greek/Hebrew words unchanged. "
                    + $"Reply with ONLY a JSON array of exactly {items.Count} strings, in the same order, nothing else.\n\n" + JsonSerializer.Serialize(items);
+        if (UsesOllama)
+        {
+            try
+            {
+                using var timeout = CancellationTokenSource.CreateLinkedTokenSource(ct);
+                timeout.CancelAfter(TimeSpan.FromSeconds(180));
+                var answer = await Ollama!.ChatAsync(OllamaModel!, [new OllamaMessage("user", prompt)], _ => { }, timeout.Token);
+                var a = answer.IndexOf('['); var b = answer.LastIndexOf(']');
+                if (a < 0 || b <= a) return null;
+                var parsed = JsonSerializer.Deserialize<List<string>>(answer[a..(b + 1)]);
+                return parsed is not null && parsed.Count == items.Count ? parsed : null;
+            }
+            catch { return null; }
+        }
         var psi = new ProcessStartInfo(_exe!)
         {
             WorkingDirectory = Path.GetTempPath(), RedirectStandardInput = true, RedirectStandardOutput = true, RedirectStandardError = true,

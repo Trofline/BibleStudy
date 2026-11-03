@@ -24,6 +24,7 @@ A sermon is saved as a **normal document** with the tag "Sermon" in the current 
 ## 8.3 Output
 
 - **Export as handout (HTML):** a printable version that you can print from the browser or save as a PDF.
+- **Handout for listeners (print / PDF):** a page to hand out: key message, the outline with the **Bible verses written out** (from the chosen translation) and ruled fields for their own notes. Your speaker notes are not in it. Choose "Save as PDF" in the print dialog.
 - **Show as slides (HTML):** the outline as a presentation.
 - Print/PDF export of the handout.
 

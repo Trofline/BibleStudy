@@ -57,11 +57,12 @@ public partial class MainWindow
             var book = _books.FirstOrDefault(b => b.Id == id);
             if (book is null) return;
             ShowReader();
-            SetPanelOpen(true);
-            OpenWork(NavGroups.First(g => g.Name == "Suchen"));
+            RevealSideTab(0);   // the search is a side panel tab, not a work area
             SearchBox.Text = $"Bezug:\"{book.CommonName} 1-{book.NumberOfChapters}\"";
             await SearchAsync();
         };
+        // a narrow window must keep room for the text: the thread graph gives way (its labels shorten themselves)
+        ReaderHost.SizeChanged += (_, e) => ThreadPane.MaxWidth = Math.Clamp(e.NewSize.Width * 0.42, 290, ThreadGraph.GraphWidth);
         ThreadPane.Picked += ShowRefsFlyout;
         ThreadPane.Jump += r => _ = GoToAsync(r.Target.Book, r.Target.Chapter, r.Target.Verse);
         ThreadPane.BuildRequested += async () => await BuildGraphAsync();

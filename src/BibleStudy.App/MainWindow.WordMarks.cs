@@ -21,8 +21,13 @@ public partial class MainWindow
     WordSpan? _hoverSpan;
     int _markCursor = -1;
 
-    /// <summary>The header of a menu entry that opens a submenu. The theme draws the arrow at the right end by itself; the minimum width only gives it room (in a narrow menu it was cut off).</summary>
-    static Control SubHeader(string text) => new TextBlock { Text = text, MinWidth = 215, VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center };
+    /// <summary>The header of a menu entry that opens a submenu in the right-click menu. The theme draws no arrow there (it does in the submenus), so the entry carries its own at the right end.</summary>
+    static Control SubHeader(string text)
+    {
+        var arrow = new TextBlock { Text = "›", FontSize = 16, Margin = new(24, -2, 0, 0), VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center, Opacity = 0.7 };
+        DockPanel.SetDock(arrow, Dock.Right);
+        return new DockPanel { Children = { arrow, new TextBlock { Text = text, VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center } } };
+    }
 
     static string NormWord(string w) => new string(w.Where(char.IsLetterOrDigit).ToArray()).ToLowerInvariant();
 
@@ -122,9 +127,10 @@ public partial class MainWindow
             StatusText.Text = _pinned.Count == 0 ? L("Keine fixierten Hervorhebungen.") : L("{0} Wörter in diesem Kapitel markiert. Rechtsklick auf ein Wort: nächstes markiertes Wort.", MarkedSpans().Count);
         }));
 
+        // the diagram of where the word occurs sits in the open, not in the submenu: otherwise hardly anyone finds it
+        menu.Items.Add(Make(L("Vorkommen von „{0}“ als Diagramm", word), () => _ = ShowWordChartAsync(w.Strongs[0], w.Word)));
         var sub = new MenuItem { Header = SubHeader(L("Wort „{0}“ · {1}", word, ids)) };
         sub.Items.Add(Make(L("{0} nachschlagen", ids), () => _ = ShowStudyAsync(w)));
-        sub.Items.Add(Make(L("Vorkommen als Diagramm"), () => _ = ShowWordChartAsync(w.Strongs[0], w.Word)));
         if (_pinned.Count > 0)
         {
             sub.Items.Add(new Separator());

@@ -82,6 +82,12 @@ public sealed class VaultStore : SqliteDb
     public HashSet<(string Book, int Chapter)> GetReadChapters() =>
         Query("SELECT book,chapter FROM read_chapters", _ => { }, r => (r.GetString(0), r.GetInt32(1))).ToHashSet();
 
+    /// <summary>When each chapter was marked as read (local time); chapters from older vaults without a date are left out.</summary>
+    public List<(string Book, int Chapter, DateTime At)> GetReadDates() =>
+        Query("SELECT book,chapter,read_at FROM read_chapters WHERE read_at IS NOT NULL", _ => { },
+            r => (r.GetString(0), r.GetInt32(1), DateTime.TryParse(r.GetString(2), null, System.Globalization.DateTimeStyles.RoundtripKind, out var t) ? t.ToLocalTime() : DateTime.MinValue))
+        .Where(x => x.Item3 != DateTime.MinValue).ToList();
+
     /// <summary>Marks chapters of one book as read (or unread) in one transaction.</summary>
     public void SetRead(string book, IEnumerable<int> chapters, bool read)
     {
@@ -320,7 +326,7 @@ public sealed class VaultStore : SqliteDb
             using var cmd = con.CreateCommand();
             cmd.CommandText = "INSERT INTO queue(book,chapter,verse,label) VALUES($b,$c,$v,$l)";
             cmd.Parameters.AddWithValue("$b", r.Book); cmd.Parameters.AddWithValue("$c", r.Chapter);
-            cmd.Parameters.AddWithValue("$v", r.Verse); cmd.Parameters.AddWithValue("$l", label);
+            cmd.Parameters.AddWithValue("$v", r.Verse); cmd.Parameters.AddWithValue("$l", label ?? "");
             cmd.ExecuteNonQuery();
         }
         tx.Commit();

@@ -16,6 +16,14 @@ public partial class MainWindow
         ApplyEasyMode();
     }
 
+    /// <summary>The extra shortcuts in the reading bar only where there is room: in the normal-sized window the bar is full with its own buttons (they were cut off).</summary>
+    void UpdateReadQuick()
+    {
+        var wide = Bounds.Width;
+        ReadQuick.IsVisible = !_settings.EasyMode && !CompactLook && wide >= 1600;
+        ReadQuickMore.IsVisible = wide >= 1800;
+    }
+
     void ApplyEasyMode()
     {
         var easy = _settings.EasyMode;
@@ -25,6 +33,9 @@ public partial class MainWindow
             if (SideTabs.Items[i] is TabItem tab) tab.IsVisible = !easy || EasySideTabs.Contains(i);
         foreach (Control c in new Control[] { TodoTopBtn, FeedbackTopBtn, KeysTopBtn, ParallelBtn, GraphBtn, StudyBtn }) c.IsVisible = !easy;
         foreach (var b in Rail.Children.OfType<Button>()) if (b.Tag is NavGroup { Name: var gn } && gn == K("Vers")) b.IsVisible = !easy;
+        // the extra shortcuts that fill the rail and the reading bar are for Advanced only: Easy looks like it always did
+        foreach (var c in Rail.Children.OfType<Control>()) if (c.Tag is "adv") c.IsVisible = !easy && !CompactLook;
+        UpdateReadQuick();
         // the chosen side tab might be hidden now: go to the first one that is shown
         if (easy && !EasySideTabs.Contains(SideTabs.SelectedIndex)) SideTabs.SelectedIndex = 0;
         FitTopBar();

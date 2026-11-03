@@ -17,7 +17,7 @@ static class ErrorLog
     public static void Install()
     {
         Dispatcher.UIThread.UnhandledException += (_, e) => { Write(e.Exception); e.Handled = true; Tell(e.Exception); };
-        TaskScheduler.UnobservedTaskException += (_, e) => { Write(e.Exception); e.SetObserved(); };
+        TaskScheduler.UnobservedTaskException += (_, e) => { if (!e.Exception.Flatten().InnerExceptions.All(x => x is OperationCanceledException)) Write(e.Exception); e.SetObserved(); };   // a cancelled task (stopped reading aloud …) is no error
         AppDomain.CurrentDomain.UnhandledException += (_, e) => { if (e.ExceptionObject is Exception ex) Write(ex); };
     }
 

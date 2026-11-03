@@ -35,7 +35,9 @@ verknüpfen, Predigten vorbereiten – alles offline nutzbar und ohne Konto.
 - **Morphologie und Syntax** des Urtextes (Griechisch und Hebräisch): Zeit, Fall, Person …, Syntax mit Subjekt, Verb, Objekt …
 - **Morphologie und Syntax** des Urtextes (Griechisch und Hebräisch): Zeit, Fall, Person …, Syntax mit Subjekt, Verb, Objekt …
 - **Analyse-Werkzeuge:** Schlüsselwörter und einmalige Wörter je Kapitel, verwandte Wörter, Verteilung eines Wortes über die Bibel
+- **Satzdiagramm und Perikopen-Analyse:** der Satz eines Verses als klassisches Satzdiagramm (Reed–Kellogg, Griechisch und Hebräisch, Export als PNG/SVG) und ein Abschnitt in Bildern: Wortarten, Verbformen, Schlüsselwörter und wo sie vorkommen, Rhythmus der Verse, Satzbau und Verbindungen
 - **Dokumente mit Kategorien**, Studienvorlagen und Wissensgraph
+- **Zusammen studieren:** direkt mit einer anderen Person verbunden (verschlüsselt, kein Server, kein Konto, kostenlos): Chat, Verse und Dokumente teilen, der Stelle der anderen folgen; eingerichtet durch den Austausch von zwei kurzen Codes. Es ist eine direkte Verbindung ohne Relay-Server und klappt am besten im selben Netzwerk; über verschiedene Netzwerke hängt es von euren Anschlüssen ab (ein privates Netzwerk wie ZeroTier oder Tailscale oder ein eigener Relay-Server kann helfen, siehe Handbuch)
 - **Linux und macOS:** Pakete werden mit gebaut (auf Windows gebaut; bisher nur auf einem Intel-Mac gestartet, sonst ungetestet), mit Schritt-für-Schritt-Anleitung im Paket (`README-macOS.txt`, `README-Linux.txt`), siehe Releases
 - **Griechisch und Hebräisch lernen:** Alphabet, Buchstaben-Quiz, Vokabeltrainer mit Wiederholung
 - **Drucken / PDF** für Dokumente, Lesepläne, Gebete und Predigt; Predigt-Folien als Vollbild-Show

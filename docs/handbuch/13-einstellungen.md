@@ -71,6 +71,10 @@ Ein **Vault** ist wie eine eigene Mappe für ein Studienprojekt: Markierungen, N
 
 *Gewählte Übersetzung offline verfügbar machen* lädt sie komplett. Es werden nur Texte geladen, die die Quelle zur freien Nutzung anbietet; Lizenz und Namensnennung stehen in der Fußzeile. Die Daten liegen lokal und gehören dir.
 
+**Alles herunterladen:** Der Knopf *Alles herunterladen …* (oben bei den Einstellungen für Daten) öffnet ein Fenster mit Haken für alles, was sonst erst beim Gebrauch geladen wird: die gewählte Übersetzung oder alle in deiner Sprache, Querverweise, Strong-, STEPBible-, BDB- und LSJ-Wörterbuch, Textkritik, die Syntaxdaten für Griechisch und Hebräisch, die Stimmen zum Vorlesen und ein lokales KI-Modell für Ollama. Alles wird nacheinander geladen, du kannst weiterarbeiten. So wartest du später nie.
+
+**Übersetzen ohne Internet:** Wählst du unter *KI und MCP* den Motor *Ollama*, übersetzt das Programm auch die englischen Wortbedeutungen (zum Beispiel im Satzdiagramm) mit dem lokalen Modell, ohne Netz und ohne Claude Code. Die Qualität hängt vom Modell ab.
+
 ## 13.9 Quellen und Lizenzen
 
 Zeigt, **woher jede Information stammt** und was du damit tun darfst. Nichts davon ist im Programm eingebaut: Es wird erst geladen, wenn du es brauchst, und liegt dann im Zwischenspeicher. Knöpfe: *Liste kopieren*, *Zwischenspeicher öffnen*, *Hinweis zur Herkunft noch einmal lesen*.

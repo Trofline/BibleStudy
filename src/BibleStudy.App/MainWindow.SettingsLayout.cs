@@ -14,7 +14,7 @@ namespace BibleStudy.App;
 public partial class MainWindow
 {
     /// <summary>Positions of the sections (in the order of the page) that start folded.</summary>
-    static readonly HashSet<int> FoldedSettings = [3, 7, 8, 9, 10, 12];
+    static readonly HashSet<int> FoldedSettings = [3, 8, 9, 10, 11, 13];
 
     void InitSettingsLayout()
     {

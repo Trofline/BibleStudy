@@ -20,7 +20,7 @@ public partial class MainWindow
     void InitPatchNotes()
     {
         VersionChipText.Text = "v" + AppPaths.Version;
-        VersionChip.Click += async (_, _) => await ShowPatchNotesAsync();
+        VersionChip.Click += async (_, _) => await CheckForUpdateAsync(manual: true);
         PatchNotesBtn.Click += async (_, _) => await ShowPatchNotesAsync();
         GitHubBtn.Click += (_, _) => OpenUrl(ProjectUrl);
         UpdateChip.Click += async (_, _) => await CheckForUpdateAsync(manual: true);
@@ -41,13 +41,19 @@ public partial class MainWindow
     /// <summary>After an update (or the first start with this feature) the notes of the running version appear once.</summary>
     async Task ShowPatchNotesIfNewAsync()
     {
-        if (_settings.LastSeenVersion == AppPaths.Version) return;
+        // only a version newer than the last one seen counts: two copies of the program (installed and portable, or a test build) sharing the
+        // data used to overwrite each other's "last seen" and showed the notes again at every change between them
+        var current = Updater.Parse(AppPaths.Version);
+        var seen = Updater.Parse(_settings.LastSeenVersion ?? "");
+        if (current is not null && seen is not null && current <= seen) return;
+        if (current is null && _settings.LastSeenVersion == AppPaths.Version) return;
         try
         {
             _updater ??= new Updater(_http);
             var list = await _updater.ListAsync(AppPaths.Version);
+            if (!list.Any(r => r.Version == AppPaths.Version)) return;   // a test build of a version that is not published: nothing to show, nothing to remember
             _settings.LastSeenVersion = AppPaths.Version; SaveSettings();
-            if (list.Any(r => r.Version == AppPaths.Version) && IsVisible && OwnedWindows.Count == 0) ShowPatchNotes(list);
+            if (IsVisible && OwnedWindows.Count == 0) ShowPatchNotes(list);
         }
         catch { /* offline: next start */ }
     }

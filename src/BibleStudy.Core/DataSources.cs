@@ -40,7 +40,7 @@ public static class DataSources
             "Free Use Bible API und die Autoren der Werke", L("je Werk: siehe Lizenz-Link in der Bücherliste"), "https://bible.helloao.org"),
         new(L("Hörbibel"), L("Gesprochene Aufnahme der Bibel, Kapitel für Kapitel, auf Englisch. Sie wird erst geladen, wenn du „Hören“ drückst, und bleibt danach zum Hören ohne Netz auf deinem Computer (höchstens 400 MB; die ältesten Kapitel werden gelöscht)."),
             "eBible.org, read by Winfred W. Henson", L("gemeinfrei"), AudioBible.SourceUrl, L("World English Bible; Text und Aufnahme sind gemeinfrei (Public Domain)")),
-        new(L("Piper (Stimmen zum Vorlesen)"), L("Programm MIT; Stimmen (CC0, gemeinfrei, Apache-2.0 oder CC BY 4.0): Thorsten, LJ Speech, Cori, Bryce, John, Norman, DaveFX, Claude, SIWIS, Gilles, Denis, Dmitri. Wird erst geladen, wenn du die natürliche Stimme wählst."),
+        new(L("Piper (Stimmen zum Vorlesen)"), L("Programm MIT; Stimmen (CC0, gemeinfrei, Unlicense, Apache-2.0 oder CC BY 4.0): Thorsten, LJ Speech, Cori, Bryce, John, Norman, Alba, Kristin, Joe, Sam, DaveFX, Claude, Ald, SIWIS, Gilles, Denis, Dmitri. Wird erst geladen, wenn du die natürliche Stimme wählst."),
             "Piper (rhasspy) und die Sprecher der Stimmen, u. a. Thorsten Müller, Keith Ito, SIWIS (Univ. Edinburgh)", "MIT, CC0, CC BY 4.0, Apache-2.0", NaturalVoice.SourceUrl),
         new(L("Übersetzte Wörterbuchtexte"), L("Die Texte von Strong und Interlinear gibt es nur englisch. Wenn du Claude Code hast, übersetzt es kurze Einträge in deine Sprache. Das ist eine KI-Übersetzung und wird so gekennzeichnet; sie bleibt auf deinem Computer."),
             L("dein eigenes Claude Code"), L("keine fremden Daten"), "https://claude.com/claude-code"),

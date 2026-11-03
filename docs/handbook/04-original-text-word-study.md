@@ -139,3 +139,33 @@ Counting is based on the Strong's numbers of the KJV. The first time, the progra
 ## 4.13 Learning Greek and Hebrew
 
 If you want to go deeper, learn the scripts yourself: *Planning → Languages* (see [Chapter 7](07-planning.md)).
+
+## 4.14 The sentence diagram
+
+The **Sentence diagram** tab (group *Study*) draws the sentence of the clicked verse as a **classical sentence diagram** (Reed–Kellogg), from the syntax data of the Greek and Hebrew text (MACULA, Clear Bible, CC BY 4.0):
+
+- Subject, verb and object stand on the **horizontal line**. The **vertical bar that crosses the line** separates subject and verb, a **short bar** separates verb and object, a **slanted bar** separates verb and complement (for example "was" + "God").
+- **Slanted lines below** carry words that describe something more closely: articles, adjectives, adverbs. A **preposition** stands on the slanted line, its object on the horizontal one.
+- **Dashed lines** join clauses and subordinate clauses, with the conjunction on them. A subordinate clause on a solid post is the subject, object or complement of the clause above it.
+- **In brackets** stands a subject that is only in the verb form (usual in Greek and Hebrew: "(he)").
+- **Colours:** subject green, verb red, object blue, complement purple, preposition orange, link grey.
+- **Hebrew sentences** run from right to left.
+
+Use: **◀ ▶** or the list switch the sentence (the list shows all sentences of the chapter). **Original** writes the original words on the lines, **Meaning** their meaning (the original words are then small above). **Ctrl + mouse wheel** zooms, **Fit** fits the picture. A **click on a word** looks it up in the Strong dictionary, the mouse pointer shows lemma and meaning. **Open in its own window** gives long sentences room. **Save as picture** (PNG) and **Save as SVG** (vector picture, stays sharp at any size) put the file into the folder *Documents\BibleStudy\Export*.
+
+As with every sentence diagram, the **word order is lost**; it is in the sentence text above the picture. The assignment of the parts of the sentence comes from the syntax trees; in rare cases (nested sentences, participles) it is an interpretation that should be checked against the text.
+
+## 4.15 The pericope analysis
+
+The **Pericope** tab (group *Study*) shows a passage in pictures. Choose **From verse … to …** (or **Whole chapter**) and **Analyse**:
+
+- **Key figures:** verses, words, different words, sentences, clauses, verbs, words per sentence.
+- **At a glance:** a few sentences on what stands out (much narrative or teaching, imperatives, most frequent key word, longest sentence, most frequent link). These are hints from the numbers, not interpretation.
+- **Word classes** as a ring.
+- **Verb forms** as a grid: Greek tense × mood, Hebrew stem × form. The darker the field, the more often.
+- **Key words:** nouns, verbs and adjectives that occur at least twice, as bars (click: Strong dictionary) and as a **trace**: a dot in every verse where the word stands. This shows repetition, frames and turning points.
+- **Rhythm of the verses:** one column per verse (words, split into nouns, verbs and the rest, green dots for connecting words). A click selects the verse.
+- **Sentence build:** one column per sentence (length in words, number of clauses). A click opens the sentence diagram.
+- **Links:** how the sentences are joined (addition, reason, contrast, purpose, condition …), ordered by the connecting words.
+
+**Save as picture** saves the whole analysis as a picture. Everything is worked out on your computer from the original-text data (only for books with syntax data, so the Old and the New Testament). Sorting a connecting word into a relation is a rule of thumb (a "καί" counts as addition, a "γάρ" as reason).

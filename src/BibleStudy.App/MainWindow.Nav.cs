@@ -21,21 +21,36 @@ public partial class MainWindow
         ? [new(CommentaryTab, K("Kommentare"), L("Freie Bibelkommentare (Matthew Henry, Jamieson-Fausset-Brown, Keil-Delitzsch, Tyndale u. a.) zum aktuellen Kapitel; der angeklickte Vers wird hervorgehoben."))]
         : [];
 
-    static NavGroup[] MakeNavGroups() =>
+    /// <summary>The compact look: like in the early versions, everything in the side panel. The work areas Studium and Original are gone, their tabs sit in Vers, Suchen and Planen again.</summary>
+    static bool CompactLook;
+
+    static NavGroup[] MakeNavGroups()
+    {
+        var all = BuildNavGroups();
+        if (!CompactLook) return all;
+        var pool = all.SelectMany(g => g.Tabs).ToDictionary(t => t.Index);
+        NavTab[] Pick(params int[] idx) => idx.Where(pool.ContainsKey).Select(i => pool[i]).ToArray();
+        return all.Where(g => g.Name != "Studium" && g.Name != "Original").Select(g => g.Name switch
+        {
+            "Suchen" => g with { Tabs = Pick(0, StrongTab) },
+            "Vers" => g with { Tabs = Pick(GuideTab, 3, PericopeTab, SentenceTab, GrundtextTab, 4, 5, AnalysisTab) },
+            "Planen" => g with { Tabs = [.. g.Tabs, .. Pick(LearnTab)] },
+            _ => g,
+        }).ToArray();
+    }
+
+    static NavGroup[] BuildNavGroups() =>
     [
         new(K("Suchen"), "M3 11a8 8 0 1 0 16 0a8 8 0 1 0-16 0z M21 21l-4.3-4.3",
         [
             new(0, K("Text"), L("Sucht in der gewählten Übersetzung: Wörter, „Wendungen“, Grundformen (L=…), Bibelstellen und Strong-Nummern.")),
-            new(StrongTab, K("Strong-Wörterbuch"), L("Schlägt Wörter des Urtextes nach: Nummer (G3056), griechisches/hebräisches Wort, Umschrift oder englische Bedeutung.")),
         ]),
         new(K("Vers"), "M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z",
         [
             new(GuideTab, K("Übersicht"), L("Alles zum angeklickten Vers auf einen Blick: deine Notizen und Dokumente, andere Übersetzungen, Querverweise. Tipp: Rechtsklick auf einen Vers.")),
             new(3, K("Wort"), L("Schalte oben „Wortstudie“ ein und tippe ein unterstrichenes Wort an: Bedeutung im Urtext.")),
-            new(GrundtextTab, K("Grundtext"), L("Der angeklickte Vers im Original, Wort für Wort mit Bedeutung.")),
             new(4, K("Querverweise"), L("Verse, die mit dem angeklickten Vers zusammenhängen.")),
             new(5, K("Vorkommen"), L("Alle Stellen, an denen ein Wort (Strong-Nummer) vorkommt, mit Verstext.")),
-            new(AnalysisTab, K("Analyse"), L("Werkzeuge zum besseren Verstehen: Schlüsselwörter, einmalige Wörter, verwandte Wörter und wo ein Wort in der Bibel vorkommt.")),
         ]),
         new(K("Bücher"), "M4 19.5A2.5 2.5 0 0 1 6.5 17H20 M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z",
         [
@@ -66,7 +81,7 @@ public partial class MainWindow
             new(PrayerTab, K("Gebete"), L("Deine Gebetsliste: Anliegen mit Datum und Vers, erhörte Gebete abhaken und festhalten.")),
             new(PlanTab, K("Lesepläne"), L("Bibel in einem Jahr und weitere Pläne: jeden Tag ein paar Kapitel, mit Fortschritt und Serie.")),
             new(MemoryTab, K("Auswendig lernen"), L("Bibelverse auswendig lernen: Lücken wachsen mit dem Können, mit Wiederholung.")),
-            new(LearnTab, K("Sprachen"), L("Griechisch und Hebräisch lernen: Alphabet, Buchstaben-Quiz und Vokabeln mit Wiederholung.")),
+            new(StatsTab, K("Statistik"), L("Wie viel du gelesen hast: Fortschritt in der Bibel, Serie, die letzten Wochen und was dein Vault enthält.")),
         ], Windowed: true),
         new(K("Zusammen"), "M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2 M9 11a4 4 0 1 0 0-8a4 4 0 0 0 0 8z M23 21v-2a4 4 0 0 0-3-3.87 M16 3.13a4 4 0 0 1 0 7.75",
         [
@@ -76,9 +91,24 @@ public partial class MainWindow
         [
             new(AiTab, K("Claude"), L("Dein lokaler Claude-Assistent. Er liest die Bibel über die Werkzeuge dieses Programms.")),
         ]),
+        new(K("Studium"), "M22 10L12 5 2 10l10 5 10-5z M6 12v5c3 3 9 3 12 0v-5",
+        [
+            new(PericopeTab, K("Perikope"), L("Ein Abschnitt in Bildern: Wortarten, Verbformen, Schlüsselwörter und wo sie vorkommen, Rhythmus der Verse, Satzbau und Verbindungen der Sätze.")),
+            new(SentenceTab, K("Satzdiagramm"), L("Der Satz des angeklickten Verses als klassisches Satzdiagramm: Subjekt, Verb, Objekt auf der Linie, alles andere darunter. Aus den Syntaxdaten des griechischen und hebräischen Textes.")),
+            new(AnalysisTab, K("Analyse"), L("Werkzeuge zum besseren Verstehen: Schlüsselwörter, einmalige Wörter, verwandte Wörter und wo ein Wort in der Bibel vorkommt.")),
+        ], Windowed: true),
+        new(K("Original"), "M5 8l6 6 M4 14l6-6 2-3 M2 5h12 M7 2h1 M22 22l-5-10-5 10 M14 18h6",
+        [
+            new(GrundtextTab, K("Grundtext"), L("Der angeklickte Vers im Original, Wort für Wort mit Bedeutung.")),
+            new(StrongTab, K("Strong-Wörterbuch"), L("Schlägt Wörter des Urtextes nach: Nummer (G3056), griechisches/hebräisches Wort, Umschrift oder englische Bedeutung.")),
+            new(LearnTab, K("Sprachen"), L("Griechisch und Hebräisch lernen: Alphabet, Buchstaben-Quiz und Vokabeln mit Wiederholung.")),
+        ], Windowed: true),
         new(K("Mehr"), "M21 4h-7 M10 4H3 M21 12h-9 M8 12H3 M21 20h-5 M12 20H3 M14 2v4 M8 10v4 M16 18v4",
         [
             new(SettingsTab, K("Einstellungen"), L("Aussehen, Verhalten, Vault, Sicherung, eigene Übersetzungen.")),
+        ], Windowed: true),
+        new(K("Hilfe"), "M2 12a10 10 0 1 0 20 0a10 10 0 1 0-20 0z M9.1 9a3 3 0 0 1 5.8 1c0 2-3 3-3 3 M12 17h.01",
+        [
             new(13, K("Hilfe"), L("So funktioniert das Programm.")),
             new(HandbookTab, K("Dokumentation"), L("Das ausführliche Handbuch: jede Funktion, jedes Tastenkürzel, Anwendung und Strategien. Mit Inhaltsverzeichnis und Suche.")),
             new(14, K("Maße & Info"), L("Maße, Gewichte und Abkürzungen aus der Bibel.")),
@@ -157,6 +187,19 @@ public partial class MainWindow
             };
             Rail.Children.Add(button);
         }
+        // the work areas (books, documents, sermon, planning, settings) are reachable from the rail too: a click opens them as a tab of the main window
+        // (Advanced mode only; the "adv" tag lets the easy mode hide them)
+        Rail.Children.Add(new Border { Height = 1, Margin = new(8, 6), Background = Res("BsBorder"), Tag = "adv" });
+        foreach (var group in NavGroups.Where(g => g.Windowed))
+        {
+            var g = group;
+            var icon = new Icon { Data = Geometry.Parse(g.Icon), IconSize = 22, HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center };
+            var label = new TextBlock { Text = g.Name == "Mehr" ? L("Optionen") : L(g.Name), FontSize = 11, FontWeight = FontWeight.Medium, HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center };
+            var button = new Button { Classes = { "rail" }, Tag = "adv", Content = new StackPanel { Spacing = 4, Children = { icon, label } } };
+            ToolTip.SetTip(button, label.Text + ": " + (g.Tabs.Length > 1 ? string.Join(" · ", g.Tabs.Select(t => L(t.Label))) : g.Tabs[0].Hint));   // the name too: in a low window only the symbol is left
+            button.Click += (_, _) => OpenWork(g);
+            Rail.Children.Add(button);
+        }
         SideTabs.SelectionChanged += (_, e) =>
         {
             if (e.Source != SideTabs || _revertingTab) return;
@@ -172,6 +215,7 @@ public partial class MainWindow
             if (SideTabs.SelectedItem is TabItem { Content: Control page }) AnimateIn(page, 10, 0);
             if (SideTabs.SelectedIndex == AnalysisTab) BuildAnalysisUi();
             else if (SideTabs.SelectedIndex == CollabTab) TabShown(CollabTab);
+            else if (SideTabs.SelectedIndex is SentenceTab or PericopeTab) TabShown(SideTabs.SelectedIndex);
             SyncNav();
         };
         if (GroupOf(SideTabs.SelectedIndex) is { Windowed: true }) SideTabs.SelectedIndex = 0;

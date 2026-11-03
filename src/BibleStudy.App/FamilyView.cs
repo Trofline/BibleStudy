@@ -38,6 +38,9 @@ public sealed class FamilyView : UserControl
         var bar = new WrapPanel { Margin = new(16, 10, 16, 4) };
         void Add(Control c, double right = 8) { c.Margin = new(0, 0, right, 4); c.VerticalAlignment = VerticalAlignment.Center; bar.Children.Add(c); }
         Add(back); Add(new TextBlock { Text = L("Stammbaum"), FontWeight = FontWeight.SemiBold }, 14); Add(_search, 14);
+        var minus = new Button { Content = "−", Width = 34 }; var plus = new Button { Content = "+", Width = 34 }; var fit = new Button { Content = L("Fit"), Width = double.NaN, Padding = new(10, 0) };
+        minus.Click += (_, _) => Zoom(1 / 1.2); plus.Click += (_, _) => Zoom(1.2); fit.Click += (_, _) => Fit();
+        Add(minus, 2); Add(plus, 2); Add(fit, 14);
         Add(new TextBlock { Text = L("Generationen davor") }); Add(_up, 12); Add(new TextBlock { Text = L("danach") }); Add(_down);
         _suggest.SelectionChanged += async (_, _) =>
         {
@@ -60,8 +63,22 @@ public sealed class FamilyView : UserControl
         DockPanel.SetDock(_suggest, Dock.Top); _suggest.Margin = new(16, 0, 16, 4); _suggest.Width = 360; _suggest.HorizontalAlignment = HorizontalAlignment.Left; root.Children.Add(_suggest);
         DockPanel.SetDock(_hint, Dock.Top); root.Children.Add(_hint);
         DockPanel.SetDock(_source, Dock.Bottom); root.Children.Add(_source);
-        root.Children.Add(new ScrollViewer { HorizontalScrollBarVisibility = Avalonia.Controls.Primitives.ScrollBarVisibility.Auto, VerticalScrollBarVisibility = Avalonia.Controls.Primitives.ScrollBarVisibility.Auto, Content = _canvas });
+        _scroll = new ScrollViewer { HorizontalScrollBarVisibility = Avalonia.Controls.Primitives.ScrollBarVisibility.Auto, VerticalScrollBarVisibility = Avalonia.Controls.Primitives.ScrollBarVisibility.Auto, Content = new LayoutTransformControl { Child = _canvas, LayoutTransform = _scale } };
+        _scroll.PointerWheelChanged += (_, e) => { if (!e.KeyModifiers.HasFlag(KeyModifiers.Control)) return; Zoom(e.Delta.Y > 0 ? 1.1 : 1 / 1.1); e.Handled = true; };
+        root.Children.Add(_scroll);
         Content = root;
+    }
+
+    readonly ScaleTransform _scale = new(1, 1);
+    readonly ScrollViewer _scroll;
+
+    void Zoom(double factor) => _scale.ScaleX = _scale.ScaleY = Math.Clamp(_scale.ScaleX * factor, 0.1, 3);
+
+    /// <summary>The whole tree in the visible area (never bigger than life size).</summary>
+    void Fit()
+    {
+        if (_canvas.Width is not > 0 || _canvas.Height is not > 0) return;
+        _scale.ScaleX = _scale.ScaleY = Math.Clamp(Math.Min((_scroll.Bounds.Width - 20) / _canvas.Width, (_scroll.Bounds.Height - 20) / _canvas.Height), 0.1, 1);
     }
 
     public async Task OpenAsync(string? personId = null)
@@ -71,7 +88,7 @@ public sealed class FamilyView : UserControl
             _hint.Text = L("Personenverzeichnis wird geladen (einmalig, danach offline) …");
             try { _people = await PeopleProvider(); } catch (Exception ex) { _hint.Text = L("Nicht verfügbar: ") + ex.Message; return; }
         }
-        _hint.Text = L("Tippe einen Namen ein. Ein Klick auf einen Kasten setzt die Person in die Mitte.");
+        _hint.Text = L("Tippe einen Namen ein. Ein Klick auf einen Kasten setzt die Person in die Mitte. Strg + Mausrad oder − + zoomt.");
         await ShowAsync(personId ?? (_rootId.Length > 0 ? _rootId : "david_994"));
     }
 
@@ -104,6 +121,7 @@ public sealed class FamilyView : UserControl
         await Expand([id], (int)(_down.Value ?? 3), false);
         if (gen != _generation) return;
         _canvas.SetTree(Build(id, (int)(_up.Value ?? 4), true), Build(id, (int)(_down.Value ?? 3), false), id);
+        Avalonia.Threading.Dispatcher.UIThread.Post(Fit, Avalonia.Threading.DispatcherPriority.Loaded);   // a big tree opens whole; zooming in is one click
         _hint.Text = L("{0}{1} · {2} Eltern, {3} Kinder, {4} Partner überliefert", root.Name, Years(root), root.Parents.Count, root.Children.Count, root.Partners.Count);
     }
 

@@ -152,6 +152,25 @@ public sealed class SyntaxProvider(HttpClient http, string cacheDir)
         return await Task.Run(() => ParseWords(xml, book, hebrew).Where(w => w.Chapter == chapter).ToList(), ct);
     }
 
+    /// <summary>The sentences of one chapter as drawn in the sentence diagram; empty when there is no syntax data for the book.</summary>
+    public async Task<List<Diagram.DSentence>> GetSentencesAsync(string book, int chapter, CancellationToken ct = default)
+    {
+        string file, url;
+        if (Find(GreekBooks, book) is { } g) { file = g + ".xml"; url = GreekBase + file; }
+        else if (Find(HebrewBooks, book) is { } h) { file = $"{h}-{chapter:D3}-lowfat.xml"; url = HebrewBase + file; }
+        else return [];
+        var path = Path.Combine(cacheDir, "macula", file);
+        string xml;
+        if (File.Exists(path)) xml = await File.ReadAllTextAsync(path, ct);
+        else
+        {
+            xml = await http.GetStringAsync(url, ct);
+            Directory.CreateDirectory(Path.GetDirectoryName(path)!);
+            await SafeFile.WriteAllTextAsync(path, xml);
+        }
+        return await Task.Run(() => Diagram.SentenceModel.ParseChapter(xml, chapter), ct);
+    }
+
     /// <summary>Hebrew chapter counts as MACULA (Leningrad Codex numbering) has them; a chapter that does not exist is skipped.</summary>
     static readonly (string Id, int Chapters)[] HebrewChapters =
     [

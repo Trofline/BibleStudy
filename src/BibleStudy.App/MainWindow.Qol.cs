@@ -39,6 +39,8 @@ public partial class MainWindow
         TranslateMeaningsCheck.IsCheckedChanged += (_, _) => { _settings.TranslateMeanings = TranslateMeaningsCheck.IsChecked == true; SaveSettings(); };
         CommentariesCheck.IsChecked = _settings.ShowCommentaries;
         CommentariesCheck.IsCheckedChanged += (_, _) => { _settings.ShowCommentaries = CommentariesCheck.IsChecked == true; SaveSettings(); StatusText.Text = L("Die Einstellung gilt nach einem Neustart."); };
+        CompactLookCheck.IsChecked = _settings.CompactLook;
+        CompactLookCheck.IsCheckedChanged += (_, _) => { _settings.CompactLook = CompactLookCheck.IsChecked == true; SaveSettings(); StatusText.Text = L("Die Einstellung gilt nach einem Neustart."); };
         JesusRedCheck.IsChecked = _settings.JesusRed; JustifyCheck.IsChecked = _settings.Justify;
         AnimationsCheck.IsChecked = _settings.Animations; AnimationsCheck.IsCheckedChanged += (_, _) => { _settings.Animations = AnimationsCheck.IsChecked == true; SaveSettings(); Classes.Set("noanim", !_settings.Animations); };
         Classes.Set("noanim", !_settings.Animations);

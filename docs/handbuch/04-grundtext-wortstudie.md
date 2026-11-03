@@ -139,3 +139,33 @@ Gezählt wird nach den Strong-Nummern der KJV. Beim ersten Mal baut das Programm
 ## 4.13 Griechisch und Hebräisch lernen
 
 Wer tiefer einsteigen will, lernt die Schriften selbst: *Planen → Sprachen* (siehe [Kapitel 7](07-planen.md)).
+
+## 4.14 Das Satzdiagramm
+
+Der Reiter **Satzdiagramm** (Gruppe *Studium*) zeichnet den Satz des angeklickten Verses als **klassisches Satzdiagramm** (nach Reed und Kellogg), aus den Syntaxdaten des griechischen und hebräischen Textes (MACULA, Clear Bible, CC BY 4.0):
+
+- Auf der **waagrechten Linie** stehen Subjekt, Verb und Objekt. Der **senkrechte Strich, der die Linie kreuzt**, trennt Subjekt und Verb, ein **kurzer Strich** Verb und Objekt, ein **schräger Strich** Verb und Ergänzung (zum Beispiel „war“ + „Gott“).
+- **Schräge Linien darunter** tragen Wörter, die etwas näher bestimmen: Artikel, Adjektive, Adverbien. Eine **Präposition** steht auf der schrägen Linie, ihr Objekt auf der waagrechten.
+- **Gestrichelte Linien** verbinden Sätze und Nebensätze, die Konjunktion steht darauf. Ein Nebensatz auf einem durchgezogenen Pfosten ist Subjekt, Objekt oder Ergänzung des Satzes darüber.
+- **In Klammern** steht ein Subjekt, das nur in der Verbform steckt (griechisch und hebräisch üblich: „(er)“).
+- **Farben:** Subjekt grün, Verb rot, Objekt blau, Ergänzung violett, Präposition orange, Verbindung grau.
+- **Hebräische Sätze** laufen von rechts nach links.
+
+Bedienung: Mit **◀ ▶** oder der Liste wechselst du den Satz (die Liste zeigt alle Sätze des Kapitels). **Urtext** schreibt die Originalwörter auf die Linien, **Bedeutung** ihre Bedeutung (die Originalwörter stehen dann klein darüber). **Strg + Mausrad** zoomt, **Einpassen** passt das Bild ein. Ein **Klick auf ein Wort** schlägt es im Strong-Wörterbuch nach, der Mauszeiger zeigt Lemma und Bedeutung. Mit **In eigenem Fenster öffnen** bekommen lange Sätze Platz. **Als Bild speichern** (PNG) und **Als SVG speichern** (Vektorbild, bleibt in jeder Größe scharf) legen die Datei im Ordner *Dokumente\BibleStudy\Export* ab.
+
+Wie bei jedem Satzdiagramm geht die **Wortstellung verloren**; sie steht im Satztext über dem Bild. Die Zuordnung der Satzglieder stammt aus den Syntaxbäumen; in seltenen Fällen (verschachtelte Sätze, Partizipien) ist sie eine Deutung, die man am Text prüfen sollte.
+
+## 4.15 Die Perikopen-Analyse
+
+Der Reiter **Perikope** (Gruppe *Studium*) zeigt einen Abschnitt in Bildern. Wähle **Von Vers … bis …** (oder **Ganzes Kapitel**) und **Analysieren**:
+
+- **Kennzahlen:** Verse, Wörter, verschiedene Wörter, Sätze, Teilsätze, Verben, Wörter pro Satz.
+- **Auf einen Blick:** ein paar Sätze, was auffällt (viel Erzählung oder Lehre, Imperative, häufigstes Schlüsselwort, längster Satz, häufigste Verbindung). Das sind Hinweise aus den Zahlen, keine Auslegung.
+- **Wortarten** als Ring.
+- **Verbformen** als Raster: Griechisch Zeit × Modus, Hebräisch Stamm × Form. Je dunkler das Feld, desto häufiger.
+- **Schlüsselwörter:** Nomen, Verben und Adjektive, die mindestens zweimal vorkommen, als Balken (Klick: Strong-Wörterbuch) und als **Spur**: ein Punkt in jedem Vers, in dem das Wort steht. So siehst du Wiederholungen, Rahmen und Wendepunkte.
+- **Rhythmus der Verse:** eine Säule je Vers (Wörter, aufgeteilt in Nomen, Verben und Übriges, grüne Punkte für verbindende Wörter). Ein Klick wählt den Vers.
+- **Satzbau:** eine Säule je Satz (Länge in Wörtern, Zahl der Teilsätze). Ein Klick öffnet das Satzdiagramm.
+- **Verbindungen:** wie die Sätze verbunden sind (Addition, Begründung, Gegensatz, Zweck, Bedingung …), nach den verbindenden Wörtern geordnet.
+
+**Als Bild speichern** legt die ganze Auswertung als Bild ab. Alles wird auf deinem Computer aus den Grundtextdaten berechnet (nur für Bücher mit Syntaxdaten, also das Alte Testament und das Neue Testament). Die Zuordnung der Bindewörter zu einer Beziehung ist eine Faustregel (ein „καί“ zählt als Addition, ein „γάρ“ als Begründung).

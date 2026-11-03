@@ -38,7 +38,8 @@ The guiding principle is **Scripture alone**: the Bible text comes first. Commen
 - **Sermon editor** with outline, verses, time plan, handout, slides and print/PDF export
 - **Tabs like in a file explorer**, layouts (including a dashboard), custom keyboard shortcuts, animations
 - **Multilingual:** English, German, Spanish, French and Russian (AI-made translations, corrections welcome; more languages can be added as a JSON file in the `lang` folder)
-- **Study together:** connect directly with one other person (encrypted, no server, no account, free): chat, share verses and documents, follow each other's place; set up by swapping two short codes
+- **Sentence diagram and pericope analysis:** the sentence of a verse drawn as a classical sentence diagram (Reed–Kellogg, Greek and Hebrew, PNG/SVG export), and a passage in pictures: word classes, verb forms, key words and where they occur, rhythm of the verses, sentence build and links
+- **Study together:** connect directly with one other person (encrypted, no server, no account, free): chat, share verses and documents, follow each other's place; set up by swapping two short codes. It is a direct connection without a relay server, so it works best in the same network; across different networks it depends on your connections (a private network such as ZeroTier or Tailscale, or your own relay server, can help; see the handbook)
 - **Backups:** manual or scheduled, to a folder of your choice
 - **AI integration (optional):** MCP server so that Claude can operate the program
 - **Plugins:** extra translations, commands and program access (see [PLUGINS.md](PLUGINS.md)). Ready-made plugins are in the [`plugins`](plugins) folder and in each release, for example **Strong-Nummern ergänzen** (adds an *estimated* Strong's numbering to translations that have none; no guarantee, please check)

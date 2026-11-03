@@ -10,8 +10,26 @@ namespace BibleStudy.Core.Collab;
 /// The two sides swap two short codes (invitation, answer) by any messenger. The codes contain the address data and the key fingerprint,
 /// so whoever has both codes is the only one who can connect. A public STUN server is asked once for the own public address (no content goes through it).
 /// </summary>
+/// <summary>An optional relay server (TURN) of the user's own choice, used when no direct connection is possible. The data stays encrypted end to end.</summary>
+public sealed record RelayServer(string Url, string User, string Password)
+{
+    /// <summary>Reads what a person typed: "turn:host:3478", "turns:host:5349" or just "host:3478" (then "turn:" is added). Null when it is empty or unusable.</summary>
+    public static RelayServer? Parse(string? url, string? user, string? password)
+    {
+        url = (url ?? "").Trim();
+        if (url.Length == 0 || url.Any(char.IsWhiteSpace)) return null;
+        if (url.StartsWith("stun:", StringComparison.OrdinalIgnoreCase)) return null;
+        if (!url.StartsWith("turn:", StringComparison.OrdinalIgnoreCase) && !url.StartsWith("turns:", StringComparison.OrdinalIgnoreCase)) url = "turn:" + url;
+        return new RelayServer(url, (user ?? "").Trim(), password ?? "");
+    }
+}
+
 public sealed class CollabPeer : IDisposable
 {
+    readonly RelayServer? _relay;
+
+    public CollabPeer(RelayServer? relay = null) => _relay = relay;
+
     public const string Prefix = "BS1-";
     static readonly string[] StunServers = ["stun:stun.l.google.com:19302", "stun:stun1.l.google.com:19302", "stun:stun.cloudflare.com:3478"];
 
@@ -45,7 +63,9 @@ public sealed class CollabPeer : IDisposable
 
     RTCPeerConnection Create()
     {
-        var pc = new RTCPeerConnection(new RTCConfiguration { iceServers = StunServers.Select(u => new RTCIceServer { urls = u }).ToList() });
+        var servers = StunServers.Select(u => new RTCIceServer { urls = u }).ToList();
+        if (_relay is not null) servers.Add(new RTCIceServer { urls = _relay.Url, username = _relay.User, credential = _relay.Password, credentialType = RTCIceCredentialType.password });
+        var pc = new RTCPeerConnection(new RTCConfiguration { iceServers = servers });
         pc.onicecandidate += c =>
         {
             if (c?.candidate is { Length: > 0 } line) lock (_candidates) _candidates.Add(line.StartsWith("candidate:") ? line : "candidate:" + line);

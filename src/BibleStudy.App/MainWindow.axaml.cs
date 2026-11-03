@@ -91,7 +91,7 @@ public partial class MainWindow : Window
         _store = new UserStore(Path.Combine(_root, "user.db"));
         _settingsPath = Path.Combine(_root, "settings.json");
         _settings = AppSettings.Load(_settingsPath);
-        CommentariesOn = _settings.ShowCommentaries; NavGroups = MakeNavGroups();
+        CommentariesOn = _settings.ShowCommentaries; CompactLook = _settings.CompactLook; NavGroups = MakeNavGroups();
         _vault = OpenVault(_settings.Vault);
         _read = _vault.GetReadChapters();
         _fontSize = _settings.FontSize;
@@ -115,6 +115,14 @@ public partial class MainWindow : Window
         StartHomeCheck.IsCheckedChanged += (_, _) => { _settings.StartOnHome = StartHomeCheck.IsChecked == true; SaveSettings(); };
         AutoReadCheck.IsCheckedChanged += (_, _) => { _settings.AutoMarkRead = AutoReadCheck.IsChecked == true; SaveSettings(); };
         OfflineBtn.Click += async (_, _) => await OfflineAsync();
+        DownloadAllBtn.Click += (_, _) => ShowDownloadAll();
+        QuickReportBtn.Click += async (_, _) => await ShowChapterReportAsync();
+        QuickPericopeBtn.Click += (_, _) => RevealSideTab(PericopeTab);
+        QuickSentenceBtn.Click += (_, _) => RevealSideTab(SentenceTab);
+        QuickStatsBtn.Click += (_, _) => OpenWork(NavGroups.First(g => g.Name == "Planen"), StatsTab);
+        QuickMemoryBtn.Click += (_, _) => OpenWork(NavGroups.First(g => g.Name == "Planen"), MemoryTab);
+        // the extra shortcuts only where there is room (the buttons on the right keep their place)
+        SizeChanged += (_, _) => UpdateReadQuick();
         SideTabs.SelectionChanged += (_, _) => { if (SideTabs.SelectedIndex == SettingsTab) UpdateOfflineInfo(); };
 
         HomeBtn.Click += (_, _) => ShowHome();
@@ -356,6 +364,8 @@ public partial class MainWindow : Window
             _curBook = b.Id; _curChapter = ch.Number; _selected = null;
             if (ReaderHost.IsVisible && !_switchingVault) { try { _vault.SetLastPosition(_curBook, _curChapter); } catch (Exception) { /* a convenience; never block reading */ } }
             ThreadPane.SelectedVerse = null;
+            FollowSentence(true);
+            FollowPericope(true);
             CollabSendLocation(focusVerse);
             _curChapterData = ch;
             LoadChapterMarks();
@@ -736,6 +746,7 @@ public partial class MainWindow : Window
         _ = ShowXrefsAsync(r);
         if (TabActive(GrundtextTab)) _ = ShowGrundtextAsync(r);
         if (TabActive(GuideTab)) _ = ShowGuideAsync(r);
+        FollowSentence(false);
         LibraryFollowReader();
     }
 

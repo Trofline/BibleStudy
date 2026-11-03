@@ -103,6 +103,10 @@ public sealed class AppSettings
     public int SearchRange { get; set; }
     /// <summary>Name shown to the other person when studying together.</summary>
     public string CollabName { get; set; } = "";
+    /// <summary>Optional own relay server (TURN) for studying together when no direct connection is possible.</summary>
+    public string RelayUrl { get; set; } = "";
+    public string RelayUser { get; set; } = "";
+    public string RelayPassword { get; set; } = "";
     public bool CollabSendLocation { get; set; } = true;
     public List<SavedSearch> SavedSearches { get; set; } = [];
     /// <summary>Version and date of the consent to the terms of studying together ("1|2026-10-28"); empty = not agreed.</summary>
@@ -150,6 +154,8 @@ public sealed class AppSettings
     public List<ParallelPreset> ParallelPresets { get; set; } = [];
     /// <summary>Commentaries are human writings (Calvin, Henry …), not Scripture: hidden unless switched on.</summary>
     public bool ShowCommentaries { get; set; }
+    /// <summary>The compact look: everything in the side panel, no extra shortcuts on the rail and in the reading bar (applies after a restart).</summary>
+    public bool CompactLook { get; set; }
     /// <summary>Translate the English word data (glosses, dictionary entries) into the program language with the local Claude (cached).</summary>
     public bool TranslateMeanings { get; set; } = true;
     public List<DocCategory> Categories { get; set; } = [];

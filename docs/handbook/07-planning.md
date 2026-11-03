@@ -77,3 +77,14 @@ The **Languages** tab offers:
 - **One request a day** in the prayer list; on Sundays, look through the answered prayers.
 - **Keep to-dos small.** A to-do should be doable in one sitting ("Observe Rom 8:1–11" rather than "Understand the book of Romans").
 - **Once a week**, go through the reading list and tidy up your bookmarks.
+
+## 7.8 Statistics
+
+The **Statistics** tab (group *Plan*) shows how much you have read:
+
+- your **progress** through the whole Bible, the Old and the New Testament (chapters you marked as "Read" are counted),
+- the **streak** (days in a row) and the longest streak, the chapters of the last 7 and 30 days and a bar chart of the last 12 weeks,
+- how many notes, highlights, documents, bookmarks and prayers your vault holds, and how far you are with memorising,
+- every book with progress as a bar.
+
+The numbers are worked out on your computer from your vault only. The date on which a chapter was marked as read is stored; older marks without a date only count towards the progress.

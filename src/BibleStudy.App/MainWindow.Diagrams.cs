@@ -31,6 +31,25 @@ public partial class MainWindow
             if (stack.Count == 0) roots.Add(node); else stack[^1].Kids.Add(node);
             stack.Add(node);
         }
+        // wrapper groups without role and text would only be empty boxes: their children move up to the parent
+        List<TreeNode> Lift(List<TreeNode> nodes)
+        {
+            var result = new List<TreeNode>();
+            foreach (var n in nodes)
+            {
+                n.Kids = Lift(n.Kids);
+                // a clause that holds only one part of the same words ("Satz [waren] unter dem …" > "Prädikatsergänzung" with the same text) shows that once
+                if (n.Line.Kind == "clause" && n.Kids is [{ Kids.Count: 0 } only] && only.Line.Kind != "clause" && only.Line.Text.Length > 0 && only.Line.Text == n.Line.Text)
+                {
+                    if (string.IsNullOrEmpty(n.Line.Role)) n.Line = n.Line with { Role = only.Line.Role };
+                    n.Kids = [];
+                }
+                if (n.Line.Kind != "clause" && n.Line.Text.Length == 0 && string.IsNullOrEmpty(n.Line.Role)) result.AddRange(n.Kids);
+                else result.Add(n);
+            }
+            return result;
+        }
+        roots = Lift(roots);
         const double slot = 118, boxW = 108, boxH = 62, levelH = 96;
         double next = 0; var maxLevel = 0;
         void Place(TreeNode n, int level)
@@ -98,7 +117,7 @@ public partial class MainWindow
         var save = new Button { Content = L("Als Bild speichern"), HorizontalAlignment = HorizontalAlignment.Left, Margin = new(0, 0, 0, 6) };
         save.Click += (_, _) => ExportControlImage(canvas, L("Syntaxbaum") + "_" + Label(new VerseRef(_curBook, _curChapter, _selected ?? 1)));
         _syntaxView.Children.Add(new TextBlock { Text = L("Strg + Mausrad: zoomen. Farbe des Rahmens = Satzrolle."), Classes = { "caption" } });
-        _syntaxView.Children.Add(save);
+        _syntaxView.Children.Add(new WrapPanel { Children = { save, new Border { Width = 8 }, PopOutButton(() => canvas, () => L("Syntaxbaum") + " · " + Label(new VerseRef(_curBook, _curChapter, _selected ?? 1))) } });
         _syntaxView.Children.Add(scroller);
     }
 
@@ -109,6 +128,59 @@ public partial class MainWindow
     {
         var sum = 0; foreach (var ch in role) sum = (sum * 31 + ch) & 0xFFFF;
         return new SolidColorBrush(Color.Parse(RolePalette[sum % RolePalette.Length]));
+    }
+
+    /// <summary>
+    /// A picture of the control in a window of its own, with zoom and save: for graphs that are too small in the side panel
+    /// (or that should stay open next to the text, on a second screen).
+    /// </summary>
+    void ShowImageWindow(Control c, string title)
+    {
+        var w = (int)Math.Ceiling(c.Bounds.Width); var h = (int)Math.Ceiling(c.Bounds.Height);
+        if (w < 2 || h < 2) return;
+        // twice the size for sharpness, but never a picture so big that the graphics memory runs out
+        var k = Math.Min(2.0, 8000.0 / Math.Max(w, h));
+        Avalonia.Media.Imaging.RenderTargetBitmap bmp;
+        try { bmp = new Avalonia.Media.Imaging.RenderTargetBitmap(new PixelSize((int)(w * k), (int)(h * k)), new Vector(96 * k, 96 * k)); bmp.Render(c); }
+        catch (Exception ex) { StatusText.Text = L("Fehler: ") + ex.Message; return; }
+        var scale = new ScaleTransform(1, 1);
+        var image = new Image { Source = bmp, Width = w, Height = h, Stretch = Stretch.Uniform };
+        var page = new Border { Background = Res("BsBackground"), Child = image };
+        var scroller = new ScrollViewer { Content = new LayoutTransformControl { Child = page, LayoutTransform = scale }, HorizontalScrollBarVisibility = Avalonia.Controls.Primitives.ScrollBarVisibility.Auto, VerticalScrollBarVisibility = Avalonia.Controls.Primitives.ScrollBarVisibility.Auto };
+        void Zoom(double f) => scale.ScaleX = scale.ScaleY = Math.Clamp(scale.ScaleX * f, 0.2, 4);
+        void Fit()
+        {
+            if (scroller.Bounds.Width < 100 || scroller.Bounds.Height < 100) return;
+            scale.ScaleX = scale.ScaleY = Math.Clamp(Math.Min((scroller.Bounds.Width - 24) / w, (scroller.Bounds.Height - 24) / h), 0.2, 1.5);   // the whole picture, in both directions
+        }
+        scroller.PointerWheelChanged += (_, e) => { if (!e.KeyModifiers.HasFlag(KeyModifiers.Control)) return; Zoom(e.Delta.Y > 0 ? 1.1 : 1 / 1.1); e.Handled = true; };
+        var minus = new Button { Content = "−", Classes = { "tool" }, Width = 32, Height = 30 };
+        var plus = new Button { Content = "+", Classes = { "tool" }, Width = 32, Height = 30 };
+        var fit = new Button { Content = L("Fit"), Classes = { "tool" }, Width = double.NaN, MinWidth = 48, Padding = new(10, 0), Height = 30 };
+        var save = new Button { Content = L("Als Bild speichern"), Classes = { "tool" }, Width = double.NaN, Padding = new(10, 0), Height = 30 };
+        minus.Click += (_, _) => Zoom(1 / 1.2); plus.Click += (_, _) => Zoom(1.2); fit.Click += (_, _) => Fit();
+        save.Click += (_, _) => ExportControlImage(c, title);
+        var bar = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 6, Margin = new(12, 8), Children = { minus, plus, fit, save } };
+        DockPanel.SetDock(bar, Dock.Top);
+        var win = new Window { Title = title, Width = Math.Clamp(w + 60, 680, 1500), Height = Math.Clamp(h + 130, 460, 950), MinWidth = 420, MinHeight = 240, Background = Res("BsBackground"), Icon = Icon, WindowStartupLocation = WindowStartupLocation.CenterOwner, Content = new DockPanel { Children = { bar, scroller } } };
+        win.Opened += (_, _) => Avalonia.Threading.Dispatcher.UIThread.Post(Fit, Avalonia.Threading.DispatcherPriority.Loaded);
+        win.Show(this);
+    }
+
+    /// <summary>Whatever big view fills the middle (graph, map, timeline, family tree) as a picture in its own window.</summary>
+    void PopOutCurrentView()
+    {
+        var (view, name) = GraphPane.IsVisible ? ((Control)GraphPane, L("Graph")) : MapPane.IsVisible ? (MapPane, L("Karte")) : TimelinePane.IsVisible ? (TimelinePane, L("Zeitleiste")) : FamilyPane.IsVisible ? (FamilyPane, L("Stammbaum")) : (null!, "");
+        if (view is null) { StatusText.Text = L("Öffne zuerst einen Graphen, die Karte, die Zeitleiste oder den Stammbaum."); return; }
+        ShowImageWindow(view, name);
+    }
+
+    /// <summary>The button that opens a graph in a window of its own; <paramref name="source"/> gives the control at the time of the click.</summary>
+    Button PopOutButton(Func<Control?> source, Func<string> title)
+    {
+        var b = new Button { Content = L("In eigenem Fenster öffnen"), HorizontalAlignment = HorizontalAlignment.Left, Margin = new(0, 0, 0, 6) };
+        b.Click += (_, _) => { if (source() is { } c) ShowImageWindow(c, title()); };
+        return b;
     }
 
     /// <summary>Saves a control as a PNG picture (twice the size, sharp) into the export folder and opens it.</summary>

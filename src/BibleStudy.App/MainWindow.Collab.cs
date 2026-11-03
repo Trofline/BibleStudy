@@ -66,6 +66,7 @@ public partial class MainWindow
         var name = new TextBox { Watermark = L("Dein Name (wird der anderen Person gezeigt)"), Text = _settings.CollabName, MaxLength = 40 };
         name.LostFocus += (_, _) => { _settings.CollabName = (name.Text ?? "").Trim(); SaveSettings(); };
         CollabPanel.Children.Add(name);
+        CollabPanel.Children.Add(BuildRelayBox());
 
         var area = new StackPanel { Spacing = 8 };
         var host = new Button { Content = L("Einladung erstellen"), Classes = { "primary" }, Margin = new(0, 0, 8, 0) };
@@ -74,6 +75,29 @@ public partial class MainWindow
         join.Click += (_, _) => { if (CollabNameOk(name)) JoinFlow(area); };
         CollabPanel.Children.Add(new WrapPanel { Children = { host, join } });
         CollabPanel.Children.Add(area);
+    }
+
+    /// <summary>The optional own relay server (TURN): used when no direct connection is possible. Collapsed, because most people never need it.</summary>
+    Control BuildRelayBox()
+    {
+        var url = new TextBox { Watermark = L("Adresse, z. B. turn:server.example:3478"), Text = _settings.RelayUrl, MaxLength = 200 };
+        var user = new TextBox { Watermark = L("Benutzername"), Text = _settings.RelayUser, MaxLength = 100 };
+        var pass = new TextBox { Watermark = L("Passwort"), Text = _settings.RelayPassword, MaxLength = 200, PasswordChar = '•' };
+        void Save() { _settings.RelayUrl = (url.Text ?? "").Trim(); _settings.RelayUser = (user.Text ?? "").Trim(); _settings.RelayPassword = pass.Text ?? ""; SaveSettings(); }
+        url.LostFocus += (_, _) => Save(); user.LostFocus += (_, _) => Save(); pass.LostFocus += (_, _) => Save();
+        return new Expander
+        {
+            Header = L("Eigener Relay-Server (optional)"), Margin = new(0, 8, 0, 0), IsExpanded = _settings.RelayUrl.Length > 0,
+            Content = new StackPanel
+            {
+                Spacing = 6, Margin = new(0, 6, 0, 0),
+                Children =
+                {
+                    new TextBlock { Text = L("Nur nötig, wenn die direkte Verbindung nicht klappt. Du brauchst dafür einen eigenen TURN-Server (zum Beispiel coturn) oder einen Zugang bei einem Anbieter. Die Daten bleiben verschlüsselt, der Server leitet sie nur weiter. Am besten tragen beide Seiten dasselbe ein. Das Passwort wird unverschlüsselt in den Einstellungen gespeichert."), Classes = { "caption" }, TextWrapping = TextWrapping.Wrap },
+                    url, user, pass,
+                },
+            },
+        };
     }
 
     bool CollabNameOk(TextBox box)
@@ -88,7 +112,7 @@ public partial class MainWindow
     CollabPeer NewPeer()
     {
         _peer?.Dispose();
-        var peer = new CollabPeer();
+        var peer = new CollabPeer(RelayServer.Parse(_settings.RelayUrl, _settings.RelayUser, _settings.RelayPassword));
         var wasOpen = false;
         peer.Connected += () => OnUi(() => { if (_peer != peer) return; wasOpen = true; CollabSend(new { t = "hello", name = _settings.CollabName }); BuildCollabUi(); });
         peer.Received += m => OnUi(() => { if (_peer == peer) HandleCollab(m); });
@@ -189,6 +213,7 @@ public partial class MainWindow
         if (_peer == peer && !peer.IsOpen)
             info.Text = L("Die Verbindung kam nicht zustande. Häufige Gründe: ein VPN, eine strenge Firewall oder ein Firmennetz. Versucht es im Heimnetz oder ohne VPN noch einmal.")
                 + "\n" + L("Unter Windows beim ersten Start „Zugriff zulassen“ für private Netzwerke wählen; am Mac unter Systemeinstellungen → Datenschutz & Sicherheit → Lokales Netzwerk die App erlauben.")
+                + "\n" + L("Klappt es nicht? Beide Seiten müssen im selben Netzwerk sein. Sonst hilft ein kostenloses privates Netzwerk wie ZeroTier oder Tailscale (beide installieren und beitreten, dann neue Codes erstellen) oder ein eigener Relay-Server.")
                 + "\n" + L("Technische Angaben: {0}", peer.Diagnose());
     }
 

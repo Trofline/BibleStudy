@@ -25,7 +25,7 @@ public partial class MainWindow
             ShowReader();
             if (kind == "word") { SetPanelOpen(true); SideTabs.SelectedIndex = AnalysisTab; await AnalyzeWordAsync(Terms(key)[0]); }
             else if (kind == "person") { OpenWork(NavGroups.First(g => g.Name == "Bücher"), LexiconTab); await ShowLexEntryAsync(new LexiconItem("people", key, "", 0)); }
-            else { SetPanelOpen(true); OpenWork(NavGroups.First(g => g.Name == "Suchen")); SearchBox.Text = key.Contains(' ') ? $"\"{key}\"" : $"L={key}"; await SearchAsync(); }
+            else { RevealSideTab(0); SearchBox.Text = key.Contains(' ') ? $"\"{key}\"" : $"L={key}"; await SearchAsync(); }
         };
     }
 

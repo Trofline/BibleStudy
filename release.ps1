@@ -17,7 +17,7 @@ dotnet test "$root\tests\BibleStudy.Tests\BibleStudy.Tests.csproj" --filter "Ful
 if ($LASTEXITCODE) { throw 'Translations are incomplete: fix the missing texts before releasing' }
 
 Write-Host "== Publishing program $Version"
-dotnet publish "$root\src\BibleStudy.App\BibleStudy.App.csproj" -c Release -r win-x64 --self-contained true -p:Version=$Version -p:DebugType=none -o $stage
+dotnet publish "$root\src\BibleStudy.App\BibleStudy.App.csproj" -c Release -r win-x64 --self-contained true -p:PublishReadyToRun=true -p:Version=$Version -p:DebugType=none -o $stage
 if ($LASTEXITCODE) { throw 'publish app failed' }
 dotnet publish "$root\src\BibleStudy.Mcp\BibleStudy.Mcp.csproj" -c Release -r win-x64 --self-contained true -p:Version=$Version -p:DebugType=none -o "$stage\mcp"
 if ($LASTEXITCODE) { throw 'publish mcp failed' }
