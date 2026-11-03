@@ -83,6 +83,12 @@ public sealed class AppSettings
     /// <summary>"claude" (Claude Code, with the Bible tools) or "ollama" (a local model, nothing leaves the computer).</summary>
     public string AiEngine { get; set; } = "claude";
     public string OllamaModel { get; set; } = "";
+    /// <summary>Start Ollama in the background when it is needed (and end it with the program).</summary>
+    public bool OllamaAutoStart { get; set; } = true;
+    /// <summary>Translate the word meanings with Ollama instead of Claude Code.</summary>
+    public bool OllamaTranslate { get; set; }
+    /// <summary>"small" (fast, simple) or "large" (most exact, needs a strong computer) model for translating.</summary>
+    public string OllamaTranslateSize { get; set; } = "small";
     /// <summary>Easy mode (only the essentials) or Advanced (everything).</summary>
     public bool EasyMode { get; set; }
     /// <summary>The setup window of the first start was shown (once per installation).</summary>

@@ -217,7 +217,7 @@ public partial class MainWindow
             case "ui_message": return await PluginMessageAsync(a);
             case "ui_choose": return await PluginChooseAsync(a);
             case "ui_status": StatusText.Text = ArgStr(a, "text") ?? ""; return new { ok = true };
-            default: return Err($"Unknown tool '{tool}'.");
+            default: return await RunMoreToolAsync(tool, a);
         }
     }
 

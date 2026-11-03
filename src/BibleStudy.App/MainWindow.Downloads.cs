@@ -86,13 +86,16 @@ public partial class MainWindow
             }
 
         group = L("Übersetzen ohne Internet");
-        var model = string.IsNullOrWhiteSpace(_settings.OllamaModel) ? "llama3.2:3b" : _settings.OllamaModel;
-        items.Add(new(L("Lokales KI-Modell „{0}“ (Ollama muss installiert sein)", model), L("Damit übersetzt das Programm Wortbedeutungen ganz ohne Claude Code und ohne Netz. Mehrere GB. Entfernen geht nur in Ollama selbst."), async (p, ct) =>
+        foreach (var (model, note) in new[] { (OllamaClient.SmallModel, L("Schnell und klein, läuft auch auf schwächeren Rechnern, übersetzt einfacher.")), (OllamaClient.LargeModel, L("Beste Übersetzung, braucht rund 10 GB freien Arbeits- oder Grafikspeicher.")) })
         {
-            _ollama ??= new OllamaClient(_http);
-            try { await _ollama.PullAsync(model, p, ct); }
-            catch (HttpRequestException) { throw new InvalidOperationException(L("Ollama konnte nicht gestartet werden. Ist es von ollama.com installiert?")); }
-        }, group, () => false, null));
+            var name = model;
+            items.Add(new(L("Lokales KI-Modell „{0}“ (Ollama muss installiert sein)", name), note + " " + L("Entfernen geht nur in Ollama selbst."), async (p, ct) =>
+            {
+                _ollama ??= new OllamaClient(_http);
+                try { await _ollama.PullAsync(name, p, ct); }
+                catch (HttpRequestException) { throw new InvalidOperationException(L("Ollama konnte nicht gestartet werden. Ist es von ollama.com installiert?")); }
+            }, group, () => false, null));
+        }
         return items;
     }
 

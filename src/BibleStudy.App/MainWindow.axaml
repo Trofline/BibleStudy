@@ -847,10 +847,18 @@
                                     <ComboBoxItem Content="Claude Code (mit Bibel-Werkzeugen)" />
                                     <ComboBoxItem Content="Ollama (lokale KI, alles bleibt auf deinem Computer)" />
                                 </ComboBox></Border>
-                                <TextBlock Classes="caption" TextWrapping="Wrap" Text="Mit Ollama übersetzt das Programm auch die englischen Wortbedeutungen in deine Sprache, ganz ohne Internet und ohne Claude Code. Die Qualität hängt vom Modell ab." />
                                 <TextBox x:Name="OllamaModelBox" Watermark="Ollama-Modell, z. B. llama3.1" />
                                 <Button x:Name="OllamaCheckBtn" Content="Ollama suchen" HorizontalAlignment="Left" />
                                 <TextBlock x:Name="OllamaInfo" Classes="caption" TextWrapping="Wrap" />
+                                <TextBlock Text="Ollama (lokale KI)" Margin="0,6,0,0" />
+                                <CheckBox x:Name="OllamaAutoStartCheck" Content="Ollama bei Bedarf selbst im Hintergrund starten (und mit dem Programm wieder beenden)" />
+                                <CheckBox x:Name="OllamaTranslateCheck" Content="Wortbedeutungen mit Ollama übersetzen statt mit Claude Code" />
+                                <Border Classes="pill"><ComboBox x:Name="OllamaSizeBox" HorizontalAlignment="Stretch">
+                                    <ComboBoxItem Content="Schnelles Modell: läuft auf jedem Rechner, einfachere Qualität (ca. 2 GB)" />
+                                    <ComboBoxItem Content="Genaues Modell: beste Qualität, braucht einen starken Rechner (ca. 8 GB)" />
+                                </ComboBox></Border>
+                                <TextBlock Classes="caption" TextWrapping="Wrap" Text="Übersetzt wird ganz ohne Internet und ohne Claude Code. Das Modell lädst du einmal im Download-Manager." />
+                                <TextBlock x:Name="OllamaTranslateInfo" Classes="caption" TextWrapping="Wrap" />
                                 <TextBlock Text="MCP-Server für andere Programme (z. B. Claude Code)" />
                                 <TextBox x:Name="McpCommandBox" IsReadOnly="True" TextWrapping="Wrap" />
                                 <Button x:Name="McpCopyBtn" Content="Befehl kopieren" HorizontalAlignment="Left" />

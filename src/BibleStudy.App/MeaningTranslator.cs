@@ -110,7 +110,9 @@ public sealed class MeaningTranslator(string cacheDir)
             UseShellExecute = false, CreateNoWindow = true,
             StandardInputEncoding = new UTF8Encoding(false), StandardOutputEncoding = Encoding.UTF8,
         };
-        foreach (var a in new[] { "-p", "--output-format", "json", "--tools", "" }) psi.ArgumentList.Add(a);
+        // Without these, Claude Code loads the user's plugins, skills and tools for every call (measured: about 104,000 tokens for 12 short entries, instead of about 1,000).
+        foreach (var a in new[] { "-p", "--output-format", "json", "--tools", "", "--disable-slash-commands", "--strict-mcp-config", "--mcp-config", "{\"mcpServers\":{}}",
+                                  "--system-prompt", "You translate dictionary entries.", "--setting-sources", "", "--no-session-persistence" }) psi.ArgumentList.Add(a);
         psi.ArgumentList.Add("--model"); psi.ArgumentList.Add(string.IsNullOrWhiteSpace(model) ? "haiku" : model);
         try
         {

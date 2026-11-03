@@ -69,6 +69,34 @@ public static class BibleTools
     [McpServerTool(Name = "set_translation"), Description("Switches the translation shown in the app.")]
     public static Task<string> SetTranslation(AppClient app, [Description(Tr)] string translation) => app.CallAsync("set_translation", new { translation });
 
+    [McpServerTool(Name = "list_tabs"), Description("The workspaces and tabs of the app (e.g. Original: Grundtext, Strong-Wörterbuch; Studium: Perikope, Satzdiagramm, Analyse). Use these names with open_workspace and show_tab.")]
+    public static Task<string> ListTabs(AppClient app) => app.CallAsync("list_tabs");
+
+    [McpServerTool(Name = "open_workspace"), Description("Opens a workspace of the app (a group of tabs) so the user sees it, e.g. Studium, Original, Planen, Dokumente.")]
+    public static Task<string> OpenWorkspace(AppClient app, string name) => app.CallAsync("open_workspace", new { name });
+
+    [McpServerTool(Name = "show_tab"), Description("Shows one tab of the app (names from list_tabs), optionally after going to a verse, e.g. the Satzdiagramm tab for John 3:16.")]
+    public static Task<string> ShowTab(AppClient app, string name, string? book = null, int? chapter = null, int? verse = null)
+        => app.CallAsync("show_tab", new { name, book, chapter, verse });
+
+    [McpServerTool(Name = "show_word_chart"), Description("Opens the picture of where a Strong's number occurs (bars per book and how the KJV renders it) in a window for the user.")]
+    public static Task<string> ShowWordChart(AppClient app, [Description("Strong's number, e.g. G3056 or H4325")] string strongs_id) => app.CallAsync("show_word_chart", new { strongs_id });
+
+    // ---- analyses (the numbers behind the app's pictures) -----------------------------------------------------------
+
+    [McpServerTool(Name = "get_word_stats"), Description("Statistics of a Strong's number: how often it occurs, in how many verses, per book, and how the KJV renders it (with counts). Use it for questions like how often a word occurs.")]
+    public static Task<string> GetWordStats(AppClient app, [Description("Strong's number, e.g. G3056 or H4325")] string strongs_id) => app.CallAsync("get_word_stats", new { strongs_id });
+
+    [McpServerTool(Name = "get_sentence_diagram"), Description("The sentence structure of the original text (Hebrew or Greek) of a verse: words with meaning, and per clause subject, verb, object, complement and modifiers. Omit verse for the whole chapter (first 12 sentences).")]
+    public static Task<string> GetSentenceDiagram(AppClient app, string book, int chapter, int? verse = null) => app.CallAsync("get_sentence_diagram", new { book, chapter, verse });
+
+    [McpServerTool(Name = "get_pericope_analysis"), Description("Numbers for a passage in the original text: word classes, verb forms, key words, clauses and sentences, rhythm of the verses and how clauses are joined. Omit the verses for the whole chapter.")]
+    public static Task<string> GetPericopeAnalysis(AppClient app, string book, int chapter, int? verse_from = null, int? verse_to = null)
+        => app.CallAsync("get_pericope_analysis", new { book, chapter, verse_from, verse_to });
+
+    [McpServerTool(Name = "get_study_history"), Description("The user's reading history: chapters read, streak, chapters per day and week, the most recently read chapters, and how many marks, notes and documents exist.")]
+    public static Task<string> GetStudyHistory(AppClient app) => app.CallAsync("get_study_history");
+
     // ---- personal data (the active vault) ---------------------------------------------------------------------------
 
     [McpServerTool(Name = "list_marks"), Description("Highlights and saved verses of the active vault, optionally filtered by folder name or tag.")]

@@ -2152,7 +2152,6 @@
   "Das ausführliche Handbuch: jede Funktion, jedes Tastenkürzel, Anwendung und Strategien. Mit Inhaltsverzeichnis und Suche. Von hier aus kannst du alles Weitere selbst entdecken.": "El manual detallado: cada función, cada atajo, uso y estrategias. Con índice y búsqueda. Desde aquí puedes descubrir todo lo demás por ti mismo.",
   "Öffne zuerst einen Graphen, die Karte, die Zeitleiste oder den Stammbaum.": "Abre primero un grafo, el mapa, la cronología o el árbol genealógico.",
   "Graph oder Ansicht als Bild in eigenem Fenster": "Grafo o vista como imagen en su propia ventana",
-  "Mit Ollama übersetzt das Programm auch die englischen Wortbedeutungen in deine Sprache, ganz ohne Internet und ohne Claude Code. Die Qualität hängt vom Modell ab.": "Con Ollama el programa también traduce los significados de las palabras del inglés a tu idioma, sin internet y sin Claude Code. La calidad depende del modelo.",
   "Bericht": "Informe",
   "Das Kapitel auf einen Blick: Zahlen, Schlüsselwörter, Personen, Orte": "El capítulo de un vistazo: cifras, palabras clave, personas, lugares",
   "Einen Abschnitt in Bildern: Wortarten, Verbformen, Schlüsselwörter, Rhythmus": "Un pasaje en imágenes: clases de palabras, formas verbales, palabras clave, ritmo",
@@ -2174,6 +2173,16 @@
   "Nichts zu tun.": "Nada que hacer.",
   "{0} mit Fehler. ": "{0} con errores. ",
   "{0} geladen, {1} entfernt.": "{0} descargados, {1} eliminados.",
-  "Damit übersetzt das Programm Wortbedeutungen ganz ohne Claude Code und ohne Netz. Mehrere GB. Entfernen geht nur in Ollama selbst.": "Con él el programa traduce significados de palabras sin Claude Code y sin red. Varios GB. Solo se puede quitar en el propio Ollama.",
-  "Ollama konnte nicht gestartet werden. Ist es von ollama.com installiert?": "No se pudo iniciar Ollama. ¿Está instalado desde ollama.com?"
+  "Ollama konnte nicht gestartet werden. Ist es von ollama.com installiert?": "No se pudo iniciar Ollama. ¿Está instalado desde ollama.com?",
+  "Ollama (lokale KI)": "Ollama (IA local)",
+  "Ollama bei Bedarf selbst im Hintergrund starten (und mit dem Programm wieder beenden)": "Iniciar Ollama en segundo plano cuando haga falta (y cerrarlo con el programa)",
+  "Wortbedeutungen mit Ollama übersetzen statt mit Claude Code": "Traducir los significados de palabras con Ollama en lugar de Claude Code",
+  "Schnelles Modell: läuft auf jedem Rechner, einfachere Qualität (ca. 2 GB)": "Modelo rápido: funciona en cualquier ordenador, calidad más sencilla (unos 2 GB)",
+  "Genaues Modell: beste Qualität, braucht einen starken Rechner (ca. 8 GB)": "Modelo preciso: la mejor calidad, necesita un ordenador potente (unos 8 GB)",
+  "Übersetzt wird ganz ohne Internet und ohne Claude Code. Das Modell lädst du einmal im Download-Manager.": "Se traduce sin internet y sin Claude Code. El modelo se carga una vez en el gestor de descargas.",
+  "Das Modell „{0}“ ist bereit.": "El modelo «{0}» está listo.",
+  "Das Modell „{0}“ ist noch nicht geladen. Lade es im Download-Manager unter „Übersetzen ohne Internet“.": "El modelo «{0}» aún no está cargado. Cárgalo en el gestor de descargas, en «Traducir sin internet».",
+  "Schnell und klein, läuft auch auf schwächeren Rechnern, übersetzt einfacher.": "Rápido y pequeño, funciona también en ordenadores más débiles, traduce de forma más sencilla.",
+  "Beste Übersetzung, braucht rund 10 GB freien Arbeits- oder Grafikspeicher.": "La mejor traducción, necesita unos 10 GB de memoria libre (RAM o gráfica).",
+  "Entfernen geht nur in Ollama selbst.": "Solo se puede quitar en el propio Ollama."
 }

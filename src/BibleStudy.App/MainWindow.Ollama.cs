@@ -15,7 +15,27 @@ public partial class MainWindow
         AiEngineBox.SelectedIndex = _settings.AiEngine == "ollama" ? 1 : 0;
         OllamaModelBox.Text = _settings.OllamaModel;
         OllamaModelBox.IsVisible = OllamaCheckBtn.IsVisible = OllamaInfo.IsVisible = _settings.AiEngine == "ollama";
+        OllamaClient.AutoStart = _settings.OllamaAutoStart;
+        OllamaAutoStartCheck.IsChecked = _settings.OllamaAutoStart;
+        OllamaTranslateCheck.IsChecked = _settings.OllamaTranslate;
+        OllamaSizeBox.SelectedIndex = _settings.OllamaTranslateSize == "small" ? 0 : 1;
+        OllamaSizeBox.IsEnabled = _settings.OllamaTranslate;
         SyncMeaningEngine();
+        OllamaAutoStartCheck.IsCheckedChanged += (_, _) =>
+        {
+            _settings.OllamaAutoStart = OllamaAutoStartCheck.IsChecked == true; OllamaClient.AutoStart = _settings.OllamaAutoStart; SaveSettings();
+            if (!_settings.OllamaAutoStart) OllamaClient.StopStarted();
+        };
+        OllamaTranslateCheck.IsCheckedChanged += (_, _) =>
+        {
+            _settings.OllamaTranslate = OllamaTranslateCheck.IsChecked == true; OllamaSizeBox.IsEnabled = _settings.OllamaTranslate; SaveSettings(); SyncMeaningEngine();
+            if (_settings.OllamaTranslate) _ = CheckTranslateModelAsync();
+        };
+        OllamaSizeBox.SelectionChanged += (_, _) =>
+        {
+            _settings.OllamaTranslateSize = OllamaSizeBox.SelectedIndex == 0 ? "small" : "large"; SaveSettings(); SyncMeaningEngine();
+            if (_settings.OllamaTranslate) _ = CheckTranslateModelAsync();
+        };
         AiEngineBox.SelectionChanged += (_, _) =>
         {
             _settings.AiEngine = AiEngineBox.SelectedIndex == 1 ? "ollama" : "claude"; SaveSettings(); SyncMeaningEngine();
@@ -26,13 +46,24 @@ public partial class MainWindow
         OllamaCheckBtn.Click += async (_, _) => await CheckOllamaAsync();
     }
 
-    /// <summary>With the local AI chosen, the word meanings are translated by it too (offline); otherwise by Claude Code.</summary>
+    string TranslateModel => _settings.OllamaTranslateSize == "small" ? OllamaClient.SmallModel : OllamaClient.LargeModel;
+
+    /// <summary>When the user chose it, the word meanings are translated by Ollama (offline); otherwise by Claude Code.</summary>
     void SyncMeaningEngine()
     {
-        var local = _settings.AiEngine == "ollama" && !string.IsNullOrWhiteSpace(_settings.OllamaModel);
         _ollama ??= new OllamaClient(_http);
-        _meanings.Ollama = local ? _ollama : null;
-        _meanings.OllamaModel = local ? _settings.OllamaModel : null;
+        _meanings.Ollama = _settings.OllamaTranslate ? _ollama : null;
+        _meanings.OllamaModel = _settings.OllamaTranslate ? TranslateModel : null;
+    }
+
+    /// <summary>Tells the user when the model for translating is not loaded yet.</summary>
+    async Task CheckTranslateModelAsync()
+    {
+        _ollama ??= new OllamaClient(_http);
+        OllamaTranslateInfo.Text = L("Suche Ollama …");
+        var models = await _ollama.ModelsAsync();
+        OllamaTranslateInfo.Text = models.Contains(TranslateModel) ? L("Das Modell „{0}“ ist bereit.", TranslateModel)
+            : L("Das Modell „{0}“ ist noch nicht geladen. Lade es im Download-Manager unter „Übersetzen ohne Internet“.", TranslateModel);
     }
 
     /// <summary>Looks for Ollama on this computer; if no model is chosen yet, the first installed one is taken.</summary>

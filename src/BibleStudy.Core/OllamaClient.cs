@@ -18,6 +18,12 @@ public sealed class OllamaClient(HttpClient http, string address = "http://127.0
     static System.Diagnostics.Process? _started;   // the Ollama that this program started itself (and stops again at the end)
     static DateTime _lastTry = DateTime.MinValue;
 
+    /// <summary>The user's choice: may this program start Ollama by itself?</summary>
+    public static bool AutoStart { get; set; } = true;
+
+    /// <summary>The two models for translating: small is fast and simple (any computer), large is the most exact (needs about 10 GB of memory).</summary>
+    public const string SmallModel = "llama3.2:3b", LargeModel = "gemma3:12b";
+
     /// <summary>Where Ollama is installed on this computer (a normal install or a copy on the PATH), or null.</summary>
     public static string? FindExe()
     {
@@ -43,6 +49,7 @@ public sealed class OllamaClient(HttpClient http, string address = "http://127.0
     public async Task<bool> EnsureRunningAsync(CancellationToken ct = default)
     {
         if (await PingAsync(ct)) return true;
+        if (!AutoStart) return false;
         if (_started is not { HasExited: false })
         {
             if (DateTime.UtcNow - _lastTry < TimeSpan.FromSeconds(30)) return false;   // it did not come up a moment ago: not again at every request
