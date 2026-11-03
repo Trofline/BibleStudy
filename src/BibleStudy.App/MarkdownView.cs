@@ -21,7 +21,7 @@ public sealed class MarkdownView
 
     public MarkdownView(Action<string> openLink, Func<string, IBrush?> brush) { _openLink = openLink; _brush = brush; }
 
-    static readonly Regex Inline = new(@"\*\*(?<b>.+?)\*\*|`(?<c>[^`]+)`|\[(?<t>[^\]]+)\]\((?<u>[^)\s]+)\)|(?<![*\w])\*(?<i>[^*\s][^*]*?)\*(?![*\w])", RegexOptions.Compiled);
+    internal static readonly Regex Inline =new(@"\*\*(?<b>.+?)\*\*|`(?<c>[^`]+)`|\[(?<t>[^\]]+)\]\((?<u>[^)\s]+)\)|(?<![*\w])\*(?<i>[^*\s][^*]*?)\*(?![*\w])", RegexOptions.Compiled);
 
     public List<Block> Render(string markdown)
     {

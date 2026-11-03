@@ -75,7 +75,7 @@
                     <Border x:Name="QuickJumpPill" Classes="pill" HorizontalAlignment="Right" Width="150" ToolTip.Tip="Bibelstelle öffnen (Joh 3,16) oder suchen (Strg+K)">
                         <Grid ColumnDefinitions="Auto,*" Margin="8,0,0,0">
                             <local:Icon Data="M13 2L3 14h9l-1 8 10-12h-9z" IconSize="16" VerticalAlignment="Center" Opacity="0.7" />
-                            <TextBox x:Name="QuickJumpBox" Grid.Column="1" MinHeight="32" Watermark="Gehe zu … (Strg+K)" BorderThickness="0" Background="Transparent" />
+                            <TextBox x:Name="QuickJumpBox" Grid.Column="1" MinHeight="32" PlaceholderText="Gehe zu … (Strg+K)" BorderThickness="0" Background="Transparent" />
                         </Grid>
                     </Border>
                 </Grid>
@@ -270,7 +270,7 @@
                         <ScrollViewer x:Name="SearchTopScroll" DockPanel.Dock="Top" HorizontalScrollBarVisibility="Disabled" Margin="0,0,0,8">
                         <StackPanel Spacing="8" Margin="0,0,8,0">
                             <Grid ColumnDefinitions="*,Auto">
-                                <TextBox x:Name="SearchBox" Watermark="Wort, „Wendung“, L=Grundform, G3056, Joh 3,16 …" />
+                                <TextBox x:Name="SearchBox" PlaceholderText="Wort, „Wendung“, L=Grundform, G3056, Joh 3,16 …" />
                                 <Button x:Name="SearchGoBtn" Grid.Column="1" Classes="tool" Margin="6,0,0,0" ToolTip.Tip="Suchen (Enter)">
                                     <local:Icon Data="M3 11a8 8 0 1 0 16 0a8 8 0 1 0-16 0z M21 21l-4.3-4.3" />
                                 </Button>
@@ -335,15 +335,15 @@
                             </Button>
                             <Button x:Name="DeleteFolderBtn" IsVisible="False" Width="0" Height="0" />
                         </Grid>
-                        <TextBox x:Name="NewFolderBox" Grid.Row="1" IsVisible="False" Watermark="Name des neuen Ordners, Enter zum Anlegen" Margin="0,0,0,8" />
+                        <TextBox x:Name="NewFolderBox" Grid.Row="1" IsVisible="False" PlaceholderText="Name des neuen Ordners, Enter zum Anlegen" Margin="0,0,0,8" />
                         <TextBlock x:Name="MarksEmpty" Grid.Row="3" Classes="caption" TextWrapping="Wrap" IsVisible="False" Margin="2,8" Text="Noch keine Markierungen. Wähle im Text ein Wort oder einen Vers und klicke oben auf „Markieren“ (Farbe wählen)." />
                         <ListBox x:Name="MarksList" Grid.Row="3" ItemTemplate="{StaticResource EntryTpl}" ScrollViewer.HorizontalScrollBarVisibility="Disabled" />
                         <Border x:Name="MarkEditor" Grid.Row="4" IsVisible="False" Margin="0,8,0,0" Padding="10" CornerRadius="12" Background="{DynamicResource BsSurface2}">
                             <StackPanel Spacing="6">
                                 <TextBlock x:Name="MarkEditTitle" FontWeight="SemiBold" TextWrapping="Wrap" />
                                 <WrapPanel x:Name="EditSwatches" />
-                                <TextBox x:Name="MarkNoteBox" AcceptsReturn="True" TextWrapping="Wrap" Height="64" Watermark="Notiz zu dieser Markierung" />
-                                <TextBox x:Name="MarkTagsBox" Watermark="Tags, mit Komma getrennt" />
+                                <TextBox x:Name="MarkNoteBox" AcceptsReturn="True" TextWrapping="Wrap" Height="64" PlaceholderText="Notiz zu dieser Markierung" />
+                                <TextBox x:Name="MarkTagsBox" PlaceholderText="Tags, mit Komma getrennt" />
                                 <Border Classes="pill"><ComboBox x:Name="MarkFolderBox" HorizontalAlignment="Stretch" /></Border>
                                 <WrapPanel>
                                     <Button x:Name="MarkSaveBtn" Content="Speichern" Classes="primary" Margin="0,0,6,0" />
@@ -367,7 +367,7 @@
                             </StackPanel>
                         </StackPanel>
                         <Grid DockPanel.Dock="Top" ColumnDefinitions="*,Auto,Auto" Margin="0,4,0,6">
-                            <TextBox x:Name="NotesSearchBox" Watermark="Notizen durchsuchen (Text oder Stelle)" Margin="0,0,6,0" />
+                            <TextBox x:Name="NotesSearchBox" PlaceholderText="Notizen durchsuchen (Text oder Stelle)" Margin="0,0,6,0" />
                             <Button x:Name="NotesFolderBtn" Grid.Column="1" Classes="tool" ToolTip.Tip="Neuer Ordner für Notizen">
                                 <local:Icon Data="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.7-.9l-.8-1.2A2 2 0 0 0 7.9 3H4a2 2 0 0 0-2 2v13c0 1.1.9 2 2 2z M12 11v6 M9 14h6" />
                             </Button>
@@ -375,7 +375,7 @@
                                 <local:Icon Data="M5 12a1 1 0 1 0 2 0a1 1 0 1 0-2 0z M11 12a1 1 0 1 0 2 0a1 1 0 1 0-2 0z M17 12a1 1 0 1 0 2 0a1 1 0 1 0-2 0z" IconSize="18" />
                             </Button>
                         </Grid>
-                        <TextBox x:Name="NewNoteFolderBox" DockPanel.Dock="Top" IsVisible="False" Watermark="Name des neuen Ordners, Enter zum Anlegen" Margin="0,0,0,6" />
+                        <TextBox x:Name="NewNoteFolderBox" DockPanel.Dock="Top" IsVisible="False" PlaceholderText="Name des neuen Ordners, Enter zum Anlegen" Margin="0,0,0,6" />
                         <TextBlock x:Name="NotesCount" DockPanel.Dock="Top" Classes="caption" Margin="2,0,0,4" />
                         <TextBlock x:Name="NotesEmpty" DockPanel.Dock="Top" Classes="caption" TextWrapping="Wrap" IsVisible="False" Margin="2,8" Text="Noch keine Notizen. Klicke im Text einen Vers an, schreibe oben deine Notiz und speichere sie." />
                         <ScrollViewer HorizontalScrollBarVisibility="Disabled"><StackPanel x:Name="NotesTree" Spacing="2" /></ScrollViewer>
@@ -435,10 +435,10 @@
                     <TabItem.Header><local:Icon Data="M21 10.5V19a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h12.5 m9 11 3 3L22 4" /></TabItem.Header>
                     <DockPanel Margin="16,14,12,12">
                         <StackPanel DockPanel.Dock="Top" Spacing="8" Margin="0,0,0,8">
-                            <TextBox x:Name="TodoBox" Watermark="Neues To-do, Enter zum Hinzufügen" />
+                            <TextBox x:Name="TodoBox" PlaceholderText="Neues To-do, Enter zum Hinzufügen" />
                             <WrapPanel>
                                 <CheckBox x:Name="TodoVerseCheck" Content="Angeklickten Vers anhängen" Margin="0,0,12,0" />
-                                <CalendarDatePicker x:Name="TodoDue" Watermark="Fällig am (optional)" Width="190" />
+                                <CalendarDatePicker x:Name="TodoDue" PlaceholderText="Fällig am (optional)" Width="190" />
                             </WrapPanel>
                             <Grid ColumnDefinitions="*,Auto">
                                 <ProgressBar x:Name="TodoBar" Minimum="0" Maximum="1" Height="6" VerticalAlignment="Center" />
@@ -469,7 +469,7 @@
                     <TabItem.Header><local:Icon Data="M4 9h16 M4 15h16 M10 3L8 21 M16 3l-2 18" /></TabItem.Header>
                     <Grid RowDefinitions="Auto,*,Auto" Margin="16,14,12,12">
                         <StackPanel Spacing="8" Margin="0,0,0,8">
-                            <TextBox x:Name="StrongSearchBox" Watermark="G3056, H1, λόγος, agape, love …  (Enter)" />
+                            <TextBox x:Name="StrongSearchBox" PlaceholderText="G3056, H1, λόγος, agape, love …  (Enter)" />
                             <TextBlock x:Name="StrongInfo" Classes="caption" TextWrapping="Wrap" Text="Nummer, Grundtextwort, Umschrift oder englische Bedeutung. Akzente sind egal." />
                         </StackPanel>
                         <ListBox x:Name="StrongList" Grid.Row="1" ItemTemplate="{StaticResource EntryTpl}" ScrollViewer.HorizontalScrollBarVisibility="Disabled" />
@@ -489,7 +489,7 @@
                                         <TextBlock Classes="caption" TextWrapping="Wrap" Text="Gedanken, Studien und Predigten – geordnet nach Kategorien." />
                                     </StackPanel>
                                 </DockPanel>
-                                <TextBox x:Name="DocSearchBox" Watermark="Dokumente durchsuchen (Titel, Text, Tags)" />
+                                <TextBox x:Name="DocSearchBox" PlaceholderText="Dokumente durchsuchen (Titel, Text, Tags)" />
                                 <TextBlock Classes="eyebrow" Text="KATEGORIEN" />
                                 <WrapPanel x:Name="DocCategoryChips" />
                                 <Expander Header="Mehr Filter und Graph" Padding="0">
@@ -537,16 +537,16 @@
                                 <StackPanel Spacing="10" Margin="0,0,8,0">
                                     <Border x:Name="DocPage" Padding="30,24,30,30" CornerRadius="12" Background="{DynamicResource BsSurface2}" BorderBrush="{DynamicResource BsBorder}" BorderThickness="1" MaxWidth="820">
                                         <StackPanel Spacing="10">
-                                            <TextBox x:Name="DocTitleBox" Classes="paper" Watermark="Titel" FontSize="28" FontWeight="SemiBold" TextWrapping="Wrap" />
+                                            <TextBox x:Name="DocTitleBox" Classes="paper" PlaceholderText="Titel" FontSize="28" FontWeight="SemiBold" TextWrapping="Wrap" />
                                             <Border Height="1" Background="{DynamicResource BsBorder}" />
-                                            <TextBox x:Name="DocBodyBox" Classes="paper" AcceptsReturn="True" TextWrapping="Wrap" MinHeight="380" FontSize="18" Watermark="Schreibe hier. Verse wie „Joh 3,16“ werden zu Links, [[Titel]] verlinkt ein anderes Dokument. Mit der Leiste oben formatierst du." />
+                                            <TextBox x:Name="DocBodyBox" Classes="paper" AcceptsReturn="True" TextWrapping="Wrap" MinHeight="380" FontSize="18" PlaceholderText="Schreibe hier. Verse wie „Joh 3,16“ werden zu Links, [[Titel]] verlinkt ein anderes Dokument. Mit der Leiste oben formatierst du." />
                                             <StackPanel x:Name="DocPreview" IsVisible="False" Spacing="8" MinHeight="380" />
                                         </StackPanel>
                                     </Border>
                                     <TextBlock x:Name="DocPathText" Classes="caption" TextWrapping="Wrap" />
                                     <Expander Header="Einordnen: Tags, Vorlage" Padding="0">
                                         <StackPanel Spacing="8" Margin="0,6,0,0">
-                                            <TextBox x:Name="DocTagsBox" Watermark="Tags, mit Komma getrennt" />
+                                            <TextBox x:Name="DocTagsBox" PlaceholderText="Tags, mit Komma getrennt" />
                                             <CheckBox x:Name="DocTemplateCheck" Content="Als Vorlage verwenden" />
                                         </StackPanel>
                                     </Expander>
@@ -582,7 +582,7 @@
                         <ScrollViewer x:Name="AiScroll" Grid.Row="1" />
                         <StackPanel Grid.Row="2" Spacing="6" Margin="0,8,0,0">
                             <TextBlock x:Name="AiStatus" Classes="caption" TextWrapping="Wrap" />
-                            <TextBox x:Name="AiInput" AcceptsReturn="True" TextWrapping="Wrap" Height="76" Watermark="Frage oder Auftrag … (Enter sendet, Umschalt+Enter neue Zeile)" />
+                            <TextBox x:Name="AiInput" AcceptsReturn="True" TextWrapping="Wrap" Height="76" PlaceholderText="Frage oder Auftrag … (Enter sendet, Umschalt+Enter neue Zeile)" />
                             <Button x:Name="AiSendBtn" Content="Senden" Classes="primary" HorizontalAlignment="Right" />
                         </StackPanel>
                     </Grid>
@@ -621,12 +621,12 @@
                                     <TextBlock Grid.Row="1" Text="Akzentfarbe" VerticalAlignment="Center" Margin="0,8,0,0" />
                                     <WrapPanel x:Name="AccentPanel" Grid.Row="1" Grid.Column="1" Margin="0,8,0,0" />
                                 </Grid>
-                                <TextBlock x:Name="FontLabel" Text="Schriftgröße" />
-                                <Slider x:Name="FontSlider" Minimum="14" Maximum="40" Value="22" TickFrequency="1" IsSnapToTickEnabled="True" />
-                                <TextBlock x:Name="LineLabel" Text="Zeilenabstand" />
-                                <Slider x:Name="LineSlider" Minimum="1.2" Maximum="2.4" Value="1.7" TickFrequency="0.1" IsSnapToTickEnabled="True" />
-                                <TextBlock x:Name="WidthLabel" Text="Textbreite" />
-                                <Slider x:Name="WidthSlider" Minimum="480" Maximum="1100" Value="760" TickFrequency="20" IsSnapToTickEnabled="True" />
+                                <TextBlock x:Name="FontLabel" Text="Schriftgröße" Margin="0,8,0,0" />
+                                <Slider x:Name="FontSlider" Classes="setting" Minimum="14" Maximum="40" Value="22" TickFrequency="1" IsSnapToTickEnabled="True" />
+                                <TextBlock x:Name="LineLabel" Text="Zeilenabstand" Margin="0,8,0,0" />
+                                <Slider x:Name="LineSlider" Classes="setting" Minimum="1.2" Maximum="2.4" Value="1.7" TickFrequency="0.1" IsSnapToTickEnabled="True" />
+                                <TextBlock x:Name="WidthLabel" Text="Textbreite" Margin="0,8,0,0" />
+                                <Slider x:Name="WidthSlider" Classes="setting" Minimum="480" Maximum="1100" Value="760" TickFrequency="20" IsSnapToTickEnabled="True" />
                                 <Grid ColumnDefinitions="110,*" RowDefinitions="Auto,Auto" >
                                     <TextBlock Text="Schriftart" VerticalAlignment="Center" />
                                     <Border Classes="pill" Grid.Column="1" HorizontalAlignment="Left"><ComboBox x:Name="FontBox" Width="180" /></Border>
@@ -676,7 +676,7 @@
                                 <TextBlock Text="Standard-Markierfarbe" Margin="0,4,0,0" />
                                 <WrapPanel x:Name="DefaultColorPanel" />
                                 <TextBlock x:Name="SpeakLabel" Text="Vorlesen: Geschwindigkeit" Margin="0,4,0,0" />
-                                <Slider x:Name="SpeakSlider" Minimum="-5" Maximum="8" Value="0" TickFrequency="1" IsSnapToTickEnabled="True" />
+                                <Slider x:Name="SpeakSlider" Classes="setting" Minimum="-5" Maximum="8" Value="0" TickFrequency="1" IsSnapToTickEnabled="True" />
                                 <TextBlock Text="Vorlesen: Stimme" Margin="0,4,0,0" />
                                 <ComboBox x:Name="SpeakVoiceBox" MinWidth="320" />
                                 <StackPanel x:Name="SpeakVoicePanel" Spacing="4" />
@@ -697,7 +697,7 @@
                                     <Button x:Name="LayoutDeleteBtn" Content="Löschen" />
                                 </StackPanel>
                                 <StackPanel Orientation="Horizontal" Spacing="6">
-                                    <TextBox x:Name="LayoutNameBox" Width="170" Watermark="Name für aktuelles Layout" />
+                                    <TextBox x:Name="LayoutNameBox" Width="170" PlaceholderText="Name für aktuelles Layout" />
                                     <Button x:Name="LayoutSaveBtn" Content="Speichern" />
                                 </StackPanel>
                                 <TextBlock x:Name="LayoutInfo" Classes="caption" TextWrapping="Wrap" />
@@ -730,7 +730,7 @@
                                 <TextBlock Classes="caption" TextWrapping="Wrap" Text="Ein Vault ist wie eine eigene Mappe für ein Studienprojekt: Markierungen, Notizen, Dokumente, Leseliste, To-dos und dein Lesefortschritt gehören immer zu genau einem Vault. Du kannst mehrere anlegen (z. B. „Predigt“ und „Privat“) und hier wechseln. Jeder Vault ist eine einzelne Datei." />
                                 <Border Classes="pill" HorizontalAlignment="Left"><ComboBox x:Name="VaultBox" Width="220" /></Border>
                                 <StackPanel Orientation="Horizontal" Spacing="6">
-                                    <TextBox x:Name="NewVaultBox" Width="170" Watermark="Name des neuen Vaults" />
+                                    <TextBox x:Name="NewVaultBox" Width="170" PlaceholderText="Name des neuen Vaults" />
                                     <Button x:Name="NewVaultBtn" Content="Anlegen" />
                                 </StackPanel>
                                 <Button x:Name="DeleteVaultBtn" Content="Diesen Vault löschen …" HorizontalAlignment="Left" ToolTip.Tip="Löscht den oben gewählten Vault mit allem, was darin ist. Vorher wird eine Sicherung angelegt." />
@@ -742,7 +742,7 @@
                                 <TextBlock Classes="caption" TextWrapping="Wrap"
                                            Text="Für Bibeltexte, die du besitzt und die nicht frei verfügbar sind. Unterstützt: e-Sword und MySword (.bblx, .mybible), Zefania, OSIS, USX, USFM, EPUB, Word (.docx), OpenDocument (.odt), RTF, FictionBook (.fb2), PDF, Webseiten (HTML), Markdown, Text, CSV, JSON und die Offline-HTML der CSV-Bibel. Die Erkennung von Büchern, Kapiteln und Versen ist bei Büchern und Dokumenten eine Schätzung: Prüfe das Ergebnis. Kopiergeschützte Dateien (DRM, z. B. Kindle) werden nicht gelesen, und BibleStudy entfernt keinen Kopierschutz. Der Text bleibt nur auf diesem Rechner. Benutzung auf eigene Gefahr: Du allein bist dafür verantwortlich, dass du eine Datei so nutzen darfst. Das Projekt prüft die Dateien nicht und übernimmt keine Haftung für das, was du damit tust." />
                                 <StackPanel Orientation="Horizontal" Spacing="8">
-                                    <TextBox x:Name="ImportLangBox" Width="70" Text="de" Watermark="Sprache" ToolTip.Tip="Sprachcode der Datei, z. B. de oder en (bei der CSV-Datei automatisch Deutsch)" />
+                                    <TextBox x:Name="ImportLangBox" Width="70" Text="de" PlaceholderText="Sprache" ToolTip.Tip="Sprachcode der Datei, z. B. de oder en (bei der CSV-Datei automatisch Deutsch)" />
                                     <Button x:Name="ImportBibleBtn" Content="Datei wählen …" />
                                 </StackPanel>
                                 <StackPanel Orientation="Horizontal" Spacing="8">
@@ -841,13 +841,13 @@
                                 <TextBox x:Name="AiContextBox" AcceptsReturn="True" TextWrapping="Wrap" Height="240" />
                                 <TextBlock Classes="caption" TextWrapping="Wrap" Text="Der Standardtext ist ein Ausgangspunkt mit klarem Standpunkt (die Bibel allein ist Maßstab). Ändere oder leere ihn nach Belieben, oder wähle „Neutral“." />
                                 <WrapPanel><Button x:Name="AiContextResetBtn" Content="Standardtext wiederherstellen" Margin="0,0,8,0" /><Button x:Name="AiContextNeutralBtn" Content="Neutral (ohne Standpunkt)" /></WrapPanel>
-                                <TextBox x:Name="AiModelBox" Watermark="Modell (leer = deine Standardeinstellung), z. B. sonnet" />
+                                <TextBox x:Name="AiModelBox" PlaceholderText="Modell (leer = deine Standardeinstellung), z. B. sonnet" />
                                 <TextBlock Text="KI-Motor" Margin="0,6,0,0" />
                                 <Border Classes="pill"><ComboBox x:Name="AiEngineBox" HorizontalAlignment="Stretch">
                                     <ComboBoxItem Content="Claude Code (mit Bibel-Werkzeugen)" />
                                     <ComboBoxItem Content="Ollama (lokale KI, alles bleibt auf deinem Computer)" />
                                 </ComboBox></Border>
-                                <TextBox x:Name="OllamaModelBox" Watermark="Ollama-Modell, z. B. llama3.1" />
+                                <TextBox x:Name="OllamaModelBox" PlaceholderText="Ollama-Modell, z. B. llama3.1" />
                                 <Button x:Name="OllamaCheckBtn" Content="Ollama suchen" HorizontalAlignment="Left" />
                                 <TextBlock x:Name="OllamaInfo" Classes="caption" TextWrapping="Wrap" />
                                 <TextBlock Text="Ollama (lokale KI)" Margin="0,6,0,0" />
@@ -961,7 +961,7 @@
                             <Border Classes="pill"><ComboBox x:Name="CommentaryBox" HorizontalAlignment="Stretch">
                             </ComboBox></Border>
                             <Grid ColumnDefinitions="*,Auto">
-                                <TextBox x:Name="CommentarySearchBox" Watermark="Im ganzen Kommentar suchen" />
+                                <TextBox x:Name="CommentarySearchBox" PlaceholderText="Im ganzen Kommentar suchen" />
                                 <Button x:Name="CommentarySearchBtn" Grid.Column="1" Content="Suchen" Margin="6,0,0,0" />
                             </Grid>
                             <TextBlock x:Name="CommentaryInfo" Classes="caption" TextWrapping="Wrap" />
@@ -972,7 +972,7 @@
                 <TabItem ToolTip.Tip="Lexikon">
                     <DockPanel Margin="16,8,12,12">
                         <StackPanel DockPanel.Dock="Top" Spacing="6" Margin="0,0,0,8">
-                            <TextBox x:Name="LexSearchBox" Watermark="Person oder Ort suchen (englisch, z. B. Nebuchadnezzar, Babylon)" />
+                            <TextBox x:Name="LexSearchBox" PlaceholderText="Person oder Ort suchen (englisch, z. B. Nebuchadnezzar, Babylon)" />
                             <TextBlock x:Name="LexInfo" Classes="caption" TextWrapping="Wrap" />
                             <WrapPanel x:Name="LexChapterChips" />
                         </StackPanel>

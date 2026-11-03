@@ -64,6 +64,17 @@ public sealed class SyntaxProvider(HttpClient http, string cacheDir)
 
     public static bool IsAvailable(string book) => Find(GreekBooks, book) is not null || Find(HebrewBooks, book) is not null;
 
+    /// <summary>A MACULA file from the cache, or downloaded once and kept there.</summary>
+    async Task<string> XmlAsync(string file, string url, CancellationToken ct)
+    {
+        var path = Path.Combine(cacheDir, "macula", file);
+        if (File.Exists(path)) return await File.ReadAllTextAsync(path, ct);
+        var xml = await http.GetStringAsync(url, ct);
+        Directory.CreateDirectory(Path.GetDirectoryName(path)!);
+        await SafeFile.WriteAllTextAsync(path, xml);
+        return xml;
+    }
+
     public async Task<SyntaxVerse?> GetVerseAsync(string book, int chapter, int verse, CancellationToken ct = default)
     {
         string url, file;
@@ -71,15 +82,7 @@ public sealed class SyntaxProvider(HttpClient http, string cacheDir)
         else if (Find(HebrewBooks, book) is { } h) { file = $"{h}-{chapter:D3}-lowfat.xml"; url = HebrewBase + file; }
         else return null;
 
-        var path = Path.Combine(cacheDir, "macula", file);
-        string xml;
-        if (File.Exists(path)) xml = await File.ReadAllTextAsync(path, ct);
-        else
-        {
-            xml = await http.GetStringAsync(url, ct);
-            Directory.CreateDirectory(Path.GetDirectoryName(path)!);
-            await SafeFile.WriteAllTextAsync(path, xml);
-        }
+        var xml = await XmlAsync(file, url, ct);
         return await Task.Run(() => Parse(xml, chapter, verse), ct);
     }
 
@@ -92,15 +95,7 @@ public sealed class SyntaxProvider(HttpClient http, string cacheDir)
             progress?.Report((i, GreekBooks.Length));
             var parts = GreekBooks[i].Split(':');
             var file = parts[1] + ".xml";
-            var path = Path.Combine(cacheDir, "macula", file);
-            string xml;
-            if (File.Exists(path)) xml = await File.ReadAllTextAsync(path, ct);
-            else
-            {
-                xml = await http.GetStringAsync(GreekBase + file, ct);
-                Directory.CreateDirectory(Path.GetDirectoryName(path)!);
-                await SafeFile.WriteAllTextAsync(path, xml);
-            }
+            var xml = await XmlAsync(file, GreekBase + file, ct);
             var book = parts[0];
             all.AddRange(await Task.Run(() => ParseWords(xml, book), ct));
         }
@@ -140,15 +135,7 @@ public sealed class SyntaxProvider(HttpClient http, string cacheDir)
         if (Find(GreekBooks, book) is { } g) { hebrew = false; file = g + ".xml"; url = GreekBase + file; }
         else if (Find(HebrewBooks, book) is { } h) { hebrew = true; file = $"{h}-{chapter:D3}-lowfat.xml"; url = HebrewBase + file; }
         else return [];
-        var path = Path.Combine(cacheDir, "macula", file);
-        string xml;
-        if (File.Exists(path)) xml = await File.ReadAllTextAsync(path, ct);
-        else
-        {
-            xml = await http.GetStringAsync(url, ct);
-            Directory.CreateDirectory(Path.GetDirectoryName(path)!);
-            await SafeFile.WriteAllTextAsync(path, xml);
-        }
+        var xml = await XmlAsync(file, url, ct);
         return await Task.Run(() => ParseWords(xml, book, hebrew).Where(w => w.Chapter == chapter).ToList(), ct);
     }
 
@@ -159,15 +146,7 @@ public sealed class SyntaxProvider(HttpClient http, string cacheDir)
         if (Find(GreekBooks, book) is { } g) { file = g + ".xml"; url = GreekBase + file; }
         else if (Find(HebrewBooks, book) is { } h) { file = $"{h}-{chapter:D3}-lowfat.xml"; url = HebrewBase + file; }
         else return [];
-        var path = Path.Combine(cacheDir, "macula", file);
-        string xml;
-        if (File.Exists(path)) xml = await File.ReadAllTextAsync(path, ct);
-        else
-        {
-            xml = await http.GetStringAsync(url, ct);
-            Directory.CreateDirectory(Path.GetDirectoryName(path)!);
-            await SafeFile.WriteAllTextAsync(path, xml);
-        }
+        var xml = await XmlAsync(file, url, ct);
         return await Task.Run(() => Diagram.SentenceModel.ParseChapter(xml, chapter), ct);
     }
 
@@ -194,16 +173,10 @@ public sealed class SyntaxProvider(HttpClient http, string cacheDir)
             {
                 var name = Find(HebrewBooks, job.Id)!;
                 var file = $"{name}-{job.Chapter:D3}-lowfat.xml";
-                var path = Path.Combine(cacheDir, "macula", file);
                 string xml;
-                if (File.Exists(path)) xml = await File.ReadAllTextAsync(path, ct);
-                else
-                {
-                    try { xml = await http.GetStringAsync(HebrewBase + file, ct); }
-                    catch (HttpRequestException) { return; }   // a chapter that is not there
-                    Directory.CreateDirectory(Path.GetDirectoryName(path)!);
-                    await SafeFile.WriteAllTextAsync(path, xml);
-                }
+                // only "not there" means the chapter does not exist; no network or a server error must not leave a silently incomplete search
+                try { xml = await XmlAsync(file, HebrewBase + file, ct); }
+                catch (HttpRequestException ex) when (ex.StatusCode == System.Net.HttpStatusCode.NotFound) { return; }
                 parts[i] = await Task.Run(() => ParseWords(xml, job.Id, true), ct);
             }
             finally { gate.Release(); progress?.Report((Interlocked.Increment(ref done), jobs.Count)); }

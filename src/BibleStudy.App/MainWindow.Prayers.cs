@@ -25,7 +25,7 @@ public partial class MainWindow
         PrayerPanel.Children.Clear();
         PrayerPanel.Children.Add(new TextBlock { Text = L("GEBETSLISTE"), Classes = { "eyebrow" } });
 
-        var box = new TextBox { Watermark = L("Wofür möchtest du beten oder danken?"), AcceptsReturn = true, TextWrapping = TextWrapping.Wrap, MinHeight = 64 };
+        var box = new TextBox { PlaceholderText = L("Wofür möchtest du beten oder danken?"), AcceptsReturn = true, TextWrapping = TextWrapping.Wrap, MinHeight = 64 };
         var withVerse = new CheckBox { Content = _selected is int v ? L("Mit {0} {1},{2} verbinden", BookName(_curBook), _curChapter, v) : L("Mit dem angeklickten Vers verbinden"), IsChecked = _prayerWithVerse && _selected is not null, IsEnabled = _selected is not null };
         withVerse.IsCheckedChanged += (_, _) => _prayerWithVerse = withVerse.IsChecked == true;
         var add = new Button { Content = L("Anliegen hinzufügen"), Classes = { "primary" }, HorizontalAlignment = HorizontalAlignment.Left };
@@ -86,7 +86,7 @@ public partial class MainWindow
             var answered = new Button { Content = L("✓ Erhört") };
             answered.Click += (_, _) =>
             {
-                var note = new TextBox { Watermark = L("Wie wurde das Gebet erhört? (optional)"), AcceptsReturn = true, TextWrapping = TextWrapping.Wrap, MinHeight = 56, Width = 300 };
+                var note = new TextBox { PlaceholderText = L("Wie wurde das Gebet erhört? (optional)"), AcceptsReturn = true, TextWrapping = TextWrapping.Wrap, MinHeight = 56, Width = 300 };
                 var save = new Button { Content = L("Als erhört speichern"), Classes = { "primary" }, Margin = new(0, 6, 0, 0) };
                 var fly = new Flyout { Content = new StackPanel { Children = { new TextBlock { Text = L("Gebet erhört"), FontWeight = FontWeight.SemiBold, Margin = new(0, 0, 0, 6) }, note, save } } };
                 save.Click += (_, _) => { _vault.SetPrayerAnswered(p.Id, true, note.Text?.Trim() ?? ""); fly.Hide(); BuildPrayerUi(); };

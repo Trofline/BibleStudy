@@ -123,7 +123,7 @@ public partial class MainWindow
     {
         VaultQuickBox = new ComboBox { MinWidth = 150, HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Stretch };
         VaultQuickBox.SelectionChanged += async (_, _) => { if (!_vaultUiLoading && VaultQuickBox.SelectedItem is string n && n != _vault.Name) await SwitchVaultAsync(n); };
-        var name = new TextBox { Watermark = L("Name des neuen Vaults"), Width = 200 };
+        var name = new TextBox { PlaceholderText = L("Name des neuen Vaults"), Width = 200 };
         var create = new Button { Content = L("Anlegen"), Classes = { "primary" }, Margin = new(0, 8, 0, 0) };
         var flyout = new Flyout { Content = new StackPanel { Spacing = 2, Children = { new TextBlock { Text = L("Neuer Vault"), FontWeight = FontWeight.SemiBold, Margin = new(0, 0, 0, 6) }, name, create } } };
         create.Click += async (_, _) => { NewVaultBox.Text = name.Text; name.Text = ""; flyout.Hide(); await CreateVaultAsync(); };
@@ -227,7 +227,7 @@ public partial class MainWindow
     {
         var current = SideTabs.SelectedIndex;
         var group = NavGroups.FirstOrDefault(g => g.Tabs.Any(t => t.Index == current)) ?? NavGroups[0];
-        foreach (var b in Rail.Children.OfType<Button>()) b.Classes.Set("active", b.Tag == group);
+        foreach (var b in Rail.Children.OfType<Button>()) b.Classes.Set("active", ReferenceEquals(b.Tag, group));
 
         SubPills.Children.Clear();
         if (group.Tabs.Length > 1)

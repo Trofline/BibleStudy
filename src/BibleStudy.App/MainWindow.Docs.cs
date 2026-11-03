@@ -85,7 +85,12 @@ public partial class MainWindow
         _miFromTemplate.Header = L("Neu aus dieser Vorlage");
         _miFromTemplate.Click += (_, _) => { if (_doc is { } d) OpenDocument(new Document(0, L("Neu: ") + d.Title, d.Body, null, false, DateTime.Now, d.Tags)); };
         _miDelete.Header = L("Löschen");
-        _miDelete.Click += (_, _) => { if (_doc is { Id: > 0 } d) { _vault.DeleteDocument(d.Id); CloseDocument(); } };
+        _miDelete.Click += async (_, _) =>
+        {
+            if (_doc is not { Id: > 0 } d) return;
+            if (await AskAsync(L("Dokument löschen?"), L("„{0}“ wirklich löschen?", d.Title), L("Abbrechen"), L("Ja, endgültig löschen")) != 1) return;
+            _vault.DeleteDocument(d.Id); CloseDocument();
+        };
         more.Items.Add(print); more.Items.Add(_miOpenFile); more.Items.Add(_miFromTemplate); more.Items.Add(new Separator()); more.Items.Add(_miDelete);
         DocMoreBtn.Flyout = more;
     }
@@ -116,7 +121,7 @@ public partial class MainWindow
         DocCategoryChips.Children.Add(Chip(L("Ohne Kategorie"), "", null, docs.Count(d => CategoryOf(d) is null)));
 
         var add = new Button { Content = L("＋ Kategorie"), Classes = { "seg" }, Margin = new(0, 0, 6, 6) };
-        var name = new TextBox { Watermark = L("Name der Kategorie"), Width = 200 };
+        var name = new TextBox { PlaceholderText = L("Name der Kategorie"), Width = 200 };
         var color = 4;
         var swatches = new WrapPanel { Margin = new(0, 6, 0, 6), Width = 200 };
         void DrawSwatches()

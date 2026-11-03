@@ -50,7 +50,7 @@ public sealed class KnowledgeView : UserControl
     public void SetData(IReadOnlyList<KnowledgeNode> nodes, IReadOnlyList<(int A, int B)> edges)
     {
         _canvas.SetData(nodes, edges);
-        _hint.Text = nodes.Count == 0 ? L("Noch keine Dokumente. Lege im Reiter „Wissen“ Notizen an.") : L("{0} Knoten · Klick: Details · Doppelklick: öffnen · Mausrad: zoomen · ziehen: verschieben", nodes.Count);
+        _hint.Text = nodes.Count == 0 ? L("Noch keine Dokumente. Lege unter „Dokumente“ eigene Texte an.") : L("{0} Knoten · Klick: Details · Doppelklick: öffnen · Mausrad: zoomen · ziehen: verschieben", nodes.Count);
     }
 }
 

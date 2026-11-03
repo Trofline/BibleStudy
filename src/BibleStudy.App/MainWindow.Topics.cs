@@ -19,7 +19,7 @@ public partial class MainWindow
         var fly = new Flyout { Placement = PlacementMode.BottomEdgeAlignedLeft };
         var panel = new StackPanel { Spacing = 8, Width = 360 };
         fly.Content = panel;
-        var topic = new TextBox { Watermark = L("Thema, z. B. Vergebung, Mut, Trost …"), Text = SearchBox.Text };
+        var topic = new TextBox { PlaceholderText = L("Thema, z. B. Vergebung, Mut, Trost …"), Text = SearchBox.Text };
         var chips = new WrapPanel();
         var info = new TextBlock { Classes = { "caption" }, TextWrapping = TextWrapping.Wrap };
         var go = new Button { Content = L("Stellen zum Thema suchen"), Classes = { "primary" }, HorizontalAlignment = HorizontalAlignment.Stretch, IsEnabled = false };

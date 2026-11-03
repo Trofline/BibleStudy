@@ -14,12 +14,11 @@ public partial class MainWindow
     Document? _doc;
     long? _newDocFolder;   // folder preset for a document created from the folder tree
     string? _docTag;
-    bool _docsLoading;
 
     void InitKnowledge()
     {
         DocSearchBox.TextChanged += (_, _) => RefreshDocs();
-        DocFilterBox.SelectionChanged += (_, _) => { if (!_docsLoading) RefreshDocs(); };
+        DocFilterBox.SelectionChanged += (_, _) => RefreshDocs();
         BuildDocMenus();
         InitAutosave();
         InitDocTree();
@@ -163,7 +162,7 @@ public partial class MainWindow
         if (_selected is not int v || _curChapterData is null) { DocInfo.Text = L("Erst einen Vers anklicken."); return; }
         var r = new VerseRef(_curBook, _curChapter, v);
         var translation = (TranslationBox.SelectedItem as TranslationInfo)?.ShortName ?? "";
-        var body = $"## {Label(r)}\n\n> {VerseTextOf(v)}\n> ({translation})\n\nGedanken:\n\n";
+        var body = $"## {Label(r)}\n\n> {VerseTextOf(v)}\n> ({translation})\n\n{L("Gedanken:")}\n\n";
         OpenDocument(new Document(0, Label(r), body, null, false, DateTime.Now, AutoTags(r).ToList()));
     }
 
@@ -183,10 +182,21 @@ public partial class MainWindow
         DocInfo.Text = L("{0} Datei(en) verknüpft. Die Dateien bleiben, wo sie sind; nur der Verweis wird gespeichert.", files.Count);
     }
 
-    void OpenLinkedFile()
+    /// <summary>Files that run something when they are opened (a program, a script, a shortcut).</summary>
+    static readonly HashSet<string> RunnableExtensions = new(StringComparer.OrdinalIgnoreCase)
+    {
+        ".exe", ".com", ".bat", ".cmd", ".ps1", ".psm1", ".vbs", ".vbe", ".js", ".jse", ".wsf", ".wsh", ".msi", ".msp", ".scr", ".pif", ".lnk", ".url",
+        ".hta", ".cpl", ".jar", ".reg", ".sh", ".command", ".app", ".appref-ms", ".application", ".msc", ".scf", ".inf",
+    };
+
+    async void OpenLinkedFile()
     {
         if (_doc?.Path is not { } path) return;
         if (!File.Exists(path)) { DocPathText.Text = L("Die Datei wurde nicht gefunden: ") + path; return; }
+        // a link can also be set from outside (the AI tools can create documents): a program or script only runs when the user says so
+        if (RunnableExtensions.Contains(System.IO.Path.GetExtension(path))
+            && await AskAsync(L("Programm starten?"), L("Die verknüpfte Datei ist ein Programm oder Skript:\n{0}\n\nStarte sie nur, wenn du sie selbst verknüpft hast und ihr vertraust.", path), L("Abbrechen"), L("Starten")) != 1)
+            return;
         try { Process.Start(new ProcessStartInfo(path) { UseShellExecute = true }); }
         catch (Exception ex) { DocPathText.Text = L("Öffnen nicht möglich: ") + ex.Message; }
     }

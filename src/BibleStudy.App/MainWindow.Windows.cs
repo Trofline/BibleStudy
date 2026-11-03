@@ -507,7 +507,7 @@ public partial class MainWindow
         var fly = new Flyout { Placement = PlacementMode.BottomEdgeAlignedRight };
         var panel = new StackPanel { Spacing = 6, Width = 300 };
         fly.Content = panel;
-        var name = new TextBox { Watermark = L("Name, z. B. „Predigtvorbereitung“") };
+        var name = new TextBox { PlaceholderText = L("Name, z. B. „Predigtvorbereitung“") };
         var info = new TextBlock { Classes = { "caption" }, TextWrapping = TextWrapping.Wrap };
 
         void Fill()

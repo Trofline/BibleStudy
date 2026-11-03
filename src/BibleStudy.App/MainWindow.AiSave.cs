@@ -21,13 +21,18 @@ public partial class MainWindow
             switch (chat.Messages.Children[i])
             {
                 case Border { Child: SelectableTextBlock u } when !string.IsNullOrWhiteSpace(u.Text): parts.Add((true, u.Text!.Trim())); break;
-                case SelectableTextBlock a when !string.IsNullOrWhiteSpace(a.Text):
-                    if (parts.Count > 0 && !parts[^1].Item1) parts[^1] = (false, parts[^1].Item2 + "\n\n" + a.Text!.Trim()); else parts.Add((false, a.Text!.Trim()));
+                case SelectableTextBlock a when TextOf(a) is { Length: > 0 } text:
+                    if (parts.Count > 0 && !parts[^1].Item1) parts[^1] = (false, parts[^1].Item2 + "\n\n" + text); else parts.Add((false, text));
                     break;
             }
         }
         return parts;
     }
+
+    /// <summary>The text of an answer as the AI wrote it (a formatted answer keeps its Markdown).</summary>
+    static string TextOf(SelectableTextBlock block) => (block is AiAnswer a ? a.Markdown : block.Text ?? "").Trim();
+
+    static bool IsQuestion(Control c) => c is Border { Child: SelectableTextBlock };
 
     /// <summary>
     /// Saves a part of the conversation: from message <paramref name="fromIndex"/> on, or only <paramref name="excerpt"/> if given.
@@ -82,17 +87,18 @@ public partial class MainWindow
             var at = children.IndexOf(block);
             // back to the question that belongs to this answer
             var start = at;
-            while (start > 0 && !(children[start] is Border)) start--;
+            while (start > 0 && !IsQuestion(children[start])) start--;
             var end = at + 1;
-            while (end < children.Count && !(children[end] is Border)) end++;
+            while (end < children.Count && !IsQuestion(children[end])) end++;
             var slice = new AiChat();
             for (var i = start; i < end && i < children.Count; i++) slice.Messages.Children.Add(CloneForTranscript(children[i]));
-            SaveChatNote(slice, 0, null, L("KI-Antwort: {0}", Shorten(Transcript(slice, 0).FirstOrDefault(p => p.User).Text ?? block.Text ?? "", 40).ReplaceLineEndings(" ")));
+            SaveChatNote(slice, 0, null, L("KI-Antwort: {0}", Shorten(Transcript(slice, 0).FirstOrDefault(p => p.User).Text ?? TextOf(block), 40).ReplaceLineEndings(" ")));
         };
         var whole = new MenuItem { Header = L("Ganzes Gespräch als Notiz speichern") };
         whole.Click += (_, _) => SaveChatNote(chat, 0, null, L("KI-Gespräch: {0}", chat.Title));
         var copy = new MenuItem { Header = L("Kopieren") };
-        copy.Click += async (_, _) => { if (TopLevel.GetTopLevel(this)?.Clipboard is { } c && !string.IsNullOrEmpty(block.SelectedText)) await c.SetTextAsync(block.SelectedText); };
+        // nothing selected: the whole message is copied
+        copy.Click += async (_, _) => { if (TopLevel.GetTopLevel(this)?.Clipboard is { } c) await c.SetTextAsync(string.IsNullOrEmpty(block.SelectedText) ? TextOf(block) : block.SelectedText); };
         menu.Items.Add(sel); menu.Items.Add(answer); menu.Items.Add(whole); menu.Items.Add(new Separator()); menu.Items.Add(copy);
         return menu;
     }
@@ -101,7 +107,7 @@ public partial class MainWindow
     static Control CloneForTranscript(Control c) => c switch
     {
         Border { Child: SelectableTextBlock u } => new Border { Child = new SelectableTextBlock { Text = u.Text } },
-        SelectableTextBlock a => new SelectableTextBlock { Text = a.Text },
+        SelectableTextBlock a => new SelectableTextBlock { Text = TextOf(a) },
         _ => new TextBlock(),
     };
 }

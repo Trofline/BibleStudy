@@ -131,7 +131,7 @@ public partial class MainWindow
     void AddBuilderRow(int kind)
     {
         var box = new ComboBox { ItemsSource = BuilderKinds.Select(k => k.Name).ToList(), SelectedIndex = kind, Width = 190 };
-        var text = new TextBox { Watermark = L("Wort(e) eingeben") };
+        var text = new TextBox { PlaceholderText = L("Wort(e) eingeben") };
         text.KeyDown += async (_, e) => { if (e.Key == Key.Enter) await RunBuilderAsync(); };
         var remove = new Button { Content = "✕", Classes = { "tool" }, Width = 28, Height = 28 };
         ToolTip.SetTip(remove, L("Entfernen"));

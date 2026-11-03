@@ -54,6 +54,7 @@ public static class ClaudeCli
         {
             "-p", "--output-format", "stream-json", "--verbose", "--include-partial-messages",
             "--mcp-config", mcpConfig, "--strict-mcp-config", "--tools", "", "--allowedTools", "mcp__biblestudy",
+            "--disable-slash-commands",   // the user's skills are not needed here and would cost tokens on every question
             "--append-system-prompt", systemPrompt,
         }) psi.ArgumentList.Add(arg);
         if (!string.IsNullOrWhiteSpace(sessionId)) { psi.ArgumentList.Add("--resume"); psi.ArgumentList.Add(sessionId); }

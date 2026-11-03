@@ -61,20 +61,22 @@ public partial class MainWindow
         // choose / create
         var saved = _vault.GetDocuments(tag: "Predigt").Where(d => d.Body.Contains(SermonMark)).ToList();
         var pick = new ComboBox { MinWidth = 220, PlaceholderText = saved.Count == 0 ? L("Noch keine gespeicherte Predigt") : L("Gespeicherte Predigt öffnen …"), ItemsSource = saved.Select(d => d.Title).ToList() };
-        pick.SelectionChanged += (_, _) =>
+        pick.SelectionChanged += async (_, _) =>
         {
             if (_sermonLoading || pick.SelectedIndex < 0) return;
-            LoadSermon(saved[pick.SelectedIndex]);
+            var chosen = saved[pick.SelectedIndex];
+            if (!await SermonMayBeLeftAsync()) { _sermonLoading = true; pick.SelectedIndex = -1; _sermonLoading = false; return; }
+            LoadSermon(chosen);
         };
         var neu = new Button { Content = L("Neue Predigt") };
-        neu.Click += (_, _) => { _sermon = NewSermon(); _sermonDocId = null; BuildSermonUi(); };
+        neu.Click += async (_, _) => { if (!await SermonMayBeLeftAsync()) return; _sermon = NewSermon(); _sermonDocId = null; BuildSermonUi(); };
         SermonPanel.Children.Add(new TextBlock { Text = L("PREDIGT-EDITOR"), Classes = { "eyebrow" } });
         SermonPanel.Children.Add(new WrapPanel { Children = { new Border { Classes = { "pill" }, Child = pick, Margin = new(0, 0, 8, 4) }, neu } });
 
         // head fields
         TextBox Field(string label, string value, Action<string> set, bool multi = false, string? hint = null)
         {
-            var box = new TextBox { Text = value, AcceptsReturn = multi, TextWrapping = multi ? TextWrapping.Wrap : TextWrapping.NoWrap, MinHeight = multi ? 60 : 0, Watermark = hint };
+            var box = new TextBox { Text = value, AcceptsReturn = multi, TextWrapping = multi ? TextWrapping.Wrap : TextWrapping.NoWrap, MinHeight = multi ? 60 : 0, PlaceholderText = hint };
             box.TextChanged += (_, _) => set(box.Text ?? "");
             SermonPanel.Children.Add(new TextBlock { Text = label, Classes = { "caption" }, Margin = new(0, 4, 0, 0) });
             SermonPanel.Children.Add(box);
@@ -103,12 +105,12 @@ public partial class MainWindow
         for (var i = 0; i < _sermon.Sections.Count; i++)
         {
             var sec = _sermon.Sections[i]; var idx = i;
-            var head = new TextBox { Text = sec.Heading, Watermark = L("Überschrift"), FontWeight = FontWeight.SemiBold };
+            var head = new TextBox { Text = sec.Heading, PlaceholderText = L("Überschrift"), FontWeight = FontWeight.SemiBold };
             head.TextChanged += (_, _) => sec.Heading = head.Text ?? "";
             var min = new NumericUpDown { Minimum = 0, Maximum = 120, Value = sec.Minutes, FormatString = "0", Width = 100 };
             ToolTip.SetTip(min, L("Minuten für diesen Teil"));
             min.ValueChanged += (_, _) => { sec.Minutes = (int)(min.Value ?? 0); UpdateTotal(); };
-            var notes = new TextBox { Text = sec.Notes, AcceptsReturn = true, TextWrapping = TextWrapping.Wrap, MinHeight = 80, Watermark = L("Gedanken, Erklärung, Beispiele …") };
+            var notes = new TextBox { Text = sec.Notes, AcceptsReturn = true, TextWrapping = TextWrapping.Wrap, MinHeight = 80, PlaceholderText = L("Gedanken, Erklärung, Beispiele …") };
             notes.TextChanged += (_, _) => sec.Notes = notes.Text ?? "";
 
             var verses = new WrapPanel();
@@ -217,6 +219,29 @@ public partial class MainWindow
         RefreshDocs();
         StatusText.Text = L("Gespeichert: {0}", title);
         BuildSermonUi();
+    }
+
+    /// <summary>True when the sermon on screen differs from what is saved (or, for a new one, from an empty sermon).</summary>
+    bool SermonChanged()
+    {
+        if (_sermonDocId is long id) return _vault.GetDocuments().FirstOrDefault(d => d.Id == id)?.Body != SermonMarkdown();
+        return JsonSerializer.Serialize(_sermon, SermonJson) != JsonSerializer.Serialize(NewSermon(), SermonJson);
+    }
+
+    /// <summary>Before another sermon is opened: unsaved work is saved or thrown away only when the user says so.</summary>
+    async Task<bool> SermonMayBeLeftAsync()
+    {
+        if (!SermonChanged()) return true;
+        var answer = await AskAsync(L("Predigt nicht gespeichert"), L("Die Änderungen an „{0}“ sind noch nicht gespeichert.", _sermon.Title.Length > 0 ? _sermon.Title : L("ohne Titel")),
+            L("Speichern"), L("Verwerfen"), L("Abbrechen"));
+        if (answer == 0) SaveSermon();
+        return answer is 0 or 1;
+    }
+
+    /// <summary>The vault is about to change: a changed sermon is saved into the vault it belongs to (like an open document).</summary>
+    void SaveSermonBeforeVaultChange()
+    {
+        if (_sermonVault == _vault.Name && SermonChanged()) SaveSermon();
     }
 
     void ExportSermon()

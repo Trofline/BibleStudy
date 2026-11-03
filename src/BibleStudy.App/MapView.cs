@@ -58,7 +58,7 @@ public sealed class MapView : UserControl
         var strip = new WrapPanel { Margin = new(16, 10, 16, 6) };
         void Add(Control c, double right = 10) { c.Margin = new(0, 0, right, 4); c.VerticalAlignment = VerticalAlignment.Center; strip.Children.Add(c); }
         Add(back, 16); Add(_chapterBtn, 4); Add(_bookBtn, 16); Add(_routeBox, 16); Add(_title);
-        _personBox.Watermark = L("Reiseweg von … (Person)"); _personBtn.Content = L("Reiseweg zeigen");
+        _personBox.PlaceholderText = L("Reiseweg von … (Person)"); _personBtn.Content = L("Reiseweg zeigen");
         ToolTip.SetTip(_personBtn, L("Die Orte, die in der Nähe der Verse einer Person genannt werden, in der Reihenfolge der Bibel"));
         Add(_personBox, 6); Add(_personBtn, 10);
         _personBtn.Click += (_, _) => { if (!string.IsNullOrWhiteSpace(_personBox.Text)) RouteRequested?.Invoke(_personBox.Text.Trim()); };

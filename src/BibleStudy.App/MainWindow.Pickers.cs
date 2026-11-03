@@ -113,7 +113,7 @@ public partial class MainWindow
         if (_books.Count == 0) return;
         Flyout? flyout = null;
         void Choose(BookInfo book) { flyout!.Hide(); Avalonia.Threading.Dispatcher.UIThread.Post(() => pick(book)); }
-        var search = new TextBox { Watermark = L("Tippen zum Filtern, z. B. „Joh“ + Enter"), Margin = new(0, 0, 0, 6) };
+        var search = new TextBox { PlaceholderText = L("Tippen zum Filtern, z. B. „Joh“ + Enter"), Margin = new(0, 0, 0, 6) };
         var tiles = new StackPanel();
         List<BookInfo> shown = [];
         void Fill()
@@ -150,7 +150,6 @@ public partial class MainWindow
             back.Click += (_, _) => { flyout!.Hide(); r.Do(); };
             panel.Children.Insert(0, back);
         }
-        panel.Children.Add(new TextBlock { Text = L("Rechtsklick auf eine Übersetzung: eigenen Namen vergeben"), Classes = { "caption" }, Margin = new(2, 4, 0, 0), Width = 700 });
         flyout = NewPickerFlyout(new ScrollViewer { Content = panel, MaxHeight = Math.Max(300, Bounds.Height - 130), HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled });
         flyout.ShowAt(anchor);
         search.Focus();
@@ -169,7 +168,7 @@ public partial class MainWindow
         var color = BookColorAt(_books, book.Id);
         var panel = new StackPanel { Width = Math.Min(620, 70 + Math.Ceiling(Math.Sqrt(book.NumberOfChapters)) * 56) };
         panel.Children.Add(PickerHeading(L("{0} – Kapitel wählen", book.CommonName)));
-        var number = new TextBox { Watermark = L("Nummer tippen (1–{0}) + Enter", book.NumberOfChapters), Margin = new(0, 0, 0, 8) };
+        var number = new TextBox { PlaceholderText = L("Nummer tippen (1–{0}) + Enter", book.NumberOfChapters), Margin = new(0, 0, 0, 8) };
         number.KeyDown += (_, e) =>
         {
             if (e.Key != Avalonia.Input.Key.Enter || !int.TryParse(number.Text, out var n)) return;
@@ -181,7 +180,7 @@ public partial class MainWindow
         {
             var chapter = c;
             var read = _read.Contains((book.Id, c));
-            var tile = PickerTile(c.ToString(), c == current, () => { flyout!.Hide(); pick(chapter); }, 50, read ? color : null, 40, read ? "gelesen" : null);
+            var tile = PickerTile(c.ToString(), c == current, () => { flyout!.Hide(); pick(chapter); }, 50, read ? color : null, 40, read ? L("gelesen") : null);
             wrap.Children.Add(tile);
         }
         panel.Children.Add(wrap);
@@ -198,7 +197,7 @@ public partial class MainWindow
         if (langs.Count == 0) return;
         Flyout? flyout = null;
         var current = LanguageBox.SelectedItem as string;
-        var search = new TextBox { Watermark = L("Sprache suchen …"), Margin = new(0, 0, 0, 10) };
+        var search = new TextBox { PlaceholderText = L("Sprache suchen …"), Margin = new(0, 0, 0, 10) };
         var grid = new WrapPanel();
         void Fill()
         {
@@ -232,7 +231,7 @@ public partial class MainWindow
         foreach (var t in items)
         {
             var tr = t;
-            var license = t.License.PublicDomain ? "gemeinfrei" : t.License.Attribution;
+            var license = t.License.PublicDomain ? L("gemeinfrei") : t.License.Attribution;
             var content = new StackPanel
             {
                 Spacing = 1, HorizontalAlignment = HorizontalAlignment.Left,
@@ -259,6 +258,8 @@ public partial class MainWindow
             pen.Click += (_, _) => { flyout!.Hide(); ShowRenameTranslation(tr); };
             panel.Children.Add(new Grid { Width = 340, Height = 52, Margin = new(0, 0, 6, 6), Children = { b, pen } });
         }
+        // the hint belongs here (it used to stand under the books, where it meant nothing)
+        panel.Children.Add(new TextBlock { Text = L("Rechtsklick auf eine Übersetzung: eigenen Namen vergeben"), Classes = { "caption" }, Margin = new(2, 4, 0, 0), Width = 692, TextWrapping = TextWrapping.Wrap });
         flyout = NewPickerFlyout(new ScrollViewer { Content = panel, Width = 720, MaxHeight = Math.Max(300, Bounds.Height - 130), HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled });
         flyout.ShowAt(TransBtn);
     }

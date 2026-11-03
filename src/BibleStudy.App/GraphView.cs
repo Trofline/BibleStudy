@@ -192,7 +192,7 @@ public sealed class GraphView : UserControl
         };
         if (mode >= 5)
         {
-            _netInput.Watermark = mode switch { 5 => L("Strong-Nummer oder Wort; mehrere mit +, z. B. Tag + Herr"), 6 => L("Person; mehrere mit +, z. B. Petrus + Johannes"), _ => L("Thema; mehrere mit +, z. B. Vergebung + Gnade") };
+            _netInput.PlaceholderText = mode switch { 5 => L("Strong-Nummer oder Wort; mehrere mit +, z. B. Tag + Herr"), 6 => L("Person; mehrere mit +, z. B. Petrus + Johannes"), _ => L("Thema; mehrere mit +, z. B. Vergebung + Gnade") };
             _force.SetData(new NetData(), null);
             return;
         }

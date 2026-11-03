@@ -335,10 +335,18 @@ public sealed class HelloAoProvider(HttpClient http, string cacheDir) : IBiblePr
         return s is null ? null : await JsonDocument.ParseAsync(s, cancellationToken: ct);
     }
 
+    /// <summary>The list of translations (with their licences) is asked for again after this time, so new translations and changed licences arrive.</summary>
+    static readonly TimeSpan ListMaxAge = TimeSpan.FromDays(7);
+
     async Task<JsonDocument> GetJsonAsync(string path, CancellationToken ct)
     {
-        var file = Path.Combine(cacheDir, path.TrimStart('/').Replace('/', Path.DirectorySeparatorChar));
-        if (File.Exists(file))
+        var root = Path.GetFullPath(cacheDir).TrimEnd(Path.DirectorySeparatorChar) + Path.DirectorySeparatorChar;
+        var file = Path.GetFullPath(Path.Combine(cacheDir, path.TrimStart('/').Replace('/', Path.DirectorySeparatorChar)));
+        // the parts of the path can come from outside (a translation id the AI passes on): ".." must never lead out of the cache folder
+        if (!file.StartsWith(root, StringComparison.OrdinalIgnoreCase) || path.Contains("..")) throw new ArgumentException("path", nameof(path));
+        var isList = path == TranslationListPath;
+        var stale = isList && File.Exists(file) && DateTime.UtcNow - File.GetLastWriteTimeUtc(file) > ListMaxAge;
+        if (File.Exists(file) && !stale)
         {
             // a damaged cache file (e.g. the program ended while writing) is fetched again instead of breaking this page for good
             try { return JsonDocument.Parse(await File.ReadAllBytesAsync(file, ct)); }
@@ -346,8 +354,10 @@ public sealed class HelloAoProvider(HttpClient http, string cacheDir) : IBiblePr
         }
         byte[] bytes;
         try { bytes = await http.GetByteArrayAsync(Base + path, ct); JsonDocument.Parse(bytes).Dispose(); }
-        catch (Exception ex) when (path == TranslationListPath && ex is HttpRequestException or TaskCanceledException or JsonException)
+        catch (Exception ex) when (isList && ex is HttpRequestException or TaskCanceledException or JsonException)
         {
+            // an old copy of the list is better than none (it is asked for again next time)
+            if (stale) { try { return JsonDocument.Parse(await File.ReadAllBytesAsync(file, ct)); } catch (JsonException) { } }
             // the server fails now and then: the list of translations (with licenses) then comes from our copy (newer one in the
             // repository, otherwise the one built into the program). It is not stored in the cache, so the next start asks the server again.
             return await FallbackTranslationListAsync(ct) ?? throw ex;

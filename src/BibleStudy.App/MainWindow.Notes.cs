@@ -157,6 +157,7 @@ public partial class MainWindow
         var delete = new MenuItem { Header = L("Notiz löschen") };
         delete.Click += async (_, _) =>
         {
+            if (await AskAsync(L("Notiz löschen?"), L("Die Notiz zu {0} wirklich löschen?", Label(n.Ref)), L("Abbrechen"), L("Löschen")) != 1) return;
             _vault.SetNote(n.Ref, "");
             if (_noteRef == n.Ref) { NoteEditor.Text = _noteLoaded = ""; }
             RefreshLists();

@@ -30,7 +30,7 @@ public partial class MainWindow
     /// <summary>The same checklist as a small window from the top bar: write something, press Enter, tick it off. Reachable from everywhere.</summary>
     void ShowTodoPopup()
     {
-        var box = new TextBox { Watermark = L("Neues To-do… (Enter)") };
+        var box = new TextBox { PlaceholderText = L("Neues To-do… (Enter)") };
         var add = new Button { Content = L("Hinzufügen"), Classes = { "primary" }, Margin = new(8, 0, 0, 0) };
         void Add()
         {
@@ -112,7 +112,7 @@ public partial class MainWindow
 
     Control SubTaskInput(long parent)
     {
-        var box = new TextBox { Watermark = L("Teil-To-do, Enter zum Hinzufügen (Esc: abbrechen)"), Margin = new(34, 0, 0, 2) };
+        var box = new TextBox { PlaceholderText = L("Teil-To-do, Enter zum Hinzufügen (Esc: abbrechen)"), Margin = new(34, 0, 0, 2) };
         box.AttachedToVisualTree += (_, _) => box.Focus();
         box.KeyDown += (_, e) =>
         {

@@ -153,7 +153,16 @@ public sealed class CollabPeer : IDisposable
         b64 = b64.PadRight(b64.Length + (4 - b64.Length % 4) % 4, '=');
         using var input = new MemoryStream(Convert.FromBase64String(b64));
         using var z = new DeflateStream(input, CompressionMode.Decompress);
-        using var doc = JsonDocument.Parse(z);
+        // a real code unpacks to a few kilobytes; a made-up one must not fill the memory
+        using var unpacked = new MemoryStream();
+        var buffer = new byte[16 * 1024];
+        for (int n; (n = z.Read(buffer)) > 0;)
+        {
+            unpacked.Write(buffer, 0, n);
+            if (unpacked.Length > 1024 * 1024) throw new FormatException("size");
+        }
+        unpacked.Position = 0;
+        using var doc = JsonDocument.Parse(unpacked);
         if (doc.RootElement.GetProperty("k").GetString() != kind) throw new FormatException("kind");
         return doc.RootElement.GetProperty("s").GetString()!;
     }

@@ -70,7 +70,23 @@ public sealed class LearnStore(string path)
         get
         {
             if (_cards is not null) return _cards;
-            try { _cards = File.Exists(path) ? JsonSerializer.Deserialize<Dictionary<string, CardState>>(File.ReadAllText(path)) : null; } catch { }
+            if (File.Exists(path))
+            {
+                // a sync program or virus scanner may hold the file for a moment: try again instead of starting empty and saving that over the progress
+                for (var attempt = 0; _cards is null && attempt < 5; attempt++)
+                {
+                    try { _cards = JsonSerializer.Deserialize<Dictionary<string, CardState>>(File.ReadAllText(path)) ?? []; _locked = false; }
+                    catch (IOException) { Thread.Sleep(150); }
+                    catch (JsonException)
+                    {
+                        // an unreadable file is kept next to it, so nothing is lost when new progress is saved
+                        try { File.Copy(path, path + $".broken-{DateTime.Now:yyyyMMdd-HHmmss}", overwrite: true); } catch (IOException) { }
+                        _cards = [];
+                    }
+                }
+                // still locked: work without it this time, but never write over the real file
+                if (_cards is null) { _locked = true; return []; }
+            }
             return _cards ??= [];
         }
     }
@@ -104,8 +120,11 @@ public sealed class LearnStore(string path)
     public int Known => Cards.Values.Count(c => c.Box >= 3);
     public int Seen => Cards.Count;
 
+    bool _locked;
+
     void Save()
     {
+        if (_locked) return;
         Directory.CreateDirectory(Path.GetDirectoryName(path)!);
         SafeFile.WriteAllText(path, JsonSerializer.Serialize(Cards));
     }

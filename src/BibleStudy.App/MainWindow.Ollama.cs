@@ -105,7 +105,7 @@ public partial class MainWindow
             var answer = await _ollama.ChatAsync(_settings.OllamaModel, messages, piece => Dispatcher.UIThread.Post(() =>
             {
                 chat.Current ??= AddAssistantText(chat);
-                chat.Current.Text += piece; chat.Streamed = true;
+                chat.Current.Append(piece); chat.Streamed = true;
                 if (chat == _chat) AiScroll.ScrollToEnd();
             }), chat.Cts.Token);
             if (answer.Length > 0) chat.History.Add(new OllamaMessage("assistant", answer));
@@ -115,7 +115,7 @@ public partial class MainWindow
         catch (Exception ex) { SetChatStatus(chat, L("Fehler: ") + ex.Message); }
         finally
         {
-            chat.Busy = false; chat.Current = null;
+            chat.Busy = false; FinishAnswer(chat);
             if (chat == _chat) AiSendBtn.Content = L("Senden");
             RebuildChatBar();
         }

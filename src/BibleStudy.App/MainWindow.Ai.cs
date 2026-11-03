@@ -18,7 +18,7 @@ public partial class MainWindow
         public string? Session;
         public CancellationTokenSource? Cts;
         public bool Busy, Streamed, HasHint;
-        public SelectableTextBlock? Current;
+        public AiAnswer? Current;
         public string Status = "";
         public string Draft = "";
         public readonly StackPanel Messages = new() { Spacing = 10, Margin = new(0, 0, 8, 0) };
@@ -36,6 +36,7 @@ public partial class MainWindow
         L("Querverweise und Strong-Nummern nachzuschlagen und die App zu steuern (anzeigen, markieren, Notizen, Warteschlange, To-dos). ") +
         L("Nutze die Werkzeuge, statt Verse aus dem Gedächtnis zu zitieren, und zitiere nur, was die Werkzeuge liefern. Prüfe Aussagen am Text. ") +
         L("Wenn der Nutzer sich auf \"diesen Vers\" oder \"hier\" bezieht, frage get_app_state ab. ") +
+        L("Für Zahlen und Aufbau hast du Wortstatistik, Satzdiagramm, Perikopen-Analyse und den Lese-Verlauf; mit show_tab, open_workspace und show_word_chart zeigst du dem Nutzer die passende Ansicht in der App. ") +
         L("Wenn du in der App etwas änderst (markieren, Notiz, Warteschlange), sage kurz, was du getan hast. Antworte auf Deutsch, klar und knapp. ") +
         L("Hintergrund des Nutzers: ") + _settings.AiContext;
 
@@ -117,18 +118,34 @@ public partial class MainWindow
     void ShowAiHint(AiChat chat)
     {
         chat.HasHint = true;
-        var hint = new TextBlock
+        // the examples are one text ("Beispiele:" and one line per example); each example becomes a card that asks it at once
+        var lines = L("Beispiele:\n• Was sagt Johannes 1:1 im Grundtext, und wie wird λόγος sonst übersetzt?\n• Markiere in Johannes 3:16 das Wort „Liebe“ gelb und lege einen Ordner „Heil“ an.\n• Suche alle Verse zum Thema Sabbat und setze sie in die Warteschlange.")
+            .Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+        var head = new TextBlock { Text = lines[0].TrimEnd(':').ToUpperInvariant(), Classes = { "eyebrow" }, Margin = new(0, 4, 0, 2) };
+        chat.Messages.Children.Add(head);
+        foreach (var example in lines.Skip(1).Select(l => l.TrimStart('•', ' ')))
         {
-            TextWrapping = TextWrapping.Wrap, FontSize = 13,
-            Text = L("Beispiele:\n• Was sagt Johannes 1:1 im Grundtext, und wie wird λόγος sonst übersetzt?\n• Markiere in Johannes 3:16 das Wort „Liebe“ gelb und lege einen Ordner „Heil“ an.\n• Suche alle Verse zum Thema Sabbat und setze sie in die Warteschlange."),
-        };
-        hint.Bind(TextBlock.ForegroundProperty, this.GetResourceObservable("BsMuted"));
-        chat.Messages.Children.Add(hint);
+            var card = new Button
+            {
+                Classes = { "aiexample" }, HorizontalAlignment = HorizontalAlignment.Stretch, HorizontalContentAlignment = HorizontalAlignment.Left,
+                Content = new TextBlock { Text = example, TextWrapping = TextWrapping.Wrap, FontSize = 13 },
+            };
+            ToolTip.SetTip(card, L("Senden"));
+            card.Click += async (_, _) => { if (_chat.Busy) return; AiInput.Text = example; await AiSendOrStopAsync(); };
+            chat.Messages.Children.Add(card);
+        }
     }
 
-    SelectableTextBlock AddAssistantText(AiChat chat)
+    /// <summary>The answer that was streaming is complete: show it formatted, and the next text starts a new block.</summary>
+    void FinishAnswer(AiChat chat)
     {
-        var tb = new SelectableTextBlock { TextWrapping = TextWrapping.Wrap };
+        chat.Current?.Render();
+        chat.Current = null;
+    }
+
+    AiAnswer AddAssistantText(AiChat chat)
+    {
+        var tb = new AiAnswer { TextWrapping = TextWrapping.Wrap, LineHeight = 21 };
         tb.ContextMenu = ChatMenu(chat, tb);
         chat.Messages.Children.Add(tb);
         return tb;
@@ -149,9 +166,11 @@ public partial class MainWindow
 
     void AddToolNote(AiChat chat, string tool)
     {
-        var note = new TextBlock { Text = "› " + tool.Replace("mcp__biblestudy__", ""), FontSize = 12 };
-        note.Bind(TextBlock.ForegroundProperty, this.GetResourceObservable("BsMuted"));
-        chat.Messages.Children.Add(note);
+        var text = new TextBlock { Text = "⚙  " + tool.Replace("mcp__biblestudy__", "").Replace('_', ' '), FontSize = 11.5 };
+        text.Bind(TextBlock.ForegroundProperty, this.GetResourceObservable("BsMuted"));
+        var chip = new Border { Child = text, Padding = new(8, 2), CornerRadius = new(10), HorizontalAlignment = HorizontalAlignment.Left, BorderThickness = new(1) };
+        chip.Bind(Border.BorderBrushProperty, this.GetResourceObservable("BsBorder"));
+        chat.Messages.Children.Add(chip);
     }
 
     async Task AiSendOrStopAsync()
@@ -188,6 +207,7 @@ public partial class MainWindow
         finally
         {
             chat.Busy = false;
+            FinishAnswer(chat);
             if (chat == _chat) AiSendBtn.Content = L("Senden");
             RebuildChatBar();
         }
@@ -205,19 +225,20 @@ public partial class MainWindow
         {
             case ClaudeTextDelta d:
                 chat.Current ??= AddAssistantText(chat);
-                chat.Current.Text += d.Text;
+                chat.Current.Append(d.Text);
                 chat.Streamed = true;
                 break;
             case ClaudeToolUse t:
-                chat.Current = null;
+                FinishAnswer(chat);
                 AddToolNote(chat, t.Name);
                 SetChatStatus(chat, L("Claude nutzt: ") + t.Name.Replace("mcp__biblestudy__", ""));
                 break;
             case ClaudeResult r:
                 chat.Session = r.SessionId ?? chat.Session;
-                if (!chat.Streamed && r.Text.Length > 0) AddAssistantText(chat).Text = r.Text;
+                // an error is shown in the status line only, not a second time as an answer
+                if (!chat.Streamed && r.Text.Length > 0 && !r.IsError) { chat.Current = AddAssistantText(chat); chat.Current.SetText(r.Text); }
                 SetChatStatus(chat, r.IsError ? L("Fehler: ") + r.Text : "");
-                chat.Current = null;
+                FinishAnswer(chat);
                 break;
         }
         if (chat == _chat) AiScroll.ScrollToEnd();

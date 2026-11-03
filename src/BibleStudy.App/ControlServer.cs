@@ -65,7 +65,7 @@ public sealed class ControlServer : IDisposable
     {
         try
         {
-            if (ctx.Request.Headers["X-Token"] != _token) { Respond(ctx, 401, """{"error":"unauthorized"}"""); return; }
+            if (!CryptographicOperations.FixedTimeEquals(Encoding.UTF8.GetBytes(ctx.Request.Headers["X-Token"] ?? ""), Encoding.UTF8.GetBytes(_token))) { Respond(ctx, 401, """{"error":"unauthorized"}"""); return; }
             if (ctx.Request.HttpMethod != "POST" || ctx.Request.Url?.AbsolutePath != "/call") { Respond(ctx, 404, """{"error":"not found"}"""); return; }
             using var doc = await JsonDocument.ParseAsync(ctx.Request.InputStream);
             var tool = doc.RootElement.GetProperty("tool").GetString() ?? "";

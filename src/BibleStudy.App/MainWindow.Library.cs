@@ -67,7 +67,7 @@ public partial class MainWindow
                 if (_shownCommentary != (c.Id, _curBook, _curChapter)) return;
                 CommentaryInfo.Text = chapter is null || (chapter.Notes.Count == 0 && chapter.Introduction.Length == 0)
                     ? L("{0} hat zu {1} {2} keine Anmerkungen. Wähle oben einen anderen Kommentar.", c.Name, BookName(_curBook), _curChapter)
-                    : L("{0} zu {1} {2} · {3} · Englisch", c.Name, BookName(_curBook), _curChapter, (c.LicenseUrl.Contains("publicdomain") ? "gemeinfrei" : L("Lizenz ") + c.LicenseUrl));
+                    : L("{0} zu {1} {2} · {3} · Englisch", c.Name, BookName(_curBook), _curChapter, (c.LicenseUrl.Contains("publicdomain") ? L("gemeinfrei") : L("Lizenz ") + c.LicenseUrl));
                 if (chapter is null) return;
                 if (chapter.Introduction.Length > 0)
                     CommentaryPanel.Children.Add(new Expander { Header = L("Einleitung"), HorizontalAlignment = HorizontalAlignment.Stretch, Content = new SelectableTextBlock { Text = chapter.Introduction, TextWrapping = TextWrapping.Wrap } });
@@ -148,7 +148,13 @@ public partial class MainWindow
     {
         var q = SearchQuery.Fold(LexSearchBox.Text?.Trim() ?? "", true);
         if (q.Length < 2) return;
-        _lexIndex ??= await _hello.GetLexiconIndexAsync();
+        // runs on every key: without a connection it says so once instead of an error box per key
+        try { _lexIndex ??= await _hello.GetLexiconIndexAsync(); }
+        catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException or System.Text.Json.JsonException or IOException)
+        {
+            LexInfo.Text = L("Lexikon nicht verfügbar: ") + ex.Message;
+            return;
+        }
         var hits = _lexIndex.Where(x => SearchQuery.Fold(x.Name, true).Contains(q))
             .OrderBy(x => SearchQuery.Fold(x.Name, true).StartsWith(q) ? 0 : 1).ThenByDescending(x => x.References).Take(60).ToList();
         LexPanel.Children.Clear();

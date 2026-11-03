@@ -63,7 +63,7 @@ public partial class MainWindow
             },
         }));
 
-        var name = new TextBox { Watermark = L("Dein Name (wird der anderen Person gezeigt)"), Text = _settings.CollabName, MaxLength = 40 };
+        var name = new TextBox { PlaceholderText = L("Dein Name (wird der anderen Person gezeigt)"), Text = _settings.CollabName, MaxLength = 40 };
         name.LostFocus += (_, _) => { _settings.CollabName = (name.Text ?? "").Trim(); SaveSettings(); };
         CollabPanel.Children.Add(name);
         CollabPanel.Children.Add(BuildRelayBox());
@@ -80,9 +80,9 @@ public partial class MainWindow
     /// <summary>The optional own relay server (TURN): used when no direct connection is possible. Collapsed, because most people never need it.</summary>
     Control BuildRelayBox()
     {
-        var url = new TextBox { Watermark = L("Adresse, z. B. turn:server.example:3478"), Text = _settings.RelayUrl, MaxLength = 200 };
-        var user = new TextBox { Watermark = L("Benutzername"), Text = _settings.RelayUser, MaxLength = 100 };
-        var pass = new TextBox { Watermark = L("Passwort"), Text = _settings.RelayPassword, MaxLength = 200, PasswordChar = '•' };
+        var url = new TextBox { PlaceholderText = L("Adresse, z. B. turn:server.example:3478"), Text = _settings.RelayUrl, MaxLength = 200 };
+        var user = new TextBox { PlaceholderText = L("Benutzername"), Text = _settings.RelayUser, MaxLength = 100 };
+        var pass = new TextBox { PlaceholderText = L("Passwort"), Text = _settings.RelayPassword, MaxLength = 200, PasswordChar = '•' };
         void Save() { _settings.RelayUrl = (url.Text ?? "").Trim(); _settings.RelayUser = (user.Text ?? "").Trim(); _settings.RelayPassword = pass.Text ?? ""; SaveSettings(); }
         url.LostFocus += (_, _) => Save(); user.LostFocus += (_, _) => Save(); pass.LostFocus += (_, _) => Save();
         return new Expander
@@ -152,7 +152,7 @@ public partial class MainWindow
             area.Children.Add(new TextBlock { Text = L("1. Schicke diesen Code der anderen Person:"), FontWeight = FontWeight.SemiBold });
             area.Children.Add(CodeBox(code));
             area.Children.Add(new TextBlock { Text = L("2. Füge hier ihren Antwortcode ein:"), FontWeight = FontWeight.SemiBold, Margin = new(0, 6, 0, 0) });
-            var answer = new TextBox { Watermark = "BS1-…", TextWrapping = TextWrapping.Wrap, MaxHeight = 110, FontSize = 11 };
+            var answer = new TextBox { PlaceholderText = "BS1-…", TextWrapping = TextWrapping.Wrap, MaxHeight = 110, FontSize = 11 };
             var connect = new Button { Content = L("Verbinden"), Classes = { "primary" }, HorizontalAlignment = HorizontalAlignment.Left };
             var info = new TextBlock { Classes = { "caption" }, TextWrapping = TextWrapping.Wrap };
             connect.Click += async (_, _) =>
@@ -175,7 +175,7 @@ public partial class MainWindow
     {
         area.Children.Clear();
         area.Children.Add(new TextBlock { Text = L("1. Füge hier den Einladungscode ein, den du bekommen hast:"), FontWeight = FontWeight.SemiBold });
-        var invitation = new TextBox { Watermark = "BS1-…", TextWrapping = TextWrapping.Wrap, MaxHeight = 110, FontSize = 11 };
+        var invitation = new TextBox { PlaceholderText = "BS1-…", TextWrapping = TextWrapping.Wrap, MaxHeight = 110, FontSize = 11 };
         var next = new Button { Content = L("Weiter"), Classes = { "primary" }, HorizontalAlignment = HorizontalAlignment.Left };
         var result = new StackPanel { Spacing = 8 };
         next.Click += async (_, _) =>
@@ -251,7 +251,7 @@ public partial class MainWindow
         actions.Children.Add(verse); actions.Children.Add(marksBtn); actions.Children.Add(doc);
         CollabPanel.Children.Add(actions);
 
-        var input = new TextBox { Watermark = L("Nachricht schreiben, Enter sendet"), MaxLength = 2000, AcceptsReturn = false };
+        var input = new TextBox { PlaceholderText = L("Nachricht schreiben, Enter sendet"), MaxLength = 2000, AcceptsReturn = false };
         input.KeyDown += (_, e) =>
         {
             if (e.Key != Key.Enter || string.IsNullOrWhiteSpace(input.Text)) return;

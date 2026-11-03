@@ -63,7 +63,7 @@ public partial class MainWindow
             return;
         }
 
-        _hbSearch = new TextBox { Watermark = L("Im Handbuch suchen …"), Margin = new(0, 0, 0, 6) };
+        _hbSearch = new TextBox { PlaceholderText = L("Im Handbuch suchen …"), Margin = new(0, 0, 0, 6) };
         _hbToc = new ListBox { Background = Brushes.Transparent };
         _hbSearch.TextChanged += (_, _) => FillHandbookToc();
         _hbToc.SelectionChanged += (_, _) =>

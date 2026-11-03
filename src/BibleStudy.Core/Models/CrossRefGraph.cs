@@ -106,7 +106,9 @@ public static class CrossRefGraphBuilder
                 results[i] = perTarget.Select(kv => new GraphEdge(from, kv.Key, kv.Value)).ToList();
                 rawResults[i] = raw;
             }
-            catch (HttpRequestException) { results[i] = []; rawResults[i] = []; }
+            // one chapter that is missing, too slow or broken must not take the whole graph down (only the user's own cancel stops it)
+            catch (Exception ex) when (ex is HttpRequestException or System.Text.Json.JsonException or IOException || ex is TaskCanceledException && !ct.IsCancellationRequested)
+            { results[i] = []; rawResults[i] = []; }
             finally { gate.Release(); progress?.Report((Interlocked.Increment(ref done), jobs.Count)); }
         }));
         var graph = new CrossRefGraph(books, results.SelectMany(r => r));

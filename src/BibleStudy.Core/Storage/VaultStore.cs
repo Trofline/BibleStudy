@@ -145,12 +145,23 @@ public sealed class VaultStore : SqliteDb
         Exec("UPDATE documents SET folder_id=$f WHERE id=$i", c => { c.Parameters.AddWithValue("$f", (object?)folderId ?? DBNull.Value); c.Parameters.AddWithValue("$i", documentId); });
 
     /// <summary>Deletes the folder; its marks and documents are kept (without folder).</summary>
-    public void DeleteFolder(long id)
+    public void DeleteFolder(long id) => InTransaction(id,
+        "UPDATE marks SET folder_id=NULL WHERE folder_id=$i", "UPDATE documents SET folder_id=NULL WHERE folder_id=$i",
+        "UPDATE notes SET folder_id=NULL WHERE folder_id=$i", "DELETE FROM folders WHERE id=$i");
+
+    /// <summary>Several statements about one id, all or none (a crash in between must not leave half of a change).</summary>
+    void InTransaction(long id, params string[] statements)
     {
-        Exec("UPDATE marks SET folder_id=NULL WHERE folder_id=$i", c => c.Parameters.AddWithValue("$i", id));
-        Exec("UPDATE documents SET folder_id=NULL WHERE folder_id=$i", c => c.Parameters.AddWithValue("$i", id));
-        Exec("UPDATE notes SET folder_id=NULL WHERE folder_id=$i", c => c.Parameters.AddWithValue("$i", id));
-        Exec("DELETE FROM folders WHERE id=$i", c => c.Parameters.AddWithValue("$i", id));
+        using var con = Open();
+        using var tx = con.BeginTransaction();
+        foreach (var sql in statements)
+        {
+            using var cmd = con.CreateCommand();
+            cmd.CommandText = sql;
+            cmd.Parameters.AddWithValue("$i", id);
+            cmd.ExecuteNonQuery();
+        }
+        tx.Commit();
     }
 
     // ---- marks ------------------------------------------------------------------------------------------------------
@@ -190,11 +201,7 @@ public sealed class VaultStore : SqliteDb
         tx.Commit();
     }
 
-    public void DeleteMark(long id)
-    {
-        Exec("DELETE FROM mark_tags WHERE mark_id=$i", c => c.Parameters.AddWithValue("$i", id));
-        Exec("DELETE FROM marks WHERE id=$i", c => c.Parameters.AddWithValue("$i", id));
-    }
+    public void DeleteMark(long id) => InTransaction(id, "DELETE FROM mark_tags WHERE mark_id=$i", "DELETE FROM marks WHERE id=$i");
 
     /// <summary>Marks filtered by chapter, folder (<paramref name="noFolder"/> = only unfiled) and/or tag; in Bible order.</summary>
     public List<Mark> GetMarks(string? book = null, int? chapter = null, long? folderId = null, bool noFolder = false, string? tag = null)
@@ -305,11 +312,9 @@ public sealed class VaultStore : SqliteDb
     // ---- delete everything in this vault ---------------------------------------------------------------------------------------
 
     /// <summary>Empties the vault completely (notes, highlights, folders, documents, lists, prayers, reading progress). Cannot be undone.</summary>
-    public void Wipe()
-    {
-        foreach (var table in new[] { "notes", "read_chapters", "folders", "marks", "mark_tags", "queue", "documents", "doc_tags", "todos", "my_xrefs", "hidden_xrefs", "prayers", "bookmarks", "last_position" })
-            Exec($"DELETE FROM {table}");
-    }
+    public void Wipe() =>
+        InTransaction(0, [.. new[] { "notes", "read_chapters", "folders", "marks", "mark_tags", "queue", "documents", "doc_tags", "todos", "my_xrefs", "hidden_xrefs", "prayers", "bookmarks", "last_position" }
+            .Select(table => $"DELETE FROM {table}")]);
 
     // ---- queue ------------------------------------------------------------------------------------------------------
 
@@ -462,11 +467,7 @@ public sealed class VaultStore : SqliteDb
         tx.Commit();
     }
 
-    public void DeleteDocument(long id)
-    {
-        Exec("DELETE FROM doc_tags WHERE doc_id=$i", c => c.Parameters.AddWithValue("$i", id));
-        Exec("DELETE FROM documents WHERE id=$i", c => c.Parameters.AddWithValue("$i", id));
-    }
+    public void DeleteDocument(long id) => InTransaction(id, "DELETE FROM doc_tags WHERE doc_id=$i", "DELETE FROM documents WHERE id=$i");
 
     /// <summary>Documents, newest change first; <paramref name="text"/> searches title, body and tags.</summary>
     public List<Document> GetDocuments(string? text = null, string? tag = null, bool? templates = null)
@@ -510,14 +511,20 @@ public sealed class VaultStore : SqliteDb
         if (!File.Exists(legacyDbPath)) return;
         using var con = Open();
         using (var attach = con.CreateCommand()) { attach.CommandText = "ATTACH DATABASE $p AS old"; attach.Parameters.AddWithValue("$p", legacyDbPath); attach.ExecuteNonQuery(); }
+        // the columns are named: the tables of a vault got more columns later (notes.folder_id), and "INSERT … SELECT" without names then failed silently
         foreach (var sql in new[]
         {
-            "INSERT OR IGNORE INTO notes SELECT book,chapter,verse,text,updated FROM old.notes",
-            "INSERT OR IGNORE INTO read_chapters SELECT book,chapter,read_at FROM old.read_chapters",
-            $"INSERT INTO marks(translation,book,chapter,verse,start_off,end_off,text,color,note,folder_id,created) SELECT '{Mark.AnyTranslation}',book,chapter,verse,-1,-1,'','{bookmarkColor}','',NULL,created FROM old.bookmarks",
+            "INSERT OR IGNORE INTO notes(book,chapter,verse,text,updated) SELECT book,chapter,verse,text,updated FROM old.notes",
+            "INSERT OR IGNORE INTO read_chapters(book,chapter,read_at) SELECT book,chapter,read_at FROM old.read_chapters",
+            "INSERT INTO marks(translation,book,chapter,verse,start_off,end_off,text,color,note,folder_id,created) SELECT $any,book,chapter,verse,-1,-1,'',$color,'',NULL,created FROM old.bookmarks",
         })
         {
-            try { using var cmd = con.CreateCommand(); cmd.CommandText = sql; cmd.ExecuteNonQuery(); }
+            try
+            {
+                using var cmd = con.CreateCommand(); cmd.CommandText = sql;
+                cmd.Parameters.AddWithValue("$any", Mark.AnyTranslation); cmd.Parameters.AddWithValue("$color", bookmarkColor);
+                cmd.ExecuteNonQuery();
+            }
             catch (SqliteException) { /* table missing in a very old database: nothing to import */ }
         }
     }

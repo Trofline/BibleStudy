@@ -172,7 +172,7 @@ public partial class MainWindow
         var from = new ComboBox { ItemsSource = names, SelectedIndex = Math.Max(0, _books.ToList().FindIndex(b => b.Id == "MAT")), MinWidth = 140 };
         var to = new ComboBox { ItemsSource = names, SelectedIndex = Math.Max(0, _books.ToList().FindIndex(b => b.Id == "JHN")), MinWidth = 140 };
         var days = new NumericUpDown { Minimum = 1, Maximum = 1500, Value = 30, Increment = 1, FormatString = "0", Width = 130 };
-        var name = new TextBox { Watermark = L("Name (freiwillig)") };
+        var name = new TextBox { PlaceholderText = L("Name (freiwillig)") };
         var info = new TextBlock { Classes = { "caption" }, TextWrapping = TextWrapping.Wrap };
         void Show()
         {

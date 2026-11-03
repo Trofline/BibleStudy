@@ -48,8 +48,8 @@ public partial class MainWindow
     /// <summary>A small card at the verse: where does it point, and why (optional).</summary>
     void ShowMyXrefEditor(VerseRef from, Control anchor)
     {
-        var target = new TextBox { Watermark = L("Bibelstelle, z. B. Joh 3,16 oder Röm 8,28-30") };
-        var note = new TextBox { Watermark = L("Kurze Notiz dazu (freiwillig)") };
+        var target = new TextBox { PlaceholderText = L("Bibelstelle, z. B. Joh 3,16 oder Röm 8,28-30") };
+        var note = new TextBox { PlaceholderText = L("Kurze Notiz dazu (freiwillig)") };
         var info = new TextBlock { Classes = { "caption" }, TextWrapping = TextWrapping.Wrap };
         var save = new Button { Content = L("Querverweis speichern"), Classes = { "primary" }, HorizontalAlignment = HorizontalAlignment.Left };
         var fly = new Flyout { Content = new StackPanel { Spacing = 8, Width = 300, Children = { new TextBlock { Text = L("Eigener Querverweis von {0}", Label(from)), FontWeight = FontWeight.SemiBold, TextWrapping = TextWrapping.Wrap }, target, note, save, info } } };

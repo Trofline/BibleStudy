@@ -78,7 +78,7 @@ public partial class MainWindow
         _grammarFields = new WrapPanel();
         FillGrammarFields();
         _grammarView.Children.Add(_grammarFields);
-        _grammarWord = new TextBox { Watermark = L("Grundform oder Strong-Nummer (optional), z. B. G26") };
+        _grammarWord = new TextBox { PlaceholderText = L("Grundform oder Strong-Nummer (optional), z. B. G26") };
         _grammarView.Children.Add(_grammarWord);
         var go = new Button { Content = L("Suchen"), Classes = { "primary" }, HorizontalAlignment = HorizontalAlignment.Left };
         var result = new StackPanel { Spacing = 6 };
@@ -94,7 +94,7 @@ public partial class MainWindow
         void AddRow(int roleIndex)
         {
             var role = new ComboBox { ItemsSource = RoleNames.Select(r => L(r.Label)).ToList(), SelectedIndex = roleIndex, Width = 170 };
-            var term = new TextBox { Watermark = L("Wort (optional), z. B. Jesus, G2424") };
+            var term = new TextBox { PlaceholderText = L("Wort (optional), z. B. Jesus, G2424") };
             var remove = new Button { Content = "✕", Classes = { "tool" }, Width = 28, Height = 28 };
             ToolTip.SetTip(remove, L("Entfernen"));
             var row = new Grid { ColumnDefinitions = new("Auto,*,Auto"), ColumnSpacing = 6 };

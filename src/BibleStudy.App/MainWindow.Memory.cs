@@ -115,6 +115,8 @@ public partial class MainWindow
         reveal.Click += (_, _) => { body.Text = text; reveal.IsVisible = false; rate.IsVisible = true; };
         async void Rate(bool ok)
         {
+            if (!knew.IsEnabled) return;   // a quick double click answers once, not twice (which skipped the next card)
+            knew.IsEnabled = again.IsEnabled = false;
             Memory.Answer(key, ok, DateTime.Now);
             if (!ok) _memoryQueue.Add(key);
             _memoryPos++;
@@ -137,7 +139,10 @@ public partial class MainWindow
     {
         var share = box switch { 0 => 0.25, 1 => 0.45, 2 => 0.65, 3 => 0.85, _ => 1.0 };
         var count = (int)Math.Round(words.Length * share);
-        var rng = new Random(key.GetHashCode(StringComparison.Ordinal) ^ box);
+        // a hash of our own: string.GetHashCode changes with every start of the program, and the gaps of a verse should stay where they are
+        var seed = 17;
+        foreach (var c in key) seed = unchecked(seed * 31 + c);
+        var rng = new Random(seed ^ box);
         return Enumerable.Range(0, words.Length).OrderBy(_ => rng.Next()).Take(count).ToHashSet();
     }
 

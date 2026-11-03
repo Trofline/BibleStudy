@@ -111,16 +111,16 @@ public static partial class BibleImporters
 
     public static ParsedBible ReadCsvOfflineHtml(string path, IProgress<string>? progress = null)
     {
-        progress?.Report("Datei wird gelesen …");
+        progress?.Report(L("Datei wird gelesen …"));
         var html = File.ReadAllText(path);
         var matches = VerseButton().Matches(html);
-        if (matches.Count < 1000) throw new InvalidDataException("Das sieht nicht nach der Offline-Datei der CSV-Bibel aus (zu wenige Verse gefunden).");
+        if (matches.Count < 1000) throw new InvalidDataException(L("Das sieht nicht nach der Offline-Datei der CSV-Bibel aus (zu wenige Verse gefunden)."));
         var verses = new List<ParsedVerse>(matches.Count);
         var footnotes = new List<(string, int, Footnote)>();
         var noteCounter = new Dictionary<(string, int), int>();
         for (var i = 0; i < matches.Count; i++)
         {
-            if (i % 2000 == 0) progress?.Report($"Verse werden gelesen … {i}/{matches.Count}");
+            if (i % 2000 == 0) progress?.Report(L("Verse werden gelesen … {0}/{1}", i, matches.Count));
             var m = matches[i];
             var reference = Reference().Match(WebUtility.HtmlDecode(m.Groups["ref"].Value));
             if (!reference.Success) continue;

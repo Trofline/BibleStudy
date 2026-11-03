@@ -130,7 +130,13 @@ public partial class MainWindow
     async Task OpenSentenceWindowAsync()
     {
         if (_selected is null && _curBook == "") return;
-        var list = SyntaxProvider.IsAvailable(_curBook) ? await SentencesOfAsync(_curBook, _curChapter) : [];
+        List<DSentence> list;
+        try { list = SyntaxProvider.IsAvailable(_curBook) ? await SentencesOfAsync(_curBook, _curChapter) : []; }
+        catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException or IOException or System.Xml.XmlException)
+        {
+            StatusText.Text = L("Syntaxdaten nicht verfügbar: ") + ex.Message;
+            return;
+        }
         if (list.Count == 0) { StatusText.Text = L("Für dieses Buch gibt es keine Syntaxdaten."); return; }
         var viewer = new SentenceViewer(this);
         viewer.SetSentences(list, SentenceAt(list, _selected));

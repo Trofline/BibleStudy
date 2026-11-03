@@ -179,6 +179,8 @@ public partial class MainWindow
         reveal.Click += (_, _) => { answer.IsVisible = true; rate.IsVisible = true; reveal.IsVisible = false; };
         async void Rate(bool ok)
         {
+            if (!knew.IsEnabled) return;   // a quick double click answers once, not twice (which skipped the next card)
+            knew.IsEnabled = again.IsEnabled = false;
             Learn.Answer(id, ok, DateTime.Now);
             if (!ok) _queue.Add(id);   // comes back at the end of this session
             _queuePos++;

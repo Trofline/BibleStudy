@@ -31,7 +31,7 @@ public static partial class BibleImporters
 
         public ParsedBible Done(string name, string languageCode)
         {
-            if (_order.Count < 10) throw new InvalidDataException("In der Datei wurden kaum Verse gefunden. Ist es wirklich eine Bibelübersetzung in diesem Format?");
+            if (_order.Count < 10) throw new InvalidDataException(L("In der Datei wurden kaum Verse gefunden. Ist es wirklich eine Bibelübersetzung in diesem Format?"));
             var verses = _order.Select(k => new ParsedVerse(k.Item1, k.Item2, k.Item3, [new Segment(_by[k].ToString())])).ToList();
             return new ParsedBible(name, name.Length > 12 ? name[..12].Trim() : name, languageCode, verses, []);
         }

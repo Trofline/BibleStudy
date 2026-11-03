@@ -32,8 +32,8 @@ public partial class MainWindow
                 case Button or ToggleButton when !ContainsText(c):
                     if (ToolTip.GetTip(c) is string tip && tip.Length > 0) AutomationProperties.SetName(c, tip);
                     break;
-                case TextBox box when !string.IsNullOrEmpty(box.Watermark):
-                    AutomationProperties.SetName(c, box.Watermark);
+                case TextBox box when !string.IsNullOrEmpty(box.PlaceholderText):
+                    AutomationProperties.SetName(c, box.PlaceholderText);
                     break;
                 case ComboBox combo when ToolTip.GetTip(combo) is string comboTip && comboTip.Length > 0:
                     AutomationProperties.SetName(c, comboTip);

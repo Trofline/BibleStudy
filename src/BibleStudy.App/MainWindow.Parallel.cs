@@ -65,7 +65,7 @@ public partial class MainWindow
                     sw.Click += async (_, _) => { SetColumnColor(col, hex); Redraw(); await ApplyColumnColorsAsync(); };
                     row.Children.Add(sw);
                 }
-                var entry = new TextBox { Width = 84, Height = 26, Margin = new(2, 0, 0, 0), Watermark = "#RRGGBB", Text = i < _settings.ParallelColors.Count ? _settings.ParallelColors[i] : "" };
+                var entry = new TextBox { Width = 84, Height = 26, Margin = new(2, 0, 0, 0), PlaceholderText = "#RRGGBB", Text = i < _settings.ParallelColors.Count ? _settings.ParallelColors[i] : "" };
                 entry.LostFocus += async (_, _) =>
                 {
                     var t = (entry.Text ?? "").Trim();

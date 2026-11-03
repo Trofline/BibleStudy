@@ -186,7 +186,8 @@ public partial class MainWindow
             _chapterRefs = all.ToDictionary(p => p.Key, p => VisibleXrefs(new VerseRef(book, chapter, p.Key), p.Value)
                 .Where(x => x.Score >= _settings.XrefMinVotes).OrderByDescending(x => x.Score).ToList());
         }
-        catch (HttpRequestException) { /* offline and not cached: the views simply stay empty */ }
+        // offline, too slow or a broken answer: the views simply stay empty, the chapter itself is shown anyway
+        catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException or System.Text.Json.JsonException or IOException) { }
     }
 
     Control? XrefChips(int verse, string translationId)

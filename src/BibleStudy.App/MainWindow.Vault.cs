@@ -46,7 +46,7 @@ public partial class MainWindow
     {
         // an open document is saved into the vault it belongs to, before the other vault takes over
         // (saved afterwards it went into the new vault and could overwrite a document there that has the same number)
-        CloseEditor(); CloseDocument(); SaveNoteDraft();
+        CloseEditor(); CloseDocument(); SaveNoteDraft(); SaveSermonBeforeVaultChange();
         _noteRef = null; NoteEditor.Text = _noteLoaded = "";
         _vault = OpenVault(name);
         RefreshHiddenXrefs();
@@ -242,7 +242,7 @@ public partial class MainWindow
         var b = new Border
         {
             Width = size, Height = size, CornerRadius = new(size / 2), Margin = new(0, 0, 6, 6), Cursor = new Cursor(StandardCursorType.Hand),
-            Background = new SolidColorBrush(Color.Parse(hex)), BorderThickness = new(selected ? 3 : 1),
+            Background = new SolidColorBrush(MarkColor(hex)), BorderThickness = new(selected ? 3 : 1),
         };
         b.Bind(Border.BorderBrushProperty, this.GetResourceObservable(selected ? "BsText" : "BsBorder"));
         ToolTip.SetTip(b, hex);

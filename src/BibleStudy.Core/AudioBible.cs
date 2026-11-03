@@ -123,7 +123,7 @@ public static class AudioBible
         }
         if (!files.TryGetValue(chapter, out var file)) throw new FileNotFoundException($"{folder}: chapter {chapter} has no recording");
 
-        var tmp = path + ".part";
+        var tmp = $"{path}.{Guid.NewGuid():N}.part";   // the prefetch of the next chapter and a click on "next" may load the same chapter at once
         try
         {
             using var resp = await http.GetAsync($"{SourceUrl}{folder}/{file}", HttpCompletionOption.ResponseHeadersRead, ct);

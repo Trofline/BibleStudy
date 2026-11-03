@@ -264,6 +264,32 @@
             <Setter Property="Foreground" Value="{DynamicResource BsAccentFg}" />
         </Style>
 
+        <!-- Sliders show the chosen part in the accent colour -->
+        <Style Selector="Slider, Slider:pointerover, Slider:pressed">
+            <Setter Property="Foreground" Value="{DynamicResource BsAccent}" />
+        </Style>
+        <Style Selector="Slider.setting">
+            <Setter Property="Width" Value="460" />
+            <Setter Property="HorizontalAlignment" Value="Left" />
+            <Setter Property="Margin" Value="0,-4,0,6" />
+        </Style>
+
+        <!-- Example questions in an empty AI conversation: a click asks them -->
+        <Style Selector="Button.aiexample">
+            <Setter Property="Padding" Value="12,9" />
+            <Setter Property="CornerRadius" Value="10" />
+            <Setter Property="Background" Value="{DynamicResource BsSurface}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource BsBorder}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="Foreground" Value="{DynamicResource BsText}" />
+            <Setter Property="Cursor" Value="Hand" />
+        </Style>
+        <Style Selector="Button.aiexample:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="{DynamicResource BsAccentSoft}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource BsAccent}" />
+            <Setter Property="Foreground" Value="{DynamicResource BsText}" />
+        </Style>
+
         <!-- Work tabs of the main window (like the tabs of the Windows Explorer) -->
         <Style Selector="Button.wtab">
             <Setter Property="Height" Value="34" />

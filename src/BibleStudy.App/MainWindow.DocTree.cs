@@ -24,7 +24,7 @@ public partial class MainWindow
 
     void InitDocTree()
     {
-        var name = new TextBox { Watermark = L("Name des Ordners"), Width = 220 };
+        var name = new TextBox { PlaceholderText = L("Name des Ordners"), Width = 220 };
         var create = new Button { Content = L("Anlegen"), Classes = { "primary" }, HorizontalAlignment = HorizontalAlignment.Left };
         var fly = new Flyout { Content = new StackPanel { Spacing = 8, Children = { name, create } } };
         void Make()

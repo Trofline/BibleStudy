@@ -197,12 +197,14 @@ public partial class MainWindow
         try
         {
             _vault.BackupTo(snapshot);
-            SaveSettings();
             if (File.Exists(path)) File.Delete(path);
             using (var zip = ZipFile.Open(path, ZipArchiveMode.Create))
             {
                 zip.CreateEntryFromFile(snapshot, "vault.db");
-                if (File.Exists(_settingsPath)) zip.CreateEntryFromFile(_settingsPath, "settings.json");
+                // only the settings the import takes over: a vault is shared with other people, the relay password, the name for studying
+                // together, the allowed plugins or the AI instruction must not go along
+                var shared = new AppSettings { CustomColors = _settings.CustomColors, DefaultColor = _settings.DefaultColor, AutoTagBook = _settings.AutoTagBook, AutoMarkRead = _settings.AutoMarkRead };
+                using (var s = new StreamWriter(zip.CreateEntry("settings.json").Open())) s.Write(JsonSerializer.Serialize(shared));
                 var info = zip.CreateEntry("info.txt");
                 using var writer = new StreamWriter(info.Open());
                 writer.Write(L("BibleStudy vault \"{0}\", exported {1:yyyy-MM-dd HH:mm}", _vault.Name, DateTime.Now));
@@ -234,9 +236,11 @@ public partial class MainWindow
                 using var reader = new StreamReader(settingsEntry.Open());
                 if (JsonSerializer.Deserialize<AppSettings>(reader.ReadToEnd()) is { } imported)
                 {
-                    _settings.CustomColors = imported.CustomColors; _settings.DefaultColor = imported.DefaultColor; _settings.AutoTagBook = imported.AutoTagBook;
-                    _settings.AutoMarkRead = imported.AutoMarkRead; _settings.AiContext = imported.AiContext; _settings.AiModel = imported.AiModel;
-                    AiContextBox.Text = _settings.AiContext; AiModelBox.Text = _settings.AiModel; AutoTagCheck.IsChecked = _settings.AutoTagBook; AutoReadCheck.IsChecked = _settings.AutoMarkRead;
+                    // colours and two switches only: the AI instruction of someone else's vault does not replace your own
+                    _settings.CustomColors = imported.CustomColors.Where(c => NormalizeHex(c) is not null).Take(30).ToList();
+                    _settings.DefaultColor = NormalizeHex(imported.DefaultColor) ?? _settings.DefaultColor;
+                    _settings.AutoTagBook = imported.AutoTagBook; _settings.AutoMarkRead = imported.AutoMarkRead;
+                    AutoTagCheck.IsChecked = _settings.AutoTagBook; AutoReadCheck.IsChecked = _settings.AutoMarkRead;
                     BuildDefaultColorPanel();
                 }
             }

@@ -1,4 +1,3 @@
-#pragma warning disable CS0618 // TextBox.Watermark is what the XAML files use
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Documents;
@@ -32,7 +31,7 @@ static class LocXaml
                 else if (tb.Text is { Length: > 0 } t) tb.Text = L(t);
                 break;
             case TextBox box:
-                if (box.Watermark is { Length: > 0 } w) box.Watermark = L(w);
+                if (box.PlaceholderText is { Length: > 0 } w) box.PlaceholderText = L(w);
                 break;
             case HeaderedContentControl h when h.Header is string hs && hs.Length > 0:
                 h.Header = L(hs);

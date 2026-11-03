@@ -17,7 +17,7 @@ namespace BibleStudy.App;
 public sealed record Entry(VerseRef Ref, string Display, long? Id = null, string? Color = null)
 {
     public bool HasColor => Color is not null;
-    public IBrush? ColorBrush => Color is null ? null : new SolidColorBrush(Avalonia.Media.Color.Parse(Color));
+    public IBrush? ColorBrush => Color is not null && Avalonia.Media.Color.TryParse(Color, out var c) ? new SolidColorBrush(c) : null;
     public string Title => Display.Split('\n', 2)[0];
     public string Body => Display.Contains('\n') ? Display[(Display.IndexOf('\n') + 1)..] : "";
     public bool HasBody => Body.Length > 0;
@@ -303,7 +303,7 @@ public partial class MainWindow : Window
         var count = Directory.Exists(dir)
             ? Directory.EnumerateFiles(dir, "*.json", SearchOption.AllDirectories).Count(f => !f.EndsWith(".words.json") && Path.GetFileName(f) != "books.json") : 0;
         var total = _books.Sum(b => b.NumberOfChapters);
-        OfflineInfo.Text = L("{0}: {1} von {2} Kapiteln offline verfügbar. Lizenz: {3}.", t.Name, count, total, (t.License.PublicDomain ? "gemeinfrei" : t.LicenseUrl));
+        OfflineInfo.Text = L("{0}: {1} von {2} Kapiteln offline verfügbar. Lizenz: {3}.", t.Name, count, total, (t.License.PublicDomain ? L("gemeinfrei") : t.LicenseUrl));
     }
 
     async Task OfflineAsync()
@@ -417,7 +417,7 @@ public partial class MainWindow : Window
             if (_startupHome) { _startupHome = false; ShowHome(); }
 
             StatusText.Text = string.Join("  |  ", cols.Select(c =>
-                L("{0}: {1}, Namensnennung: {2}", c.T.Name, (c.T.License.PublicDomain ? "gemeinfrei" : L("Lizenz ") + c.T.LicenseUrl), c.T.License.Attribution))) + L(" · Quelle: {0}", _provider.Name);
+                L("{0}: {1}, Namensnennung: {2}", c.T.Name, (c.T.License.PublicDomain ? L("gemeinfrei") : L("Lizenz ") + c.T.LicenseUrl), c.T.License.Attribution))) + L(" · Quelle: {0}", _provider.Name);
         }
         catch (Exception ex) { if (generation == _showGeneration) StatusText.Text = L("Kapitel nicht verfügbar: ") + ex.Message; }
         finally { SplashWindow.Done(); }
@@ -534,7 +534,10 @@ public partial class MainWindow : Window
     }
 
     /// <summary>Translucent so the text stays readable on both themes.</summary>
-    IBrush HighlightBrush(string hex) => new SolidColorBrush(Color.Parse(hex), ActualThemeVariant == Avalonia.Styling.ThemeVariant.Dark ? 0.45 : 0.55);
+    IBrush HighlightBrush(string hex) => new SolidColorBrush(MarkColor(hex), ActualThemeVariant == Avalonia.Styling.ThemeVariant.Dark ? 0.45 : 0.55);
+
+    /// <summary>The colour of a mark; a value that is no colour (an imported or hand-edited vault) must not stop the chapter from showing.</summary>
+    static Color MarkColor(string hex) => Color.TryParse(hex, out var c) ? c : Color.Parse(PresetColors[0]);
 
     void OnVersePressed(int verse, PointerPressedEventArgs e, bool foreign = false)
     {
@@ -674,7 +677,7 @@ public partial class MainWindow : Window
         var ink = (Res("BsText") as ISolidColorBrush)?.Color ?? Colors.Gray;
         foreach (var (n, box) in _verseBoxes.Concat(_colBoxes.Where((_, k) => !IsForeign(k + 1)).SelectMany(d => d)))
         {
-            var whole = _wholeMarks.TryGetValue(n, out var hex) ? Color.Parse(hex) : (Color?)null;
+            var whole = _wholeMarks.TryGetValue(n, out var hex) ? MarkColor(hex) : (Color?)null;
             var selected = n == _selected;
             if (whole is { } c) box.Background = new SolidColorBrush(c, 0.14);
             else if (selected) box.Background = new SolidColorBrush(ink, 0.07);

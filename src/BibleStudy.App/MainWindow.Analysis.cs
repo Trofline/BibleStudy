@@ -83,13 +83,15 @@ public partial class MainWindow
 
         // 3. any word
         AnalysisPanel.Children.Add(new TextBlock { Text = L("Ein Wort analysieren"), FontWeight = FontWeight.SemiBold, TextWrapping = TextWrapping.Wrap, Margin = new(0, 8, 0, 0) });
-        var box = new TextBox { Watermark = L("G26, H157, agape …  (Enter)") };
+        var box = new TextBox { PlaceholderText = L("G26, H157, agape …  (Enter)") };
         box.KeyDown += async (_, e) =>
         {
             if (e.Key != Avalonia.Input.Key.Enter) return;
             var q = box.Text?.Trim() ?? "";
             if (q.Length == 0) return;
-            var id = WordAnalyzer.Normalize(q) ?? (await _strongs.SearchAsync(q, 1)).FirstOrDefault()?.Id;
+            string? id;
+            try { id = WordAnalyzer.Normalize(q) ?? (await _strongs.SearchAsync(q, 1)).FirstOrDefault()?.Id; }
+            catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException or IOException) { StatusText.Text = L("Wörterbuch nicht verfügbar: ") + ex.Message; return; }
             if (id is not null) await AnalyzeWordAsync(id);
         };
         AnalysisPanel.Children.Add(box);

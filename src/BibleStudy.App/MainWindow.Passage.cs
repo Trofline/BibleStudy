@@ -142,7 +142,7 @@ public partial class MainWindow
             mine.Children.Add(new TextBlock { Text = "✎ " + note.Text, TextWrapping = TextWrapping.Wrap });
         foreach (var m in _vault.GetMarks(r.Book, r.Chapter).Where(m => m.Ref.Verse == r.Verse))
         {
-            var dot = new Border { Width = 10, Height = 10, CornerRadius = new(5), Background = new SolidColorBrush(Color.Parse(m.Color)), VerticalAlignment = VerticalAlignment.Top, Margin = new(0, 5, 8, 0) };
+            var dot = new Border { Width = 10, Height = 10, CornerRadius = new(5), Background = new SolidColorBrush(MarkColor(m.Color)), VerticalAlignment = VerticalAlignment.Top, Margin = new(0, 5, 8, 0) };
             var body = new TextBlock { TextWrapping = TextWrapping.Wrap, Text = (m.WholeVerse ? L("Ganzer Vers") : $"„{Shorten(m.Text, 60)}“") + (m.Note.Length > 0 ? " – " + Shorten(m.Note.ReplaceLineEndings(" "), 160) : "") + (m.Tags.Count > 0 ? "  " + string.Join(" ", m.Tags.Select(t => "#" + t)) : "") };
             var row = new DockPanel { Children = { dot, body } };
             DockPanel.SetDock(dot, Dock.Left);

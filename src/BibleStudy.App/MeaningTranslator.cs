@@ -16,6 +16,7 @@ public sealed class MeaningTranslator(string cacheDir)
 
     readonly Dictionary<string, string> _cache = [];
     readonly HashSet<string> _failed = [];
+    readonly HashSet<string> _inFlight = [];
     string? _loadedFor;
     string? _exe;
     bool _exeSearched;
@@ -70,17 +71,23 @@ public sealed class MeaningTranslator(string cacheDir)
     {
         Load();
         if (!Available) return false;
-        var todo = english.Select(s => s.Trim()).Where(IsMissing).Distinct().ToList();
+        // what another card is translating right now is not sent a second time (it would cost the same tokens twice)
+        var todo = english.Select(s => s.Trim()).Where(s => IsMissing(s) && !_inFlight.Contains(s)).Distinct().ToList();
+        _inFlight.UnionWith(todo);
         var any = false;
-        for (var i = 0; i < todo.Count; i += Batch)
+        try
         {
-            var chunk = todo.Skip(i).Take(Batch).ToList();
-            var result = await TranslateAsync(chunk, model, ct);
-            if (result is null) { foreach (var s in chunk) _failed.Add(s); continue; }
-            for (var j = 0; j < chunk.Count; j++) _cache[chunk[j]] = result[j];
-            any = true;
-            try { Directory.CreateDirectory(cacheDir); await File.WriteAllTextAsync(CacheFile, JsonSerializer.Serialize(_cache), ct); } catch { /* keep going without saving */ }
+            for (var i = 0; i < todo.Count; i += Batch)
+            {
+                var chunk = todo.Skip(i).Take(Batch).ToList();
+                var result = await TranslateAsync(chunk, model, ct);
+                if (result is null) { foreach (var s in chunk) _failed.Add(s); continue; }
+                for (var j = 0; j < chunk.Count; j++) _cache[chunk[j]] = result[j];
+                any = true;
+                try { Directory.CreateDirectory(cacheDir); await File.WriteAllTextAsync(CacheFile, JsonSerializer.Serialize(_cache), ct); } catch { /* keep going without saving */ }
+            }
         }
+        finally { _inFlight.ExceptWith(todo); }
         return any;
     }
 

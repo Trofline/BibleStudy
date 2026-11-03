@@ -60,7 +60,7 @@ public partial class MainWindow
 
     Flyout BuildSaveFlyout()
     {
-        var name = new TextBox { Watermark = L("Name der Suche"), Width = 240 };
+        var name = new TextBox { PlaceholderText = L("Name der Suche"), Width = 240 };
         var save = new Button { Content = L("Merken"), Classes = { "primary" }, HorizontalAlignment = HorizontalAlignment.Left };
         var info = new TextBlock { Classes = { "caption" }, TextWrapping = TextWrapping.Wrap, MaxWidth = 240 };
         var fly = new Flyout { Content = new StackPanel { Spacing = 8, Children = { new TextBlock { Text = L("Suche merken"), FontWeight = FontWeight.SemiBold }, name, save, info } } };

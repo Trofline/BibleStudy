@@ -50,7 +50,7 @@ public partial class MainWindow
             return wrap;
         }
 
-        var latin = new TextBox { Watermark = L("Mit lateinischen Buchstaben tippen: logos, shalom …"), Width = 340 };
+        var latin = new TextBox { PlaceholderText = L("Mit lateinischen Buchstaben tippen: logos, shalom …"), Width = 340 };
         var toGreek = new Button { Content = L("→ Griechisch"), Margin = new(0, 0, 6, 0) };
         var toHebrew = new Button { Content = L("→ Hebräisch"), Margin = new(0, 0, 6, 0) };
         var back = new Button { Content = "⌫" };

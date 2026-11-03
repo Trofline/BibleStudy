@@ -40,7 +40,7 @@ public partial class MainWindow
                     Check(tb.Text, where);
                     foreach (var run in tb.Inlines?.OfType<Run>() ?? []) Check(run.Text, where);
                 }
-                if (n is TextBox box) Check(box.Watermark, where + " (hint)");
+                if (n is TextBox box) Check(box.PlaceholderText, where + " (hint)");
                 if (n is HeaderedContentControl h && h.Header is string hs) Check(hs, where + " (header)");
                 if (n is ContentControl cc && cc.Content is string cs) Check(cs, where);
                 if (n is MenuItem mi && mi.Header is string ms) Check(ms, where + " (menu)");

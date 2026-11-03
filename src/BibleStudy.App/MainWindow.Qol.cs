@@ -99,6 +99,9 @@ public partial class MainWindow
                 SetRead(_curBook, [_curChapter], true);
         };
 
+        // focus mode belongs to one session: a program closed in it starts normal, and the reading bar must not stay hidden then
+        _settings.FocusMode = false;
+
         // side panel remembers its tab
         if (_settings.SideTab >= 0 && _settings.SideTab < SideTabs.ItemCount) SideTabs.SelectedIndex = _settings.SideTab;
         SideTabs.SelectionChanged += (_, e) => { if (e.Source == SideTabs) { _settings.SideTab = SideTabs.SelectedIndex; } };

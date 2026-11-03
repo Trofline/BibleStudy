@@ -112,7 +112,7 @@ public partial class MainWindow
 
     Flyout BuildVerseFlyout()
     {
-        var reference = new TextBox { Watermark = L("z. B. Joh 3,16-18"), Width = 250 };
+        var reference = new TextBox { PlaceholderText = L("z. B. Joh 3,16-18"), Width = 250 };
         var info = new TextBlock { Classes = { "caption" }, TextWrapping = TextWrapping.Wrap, MaxWidth = 250 };
         var quote = new Button { Content = L("Als Zitat einfügen"), Classes = { "primary" }, Margin = new(0, 0, 6, 0) };
         var link = new Button { Content = L("Nur als Link") };

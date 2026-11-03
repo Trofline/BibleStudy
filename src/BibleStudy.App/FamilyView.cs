@@ -16,7 +16,7 @@ public sealed class FamilyView : UserControl
     public Func<Task<IReadOnlyList<LexiconItem>>>? PeopleProvider { get; set; }
 
     readonly FamilyCanvas _canvas = new();
-    readonly TextBox _search = new() { Watermark = L("Person suchen (englisch), z. B. David, Abraham, Ruth …"), Width = 360 };
+    readonly TextBox _search = new() { PlaceholderText = L("Person suchen (englisch), z. B. David, Abraham, Ruth …"), Width = 360 };
     readonly ListBox _suggest = new() { MaxHeight = 220, IsVisible = false };
     readonly NumericUpDown _up = new() { Minimum = 0, Maximum = 8, Value = 4, FormatString = "0", Width = 100 };
     readonly NumericUpDown _down = new() { Minimum = 0, Maximum = 6, Value = 3, FormatString = "0", Width = 100 };

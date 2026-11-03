@@ -23,7 +23,7 @@ public partial class MainWindow
     readonly TextBlock _periStatus = new() { Classes = { "caption" }, TextWrapping = TextWrapping.Wrap };
     readonly Dictionary<(string Book, int Chapter), List<GrammarWord>> _periWords = [];
     (string Book, int Chapter) _periFor;
-    bool _periBuilt, _periQuiet;
+    bool _periBuilt;
     int _periRun;
 
     void BuildPericopeShell()
@@ -40,7 +40,7 @@ public partial class MainWindow
         var all = new Button { Content = L("Ganzes Kapitel"), Padding = new(12, 0), Height = 32 };
         var save = new Button { Content = L("Als Bild speichern"), Padding = new(12, 0), Height = 32 };
         go.Click += async (_, _) => await RunPericopeAsync();
-        all.Click += async (_, _) => { _periQuiet = true; _periFrom.Value = 1; _periTo.Value = _periTo.Maximum; _periQuiet = false; await RunPericopeAsync(); };
+        all.Click += async (_, _) => { _periFrom.Value = 1; _periTo.Value = _periTo.Maximum; await RunPericopeAsync(); };
         save.Click += (_, _) => { if (_periResults.Bounds.Width > 10) ExportControlImage(_periResults, L("Perikopen-Analyse") + "_" + BookName(_curBook) + "_" + _curChapter + "_" + (int)(_periFrom.Value ?? 1) + "-" + (int)(_periTo.Value ?? 1)); };
         var row = new WrapPanel
         {
@@ -66,13 +66,11 @@ public partial class MainWindow
         if (!_periBuilt) BuildPericopeShell();
         if (_curBook == "") return;
         var last = _curChapterData?.Verses.Count > 0 ? _curChapterData.Verses.Max(v => v.Number) : 1;
-        _periQuiet = true;
         _periFrom.Maximum = _periTo.Maximum = Math.Max(1, last);
         if (chapterChanged || _periFor != (_curBook, _curChapter))
         {
             _periFrom.Value = _selected ?? 1; _periTo.Value = last;
         }
-        _periQuiet = false;
         if (!chapterChanged && _periFor == (_curBook, _curChapter) && _periResults.Children.Count > 0) return;
         await RunPericopeAsync();
     }

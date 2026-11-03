@@ -43,8 +43,8 @@ public partial class MainWindow
     {
         var original = _allOriginal.FirstOrDefault(x => x.Id == t.Id) ?? t;
         _settings.TranslationAliases.TryGetValue(t.Id, out var alias);
-        var name = new TextBox { Text = alias?.Name ?? "", Watermark = original.Name, MaxLength = 80 };
-        var shortName = new TextBox { Text = alias?.Short ?? "", Watermark = original.ShortName, MaxLength = 12, Width = 160, HorizontalAlignment = HorizontalAlignment.Left };
+        var name = new TextBox { Text = alias?.Name ?? "", PlaceholderText = original.Name, MaxLength = 80 };
+        var shortName = new TextBox { Text = alias?.Short ?? "", PlaceholderText = original.ShortName, MaxLength = 12, Width = 160, HorizontalAlignment = HorizontalAlignment.Left };
         var save = new Button { Content = L("Speichern"), Classes = { "primary" } };
         var cancel = new Button { Content = L("Abbrechen") };
         var stack = new StackPanel
