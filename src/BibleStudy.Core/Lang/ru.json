@@ -2001,5 +2001,8 @@
   "Dezent (nur ausblenden)": "Неброская (только затухание)",
   "Röhrenfernseher": "Кинескоп",
   "Keine": "Нет",
-  "Unscharf (verschwimmen)": "Размытие (теряет резкость)"
+  "Unscharf (verschwimmen)": "Размытие (теряет резкость)",
+  "Verbinde … {0} s (Status: {1})": "Подключение … {0} с (состояние: {1})",
+  "Unter Windows beim ersten Start „Zugriff zulassen“ für private Netzwerke wählen; am Mac unter Systemeinstellungen → Datenschutz & Sicherheit → Lokales Netzwerk die App erlauben.": "В Windows при первом запуске выберите «Разрешить доступ» для частных сетей; на Mac разрешите приложение в Системных настройках → Конфиденциальность и безопасность → Локальная сеть.",
+  "Technische Angaben: {0}": "Технические сведения: {0}"
 }

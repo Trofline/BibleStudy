@@ -2001,5 +2001,8 @@
   "Dezent (nur ausblenden)": "Subtle (fade only)",
   "Röhrenfernseher": "Tube TV",
   "Keine": "None",
-  "Unscharf (verschwimmen)": "Blur (drift out of focus)"
+  "Unscharf (verschwimmen)": "Blur (drift out of focus)",
+  "Verbinde … {0} s (Status: {1})": "Connecting … {0} s (state: {1})",
+  "Unter Windows beim ersten Start „Zugriff zulassen“ für private Netzwerke wählen; am Mac unter Systemeinstellungen → Datenschutz & Sicherheit → Lokales Netzwerk die App erlauben.": "On Windows choose “Allow access” for private networks at the first start; on a Mac allow the app under System Settings → Privacy & Security → Local Network.",
+  "Technische Angaben: {0}": "Technical details: {0}"
 }

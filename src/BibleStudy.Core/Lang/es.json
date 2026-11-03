@@ -2001,5 +2001,8 @@
   "Dezent (nur ausblenden)": "Discreta (solo desvanecer)",
   "Röhrenfernseher": "Televisor de tubo",
   "Keine": "Ninguna",
-  "Unscharf (verschwimmen)": "Desenfoque (se difumina)"
+  "Unscharf (verschwimmen)": "Desenfoque (se difumina)",
+  "Verbinde … {0} s (Status: {1})": "Conectando … {0} s (estado: {1})",
+  "Unter Windows beim ersten Start „Zugriff zulassen“ für private Netzwerke wählen; am Mac unter Systemeinstellungen → Datenschutz & Sicherheit → Lokales Netzwerk die App erlauben.": "En Windows elige «Permitir acceso» para redes privadas en el primer inicio; en Mac permite la app en Ajustes del Sistema → Privacidad y seguridad → Red local.",
+  "Technische Angaben: {0}": "Detalles técnicos: {0}"
 }

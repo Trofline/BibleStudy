@@ -231,6 +231,7 @@ public partial class MainWindow : Window
 
     void ShowHome()
     {
+        if (_activeWork is not null) ShowWork(null);   // a tab such as the settings is left first, else the start page stays hidden behind it
         // each vault remembers its own place; a new or empty vault has none
         Home.Resume = _vault.GetLastPosition() is { } last && _books.Any(b => b.Id == last.Book) ? (last.Book, last.Chapter, $"{BookName(last.Book)} {last.Chapter}") : null;
         var recent = new List<(string, string, string, Action)>();

@@ -2001,5 +2001,8 @@
   "Dezent (nur ausblenden)": "Discrète (fondu seulement)",
   "Röhrenfernseher": "Télévision à tube",
   "Keine": "Aucune",
-  "Unscharf (verschwimmen)": "Flou (se brouille)"
+  "Unscharf (verschwimmen)": "Flou (se brouille)",
+  "Verbinde … {0} s (Status: {1})": "Connexion … {0} s (état : {1})",
+  "Unter Windows beim ersten Start „Zugriff zulassen“ für private Netzwerke wählen; am Mac unter Systemeinstellungen → Datenschutz & Sicherheit → Lokales Netzwerk die App erlauben.": "Sous Windows, choisis « Autoriser l’accès » pour les réseaux privés au premier démarrage ; sur Mac, autorise l’app dans Réglages Système → Confidentialité et sécurité → Réseau local.",
+  "Technische Angaben: {0}": "Détails techniques : {0}"
 }

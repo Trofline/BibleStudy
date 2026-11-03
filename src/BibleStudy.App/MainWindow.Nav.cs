@@ -152,6 +152,8 @@ public partial class MainWindow
                 SetPanelOpen(true);
                 if (!g.Tabs.Any(t => t.Index == SideTabs.SelectedIndex)) SideTabs.SelectedIndex = g.Tabs[0].Index;
                 SyncNav();
+                // the tab may already be the selected one (nothing changes then), but still be empty
+                if (SideTabs.SelectedIndex == CollabTab) TabShown(CollabTab);
             };
             Rail.Children.Add(button);
         }

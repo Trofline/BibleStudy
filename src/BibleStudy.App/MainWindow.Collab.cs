@@ -176,14 +176,20 @@ public partial class MainWindow
         area.Children.Add(invitation); area.Children.Add(next); area.Children.Add(result);
     }
 
+    /// <summary>Waits for the connection and shows the state every second, so it is clear that something happens; on failure it says why it may be.</summary>
     async Task WaitConnectedAsync(CollabPeer peer, TextBlock info, int seconds = 45)
     {
-        try { await peer.WaitOpenAsync(TimeSpan.FromSeconds(seconds)); }
-        catch
+        var clock = System.Diagnostics.Stopwatch.StartNew();
+        while (!peer.IsOpen && clock.Elapsed.TotalSeconds < seconds)
         {
-            if (_peer == peer && !peer.IsOpen)
-                info.Text = L("Die Verbindung kam nicht zustande. Häufige Gründe: ein VPN, eine strenge Firewall oder ein Firmennetz. Versucht es im Heimnetz oder ohne VPN noch einmal.");
+            if (_peer != peer) return;
+            info.Text = L("Verbinde … {0} s (Status: {1})", (int)clock.Elapsed.TotalSeconds, peer.Status);
+            await Task.Delay(500);
         }
+        if (_peer == peer && !peer.IsOpen)
+            info.Text = L("Die Verbindung kam nicht zustande. Häufige Gründe: ein VPN, eine strenge Firewall oder ein Firmennetz. Versucht es im Heimnetz oder ohne VPN noch einmal.")
+                + "\n" + L("Unter Windows beim ersten Start „Zugriff zulassen“ für private Netzwerke wählen; am Mac unter Systemeinstellungen → Datenschutz & Sicherheit → Lokales Netzwerk die App erlauben.")
+                + "\n" + L("Technische Angaben: {0}", peer.Diagnose());
     }
 
     // ---- connected ------------------------------------------------------------------------------------------------------

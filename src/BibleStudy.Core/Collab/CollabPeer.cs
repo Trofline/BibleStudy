@@ -13,9 +13,10 @@ namespace BibleStudy.Core.Collab;
 public sealed class CollabPeer : IDisposable
 {
     public const string Prefix = "BS1-";
-    static readonly string[] StunServers = ["stun:stun.l.google.com:19302", "stun:stun.cloudflare.com:3478"];
+    static readonly string[] StunServers = ["stun:stun.l.google.com:19302", "stun:stun1.l.google.com:19302", "stun:stun.cloudflare.com:3478"];
 
     RTCPeerConnection? _pc;
+    readonly List<string> _candidates = [];   // every address found, also those the library leaves out of the description
     RTCDataChannel? _channel;
     readonly TaskCompletionSource _open = new(TaskCreationOptions.RunContinuationsAsynchronously);
 
@@ -25,9 +26,30 @@ public sealed class CollabPeer : IDisposable
 
     public bool IsOpen => _channel?.readyState == RTCDataChannelState.open;
 
+    /// <summary>Where the connection stands, for the status line while waiting (for example "connecting/checking").</summary>
+    public string Status => _pc is null ? "" : $"{_pc.connectionState}/{_pc.iceConnectionState}";
+
+    /// <summary>A short technical line for the failure message: the state and how many addresses of which kind each side offered
+    /// (host = own network, srflx = seen from outside by the STUN server). Tells at once whether the other side's addresses were seen.</summary>
+    public string Diagnose()
+    {
+        static string Count(string? sdp)
+        {
+            if (string.IsNullOrEmpty(sdp)) return "0";
+            var kinds = System.Text.RegularExpressions.Regex.Matches(sdp, @"a=candidate:.* typ (\w+)").Select(m => m.Groups[1].Value)
+                .GroupBy(k => k).Select(g => $"{g.Key} {g.Count()}").ToList();
+            return kinds.Count == 0 ? "0" : string.Join(", ", kinds);
+        }
+        return $"{Status}; own addresses: {Count(_pc?.localDescription?.sdp?.ToString())}; other addresses: {Count(_pc?.remoteDescription?.sdp?.ToString())}";
+    }
+
     RTCPeerConnection Create()
     {
         var pc = new RTCPeerConnection(new RTCConfiguration { iceServers = StunServers.Select(u => new RTCIceServer { urls = u }).ToList() });
+        pc.onicecandidate += c =>
+        {
+            if (c?.candidate is { Length: > 0 } line) lock (_candidates) _candidates.Add(line.StartsWith("candidate:") ? line : "candidate:" + line);
+        };
         pc.onconnectionstatechange += state =>
         {
             if (state is RTCPeerConnectionState.failed or RTCPeerConnectionState.closed or RTCPeerConnectionState.disconnected) Closed?.Invoke(state.ToString());
@@ -81,13 +103,22 @@ public sealed class CollabPeer : IDisposable
 
     // ---- codes: the description once all addresses are known, packed small ------------------------------------------------
 
-    static async Task<string> EncodeAsync(RTCPeerConnection pc, string kind)
+    async Task<string> EncodeAsync(RTCPeerConnection pc, string kind)
     {
         var gathered = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
         pc.onicegatheringstatechange += s => { if (s == RTCIceGatheringState.complete) gathered.TrySetResult(); };
         if (pc.iceGatheringState == RTCIceGatheringState.complete) gathered.TrySetResult();
         await Task.WhenAny(gathered.Task, Task.Delay(8000));   // without internet the local addresses are all there is
         var sdp = pc.localDescription!.sdp.ToString();
+        // the library puts only the address of the own network into the description; the address seen from outside (found with the STUN server)
+        // arrives separately and must be added, else the other side could never reach us from another network
+        string[] found; lock (_candidates) found = _candidates.ToArray();
+        var missing = found.Where(c => !sdp.Contains(c, StringComparison.Ordinal)).ToList();
+        if (missing.Count > 0)
+        {
+            if (!sdp.EndsWith('\n')) sdp += "\r\n";
+            sdp += string.Concat(missing.Select(c => "a=" + c + "\r\n"));
+        }
         var raw = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(new { k = kind, s = sdp }));
         using var ms = new MemoryStream();
         using (var z = new DeflateStream(ms, CompressionLevel.SmallestSize, true)) z.Write(raw);

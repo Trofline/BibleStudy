@@ -66,6 +66,28 @@ function New-UnixZip([string]$srcDir, [string]$zipPath, [string]$topName) {
         }
     } finally { $zip.Dispose() }
 }
+# the icon of a macOS app (.icns): PNG pictures of several sizes in one file
+function New-Icns([string]$png, [string]$out) {
+    Add-Type -AssemblyName System.Drawing
+    $src = [Drawing.Image]::FromFile($png)
+    $parts = New-Object System.Collections.Generic.List[object]
+    foreach ($e in @(@('ic07', 128), @('ic08', 256), @('ic09', 512), @('ic10', 1024))) {
+        $bmp = New-Object Drawing.Bitmap $e[1], $e[1]
+        $g = [Drawing.Graphics]::FromImage($bmp); $g.InterpolationMode = 'HighQualityBicubic'; $g.SmoothingMode = 'HighQuality'; $g.DrawImage($src, 0, 0, $e[1], $e[1]); $g.Dispose()
+        $ms = New-Object IO.MemoryStream; $bmp.Save($ms, [Drawing.Imaging.ImageFormat]::Png); $bmp.Dispose()
+        $parts.Add(@($e[0], $ms.ToArray()))
+    }
+    $src.Dispose()
+    function BigEndian([int]$v) { $b = [BitConverter]::GetBytes($v); [Array]::Reverse($b); $b }
+    $total = 8; foreach ($x in $parts) { $total += 8 + $x[1].Length }
+    $fs = [IO.File]::Create($out)
+    try {
+        $fs.Write([Text.Encoding]::ASCII.GetBytes('icns'), 0, 4); $fs.Write((BigEndian $total), 0, 4)
+        foreach ($x in $parts) {
+            $fs.Write([Text.Encoding]::ASCII.GetBytes($x[0]), 0, 4); $fs.Write((BigEndian (8 + $x[1].Length)), 0, 4); $fs.Write($x[1], 0, $x[1].Length)
+        }
+    } finally { $fs.Dispose() }
+}
 function New-UnixTgz([string]$srcDir, [string]$tgzPath, [string]$topName) {
     $base = (Get-Item $srcDir).FullName.TrimEnd('\')
     $file = [IO.File]::Create($tgzPath)
@@ -120,9 +142,19 @@ foreach ($rid in 'linux-x64', 'osx-arm64', 'osx-x64') {
         Copy-UnixText "$root\packaging\linux\README-Linux.txt" (Join-Path $u 'README-Linux.txt')
         New-UnixTgz $u "$rel\BibleStudy-Linux-x64-$Version.tar.gz" 'BibleStudy'
     } else {
-        Copy-UnixText "$root\packaging\macos\README-macOS.txt" (Join-Path $u 'README-macOS.txt')
-        Copy-UnixText "$root\packaging\macos\Start-BibleStudy.command" (Join-Path $u 'Start-BibleStudy.command')
-        New-UnixZip $u "$rel\BibleStudy-macOS-$($rid.Split('-')[1])-$Version.zip" 'BibleStudy'
+        # a real application "BibleStudy.app" (own name and icon in the Dock and the menu bar, no Terminal window): the program files go into
+        # Contents\MacOS, next to it the icon and the description; the folder of the zip holds the app, the set-up script and the readme
+        $pkg = Join-Path $rel "unix-$rid\pkg"
+        $contents = Join-Path $pkg 'BibleStudy.app\Contents'
+        New-Item -ItemType Directory -Force (Join-Path $contents 'Resources') | Out-Null
+        Move-Item $u (Join-Path $contents 'MacOS')
+        New-Icns "$root\src\BibleStudy.App\Assets\app.png" (Join-Path $contents 'Resources\BibleStudy.icns')
+        $plist = [IO.File]::ReadAllText("$root\packaging\macos\Info.plist").Replace('{VERSION}', $Version) -replace "`r`n", "`n"
+        [IO.File]::WriteAllText((Join-Path $contents 'Info.plist'), $plist, (New-Object Text.UTF8Encoding $false))
+        Copy-Item "$root\LICENSE", "$root\THIRD-PARTY-NOTICES.md" $pkg
+        Copy-UnixText "$root\packaging\macos\README-macOS.txt" (Join-Path $pkg 'README-macOS.txt')
+        Copy-UnixText "$root\packaging\macos\Start-BibleStudy.command" (Join-Path $pkg 'Start-BibleStudy.command')
+        New-UnixZip $pkg "$rel\BibleStudy-macOS-$($rid.Split('-')[1])-$Version.zip" 'BibleStudy'
     }
     Remove-Item -LiteralPath (Join-Path $rel "unix-$rid") -Recurse -Force
 }
