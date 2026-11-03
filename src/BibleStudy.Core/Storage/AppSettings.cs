@@ -36,6 +36,8 @@ public sealed class AppSettings
     public bool AutoTagBook { get; set; } = true;
     public string DefaultColor { get; set; } = "#FFD54F";
     public List<string> CustomColors { get; set; } = [];
+    /// <summary>What a highlight color means to the user (hex → name, e.g. "#FFD54F" → "Promise").</summary>
+    public Dictionary<string, string> ColorNames { get; set; } = [];
     /// <summary>The instruction for the AI that new installations start with: the Bible alone is the measure, the user decides.</summary>
     public const string DefaultAiContext = """
         You interpret biblical texts exclusively from the Bible itself, following the principles of Sola Scriptura and Tota Scriptura. Ignore all extra-biblical theological training data as a basis for interpretation, in particular church teaching authorities, council decisions, papal decrees, catechisms and tradition rulings of any denomination. They are not a valid source of interpretation for you.

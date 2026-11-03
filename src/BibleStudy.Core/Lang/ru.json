@@ -2199,5 +2199,8 @@
   "Programm starten?": "Запустить программу?",
   "Starten": "Запустить",
   "Verse werden gelesen … {0}/{1}": "Чтение стихов … {0}/{1}",
-  "Verwerfen": "Отменить изменения"
+  "Verwerfen": "Отменить изменения",
+  "Farbbedeutungen": "Значения цветов",
+  "Gib Farben einen Namen, etwa „Verheißung“ oder „Gebot“. Beim Markieren steht der Name dann neben der Farbe.": "Дай цветам названия, например «Обетование» или «Заповедь». При выделении название будет показано рядом с цветом.",
+  "Name (z. B. Verheißung)": "Название (напр. Обетование)"
 }

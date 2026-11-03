@@ -143,7 +143,8 @@ public partial class MainWindow
         foreach (var m in _vault.GetMarks(r.Book, r.Chapter).Where(m => m.Ref.Verse == r.Verse))
         {
             var dot = new Border { Width = 10, Height = 10, CornerRadius = new(5), Background = new SolidColorBrush(MarkColor(m.Color)), VerticalAlignment = VerticalAlignment.Top, Margin = new(0, 5, 8, 0) };
-            var body = new TextBlock { TextWrapping = TextWrapping.Wrap, Text = (m.WholeVerse ? L("Ganzer Vers") : $"„{Shorten(m.Text, 60)}“") + (m.Note.Length > 0 ? " – " + Shorten(m.Note.ReplaceLineEndings(" "), 160) : "") + (m.Tags.Count > 0 ? "  " + string.Join(" ", m.Tags.Select(t => "#" + t)) : "") };
+            if (ColorName(m.Color) is { Length: > 0 } meaning) ToolTip.SetTip(dot, meaning);
+            var body = new TextBlock { TextWrapping = TextWrapping.Wrap, Text = (ColorName(m.Color) is { Length: > 0 } nm ? nm + ": " : "") + (m.WholeVerse ? L("Ganzer Vers") : $"„{Shorten(m.Text, 60)}“") + (m.Note.Length > 0 ? " – " + Shorten(m.Note.ReplaceLineEndings(" "), 160) : "") + (m.Tags.Count > 0 ? "  " + string.Join(" ", m.Tags.Select(t => "#" + t)) : "") };
             var row = new DockPanel { Children = { dot, body } };
             DockPanel.SetDock(dot, Dock.Left);
             mine.Children.Add(row);

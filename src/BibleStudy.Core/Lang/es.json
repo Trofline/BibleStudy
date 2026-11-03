@@ -2199,5 +2199,8 @@
   "Programm starten?": "¿Iniciar programa?",
   "Starten": "Iniciar",
   "Verse werden gelesen … {0}/{1}": "Leyendo versículos … {0}/{1}",
-  "Verwerfen": "Descartar"
+  "Verwerfen": "Descartar",
+  "Farbbedeutungen": "Significado de los colores",
+  "Gib Farben einen Namen, etwa „Verheißung“ oder „Gebot“. Beim Markieren steht der Name dann neben der Farbe.": "Ponle nombre a los colores, por ejemplo «Promesa» o «Mandato». Al marcar, el nombre aparece junto al color.",
+  "Name (z. B. Verheißung)": "Nombre (p. ej. Promesa)"
 }

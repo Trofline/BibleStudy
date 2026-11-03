@@ -245,9 +245,62 @@ public partial class MainWindow
             Background = new SolidColorBrush(MarkColor(hex)), BorderThickness = new(selected ? 3 : 1),
         };
         b.Bind(Border.BorderBrushProperty, this.GetResourceObservable(selected ? "BsText" : "BsBorder"));
-        ToolTip.SetTip(b, hex);
+        ToolTip.SetTip(b, ColorName(hex) is { Length: > 0 } nm ? $"{nm}  ({hex})" : hex);
         b.PointerPressed += (_, _) => pick(hex);
         return b;
+    }
+
+    /// <summary>The meaning the user gave a color ("" if none).</summary>
+    string ColorName(string? hex) => hex is not null && _settings.ColorNames.TryGetValue(hex.ToUpperInvariant(), out var n) ? n : "";
+
+    /// <summary>One row per named color (dot + name), so a color can be found by its meaning.</summary>
+    Control NamedColorRow(string hex, Action<string> pick, bool selected = false)
+    {
+        var dot = new Border { Width = 16, Height = 16, CornerRadius = new(8), Background = new SolidColorBrush(MarkColor(hex)), VerticalAlignment = VerticalAlignment.Center };
+        var row = new Button
+        {
+            HorizontalAlignment = HorizontalAlignment.Stretch, HorizontalContentAlignment = HorizontalAlignment.Left, Padding = new(8, 5),
+            Content = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 8, Children = { dot, new TextBlock { Text = ColorName(hex), VerticalAlignment = VerticalAlignment.Center, FontWeight = selected ? FontWeight.SemiBold : FontWeight.Normal } } },
+        };
+        row.Classes.Set("primary", selected);
+        row.Click += (_, _) => pick(hex);
+        return row;
+    }
+
+    /// <summary>Named colors as a list of rows, the rest as plain swatches.</summary>
+    Control ColorChoice(Action<string> pick, string? selected = null)
+    {
+        var all = PresetColors.Concat(_settings.CustomColors).ToList();
+        if (selected is not null && !all.Contains(selected)) all.Add(selected);
+        var named = all.Where(h => ColorName(h).Length > 0).ToList();
+        var plain = new WrapPanel();
+        foreach (var hex in all.Where(h => !named.Contains(h))) plain.Children.Add(Swatch(hex, pick, hex == selected));
+        var box = new StackPanel { Spacing = 2 };
+        foreach (var hex in named) box.Children.Add(NamedColorRow(hex, pick, hex == selected));
+        if (named.Count > 0 && plain.Children.Count > 0) box.Children.Add(new Border { Height = 6 });
+        if (plain.Children.Count > 0) box.Children.Add(plain);
+        return box;
+    }
+
+    /// <summary>Settings: give each color a meaning (shown when marking).</summary>
+    void BuildColorNamesPanel()
+    {
+        ColorNamesPanel.Children.Clear();
+        ColorNamesPanel.Children.Add(new TextBlock { Text = L("Farbbedeutungen"), Margin = new(0, 4, 0, 0) });
+        ColorNamesPanel.Children.Add(new TextBlock { Text = L("Gib Farben einen Namen, etwa „Verheißung“ oder „Gebot“. Beim Markieren steht der Name dann neben der Farbe."), Classes = { "caption" }, TextWrapping = TextWrapping.Wrap });
+        foreach (var hex in PresetColors.Concat(_settings.CustomColors))
+        {
+            var key = hex.ToUpperInvariant();
+            var box = new TextBox { Text = ColorName(hex), PlaceholderText = L("Name (z. B. Verheißung)"), MaxLength = 30, MinWidth = 240 };
+            box.LostFocus += (_, _) =>
+            {
+                var t = (box.Text ?? "").Trim();
+                if (t.Length == 0) _settings.ColorNames.Remove(key); else _settings.ColorNames[key] = t;
+                SaveSettings();
+            };
+            var dot = new Border { Width = 22, Height = 22, CornerRadius = new(11), Background = new SolidColorBrush(MarkColor(hex)), VerticalAlignment = VerticalAlignment.Center };
+            ColorNamesPanel.Children.Add(new StackPanel { Orientation = Orientation.Horizontal, Spacing = 8, Children = { dot, box } });
+        }
     }
 
     static string? NormalizeHex(string? text)
@@ -276,7 +329,7 @@ public partial class MainWindow
         apply.Click += (_, _) =>
         {
             var hex = Current();
-            if (!PresetColors.Contains(hex) && !_settings.CustomColors.Contains(hex)) { _settings.CustomColors.Add(hex); SaveSettings(); }
+            if (!PresetColors.Contains(hex) && !_settings.CustomColors.Contains(hex)) { _settings.CustomColors.Add(hex); SaveSettings(); BuildColorNamesPanel(); }
             pick(hex);
         };
         openButton = open; applyButton = apply;
@@ -292,8 +345,7 @@ public partial class MainWindow
             FontWeight = FontWeight.SemiBold, TextWrapping = TextWrapping.Wrap,
             Text = _selection is { } s ? L("Auswahl: „{0}“", Shorten(s.Text)) : _selected is int v ? L("Ganzer Vers {0}", v) : L("Erst Text auswählen oder einen Vers anklicken"),
         };
-        var swatches = new WrapPanel();
-        foreach (var hex in PresetColors.Concat(_settings.CustomColors)) swatches.Children.Add(Swatch(hex, Pick));
+        var swatches = ColorChoice(Pick);
         var picker = BuildRgbPicker(Pick, out var custom, out var apply);
         var error = new TextBlock { Classes = { "caption" } };
         var remove = new Button { Content = L("Markierung entfernen") };
@@ -311,6 +363,7 @@ public partial class MainWindow
         DefaultColorPanel.Children.Clear();
         foreach (var hex in PresetColors.Concat(_settings.CustomColors))
             DefaultColorPanel.Children.Add(Swatch(hex, h => { _settings.DefaultColor = h; SaveSettings(); BuildDefaultColorPanel(); }, hex == _settings.DefaultColor));
+        BuildColorNamesPanel();
     }
 
     // ---- collection (folders, tags, editor) ---------------------------------------------------------------------------
@@ -401,6 +454,7 @@ public partial class MainWindow
         var label = run.Count == 1 ? Label(m.Ref) : $"{BookName(m.Ref.Book)} {m.Ref.Chapter},{m.Ref.Verse}–{last.Ref.Verse}";
         if (!detail) return label;
         var lines = new List<string>();
+        if (ColorName(m.Color) is { Length: > 0 } meaning) lines.Add("● " + meaning);
         var text = string.Join(" ", run.Select(r => r.Text));
         if (!m.WholeVerse) lines.Add(Loc.Quote(Shorten(m.Text, 100))); else if (text.Length > 0) lines.Add(Shorten(text, run.Count > 1 ? 220 : 100));
         if (m.Note.Length > 0) lines.Add("✎ " + Shorten(m.Note.ReplaceLineEndings(" "), 100));
@@ -437,9 +491,7 @@ public partial class MainWindow
     void BuildEditSwatches()
     {
         EditSwatches.Children.Clear();
-        var all = PresetColors.Concat(_settings.CustomColors).ToList();
-        if (!all.Contains(_editColor)) all.Add(_editColor);
-        foreach (var hex in all) EditSwatches.Children.Add(Swatch(hex, h => { _editColor = h; BuildEditSwatches(); }, hex == _editColor));
+        EditSwatches.Children.Add(new StackPanel { Width = 240, Children = { ColorChoice(h => { _editColor = h; BuildEditSwatches(); }, _editColor) } });
         var rgb = BuildRgbPicker(h => { _editColor = h; BuildEditSwatches(); }, out var open, out var apply);
         EditSwatches.Children.Add(new StackPanel { Width = 240, Spacing = 4, Margin = new(0, 6, 0, 0), Children = { open, rgb, apply } });
     }

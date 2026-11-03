@@ -675,6 +675,7 @@
                                 <CheckBox x:Name="AutoTagCheck" Content="Beim Speichern den Buchnamen als Tag vergeben" />
                                 <TextBlock Text="Standard-Markierfarbe" Margin="0,4,0,0" />
                                 <WrapPanel x:Name="DefaultColorPanel" />
+                                <StackPanel x:Name="ColorNamesPanel" Spacing="6" />
                                 <TextBlock x:Name="SpeakLabel" Text="Vorlesen: Geschwindigkeit" Margin="0,4,0,0" />
                                 <Slider x:Name="SpeakSlider" Classes="setting" Minimum="-5" Maximum="8" Value="0" TickFrequency="1" IsSnapToTickEnabled="True" />
                                 <TextBlock Text="Vorlesen: Stimme" Margin="0,4,0,0" />

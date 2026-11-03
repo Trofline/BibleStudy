@@ -2199,5 +2199,8 @@
   "Programm starten?": "Start program?",
   "Starten": "Start",
   "Verse werden gelesen … {0}/{1}": "Reading verses … {0}/{1}",
-  "Verwerfen": "Discard"
+  "Verwerfen": "Discard",
+  "Farbbedeutungen": "Color meanings",
+  "Gib Farben einen Namen, etwa „Verheißung“ oder „Gebot“. Beim Markieren steht der Name dann neben der Farbe.": "Give colors a name, such as “Promise” or “Command”. When you highlight, the name is shown next to the color.",
+  "Name (z. B. Verheißung)": "Name (e.g. Promise)"
 }

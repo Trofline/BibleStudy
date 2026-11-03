@@ -2199,5 +2199,8 @@
   "Programm starten?": "Lancer le programme ?",
   "Starten": "Lancer",
   "Verse werden gelesen … {0}/{1}": "Lecture des versets … {0}/{1}",
-  "Verwerfen": "Abandonner"
+  "Verwerfen": "Abandonner",
+  "Farbbedeutungen": "Signification des couleurs",
+  "Gib Farben einen Namen, etwa „Verheißung“ oder „Gebot“. Beim Markieren steht der Name dann neben der Farbe.": "Donne un nom aux couleurs, par exemple « Promesse » ou « Commandement ». Lors du surlignage, le nom s’affiche à côté de la couleur.",
+  "Name (z. B. Verheißung)": "Nom (p. ex. Promesse)"
 }

@@ -203,7 +203,7 @@ public partial class MainWindow
                 zip.CreateEntryFromFile(snapshot, "vault.db");
                 // only the settings the import takes over: a vault is shared with other people, the relay password, the name for studying
                 // together, the allowed plugins or the AI instruction must not go along
-                var shared = new AppSettings { CustomColors = _settings.CustomColors, DefaultColor = _settings.DefaultColor, AutoTagBook = _settings.AutoTagBook, AutoMarkRead = _settings.AutoMarkRead };
+                var shared = new AppSettings { CustomColors = _settings.CustomColors, ColorNames = _settings.ColorNames, DefaultColor = _settings.DefaultColor, AutoTagBook = _settings.AutoTagBook, AutoMarkRead = _settings.AutoMarkRead };
                 using (var s = new StreamWriter(zip.CreateEntry("settings.json").Open())) s.Write(JsonSerializer.Serialize(shared));
                 var info = zip.CreateEntry("info.txt");
                 using var writer = new StreamWriter(info.Open());
@@ -239,6 +239,8 @@ public partial class MainWindow
                     // colours and two switches only: the AI instruction of someone else's vault does not replace your own
                     _settings.CustomColors = imported.CustomColors.Where(c => NormalizeHex(c) is not null).Take(30).ToList();
                     _settings.DefaultColor = NormalizeHex(imported.DefaultColor) ?? _settings.DefaultColor;
+                    foreach (var (hex, nm) in imported.ColorNames.Take(40))   // meanings of the colors; yours stay where both name the same color
+                        if (NormalizeHex(hex) is { } key && nm.Trim() is { Length: > 0 } t && !_settings.ColorNames.ContainsKey(key)) _settings.ColorNames[key] = t.Length > 30 ? t[..30] : t;
                     _settings.AutoTagBook = imported.AutoTagBook; _settings.AutoMarkRead = imported.AutoMarkRead;
                     AutoTagCheck.IsChecked = _settings.AutoTagBook; AutoReadCheck.IsChecked = _settings.AutoMarkRead;
                     BuildDefaultColorPanel();
