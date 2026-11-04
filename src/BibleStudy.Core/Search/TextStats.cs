@@ -26,7 +26,27 @@ public static class TextStats
         return freq;
     }
 
-    /// <summary>Dunning's G²: how far a word's share in the focus part (a of c words) departs from its share in the rest (b of d words).</summary>
+    /// <summary>
+  /// The search folds words (no umlauts, no accents, lower case). To show a word the way the text spells it, this gives for every folded word the
+  /// form that is used most often (only for words where it differs).
+  /// </summary>
+  public static Dictionary<string, string> DisplayForms(IEnumerable<CorpusVerse> corpus)
+  {
+      var seen = new Dictionary<string, Dictionary<string, int>>();
+      foreach (var v in corpus)
+          for (var i = 0; i < v.Words.Length; i++)
+          {
+              var (start, len) = v.Words[i];
+              var original = v.Text.Substring(start, len).ToLowerInvariant();
+              var folded = v.Word(i, true);
+              if (original == folded) continue;
+              if (!seen.TryGetValue(folded, out var forms)) seen[folded] = forms = [];
+              forms[original] = forms.GetValueOrDefault(original) + 1;
+          }
+      return seen.ToDictionary(p => p.Key, p => p.Value.OrderByDescending(f => f.Value).First().Key);
+  }
+
+  /// <summary>Dunning's G²: how far a word's share in the focus part (a of c words) departs from its share in the rest (b of d words).</summary>
     public static double LogLikelihood(long a, long b, long c, long d)
     {
         if (c <= 0 || d <= 0 || a + b == 0) return 0;
@@ -37,7 +57,7 @@ public static class TextStats
         return 2 * g;
     }
 
-    static bool Worth(string w) => w.Length > 1 && !w.All(char.IsDigit);
+    static bool Worth(string w) => w.Length > 1 && !w.All(char.IsDigit) && !TextTokens.IsStrongTag(w);
 
     /// <summary>The words that stand within <paramref name="window"/> words of the hits more often than chance would have it, strongest first.</summary>
     public static List<WordScore> Collocates(IReadOnlyList<CorpusVerse> corpus, IEnumerable<SearchResult> hits, int window = 5, int top = 40, Dictionary<string, int>? freq = null)

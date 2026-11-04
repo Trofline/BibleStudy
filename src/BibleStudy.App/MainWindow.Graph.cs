@@ -23,6 +23,7 @@ public partial class MainWindow
         MapPane.CloseRequested += ShowReader;
         MapPane.MapProvider = async () => _worldMap ??= await WorldMap.LoadAsync(_http, Path.Combine(_root, "cache"));
         MapPane.PlacesProvider = (book, chapter) => _hello.GetChapterPlacesAsync(book, chapter);
+        MapPane.AnimationsEnabled = () => _settings.Animations;
         MapPane.BookNames = BookName;
         MapPane.BookOrder = id => _books.ToList().FindIndex(b => b.Id == id);
         MapPane.RouteRequested += async name =>

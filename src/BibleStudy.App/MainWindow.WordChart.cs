@@ -70,6 +70,14 @@ public partial class MainWindow
         };
         stack.Children.Add(bars);
         stack.Children.Add(new TextBlock { Text = L("Ein Klick auf einen Balken springt zur ersten Stelle in diesem Buch."), Classes = { "caption" } });
+
+        // barcode: one stripe per chapter
+        stack.Children.Add(new TextBlock { Text = L("Wort-Barcode: ein Streifen je Kapitel"), FontSize = 18, Margin = new(0, 14, 0, 0) });
+        var barcode = new ChapterBarcode();
+        barcode.SetData(BarcodeCells(books, analyzer.Occurrences(id)), ShortBookId, BookName);
+        barcode.ChapterClicked += (book, chapter) => { win.Close(); _ = GoToAsync(book, chapter); };
+        stack.Children.Add(barcode);
+        stack.Children.Add(new TextBlock { Text = L("Je kräftiger der Streifen, desto mehr Treffer im Kapitel. Ein Klick öffnet das Kapitel."), Classes = { "caption" } });
         if (other > 0) stack.Children.Add(new TextBlock { Text = L("{0} Vorkommen im anderen Testament", other), Classes = { "caption" } });
 
         // ring: how the translation renders the word

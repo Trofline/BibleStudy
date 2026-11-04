@@ -138,32 +138,53 @@ public partial class MainWindow
     {
         var w = (int)Math.Ceiling(c.Bounds.Width); var h = (int)Math.Ceiling(c.Bounds.Height);
         if (w < 2 || h < 2) return;
-        // twice the size for sharpness, but never a picture so big that the graphics memory runs out
-        var k = Math.Min(2.0, 8000.0 / Math.Max(w, h));
+        // 1:1 on purpose: a bitmap with a higher dpi showed up enlarged and cut off in the window (the PNG export below is not affected)
+        const double k = 1.0;
         Avalonia.Media.Imaging.RenderTargetBitmap bmp;
         try { bmp = new Avalonia.Media.Imaging.RenderTargetBitmap(new PixelSize((int)(w * k), (int)(h * k)), new Vector(96 * k, 96 * k)); bmp.Render(c); }
         catch (Exception ex) { StatusText.Text = L("Fehler: ") + ex.Message; return; }
-        var scale = new ScaleTransform(1, 1);
-        var image = new Image { Source = bmp, Width = w, Height = h, Stretch = Stretch.Uniform };
-        var page = new Border { Background = Res("BsBackground"), Child = image };
-        var scroller = new ScrollViewer { Content = new LayoutTransformControl { Child = page, LayoutTransform = scale }, HorizontalScrollBarVisibility = Avalonia.Controls.Primitives.ScrollBarVisibility.Auto, VerticalScrollBarVisibility = Avalonia.Controls.Primitives.ScrollBarVisibility.Auto };
-        void Zoom(double f) => scale.ScaleX = scale.ScaleY = Math.Clamp(scale.ScaleX * f, 0.2, 4);
+        var image = new Image { Source = bmp, Width = w * k, Height = h * k, Stretch = Stretch.Fill, RenderTransformOrigin = RelativePoint.TopLeft };
+        RenderOptions.SetBitmapInterpolationMode(image, Avalonia.Media.Imaging.BitmapInterpolationMode.HighQuality);
+        var host = new Canvas { Background = Res("BsBackground"), ClipToBounds = true, Cursor = new Cursor(StandardCursorType.SizeAll), Children = { image } };
+        double zoom = 1, ox = 0, oy = 0;
+        bool fitted = false;
+        void Apply()
+        {
+            image.RenderTransform = new MatrixTransform(new Matrix(zoom, 0, 0, zoom, ox, oy));
+        }
         void Fit()
         {
-            if (scroller.Bounds.Width < 100 || scroller.Bounds.Height < 100) return;
-            scale.ScaleX = scale.ScaleY = Math.Clamp(Math.Min((scroller.Bounds.Width - 24) / w, (scroller.Bounds.Height - 24) / h), 0.2, 1.5);   // the whole picture, in both directions
+            if (host.Bounds.Width < 100 || host.Bounds.Height < 100) return;
+            zoom = Math.Clamp(Math.Min((host.Bounds.Width - 24) / (w * k), (host.Bounds.Height - 24) / (h * k)), 0.02, 1.5 / k);   // the whole picture, in both directions
+            ox = (host.Bounds.Width - w * k * zoom) / 2; oy = (host.Bounds.Height - h * k * zoom) / 2;
+            fitted = true; Apply();
         }
-        scroller.PointerWheelChanged += (_, e) => { if (!e.KeyModifiers.HasFlag(KeyModifiers.Control)) return; Zoom(e.Delta.Y > 0 ? 1.1 : 1 / 1.1); e.Handled = true; };
+        void ZoomAt(Point p, double f)
+        {
+            var z = Math.Clamp(zoom * f, 0.02, 6 / k);
+            f = z / zoom;
+            ox = p.X - (p.X - ox) * f; oy = p.Y - (p.Y - oy) * f; zoom = z; Apply();
+        }
+        // wheel zooms around the mouse, dragging moves the picture
+        host.PointerWheelChanged += (_, e) => { ZoomAt(e.GetPosition(host), e.Delta.Y > 0 ? 1.12 : 1 / 1.12); e.Handled = true; };
+        Point? last = null;
+        host.PointerPressed += (_, e) => { if (e.GetCurrentPoint(host).Properties.IsLeftButtonPressed || e.GetCurrentPoint(host).Properties.IsMiddleButtonPressed) { last = e.GetPosition(host); e.Pointer.Capture(host); } };
+        host.PointerMoved += (_, e) => { if (last is { } l) { var p = e.GetPosition(host); ox += p.X - l.X; oy += p.Y - l.Y; last = p; Apply(); } };
+        host.PointerReleased += (_, e) => { last = null; e.Pointer.Capture(null); };
+        host.DoubleTapped += (_, _) => Fit();
+        host.SizeChanged += (_, _) => { if (!fitted) Fit(); };
         var minus = new Button { Content = "−", Classes = { "tool" }, Width = 32, Height = 30 };
         var plus = new Button { Content = "+", Classes = { "tool" }, Width = 32, Height = 30 };
         var fit = new Button { Content = L("Fit"), Classes = { "tool" }, Width = double.NaN, MinWidth = 48, Padding = new(10, 0), Height = 30 };
         var save = new Button { Content = L("Als Bild speichern"), Classes = { "tool" }, Width = double.NaN, Padding = new(10, 0), Height = 30 };
-        minus.Click += (_, _) => Zoom(1 / 1.2); plus.Click += (_, _) => Zoom(1.2); fit.Click += (_, _) => Fit();
+        var hint = new TextBlock { Text = L("Ziehen: verschieben · Mausrad: zoomen · Doppelklick: einpassen"), Classes = { "caption" }, VerticalAlignment = VerticalAlignment.Center, Margin = new(8, 0, 0, 0) };
+        minus.Click += (_, _) => ZoomAt(new Point(host.Bounds.Width / 2, host.Bounds.Height / 2), 1 / 1.2);
+        plus.Click += (_, _) => ZoomAt(new Point(host.Bounds.Width / 2, host.Bounds.Height / 2), 1.2);
+        fit.Click += (_, _) => Fit();
         save.Click += (_, _) => ExportControlImage(c, title);
-        var bar = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 6, Margin = new(12, 8), Children = { minus, plus, fit, save } };
+        var bar = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 6, Margin = new(12, 8), Children = { minus, plus, fit, save, hint } };
         DockPanel.SetDock(bar, Dock.Top);
-        var win = new Window { Title = title, Width = Math.Clamp(w + 60, 680, 1500), Height = Math.Clamp(h + 130, 460, 950), MinWidth = 420, MinHeight = 240, Background = Res("BsBackground"), Icon = Icon, WindowStartupLocation = WindowStartupLocation.CenterOwner, Content = new DockPanel { Children = { bar, scroller } } };
-        win.Opened += (_, _) => Avalonia.Threading.Dispatcher.UIThread.Post(Fit, Avalonia.Threading.DispatcherPriority.Loaded);
+        var win = new Window { Title = title, Width = Math.Clamp(w + 60, 680, 1500), Height = Math.Clamp(h + 130, 460, 950), MinWidth = 420, MinHeight = 240, Background = Res("BsBackground"), Icon = Icon, WindowStartupLocation = WindowStartupLocation.CenterOwner, Content = new DockPanel { Children = { bar, host } } };
         win.Show(this);
     }
 

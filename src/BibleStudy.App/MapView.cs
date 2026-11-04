@@ -31,6 +31,10 @@ public sealed class MapView : UserControl
     readonly ToggleButton _chapterBtn = new() { Content = L("Kapitel"), IsChecked = true };
     readonly ToggleButton _bookBtn = new() { Content = L("Ganzes Buch") };
     readonly CheckBox _routeBox = new() { Content = L("Weg in Reihenfolge der Erwähnung"), IsChecked = true };
+    readonly Button _playBtn = new() { IsVisible = false };
+    readonly ComboBox _speedBox = new() { IsVisible = false, ItemsSource = new[] { L("Langsam"), L("Normal"), L("Schnell") }, SelectedIndex = 1 };
+    /// <summary>False when the program runs without animations: the journey then jumps from place to place.</summary>
+    public Func<bool>? AnimationsEnabled { get; set; }
     readonly TextBlock _title = new() { FontWeight = FontWeight.SemiBold, VerticalAlignment = VerticalAlignment.Center };
     readonly TextBlock _hint = new() { FontSize = 12, VerticalAlignment = VerticalAlignment.Center, TextTrimming = TextTrimming.CharacterEllipsis };
     readonly TextBlock _detailTitle = new() { FontWeight = FontWeight.SemiBold, FontSize = 15 };
@@ -61,6 +65,13 @@ public sealed class MapView : UserControl
         _personBox.PlaceholderText = L("Reiseweg von … (Person)"); _personBtn.Content = L("Reiseweg zeigen");
         ToolTip.SetTip(_personBtn, L("Die Orte, die in der Nähe der Verse einer Person genannt werden, in der Reihenfolge der Bibel"));
         Add(_personBox, 6); Add(_personBtn, 10);
+        _playBtn.Content = L("▶ Reise abspielen");
+        ToolTip.SetTip(_playBtn, L("Zeigt den Weg Schritt für Schritt: Der Reihe nach erscheinen die Orte, ein Punkt wandert von einem zum nächsten"));
+        Add(_playBtn, 6); Add(_speedBox, 16);
+        _playBtn.Click += (_, _) => { if (_canvas.IsPlaying) _canvas.Stop(); else { _detail.IsVisible = false; _canvas.Play(AnimationsEnabled?.Invoke() ?? true, _speedBox.SelectedIndex); } };
+        _speedBox.SelectionChanged += (_, _) => _canvas.SpeedLevel = _speedBox.SelectedIndex;
+        _canvas.PlayStateChanged += () => { _playBtn.Content = _canvas.IsPlaying ? L("⏸ Anhalten") : L("▶ Reise abspielen"); };
+        _canvas.StepChanged += StepShown;
         _personBtn.Click += (_, _) => { if (!string.IsNullOrWhiteSpace(_personBox.Text)) RouteRequested?.Invoke(_personBox.Text.Trim()); };
         _personBox.KeyDown += (_, e) => { if (e.Key == Avalonia.Input.Key.Enter && !string.IsNullOrWhiteSpace(_personBox.Text)) RouteRequested?.Invoke(_personBox.Text.Trim()); };
         var hintRow = new Border { Height = 24, Padding = new(16, 0), Child = _hint };
@@ -76,7 +87,7 @@ public sealed class MapView : UserControl
 
         _chapterBtn.Click += async (_, _) => { _chapterBtn.IsChecked = true; _bookBtn.IsChecked = false; await LoadAsync(); };
         _bookBtn.Click += async (_, _) => { _bookBtn.IsChecked = true; _chapterBtn.IsChecked = false; await LoadAsync(); };
-        _routeBox.IsCheckedChanged += (_, _) => _canvas.ShowRoute = _routeBox.IsChecked == true;
+        _routeBox.IsCheckedChanged += (_, _) => { _canvas.ShowRoute = _routeBox.IsChecked == true; UpdatePlayButton(); };
         _canvas.Hovered += text => _hint.Text = text;
         _canvas.Selected += ShowDetail;
     }
@@ -147,6 +158,7 @@ public sealed class MapView : UserControl
             _hitMentions.Clear();
             foreach (var e in ordered) _hitMentions[e.Place.Id] = e.Verses.OrderBy(v => v.Book).ThenBy(v => v.Chapter).ThenBy(v => v.Verse).ToList();
             _canvas.SetPlaces(ordered.Select(e => e.Place).ToList(), route ? null : ordered.Select(e => e.Verses.Count).ToList());
+            UpdatePlayButton();
             _hint.Text = ordered.Count == 0 ? L("In den Treffern kommen keine Orte mit Koordinaten vor.")
                 : L("{0} Orte in {1} Treffern · Punktgröße = Zahl der Verse · Ort anklicken: Stellen", ordered.Count, hits.Count);
         }
@@ -188,9 +200,26 @@ public sealed class MapView : UserControl
                     if (seen.Add(place.Id)) places.Add(place);
                 }
             _canvas.SetPlaces(places);
+            UpdatePlayButton();
             _hint.Text = places.Count == 0 ? L("Keine Orte mit Koordinaten in diesem Abschnitt.") : L("{0} Orte · Mausrad: zoomen · ziehen: verschieben · Ort anklicken: Stellen", places.Count);
         }
         catch (Exception ex) { _hint.Text = L("Karte nicht verfügbar: ") + ex.Message; }
+    }
+
+    void UpdatePlayButton()
+    {
+        var can = _canvas.CanPlay;
+        _playBtn.IsVisible = can; _speedBox.IsVisible = can;
+        if (!can) _canvas.Stop();
+    }
+
+    /// <summary>While the journey plays: which place we are at and where the text mentions it.</summary>
+    void StepShown(int index, int count, MapPlace place)
+    {
+        var first = _hitMode
+            ? _hitMentions.GetValueOrDefault(place.Id)?.FirstOrDefault() is { } r ? $"{BookNames?.Invoke(r.Book) ?? r.Book} {r.Chapter},{r.Verse}" : ""
+            : _mentions.GetValueOrDefault(place.Id) is { Count: > 0 } m ? $"{_bookName} {m[0].Chapter},{m[0].Verse}" : "";
+        _hint.Text = $"{index + 1}/{count} · {place.Name}" + (first.Length > 0 ? " · " + first : "");
     }
 
     void ShowDetail(MapPlace? place)
@@ -242,7 +271,69 @@ sealed class MapCanvas : Control
     Point? _dragFrom; Vector _dragCenter; bool _dragged;
     bool _showRoute = true;
 
-    public bool ShowRoute { get => _showRoute; set { _showRoute = value; InvalidateVisual(); } }
+    public bool ShowRoute { get => _showRoute; set { _showRoute = value; if (!value) Stop(); InvalidateVisual(); } }
+
+    // ---- the journey as an animation ----------------------------------------------------------------------------------
+    public event Action? PlayStateChanged;
+    /// <summary>Index of the place we are at (or on the way to), count of places, the place.</summary>
+    public event Action<int, int, MapPlace>? StepChanged;
+    Avalonia.Threading.DispatcherTimer? _timer;
+    System.Diagnostics.Stopwatch? _clock;
+    double _playPos = -1;       // 0 = at the first place; 1.5 = halfway between the second and the third
+    bool _smooth = true;
+    int _lastStep = -1;
+    public bool IsPlaying => _timer is not null;
+    public bool CanPlay => _showRoute && _places.Count > 1 && _weights is null;
+    public int SpeedLevel { get; set; } = 1;
+
+    // seconds for one place: slow, normal, fast
+    double SecondsPerPlace => SpeedLevel switch { 0 => 2.8, 2 => 0.9, _ => 1.7 };
+
+    public void Play(bool smooth, int speedLevel)
+    {
+        if (!CanPlay) return;
+        Stop();
+        SpeedLevel = speedLevel; _smooth = smooth; _playPos = 0; _lastStep = -1;
+        _clock = System.Diagnostics.Stopwatch.StartNew();
+        var last = TimeSpan.Zero;
+        _timer = new Avalonia.Threading.DispatcherTimer { Interval = TimeSpan.FromMilliseconds(smooth ? 16 : 100) };
+        _timer.Tick += (_, _) =>
+        {
+            var now = _clock!.Elapsed;
+            _playPos += (now - last).TotalSeconds / SecondsPerPlace;
+            last = now;
+            if (_playPos >= _places.Count - 1 + 0.9) { Stop(); return; }   // a short rest on the last place, then the normal picture
+            var step = (int)Math.Min(_places.Count - 1, Math.Floor(_playPos + (_smooth ? 0.35 : 0)));
+            if (step != _lastStep) { _lastStep = step; StepChanged?.Invoke(step, _places.Count, _places[step]); }
+            InvalidateVisual();
+        };
+        _timer.Start();
+        PlayStateChanged?.Invoke();
+        InvalidateVisual();
+    }
+
+    public void Stop()
+    {
+        if (_timer is null) return;
+        _timer.Stop(); _timer = null; _clock = null; _playPos = -1; _lastStep = -1;
+        PlayStateChanged?.Invoke();
+        InvalidateVisual();
+    }
+
+    /// <summary>Position of the moving point: it travels in the first part of each step and rests on the place for the rest.</summary>
+    Point? Marker()
+    {
+        if (_playPos < 0 || _places.Count == 0) return null;
+        var k = (int)Math.Min(Math.Floor(_playPos), _places.Count - 1);
+        if (k >= _places.Count - 1) return ToScreen(_places[^1]);
+        var f = _smooth ? Math.Clamp((_playPos - k) / 0.65, 0, 1) : (_playPos - k >= 0.5 ? 1 : 0);
+        f = f * f * (3 - 2 * f);
+        var a = ToScreen(_places[k]); var b = ToScreen(_places[k + 1]);
+        return new Point(a.X + (b.X - a.X) * f, a.Y + (b.Y - a.Y) * f);
+    }
+
+    /// <summary>How many places the journey has reached (the one the point is on, or is travelling to).</summary>
+    int Reached => _playPos < 0 ? _places.Count - 1 : (int)Math.Min(_places.Count - 1, Math.Floor(_playPos + (_smooth ? 0.65 : 0.5)));
 
     static double MercY(double lat) => 180 / Math.PI * Math.Log(Math.Tan(Math.PI / 4 + Math.Clamp(lat, -85, 85) * Math.PI / 360));
 
@@ -270,6 +361,7 @@ sealed class MapCanvas : Control
 
     public void SetPlaces(IReadOnlyList<MapPlace> places, IReadOnlyList<int>? weights = null)
     {
+        Stop();
         _places = places; _weights = weights; _hover = -1; _selected = -1;
         Selected?.Invoke(null);
         Fit();
@@ -310,8 +402,11 @@ sealed class MapCanvas : Control
         }
         var accent = this.TryFindResource("BsAccent", ActualThemeVariant, out var a) && a is IBrush ab ? ab : Brushes.Gold;
         var text = this.TryFindResource("BsText", ActualThemeVariant, out var t) && t is IBrush tb ? tb : Brushes.White;
+        var playing = _playPos >= 0;
+        var marker = playing ? Marker() : null;
         if (_showRoute && _places.Count > 1)
         {
+            // dashed route; while playing, the part that was travelled is drawn solid and the rest only faintly
             var geometry = new StreamGeometry();
             using (var ctx = geometry.Open())
             {
@@ -319,20 +414,47 @@ sealed class MapCanvas : Control
                 for (var i = 1; i < _places.Count; i++) ctx.LineTo(ToScreen(_places[i]));
                 ctx.EndFigure(false);
             }
-            dc.DrawGeometry(null, new Pen(accent, 1.8, new DashStyle([4, 3], 0)), geometry);
+            var accentColor = (accent as ISolidColorBrush)?.Color ?? Colors.Gold;
+            dc.DrawGeometry(null, new Pen(playing ? new SolidColorBrush(accentColor, 0.22) : accent, 1.8, new DashStyle([4, 3], 0)), geometry);
+            if (playing && marker is { } m)
+            {
+                var k = (int)Math.Min(Math.Floor(_playPos), _places.Count - 1);
+                var done = new StreamGeometry();
+                using (var ctx = done.Open())
+                {
+                    ctx.BeginFigure(ToScreen(_places[0]), false);
+                    for (var i = 1; i <= k; i++) ctx.LineTo(ToScreen(_places[i]));
+                    if (k < _places.Count - 1) ctx.LineTo(m);
+                    ctx.EndFigure(false);
+                }
+                dc.DrawGeometry(null, new Pen(accent, 3.2, lineCap: PenLineCap.Round, lineJoin: PenLineJoin.Round), done);
+            }
         }
         for (var i = 0; i < _places.Count; i++)
         {
             var p = ToScreen(_places[i]);
             if (p.X < -20 || p.Y < -20 || p.X > Bounds.Width + 20 || p.Y > Bounds.Height + 20) continue;
             var radius = Radius(i) + (i == _selected ? 3 : i == _hover ? 2 : 0);
-            dc.DrawEllipse(ColorOf(_places[i].FeatureType), new Pen(i == _selected ? text : Brushes.Black, i == _selected ? 2 : 1), p, radius, radius);
-            if (_places.Count <= 40 || i == _hover || i == _selected || _scale > 40)
+            var ahead = playing && i > Reached;   // not yet visited: only a faint dot
+            using (dc.PushOpacity(ahead ? 0.28 : 1))
+                dc.DrawEllipse(ColorOf(_places[i].FeatureType), new Pen(i == _selected ? text : Brushes.Black, i == _selected ? 2 : 1), p, radius, radius);
+            if (playing && i == Reached)
+            {
+                var pulse = 5 + 3 * Math.Sin(_clock!.Elapsed.TotalSeconds * 6);
+                dc.DrawEllipse(null, new Pen(accent, 2.2), p, radius + pulse, radius + pulse);
+            }
+            if (ahead) continue;
+            if (_places.Count <= 40 || i == _hover || i == _selected || _scale > 40 || (playing && i == Reached))
             {
                 var label = new FormattedText($"{(_weights is null && _places.Count <= 60 ? (i + 1) + " " : "")}{_places[i].Name}{(_weights is null ? "" : $" ({_weights[i]})")}", CultureInfo.CurrentUICulture, FlowDirection.LeftToRight, Typeface.Default, 11, text);
                 dc.DrawRectangle(new SolidColorBrush(Color.Parse("#0d1b2a"), 0.65), null, new Rect(p.X + 8, p.Y - label.Height / 2 - 1, label.Width + 6, label.Height + 2));
                 dc.DrawText(label, new Point(p.X + 11, p.Y - label.Height / 2));
             }
+        }
+        if (marker is { } mk)
+        {
+            dc.DrawEllipse(new SolidColorBrush((accent as ISolidColorBrush)?.Color ?? Colors.Gold, 0.3), null, mk, 13, 13);
+            dc.DrawEllipse(accent, new Pen(Brushes.Black, 1.5), mk, 7, 7);
         }
         if (_places.Count == 0)
             dc.DrawText(new FormattedText(L("Keine Orte mit Koordinaten in diesem Abschnitt."), CultureInfo.CurrentUICulture, FlowDirection.LeftToRight, Typeface.Default, 14, text), new Point(24, 20));

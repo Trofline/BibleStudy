@@ -99,6 +99,7 @@ public partial class MainWindow
         yield return C(L("Statistik"), () => Work("Planen", StatsTab));
         yield return C(L("Satzdiagramm"), () => Side(SentenceTab));
         yield return C(L("Perikopen-Analyse"), () => Side(PericopeTab));
+        yield return C(L("Chiasmus-Finder"), ShowChiasmFinderAsync);
         yield return C(L("Auswendig lernen"), () => Work("Planen", MemoryTab));
         yield return C(L("Gemeinsam studieren"), () => Side(CollabTab));
         yield return C(L("Verweis-Netz AT ↔ NT"), async () => { await ShowGraphAsync(); GraphPane.ShowOtNt(); });

@@ -39,6 +39,9 @@ public partial class MainWindow
         var go = new Button { Content = L("Analysieren"), Classes = { "primary" }, Padding = new(14, 0), Height = 32 };
         var all = new Button { Content = L("Ganzes Kapitel"), Padding = new(12, 0), Height = 32 };
         var save = new Button { Content = L("Als Bild speichern"), Padding = new(12, 0), Height = 32 };
+        var chiasm = new Button { Content = L("Chiasmus-Finder"), Padding = new(12, 0), Height = 32 };
+        ToolTip.SetTip(chiasm, L("Sucht Spiegelaufbauten (A B C … C B A) im Kapitel oder im ganzen Buch"));
+        chiasm.Click += async (_, _) => await ShowChiasmFinderAsync();
         go.Click += async (_, _) => await RunPericopeAsync();
         all.Click += async (_, _) => { _periFrom.Value = 1; _periTo.Value = _periTo.Maximum; await RunPericopeAsync(); };
         save.Click += (_, _) => { if (_periResults.Bounds.Width > 10) ExportControlImage(_periResults, L("Perikopen-Analyse") + "_" + BookName(_curBook) + "_" + _curChapter + "_" + (int)(_periFrom.Value ?? 1) + "-" + (int)(_periTo.Value ?? 1)); };
@@ -49,7 +52,7 @@ public partial class MainWindow
             {
                 Pad(new TextBlock { Text = L("Von Vers"), VerticalAlignment = VerticalAlignment.Center }), Pad(_periFrom),
                 Pad(new TextBlock { Text = L("bis"), VerticalAlignment = VerticalAlignment.Center }), Pad(_periTo),
-                Pad(go), Pad(all), Pad(save),
+                Pad(go), Pad(all), Pad(save), Pad(chiasm),
                 Pad(PopOutButton(() => _periResults.Bounds.Width > 10 ? _periResults : null, () => L("Perikopen-Analyse") + " · " + BookName(_curBook) + " " + _curChapter)),
             },
         };

@@ -34,10 +34,12 @@ public partial class MainWindow
             options.Children.Add(_saveSearchBtn);
             options.Children.Add(_savedListBtn);
         }
-        if (SearchQueueBtn.Parent is Panel actions)
+        // outside the scrolling top part: otherwise the buttons sit below the fold of the search panel and nobody finds them
+        if (SearchDock.Children.IndexOf(SearchTopScroll) is var scrollAt and >= 0)
         {
-            var at = actions.Children.IndexOf(SearchQueueBtn) + 1;
-            actions.Children.Insert(at, new WrapPanel { Children = { _hitsDocBtn, _hitsCsvBtn, _hitsMapBtn, _hitsStatsBtn } });
+            var row = new WrapPanel { Children = { _hitsDocBtn, _hitsCsvBtn, _hitsMapBtn, _hitsStatsBtn } };
+            DockPanel.SetDock(row, Dock.Top);
+            SearchDock.Children.Insert(scrollAt + 1, row);
         }
         _saveSearchBtn.Flyout = BuildSaveFlyout();
         _savedListBtn.Click += (_, _) => ShowSavedMenu();

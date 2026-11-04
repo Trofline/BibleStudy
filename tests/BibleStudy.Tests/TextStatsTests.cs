@@ -47,4 +47,13 @@ public class TextStatsTests
         Assert.Equal(0, TextStats.LogLikelihood(10, 10, 100, 100), 6);
         Assert.True(TextStats.LogLikelihood(30, 10, 100, 100) > TextStats.LogLikelihood(15, 10, 100, 100));
     }
+
+    [Fact]
+    public void Display_forms_give_back_the_umlauts_the_search_folds_away()
+    {
+        var corpus = new List<CorpusVerse> { new(new VerseRef("ROM", 1, 1), "Übertretung und Gnade"), new(new VerseRef("ROM", 1, 2), "Die Übertretung bleibt") };
+        var forms = TextStats.DisplayForms(corpus);
+        Assert.Equal("übertretung", forms["ubertretung"]);
+        Assert.False(forms.ContainsKey("gnade"));
+    }
 }
