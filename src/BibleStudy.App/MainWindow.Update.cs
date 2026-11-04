@@ -75,7 +75,7 @@ public partial class MainWindow
             row.Children.Add(b);
         }
         win.Content = new StackPanel { Margin = new(22), Children = { new TextBlock { Text = title, FontSize = 18, FontWeight = FontWeight.SemiBold, Margin = new(0, 0, 0, 10) }, new TextBlock { Text = text, TextWrapping = TextWrapping.Wrap }, row } };
-        await win.ShowDialog(this);
+        await ShowModalAsync(win);
         return result;
     }
 

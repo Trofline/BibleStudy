@@ -60,7 +60,7 @@ public partial class MainWindow
                 new StackPanel { Orientation = Orientation.Horizontal, HorizontalAlignment = HorizontalAlignment.Right, Children = { cancel, ok } },
             },
         };
-        await win.ShowDialog(this);
+        await ShowModalAsync(win);
         return chosen;
     }
 
@@ -144,7 +144,7 @@ public partial class MainWindow
                 new StackPanel { Orientation = Orientation.Horizontal, HorizontalAlignment = HorizontalAlignment.Right, Children = { cancel, ok } },
             },
         };
-        await win.ShowDialog(this);
+        await ShowModalAsync(win);
         return new { id = chosen };
     }
 }

@@ -95,8 +95,27 @@ public partial class MainWindow
 
     void ToggleMaximize() => WindowState = WindowState == WindowState.Maximized ? WindowState.Normal : WindowState.Maximized;
 
+    Window? _modal;
+
+    /// <summary>A question window that blocks the main window; remembered so that the close button of the main window can end it first.</summary>
+    async Task ShowModalAsync(Window win)
+    {
+        _modal = win;
+        try { await win.ShowDialog(this); }
+        finally { if (_modal == win) _modal = null; }
+    }
+
     void OnWindowClosing(object? sender, WindowClosingEventArgs e)
     {
+        // a question window that is still open (update offer ...) would keep the main window from closing: the first click only ended the
+        // animation without effect and the second one was needed. So the question is closed first (as "later"/"no") and then the program closes.
+        if (_modal is { } open && e.CloseReason == WindowCloseReason.WindowClosing)
+        {
+            e.Cancel = true; _modal = null;
+            open.Close();
+            Dispatcher.UIThread.Post(Close, DispatcherPriority.Background);
+            return;
+        }
         var toTray = !_exiting && _settings.CloseToTray && _tray is not null && _settings.Tray;
         if (_closeAnimating) { e.Cancel = true; return; }
         if (!_closeAnimated && CloseStyle != "none" && IsVisible && WindowState != WindowState.Minimized && e.CloseReason == WindowCloseReason.WindowClosing)
