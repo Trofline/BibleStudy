@@ -40,6 +40,8 @@ jobs:
           APP="dmgroot/BibleStudy.app/Contents"
           mkdir -p "$APP/MacOS" "$APP/Resources"
           cp -R stage/app/. "$APP/MacOS/"
+          # macOS treats a file called "BibleStudy.App" like an application bundle: the start file is just "BibleStudy"
+          mv "$APP/MacOS/BibleStudy.App" "$APP/MacOS/BibleStudy"
           chmod +x "$APP/MacOS/BibleStudy" "$APP/MacOS/mcp/BibleStudy.Mcp"
           sed "s/{VERSION}/$VERSION/g" packaging/macos/Info.plist > "$APP/Info.plist"
           # the icon: PNG sizes in an .iconset, made into BibleStudy.icns by the system tool
