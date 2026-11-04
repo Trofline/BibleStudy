@@ -21,13 +21,23 @@ public sealed record Prayer(long Id, string Text, VerseRef? Ref, DateTime Create
 /// <summary>A verse in the plain "Merkliste" (bookmark list): the place and the text as it was when saved.</summary>
 public sealed record Bookmark(long Id, VerseRef Ref, string Text, string Created);
 
-/// <summary>A highlighted word range (Start/End are offsets into the verse text of that translation) or a whole verse (Start = -1).</summary>
+/// <summary>
+/// A highlighted word range or a whole verse (Start = -1). Start is an offset into the text of the first verse, End into the text of the
+/// <see cref="LastVerse"/>; one mark can run over several verses (4–6) and then stays one entry in every list.
+/// </summary>
 public sealed record Mark(long Id, string TranslationId, VerseRef Ref, int Start, int End, string Text, string Color, string Note,
-    long? FolderId, IReadOnlyList<string> Tags)
+    long? FolderId, IReadOnlyList<string> Tags, int EndVerse = 0)
 {
     public const string AnyTranslation = "*";
     public bool WholeVerse => Start < 0;
+    /// <summary>The last verse of the mark (the same as the first for a single verse).</summary>
+    public int LastVerse => EndVerse > Ref.Verse ? EndVerse : Ref.Verse;
+    public bool Covers(int verse) => verse >= Ref.Verse && verse <= LastVerse;
+    public bool MultiVerse => LastVerse > Ref.Verse;
 }
+
+/// <summary>A heading of the user's own between verses: it stands in front of the verse (a theme of its own, not a note).</summary>
+public sealed record Heading(long Id, VerseRef Ref, string Text, int Level);
 
 /// <summary>
 /// Personal data of one vault: reading progress, notes, highlights (with colors, tags, folders), queue and to-dos.
@@ -40,6 +50,7 @@ public sealed class VaultStore : SqliteDb
     public VaultStore(string dbPath, string name) : base(dbPath)
     {
         Name = name;
+        KeepCopyBeforeMigration(dbPath);
         Exec("""
             CREATE TABLE IF NOT EXISTS notes(book TEXT, chapter INT, verse INT, text TEXT, updated TEXT, PRIMARY KEY(book,chapter,verse));
             CREATE TABLE IF NOT EXISTS read_chapters(book TEXT, chapter INT, read_at TEXT, PRIMARY KEY(book,chapter));
@@ -57,7 +68,12 @@ public sealed class VaultStore : SqliteDb
             CREATE TABLE IF NOT EXISTS bookmarks(id INTEGER PRIMARY KEY, book TEXT, chapter INT, verse INT, text TEXT, created TEXT, UNIQUE(book, chapter, verse));
             CREATE TABLE IF NOT EXISTS last_position(id INTEGER PRIMARY KEY CHECK(id=1), book TEXT, chapter INT);
             CREATE TABLE IF NOT EXISTS prayers(id INTEGER PRIMARY KEY, text TEXT, book TEXT, chapter INT, verse INT, created TEXT, answered TEXT, note TEXT);
+            CREATE TABLE IF NOT EXISTS headings(id INTEGER PRIMARY KEY, book TEXT, chapter INT, verse INT, text TEXT NOT NULL, level INT, created TEXT);
+            CREATE INDEX IF NOT EXISTS headings_pos ON headings(book, chapter);
             """);
+        // a mark can run over several verses (older vaults are migrated here; nothing is rewritten, the new column is empty for the old marks)
+        if (Query("SELECT 1 FROM pragma_table_info('marks') WHERE name='end_verse'", _ => { }, _ => 1).Count == 0)
+            Exec("ALTER TABLE marks ADD COLUMN end_verse INT");
         // documents can live in the same folders as marks (added later; older vaults are migrated here)
         // notes can be put into folders as well (older vaults are migrated here)
         if (Query("SELECT 1 FROM pragma_table_info('notes') WHERE name='folder_id'", _ => { }, _ => 1).Count == 0)
@@ -68,6 +84,26 @@ public sealed class VaultStore : SqliteDb
         foreach (var (column, type) in new[] { ("parent_id", "INT"), ("due", "TEXT"), ("pos", "INT") })
             if (Query($"SELECT 1 FROM pragma_table_info('todos') WHERE name='{column}'", _ => { }, _ => 1).Count == 0)
                 Exec($"ALTER TABLE todos ADD COLUMN {column} {type}");
+    }
+
+    /// <summary>
+    /// A vault from before the marks over several verses is copied once (through SQLite, so the copy is consistent) before it is changed: whoever
+    /// tries a new version on real data can always go back. The copy stays next to the vault as <c>vault.db.vor-Mehrvers.bak</c>.
+    /// </summary>
+    void KeepCopyBeforeMigration(string dbPath)
+    {
+        try
+        {
+            var copy = dbPath + ".vor-Mehrvers.bak";
+            if (!File.Exists(dbPath) || File.Exists(copy)) return;
+            var hasMarks = Query("SELECT 1 FROM sqlite_master WHERE type='table' AND name='marks'", _ => { }, _ => 1).Count > 0;
+            if (!hasMarks || Query("SELECT 1 FROM pragma_table_info('marks') WHERE name='end_verse'", _ => { }, _ => 1).Count > 0) return;
+            using var source = Open();
+            using var target = new SqliteConnection(new SqliteConnectionStringBuilder { DataSource = copy }.ToString());
+            target.Open();
+            source.BackupDatabase(target);
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or SqliteException) { /* the copy is a precaution; the vault opens either way */ }
     }
 
     // ---- reading progress -------------------------------------------------------------------------------------------
@@ -166,15 +202,16 @@ public sealed class VaultStore : SqliteDb
 
     // ---- marks ------------------------------------------------------------------------------------------------------
 
-    public long AddMark(string translationId, VerseRef r, int start, int end, string text, string color, string note, long? folderId, IEnumerable<string> tags)
+    public long AddMark(string translationId, VerseRef r, int start, int end, string text, string color, string note, long? folderId, IEnumerable<string> tags, int endVerse = 0)
     {
         using var con = Open();
         using var tx = con.BeginTransaction();
         using var cmd = con.CreateCommand();
         cmd.CommandText = """
-            INSERT INTO marks(translation,book,chapter,verse,start_off,end_off,text,color,note,folder_id,created)
-            VALUES($tr,$b,$c,$v,$s,$e,$x,$col,$n,$f,$t); SELECT last_insert_rowid()
+            INSERT INTO marks(translation,book,chapter,verse,start_off,end_off,text,color,note,folder_id,created,end_verse)
+            VALUES($tr,$b,$c,$v,$s,$e,$x,$col,$n,$f,$t,$ev); SELECT last_insert_rowid()
             """;
+        cmd.Parameters.AddWithValue("$ev", endVerse > r.Verse ? endVerse : DBNull.Value);
         cmd.Parameters.AddWithValue("$tr", translationId); cmd.Parameters.AddWithValue("$b", r.Book);
         cmd.Parameters.AddWithValue("$c", r.Chapter); cmd.Parameters.AddWithValue("$v", r.Verse);
         cmd.Parameters.AddWithValue("$s", start); cmd.Parameters.AddWithValue("$e", end);
@@ -214,7 +251,7 @@ public sealed class VaultStore : SqliteDb
         if (tag is not null) where.Add("id IN (SELECT mark_id FROM mark_tags WHERE tag=$t)");
         var tags = Query("SELECT mark_id,tag FROM mark_tags ORDER BY tag", _ => { }, r => (Id: r.GetInt64(0), Tag: r.GetString(1)))
             .ToLookup(x => x.Id, x => x.Tag);
-        return Query($"SELECT id,translation,book,chapter,verse,start_off,end_off,text,color,note,folder_id FROM marks {(where.Count > 0 ? "WHERE " + string.Join(" AND ", where) : "")} ORDER BY rowid",
+        return Query($"SELECT id,translation,book,chapter,verse,start_off,end_off,text,color,note,folder_id,end_verse FROM marks {(where.Count > 0 ? "WHERE " + string.Join(" AND ", where) : "")} ORDER BY rowid",
             c =>
             {
                 if (book is not null) c.Parameters.AddWithValue("$b", book);
@@ -223,8 +260,59 @@ public sealed class VaultStore : SqliteDb
                 if (tag is not null) c.Parameters.AddWithValue("$t", tag);
             },
             r => new Mark(r.GetInt64(0), r.GetString(1), new VerseRef(r.GetString(2), r.GetInt32(3), r.GetInt32(4)), r.GetInt32(5), r.GetInt32(6),
-                r.GetString(7), r.GetString(8), r.GetString(9), r.IsDBNull(10) ? null : r.GetInt64(10), tags[r.GetInt64(0)].ToList()));
+                r.GetString(7), r.GetString(8), r.GetString(9), r.IsDBNull(10) ? null : r.GetInt64(10), tags[r.GetInt64(0)].ToList(), r.IsDBNull(11) ? 0 : r.GetInt32(11)));
     }
+
+    /// <summary>Recolors several marks in one step (all or none).</summary>
+    public void RecolorMarks(IEnumerable<long> ids, string color)
+    {
+        using var con = Open();
+        using var tx = con.BeginTransaction();
+        foreach (var id in ids)
+        {
+            using var cmd = con.CreateCommand();
+            cmd.CommandText = "UPDATE marks SET color=$c WHERE id=$i";
+            cmd.Parameters.AddWithValue("$c", color); cmd.Parameters.AddWithValue("$i", id);
+            cmd.ExecuteNonQuery();
+        }
+        tx.Commit();
+    }
+
+    /// <summary>Deletes several marks in one step (all or none).</summary>
+    public void DeleteMarks(IEnumerable<long> ids)
+    {
+        using var con = Open();
+        using var tx = con.BeginTransaction();
+        foreach (var id in ids)
+            foreach (var sql in new[] { "DELETE FROM mark_tags WHERE mark_id=$i", "DELETE FROM marks WHERE id=$i" })
+            {
+                using var cmd = con.CreateCommand();
+                cmd.CommandText = sql; cmd.Parameters.AddWithValue("$i", id);
+                cmd.ExecuteNonQuery();
+            }
+        tx.Commit();
+    }
+
+    // ---- own headings ------------------------------------------------------------------------------------------------
+
+    public List<Heading> GetHeadings(string? book = null, int? chapter = null) =>
+        Query("SELECT id,book,chapter,verse,text,level FROM headings WHERE ($b IS NULL OR book=$b) AND ($c IS NULL OR chapter=$c) ORDER BY book,chapter,verse,id",
+            c => { c.Parameters.AddWithValue("$b", (object?)book ?? DBNull.Value); c.Parameters.AddWithValue("$c", (object?)chapter ?? DBNull.Value); },
+            r => new Heading(r.GetInt64(0), new VerseRef(r.GetString(1), r.GetInt32(2), r.GetInt32(3)), r.GetString(4), r.IsDBNull(5) ? 1 : r.GetInt32(5)));
+
+    public long AddHeading(VerseRef before, string text, int level = 1)
+    {
+        using var con = Open(); using var cmd = con.CreateCommand();
+        cmd.CommandText = "INSERT INTO headings(book,chapter,verse,text,level,created) VALUES($b,$c,$v,$x,$l,$t); SELECT last_insert_rowid()";
+        cmd.Parameters.AddWithValue("$b", before.Book); cmd.Parameters.AddWithValue("$c", before.Chapter); cmd.Parameters.AddWithValue("$v", before.Verse);
+        cmd.Parameters.AddWithValue("$x", text.Trim()); cmd.Parameters.AddWithValue("$l", Math.Clamp(level, 1, 3)); cmd.Parameters.AddWithValue("$t", DateTime.UtcNow.ToString("o"));
+        return (long)cmd.ExecuteScalar()!;
+    }
+
+    public void UpdateHeading(long id, string text, int level) =>
+        Exec("UPDATE headings SET text=$x, level=$l WHERE id=$i", c => { c.Parameters.AddWithValue("$x", text.Trim()); c.Parameters.AddWithValue("$l", Math.Clamp(level, 1, 3)); c.Parameters.AddWithValue("$i", id); });
+
+    public void DeleteHeading(long id) => Exec("DELETE FROM headings WHERE id=$i", c => c.Parameters.AddWithValue("$i", id));
 
     public List<(string Tag, int Count)> GetTags() =>
         Query("SELECT tag, COUNT(*) FROM mark_tags GROUP BY tag ORDER BY tag COLLATE NOCASE", _ => { }, r => (r.GetString(0), r.GetInt32(1)));

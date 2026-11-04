@@ -55,7 +55,7 @@ public partial class MainWindow
         BuildAccentPanel();
         ApplyAccent(_settings.Accent);
 
-        async void Redraw() { if (_qolReady) { SaveSettings(); await ShowChapterAsync(_selected); } }
+        async void Redraw() { if (_qolReady) { SaveSettings(); await RedrawChapterAsync(); } }
         FontBox.SelectionChanged += (_, _) => { if (FontBox.SelectedItem is string f) { _settings.ReaderFont = f; Redraw(); } };
         LineSlider.ValueChanged += (_, e) => { _settings.LineSpacing = Math.Round(e.NewValue, 1); LineLabel.Text = L("Zeilenabstand: {0:0.0}", _settings.LineSpacing); Redraw(); };
         WidthSlider.ValueChanged += (_, e) => { _settings.ReaderWidth = (int)e.NewValue; WidthLabel.Text = L("Textbreite: {0}", _settings.ReaderWidth); if (_qolReady) { FitReader(); SaveSettings(); } };
@@ -65,7 +65,8 @@ public partial class MainWindow
         void BuildJesusColors()
         {
             JesusColorPanel.Children.Clear();
-            foreach (var hex in new[] { "", "#C62828", "#8B1A1A", "#D9480F", "#B8860B", "#2E7D32", "#1565C0", "#6A1B9A", "#6D4C41" })
+            var fixedColors = new[] { "", "#C62828", "#8B1A1A", "#D9480F", "#B8860B", "#2E7D32", "#1565C0", "#6A1B9A", "#6D4C41" };
+            foreach (var hex in fixedColors.Concat(_settings.CustomJesusColors))
             {
                 var chosen = hex == _settings.JesusColor;
                 var dot = new Border
@@ -78,6 +79,22 @@ public partial class MainWindow
                 dot.PointerPressed += (_, _) => { _settings.JesusColor = captured; BuildJesusColors(); Redraw(); };
                 JesusColorPanel.Children.Add(dot);
             }
+            var add = new Border
+            {
+                Width = 26, Height = 26, CornerRadius = new(13), Margin = new(0, 4, 8, 4), Cursor = new Cursor(StandardCursorType.Hand), BorderThickness = new(1), BorderBrush = Res("BsBorder"),
+                Child = new TextBlock { Text = "+", HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center, VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center, FontSize = 16 },
+            };
+            ToolTip.SetTip(add, L("Eigene Farbe wählen"));
+            add.PointerPressed += (_, _) => ShowCustomColor(Color.TryParse(_settings.JesusColor, out var cur) ? cur : Color.Parse("#C62828"), hex =>
+            {
+                if (!fixedColors.Contains(hex, StringComparer.OrdinalIgnoreCase) && !_settings.CustomJesusColors.Contains(hex, StringComparer.OrdinalIgnoreCase))
+                {
+                    _settings.CustomJesusColors.Add(hex);
+                    if (_settings.CustomJesusColors.Count > 6) _settings.CustomJesusColors.RemoveAt(0);
+                }
+                _settings.JesusColor = hex; BuildJesusColors(); Redraw();
+            });
+            JesusColorPanel.Children.Add(add);
         }
         BuildJesusColors();
         JustifyCheck.IsCheckedChanged += (_, _) => { _settings.Justify = JustifyCheck.IsChecked == true; Redraw(); };
@@ -240,7 +257,7 @@ public partial class MainWindow
         res["SystemAccentColor"] = baseColor;
         res["SystemAccentColorLight1"] = Mix(baseColor, Colors.White, 0.15); res["SystemAccentColorLight2"] = Mix(baseColor, Colors.White, 0.3); res["SystemAccentColorLight3"] = Mix(baseColor, Colors.White, 0.45);
         res["SystemAccentColorDark1"] = Mix(baseColor, Colors.Black, 0.15); res["SystemAccentColorDark2"] = Mix(baseColor, Colors.Black, 0.3); res["SystemAccentColorDark3"] = Mix(baseColor, Colors.Black, 0.45);
-        foreach (var (variant, hex, paper) in new[] { (ThemeVariant.Light, accent.Light, "#FFFCF6"), (ThemeVariant.Dark, accent.Dark, "#161A20") })
+        foreach (var (variant, hex, paper) in new[] { (ThemeVariant.Light, accent.Light, "#FFFCF6"), (ThemeVariant.Dark, accent.Dark, CurrentDark.Surface) })
         {
             if (!res.ThemeDictionaries.TryGetValue(variant, out var provider) || provider is not ResourceDictionary d) continue;
             var c = Color.Parse(hex);

@@ -36,6 +36,7 @@ public partial class MainWindow
             {
                 var other = names.First(n => n != name);
                 if (name == _vault.Name) await SwitchVaultAsync(other);
+                _otherVaults.Remove(name);
                 SqliteConnection.ClearAllPools();   // the file may still be held by the connection pool
                 Directory.Delete(Path.Combine(_root, "vaults", name), true);
                 RefreshVaultUi();

@@ -32,7 +32,7 @@ public partial class MainWindow
         _vault.HideXref(from, to);
         RefreshHiddenXrefs();
         StatusText.Text = L("{0} → {1} ist ausgeblendet. Zurückholen: Einstellungen → Quellen und Daten.", Label(from), Label(to));
-        await ShowChapterAsync(_selected);   // chips, graph threads and the lists draw again
+        await RedrawChapterAsync();   // chips, graph threads and the lists draw again
         if (_selected is int v) _ = ShowXrefsAsync(new VerseRef(_curBook, _curChapter, v));
     }
 
@@ -80,7 +80,7 @@ public partial class MainWindow
             back.Click += async (_, _) =>
             {
                 _vault.UnhideXref(item.Id); RefreshHiddenXrefs(); fly.Hide();
-                await ShowChapterAsync(_selected);
+                await RedrawChapterAsync();
             };
             var row = new DockPanel { Children = { back, new TextBlock { Text = $"{Label(item.From)}  ↔  {Label(item.To)}", VerticalAlignment = VerticalAlignment.Center, TextWrapping = TextWrapping.Wrap } } };
             DockPanel.SetDock(back, Dock.Right);

@@ -28,7 +28,7 @@ public partial class MainWindow
             ? L("{0} gemerkt – zu finden unter „Lesezeichen“ rechts.", Label(verse))
             : L("{0} nicht mehr gemerkt.", Label(verse));
         RefreshBookmarks();
-        _ = ShowChapterAsync(_selected);   // the star next to the verse number
+        RefreshCells();   // the star next to the verse number
     }
 
     void RefreshBookmarks()
@@ -54,7 +54,7 @@ public partial class MainWindow
             text.Bind(TextBlock.ForegroundProperty, this.GetResourceObservable("BsMuted"));
             var remove = new Button { Content = "✕", Classes = { "tool" }, Width = 26, Height = 26, FontSize = 11, VerticalAlignment = VerticalAlignment.Center };
             ToolTip.SetTip(remove, L("Lesezeichen entfernen"));
-            remove.Click += (_, _) => { _vault.RemoveBookmark(bm.Id); RefreshBookmarks(); if (bm.Ref.Book == _curBook && bm.Ref.Chapter == _curChapter) _ = ShowChapterAsync(_selected); };
+            remove.Click += (_, _) => { _vault.RemoveBookmark(bm.Id); RefreshBookmarks(); if (bm.Ref.Book == _curBook && bm.Ref.Chapter == _curChapter) RefreshCells(); };
             var grid = new Grid { ColumnDefinitions = new("*,Auto") };
             grid.Children.Add(new StackPanel { Spacing = 2, Children = { title, text } });
             Grid.SetColumn(remove, 1); grid.Children.Add(remove);

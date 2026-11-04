@@ -40,7 +40,7 @@ public partial class MainWindow
         chip.Bind(Border.BackgroundProperty, this.GetResourceObservable("BsAccentSoft"));
         chip.BorderBrush = Res("BsAccent") as IBrush ?? Brushes.Goldenrod;
         var del = new MenuItem { Header = L("Eigenen Querverweis löschen") };
-        del.Click += async (_, _) => { _vault.DeleteMyXref(x.Id); _myXrefKey = null; await ShowChapterAsync(_selected); };
+        del.Click += async (_, _) => { _vault.DeleteMyXref(x.Id); _myXrefKey = null; await RedrawChapterAsync(); };
         chip.ContextMenu = new ContextMenu { Items = { del } };
         return chip;
     }
@@ -64,7 +64,7 @@ public partial class MainWindow
             _myXrefKey = null;
             fly.Hide();
             StatusText.Text = L("Querverweis {0} → {1} gespeichert.", Label(from), Label(to));
-            await ShowChapterAsync(_selected);
+            await RedrawChapterAsync();
         }
         save.Click += async (_, _) => await Commit();
         target.KeyDown += async (_, e) => { if (e.Key == Key.Enter) await Commit(); };

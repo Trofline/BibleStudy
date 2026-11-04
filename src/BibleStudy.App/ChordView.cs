@@ -29,7 +29,7 @@ sealed class ChordView : Control
         InvalidateVisual();
     }
 
-    static string Abbreviation(string id) => BookData.ShortName(id, Loc.Code) ?? id;
+    static string Abbreviation(string id) => BookData.ShortName(id, MainWindow.BookNameLanguage) ?? id;
 
     IBrush Res(string key, IBrush fallback) => this.TryFindResource(key, ActualThemeVariant, out var v) && v is IBrush b ? b : fallback;
 

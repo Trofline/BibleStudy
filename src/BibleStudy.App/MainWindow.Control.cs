@@ -182,7 +182,7 @@ public partial class MainWindow
                 if (err is not null || book is null) return err ?? Err("book is required");
                 _vault.SetNote(new VerseRef(book.Id, ArgInt(a, "chapter") ?? 1, ArgInt(a, "verse") ?? 1), ArgStr(a, "text") ?? "");
                 RefreshLists();
-                if (book.Id == _curBook) await ShowChapterAsync(_selected);
+                if (book.Id == _curBook) await RedrawChapterAsync();
                 return new { ok = true };
             }
             case "queue_add": return await QueueAddAsync(a);
@@ -211,8 +211,8 @@ public partial class MainWindow
             }
             case "get_chapter_strongs": return await GetChapterStrongsAsync(a);
             case "set_strongs_overlay": return await SetStrongsOverlayAsync(a);
-            case "commit_strongs_overlay": if (ArgStr(a, "translation") is { } ct) _overlay.Commit(ct); else _overlay.CommitAll(); await ShowChapterAsync(_selected); return new { ok = true };
-            case "remove_strongs_overlay": if (ArgStr(a, "translation") is { } rt) { _overlay.Remove(rt); await ShowChapterAsync(_selected); } return new { ok = true };
+            case "commit_strongs_overlay": if (ArgStr(a, "translation") is { } ct) _overlay.Commit(ct); else _overlay.CommitAll(); await RedrawChapterAsync(); return new { ok = true };
+            case "remove_strongs_overlay": if (ArgStr(a, "translation") is { } rt) { _overlay.Remove(rt); await RedrawChapterAsync(); } return new { ok = true };
             case "list_strongs_overlays": return new { overlays = _overlay.List().Select(o => new { translation = o.Id, reference = o.Reference, created = o.Created }) };
             case "ui_message": return await PluginMessageAsync(a);
             case "ui_choose": return await PluginChooseAsync(a);
@@ -339,7 +339,7 @@ public partial class MainWindow
     {
         RefreshCollection();
         LoadChapterMarks();
-        await ShowChapterAsync(_selected);
+        await RedrawChapterAsync();
     }
 
     async Task<object> AddMarkAsync(JsonElement a)

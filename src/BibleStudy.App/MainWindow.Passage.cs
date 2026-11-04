@@ -38,12 +38,13 @@ public partial class MainWindow
 
         // what is done with a verse most often stays at the top
         Item(L("{0} – Vers-Übersicht", Label(r)), () => { Open(GuideTab); _ = ShowGuideAsync(r); });
-        var picked = PickedText(anchor);
+        var picked = SelectedText().Length > 0 ? SelectedText() : PickedText(anchor);
         if (picked.Length > 0) Item(L("Markierten Text kopieren"), async () => { if (TopLevel.GetTopLevel(this)?.Clipboard is { } cb) await cb.SetTextAsync(picked); });
-        var marked = MarkedText(anchor);
+        var marked = MarkedTextOf(anchor);
         Item(L("Vers mit Stelle kopieren"), () => _ = CopyVerseAsync());
         Item(L("Markieren (Farbe wählen) …"), ShowColorFlyout);
         Item(L("Notiz schreiben"), () => { Open(2); NoteEditor.Focus(); });
+        Item(HeadingBefore(verse) is null ? L("Überschrift davor einfügen …") : L("Überschrift davor bearbeiten …"), () => ShowHeadingEditor(r, HeadingBefore(verse), anchor));
         Item(L("Merken / nicht mehr merken"), ToggleBookmark);
         menu.Items.Add(new Separator());
 
@@ -140,7 +141,7 @@ public partial class MainWindow
         var mine = new StackPanel { Spacing = 6 };
         if (_vault.GetNotes().FirstOrDefault(n => n.Ref == r) is { } note)
             mine.Children.Add(new TextBlock { Text = "✎ " + note.Text, TextWrapping = TextWrapping.Wrap });
-        foreach (var m in _vault.GetMarks(r.Book, r.Chapter).Where(m => m.Ref.Verse == r.Verse))
+        foreach (var m in _vault.GetMarks(r.Book, r.Chapter).Where(m => m.Covers(r.Verse)))
         {
             var dot = new Border { Width = 10, Height = 10, CornerRadius = new(5), Background = new SolidColorBrush(MarkColor(m.Color)), VerticalAlignment = VerticalAlignment.Top, Margin = new(0, 5, 8, 0) };
             if (ColorName(m.Color) is { Length: > 0 } meaning) ToolTip.SetTip(dot, meaning);

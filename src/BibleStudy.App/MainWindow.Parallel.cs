@@ -86,7 +86,7 @@ public partial class MainWindow
         fly.ShowAt(anchor);
     }
 
-    async Task ApplyColumnColorsAsync() { RecolorPills(); await ShowChapterAsync(_selected); }
+    async Task ApplyColumnColorsAsync() { RecolorPills(); await RedrawChapterAsync(); }
 
     Border ColumnHeader(TranslationInfo t, Chapter? c, int i)
     {
@@ -126,7 +126,6 @@ public partial class MainWindow
     {
         var box = new Border { Child = content, Padding = new(10, 3), CornerRadius = new(8), BorderThickness = new(3, 0, 0, 0), BorderBrush = Brushes.Transparent, Classes = { "verse" } };
         box.AddHandler(PointerPressedEvent, (object? _, PointerPressedEventArgs e) => OnVersePressed(n, e, foreign), RoutingStrategies.Tunnel, handledEventsToo: true);
-        if (!foreign) box.AddHandler(PointerReleasedEvent, (object? _, PointerReleasedEventArgs e) => CaptureSelection(e), RoutingStrategies.Tunnel, handledEventsToo: true);
         return box;
     }
 
@@ -146,9 +145,9 @@ public partial class MainWindow
             foreach (var v in cols[i].C?.Verses ?? [])
             {
                 var num = v.Number;
-                var cell = VerseCell(v, num, cols[i].T, size, i == 0 && noted.Contains(num), notes[i],
-                    foreign ? [] : _chapterMarks.Where(m => m.Ref.Verse == num && !m.WholeVerse && m.TranslationId == cols[i].T.Id).ToList());
+                var cell = VerseCell(v, num, cols[i].T, size, i == 0 && noted.Contains(num), notes[i], i, foreign);
                 var box = MakeVerseBox(i == 0 && XrefChips(num, primary.Id) is { } chips ? new StackPanel { Children = { cell, chips } } : cell, num, foreign);
+                if (i == 0 && !foreign) AddHeadings(panel, num);
                 boxes[num] = box; panel.Children.Add(box);
             }
             var scroll = new ScrollViewer { Content = panel };
@@ -216,7 +215,7 @@ public partial class MainWindow
             if (_settingSyncCheck) return;
             _settings.ParallelSync = check.IsChecked == true;
             if (_settings.ParallelSync) _settings.ParallelSyncIds.Clear();
-            await ShowChapterAsync(_selected);
+            await RedrawChapterAsync();
         };
         var pick = new Button { Classes = { "tool" }, Width = 28, Height = 28, Content = new Icon { Data = Geometry.Parse("M4 6h16 M7 12h10 M10 18h4"), IconSize = 14 }, VerticalAlignment = VerticalAlignment.Center };
         ToolTip.SetTip(pick, L("Auswählen, welche Spalten zusammen scrollen"));
@@ -253,7 +252,7 @@ public partial class MainWindow
             _settingSyncCheck = true;   // the switch only shows the new state; drawing happens once, below
             all.IsChecked = allOn;
             _settingSyncCheck = false;
-            await ShowChapterAsync(_selected);
+            await RedrawChapterAsync();
         };
         panel.Children.Add(apply);
         fly.ShowAt(anchor);
@@ -267,7 +266,7 @@ public partial class MainWindow
     /// <summary>Book, then chapter, for one column; the main text keeps its place.</summary>
     void ChooseColumnPassage(ExtraColumn col)
     {
-        async Task Apply((string Book, int Chapter)? own) { col.Own = own; UpdatePassageButton(col); await ShowChapterAsync(_selected); }
+        async Task Apply((string Book, int Chapter)? own) { col.Own = own; UpdatePassageButton(col); await RedrawChapterAsync(); }
         ShowBookPicker(col.PassageBtn, col.Own?.Book ?? (BookBox.SelectedItem as BookInfo)?.Id, book =>
         {
             if (book.NumberOfChapters > 1) ShowChapterPicker(col.PassageBtn, book, col.Own is { } o && o.Book == book.Id ? o.Chapter : 1, c => _ = Apply((book.Id, c)));

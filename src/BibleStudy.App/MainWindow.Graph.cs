@@ -131,7 +131,7 @@ public partial class MainWindow
             }
             else { StudyBtn.IsChecked = false; return; }   // no choice: no word study (the switch handler redraws the text)
         }
-        await ShowChapterAsync(_selected);
+        await RedrawChapterAsync();
     }
 
     // ---- graph beside the text: what was clicked ------------------------------------------------------------------
@@ -156,17 +156,17 @@ public partial class MainWindow
         inText.IsCheckedChanged += async (_, _) =>
         {
             _xrefInText = inText.IsChecked == true; _settings.XrefInText = _xrefInText; SaveSettings();
-            await ShowChapterAsync(_selected);
+            await RedrawChapterAsync();
         };
         thread.IsCheckedChanged += async (_, _) =>
         {
             _threadOn = thread.IsChecked == true; _settings.ThreadGraph = _threadOn; SaveSettings();
-            await ShowChapterAsync(_selected);
+            await RedrawChapterAsync();
         };
         var votes = new NumericUpDown { Minimum = 0, Maximum = 1000, Increment = 10, FormatString = "0", Value = _settings.XrefMinVotes, Width = 130 };
         var before = _settings.XrefMinVotes;
         votes.ValueChanged += (_, _) => { _settings.XrefMinVotes = (int)(votes.Value ?? 0); SaveSettings(); };
-        flyout.Closed += async (_, _) => { if (_settings.XrefMinVotes != before) await ShowChapterAsync(_selected); };   // redraw once, not at every click
+        flyout.Closed += async (_, _) => { if (_settings.XrefMinVotes != before) await RedrawChapterAsync(); };   // redraw once, not at every click
         var votesHelp = new TextBlock { Text = L("Nur Querverweise mit mindestens so vielen Stimmen im Text zeigen (0 = alle, 100 = nur die wichtigsten). Die Liste im Seitenfeld bleibt vollständig."), Classes = { "caption" }, TextWrapping = TextWrapping.Wrap, MaxWidth = 300 };
         flyout.Content = new StackPanel { Spacing = 8, Children = { inText, thread, new TextBlock { Text = L("Mindestens Stimmen:"), Margin = new(0, 6, 0, 0) }, votes, votesHelp } };
         flyout.ShowAt(ViewBtn);

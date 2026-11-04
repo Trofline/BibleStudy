@@ -2,7 +2,7 @@ using BibleStudy.Core.Models;
 
 namespace BibleStudy.Core.Storage;
 
-public enum OwnKind { Document, Note, Mark, Prayer, Todo, MyXref }
+public enum OwnKind { Document, Note, Mark, Prayer, Todo, MyXref, Heading }
 
 /// <summary>One thing of the user's own: <paramref name="Title"/> is empty when the verse (<paramref name="Ref"/>) is the title.</summary>
 public sealed record OwnHit(OwnKind Kind, string Title, string Snippet, VerseRef? Ref, long Id);
@@ -53,6 +53,8 @@ public static class OwnSearch
             if (Match(t.Text)) hits.Add(new(OwnKind.Todo, "", Excerpt(t.Text, first), t.Ref, t.Id));
         foreach (var x in vault.GetMyXrefs())
             if (x.Note.Length > 0 && Match(x.Note)) hits.Add(new(OwnKind.MyXref, "", Excerpt(x.Note, first), x.From, x.Id));
+        foreach (var h in vault.GetHeadings())
+            if (Match(h.Text)) hits.Add(new(OwnKind.Heading, "", h.Text, h.Ref, h.Id));
         return hits.Take(max).ToList();
     }
 
@@ -68,9 +70,11 @@ public static class OwnSearch
             if (n.Ref == r) hits.Add(new(OwnKind.Note, "", n.Text.ReplaceLineEndings(" ").Trim(), n.Ref, 0));
             else if (Mentions(n.Text, r)) hits.Add(new(OwnKind.Note, "", Excerpt(n.Text, ""), n.Ref, 0));
         foreach (var m in vault.GetMarks(r.Book, r.Chapter))
-            if (m.Ref == r && (m.Note.Length > 0 || m.Tags.Count > 0)) hits.Add(new(OwnKind.Mark, "", Excerpt(m.Note.Length > 0 ? m.Note : m.Text, "") + (m.Tags.Count > 0 ? "  #" + string.Join(" #", m.Tags) : ""), m.Ref, m.Id));
+            if (m.Covers(r.Verse) && (m.Note.Length > 0 || m.Tags.Count > 0)) hits.Add(new(OwnKind.Mark, "", Excerpt(m.Note.Length > 0 ? m.Note : m.Text, "") + (m.Tags.Count > 0 ? "  #" + string.Join(" #", m.Tags) : ""), m.Ref, m.Id));
         foreach (var m in vault.GetMarks())
-            if (m.Ref != r && m.Note.Length > 0 && Mentions(m.Note, r)) hits.Add(new(OwnKind.Mark, "", Excerpt(m.Note, ""), m.Ref, m.Id));
+            if (!(m.Ref.Book == r.Book && m.Ref.Chapter == r.Chapter && m.Covers(r.Verse)) && m.Note.Length > 0 && Mentions(m.Note, r)) hits.Add(new(OwnKind.Mark, "", Excerpt(m.Note, ""), m.Ref, m.Id));
+        foreach (var h in vault.GetHeadings(r.Book, r.Chapter))
+            if (h.Ref == r) hits.Add(new(OwnKind.Heading, "", h.Text, h.Ref, h.Id));
         foreach (var d in vault.GetDocuments())
             if (Mentions(d.Body, r)) hits.Add(new(OwnKind.Document, d.Title, Excerpt(d.Body, ""), null, d.Id));
         foreach (var p in vault.GetPrayers())

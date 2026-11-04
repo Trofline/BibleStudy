@@ -161,7 +161,7 @@ public partial class MainWindow
             _vault.SetNote(n.Ref, "");
             if (_noteRef == n.Ref) { NoteEditor.Text = _noteLoaded = ""; }
             RefreshLists();
-            await ShowChapterAsync(_selected);
+            RefreshCells();
         };
         menu.Items.Add(move); menu.Items.Add(new Separator()); menu.Items.Add(delete);
         row.ContextFlyout = menu;

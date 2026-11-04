@@ -22,7 +22,7 @@ public partial class MainWindow
         foreach (var c in _extras) ParallelBar.Children.Remove(c.Root);
         foreach (var c in _extras) ParallelBar.Children.Add(c.Root);
         RecolorPills();
-        await ShowChapterAsync(_selected);
+        await RedrawChapterAsync();
     }
 
     async Task MoveColumnAsync(ExtraColumn col, int to)
@@ -121,6 +121,6 @@ public partial class MainWindow
             if (column.Book is not null && _extras[^1] is { } added) { added.Own = (column.Book, Math.Max(1, column.Chapter)); UpdatePassageButton(added); }
         }
         ParallelBar.IsVisible = _extras.Count > 0;
-        await ShowChapterAsync(_selected);
+        await RedrawChapterAsync();
     }
 }

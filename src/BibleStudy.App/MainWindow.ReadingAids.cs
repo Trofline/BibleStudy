@@ -29,7 +29,7 @@ public partial class MainWindow
     {
         HighContrastCheck.IsChecked = _settings.HighContrast; ReadableTextCheck.IsChecked = _settings.ReadableText;
         HebrewVowelsCheck.IsChecked = _settings.HebrewVowels; HebrewAccentsCheck.IsChecked = _settings.HebrewAccents;
-        async void Redraw() { SaveSettings(); await ShowChapterAsync(_selected); }
+        async void Redraw() { SaveSettings(); await RedrawChapterAsync(); }
         HighContrastCheck.IsCheckedChanged += (_, _) => { _settings.HighContrast = HighContrastCheck.IsChecked == true; ApplyContrast(); SaveSettings(); };
         ReadableTextCheck.IsCheckedChanged += (_, _) => { _settings.ReadableText = ReadableTextCheck.IsChecked == true; Redraw(); };
         HebrewVowelsCheck.IsCheckedChanged += (_, _) => { _settings.HebrewVowels = HebrewVowelsCheck.IsChecked == true; Redraw(); };

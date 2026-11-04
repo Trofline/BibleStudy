@@ -20,6 +20,17 @@ public partial class MainWindow
         return blocks.Select(b => b.SelectedText).FirstOrDefault(t => !string.IsNullOrWhiteSpace(t))?.Trim() ?? "";
     }
 
+    /// <summary>The word marked for "explain": the program's own selection (one verse) first, else what the built-in selection holds.</summary>
+    string MarkedTextOf(Control anchor)
+    {
+        if (_sel is { Parts.Count: 1 })
+        {
+            var t = SelectedText().Trim().Trim('.', ',', ';', ':', '!', '?', '(', ')', '„', '“', '"', '«', '»', '–', '—', '¶');
+            return t.Length is >= 2 and <= 60 && t.Count(char.IsWhiteSpace) <= 2 ? t : "";
+        }
+        return MarkedText(anchor);
+    }
+
     static string MarkedText(Control anchor)
     {
         var blocks = anchor is SelectableTextBlock own ? [own] : anchor.GetVisualDescendants().OfType<SelectableTextBlock>().ToList();

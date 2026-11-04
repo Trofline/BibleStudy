@@ -2,6 +2,7 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Layout;
 using BibleStudy.Core;
+using BibleStudy.Core.Import;
 using BibleStudy.Core.Models;
 using BibleStudy.Core.Storage;
 
@@ -19,6 +20,38 @@ public partial class MainWindow
         return list.Select(t => _settings.TranslationAliases.TryGetValue(t.Id, out var a)
             ? t with { Name = a.Name.Length > 0 ? a.Name : t.Name, ShortName = a.Short.Length > 0 ? a.Short : t.ShortName }
             : t).ToList();
+    }
+
+    // ---- names of the books ---------------------------------------------------------------------------------------------
+
+    /// <summary>The books with the names the user chose in the settings: as the translation has them, always German or always English.</summary>
+    /// <summary>The language of the short book names (tiles, charts): the one chosen for the book names, else the language of the program.</summary>
+    internal static string BookNameLanguage { get; private set; } = Loc.Code;
+
+    IReadOnlyList<BookInfo> ApplyBookNames(IReadOnlyList<BookInfo> books)
+    {
+        var mode = _settings.BookNames;
+        BookNameLanguage = mode is "de" or "en" ? mode : Loc.Code;
+        if (mode is not ("de" or "en")) return books;
+        return [.. books.Select(b => BookData.UsfmIds.Contains(b.Id) ? b with { Name = BookData.NameOf(b.Id, mode), CommonName = BookData.NameOf(b.Id, mode) } : b)];
+    }
+
+    void InitBookNames()
+    {
+        BookNamesBox.SelectedIndex = _settings.BookNames switch { "de" => 1, "en" => 2, _ => 0 };
+        BookNamesBox.SelectionChanged += async (_, _) =>
+        {
+            var mode = BookNamesBox.SelectedIndex switch { 1 => "de", 2 => "en", _ => "Auto" };
+            if (mode == _settings.BookNames) return;
+            _settings.BookNames = mode; SaveSettings();
+            await LoadBooksAsync();   // the book list, the start page and the picker take the names over
+            StatusText.Text = L("Namen der Bücher geändert.");
+        };
+        ShareMarksCheck.IsChecked = _settings.ShareMarksAcrossTranslations;
+        ShareMarksCheck.IsCheckedChanged += async (_, _) => { _settings.ShareMarksAcrossTranslations = ShareMarksCheck.IsChecked == true; SaveSettings(); await RedrawChapterAsync(); };
+        SelectionPopupCheck.IsChecked = _settings.SelectionPopup;
+        SelectionPopupCheck.IsCheckedChanged += (_, _) => { _settings.SelectionPopup = SelectionPopupCheck.IsChecked == true; SaveSettings(); };
+        InitAppearance();
     }
 
     readonly HashSet<string> _aliasRemoved = [];

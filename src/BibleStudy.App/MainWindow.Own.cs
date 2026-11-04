@@ -12,7 +12,7 @@ public partial class MainWindow
     static string OwnKindLabel(OwnKind kind) => kind switch
     {
         OwnKind.Document => L("Dokument"), OwnKind.Note => L("Notiz"), OwnKind.Mark => L("Markierung"),
-        OwnKind.Prayer => L("Gebet"), OwnKind.Todo => L("To-do"), _ => L("Querverweis"),
+        OwnKind.Prayer => L("Gebet"), OwnKind.Todo => L("To-do"), OwnKind.Heading => L("Überschrift"), _ => L("Querverweis"),
     };
 
     string OwnTitle(OwnHit h) => h.Title.Length > 0 ? h.Title : h.Ref is { } r ? Label(r) : OwnKindLabel(h.Kind);

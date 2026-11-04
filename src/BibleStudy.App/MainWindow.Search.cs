@@ -182,7 +182,7 @@ public partial class MainWindow
         catch { /* offline: the number alone is still useful */ }
     }
 
-    static string ShortBook(BookInfo b) => BookData.ShortName(b.Id, Loc.Code) ?? b.CommonName;
+    static string ShortBook(BookInfo b) => BookData.ShortName(b.Id, BookNameLanguage) ?? b.CommonName;
 
     IEnumerable<SearchResult> CurrentHits() => _hitBook is null ? _hits : _hits.Where(h => h.Ref.Book == _hitBook);
 

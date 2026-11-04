@@ -53,7 +53,7 @@ public partial class MainWindow
             var list = await _updater.ListAsync(AppPaths.Version);
             if (!list.Any(r => r.Version == AppPaths.Version)) return;   // a test build of a version that is not published: nothing to show, nothing to remember
             _settings.LastSeenVersion = AppPaths.Version; SaveSettings();
-            if (IsVisible && OwnedWindows.Count == 0) ShowPatchNotes(list);
+            if (IsVisible && OwnedWindows.Count == 0) ShowPatchNotes(list, seen);   // every version since the last one seen is open, not only the newest
         }
         catch { /* offline: next start */ }
     }
@@ -66,7 +66,7 @@ public partial class MainWindow
         catch (Exception ex) { StatusText.Text = L("Die Patch Notes konnten nicht geladen werden: {0}", ex.Message); }
     }
 
-    void ShowPatchNotes(List<ReleaseNote> list)
+    void ShowPatchNotes(List<ReleaseNote> list, Version? since = null)
     {
         if (_patchNotes is not null) { _patchNotes.Activate(); return; }
         var current = Updater.Parse(AppPaths.Version);
@@ -98,7 +98,7 @@ public partial class MainWindow
                 row.Children.Add(back);
             }
             body.Children.Add(row);
-            stack.Children.Add(new Expander { Header = head, Content = body, IsExpanded = first || (v is not null && v == current), HorizontalAlignment = HorizontalAlignment.Stretch, HorizontalContentAlignment = HorizontalAlignment.Stretch });
+            stack.Children.Add(new Expander { Header = head, Content = body, IsExpanded = first || (v is not null && v == current) || (v is not null && since is not null && current is not null && v > since && v <= current), HorizontalAlignment = HorizontalAlignment.Stretch, HorizontalContentAlignment = HorizontalAlignment.Stretch });
             first = false;
         }
         if (list.Count == 0) stack.Children.Add(new TextBlock { Text = L("Es gibt noch keine veröffentlichten Versionen."), TextWrapping = TextWrapping.Wrap });

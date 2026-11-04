@@ -35,6 +35,20 @@ public sealed class AppSettings
     public string Vault { get; set; } = "Standard";
     public bool AutoTagBook { get; set; } = true;
     public string DefaultColor { get; set; } = "#FFD54F";
+    /// <summary>Quick marking: while it is on, everything selected in the text is marked at once in <see cref="QuickMarkColor"/>.</summary>
+    public bool QuickMark { get; set; }
+    public string QuickMarkColor { get; set; } = "";
+    /// <summary>A small bar with the colors appears over the selected text (no click on the mark button needed).</summary>
+    public bool SelectionPopup { get; set; } = true;
+    public bool SelectWholeWords { get; set; } = true;   // a selection always starts and ends at word borders
+    public List<string> CustomSubColors { get; set; } = [];   // own colors for sub-marks, chosen with the "+" in the settings
+    public string SubMarkColor { get; set; } = "";   // color of a sub-mark inside a marked verse; "" = the accent color of the program
+    public string SelectionColor { get; set; } = "Accent";   // "Accent" (the accent color of the program), "Gray" or "Blue"
+    public string DarkBackground { get; set; } = "Nachtblau";   // one of the dark backgrounds (see MainWindow.Qol)
+    /// <summary>Marks made in one translation also show in the others (the same words, or the same Strong numbers).</summary>
+    public bool ShareMarksAcrossTranslations { get; set; } = true;
+    /// <summary>Names of the Bible books in the program: "Auto" (as the translation has them), "de" (German) or "en" (English).</summary>
+    public string BookNames { get; set; } = "Auto";
     public List<string> CustomColors { get; set; } = [];
     /// <summary>What a highlight color means to the user (hex → name, e.g. "#FFD54F" → "Promise").</summary>
     public Dictionary<string, string> ColorNames { get; set; } = [];
@@ -128,6 +142,7 @@ public sealed class AppSettings
     public bool JesusRed { get; set; } = true;
     /// <summary>Own color of the words of Jesus as #RRGGBB; empty = the program default.</summary>
     public string JesusColor { get; set; } = "";
+    public List<string> CustomJesusColors { get; set; } = [];   // own colors for the words of Jesus, chosen with the "+" in the settings
     /// <summary>Reading aids: stronger contrast, a plain wide-spaced typeface (easier with dyslexia), Hebrew without vowel signs / accents.</summary>
     public bool HighContrast { get; set; }
     public bool ReadableText { get; set; }

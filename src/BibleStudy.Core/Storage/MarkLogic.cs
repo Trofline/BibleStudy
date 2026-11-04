@@ -1,0 +1,139 @@
+using BibleStudy.Core.Models;
+
+namespace BibleStudy.Core.Storage;
+
+/// <summary>
+/// The rules behind highlights that do not need a window: trimming a selection, grouping verses into runs, carrying a mark from one
+/// translation to another, and the part of a verse a mark covers.
+/// </summary>
+public static class MarkLogic
+{
+    /// <summary>The text of a verse as marks count it: the segments without footnote markers, exactly as written.</summary>
+    public static string RawText(IReadOnlyList<Segment> segments) => string.Concat(segments.Where(s => s.NoteId is null).Select(s => s.Text));
+
+    /// <summary>
+    /// A selection without the blanks at its two ends (only the ends: the blanks between the words stay in, so a mark over several
+    /// words is one piece). An empty or blank selection gives null.
+    /// </summary>
+    public static (int Start, int End)? Trim(string text, int start, int end)
+    {
+        start = Math.Clamp(start, 0, text.Length); end = Math.Clamp(end, 0, text.Length);
+        while (start < end && char.IsWhiteSpace(text[start])) start++;
+        while (end > start && char.IsWhiteSpace(text[end - 1])) end--;
+        return end > start ? (start, end) : null;
+    }
+
+    /// <summary>Verse numbers as runs of neighbours: 3, 5, 6, 7 gives (3,3) and (5,7). Several verses of a run become one mark.</summary>
+    public static List<(int From, int To)> Runs(IEnumerable<int> verses)
+    {
+        var runs = new List<(int From, int To)>();
+        foreach (var v in verses.Distinct().Order())
+        {
+            if (runs.Count > 0 && runs[^1].To == v - 1) runs[^1] = (runs[^1].From, v);
+            else runs.Add((v, v));
+        }
+        return runs;
+    }
+
+    /// <summary>
+    /// The part of one verse that a mark covers, as offsets into that verse's raw text; null when the mark does not touch the verse.
+    /// A verse in the middle of a mark is covered completely, the first verse from the start of the mark, the last up to its end.
+    /// </summary>
+    public static (int Start, int End)? PartIn(Mark m, int verse, int verseLength)
+    {
+        if (m.WholeVerse || !m.Covers(verse)) return null;
+        var first = verse == m.Ref.Verse; var last = verse == m.LastVerse;
+        var s = first ? m.Start : 0; var e = last ? m.End : verseLength;
+        s = Math.Clamp(s, 0, verseLength); e = Math.Clamp(e, 0, verseLength);
+        return e > s ? (s, e) : null;
+    }
+
+    /// <summary>
+    /// Where the marked text of a mark made in another translation stands in this translation. First the same words are looked for (translations
+    /// that read alike); then the Strong numbers of the marked words are followed when both translations carry them. Null when neither is certain:
+    /// a mark must never wander to the wrong words.
+    /// </summary>
+    public static (int Start, int End)? Project(IReadOnlyList<Segment> source, int start, int end, IReadOnlyList<Segment> target)
+    {
+        var sourceText = RawText(source); var targetText = RawText(target);
+        if (Trim(sourceText, start, end) is not { } t) return null;
+        var wanted = sourceText[t.Start..t.End];
+
+        var at = targetText.IndexOf(wanted, StringComparison.OrdinalIgnoreCase);
+        if (at >= 0) return (at, at + wanted.Length);
+
+        // Strong numbers: the numbers of the marked words, found again in the other text
+        var ids = SegmentsIn(source, t.Start, t.End).SelectMany(x => x.Seg.Strongs ?? []).ToHashSet();
+        if (ids.Count == 0 || ids.Count > 14) return null;
+        var hits = SegmentsIn(target, 0, targetText.Length).Where(x => x.Seg.Strongs is { Count: > 0 } && x.Seg.Strongs.Any(ids.Contains)).ToList();
+        if (hits.Count == 0) return null;
+        var found = hits.SelectMany(h => h.Seg.Strongs!).Where(ids.Contains).ToHashSet();
+        if (found.Count * 2 < ids.Count) return null;   // fewer than half of the words found again
+        var from = hits.Min(h => h.Start); var to = hits.Max(h => h.End);
+        if (to - from > wanted.Length * 1.5 + 12) return null;   // the hits are spread over the verse: not the same passage
+        return Trim(targetText, from, to);
+    }
+
+    // ---- cutting a part out of existing marks -----------------------------------------------------------------------
+
+    /// <summary>A stretch of text of one verse: the part of a mark, or a part to cut out of it.</summary>
+    public readonly record struct Piece(int Verse, int Start, int End);
+
+    /// <summary>One mark to keep or to add: from the first verse (offset Start) to the last verse (offset End); whole verses have Start = -1.</summary>
+    public readonly record struct Spec(int FirstVerse, int Start, int LastVerse, int End)
+    {
+        public bool Whole => Start < 0;
+    }
+
+    /// <summary>
+    /// What is left of a text mark when the pieces in <paramref name="cut"/> are taken out: zero, one or two stretches in one verse, or a stretch
+    /// over several verses where nothing was cut in between. Marking over an old mark thus replaces only the part that is marked anew.
+    /// </summary>
+    public static List<Spec> CarveText(Mark m, IReadOnlyList<Piece> cut, Func<int, int> lengthOf)
+    {
+        var left = new List<Piece>();
+        for (var v = m.Ref.Verse; v <= m.LastVerse; v++)
+        {
+            var len = lengthOf(v);
+            if (PartIn(m, v, len) is not { } part) continue;
+            var spans = new List<(int S, int E)> { part };
+            foreach (var c in cut.Where(c => c.Verse == v))
+            {
+                var next = new List<(int S, int E)>();
+                foreach (var (s, e) in spans)
+                {
+                    if (c.End <= s || c.Start >= e) { next.Add((s, e)); continue; }
+                    if (c.Start > s) next.Add((s, c.Start));
+                    if (c.End < e) next.Add((c.End, e));
+                }
+                spans = next;
+            }
+            foreach (var (s, e) in spans.OrderBy(x => x.S)) left.Add(new Piece(v, s, e));
+        }
+        // neighbours that join up (one ends where its verse ends, the next begins at the start of the next verse) are one mark again
+        var result = new List<Spec>();
+        for (var i = 0; i < left.Count; i++)
+        {
+            var first = left[i]; var last = first;
+            while (i + 1 < left.Count && left[i + 1].Verse == last.Verse + 1 && last.End >= lengthOf(last.Verse) && left[i + 1].Start <= 0) { last = left[++i]; }
+            result.Add(new Spec(first.Verse, first.Start, last.Verse, last.End));
+        }
+        return result;
+    }
+
+    /// <summary>What is left of a mark of whole verses when some verses are cut out: runs of the verses that remain.</summary>
+    public static List<Spec> CarveWhole(Mark m, ISet<int> cutVerses) =>
+        Runs(Enumerable.Range(m.Ref.Verse, m.LastVerse - m.Ref.Verse + 1).Where(v => !cutVerses.Contains(v))).Select(r => new Spec(r.From, -1, r.To, -1)).ToList();
+
+    /// <summary>The segments (without footnote markers) that touch the range, each with its offsets in the raw text.</summary>
+    public static IEnumerable<(Segment Seg, int Start, int End)> SegmentsIn(IReadOnlyList<Segment> segments, int start, int end)
+    {
+        var pos = 0;
+        foreach (var s in segments)
+        {
+            if (s.NoteId is not null) continue;
+            var a = pos; var b = pos + s.Text.Length; pos = b;
+            if (b > start && a < end) yield return (s, a, b);
+        }
+    }
+}

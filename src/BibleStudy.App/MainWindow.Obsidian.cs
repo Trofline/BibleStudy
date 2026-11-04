@@ -68,9 +68,9 @@ public partial class MainWindow
             for (var i = 0; i < list.Count; i++)
             {
                 var first = list[i]; var last = first; var texts = new List<string> { first.Text };
-                while (i + 1 < list.Count && list[i + 1] is var nx && nx.WholeVerse && last.WholeVerse && nx.Ref.Book == last.Ref.Book && nx.Ref.Chapter == last.Ref.Chapter && nx.Ref.Verse == last.Ref.Verse + 1 && nx.Note == first.Note)
+                while (i + 1 < list.Count && list[i + 1] is var nx && nx.WholeVerse && last.WholeVerse && nx.Ref.Book == last.Ref.Book && nx.Ref.Chapter == last.Ref.Chapter && nx.Ref.Verse == last.LastVerse + 1 && nx.Note == first.Note)
                 { texts.Add(nx.Text); last = nx; i++; }
-                var label = last == first ? Label(first.Ref) : $"{BookName(first.Ref.Book)} {first.Ref.Chapter},{first.Ref.Verse}–{last.Ref.Verse}";
+                var label = last.LastVerse == first.Ref.Verse ? Label(first.Ref) : $"{BookName(first.Ref.Book)} {first.Ref.Chapter},{first.Ref.Verse}–{last.LastVerse}";
                 sb.AppendLine($"## {label}");
                 sb.AppendLine($"> {(first.WholeVerse ? string.Join(" ", texts) : Loc.Quote(first.Text))}").AppendLine();
                 if (first.Note.Length > 0) sb.AppendLine(first.Note).AppendLine();
@@ -84,6 +84,15 @@ public partial class MainWindow
         foreach (var n in _vault.GetNotes().OrderBy(n => BookOrder(n.Ref.Book)).ThenBy(n => n.Ref.Chapter).ThenBy(n => n.Ref.Verse))
             notes.AppendLine($"## {Label(n.Ref)}").AppendLine(n.Text).AppendLine();
         Write(L("Notizen") + ".md", notes.ToString());
+
+        var headings = _vault.GetHeadings();
+        if (headings.Count > 0)
+        {
+            var hs = new StringBuilder("# " + L("Überschrift") + "\n\n");
+            foreach (var h in headings.OrderBy(h => BookOrder(h.Ref.Book)).ThenBy(h => h.Ref.Chapter).ThenBy(h => h.Ref.Verse))
+                hs.AppendLine($"- {Label(h.Ref)}: {h.Text}");
+            Write(L("Überschrift") + ".md", hs.ToString());
+        }
 
         var queue = new StringBuilder("# " + L("Leseliste") + "\n\n");
         foreach (var q in _vault.GetQueue()) queue.AppendLine($"- [ ] {q.Label}");
@@ -100,6 +109,7 @@ public partial class MainWindow
         var start = new StringBuilder($"# {_vault.Name}\n\n{L("Export aus BibleStudy vom {0:dd.MM.yyyy HH:mm}.", DateTime.Now)}\n\n## {L("Dokumente")}\n");
         foreach (var d in docs.OrderBy(d => d.Title)) start.AppendLine($"- [[{docFiles[d.Id]}]]");
         start.AppendLine($"\n## {L("Weitere")}\n- [[{L("Notizen")}]]\n- [[{L("Lesezeichen")}]]\n- [[{L("Leseliste")}]]\n- [[{L("To-dos")}]]");
+        if (headings.Count > 0) start.AppendLine($"- [[{L("Überschrift")}]]");
         foreach (var f in markFiles.Order()) start.AppendLine($"- [[{f}]] ({L("Markierungen")})");   // only folders that have marks have a file
         Write("Start.md", start.ToString());
         return files;

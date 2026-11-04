@@ -73,10 +73,20 @@ public partial class MainWindow
     {
         _all = Named(await _provider.GetTranslationsAsync());
         _langs = _all.Select(x => x.LanguageName).Where(l => l != "").Distinct().Order().ToList();
-        LanguageBox.ItemsSource = _langs;
         var target = _all.FirstOrDefault(x => x.Id == (select ?? (TranslationBox.SelectedItem as TranslationInfo)?.Id)) ?? _all.FirstOrDefault(x => x.Id == "eng_kjv");
         if (target is null) return;
-        _pendingTranslation = target.Id;
-        if ((string?)LanguageBox.SelectedItem == target.LanguageName) FillTranslations(); else LanguageBox.SelectedItem = target.LanguageName;
+        // the lists are rebuilt without the boxes reacting at every step (each step started a load of its own, and a slow one could finish last
+        // and leave the book list of a half-built state: after renaming or importing only a few books were there until one switched away and back)
+        _quietPickers = true;
+        try
+        {
+            LanguageBox.ItemsSource = _langs;
+            LanguageBox.SelectedItem = target.LanguageName;
+            _pendingTranslation = target.Id;
+            FillTranslations();
+        }
+        finally { _quietPickers = false; }
+        UpdatePickerLabels();
+        await LoadBooksAsync();
     }
 }
