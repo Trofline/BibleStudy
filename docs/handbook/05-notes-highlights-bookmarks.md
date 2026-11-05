@@ -20,16 +20,25 @@ Verses with a note show a ✎ next to the verse number. Below, in the tab, you'l
 
 ## 5.3 Highlights
 
-There are two kinds:
+There are three kinds:
 
-- **Word or piece of text:** Select text with the mouse, then **Highlight** (or right-click → *Highlight (choose color) …*).
-- **Whole verse:** Click the verse, then **Highlight**.
+- **Word or piece of text:** drag with the mouse, also across several verses (from the middle of verse 1 to the middle of verse 2). The colors appear right above the text (can be turned off). Double-click selects a word, triple-click the verse. The selection snaps to **whole words** (can be turned off), and the verse number cannot be marked. Blanks at the start and end are cut off.
+- **Whole verse:** click the **verse number**; the colors appear over the verse. **Ctrl+click** chooses single verses, **Shift+click** a range of whole verses.
+- **Sub-highlight:** inside an already highlighted verse you mark the most important part. There is only one option there, **Sub-highlight**, in the accent color or a color of your choice (Settings, own colors too); **…** gives a normal highlight instead. In the collection it is shown highlighted inside the verse, not as an entry of its own.
 
-You choose a color; you set the default color in the Settings. A highlight can carry its own **note**.
+A **✕** on the far left above the text always removes the highlight. A **plain click** on highlighted words (no dragging) opens the colors for that highlight so you can recolor or delete it without marking the words again. A click on the verse number of a highlighted verse shows its current color.
+
+With **Quick** (switch in the bar) whatever you select is highlighted at once in the quick color; a click on the verse number highlights the whole verse, another click removes it. **Ctrl+Z** undoes the last highlights.
+
+A highlight over several verses stays **one** entry (“4–6”). Highlights also show in other translations (whole verses always, single words when the wording or the Strong numbers match; can be turned off). You choose a color; you set the default color in the Settings. A highlight can carry its own **note**.
+
+### Own headings
+
+In the verse menu (right-click) you can put an **own heading** before a verse (not a note). It shows in the reading view, in search and in the Obsidian export.
 
 ### Folders, tags, categories
 
-Under *Notes → Highlights* (the collection) you organize highlights into **folders** and give them **tags**. If you like, the program assigns the **book name as a tag** when saving (setting). Clicking an entry jumps to the passage.
+Under *Notes → Highlights* (the collection) you organize highlights into **folders** and give them **tags**. The button at the top right shows the highlights of **all vaults** at once (also in the reading text, to look at only) or only those of the active one; the state is kept. If you like, the program assigns the **book name as a tag** when saving (setting). Clicking an entry jumps to the passage.
 
 ## 5.4 Bookmarks
 

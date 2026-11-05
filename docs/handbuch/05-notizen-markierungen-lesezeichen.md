@@ -20,16 +20,25 @@ Verse mit Notiz tragen ein ✎ neben der Versnummer. Darunter im Reiter stehen a
 
 ## 5.3 Markierungen
 
-Es gibt zwei Arten:
+Es gibt drei Arten:
 
-- **Wort oder Textstück:** Text mit der Maus markieren, dann **Markieren** (oder Rechtsklick → *Markieren (Farbe wählen) …*).
-- **ganzer Vers:** Vers anklicken, **Markieren**.
+- **Wort oder Textstück:** Text mit der Maus ziehen, auch über mehrere Verse (mitten in Vers 1 bis mitten in Vers 2). Die Farben erscheinen direkt über dem Text (abschaltbar). Doppelklick wählt ein Wort, Dreifachklick den Vers. Die Auswahl rastet auf **ganze Wörter** ein (abschaltbar), und die Versnummer lässt sich nicht mitmarkieren. Leerzeichen am Anfang und Ende werden abgeschnitten.
+- **ganzer Vers:** Auf die **Versnummer** klicken; die Farben erscheinen über dem Vers. **Strg+Klick** wählt einzelne Verse, **Umschalt+Klick** einen Bereich ganzer Verse.
+- **Untermarkierung:** In einem schon markierten Vers markierst du den wichtigsten Teil. Dort gibt es nur die Option **Untermarkierung** in der Akzentfarbe oder einer Farbe deiner Wahl (Einstellungen, auch eigene Farben); mit **…** geht auch eine normale Markierung. In der Sammlung steht sie im Vers hervorgehoben, nicht als eigener Eintrag.
 
-Du wählst eine Farbe; die Standardfarbe stellst du in den Einstellungen ein. Eine Markierung kann eine eigene **Notiz** tragen.
+Über dem Text steht immer ganz links ein **✕**: Es nimmt die Markierung weg. Ein **einfacher Klick** auf markierte Wörter (ohne zu ziehen) öffnet die Farben für diese Markierung, damit du sie umfärben oder löschen kannst, ohne sie neu zu markieren. Ein Klick auf die Versnummer eines markierten Verses zeigt seine aktuelle Farbe.
+
+Mit **Schnell** (Schalter in der Leiste) wird alles, was du auswählst, sofort in der Schnellfarbe markiert; ein Klick auf die Versnummer markiert den ganzen Vers, ein weiterer nimmt es wieder weg. **Strg+Z** macht die letzten Markierungen rückgängig.
+
+Eine Markierung über mehrere Verse bleibt **ein** Eintrag („4–6“). Markierungen erscheinen auch in anderen Übersetzungen (ganze Verse immer, einzelne Wörter bei gleichem Wortlaut oder gleichen Strong-Nummern; abschaltbar). Du wählst eine Farbe; die Standardfarbe stellst du in den Einstellungen ein. Eine Markierung kann eine eigene **Notiz** tragen.
+
+### Eigene Überschriften
+
+Im Vers-Menü (Rechtsklick) kannst du vor einem Vers eine **eigene Überschrift** setzen (keine Notiz). Sie steht im Lesetext, in der Suche und im Obsidian-Export.
 
 ### Ordner, Tags, Kategorien
 
-Unter *Notizen → Markierungen* (die Sammlung) ordnest du Markierungen in **Ordner** und versiehst sie mit **Tags**. Auf Wunsch vergibt das Programm beim Speichern den **Buchnamen als Tag** (Einstellung). Ein Klick auf einen Eintrag springt zur Stelle.
+Unter *Notizen → Markierungen* (die Sammlung) ordnest du Markierungen in **Ordner** und versiehst sie mit **Tags**. Der Knopf rechts oben zeigt die Markierungen **aller Vaults** gleichzeitig (auch im Lesetext, nur zum Ansehen) oder nur die des aktiven; der Zustand bleibt gespeichert. Auf Wunsch vergibt das Programm beim Speichern den **Buchnamen als Tag** (Einstellung). Ein Klick auf einen Eintrag springt zur Stelle.
 
 ## 5.4 Lesezeichen
 

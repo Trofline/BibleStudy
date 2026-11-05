@@ -18,7 +18,9 @@ Deine Sprache fehlt? Speichere die **Vorlage mit der KI-Anweisung**, lass sie vo
 - **Akzentfarbe** des Programms: sechs fertige Farben oder mit **+** eine eigene (Farbwähler mit Vorschau; Hell und Dunkel werden so angepasst, dass Schrift lesbar bleibt). Eigene Farben entfernst du per Rechtsklick.
 - **Schrift:** Größe, Zeilenabstand, Blocksatz, leichter lesbare Schrift (zum Beispiel bei Legasthenie), hoher Kontrast.
 - **Versnummern:** klein hochgestellt, normal im Text, ausblenden.
-- **Worte Jesu** farbig hervorheben, mit eigener Farbe (unabhängig vom Farbschema).
+- **Worte Jesu** farbig hervorheben, mit eigener Farbe (unabhängig vom Farbschema; eigene Farben mit **+**).
+- **Dunkler Hintergrund:** Nachtblau, Schwarz, Grau, Warm, Wald oder Violett (gilt im dunklen Design).
+- **Farbe der Auswahl:** Akzentfarbe (Standard), Grau oder Blau.
 - **Hebräisch:** Vokalzeichen und Akzentzeichen (Kantillation) ein-/ausblenden.
 - **Wortbedeutungen in meine Sprache übersetzen** (KI).
 - **Kommentare anzeigen** (Menschenwerk, nicht der Bibeltext; gilt nach Neustart).
@@ -35,6 +37,10 @@ Deine Sprache fehlt? Speichere die **Vorlage mit der KI-Anweisung**, lass sie vo
 - Kapitel als gelesen markieren, wenn du bis zum Ende **gescrollt** hast.
 - Beim Speichern den **Buchnamen als Tag** vergeben.
 - **Standard-Markierfarbe.**
+- **Farben über dem Text** beim Auswählen (standardmäßig an) und **immer ganze Wörter** auswählen (standardmäßig an).
+- **Markierungen aus anderen Übersetzungen mitzeigen** (gleiche Wörter oder Strong-Nummern).
+- **Namen der Bibelbücher:** wie in der Übersetzung, immer Deutsch oder immer Englisch (auch die Kürzel in Auswahl und Diagrammen).
+- **Farbe der Untermarkierung:** Akzentfarbe, eine feste Farbe oder eine eigene (**+**).
 - **Vorlesen: Geschwindigkeit.**
 - **Vorlesen: Stimme.** Windows-Stimme oder natürliche Stimme (Piper, wird beim ersten Mal geladen).
 - **Suchverlauf löschen.**

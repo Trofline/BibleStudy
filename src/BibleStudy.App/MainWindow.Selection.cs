@@ -200,7 +200,26 @@ public partial class MainWindow
         d.Timer?.Stop();
         try { ((IInputElement?)ReaderScroll).Focus(); } catch { /* no focus change needed */ }
         if (finished && d.Moved && _sel is { Parts.Count: > 0 }) OnSelectionMade();
-        else if (!d.Moved) ClearTextSelection(true);
+        else if (!d.Moved)
+        {
+            ClearTextSelection(true);
+            if (finished) SelectMarkAt(d.Anchor, d.AnchorRaw);   // a plain click on marked words opens the colors for that mark: change it or take it away
+        }
+    }
+
+    /// <summary>A click (no dragging) on words that are marked: the whole mark is selected and the colors show over it, so it can be recolored or removed without marking the words again.</summary>
+    void SelectMarkAt(CellRef cell, int raw)
+    {
+        if (!_settings.SelectionPopup || cell.Tb.Tag is not CellInfo info) return;
+        var hit = CellMarks(cell.Data, info.RawText).Where(x => !x.Shared && x.Mark.Id >= 0 && x.Start <= raw && raw < x.End).OrderBy(x => x.End - x.Start).FirstOrDefault();
+        if (hit is null) return;
+        var m = hit.Mark;
+        var sel = new TextSel { TranslationId = cell.Data.T.Id, Col = cell.Data.Col };
+        foreach (var c in ColCells(cell).Where(c => m.Covers(c.Data.Number)))
+            if (c.Tb.Tag is CellInfo ci && MarkLogic.PartIn(m, c.Data.Number, ci.RawText.Length) is { } p) sel.Parts.Add(new SelPart(c.Data.Number, p.Start, p.End));
+        if (sel.Parts.Count == 0) return;
+        PaintSelection(sel);
+        ShowSelectionPopup();
     }
 
     /// <summary>The cell under a point of the window and the offset in its verse; above or below the cells the first or last position.</summary>

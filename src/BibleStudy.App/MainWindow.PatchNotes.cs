@@ -119,6 +119,18 @@ public partial class MainWindow
         win.Show(this);
     }
 
+    /// <summary>The color of a kind label in the patch notes (German or English words).</summary>
+    static Color TagColor(string tag)
+    {
+        var t = tag.ToLowerInvariant();
+        if (t.Contains("hotfix")) return Color.Parse("#C0392B");
+        if (t.Contains("fehler") || t.Contains("bug") || t.Contains("fix")) return Color.Parse("#C26A12");
+        if (t.Contains("mini")) return Color.Parse("#2F7FC1");
+        if (t.Contains("verbesser") || t.Contains("improve")) return Color.Parse("#7D5BBE");
+        if (t.Contains("sicher") || t.Contains("security")) return Color.Parse("#B03060");
+        return Color.Parse("#2E8B57");   // new feature
+    }
+
     /// <summary>Headings, "- " lists and **bold** / `code` of a release text, as plain controls.</summary>
     static void AddMarkdown(Panel panel, string text)
     {
@@ -131,6 +143,14 @@ public partial class MainWindow
             var content = bullet ? line[2..] : heading ? line.TrimStart('#').Trim() : line;
             var block = new TextBlock { TextWrapping = TextWrapping.Wrap, Margin = new(bullet ? 12 : 0, heading ? 6 : 0, 0, 0), FontWeight = heading ? FontWeight.SemiBold : FontWeight.Normal };
             if (bullet) block.Inlines!.Add(new Run("•  "));
+            // a kind label at the start ("**[Neues Feature]**", "**[Fehler behoben]**", "**[Hotfix]**" …) shows as a colored tag, so the kind of change is clear at a glance
+            if (content.StartsWith("**[") && content.IndexOf("]**", StringComparison.Ordinal) is var tagEnd and > 3)
+            {
+                var tag = content[3..tagEnd];
+                block.Inlines!.Add(new Run(" " + tag.ToUpperInvariant() + " ") { FontWeight = FontWeight.Bold, FontSize = 11, Foreground = Brushes.White, Background = new SolidColorBrush(TagColor(tag)) });
+                block.Inlines.Add(new Run("  "));
+                content = content[(tagEnd + 3)..].TrimStart();
+            }
             var bold = false;
             foreach (var part in content.Split("**"))
             {

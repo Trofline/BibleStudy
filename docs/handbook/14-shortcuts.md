@@ -27,6 +27,20 @@ All shortcuts in the first table can be changed (*Settings → Keyboard shortcut
 
 Several of these shortcuts also work while you're typing in a text field (for example Ctrl+K).
 
+## 14.1a Highlighting in the reading text
+
+| Action | Effect |
+|---|---|
+| Drag | select text (also across several verses) |
+| Double-click / triple-click | select a word / the whole verse |
+| Click on the verse number | highlight the whole verse (colors over the verse) |
+| Plain click on highlighted words | colors for that highlight (recolor, ✕ to delete) |
+| Ctrl+click | choose single verses |
+| Shift+click | choose a range of whole verses |
+| Ctrl+C | copy the selected text |
+| Ctrl+Z | undo the last highlight |
+| Esc | clear the selection |
+
 ## 14.2 Fixed shortcuts in the editor and in lists
 
 | Shortcut | Effect |

@@ -33,7 +33,7 @@ The guiding principle is **Scripture alone**: the Bible text comes first. Commen
 - **Analysis tools:** morphology (every word's tense, case, person …) and **syntax** (clause structure with subject, verb, object …) for Greek and Hebrew; key words and unique words per chapter, related words, distribution of a word across the Bible
 - **Learn Greek and Hebrew:** alphabets, letter quiz, vocabulary trainer with spaced repetition
 - **Timeline with map**, **family tree** of Bible people
-- **Your own knowledge:** vaults (like Obsidian) with highlights, notes, documents, folders, **categories**, tags, wiki links, study templates and a knowledge graph
+- **Your own knowledge:** vaults (like Obsidian) with highlights (free text selection across verses, sub-highlights, one-click color change), notes, documents, folders, **categories**, tags, wiki links, study templates and a knowledge graph
 - **Plan:** reading plans with progress, reading list, tasks, **prayer list**
 - **Sermon editor** with outline, verses, time plan, handout, slides and print/PDF export
 - **Tabs like in a file explorer**, layouts (including a dashboard), custom keyboard shortcuts, animations

@@ -18,7 +18,9 @@ Your language is missing? Save the **template with the AI instruction**, have an
 - **Accent color** of the program: six ready-made colors or your own with **+** (color picker with preview; light and dark are adjusted so text stays readable). Remove your own colors with a right click.
 - **Font:** size, line spacing, justified text, an easier-to-read font (for example for dyslexia), high contrast.
 - **Verse numbers:** small superscript, normal in the text, hidden.
-- **Words of Jesus** highlighted in color, with their own color (independent of the color scheme).
+- **Words of Jesus** highlighted in color, with their own color (independent of the color scheme; own colors with **+**).
+- **Dark background:** night blue, black, gray, warm, forest or violet (applies to the dark design).
+- **Selection color:** accent color (default), gray or blue.
 - **Hebrew:** show/hide vowel points and accent marks (cantillation).
 - **Translate word meanings into my language** (AI).
 - **Show commentaries** (human work, not the Bible text; takes effect after a restart).
@@ -35,6 +37,10 @@ Your language is missing? Save the **template with the AI instruction**, have an
 - Mark chapters as read when you have **scrolled** to the end.
 - Assign the **book name as a tag** when saving.
 - **Default highlight color.**
+- **Colors over the text** when selecting (on by default) and **always select whole words** (on by default).
+- **Show highlights from other translations** (same words or Strong numbers).
+- **Names of the Bible books:** as in the translation, always German or always English (also the short names in the picker and charts).
+- **Sub-highlight color:** accent color, a fixed color or your own (**+**).
 - **Read aloud: speed.**
 - **Read aloud: voice.** Windows voice or natural voice (Piper, downloaded the first time).
 - **Clear search history.**

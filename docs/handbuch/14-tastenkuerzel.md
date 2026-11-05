@@ -27,6 +27,20 @@ Alle Kürzel in der ersten Tabelle lassen sich ändern (*Einstellungen → Taste
 
 Mehrere dieser Kürzel funktionieren auch, während du in einem Textfeld tippst (zum Beispiel Strg+K).
 
+## 14.1a Beim Markieren im Lesetext
+
+| Bedienung | Wirkung |
+|---|---|
+| Ziehen | Text auswählen (auch über mehrere Verse) |
+| Doppelklick / Dreifachklick | Wort / ganzen Vers auswählen |
+| Klick auf die Versnummer | ganzen Vers markieren (Farben über dem Vers) |
+| Einfacher Klick auf markierte Wörter | Farben für diese Markierung (umfärben, ✕ löschen) |
+| Strg+Klick | einzelne Verse wählen |
+| Umschalt+Klick | Bereich ganzer Verse wählen |
+| Strg+C | ausgewählten Text kopieren |
+| Strg+Z | letzte Markierung rückgängig |
+| Esc | Auswahl aufheben |
+
 ## 14.2 Feste Kürzel im Editor und in Listen
 
 | Kürzel | Wirkung |

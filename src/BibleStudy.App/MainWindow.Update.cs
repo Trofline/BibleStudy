@@ -48,10 +48,10 @@ public partial class MainWindow
         InitNotes();
         InitSources();
         InitHiddenXrefs();
-        // once per start, a few seconds after launch so that the reader is up first
+        // once per start, right after the window is up (the check itself runs in the background and never blocks the reader)
         if (_settings.AutoUpdate)
         {
-            DispatcherTimer.RunOnce(async () => await CheckForUpdateAsync(manual: false), TimeSpan.FromSeconds(10));
+            DispatcherTimer.RunOnce(async () => await CheckForUpdateAsync(manual: false), TimeSpan.FromSeconds(2));
             var again = new DispatcherTimer { Interval = TimeSpan.FromHours(6) };
             again.Tick += async (_, _) => await CheckForUpdateAsync(manual: false);
             again.Start();

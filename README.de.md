@@ -29,7 +29,7 @@ verknüpfen, Predigten vorbereiten – alles offline nutzbar und ohne Konto.
 - **Suche:** Wörter, Wendungen, Grundformen, Strong-Nummern, Bibelstellen, **Themensuche** mit verwandten Wörtern
 - **Studium:** Wort-für-Wort-Grundtext, Strong-Wörterbuch, Querverweise (Graph, Netzwerk, Bogen), Kommentare, Bibellexikon
 - **Zeitleiste mit Karte**, **Stammbaum** von Personen der Bibel
-- **Eigenes Wissen:** Vaults (wie bei Obsidian) mit Markierungen, Notizen, Dokumenten, Ordnern, Tags, Wiki-Links
+- **Eigenes Wissen:** Vaults (wie bei Obsidian) mit Markierungen (freie Textauswahl über Verse, Untermarkierungen, Farbwechsel mit einem Klick), Notizen, Dokumenten, Ordnern, Tags, Wiki-Links
 - **Planen:** Lesepläne mit Fortschritt, Leseliste, Aufgaben, **Gebetsliste**
 - **Predigt-Editor** mit Gliederung, Versen, Zeitplan und Handout-Export
 - **Morphologie und Syntax** des Urtextes (Griechisch und Hebräisch): Zeit, Fall, Person …, Syntax mit Subjekt, Verb, Objekt …
