@@ -2421,5 +2421,14 @@
   "{0} Einträge werden endgültig gelöscht und lassen sich nicht mehr zurückholen.": "Записи ({0}) будут удалены навсегда, их нельзя будет вернуть.",
   "Papierkorb leeren": "Очистить корзину",
   "Markierung „{0}“ gelöscht.": "Пометка «{0}» удалена.",
-  "Schreibt den ganzen Vault als Markdown-Ordner: deine Ordner als Ordner, jede Notiz und jedes Dokument als eigene Datei, Bibelstellen als Links. Obsidian und andere Notiz-Programme öffnen ihn direkt.": "Записывает всё хранилище как папку Markdown: твои папки как папки, каждая заметка и каждый документ отдельным файлом, ссылки на Библию как ссылки. Obsidian и другие программы для заметок открывают её напрямую."
+  "Schreibt den ganzen Vault als Markdown-Ordner: deine Ordner als Ordner, jede Notiz und jedes Dokument als eigene Datei, Bibelstellen als Links. Obsidian und andere Notiz-Programme öffnen ihn direkt.": "Записывает всё хранилище как папку Markdown: твои папки как папки, каждая заметка и каждый документ отдельным файлом, ссылки на Библию как ссылки. Obsidian и другие программы для заметок открывают её напрямую.",
+  "Als gelesen markieren": "Отметить как прочитанное",
+  "Datenordner": "Папка с данными",
+  "Fertig.": "Готово.",
+  "Ganze Übersetzung offline laden": "Загрузить весь перевод для работы без сети",
+  "Hier liegen deine Markierungen und gelesenen Kapitel (Unterordner vaults). Zeige hier den Ordner, den Syncthing mit dem Computer abgleicht; im Programm auf dem Computer ist es der Ordner BibleStudy in LocalAppData.": "Здесь хранятся твои выделения и прочитанные главы (подпапка vaults). Укажи папку, которую Syncthing синхронизирует с компьютером; в программе на компьютере это папка BibleStudy в LocalAppData.",
+  "Kapitel {0}": "Глава {0}",
+  "Keine Verbindung. Schon gelesene Kapitel sind auch offline da.": "Нет соединения. Уже прочитанные главы доступны без сети.",
+  "Suchen …": "Поиск …",
+  "Zugriff auf alle Dateien erlauben": "Разрешить доступ ко всем файлам"
 }

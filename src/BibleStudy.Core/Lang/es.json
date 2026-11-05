@@ -2421,5 +2421,14 @@
   "{0} Einträge werden endgültig gelöscht und lassen sich nicht mehr zurückholen.": "{0} entradas se eliminarán definitivamente y ya no se podrán recuperar.",
   "Papierkorb leeren": "Vaciar la papelera",
   "Markierung „{0}“ gelöscht.": "Resaltado «{0}» eliminado.",
-  "Schreibt den ganzen Vault als Markdown-Ordner: deine Ordner als Ordner, jede Notiz und jedes Dokument als eigene Datei, Bibelstellen als Links. Obsidian und andere Notiz-Programme öffnen ihn direkt.": "Escribe todo el vault como carpeta Markdown: tus carpetas como carpetas, cada nota y cada documento como archivo propio, las citas bíblicas como enlaces. Obsidian y otros programas de notas la abren directamente."
+  "Schreibt den ganzen Vault als Markdown-Ordner: deine Ordner als Ordner, jede Notiz und jedes Dokument als eigene Datei, Bibelstellen als Links. Obsidian und andere Notiz-Programme öffnen ihn direkt.": "Escribe todo el vault como carpeta Markdown: tus carpetas como carpetas, cada nota y cada documento como archivo propio, las citas bíblicas como enlaces. Obsidian y otros programas de notas la abren directamente.",
+  "Als gelesen markieren": "Marcar como leído",
+  "Datenordner": "Carpeta de datos",
+  "Fertig.": "Listo.",
+  "Ganze Übersetzung offline laden": "Descargar toda la traducción para usarla sin conexión",
+  "Hier liegen deine Markierungen und gelesenen Kapitel (Unterordner vaults). Zeige hier den Ordner, den Syncthing mit dem Computer abgleicht; im Programm auf dem Computer ist es der Ordner BibleStudy in LocalAppData.": "Aquí se guardan tus marcas y los capítulos leídos (subcarpeta vaults). Indica la carpeta que Syncthing mantiene sincronizada con tu ordenador; en el programa del ordenador es la carpeta BibleStudy en LocalAppData.",
+  "Kapitel {0}": "Capítulo {0}",
+  "Keine Verbindung. Schon gelesene Kapitel sind auch offline da.": "Sin conexión. Los capítulos que ya has leído están disponibles sin conexión.",
+  "Suchen …": "Buscar …",
+  "Zugriff auf alle Dateien erlauben": "Permitir el acceso a todos los archivos"
 }

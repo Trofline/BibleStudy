@@ -1,0 +1,35 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- BibleStudy for Android: read translations, mark verses in colors, mark chapters as read. Same vault file as the desktop program. -->
+  <PropertyGroup>
+    <TargetFramework>net10.0-android</TargetFramework>
+    <SupportedOSPlatformVersion>24</SupportedOSPlatformVersion>
+    <OutputType>Exe</OutputType>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <ApplicationId>de.trofline.biblestudy</ApplicationId>
+    <ApplicationVersion>1</ApplicationVersion>
+    <ApplicationDisplayVersion>1.6.0</ApplicationDisplayVersion>
+    <Version>1.6.0</Version>
+    <AndroidPackageFormat>apk</AndroidPackageFormat>
+    <AndroidEnableProfiledAot>false</AndroidEnableProfiledAot>
+    <RuntimeIdentifiers>android-arm64;android-x64</RuntimeIdentifiers>
+    <Product>BibleStudy</Product>
+    <!-- the Android implicit usings (Button, Application …) collide with the Avalonia names -->
+    <Authors>Trofline</Authors>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Avalonia.Android" Version="12.1.4" />
+    <PackageReference Include="Avalonia.Themes.Fluent" Version="12.1.4" />
+    <PackageReference Include="Avalonia.Fonts.Inter" Version="12.1.4" />
+    <ProjectReference Include="..\BibleStudy.Core\BibleStudy.Core.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <Using Include="BibleStudy.Core.Loc" Static="true" />
+    <Using Remove="Android.App" />
+    <Using Remove="Android.Widget" />
+    <Using Remove="Android.OS" />
+    <Using Remove="Android.Views" />
+    <Using Remove="Android.Content" />
+    <Using Remove="Android.Runtime" />
+  </ItemGroup>
+</Project>

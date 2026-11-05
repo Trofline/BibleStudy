@@ -2421,5 +2421,14 @@
   "{0} Einträge werden endgültig gelöscht und lassen sich nicht mehr zurückholen.": "{0} entrées seront supprimées définitivement et ne pourront plus être récupérées.",
   "Papierkorb leeren": "Vider la corbeille",
   "Markierung „{0}“ gelöscht.": "Surlignage « {0} » supprimé.",
-  "Schreibt den ganzen Vault als Markdown-Ordner: deine Ordner als Ordner, jede Notiz und jedes Dokument als eigene Datei, Bibelstellen als Links. Obsidian und andere Notiz-Programme öffnen ihn direkt.": "Écrit tout le vault en dossier Markdown : tes dossiers comme dossiers, chaque note et chaque document comme fichier à part, les références bibliques comme liens. Obsidian et d’autres programmes de notes l’ouvrent directement."
+  "Schreibt den ganzen Vault als Markdown-Ordner: deine Ordner als Ordner, jede Notiz und jedes Dokument als eigene Datei, Bibelstellen als Links. Obsidian und andere Notiz-Programme öffnen ihn direkt.": "Écrit tout le vault en dossier Markdown : tes dossiers comme dossiers, chaque note et chaque document comme fichier à part, les références bibliques comme liens. Obsidian et d’autres programmes de notes l’ouvrent directement.",
+  "Als gelesen markieren": "Marquer comme lu",
+  "Datenordner": "Dossier de données",
+  "Fertig.": "Terminé.",
+  "Ganze Übersetzung offline laden": "Télécharger toute la traduction pour l'utiliser hors ligne",
+  "Hier liegen deine Markierungen und gelesenen Kapitel (Unterordner vaults). Zeige hier den Ordner, den Syncthing mit dem Computer abgleicht; im Programm auf dem Computer ist es der Ordner BibleStudy in LocalAppData.": "Tes surlignages et les chapitres lus sont conservés ici (sous-dossier vaults). Indique le dossier que Syncthing synchronise avec ton ordinateur ; dans le programme de l'ordinateur, c'est le dossier BibleStudy dans LocalAppData.",
+  "Kapitel {0}": "Chapitre {0}",
+  "Keine Verbindung. Schon gelesene Kapitel sind auch offline da.": "Pas de connexion. Les chapitres déjà lus sont disponibles hors ligne.",
+  "Suchen …": "Rechercher …",
+  "Zugriff auf alle Dateien erlauben": "Autoriser l'accès à tous les fichiers"
 }

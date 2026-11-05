@@ -2421,5 +2421,14 @@
   "{0} Einträge werden endgültig gelöscht und lassen sich nicht mehr zurückholen.": "{0} entries will be deleted for good and cannot be brought back.",
   "Papierkorb leeren": "Empty trash",
   "Markierung „{0}“ gelöscht.": "Highlight “{0}” deleted.",
-  "Schreibt den ganzen Vault als Markdown-Ordner: deine Ordner als Ordner, jede Notiz und jedes Dokument als eigene Datei, Bibelstellen als Links. Obsidian und andere Notiz-Programme öffnen ihn direkt.": "Writes the whole vault as a Markdown folder: your folders as folders, every note and every document as a file of its own, Bible references as links. Obsidian and other notes programs open it directly."
+  "Schreibt den ganzen Vault als Markdown-Ordner: deine Ordner als Ordner, jede Notiz und jedes Dokument als eigene Datei, Bibelstellen als Links. Obsidian und andere Notiz-Programme öffnen ihn direkt.": "Writes the whole vault as a Markdown folder: your folders as folders, every note and every document as a file of its own, Bible references as links. Obsidian and other notes programs open it directly.",
+  "Als gelesen markieren": "Mark as read",
+  "Datenordner": "Data folder",
+  "Fertig.": "Done.",
+  "Ganze Übersetzung offline laden": "Download the whole translation for offline use",
+  "Hier liegen deine Markierungen und gelesenen Kapitel (Unterordner vaults). Zeige hier den Ordner, den Syncthing mit dem Computer abgleicht; im Programm auf dem Computer ist es der Ordner BibleStudy in LocalAppData.": "Your highlights and chapters read are kept here (sub-folder vaults). Point this to the folder that Syncthing keeps in step with your computer; in the computer program it is the folder BibleStudy in LocalAppData.",
+  "Kapitel {0}": "Chapter {0}",
+  "Keine Verbindung. Schon gelesene Kapitel sind auch offline da.": "No connection. Chapters you have read before are available offline.",
+  "Suchen …": "Search …",
+  "Zugriff auf alle Dateien erlauben": "Allow access to all files"
 }
