@@ -19,7 +19,7 @@ public partial class MainWindow
 
     enum ExKind { Folder, Mark, Note }
 
-    sealed record ExItem(ExKind Kind, long Id, string Title, string Place, string? Color, long? FolderId, VerseRef? Ref = null);
+    sealed record ExItem(ExKind Kind, long Id, string Title, string Place, string? Color, long? FolderId, VerseRef? Ref = null, IReadOnlyList<(string Text, string Color)>? Cores = null);
 
     sealed record ExTarget(Control Control, long? Folder, Action<bool> Highlight);
 
@@ -353,14 +353,23 @@ public partial class MainWindow
     List<ExItem> ExAllItems()
     {
         var items = new List<ExItem>();
-        foreach (var m in _vault.GetMarks())
+        var marks = _vault.GetMarks();
+        // a mark inside a marked verse is the most important part of it: it shows highlighted in the verse, not as an entry of its own
+        var wholeVerses = new HashSet<(string, int, int)>();
+        foreach (var m in marks.Where(m => m.WholeVerse)) for (var v = m.Ref.Verse; v <= m.LastVerse; v++) wholeVerses.Add((m.Ref.Book, m.Ref.Chapter, v));
+        bool IsCore(Mark m) => !m.WholeVerse && Enumerable.Range(m.Ref.Verse, m.LastVerse - m.Ref.Verse + 1).All(v => wholeVerses.Contains((m.Ref.Book, m.Ref.Chapter, v)));
+        var cores = marks.Where(IsCore).ToLookup(m => (m.Ref.Book, m.Ref.Chapter));
+        foreach (var m in marks.Where(m => !IsCore(m)))
         {
             var place = Label(m.Ref) + (m.MultiVerse ? "–" + m.LastVerse : "");
-            var title = m.Note.Length > 0 ? m.Note.ReplaceLineEndings(" ") : m.Text.ReplaceLineEndings(" ");
-            items.Add(new ExItem(ExKind.Mark, m.Id, Shorten(title.Trim().Length > 0 ? title.Trim() : place, 110), place, m.Color, Known(m.FolderId), m.Ref));
+            var hasNote = m.Note.Length > 0;
+            var title = (hasNote ? m.Note : m.Text).ReplaceLineEndings(" ").Trim();   // the whole text: a long verse wraps instead of being cut off
+            var parts = hasNote || !m.WholeVerse ? null
+                : cores[(m.Ref.Book, m.Ref.Chapter)].Where(c => c.Ref.Verse >= m.Ref.Verse && c.LastVerse <= m.LastVerse && c.Text.Trim().Length > 0).Select(c => (c.Text.Trim(), c.Color)).ToList();
+            items.Add(new ExItem(ExKind.Mark, m.Id, title.Length > 0 ? title : place, place, m.Color, Known(m.FolderId), m.Ref, parts));
         }
         foreach (var n in _vault.GetNotes())
-            items.Add(new ExItem(ExKind.Note, NoteKey(n.Ref), Shorten(n.Text.ReplaceLineEndings(" ").Trim(), 110), Label(n.Ref), null, Known(n.FolderId), n.Ref));
+            items.Add(new ExItem(ExKind.Note, NoteKey(n.Ref), n.Text.ReplaceLineEndings(" ").Trim(), Label(n.Ref), null, Known(n.FolderId), n.Ref));
         return items;
     }
 
@@ -552,7 +561,9 @@ public partial class MainWindow
         var title = item.Kind == ExKind.Folder
             ? item.Title + "   " + L("({0})", all.Count(i => i.FolderId == item.Id) + ChildFolders(item.Id).Count())
             : item.Title.Length > 0 ? item.Title : L("(ohne Text)");
-        var name = new TextBlock { Text = title, TextTrimming = TextTrimming.CharacterEllipsis, VerticalAlignment = VerticalAlignment.Center, FontWeight = item.Kind == ExKind.Folder ? FontWeight.SemiBold : FontWeight.Normal };
+        var name = new TextBlock { VerticalAlignment = VerticalAlignment.Center, FontWeight = item.Kind == ExKind.Folder ? FontWeight.SemiBold : FontWeight.Normal };
+        if (item.Kind == ExKind.Folder) { name.Text = title; name.TextTrimming = TextTrimming.CharacterEllipsis; }
+        else FillWrapped(name, title, item.Cores);
         var place = new TextBlock { Text = item.Place, Classes = { "caption" }, VerticalAlignment = VerticalAlignment.Center, TextTrimming = TextTrimming.CharacterEllipsis };
         var kind = new TextBlock { Text = item.Kind switch { ExKind.Folder => L("Ordner"), ExKind.Note => L("Notiz"), _ => L("Markierung") }, Classes = { "caption" }, VerticalAlignment = VerticalAlignment.Center };
         Grid.SetColumn(name, 1); Grid.SetColumn(place, 2); Grid.SetColumn(kind, 3);
@@ -566,6 +577,32 @@ public partial class MainWindow
         ExDragSource(row, item);
         row.ContextMenu = item.Kind == ExKind.Folder ? FolderContextMenu(item, row) : ItemContextMenu(item, row);
         return row;
+    }
+
+    /// <summary>The whole text of an entry (it wraps, nothing is cut off); the most important parts of a verse stand highlighted in their color.</summary>
+    static void FillWrapped(TextBlock block, string text, IReadOnlyList<(string Text, string Color)>? cores)
+    {
+        block.TextWrapping = TextWrapping.Wrap;
+        var spans = new List<(int At, int Len, string Color)>();
+        foreach (var (core, color) in (cores ?? []).OrderByDescending(c => c.Text.Length))
+        {
+            var from = 0;
+            while (text.IndexOf(core, from, StringComparison.OrdinalIgnoreCase) is var at and >= 0)
+            {
+                if (!spans.Any(s => at < s.At + s.Len && s.At < at + core.Length)) { spans.Add((at, core.Length, color)); break; }
+                from = at + 1;
+            }
+        }
+        if (spans.Count == 0) { block.Text = text; return; }
+        var pos = 0;
+        foreach (var (at, len, color) in spans.OrderBy(s => s.At))
+        {
+            if (at > pos) block.Inlines!.Add(new Avalonia.Controls.Documents.Run(text[pos..at]));
+            var c = MarkColor(color);
+            block.Inlines!.Add(new Avalonia.Controls.Documents.Run(text.Substring(at, len)) { Background = new SolidColorBrush(Color.FromArgb(120, c.R, c.G, c.B)) });
+            pos = at + len;
+        }
+        if (pos < text.Length) block.Inlines!.Add(new Avalonia.Controls.Documents.Run(text[pos..]));
     }
 
     void ExOpen(ExItem item)

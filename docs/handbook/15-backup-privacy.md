@@ -18,6 +18,8 @@ You can keep several vaults, for example "Sermon" and "Private", and switch betw
 
 *Settings → Backup*: **Daily, Weekly or Monthly**; the destination is a folder of your choice. Before every update and before deleting a vault, the program also creates a backup on its own.
 
+**Cleaning up:** every update creates a backup, which can take a lot of space. *Settings → Backup → Clean up backups …* lists all backups with date, kind (for example “Before the update to 1.5.2”) and size. Check what can go, or choose “All but the 3 newest”; deleting asks first and is permanent.
+
 ### Manual
 
 - **Back up now** creates a ZIP with all your data.

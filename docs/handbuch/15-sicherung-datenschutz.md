@@ -18,6 +18,8 @@ Du kannst mehrere Vaults führen, zum Beispiel „Predigt“ und „Privat“, u
 
 *Einstellungen → Sicherung*: **Täglich, Wöchentlich oder Monatlich**; Ziel ist ein Ordner deiner Wahl. Vor jedem Update und vor dem Löschen eines Vaults legt das Programm zusätzlich selbst eine Sicherung an.
 
+**Aufräumen:** Jedes Update legt eine Sicherung an, das kann viel Speicher belegen. *Einstellungen → Sicherung → Sicherungen aufräumen …* listet alle Sicherungen mit Datum, Art (zum Beispiel „Vor dem Update auf 1.5.2“) und Größe. Hake an, was weg kann, oder wähle „Alle bis auf die 3 neuesten“; gelöscht wird erst nach einer Rückfrage und endgültig.
+
 ### Manuell
 
 - **Jetzt sichern** legt eine ZIP mit allen Daten an.

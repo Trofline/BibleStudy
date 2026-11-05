@@ -166,7 +166,7 @@ public partial class MainWindow
     {
         var items = new List<object> { L("(keine)") };
         items.AddRange(Categories.Select(c => (object)c));
-        DocCategoryBox.ItemTemplate = new Avalonia.Controls.Templates.FuncDataTemplate<object>((o, _) => new TextBlock { Text = o is DocCategory c ? CategoryColors[Math.Clamp(c.Color, 0, CategoryColors.Length - 1)].Dot + " " + c.Name : o.ToString() });
+        DocCategoryBox.ItemTemplate = new Avalonia.Controls.Templates.FuncDataTemplate<object>((o, _) => new TextBlock { Text = o is DocCategory c ? CategoryColors[Math.Clamp(c.Color, 0, CategoryColors.Length - 1)].Dot + " " + c.Name : o?.ToString() ?? "" });
         DocCategoryBox.ItemsSource = items;
         var current = CategoryOf(d) ?? (d.Id == 0 && _docCategory is { Length: > 0 } pre ? Categories.FirstOrDefault(c => c.Name == pre) : null);
         DocCategoryBox.SelectedIndex = current is null ? 0 : Math.Max(0, Categories.IndexOf(current) + 1);
