@@ -30,7 +30,7 @@ public partial class MainWindow
         if (!CompactLook) return all;
         var pool = all.SelectMany(g => g.Tabs).ToDictionary(t => t.Index);
         NavTab[] Pick(params int[] idx) => idx.Where(pool.ContainsKey).Select(i => pool[i]).ToArray();
-        return all.Where(g => g.Name != "Studium" && g.Name != "Original").Select(g => g.Name switch
+        return all.Where(g => g.Name != "Studium" && g.Name != "Lernen").Select(g => g.Name switch
         {
             "Suchen" => g with { Tabs = Pick(0, StrongTab) },
             "Vers" => g with { Tabs = Pick(GuideTab, 3, PericopeTab, SentenceTab, GrundtextTab, 4, 5, AnalysisTab) },
@@ -48,6 +48,7 @@ public partial class MainWindow
         new(K("Vers"), "M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z",
         [
             new(GuideTab, K("Übersicht"), L("Alles zum angeklickten Vers auf einen Blick: deine Notizen und Dokumente, andere Übersetzungen, Querverweise. Tipp: Rechtsklick auf einen Vers.")),
+            new(GrundtextTab, K("Grundtext"), L("Der angeklickte Vers im Original, Wort für Wort mit Bedeutung.")),
             new(3, K("Wort"), L("Schalte oben „Wortstudie“ ein und tippe ein unterstrichenes Wort an: Bedeutung im Urtext.")),
             new(4, K("Querverweise"), L("Verse, die mit dem angeklickten Vers zusammenhängen.")),
             new(5, K("Vorkommen"), L("Alle Stellen, an denen ein Wort (Strong-Nummer) vorkommt, mit Verstext.")),
@@ -62,6 +63,10 @@ public partial class MainWindow
             new(2, K("Notizen"), L("Schreibe eine kurze Notiz zum angeklickten Vers. Darunter stehen alle deine Notizen; Klick springt zur Stelle.")),
             new(1, K("Markierungen"), L("Farbig markierte Wörter und Verse mit eigener Notiz, in Ordnern und mit Tags. Klick springt zur Stelle.")),
         ]),
+        new(K("Markierung"), "M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z M7 13h6",
+        [
+            new(ExplorerTab, K("Explorer"), L("Alle Markierungen und Notizen wie im Datei-Explorer: Ordner und Unterordner anlegen, Verse und Ordner per Ziehen einordnen. Doppelklick öffnet.")),
+        ], Windowed: true),
         new(K("Merken"), "M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z",
         [
             new(BookmarksTab, K("Lesezeichen"), L("Deine gemerkten Verse: einfach eine Liste zum späteren Zurückspringen, ohne Notizen.")),
@@ -97,9 +102,8 @@ public partial class MainWindow
             new(SentenceTab, K("Satzdiagramm"), L("Der Satz des angeklickten Verses als klassisches Satzdiagramm: Subjekt, Verb, Objekt auf der Linie, alles andere darunter. Aus den Syntaxdaten des griechischen und hebräischen Textes.")),
             new(AnalysisTab, K("Analyse"), L("Werkzeuge zum besseren Verstehen: Schlüsselwörter, einmalige Wörter, verwandte Wörter und wo ein Wort in der Bibel vorkommt.")),
         ], Windowed: true),
-        new(K("Original"), "M5 8l6 6 M4 14l6-6 2-3 M2 5h12 M7 2h1 M22 22l-5-10-5 10 M14 18h6",
+        new(K("Lernen"), "M5 8l6 6 M4 14l6-6 2-3 M2 5h12 M7 2h1 M22 22l-5-10-5 10 M14 18h6",
         [
-            new(GrundtextTab, K("Grundtext"), L("Der angeklickte Vers im Original, Wort für Wort mit Bedeutung.")),
             new(StrongTab, K("Strong-Wörterbuch"), L("Schlägt Wörter des Urtextes nach: Nummer (G3056), griechisches/hebräisches Wort, Umschrift oder englische Bedeutung.")),
             new(LearnTab, K("Sprachen"), L("Griechisch und Hebräisch lernen: Alphabet, Buchstaben-Quiz und Vokabeln mit Wiederholung.")),
         ], Windowed: true),

@@ -37,7 +37,7 @@ Deine Sprache fehlt? Speichere die **Vorlage mit der KI-Anweisung**, lass sie vo
 - Kapitel als gelesen markieren, wenn du bis zum Ende **gescrollt** hast.
 - Beim Speichern den **Buchnamen als Tag** vergeben.
 - **Standard-Markierfarbe.**
-- **Farben über dem Text** beim Auswählen (standardmäßig an) und **immer ganze Wörter** auswählen (standardmäßig an).
+- **Farben über dem Text** beim Auswählen (standardmäßig an) und **Text markieren** wahlweise **Wort für Wort** (Standard) oder **Buchstabe für Buchstabe**.
 - **Markierungen aus anderen Übersetzungen mitzeigen** (gleiche Wörter oder Strong-Nummern).
 - **Namen der Bibelbücher:** wie in der Übersetzung, immer Deutsch oder immer Englisch (auch die Kürzel in Auswahl und Diagrammen).
 - **Farbe der Untermarkierung:** Akzentfarbe, eine feste Farbe oder eine eigene (**+**).

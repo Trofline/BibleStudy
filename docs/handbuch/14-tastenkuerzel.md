@@ -39,6 +39,10 @@ Mehrere dieser Kürzel funktionieren auch, während du in einem Textfeld tippst 
 | Umschalt+Klick | Bereich ganzer Verse wählen |
 | Strg+C | ausgewählten Text kopieren |
 | Strg+Z | letzte Markierung rückgängig |
+| Alt+← / Alt+→ | zurück / vorwärts durch die zuletzt gelesenen Stellen (ebenso die Seitentasten der Maus) |
+| Tab | zwischen Lesen und dem letzten Reiter wechseln (der Punkt am Reiter legt fest, zu welchem) |
+| Mittlere Maustaste | Schnellmarkieren ein/aus |
+| Im Explorer: Strg+X, Strg+V, Entf, Strg+Z, Strg+A | ausschneiden, einfügen, in den Papierkorb, rückgängig, alles wählen |
 | Esc | Auswahl aufheben |
 
 ## 14.2 Feste Kürzel im Editor und in Listen

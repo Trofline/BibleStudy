@@ -46,6 +46,19 @@
                     <SolidColorBrush x:Key="TabItemHeaderForegroundUnselectedPointerOver" Color="#24201A" />
                     <SolidColorBrush x:Key="TabItemHeaderForegroundSelected" Color="#8A4F0F" />
                     <SolidColorBrush x:Key="TabItemHeaderForegroundSelectedPointerOver" Color="#8A4F0F" />
+                    <!-- menus (right click, "…"): the colors of the program instead of the plain system look -->
+                    <SolidColorBrush x:Key="MenuFlyoutPresenterBackground" Color="#FFFCF6" />
+                    <SolidColorBrush x:Key="MenuFlyoutPresenterBorderBrush" Color="#E2D9C5" />
+                    <SolidColorBrush x:Key="MenuFlyoutItemBackgroundPointerOver" Color="#EFE8D8" />
+                    <SolidColorBrush x:Key="MenuFlyoutItemBackgroundPressed" Color="#E8DFCB" />
+                    <SolidColorBrush x:Key="MenuFlyoutItemForeground" Color="#24201A" />
+                    <SolidColorBrush x:Key="MenuFlyoutItemForegroundPointerOver" Color="#24201A" />
+                    <SolidColorBrush x:Key="MenuFlyoutItemForegroundPressed" Color="#24201A" />
+                    <SolidColorBrush x:Key="MenuFlyoutItemKeyboardAcceleratorTextForeground" Color="#6B6354" />
+                    <SolidColorBrush x:Key="MenuFlyoutItemKeyboardAcceleratorTextForegroundPointerOver" Color="#6B6354" />
+                    <SolidColorBrush x:Key="MenuFlyoutSubItemChevron" Color="#6B6354" />
+                    <SolidColorBrush x:Key="MenuFlyoutSubItemChevronPointerOver" Color="#24201A" />
+                    <SolidColorBrush x:Key="MenuFlyoutSubItemChevronSubMenuOpened" Color="#24201A" />
                 </ResourceDictionary>
                 <ResourceDictionary x:Key="Dark">
                     <SolidColorBrush x:Key="BsBackground" Color="#0F1216" />
@@ -76,6 +89,18 @@
                     <SolidColorBrush x:Key="TabItemHeaderForegroundUnselectedPointerOver" Color="#ECE7DA" />
                     <SolidColorBrush x:Key="TabItemHeaderForegroundSelected" Color="#E3B65F" />
                     <SolidColorBrush x:Key="TabItemHeaderForegroundSelectedPointerOver" Color="#E3B65F" />
+                    <SolidColorBrush x:Key="MenuFlyoutPresenterBackground" Color="#161A20" />
+                    <SolidColorBrush x:Key="MenuFlyoutPresenterBorderBrush" Color="#262D37" />
+                    <SolidColorBrush x:Key="MenuFlyoutItemBackgroundPointerOver" Color="#2A323D" />
+                    <SolidColorBrush x:Key="MenuFlyoutItemBackgroundPressed" Color="#2A323D" />
+                    <SolidColorBrush x:Key="MenuFlyoutItemForeground" Color="#ECE7DA" />
+                    <SolidColorBrush x:Key="MenuFlyoutItemForegroundPointerOver" Color="#ECE7DA" />
+                    <SolidColorBrush x:Key="MenuFlyoutItemForegroundPressed" Color="#ECE7DA" />
+                    <SolidColorBrush x:Key="MenuFlyoutItemKeyboardAcceleratorTextForeground" Color="#9AA2AD" />
+                    <SolidColorBrush x:Key="MenuFlyoutItemKeyboardAcceleratorTextForegroundPointerOver" Color="#9AA2AD" />
+                    <SolidColorBrush x:Key="MenuFlyoutSubItemChevron" Color="#9AA2AD" />
+                    <SolidColorBrush x:Key="MenuFlyoutSubItemChevronPointerOver" Color="#ECE7DA" />
+                    <SolidColorBrush x:Key="MenuFlyoutSubItemChevronSubMenuOpened" Color="#ECE7DA" />
                 </ResourceDictionary>
             </ResourceDictionary.ThemeDictionaries>
         </ResourceDictionary>
@@ -84,6 +109,23 @@
     <Application.Styles>
         <FluentTheme />
         <StyleInclude Source="avares://Avalonia.Controls.ColorPicker/Themes/Fluent/Fluent.xaml" />
+
+        <!-- Menus (right click and "…" menus): rounded, in the colors of the program -->
+        <Style Selector="MenuFlyoutPresenter, ContextMenu">
+            <Setter Property="CornerRadius" Value="12" />
+            <Setter Property="Padding" Value="5" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="MinWidth" Value="210" />
+        </Style>
+        <Style Selector="MenuItem">
+            <Setter Property="CornerRadius" Value="8" />
+            <Setter Property="Padding" Value="10,7" />
+            <Setter Property="FontSize" Value="13" />
+        </Style>
+        <Style Selector="MenuFlyoutPresenter Separator, ContextMenu Separator, MenuItem Separator">
+            <Setter Property="Margin" Value="8,4" />
+            <Setter Property="Background" Value="{DynamicResource BsBorder}" />
+        </Style>
 
         <!-- Icon buttons -->
         <Style Selector="Button.tool, ToggleButton.tool">

@@ -29,6 +29,9 @@
                     <Button x:Name="BackBtn" Classes="tool" ToolTip.Tip="Zurück zur vorherigen Stelle (Alt+←)">
                         <local:Icon Data="M19 12H5 M12 19l-7-7 7-7" />
                     </Button>
+                    <Button x:Name="ForwardBtn" Classes="tool" ToolTip.Tip="Vorwärts zur nächsten Stelle (Alt+→)" IsEnabled="False">
+                        <local:Icon Data="M5 12h14 M12 5l7 7-7 7" />
+                    </Button>
                     <Button x:Name="HomeBtn" Classes="tool" ToolTip.Tip="Startseite: alle Bücher und Kapitel (Alt+Pos1)">
                         <local:Icon Data="M3 9.5L12 3l9 6.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z" />
                     </Button>
@@ -366,12 +369,14 @@
                     <DockPanel Margin="16,14,12,12">
                         <StackPanel DockPanel.Dock="Top" Spacing="8" Margin="0,0,0,8">
                             <TextBlock x:Name="NoteTarget" Classes="caption" Text="Vers anklicken, um eine Notiz zu schreiben" TextWrapping="Wrap" />
-                            <TextBox x:Name="NoteEditor" AcceptsReturn="True" TextWrapping="Wrap" Height="96" />
+                            <TextBox x:Name="NoteEditor" AcceptsReturn="True" TextWrapping="Wrap" Height="96" PlaceholderText="Deine Notiz. Bibelstellen wie Joh 3,16 werden darunter zu Links." />
                             <StackPanel Orientation="Horizontal" Spacing="8">
                                 <Button x:Name="NoteSaveBtn" Content="Speichern" Classes="primary" />
                                 <Button x:Name="NoteDeleteBtn" Content="Löschen" />
                                 <Border Classes="pill"><ComboBox x:Name="NoteFolderBox" MinWidth="150" ToolTip.Tip="Ordner dieser Notiz" /></Border>
                             </StackPanel>
+                            <WrapPanel x:Name="NoteLinksPanel" IsVisible="False" />
+                            <WrapPanel x:Name="NoteBacklinksPanel" IsVisible="False" />
                         </StackPanel>
                         <Grid DockPanel.Dock="Top" ColumnDefinitions="*,Auto,Auto" Margin="0,4,0,6">
                             <TextBox x:Name="NotesSearchBox" PlaceholderText="Notizen durchsuchen (Text oder Stelle)" Margin="0,0,6,0" />
@@ -692,7 +697,11 @@
                                 <CheckBox x:Name="AutoTagCheck" Content="Beim Speichern den Buchnamen als Tag vergeben" />
                                 <CheckBox x:Name="ShareMarksCheck" Content="Markierungen aus anderen Übersetzungen mitzeigen (gleiche Wörter oder gleiche Strong-Nummern)" />
                                 <CheckBox x:Name="SelectionPopupCheck" Content="Beim Auswählen von Text die Farben gleich über dem Text zeigen" />
-                                <CheckBox x:Name="SelectWordsCheck" Content="Beim Auswählen immer ganze Wörter markieren (nie halbe)" />
+                                <TextBlock Text="Text markieren" Margin="0,4,0,0" />
+                                <Border Classes="pill" HorizontalAlignment="Left"><ComboBox x:Name="SelectModeBox" Width="260" SelectedIndex="0">
+                                    <ComboBoxItem Content="Wort für Wort" />
+                                    <ComboBoxItem Content="Buchstabe für Buchstabe" />
+                                </ComboBox></Border>
                                 <TextBlock Text="Namen der Bibelbücher" Margin="0,4,0,0" />
                                 <Border Classes="pill" HorizontalAlignment="Left"><ComboBox x:Name="BookNamesBox" Width="260" SelectedIndex="0">
                                     <ComboBoxItem Content="Wie in der Übersetzung" />
@@ -839,7 +848,7 @@
                                 <WrapPanel>
                                     <Button x:Name="ExportBtn" Content="Exportieren …" Margin="0,0,6,6" />
                                     <Button x:Name="ImportBtn" Content="Importieren …" Margin="0,0,6,6" />
-                                    <Button x:Name="ObsidianBtn" Content="Als Obsidian-Vault exportieren …" ToolTip.Tip="Schreibt Dokumente, Markierungen, Notizen, Leseliste und To-dos als Markdown-Ordner, den Obsidian direkt öffnet" />
+                                    <Button x:Name="ObsidianBtn" Content="Als Obsidian-Vault exportieren …" ToolTip.Tip="Schreibt den ganzen Vault als Markdown-Ordner: deine Ordner als Ordner, jede Notiz und jedes Dokument als eigene Datei, Bibelstellen als Links. Obsidian und andere Notiz-Programme öffnen ihn direkt." />
                                     <Button x:Name="LicensesBtn" Content="Quellen und Lizenzen …" ToolTip.Tip="Woher alle Texte und Daten stammen und unter welcher Lizenz sie stehen" />
                                 </WrapPanel>
                                 <TextBlock x:Name="BackupInfo" Classes="caption" TextWrapping="Wrap" />
@@ -1041,6 +1050,9 @@
                 </TabItem>
                 <TabItem Header="Perikope">
                     <ScrollViewer><StackPanel x:Name="PericopePanel" Spacing="8" Margin="16,10,12,16" /></ScrollViewer>
+                </TabItem>
+                <TabItem Header="Explorer">
+                    <Panel x:Name="ExplorerHost" />
                 </TabItem>
             </TabControl>
             </DockPanel>

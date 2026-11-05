@@ -162,7 +162,7 @@ public partial class MainWindow
             case "delete_mark":
             {
                 if (ArgLong(a, "id") is not long id) return Err("id is required");
-                _vault.DeleteMark(id); CloseEditor(); await RefreshAfterMarkChangeAsync();
+                _vault.TrashMark(id); CloseEditor(); await RefreshAfterMarkChangeAsync();
                 return new { ok = true };
             }
             case "list_folders": return new { folders = _vault.GetFolders().Select(f => new { id = f.Id, name = f.Name }) };

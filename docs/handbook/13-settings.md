@@ -37,7 +37,7 @@ Your language is missing? Save the **template with the AI instruction**, have an
 - Mark chapters as read when you have **scrolled** to the end.
 - Assign the **book name as a tag** when saving.
 - **Default highlight color.**
-- **Colors over the text** when selecting (on by default) and **always select whole words** (on by default).
+- **Colors over the text** when selecting (on by default) and **Select text** either **Word by word** (default) or **Letter by letter**.
 - **Show highlights from other translations** (same words or Strong numbers).
 - **Names of the Bible books:** as in the translation, always German or always English (also the short names in the picker and charts).
 - **Sub-highlight color:** accent color, a fixed color or your own (**+**).

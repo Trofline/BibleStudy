@@ -87,7 +87,7 @@ public partial class MainWindow
         DocTitleBox.Text = d.Title; DocBodyBox.Text = d.Body; DocTagsBox.Text = string.Join(", ", d.Tags.Where(t => !IsCategoryTag(t)));
         FillCategoryBox(d);
         DocTemplateCheck.IsChecked = d.IsTemplate;
-        var folders = _vault.GetFolders().OrderBy(f => f.Name, Comparer<string>.Create(NaturalCompare)).ToList();
+        var folders = FolderTree(_vault.GetFolders());
         DocFolderBox.ItemsSource = new List<object> { L("(kein Ordner)") }.Concat(folders).ToList();
         var fid = d.FolderId ?? _newDocFolder;
         DocFolderBox.SelectedIndex = fid is long f2 && folders.FindIndex(x => x.Id == f2) is var fi and >= 0 ? fi + 1 : 0;

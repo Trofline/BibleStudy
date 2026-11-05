@@ -35,6 +35,25 @@ public partial class MainWindow
         return x.Length.CompareTo(y.Length);
     }
 
+    /// <summary>The folders as a tree: every folder followed by its sub-folders (each level sorted by name), with <see cref="Folder.Depth"/> set,
+    /// so lists and boxes can show them indented.</summary>
+    static List<Folder> FolderTree(IEnumerable<Folder> folders)
+    {
+        var all = folders.ToList();
+        var ids = all.Select(f => f.Id).ToHashSet();
+        var result = new List<Folder>(all.Count);
+        var seen = new HashSet<long>();
+        long? Parent(Folder f) => f.ParentId is long p && p != f.Id && ids.Contains(p) ? p : null;
+        void Add(long? parent, int depth)
+        {
+            foreach (var f in all.Where(f => Parent(f) == parent).OrderBy(f => f.Name, Comparer<string>.Create(NaturalCompare)))
+                if (seen.Add(f.Id)) { result.Add(f with { Depth = depth }); Add(f.Id, depth + 1); }
+        }
+        Add(null, 0);
+        foreach (var f in all) if (seen.Add(f.Id)) result.Add(f);   // a broken chain must not hide a folder
+        return result;
+    }
+
     VaultStore StoreOf(string name)
     {
         if (name == _vault.Name) return _vault;
@@ -67,7 +86,7 @@ public partial class MainWindow
                 && (tagFilter is null || m.Tags.Contains(tagFilter, StringComparer.OrdinalIgnoreCase))).ToList();
             if (all && marks.Count == 0) continue;
             total += marks.Count;
-            var folders = store.GetFolders().OrderBy(f => f.Name, Comparer<string>.Create(NaturalCompare)).ToList();
+            var folders = FolderTree(store.GetFolders());
             if (!_foldersTouched) { if (all || folders.Count <= 3 || folder is not null) foreach (var f in folders) _openFolders.Add(vnum * FolderKeySpan + f.Id); _openFolders.Add(vnum * FolderKeySpan); if (all) _openFolders.Add(VaultKeyBase + vi); }
             if (all)
             {
@@ -83,13 +102,13 @@ public partial class MainWindow
             var cores = marks.Where(IsCore).ToList();
             var shown = marks.Where(m => !IsCore(m)).ToList();
 
-            foreach (var (id, name) in folders.Select(f => (f.Id, f.Name)).Append((0L, L("Ohne Ordner"))))
+            foreach (var (id, name, depth) in folders.Select(f => (f.Id, f.Name, f.Depth)).Append((0L, L("Ohne Ordner"), 0)))
             {
                 var inFolder = shown.Where(m => (m.FolderId ?? 0) == id).OrderBy(m => BookOrder(m.Ref.Book)).ThenBy(m => m.Ref.Chapter).ThenBy(m => m.Ref.Verse).ToList();
                 if (inFolder.Count == 0) continue;
                 var key = vnum * FolderKeySpan + id;
                 var open = _openFolders.Contains(key);
-                rows.Add(new Entry(default, $"{(open ? "▾" : "▸")}  {name}   ·   {L("{0} Verse", inFolder.Count)}", -1 - key, null));
+                rows.Add(new Entry(default, $"{new string(' ', depth * 5)}{(open ? "▾" : "▸")}  {name}   ·   {L("{0} Verse", inFolder.Count)}", -1 - key, null));
                 if (!open) continue;
                 for (var i = 0; i < inFolder.Count; i++)
                 {

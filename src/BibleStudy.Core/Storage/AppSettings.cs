@@ -190,6 +190,7 @@ public sealed class AppSettings
     public Dictionary<string, string> AllowedPlugins { get; set; } = [];
     /// <summary>Order of the work tabs at the top (keys of the tabs), as the user dragged them.</summary>
     public List<string> TabOrder { get; set; } = [];
+    public string? PinnedTab { get; set; }                  // the tab the Tab key switches to from the reading tab (null = the last one)
     /// <summary>The one-time note about where the data comes from has been read (version of the note).</summary>
     public string SourcesNoticeSeen { get; set; } = "";
     /// <summary>Show the STEPBible brief lexicon under the Strong entries.</summary>
@@ -222,6 +223,8 @@ public sealed class AppSettings
     public string? LastSeenVersion { get; set; }
     /// <summary>Whether the question about a weekly backup was asked already (it is asked once, when backups are off).</summary>
     public bool BackupAsked { get; set; }
+    /// <summary>The last "new shortcuts" hint that was shown (so each one appears only once).</summary>
+    public string? TipShown { get; set; }
     public string? PlanId { get; set; }
     public string? PlanStart { get; set; }
     public List<string> PlanDoneDays { get; set; } = [];

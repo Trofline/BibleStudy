@@ -40,6 +40,18 @@ In the verse menu (right-click) you can put an **own heading** before a verse (n
 
 Under *Notes → Highlights* (the collection) you organize highlights into **folders** and give them **tags**. The button at the top right shows the highlights of **all vaults** at once (also in the reading text, to look at only) or only those of the active one; the state is kept. If you like, the program assigns the **book name as a tag** when saving (setting). Clicking an entry jumps to the passage.
 
+### The Explorer
+
+In the **Explorer** tab (right sidebar) you see all highlights and notes like in a file explorer: with folders and sub-folders, a tree on the left, the path on top and a sortable list (click a column heading).
+
+- **Arranging:** put items and folders into a folder by dragging, or with **Ctrl+X** / **Ctrl+V**. **Double-click** or **Enter** opens, **Del** deletes, **Ctrl+Z** undoes deleting, moving and renaming. Arrow keys select, with Shift several, **Ctrl+A** everything.
+- **Typing jumps:** type “u” and you land on the first entry starting with “u”. Typing on narrows it down. The field above filters the folder.
+- **Several at once:** select, then right-click: **Change color …** and **Tags** (add or remove) for all selected highlights. This can be taken back as well.
+- **Trash:** what you delete goes to the **trash** (bottom of the tree). It stays there for **30 days**, also after a restart. **Double-click**, **Enter** or right-click → *Restore* brings it back; a deleted folder returns with its content. *Delete for good …* and *Empty trash …* ask first. Documents and highlights removed in the reading text land there too.
+- **Undo in the reading text too:** when a highlight is removed in the text or in the *Highlights* tab, **Undo** appears briefly at the bottom.
+- **Exporting:** right-click a folder → as PDF / print or as a Markdown file.
+- **Linking notes:** Bible references in a note (for example John 3:16) become links below the note. The note on John 3:16 shows at the bottom which other notes refer to it.
+
 ## 5.4 Bookmarks
 
 Bookmarks are the simplest list: verses you want to jump back to later, without a note.
@@ -61,4 +73,4 @@ In the **Verse overview** (Ctrl+G). It shows your notes, documents and highlight
 Everything lives in the vault and is included in every backup. For sharing:
 
 - *Settings → Export …* writes the active vault, including settings, as a ZIP; *Import …* creates a **new** vault from it.
-- *Export as Obsidian vault …* writes documents, highlights, notes, bookmarks, reading list and to-dos as a Markdown folder that Obsidian opens directly.
+- *Export as Obsidian vault …* (also by right-click in the Explorer) writes the whole vault as a Markdown folder: your folders as folders, every note and document as its own file, Bible references as links, plus highlights, bookmarks, reading list and to-dos. Obsidian and other note programs open it directly.

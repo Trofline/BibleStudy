@@ -16,14 +16,20 @@ public partial class MainWindow
 {
     // ---- taking steps back --------------------------------------------------------------------------------------------
 
-    sealed record UndoStep(string Vault, string Book, int Chapter, List<Mark> Marks);
+    /// <summary>
+    /// Trash: the entries a removal put into the trash (thrown away again when the step is taken back, so nothing comes back twice).
+    /// Jump: taking the step back opens its chapter (not for a mark deleted in the list of marks, far from the text).
+    /// </summary>
+    sealed record UndoStep(string Vault, string Book, int Chapter, List<Mark> Marks, List<long>? Trash = null, bool Jump = true);
 
     readonly List<UndoStep> _markUndo = [];
 
     /// <summary>Remembers the marks of this chapter as they are now (call before every change of marks).</summary>
-    void PushUndo()
+    void PushUndo() => PushUndo(_curBook, _curChapter);
+
+    void PushUndo(string book, int chapter, bool jump = true)
     {
-        _markUndo.Add(new UndoStep(_vault.Name, _curBook, _curChapter, _vault.GetMarks(_curBook, _curChapter)));
+        _markUndo.Add(new UndoStep(_vault.Name, book, chapter, _vault.GetMarks(book, chapter), Jump: jump));
         if (_markUndo.Count > 40) _markUndo.RemoveAt(0);
     }
 
@@ -33,9 +39,11 @@ public partial class MainWindow
         var step = _markUndo[^1];
         if (step.Vault != _vault.Name) { _markUndo.Clear(); StatusText.Text = L("Nichts rückgängig zu machen."); return; }
         _markUndo.RemoveAt(_markUndo.Count - 1);
-        if (step.Book != _curBook || step.Chapter != _curChapter) await GoToAsync(step.Book, step.Chapter);
+        if (step.Jump && (step.Book != _curBook || step.Chapter != _curChapter)) await GoToAsync(step.Book, step.Chapter);
         _vault.DeleteMarks(_vault.GetMarks(step.Book, step.Chapter).Select(m => m.Id));
         foreach (var m in step.Marks) _vault.AddMark(m.TranslationId, m.Ref, m.Start, m.End, m.Text, m.Color, m.Note, m.FolderId, m.Tags, m.EndVerse);
+        foreach (var t in step.Trash ?? []) _vault.DeleteFromTrash(t);
+        HideUndoToast();
         ClearTextSelection(true);
         RefreshCollection(); RefreshCells();
         StatusText.Text = L("Markierung rückgängig gemacht.");
@@ -69,15 +77,17 @@ public partial class MainWindow
     // ---- cutting out of older marks ---------------------------------------------------------------------------------
 
     /// <summary>Puts back what is left of a mark after a part was cut out of it (the mark itself is deleted; note, tags and folder go to every piece).</summary>
-    void KeepRemnants(Mark old, IEnumerable<MarkLogic.Spec> specs)
+    int KeepRemnants(Mark old, IEnumerable<MarkLogic.Spec> specs)
     {
         _vault.DeleteMark(old.Id);
+        var kept = 0;
         foreach (var sp in specs)
         {
             if (sp.Whole)
             {
                 var from = new VerseRef(old.Ref.Book, old.Ref.Chapter, sp.FirstVerse);
                 _vault.AddMark(old.TranslationId, from, -1, -1, VerseRangeText(sp.FirstVerse, sp.LastVerse), old.Color, old.Note, old.FolderId, old.Tags, sp.LastVerse);
+                kept++;
                 continue;
             }
             // a piece that is only blanks is not worth keeping; the ends of a piece lose their blanks
@@ -96,7 +106,9 @@ public partial class MainWindow
             var text = RangeText(old.TranslationId, fv, s, lv, e);
             if (text.Length == 0) continue;
             _vault.AddMark(old.TranslationId, new VerseRef(old.Ref.Book, old.Ref.Chapter, fv), s, e, text, old.Color, old.Note, old.FolderId, old.Tags, lv);
+            kept++;
         }
+        return kept;
     }
 
     Func<int, int> LengthIn(string translationId) => v => RawVerse(translationId, v).Length;
@@ -173,6 +185,7 @@ public partial class MainWindow
 
     Task RemoveMarksAsync()
     {
+        var gone = new List<Mark>();   // marks that went as a whole (a mark cut in two is no loss)
         if (_sel is { Parts.Count: > 0 } sel)
         {
             var first = sel.Parts[0]; var last = sel.Parts[^1];
@@ -184,8 +197,8 @@ public partial class MainWindow
             PushUndo();
             foreach (var m in affected)
             {
-                if (m.TranslationId == sel.TranslationId) KeepRemnants(m, MarkLogic.CarveText(m, cut, LengthIn(m.TranslationId)));
-                else _vault.DeleteMark(m.Id);
+                if (m.TranslationId != sel.TranslationId) { _vault.DeleteMark(m.Id); gone.Add(m); }
+                else if (KeepRemnants(m, MarkLogic.CarveText(m, cut, LengthIn(m.TranslationId))) == 0) gone.Add(m);
             }
         }
         else
@@ -196,11 +209,14 @@ public partial class MainWindow
             PushUndo();
             var cut = verses.Select(v => new MarkLogic.Piece(v, 0, int.MaxValue)).ToList();
             foreach (var m in touching)
-                KeepRemnants(m, m.WholeVerse ? MarkLogic.CarveWhole(m, verses) : MarkLogic.CarveText(m, cut, LengthIn(m.TranslationId)));
+                if (KeepRemnants(m, m.WholeVerse ? MarkLogic.CarveWhole(m, verses) : MarkLogic.CarveText(m, cut, LengthIn(m.TranslationId))) == 0) gone.Add(m);
         }
+        // what went as a whole waits in the trash as well (taking the step back throws those entries away again)
+        if (gone.Count > 0 && _markUndo.Count > 0) _markUndo[^1] = _markUndo[^1] with { Trash = gone.Select(_vault.KeepInTrash).ToList() };
         ClearTextSelection(false);
         RefreshCollection(); RefreshCells();
         StatusText.Text = L("Markierung entfernt · Strg+Z macht es rückgängig");
+        ShowUndoToast(gone.Count > 1 ? L("{0} Markierungen entfernt.", gone.Count) : L("Markierung entfernt."), UndoMarksAsync);
         return Task.CompletedTask;
     }
 

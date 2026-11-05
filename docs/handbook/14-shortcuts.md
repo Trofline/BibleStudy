@@ -39,6 +39,10 @@ Several of these shortcuts also work while you're typing in a text field (for ex
 | Shift+click | choose a range of whole verses |
 | Ctrl+C | copy the selected text |
 | Ctrl+Z | undo the last highlight |
+| Alt+← / Alt+→ | back / forward through the passages you read last (so do the side buttons of the mouse) |
+| Tab | switch between reading and the last tab (the dot on the tab sets which one) |
+| Middle mouse button | quick marking on/off |
+| In the Explorer: Ctrl+X, Ctrl+V, Del, Ctrl+Z, Ctrl+A | cut, paste, to the trash, undo, select all |
 | Esc | clear the selection |
 
 ## 14.2 Fixed shortcuts in the editor and in lists

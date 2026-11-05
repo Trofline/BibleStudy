@@ -23,18 +23,42 @@ public partial class MainWindow
         new("Violett", "#130F18", "#1A1520", "#231D2A", "#2F2738", "#2A2332"),
     ];
 
-    DarkPalette CurrentDark => DarkPalettes.FirstOrDefault(p => p.Key == _settings.DarkBackground) ?? DarkPalettes[0];
+    DarkPalette CurrentDark => DarkPalettes.FirstOrDefault(p => p.Key == _settings.DarkBackground) ?? (Color.TryParse(_settings.DarkBackground, out var own) ? OwnDark(own) : DarkPalettes[0]);
 
-    string[] DarkNames => [L("Nachtblau"), L("Schwarz"), L("Grau"), L("Warm"), L("Wald"), L("Violett")];
+    /// <summary>A dark palette from one own color: the page is that color (kept dark enough for the light text), cards and lines are a little lighter.</summary>
+    static DarkPalette OwnDark(Color c)
+    {
+        var lum = 0.2126 * c.R + 0.7152 * c.G + 0.0722 * c.B;   // 0..255
+        if (lum > 48) c = Mix(c, Colors.Black, 1 - 48 / lum);   // too light for a dark design: darken it
+        string Hex(double t) { var m = Mix(c, Colors.White, t); return $"#{m.R:X2}{m.G:X2}{m.B:X2}"; }
+        return new("Own", $"#{c.R:X2}{c.G:X2}{c.B:X2}", Hex(0.04), Hex(0.08), Hex(0.15), Hex(0.11));
+    }
+
+    string[] DarkNames => [L("Nachtblau"), L("Schwarz"), L("Grau"), L("Warm"), L("Wald"), L("Violett"), L("Eigene Farbe")];
 
     void InitAppearance()
     {
         DarkBackgroundBox.ItemsSource = DarkNames;
-        DarkBackgroundBox.SelectedIndex = Math.Max(0, Array.FindIndex(DarkPalettes, p => p.Key == _settings.DarkBackground));
+        var customDark = Color.TryParse(_settings.DarkBackground, out _);
+        DarkBackgroundBox.SelectedIndex = customDark ? DarkPalettes.Length : Math.Max(0, Array.FindIndex(DarkPalettes, p => p.Key == _settings.DarkBackground));
+        var lastDark = DarkBackgroundBox.SelectedIndex;
         DarkBackgroundBox.SelectionChanged += (_, _) =>
         {
-            if (DarkBackgroundBox.SelectedIndex < 0) return;
-            _settings.DarkBackground = DarkPalettes[DarkBackgroundBox.SelectedIndex].Key; SaveSettings();
+            var i = DarkBackgroundBox.SelectedIndex;
+            if (i < 0) return;
+            if (i == DarkPalettes.Length)   // own color: a picker; "Cancel" returns to the one before
+            {
+                var back = lastDark;
+                var start = Color.TryParse(_settings.DarkBackground, out var cur) ? cur : Color.Parse(CurrentDark.Background);
+                ShowCustomColor(start, hex =>
+                {
+                    _settings.DarkBackground = hex; SaveSettings(); lastDark = DarkPalettes.Length;
+                    ApplyDarkBackground(); ApplyAccent(_settings.Accent);
+                }, onClosedWithoutSave: () => DarkBackgroundBox.SelectedIndex = back);
+                return;
+            }
+            lastDark = i;
+            _settings.DarkBackground = DarkPalettes[i].Key; SaveSettings();
             ApplyDarkBackground(); ApplyAccent(_settings.Accent);
         };
         SelectionColorBox.ItemsSource = new[] { L("Akzentfarbe"), L("Grau"), L("Blau") };
@@ -46,8 +70,12 @@ public partial class MainWindow
             Paint(); await RedrawChapterAsync();
         };
         ApplyDarkBackground();
-        SelectWordsCheck.IsChecked = _settings.SelectWholeWords;
-        SelectWordsCheck.IsCheckedChanged += (_, _) => { _settings.SelectWholeWords = SelectWordsCheck.IsChecked == true; SaveSettings(); };
+        SelectModeBox.SelectedIndex = _settings.SelectWholeWords ? 0 : 1;   // word by word (default) or letter by letter
+        SelectModeBox.SelectionChanged += (_, _) =>
+        {
+            if (SelectModeBox.SelectedIndex < 0) return;
+            _settings.SelectWholeWords = SelectModeBox.SelectedIndex == 0; SaveSettings();
+        };
         BuildSubMarkPanel();
     }
 
@@ -91,7 +119,7 @@ public partial class MainWindow
     });
 
     /// <summary>A small window with a color picker; <paramref name="chosen"/> gets the color (#RRGGBB) when the user saves.</summary>
-    void ShowCustomColor(Color start, Action<string> chosen)
+    void ShowCustomColor(Color start, Action<string> chosen, Action? onClosedWithoutSave = null)
     {
         var picker = new ColorView { Color = start, IsAlphaVisible = false };
         var save = new Button { Content = L("Speichern"), Classes = { "primary" }, Margin = new(8, 0, 0, 0) };
@@ -102,11 +130,13 @@ public partial class MainWindow
             Children = { new TextBlock { Text = L("Eigene Farbe wählen"), Classes = { "h2" } }, picker, new WrapPanel { HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Right, Children = { cancel, save } } },
         };
         var win = new Window { Title = L("Eigene Farbe wählen"), Width = 420, SizeToContent = SizeToContent.Height, CanResize = false, Background = Res("BsSurface"), Icon = Icon, WindowStartupLocation = WindowStartupLocation.CenterOwner, Content = stack };
+        var saved = false;
         save.Click += (_, _) =>
         {
-            chosen(HexOf(picker.Color)); win.Close();
+            saved = true; chosen(HexOf(picker.Color)); win.Close();
         };
         cancel.Click += (_, _) => win.Close();
+        win.Closed += (_, _) => { if (!saved) onClosedWithoutSave?.Invoke(); };
         win.Show(this);
     }
 
@@ -121,6 +151,8 @@ public partial class MainWindow
         d["BsAccentFg"] = B(p.Surface);
         d["ComboBoxBackgroundPointerOver"] = B(p.Hover); d["ComboBoxBackgroundPressed"] = B(p.Hover);
         d["TabItemHeaderBackgroundUnselectedPointerOver"] = B(p.Hover);
+        d["MenuFlyoutPresenterBackground"] = B(p.Surface); d["MenuFlyoutPresenterBorderBrush"] = B(p.Border);
+        d["MenuFlyoutItemBackgroundPointerOver"] = B(p.Hover); d["MenuFlyoutItemBackgroundPressed"] = B(p.Hover);
     }
 
     /// <summary>The color that shows what is selected (a verse or text): the accent color of the program unless another one is chosen.</summary>

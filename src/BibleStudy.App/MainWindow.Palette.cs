@@ -137,7 +137,9 @@ public partial class MainWindow
             else if (DocumentLinks.BookId(text) is { } book && _books.FirstOrDefault(b => b.Id == book) is { } bk)
                 items.Add(new(L("Stelle"), bk.CommonName, L("Gehe zu"), () => GoToAsync(book, 1)));
 
-            items.AddRange(Commands().Where(c => c.Title.Contains(text, StringComparison.CurrentCultureIgnoreCase)).Take(25));
+            // a command is found by its title, by the plugin it belongs to, and by its category: "plugin" lists all plugin commands, "befehl" all commands
+            bool ByKind(PaletteItem c) => text.Length >= 3 && (c.Kind.StartsWith(text, StringComparison.CurrentCultureIgnoreCase) || text.StartsWith(c.Kind, StringComparison.CurrentCultureIgnoreCase) && text.Length <= c.Kind.Length + 2);
+            items.AddRange(Commands().Where(c => c.Title.Contains(text, StringComparison.CurrentCultureIgnoreCase) || c.Sub.Contains(text, StringComparison.CurrentCultureIgnoreCase) || ByKind(c)).Take(25));
 
             // everything of your own: documents, notes, highlights (with their notes and tags), prayers, to-dos, own cross references
             foreach (var h in OwnSearch.Search(_vault, text, 8))

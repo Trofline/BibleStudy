@@ -40,6 +40,18 @@ Im Vers-Menü (Rechtsklick) kannst du vor einem Vers eine **eigene Überschrift*
 
 Unter *Notizen → Markierungen* (die Sammlung) ordnest du Markierungen in **Ordner** und versiehst sie mit **Tags**. Der Knopf rechts oben zeigt die Markierungen **aller Vaults** gleichzeitig (auch im Lesetext, nur zum Ansehen) oder nur die des aktiven; der Zustand bleibt gespeichert. Auf Wunsch vergibt das Programm beim Speichern den **Buchnamen als Tag** (Einstellung). Ein Klick auf einen Eintrag springt zur Stelle.
 
+### Der Explorer
+
+Im Reiter **Explorer** (rechte Leiste) siehst du alle Markierungen und Notizen wie im Datei-Explorer: mit Ordnern und Unterordnern, einem Baum links, dem Pfad oben und einer sortierbaren Liste (Klick auf eine Spaltenüberschrift).
+
+- **Ordnen:** Einträge und Ordner per Ziehen in einen Ordner legen, oder **Strg+X** / **Strg+V**. **Doppelklick** oder **Enter** öffnet, **Entf** löscht, **Strg+Z** macht Löschen, Verschieben und Umbenennen rückgängig. Pfeiltasten wählen, mit Umschalt mehrere, **Strg+A** alles.
+- **Tippen springt:** Wer „u“ tippt, landet beim ersten Eintrag mit „u“. Schnell weitergetippt wird genauer gesucht. Das Feld darüber filtert den Ordner.
+- **Mehrere auf einmal:** Auswählen, dann Rechtsklick: **Farbe ändern …** und **Tags** (hinzufügen oder entfernen) für alle gewählten Markierungen. Auch das lässt sich zurücknehmen.
+- **Papierkorb:** Was du löschst, landet im **Papierkorb** (unten im Baum). Dort bleibt es **30 Tage**, auch nach einem Neustart. **Doppelklick**, **Enter** oder Rechtsklick → *Wiederherstellen* holt es zurück; ein gelöschter Ordner kommt mit seinem Inhalt. *Endgültig löschen …* und *Papierkorb leeren …* fragen vorher nach. Auch Dokumente und im Lesetext entfernte Markierungen landen dort.
+- **Rückgängig auch im Lesetext:** Wird eine Markierung im Text oder im Reiter *Markierungen* entfernt, erscheint unten kurz **Rückgängig**.
+- **Exportieren:** Rechtsklick auf einen Ordner → als PDF / Drucken oder als Markdown-Datei.
+- **Notizen verlinken:** Bibelstellen in einer Notiz (zum Beispiel Joh 3,16) werden unter der Notiz zu Links. Die Notiz zu Joh 3,16 zeigt unten, welche anderen Notizen auf sie verweisen.
+
 ## 5.4 Lesezeichen
 
 Lesezeichen sind die einfachste Liste: Verse, zu denen du später zurückspringen willst, ohne Notiz.
@@ -61,4 +73,4 @@ In der **Vers-Übersicht** (Strg+G). Sie zeigt deine Notizen, Dokumente und Mark
 Alles liegt im Vault und ist in jeder Sicherung enthalten. Zum Weitergeben:
 
 - *Einstellungen → Exportieren …* schreibt den aktiven Vault samt Einstellungen als ZIP; *Importieren …* legt daraus einen **neuen** Vault an.
-- *Als Obsidian-Vault exportieren …* schreibt Dokumente, Markierungen, Notizen, Lesezeichen, Leseliste und To-dos als Markdown-Ordner, den Obsidian direkt öffnet.
+- *Als Obsidian-Vault exportieren …* (auch per Rechtsklick im Explorer) schreibt den ganzen Vault als Markdown-Ordner: deine Ordner als Ordner, jede Notiz und jedes Dokument als eigene Datei, Bibelstellen als Links, dazu Markierungen, Lesezeichen, Leseliste und To-dos. Obsidian und andere Notiz-Programme öffnen ihn direkt.

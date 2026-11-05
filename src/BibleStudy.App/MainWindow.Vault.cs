@@ -129,8 +129,11 @@ public partial class MainWindow
         MarkDeleteBtn.Click += (_, _) =>
         {
             if (_editMark is not { } m) return;
-            if (m.Ref.Book == _curBook && m.Ref.Chapter == _curChapter) PushUndo();
-            _vault.DeleteMark(m.Id); CloseEditor(); RefreshCollection(); RefreshCells();
+            PushUndo(m.Ref.Book, m.Ref.Chapter, jump: false);
+            var t = _vault.TrashMark(m.Id);
+            _markUndo[^1] = _markUndo[^1] with { Trash = [t] };
+            CloseEditor(); RefreshCollection(); RefreshCells();
+            ShowUndoToast(L("Markierung „{0}“ gelöscht.", Shorten(MarkLabel(m), 40)), UndoMarksAsync);
         };
         MarkQueueBtn.Click += (_, _) => { if (_editMark is { } m) AddToQueue([m.Ref]); };
 
@@ -337,7 +340,7 @@ public partial class MainWindow
         var keepFolder = (FolderFilterBox.SelectedItem as Folder)?.Id;
         var keepNoFolder = FolderFilterBox.SelectedIndex == 1;
         var keepTag = TagFilterBox.SelectedIndex > 0 ? TagFilterBox.SelectedItem as string : null;
-        var folders = _vault.GetFolders();
+        var folders = FolderTree(_vault.GetFolders());
         var tags = _vault.GetTags().Select(t => t.Tag).ToList();
 
         _vaultUiLoading = true;
@@ -347,6 +350,7 @@ public partial class MainWindow
         TagFilterBox.SelectedIndex = keepTag is not null && tags.IndexOf(keepTag) is var j and >= 0 ? j + 1 : 0;
         _vaultUiLoading = false;
         DeleteFolderBtn.IsVisible = FolderFilterBox.SelectedItem is Folder;
+        if (!_exQuiet && _exBuilt && TabActive(ExplorerTab)) RefreshExplorer();
         ApplyCollectionFilter();
         RefreshNotesTree();   // the folders of the notes
         if (_noteRef is { } nr) LoadNoteFolderBox(nr); else { _noteFolderLoading = true; NoteFolderBox.ItemsSource = new List<object> { L("(kein Ordner)") }.Concat(folders).ToList(); NoteFolderBox.SelectedIndex = 0; _noteFolderLoading = false; }
@@ -361,7 +365,7 @@ public partial class MainWindow
         BuildEditSwatches();
         MarkNoteBox.Text = m.Note;
         MarkTagsBox.Text = string.Join(", ", m.Tags);
-        var folders = _vault.GetFolders();
+        var folders = FolderTree(_vault.GetFolders());
         MarkFolderBox.ItemsSource = new List<object> { L("(kein Ordner)") }.Concat(folders).ToList();
         MarkFolderBox.SelectedIndex = m.FolderId is long fid ? folders.FindIndex(f => f.Id == fid) + 1 : 0;
     }
@@ -379,7 +383,7 @@ public partial class MainWindow
     async Task SaveEditedMarkAsync()
     {
         if (_editMark is not { } m) return;
-        var folders = _vault.GetFolders();
+        var folders = FolderTree(_vault.GetFolders());
         long? folder = MarkFolderBox.SelectedIndex > 0 && MarkFolderBox.SelectedIndex <= folders.Count ? folders[MarkFolderBox.SelectedIndex - 1].Id : null;
         if (m.Ref.Book == _curBook && m.Ref.Chapter == _curChapter) PushUndo();
         _vault.UpdateMark(m.Id, _editColor, MarkNoteBox.Text ?? "", folder, (MarkTagsBox.Text ?? "").Split(',', ';'));

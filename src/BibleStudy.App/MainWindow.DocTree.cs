@@ -45,7 +45,7 @@ public partial class MainWindow
     void BuildDocTree(List<Document> docs, bool flat)
     {
         DocTree.Children.Clear();
-        var folders = _vault.GetFolders().OrderBy(f => f.Name, Comparer<string>.Create(NaturalCompare)).ToList();
+        var folders = FolderTree(_vault.GetFolders());
         if (flat || folders.Count == 0)
         {
             foreach (var d in docs) DocTree.Children.Add(DocRow(d, 0));
@@ -54,19 +54,19 @@ public partial class MainWindow
             return;
         }
         var known = folders.Select(f => f.Id).ToHashSet();
-        var groups = folders.Select(f => (f.Id, f.Name, Docs: docs.Where(d => d.FolderId == f.Id).ToList())).ToList();
-        groups.Add((0, L("Ohne Ordner"), docs.Where(d => d.FolderId is not long fid || !known.Contains(fid)).ToList()));
-        foreach (var (id, name, inFolder) in groups)
+        var groups = folders.Select(f => (f.Id, f.Name, f.Depth, Docs: docs.Where(d => d.FolderId == f.Id).ToList())).ToList();
+        groups.Add((0, L("Ohne Ordner"), 0, docs.Where(d => d.FolderId is not long fid || !known.Contains(fid)).ToList()));
+        foreach (var (id, name, depth, inFolder) in groups)
         {
             var open = !_closedDocFolders.Contains(id);
-            DocTree.Children.Add(FolderHeader(id, name, inFolder.Count, open));
+            DocTree.Children.Add(FolderHeader(id, name, inFolder.Count, open, depth));
             if (!open) continue;
             if (inFolder.Count == 0) DocTree.Children.Add(new TextBlock { Text = L("leer – hierher ziehen"), Classes = { "caption" }, Margin = new(30, 0, 0, 4), Opacity = 0.7 });
             foreach (var d in inFolder) DocTree.Children.Add(DocRow(d, 16));
         }
     }
 
-    Control FolderHeader(long id, string name, int count, bool open)
+    Control FolderHeader(long id, string name, int count, bool open, int depth = 0)
     {
         var line = new StackPanel
         {
@@ -79,7 +79,7 @@ public partial class MainWindow
                 new TextBlock { Text = count.ToString(), Classes = { "caption" }, VerticalAlignment = VerticalAlignment.Center },
             },
         };
-        var box = new Border { Padding = new(8, 8), CornerRadius = new(8), Background = Brushes.Transparent, Child = line, Cursor = new Cursor(StandardCursorType.Hand), Margin = new(0, 4, 0, 0) };
+        var box = new Border { Padding = new(8, 8), CornerRadius = new(8), Background = Brushes.Transparent, Child = line, Cursor = new Cursor(StandardCursorType.Hand), Margin = new(depth * 16, 4, 0, 0) };
         box.PointerReleased += (_, e) =>
         {
             if (_dragging || e.InitialPressMouseButton != MouseButton.Left) return;
@@ -155,10 +155,10 @@ public partial class MainWindow
         var none = new MenuItem { Header = L("Ohne Ordner") };
         none.Click += (_, _) => MoveDocument(d, null, L("Ohne Ordner"));
         move.Items.Add(none);
-        foreach (var f in _vault.GetFolders().OrderBy(f => f.Name, Comparer<string>.Create(NaturalCompare)))
+        foreach (var f in FolderTree(_vault.GetFolders()))
         {
             var folder = f;
-            var item = new MenuItem { Header = "📁 " + folder.Name };
+            var item = new MenuItem { Header = new string(' ', folder.Depth * 4) + "📁 " + folder.Name };
             item.Click += (_, _) => MoveDocument(d, folder.Id, folder.Name);
             move.Items.Add(item);
         }
@@ -182,14 +182,8 @@ public partial class MainWindow
             RefreshDocs(); RefreshCollection();
         };
 
-        var delete = new MenuItem { Header = L("Löschen …") };
-        delete.Click += (_, _) =>
-        {
-            var sure = new Button { Content = L("Ja, endgültig löschen"), Classes = { "primary" } };
-            var fly = new Flyout { Content = new StackPanel { Spacing = 8, Children = { new TextBlock { Text = L("„{0}“ wirklich löschen?", d.Title), MaxWidth = 240, TextWrapping = TextWrapping.Wrap }, sure } } };
-            sure.Click += (_, _) => { fly.Hide(); _vault.DeleteDocument(d.Id); RefreshDocs(); RefreshCollection(); };
-            fly.ShowAt(anchor);
-        };
+        var delete = new MenuItem { Header = L("Löschen") };
+        delete.Click += (_, _) => TrashDocumentWithUndo(d);
         return new ContextMenu { Items = { open, move, category, copy, new Separator(), delete } };
     }
 

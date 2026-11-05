@@ -25,3 +25,8 @@ Example:
 - **[Mini-Feature]** **Klick auf markierte Wörter:** …
 - **[Verbesserung]** **Updatesuche:** …
 ```
+
+## Keep bug fixes short
+
+Features and improvements get a real explanation. A `[Fehler behoben]` / `[Hotfix]` item is only one short line
+saying what now works (e.g. "Kapitel-Pfeile bleiben am Anfang und Ende der Bibel stehen"), without describing the defect or its cause.

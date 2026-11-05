@@ -1,6 +1,7 @@
 ﻿using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
+using Avalonia.Controls.Shapes;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Layout;
@@ -77,6 +78,7 @@ public partial class MainWindow
         else if (index == SentenceTab) _ = ShowSentenceAsync(true);
         else if (index == PericopeTab) _ = ShowPericopeAsync(false);
         else if (index == HandbookTab) BuildHandbookUi();
+        else if (index == ExplorerTab) { BuildExplorer(); RefreshExplorer(); ExplorerHost.Focus(); }
         else if (index == GrundtextTab && _selected is int gv) _ = ShowGrundtextAsync(new VerseRef(_curBook, _curChapter, gv));
         else if (index == CollabTab && CollabPanel.Children.Count == 0) BuildCollabUi();
         else if (index == AnalysisTab) BuildAnalysisUi();
@@ -181,12 +183,30 @@ public partial class MainWindow
         if (key is not null && !(_windows.TryGetValue(key, out var d) && d.Win is null)) key = null;
         var before = _activeWork;
         _activeWork = key;
+        if (key is not null) _lastWorkTab = key;
         foreach (var w in _windows.Values.Where(w => w.Win is null)) w.Panel.IsVisible = w.Key == key;
         if (key is not null && key != before && _windows.TryGetValue(key, out var fresh)) AnimateIn(fresh.Panel);
         WorkHost.IsVisible = key is not null;
         UpdateReadBar();
         RebuildTabStrip();
         if (key is not null && _windows.TryGetValue(key, out var shown)) TabShown(shown.Current);
+    }
+
+    string? _lastWorkTab;
+
+    /// <summary>
+    /// The Tab key: from the reading tab to the pinned tab (the dot on a tab), or to the tab you were on last; from any other tab back to reading.
+    /// </summary>
+    void SwitchReadTab()
+    {
+        if (_activeWork is not null) { ShowReader(); return; }
+        var target = _settings.PinnedTab ?? _lastWorkTab;
+        if (target is null || NavGroups.FirstOrDefault(g => "group:" + g.Name == target) is not { } g)
+        {
+            StatusText.Text = L("Noch kein anderer Reiter offen. Öffne einen Reiter oder setze den Punkt an einem Reiter, dann wechselt Tab dorthin.");
+            return;
+        }
+        OpenWork(g);
     }
 
     void UpdateReadBar() => ReadBar.IsVisible = ReaderHost.IsVisible && !WorkHost.IsVisible && !_settings.FocusMode;
@@ -208,7 +228,7 @@ public partial class MainWindow
         plus.Click += (_, _) =>
         {
             var menu = new MenuFlyout();
-            foreach (var name in new[] { "Bücher", "Dokumente", "Predigt", "Planen", "Studium", "Original", "Mehr", "Hilfe" })   // the inner names; the menu shows them translated
+            foreach (var name in new[] { "Bücher", "Dokumente", "Predigt", "Planen", "Markierung", "Studium", "Lernen", "Mehr", "Hilfe" })   // the inner names; the menu shows them translated
             {
                 if (NavGroups.FirstOrDefault(x => x.Name == name) is not { } g) continue;
                 var item = new MenuItem { Header = name == "Mehr" ? L("Einstellungen") : L(name), IsEnabled = !_windows.ContainsKey("group:" + name) };
@@ -230,6 +250,18 @@ public partial class MainWindow
         var b = new Button { Classes = { "wtab" }, Content = row };
         b.Classes.Set("active", active);
         ToolTip.SetTip(b, key is null ? L("Zurück zum Bibeltext") : windowed ? L("Liegt in einem eigenen Fenster – klicken holt es nach vorn") : L("Klicken wechselt hierher. Nach unten ziehen macht ein eigenes Fenster daraus."));
+        if (closable && key is not null)
+        {
+            // the dot: the Tab key always switches between reading and this tab (no dot anywhere: the tab you were on last)
+            var pinned = _settings.PinnedTab == key;
+            var dot = new Button { Classes = { "tool" }, Width = 18, Height = 22, Padding = new(0), Opacity = pinned ? 1 : 0.45,
+                Content = new Ellipse { Width = 8, Height = 8, StrokeThickness = 1.5 } };
+            ((Ellipse)dot.Content).Bind(Shape.StrokeProperty, this.GetResourceObservable(pinned ? "BsAccent" : "BsMuted"));
+            if (pinned) ((Ellipse)dot.Content).Bind(Shape.FillProperty, this.GetResourceObservable("BsAccent"));
+            ToolTip.SetTip(dot, pinned ? L("Tab wechselt immer zwischen Lesen und diesem Reiter. Klicken hebt das auf.") : L("Klicken: Die Tab-Taste wechselt dann immer zwischen Lesen und diesem Reiter."));
+            dot.Click += (_, e) => { e.Handled = true; _settings.PinnedTab = pinned ? null : key; SaveSettings(); RebuildTabStrip(); };
+            row.Children.Insert(0, dot);
+        }
         if (closable)
         {
             var x = new Button { Classes = { "tool" }, Width = 22, Height = 22, Padding = new(0), Content = new Icon { Data = Geometry.Parse("M18 6L6 18 M6 6l12 12"), IconSize = 12 } };

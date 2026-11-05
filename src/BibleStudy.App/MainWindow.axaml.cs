@@ -127,6 +127,8 @@ public partial class MainWindow : Window
 
         HomeBtn.Click += (_, _) => ShowHome();
         BackBtn.Click += async (_, _) => await GoBackAsync();
+        ForwardBtn.Click += async (_, _) => await GoForwardAsync();
+        AddHandler(PointerPressedEvent, OnMouseSideButtons, Avalonia.Interactivity.RoutingStrategies.Tunnel);
         ReadBtn.Click += (_, _) => SetRead(_curBook, [_curChapter], ReadBtn.IsChecked == true);
         Home.ChapterChosen += async (book, chapter) => await GoToAsync(book, chapter);
         Home.ReadChanged += SetRead;
@@ -148,11 +150,11 @@ public partial class MainWindow : Window
             await ShowChapterAsync();
         };
         ChapterBox.ValueChanged += async (_, _) => { if (!_loading) ShowReader(); await ShowChapterAsync(); };
-        PrevBtn.Click += (_, _) => ChapterBox.Value -= 1;
-        NextBtn.Click += (_, _) =>
+        PrevBtn.Click += async (_, _) => await StepChapterAsync(-1);
+        NextBtn.Click += async (_, _) =>
         {
             if (_settings.AutoMarkRead && _curBook != "") SetRead(_curBook, [_curChapter], true);
-            ChapterBox.Value += 1;
+            await StepChapterAsync(1);
         };
         BookmarkBtn.Click += (_, _) => ToggleBookmark();
         ParallelBtn.Click += (_, _) => AddColumn();
@@ -279,14 +281,65 @@ public partial class MainWindow : Window
         await ShowChapterAsync(verse);
     }
 
+    /// <summary>One chapter forward or back; at the end of a book it goes on to the next (or the last chapter of the previous) book and stops at the first and last book.</summary>
+    async Task StepChapterAsync(int delta)
+    {
+        if (BookBox.SelectedItem is not BookInfo book) return;
+        var chapter = (int)(ChapterBox.Value ?? 1) + delta;
+        var i = _books.ToList().IndexOf(book);
+        if (chapter < 1)
+        {
+            if (i <= 0) return;
+            var prev = _books[i - 1];
+            await GoToAsync(prev.Id, prev.NumberOfChapters);
+        }
+        else if (chapter > book.NumberOfChapters)
+        {
+            if (i < 0 || i >= _books.Count - 1) return;
+            await GoToAsync(_books[i + 1].Id, 1);
+        }
+        else ChapterBox.Value = chapter;
+    }
+
     async Task GoBackAsync()
     {
         if (Home.IsVisible || GraphPane.IsVisible || FamilyPane.IsVisible || TimelinePane.IsVisible || MapPane.IsVisible || KnowledgePane.IsVisible) { ShowReader(); return; }
         if (_history.Count < 2) return;
+        _forward.Add(_history[^1]);
         _history.RemoveAt(_history.Count - 1);
         var (book, chapter) = _history[^1];
         _history.RemoveAt(_history.Count - 1); // GoToAsync records it again
-        await GoToAsync(book, chapter);
+        _byHistory = true;
+        try { await GoToAsync(book, chapter); } finally { _byHistory = false; }
+        UpdateHistoryButtons();
+    }
+
+    /// <summary>The way back again, after <see cref="GoBackAsync"/>; a new jump somewhere else forgets it (as in a browser).</summary>
+    async Task GoForwardAsync()
+    {
+        if (Home.IsVisible || GraphPane.IsVisible || FamilyPane.IsVisible || TimelinePane.IsVisible || MapPane.IsVisible || KnowledgePane.IsVisible) ShowReader();
+        if (_forward.Count == 0) return;
+        var (book, chapter) = _forward[^1];
+        _forward.RemoveAt(_forward.Count - 1);
+        _byHistory = true;
+        try { await GoToAsync(book, chapter); } finally { _byHistory = false; }
+        UpdateHistoryButtons();
+    }
+
+    readonly List<(string Book, int Chapter)> _forward = [];
+    bool _byHistory;
+
+    void UpdateHistoryButtons()
+    {
+        ForwardBtn.IsEnabled = _forward.Count > 0;
+    }
+
+    /// <summary>The side buttons of the mouse (back / forward), anywhere in the window.</summary>
+    void OnMouseSideButtons(object? sender, PointerPressedEventArgs e)
+    {
+        var p = e.GetCurrentPoint(this).Properties;
+        if (p.IsXButton1Pressed) { e.Handled = true; _ = GoBackAsync(); }
+        else if (p.IsXButton2Pressed) { e.Handled = true; _ = GoForwardAsync(); }
     }
 
     void SetRead(string book, IReadOnlyList<int> chapters, bool read)
@@ -431,7 +484,8 @@ public partial class MainWindow : Window
             else ReaderScroll.Offset = default;
 
             ReadBtn.IsChecked = _read.Contains((b.Id, number));
-            if (_history.Count == 0 || _history[^1] != (b.Id, number)) { _history.Add((b.Id, number)); if (_history.Count > 100) _history.RemoveAt(0); }
+            if (_history.Count == 0 || _history[^1] != (b.Id, number)) { _history.Add((b.Id, number)); if (_history.Count > 100) _history.RemoveAt(0); if (!_byHistory) _forward.Clear(); }
+            UpdateHistoryButtons();
             _settings.TranslationId = t.Id; _settings.BookId = b.Id; _settings.Chapter = number;
             UpdateTitle(b.CommonName, number, t.ShortName);
             LibraryFollowReader();

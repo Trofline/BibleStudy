@@ -4,9 +4,12 @@ using Microsoft.Data.Sqlite;
 namespace BibleStudy.Core.Storage;
 
 public sealed record Note(VerseRef Ref, string Text, long? FolderId = null);
-public sealed record Folder(long Id, string Name)
+/// <summary>A folder for marks, notes and documents; ParentId makes it a sub-folder (null = at the top).</summary>
+public sealed record Folder(long Id, string Name, long? ParentId = null)
 {
-    public override string ToString() => Name;
+    /// <summary>How deep the folder lies in the tree (set when folders are listed as a tree; 0 = at the top).</summary>
+    public int Depth { get; init; }
+    public override string ToString() => new string(' ', Depth * 4) + Name;
 }
 public sealed record QueueItem(long Id, VerseRef Ref, string Label);
 /// <summary>A note or linked file of the knowledge base. Notes have text; linked files have a path (and their text, if it could be read).</summary>
@@ -43,7 +46,7 @@ public sealed record Heading(long Id, VerseRef Ref, string Text, int Level);
 /// Personal data of one vault: reading progress, notes, highlights (with colors, tags, folders), queue and to-dos.
 /// Every vault is one SQLite file, so a vault can be copied, backed up or shared as a single file.
 /// </summary>
-public sealed class VaultStore : SqliteDb
+public sealed partial class VaultStore : SqliteDb
 {
     public string Name { get; }
 
@@ -80,10 +83,14 @@ public sealed class VaultStore : SqliteDb
             Exec("ALTER TABLE notes ADD COLUMN folder_id INT");
         if (Query("SELECT 1 FROM pragma_table_info('documents') WHERE name='folder_id'", _ => { }, _ => 1).Count == 0)
             Exec("ALTER TABLE documents ADD COLUMN folder_id INT");
+        // folders can lie in folders (the explorer of the marks; older vaults keep all folders at the top)
+        if (Query("SELECT 1 FROM pragma_table_info('folders') WHERE name='parent_id'", _ => { }, _ => 1).Count == 0)
+            Exec("ALTER TABLE folders ADD COLUMN parent_id INT");
         // the checklist got sub-tasks, a due date and an order of its own
         foreach (var (column, type) in new[] { ("parent_id", "INT"), ("due", "TEXT"), ("pos", "INT") })
             if (Query($"SELECT 1 FROM pragma_table_info('todos') WHERE name='{column}'", _ => { }, _ => 1).Count == 0)
                 Exec($"ALTER TABLE todos ADD COLUMN {column} {type}");
+        InitTrash();
     }
 
     /// <summary>
@@ -163,7 +170,23 @@ public sealed class VaultStore : SqliteDb
 
     // ---- folders ----------------------------------------------------------------------------------------------------
 
-    public List<Folder> GetFolders() => Query("SELECT id,name FROM folders ORDER BY name COLLATE NOCASE", _ => { }, r => new Folder(r.GetInt64(0), r.GetString(1)));
+    public List<Folder> GetFolders() => Query("SELECT id,name,parent_id FROM folders ORDER BY name COLLATE NOCASE", _ => { }, r => new Folder(r.GetInt64(0), r.GetString(1), r.IsDBNull(2) ? null : r.GetInt64(2)));
+
+    /// <summary>Puts a folder into another one (null = to the top). A folder can not go into itself or into one of its own sub-folders.</summary>
+    public bool SetFolderParent(long id, long? parentId)
+    {
+        if (parentId is long p)
+        {
+            var parents = GetFolders().ToDictionary(f => f.Id, f => f.ParentId);
+            for (long? at = p; at is long a; at = parents.GetValueOrDefault(a)) if (a == id) return false;
+        }
+        Exec("UPDATE folders SET parent_id=$p WHERE id=$i", c => { c.Parameters.AddWithValue("$p", (object?)parentId ?? DBNull.Value); c.Parameters.AddWithValue("$i", id); });
+        return true;
+    }
+
+    /// <summary>Moves a mark into a folder (null = out of every folder) without touching anything else.</summary>
+    public void SetMarkFolder(long markId, long? folderId) =>
+        Exec("UPDATE marks SET folder_id=$f WHERE id=$i", c => { c.Parameters.AddWithValue("$f", (object?)folderId ?? DBNull.Value); c.Parameters.AddWithValue("$i", markId); });
 
     public long AddFolder(string name)
     {
@@ -173,6 +196,18 @@ public sealed class VaultStore : SqliteDb
         return (long)cmd.ExecuteScalar()!;
     }
 
+    /// <summary>Brings a deleted folder back, with its old id when that is still free (else with a new one); returns the id it got.</summary>
+    public long RestoreFolder(long id, string name, long? parentId)
+    {
+        var taken = Query("SELECT 1 FROM folders WHERE id=$i", c => c.Parameters.AddWithValue("$i", id), _ => 1).Count > 0;
+        if (taken) { var made = AddFolder(name); SetFolderParent(made, parentId); return made; }
+        Exec("INSERT INTO folders(id,name,parent_id) VALUES($i,$n,$p)", c =>
+        {
+            c.Parameters.AddWithValue("$i", id); c.Parameters.AddWithValue("$n", name.Trim()); c.Parameters.AddWithValue("$p", (object?)parentId ?? DBNull.Value);
+        });
+        return id;
+    }
+
     public void RenameFolder(long id, string name) =>
         Exec("UPDATE folders SET name=$n WHERE id=$i", c => { c.Parameters.AddWithValue("$n", name.Trim()); c.Parameters.AddWithValue("$i", id); });
 
@@ -180,8 +215,9 @@ public sealed class VaultStore : SqliteDb
     public void SetDocumentFolder(long documentId, long? folderId) =>
         Exec("UPDATE documents SET folder_id=$f WHERE id=$i", c => { c.Parameters.AddWithValue("$f", (object?)folderId ?? DBNull.Value); c.Parameters.AddWithValue("$i", documentId); });
 
-    /// <summary>Deletes the folder; its marks and documents are kept (without folder).</summary>
+    /// <summary>Deletes the folder; its marks and documents are kept (without folder), its sub-folders move up one level.</summary>
     public void DeleteFolder(long id) => InTransaction(id,
+        "UPDATE folders SET parent_id=(SELECT parent_id FROM folders WHERE id=$i) WHERE parent_id=$i",
         "UPDATE marks SET folder_id=NULL WHERE folder_id=$i", "UPDATE documents SET folder_id=NULL WHERE folder_id=$i",
         "UPDATE notes SET folder_id=NULL WHERE folder_id=$i", "DELETE FROM folders WHERE id=$i");
 
@@ -236,6 +272,16 @@ public sealed class VaultStore : SqliteDb
         }
         SetTags(con, id, tags);
         tx.Commit();
+    }
+
+    /// <summary>Brings a deleted mark back as it was, with its old id when that is still free; returns the id it got.</summary>
+    public long RestoreMark(Mark m)
+    {
+        var made = AddMark(m.TranslationId, m.Ref, m.Start, m.End, m.Text, m.Color, m.Note, m.FolderId, m.Tags, m.EndVerse);
+        var taken = Query("SELECT 1 FROM marks WHERE id=$i", c => c.Parameters.AddWithValue("$i", m.Id), _ => 1).Count > 0;
+        if (taken) return made;
+        Exec("UPDATE marks SET id=$o WHERE id=$n; UPDATE mark_tags SET mark_id=$o WHERE mark_id=$n", c => { c.Parameters.AddWithValue("$o", m.Id); c.Parameters.AddWithValue("$n", made); });
+        return m.Id;
     }
 
     public void DeleteMark(long id) => InTransaction(id, "DELETE FROM mark_tags WHERE mark_id=$i", "DELETE FROM marks WHERE id=$i");

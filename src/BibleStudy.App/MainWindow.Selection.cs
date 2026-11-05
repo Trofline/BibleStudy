@@ -320,11 +320,13 @@ public partial class MainWindow
 
     bool TextFieldHasFocus() => TopLevel.GetTopLevel(this)?.FocusManager?.GetFocusedElement() is TextBox;
 
+    bool FocusInExplorer() => TopLevel.GetTopLevel(this)?.FocusManager?.GetFocusedElement() is Avalonia.Visual v && (v == ExplorerHost || ExplorerHost.IsVisualAncestorOf(v));
+
     void OnSelKeyDown(object? sender, KeyEventArgs e)
     {
         if (e.Handled) return;
         var ctrl = e.KeyModifiers.HasFlag(KeyModifiers.Control) && !e.KeyModifiers.HasFlag(KeyModifiers.Shift) && !e.KeyModifiers.HasFlag(KeyModifiers.Alt);
-        if (e.Key == Key.Escape && (_sel is not null || _selVerses.Count > 1))
+        if (e.Key == Key.Escape && (_sel is not null || _selVerses.Count > 1) && !FocusInExplorer())
         {
             ClearTextSelection(true);
             if (_selVerses.Count > 1 && _selected is int keep) { SelectVerse(keep); }
@@ -336,7 +338,7 @@ public partial class MainWindow
             if (text.Length > 0 && TopLevel.GetTopLevel(this)?.Clipboard is { } cb) { _ = cb.SetTextAsync(text); StatusText.Text = L("Kopiert: „{0}“", Shorten(text, 60)); }
             e.Handled = true;
         }
-        else if (ctrl && e.Key == Key.Z && !TextFieldHasFocus() && _markUndo.Count > 0)
+        else if (ctrl && e.Key == Key.Z && !TextFieldHasFocus() && !FocusInExplorer() && _markUndo.Count > 0)   // the explorer has its own steps back
         {
             e.Handled = true;
             _ = UndoMarksAsync();
@@ -444,6 +446,13 @@ public partial class MainWindow
             StatusText.Text = _settings.QuickMark ? L("Schnellmarkieren an: Was du im Text auswählst, wird sofort markiert.") : L("Schnellmarkieren aus.");
         };
         QuickColorBtn.Click += (_, _) => ShowQuickColorFlyout();
+        // the middle mouse button in the text turns quick marking on and off
+        ReaderHost.AddHandler(PointerPressedEvent, (object? _, PointerPressedEventArgs e) =>
+        {
+            if (!e.GetCurrentPoint(ReaderHost).Properties.IsMiddleButtonPressed) return;
+            e.Handled = true;
+            QuickMarkBtn.IsChecked = QuickMarkBtn.IsChecked != true;
+        }, Avalonia.Interactivity.RoutingStrategies.Tunnel);
     }
 
     void UpdateQuickUi()

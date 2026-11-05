@@ -25,9 +25,10 @@ public partial class MainWindow
             new("quickjump", L("Gehe zu Stelle oder suchen"), "Ctrl+K", () => Sync(() => { QuickJumpBox.Focus(); QuickJumpBox.SelectAll(); }), true),
             new("search", L("Suche öffnen"), "Ctrl+F", () => Sync(() => { SetPanelOpen(true); SideTabs.SelectedIndex = 0; SearchBox.Focus(); SearchBox.SelectAll(); }), true),
             new("back", L("Zurück zur vorherigen Stelle"), "Alt+Left", GoBackAsync, true),
+            new("forward", L("Vorwärts zur nächsten Stelle"), "Alt+Right", GoForwardAsync, true),
             new("home", L("Startseite"), "Alt+Home", () => Sync(ShowHome), true),
-            new("prev", L("Voriges Kapitel"), "Ctrl+Left", () => Sync(() => { if (ChapterBox.Value > ChapterBox.Minimum) ChapterBox.Value -= 1; })),
-            new("next", L("Nächstes Kapitel"), "Ctrl+Right", () => Sync(() => ChapterBox.Value += 1)),
+            new("prev", L("Voriges Kapitel"), "Ctrl+Left", () => StepChapterAsync(-1)),
+            new("next", L("Nächstes Kapitel"), "Ctrl+Right", () => StepChapterAsync(1)),
             new("read", L("Kapitel als gelesen markieren"), "Ctrl+R", () => Sync(() => { if (_curBook != "") SetRead(_curBook, [_curChapter], !_read.Contains((_curBook, _curChapter))); })),
             new("bookmark", L("Vers merken"), "Ctrl+D", () => Sync(ToggleBookmark)),
             new("copy", L("Vers mit Stelle kopieren"), "Ctrl+Shift+C", CopyVerseAsync, true),
@@ -40,6 +41,7 @@ public partial class MainWindow
             new("guide", L("Vers-Übersicht öffnen"), "Ctrl+G", () => Sync(() => { SetPanelOpen(true); SideTabs.SelectedIndex = GuideTab; }), true),
             new("docs", L("Dokumente öffnen"), "Ctrl+Shift+D", () => Sync(() => OpenWork(NavGroups.First(g => g.Name == "Dokumente"))), true),
             new("popout", L("Aktuelles Seitenfenster auslagern"), "Ctrl+Shift+O", () => Sync(() => PopOutTab(SideTabs.SelectedIndex)), true),
+            new("tabswitch", L("Zwischen Lesen und dem gewählten Reiter wechseln"), "Tab", () => Sync(SwitchReadTab)),
         ];
         BuildKeysPanel();
         ResetKeysBtn.Click += (_, _) => { _settings.KeyBindings.Clear(); SaveSettings(); BuildKeysPanel(); };

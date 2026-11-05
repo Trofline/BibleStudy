@@ -45,6 +45,7 @@ public partial class MainWindow
             if (_noteFolderLoading || _noteRef is not { } r) return;
             if (_vault.GetNotes().Any(n => n.Ref == r)) { _vault.SetNoteFolder(r, SelectedNoteFolder()); RefreshNotesTree(); }
         };
+        NoteEditor.TextChanged += (_, _) => ShowNoteLinks(backlinks: false);
         RefreshNotesTree();
     }
 
@@ -60,7 +61,7 @@ public partial class MainWindow
     void LoadNoteFolderBox(VerseRef r)
     {
         _noteFolderLoading = true;
-        var folders = _vault.GetFolders();
+        var folders = FolderTree(_vault.GetFolders());
         NoteFolderBox.ItemsSource = new List<object> { L("(kein Ordner)") }.Concat(folders).ToList();
         var current = _vault.GetNotes().FirstOrDefault(n => n.Ref == r)?.FolderId;
         NoteFolderBox.SelectedIndex = current is long id && folders.FindIndex(f => f.Id == id) is var i and >= 0 ? i + 1 : 0;
@@ -73,10 +74,12 @@ public partial class MainWindow
     {
         if (_vault is null) return;
         var all = _vault.GetNotes();
+        ShowNoteLinks(backlinks: true);   // a note that was saved or deleted changes what mentions this verse
+        if (!_exQuiet && _exBuilt && TabActive(ExplorerTab)) RefreshExplorer();
         var query = NotesSearchBox.Text?.Trim() ?? "";
         var words = query.Split(' ', StringSplitOptions.RemoveEmptyEntries);
         var shown = words.Length == 0 ? all : all.Where(n => NoteMatches(Label(n.Ref), n.Text, words)).ToList();
-        var folders = _vault.GetFolders().OrderBy(f => f.Name, Comparer<string>.Create(NaturalCompare)).ToList();
+        var folders = FolderTree(_vault.GetFolders());
         NotesEmpty.IsVisible = all.Count == 0;
         NotesCount.Text = all.Count == 0 ? "" : words.Length > 0 ? L("{0} von {1} Notizen", shown.Count, all.Count) : L("{0} Notizen", all.Count);
         NotesTree.Children.Clear();
@@ -91,15 +94,15 @@ public partial class MainWindow
         }
         var searching = words.Length > 0;
 
-        void Group(string key, string title, int count, Action<StackPanel> fill, MenuFlyout? menu = null)
+        void Group(string key, string title, int count, Action<StackPanel> fill, MenuFlyout? menu = null, int depth = 0)
         {
             var open = searching || _noteOpen.Contains(key);
-            var head = new Button { Classes = { "ghost" }, HorizontalAlignment = HorizontalAlignment.Stretch, HorizontalContentAlignment = HorizontalAlignment.Left, Padding = new(6, 5), Margin = new(0, 2, 0, 0), Content = $"{(open ? "▾" : "▸")}  {title}   ·   {count}", FontWeight = FontWeight.SemiBold };
+            var head = new Button { Classes = { "ghost" }, HorizontalAlignment = HorizontalAlignment.Stretch, HorizontalContentAlignment = HorizontalAlignment.Left, Padding = new(6, 5), Margin = new(depth * 16, 2, 0, 0), Content = $"{(open ? "▾" : "▸")}  {title}   ·   {count}", FontWeight = FontWeight.SemiBold };
             head.Click += (_, _) => { _notesTouched = true; if (!_noteOpen.Remove(key)) _noteOpen.Add(key); RefreshNotesTree(); };
             if (menu is not null) head.ContextFlyout = menu;
             NotesTree.Children.Add(head);
             if (!open) return;
-            var body = new StackPanel { Spacing = 1, Margin = new(14, 0, 0, 4) };
+            var body = new StackPanel { Spacing = 1, Margin = new(14 + depth * 16, 0, 0, 4) };
             fill(body);
             NotesTree.Children.Add(body);
         }
@@ -113,7 +116,7 @@ public partial class MainWindow
             var delete = new MenuItem { Header = L("Ordner löschen (die Notizen bleiben)") };
             delete.Click += (_, _) => { _vault.DeleteFolder(folder.Id); RefreshCollection(); };
             menu.Items.Add(delete);
-            Group("f:" + f.Id, f.Name, inFolder.Count, body => { foreach (var n in inFolder) body.Children.Add(NoteRow(n, folders)); }, menu);
+            Group("f:" + f.Id, f.Name, inFolder.Count, body => { foreach (var n in inFolder) body.Children.Add(NoteRow(n, folders)); }, menu, f.Depth);
         }
         var folderIds = folders.Select(f => f.Id).ToHashSet();
         var loose = shown.Where(n => n.FolderId is not long id || !folderIds.Contains(id)).ToList();
@@ -150,7 +153,7 @@ public partial class MainWindow
         move.Items.Add(none);
         foreach (var f in folders)
         {
-            var id = f.Id; var item = new MenuItem { Header = f.Name };
+            var id = f.Id; var item = new MenuItem { Header = f.ToString() };
             item.Click += (_, _) => { _vault.SetNoteFolder(n.Ref, id); _noteOpen.Add("f:" + id); RefreshNotesTree(); if (_noteRef == n.Ref) LoadNoteFolderBox(n.Ref); };
             move.Items.Add(item);
         }
