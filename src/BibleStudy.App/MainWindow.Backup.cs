@@ -35,6 +35,7 @@ public partial class MainWindow
         };
         BackupSyncBtn.Click += (_, _) => ShowSyncthingMenu();
         BackupNowBtn.Click += async (_, _) => await RunBackupAsync(manual: true);
+        BackupCleanupBtn.Click += async (_, _) => await ShowBackupCleanupAsync();
         ShowBackupState();
         // a while after the start (the reader comes first), then every hour
         DispatcherTimer.RunOnce(async () => await AutoBackupIfDueAsync(), TimeSpan.FromSeconds(25));

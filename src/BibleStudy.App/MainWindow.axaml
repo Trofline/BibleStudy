@@ -867,6 +867,7 @@
                                 </WrapPanel>
                                 <TextBlock Classes="caption" TextWrapping="Wrap" Text="Zwischen mehreren Geräten: Lege die Sicherungen in einen Syncthing-Ordner. Synchronisiere nie den laufenden Datenordner selbst, das kann Dateien beschädigen." />
                                 <TextBlock x:Name="AutoBackupInfo" Classes="caption" TextWrapping="Wrap" />
+                                <Button x:Name="BackupCleanupBtn" Content="Sicherungen aufräumen …" HorizontalAlignment="Left" ToolTip.Tip="Zeigt alle Sicherungen mit ihrer Größe. Hake an, was gelöscht werden soll." />
                             </StackPanel></Border>
 
                             <Border Classes="card"><StackPanel Spacing="8">
