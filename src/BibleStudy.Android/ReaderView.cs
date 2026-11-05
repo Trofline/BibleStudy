@@ -34,7 +34,7 @@ public sealed class ReaderView : UserControl
     readonly Button _trBtn = Btn(""), _placeBtn = Btn(""), _readBtn = Btn("");
     readonly StackPanel _verses = new() { Margin = new(14, 8, 14, 24), Spacing = 2 };
     readonly ScrollViewer _scroll = new();
-    readonly StackPanel _colorBar = new() { Orientation = Orientation.Horizontal, Spacing = 8, HorizontalAlignment = HorizontalAlignment.Center, Margin = new(0, 6), IsVisible = false };
+    readonly WrapPanel _colorBar = new() { Orientation = Orientation.Horizontal, HorizontalAlignment = HorizontalAlignment.Center, Margin = new(0, 6), IsVisible = false };
     readonly TextBlock _status = new() { Margin = new(14, 4), TextWrapping = TextWrapping.Wrap, IsVisible = false };
     readonly Grid _overlay = new() { IsVisible = false };
 
@@ -147,8 +147,8 @@ public sealed class ReaderView : UserControl
         _placeBtn.Content = (book?.CommonName ?? _book) + " " + _chapter;
         var read = _vault.GetReadChapters().Contains((_book, _chapter));
         _readBtn.Content = read ? "✓ " + L("Gelesen") : L("Als gelesen markieren");
-        _readBtn.Background = read ? new SolidColorBrush(Color.Parse("#2E7D32")) : null;
-        _readBtn.Foreground = read ? Brushes.White : null;
+        if (read) { _readBtn.Background = new SolidColorBrush(Color.Parse("#2E7D32")); _readBtn.Foreground = Brushes.White; }
+        else { _readBtn.ClearValue(Avalonia.Controls.Primitives.TemplatedControl.BackgroundProperty); _readBtn.ClearValue(Avalonia.Controls.Primitives.TemplatedControl.ForegroundProperty); }
 
         _verses.Children.Clear();
         if (_loaded is null) return;
@@ -201,11 +201,11 @@ public sealed class ReaderView : UserControl
     {
         foreach (var c in Colors)
         {
-            var b = new Button { Width = 40, Height = 40, CornerRadius = new(20), Background = new SolidColorBrush(Color.Parse(c)), Padding = default };
+            var b = new Button { Width = 40, Height = 40, Margin = new(4), CornerRadius = new(20), Background = new SolidColorBrush(Color.Parse(c)), Padding = default };
             b.Click += (_, _) => ApplyColor(c);
             _colorBar.Children.Add(b);
         }
-        var clear = new Button { Content = "✕", Width = 40, Height = 40, CornerRadius = new(20), Padding = default, HorizontalContentAlignment = HorizontalAlignment.Center };
+        var clear = new Button { Content = "✕", Width = 40, Height = 40, Margin = new(4), CornerRadius = new(20), Padding = default, HorizontalContentAlignment = HorizontalAlignment.Center };
         ToolTip.SetTip(clear, L("Markierung entfernen"));
         clear.Click += (_, _) => ApplyColor(null);
         _colorBar.Children.Add(clear);
