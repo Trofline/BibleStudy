@@ -331,8 +331,11 @@ public partial class MainWindow
     /// <summary>Set when the user asked for the normal colors inside a marked verse (instead of the sub-mark); ends with the next selection or mark.</summary>
     bool _normalMarking;
 
+    EventHandler<PointerPressedEventArgs>? _selPopupOutside;
+
     void HideSelectionPopup()
     {
+        if (_selPopupOutside is { } h) { RemoveHandler(PointerPressedEvent, h); _selPopupOutside = null; }
         if (_selPopup is not { } p) return;
         _selPopup = null;
         p.IsOpen = false;
@@ -392,8 +395,16 @@ public partial class MainWindow
         var popup = new Popup
         {
             PlacementTarget = cref.Tb, Placement = PlacementMode.Top, PlacementRect = new Rect(rect.X, rect.Y, 1, Math.Max(1, rect.Height)),
-            IsLightDismissEnabled = true, OverlayDismissEventPassThrough = true, Child = card,
+            // not the built-in light dismiss: it swallows the click that closes it, so the next verse had to be clicked twice.
+            // Ours closes the popup and lets the same click go on.
+            IsLightDismissEnabled = false, Child = card,
         };
+        _selPopupOutside = (_, e) =>
+        {
+            if (e.Source is Visual src && (ReferenceEquals(src, card) || src.GetVisualAncestors().Contains(card))) return;
+            HideSelectionPopup();
+        };
+        AddHandler(PointerPressedEvent, _selPopupOutside, RoutingStrategies.Tunnel, true);
         popup.Closed += (_, _) => { if (ReferenceEquals(_selPopup, popup)) _selPopup = null; ReaderHost.Children.Remove(popup); };
         _selPopup = popup;
         ReaderHost.Children.Add(popup);

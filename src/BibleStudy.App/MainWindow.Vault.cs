@@ -100,7 +100,13 @@ public partial class MainWindow
         };
         MarksList.SelectionChanged += async (_, _) => await OnMarksListPickedAsync();
         MarksDetailBtn.IsCheckedChanged += (_, _) => ApplyCollectionFilter();
-        MarksAllVaultsBtn.IsCheckedChanged += (_, _) => { _foldersTouched = false; CloseEditor(); ApplyCollectionFilter(); };
+        MarksAllVaultsBtn.IsChecked = _settings.MarksAllVaults;   // the state is kept between starts
+        MarksAllVaultsBtn.IsCheckedChanged += (_, _) =>
+        {
+            _settings.MarksAllVaults = MarksAllVaultsBtn.IsChecked == true; SaveSettings();
+            _foldersTouched = false; CloseEditor(); ApplyCollectionFilter();
+            RefreshCells();   // the marks of the other vaults show in the text, or go away again
+        };
         var more = new MenuFlyout();
         void AddItem(string text, Action act) { var i = new MenuItem { Header = text }; i.Click += (_, _) => act(); more.Items.Add(i); }
         AddItem(L("Alle Ordner aufklappen"), () =>
@@ -159,7 +165,23 @@ public partial class MainWindow
         foreach (var m in _chapterMarks.Where(m => m.WholeVerse))   // a mark of several verses colors each of them
             for (var v = m.Ref.Verse; v <= m.LastVerse; v++) _wholeMarks[v] = m.Color;
         _headings = _vault.GetHeadings(_curBook, _curChapter);
+        // with "all vaults" on, the marks of the other vaults show in the text too (to look at: negative ids, so they are never edited by mistake)
+        _otherChapterMarks = []; _otherWhole = [];
+        if (_settings.MarksAllVaults)
+            foreach (var name in VaultNames().Where(n => n != _vault.Name))
+                try
+                {
+                    foreach (var m in StoreOf(name).GetMarks(_curBook, _curChapter))
+                    {
+                        _otherChapterMarks.Add(m with { Id = -m.Id - 1 });
+                        if (m.WholeVerse) for (var v = m.Ref.Verse; v <= m.LastVerse; v++) _otherWhole.TryAdd(v, m.Color);
+                    }
+                }
+                catch { /* a vault that cannot be read just does not show */ }
     }
+
+    List<Mark> _otherChapterMarks = [];
+    Dictionary<int, string> _otherWhole = [];
 
     static string Shorten(string text, int max = 40) => text.Length <= max ? text : text[..max].TrimEnd() + "…";
 

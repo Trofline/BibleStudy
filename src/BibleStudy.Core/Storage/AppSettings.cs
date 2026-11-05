@@ -40,6 +40,7 @@ public sealed class AppSettings
     public string QuickMarkColor { get; set; } = "";
     /// <summary>A small bar with the colors appears over the selected text (no click on the mark button needed).</summary>
     public bool SelectionPopup { get; set; } = true;
+    public bool MarksAllVaults { get; set; }   // the collection and the text show the marks of all vaults, not only of the active one
     public bool SelectWholeWords { get; set; } = true;   // a selection always starts and ends at word borders
     public List<string> CustomSubColors { get; set; } = [];   // own colors for sub-marks, chosen with the "+" in the settings
     public string SubMarkColor { get; set; } = "";   // color of a sub-mark inside a marked verse; "" = the accent color of the program

@@ -528,8 +528,8 @@ public partial class MainWindow : Window
     {
         var list = new List<CellMark>();
         if (d.Foreign) return list;
-        var core = _wholeMarks.ContainsKey(d.Number);
-        foreach (var m in _chapterMarks)
+        var core = _wholeMarks.ContainsKey(d.Number) || _otherWhole.ContainsKey(d.Number);
+        foreach (var m in _chapterMarks.Concat(_otherChapterMarks))
         {
             if (m.WholeVerse || !m.Covers(d.Number)) continue;
             if (m.TranslationId == d.T.Id)
@@ -661,6 +661,13 @@ public partial class MainWindow : Window
             e.Handled = true;
             Avalonia.Threading.Dispatcher.UIThread.Post(() => ShowSelectionPopup(verse), Avalonia.Threading.DispatcherPriority.Background);
         }
+        else if (!foreign && props.IsLeftButtonPressed && !withKeys && onNumber && _settings.QuickMark)
+        {
+            // quick marking: a click on the verse number marks the whole verse in the quick color; on a verse of that color it takes the mark away again
+            e.Handled = true;
+            if (_wholeMarks.TryGetValue(verse, out var have) && string.Equals(have, QuickColor(), StringComparison.OrdinalIgnoreCase)) _ = RemoveMarksAsync();
+            else _ = ApplyColorAsync(QuickColor());
+        }
         else if (!foreign && props.IsLeftButtonPressed && !withKeys) BeginTextSelection(e, tb, cell);
         else if (!foreign && props.IsLeftButtonPressed) e.Handled = true;   // Ctrl/Shift choose verses; the built-in selection must not start
     }
@@ -786,7 +793,7 @@ public partial class MainWindow : Window
         var ink = SelectionInk();
         foreach (var (n, box) in _verseBoxes.Concat(_colBoxes.Where((_, k) => !IsForeign(k + 1)).SelectMany(d => d)))
         {
-            var whole = _wholeMarks.TryGetValue(n, out var hex) ? MarkColor(hex) : (Color?)null;
+            var whole = _wholeMarks.TryGetValue(n, out var hex) || _otherWhole.TryGetValue(n, out hex) ? MarkColor(hex) : (Color?)null;
             var selected = _selVerses.Count > 0 ? _selVerses.Contains(n) : n == _selected;
             if (whole is { } c) box.Background = new SolidColorBrush(c, 0.14);
             else if (selected) box.Background = new SolidColorBrush(ink, 0.12);
