@@ -131,7 +131,7 @@ public partial class MainWindow
         head.Children.Add(left);
 
         var preview = d.Path is not null ? L("Datei: ") + System.IO.Path.GetFileName(d.Path)
-            : Shorten(d.Body.ReplaceLineEndings(" ").Replace("#", "").Replace("**", "").Replace("[[", "").Replace("]]", "").Replace(">", "").Trim(), 100);
+            : Shorten(BibleStudy.Core.Models.DocumentLinks.WithLinkTexts(d.Body).ReplaceLineEndings(" ").Replace("#", "").Replace("**", "").Replace(">", "").Trim(), 100);
         var stack = new StackPanel { Spacing = 2, Children = { head } };
         if (preview.Length > 0) stack.Children.Add(new TextBlock { Text = preview, Classes = { "caption" }, TextTrimming = TextTrimming.CharacterEllipsis });
         var shown = d.Tags.Where(t => !IsCategoryTag(t)).ToList();

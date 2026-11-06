@@ -2455,7 +2455,6 @@
   "Nummerierte Liste (Strg+Umschalt+7)": "Liste numérotée (Ctrl+Maj+7)",
   "Zitat (Strg+Umschalt+9)": "Citation (Ctrl+Maj+9)",
   "Trennlinie (Strg+Umschalt+−)": "Ligne de séparation (Ctrl+Maj+−)",
-  "Text des Links, z. B. „klicke hier“ (leer: der Titel)": "Texte du lien, p. ex. « cliquez ici » (vide : le titre)",
   "Als HTML-Datei speichern …": "Enregistrer en fichier HTML …",
   "Als Markdown speichern …": "Enregistrer en Markdown …",
   "Dokument als HTML speichern": "Enregistrer le document en HTML",
@@ -2464,6 +2463,16 @@
   "Speichern nicht möglich: ": "Enregistrement impossible : ",
   "Ordner für den Markdown-Export wählen": "Choisir un dossier pour l'export Markdown",
   "{0} Dokument(e) als Markdown gespeichert in {1}": "{0} document(s) enregistré(s) en Markdown dans {1}",
-  "Auto-Speichern": "Enregistrement auto",
-  "Das Dokument speichert sich alle paar Sekunden selbst. Aus: gespeichert wird mit „Speichern“, beim Verlassen des Dokuments und beim Schließen des Programms.": "Le document s'enregistre tout seul toutes les quelques secondes. Désactivé : il est enregistré avec « Enregistrer », en quittant le document et à la fermeture du programme."
+  "Das Dokument speichert sich alle paar Sekunden selbst. Aus: gespeichert wird mit „Speichern“, beim Verlassen des Dokuments und beim Schließen des Programms.": "Le document s'enregistre tout seul toutes les quelques secondes. Désactivé : il est enregistré avec « Enregistrer », en quittant le document et à la fermeture du programme.",
+  "z. B. klicke hier": "p. ex. cliquez ici",
+  "Link ändern": "Modifier le lien",
+  "Angezeigter Text (leer: der Titel des Dokuments)": "Texte affiché (vide : le titre du document)",
+  "Text übernehmen": "Appliquer le texte",
+  "Führt zu: {0}": "Mène à : {0}",
+  "Dokument wählen:": "Choisir un document :",
+  "Oder zu einem anderen Dokument führen:": "Ou mener à un autre document :",
+  "Auto-Speichern: an": "Enregistrement auto : activé",
+  "Auto-Speichern: aus": "Enregistrement auto : désactivé",
+  "Als PDF, HTML oder Markdown, mit den verlinkten Dokumenten und Versen, damit die Links in der Datei funktionieren": "En PDF, HTML ou Markdown, avec les documents liés et les versets, pour que les liens fonctionnent dans le fichier",
+  "Bibelstellen": "Passages bibliques"
 }

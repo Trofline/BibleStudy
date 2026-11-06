@@ -534,15 +534,16 @@
                         <Grid x:Name="DocEditorPanel" IsVisible="False" RowDefinitions="Auto,Auto,Auto,*,Auto" Margin="12,12,6,8">
                             <DockPanel Margin="0,0,0,8">
                                 <Button x:Name="DocSaveBtn" DockPanel.Dock="Right" Content="Speichern" Classes="primary" />
-                                <ToggleButton x:Name="DocAutoSaveBtn" DockPanel.Dock="Right" Classes="pillbtn" Content="Auto-Speichern" Margin="0,0,6,0" ToolTip.Tip="Das Dokument speichert sich alle paar Sekunden selbst. Aus: gespeichert wird mit „Speichern“, beim Verlassen des Dokuments und beim Schließen des Programms." />
+                                <ToggleButton x:Name="DocAutoSaveBtn" DockPanel.Dock="Right" Classes="pillbtn" Margin="0,0,6,0" ToolTip.Tip="Das Dokument speichert sich alle paar Sekunden selbst. Aus: gespeichert wird mit „Speichern“, beim Verlassen des Dokuments und beim Schließen des Programms." />
                                 <Button x:Name="DocMoreBtn" DockPanel.Dock="Right" Content="⋯" Classes="tool" Margin="0,0,6,0" ToolTip.Tip="Mehr" />
+                                <Button x:Name="DocExportBtn" DockPanel.Dock="Right" Content="Exportieren" Margin="0,0,6,0" ToolTip.Tip="Als PDF, HTML oder Markdown, mit den verlinkten Dokumenten und Versen, damit die Links in der Datei funktionieren" />
                                 <ToggleButton x:Name="DocReadBtn" DockPanel.Dock="Right" Classes="pillbtn" Content="Lesen" Margin="0,0,6,0" ToolTip.Tip="Zwischen Schreiben und fertiger Ansicht wechseln (Strg+E). In der Ansicht sind Verse und Links anklickbar." />
                                 <Button x:Name="DocBackBtn" Content="← Liste" HorizontalAlignment="Left" />
                             </DockPanel>
-                            <Border Grid.Row="1" Padding="6,4" CornerRadius="10" Background="{DynamicResource BsSurface2}" BorderBrush="{DynamicResource BsBorder}" BorderThickness="1">
+                            <Border x:Name="DocRibbonBar" Grid.Row="1" Padding="6,4" CornerRadius="10" Background="{DynamicResource BsSurface2}" BorderBrush="{DynamicResource BsBorder}" BorderThickness="1">
                                 <WrapPanel x:Name="DocRibbon" />
                             </Border>
-                            <WrapPanel Grid.Row="2" Margin="0,8,0,0">
+                            <WrapPanel x:Name="DocMetaRow" Grid.Row="2" Margin="0,8,0,0">
                                 <Border Classes="pill" Margin="0,0,8,0"><ComboBox x:Name="DocCategoryBox" Width="170" ToolTip.Tip="Kategorie" /></Border>
                                 <Border Classes="pill" Margin="0,0,8,0"><ComboBox x:Name="DocFolderBox" Width="170" ToolTip.Tip="Ordner, in dem das Dokument liegt (dieselben Ordner wie bei den Markierungen)" /></Border>
                             </WrapPanel>
@@ -557,7 +558,7 @@
                                         </StackPanel>
                                     </Border>
                                     <TextBlock x:Name="DocPathText" Classes="caption" TextWrapping="Wrap" />
-                                    <Expander Header="Einordnen: Tags, Vorlage" Padding="0">
+                                    <Expander x:Name="DocSortExpander" Header="Einordnen: Tags, Vorlage" Padding="0">
                                         <StackPanel Spacing="8" Margin="0,6,0,0">
                                             <TextBox x:Name="DocTagsBox" PlaceholderText="Tags, mit Komma getrennt" />
                                             <CheckBox x:Name="DocTemplateCheck" Content="Als Vorlage verwenden" />

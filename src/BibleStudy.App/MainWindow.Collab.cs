@@ -314,7 +314,8 @@ public partial class MainWindow
             {
                 // one message of the connection holds at most about 256 KB: a longer document is sent shortened, and the sender is told so
                 var shortened = doc.Body.Length > MaxSentBody;
-                CollabSend(new { t = "doc", title = doc.Title, body = shortened ? doc.Body[..MaxSentBody] : doc.Body });
+                var sent = DocumentLinks.WithoutNumbers(doc.Body);   // the numbers of the links mean something only in this vault
+                CollabSend(new { t = "doc", title = doc.Title, body = shortened ? sent[..Math.Min(sent.Length, MaxSentBody)] : sent });
                 AddCollabLog(L("Du hast das Dokument „{0}“ als Kopie gesendet.", doc.Title) + (shortened ? " " + L("Es war sehr lang und wurde gekürzt gesendet.") : ""), mine: true, system: true);
             };
             menu.Items.Add(item);
@@ -416,7 +417,7 @@ public partial class MainWindow
         save.Click += (_, _) =>
         {
             // always a new document, tagged with its origin; nothing of the existing documents is touched
-            _vault.AddDocument(title.Trim(), body, null, false, [L("geteilt")]);
+            _vault.AddDocument(title.Trim(), DocumentLinks.WithoutNumbers(body), null, false, [L("geteilt")]);
             save.IsEnabled = false; save.Content = L("Gespeichert ✓");
             RefreshDocs();
         };

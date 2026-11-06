@@ -10,15 +10,109 @@ public static partial class DocumentLinks
 {
     static readonly Lazy<Dictionary<string, string>> Names = new(Build);
 
-    /// <summary>Titles linked with [[Title]] (also [[Title|text]] and [[Title#part]]), without duplicates.</summary>
-    public static IReadOnlyList<string> WikiLinks(string body) =>
-        Wiki().Matches(body).Select(m => m.Groups["t"].Value.Trim()).Where(t => t.Length > 0).Distinct(StringComparer.OrdinalIgnoreCase).ToList();
+    /// <summary>
+    /// One link in a text. Links carry the number of the document: [[#12:Title]] or [[#12:Title|own text]]. The number decides where a link leads, so a new
+    /// title cannot break it; the title in it is only there to be readable in the text. [[Title]] without a number (typed by hand, or from older versions) leads by its title.
+    /// </summary>
+    public sealed record DocLink(long? Id, string Title, string Text, int Index, int Length)
+    {
+        /// <summary>What the link shows when it has no text of its own: <paramref name="currentTitle"/>, the title of the document now.</summary>
+        public string Shown(string? currentTitle = null) => Text.Length > 0 ? Text : currentTitle ?? Title;
+    }
 
-    /// <summary>The text with every [[Old]], [[Old|text]] and [[Old#part]] pointing to the new title (the text and the part stay). Renaming a document must not break the links to it.</summary>
+    public static IReadOnlyList<DocLink> Links(string body) =>
+        Wiki().Matches(body).Select(ToLink).Where(l => l.Title.Length > 0 || l.Id is not null).ToList();
+
+    static DocLink ToLink(Match m) => new(
+        m.Groups["id"].Success && long.TryParse(m.Groups["id"].Value, out var id) ? id : null,
+        m.Groups["t"].Value.Trim(), m.Groups["a"].Value.Trim(), m.Index, m.Length);
+
+    /// <summary>The link as it is written into a text.</summary>
+    public static string LinkText(long id, string title, string shown = "")
+    {
+        var clean = title.Replace("[", "").Replace("]", "").Replace("|", "").Replace("#", "").Trim();
+        var own = shown.Replace("[", "").Replace("]", "").Replace("|", "").Trim();
+        return $"[[#{id}:{clean}{(own.Length > 0 && own != title.Trim() ? "|" + own : "")}]]";
+    }
+
+    /// <summary>Titles linked in the text, without duplicates. Links with a number name the title too; the store keeps it up to date.</summary>
+    public static IReadOnlyList<string> WikiLinks(string body) =>
+        Links(body).Select(l => l.Title).Where(t => t.Length > 0).Distinct(StringComparer.OrdinalIgnoreCase).ToList();
+
+    /// <summary>True when the text links to this document: by its number, or by title for a link without one.</summary>
+    public static bool LinksTo(string body, long id, string title) =>
+        Links(body).Any(l => l.Id is long n ? n == id : string.Equals(l.Title, title.Trim(), StringComparison.OrdinalIgnoreCase));
+
+    /// <summary>
+    /// Every link gets the number of its document and that document's current title. <paramref name="titleOf"/> gives the title of a number; <paramref name="idOf"/> the number
+    /// of a title (null when there is no such document or several). A link that finds nothing stays as it is. Text in HTML comments is left alone.
+    /// </summary>
+    public static string NumberLinks(string body, Func<long, string?> titleOf, Func<string, long?> idOf)
+    {
+        if (!body.Contains("[[", StringComparison.Ordinal)) return body;
+        var comments = Comment().Matches(body);
+        return Wiki().Replace(body, m =>
+        {
+            if (comments.Any(c => m.Index >= c.Index && m.Index < c.Index + c.Length)) return m.Value;
+            var l = ToLink(m);
+            if (l.Id is long id && titleOf(id) is { } title) return LinkText(id, title, l.Text);
+            return idOf(l.Title) is long found && titleOf(found) is { } t ? LinkText(found, t, l.Text) : m.Value;
+        });
+    }
+
+    /// <summary>The text with plain [[Title|text]] links, for places where the numbers mean nothing: another person's vault, another program.</summary>
+    public static string WithoutNumbers(string body) => Wiki().Replace(body, m =>
+    {
+        var l = ToLink(m);
+        return l.Id is null ? m.Value : $"[[{l.Title}{(l.Text.Length > 0 ? "|" + l.Text : "")}]]";
+    });
+
+    /// <summary>The text with links as what they show, for short previews.</summary>
+    public static string WithLinkTexts(string body) => Wiki().Replace(body, m => ToLink(m).Shown());
+
+    /// <summary>The text with [[Old]], [[Old|text]] and [[Old#part]] (links without a number) pointing to the new title.</summary>
     public static string RenameLink(string body, string oldTitle, string newTitle) =>
-        Wiki().Replace(body, m => string.Equals(m.Groups["t"].Value.Trim(), oldTitle.Trim(), StringComparison.OrdinalIgnoreCase)
-            ? "[[" + newTitle.Trim() + m.Value[(2 + m.Groups["t"].Length)..]
+        Wiki().Replace(body, m => !m.Groups["id"].Success && string.Equals(m.Groups["t"].Value.Trim(), oldTitle.Trim(), StringComparison.OrdinalIgnoreCase)
+            ? "[[" + newTitle.Trim() + m.Value[(m.Groups["t"].Index - m.Index + m.Groups["t"].Length)..]
             : m.Value);
+
+    /// <summary>Each verse reference outside of a [[link]] goes through <paramref name="replace"/> (null keeps it as it is).</summary>
+    public static string ReplaceVerses(string text, Func<string, string?> replace)
+    {
+        var links = Wiki().Matches(text);
+        var result = text;
+        foreach (var (index, length, _) in VerseSpans(text).Reverse())
+        {
+            if (links.Any(l => index < l.Index + l.Length && index + length > l.Index)) continue;
+            if (replace(text.Substring(index, length)) is { } instead) result = result[..index] + instead + result[(index + length)..];
+        }
+        return result;
+    }
+
+    /// <summary>
+    /// The text for other Markdown programs: a link becomes [text](file) when <paramref name="target"/> knows the file of its document (with the document's current title),
+    /// otherwise only its text; verse references become links when <paramref name="verseHref"/> knows a place for them. In an export names no longer change, so files are named after titles.
+    /// </summary>
+    public static string ToMarkdownLinks(string body, Func<DocLink, (string Title, string File)?> target, Func<string, string?>? verseHref = null)
+    {
+        var text = verseHref is null ? body : ReplaceVerses(body, span => verseHref(span) is { } href ? $"[{span}]({href})" : null);
+        return Wiki().Replace(text, m =>
+        {
+            var l = ToLink(m);
+            return target(l) is { } t ? $"[{l.Shown(t.Title)}]({Uri.EscapeDataString(t.File)})" : l.Shown();
+        });
+    }
+
+    /// <summary>The text without a first heading that only repeats the title (the export writes the title itself).</summary>
+    public static string WithoutTitleHeading(string body, string title)
+    {
+        var text = body.TrimStart();
+        var end = text.IndexOf('\n');
+        var first = (end < 0 ? text : text[..end]).Trim();
+        return first.StartsWith('#') && string.Equals(first.TrimStart('#').Trim(), title.Trim(), StringComparison.OrdinalIgnoreCase)
+            ? (end < 0 ? "" : text[(end + 1)..].TrimStart('\r', '\n'))
+            : body;
+    }
 
     /// <summary>Verse references in the text, first verse of a range, in order of appearance without duplicates.</summary>
     public static IReadOnlyList<VerseRef> VerseRefs(string body)
@@ -88,7 +182,8 @@ public static partial class DocumentLinks
         return map;
     }
 
-    [GeneratedRegex(@"\[\[(?<t>[^\]|#]+)(?:[|#][^\]]*)?\]\]")] private static partial Regex Wiki();
+    [GeneratedRegex(@"\[\[(?:#(?<id>\d+):)?(?<t>[^\]|#]*)(?:[|#](?<a>[^\]]*))?\]\]")] private static partial Regex Wiki();
+    [GeneratedRegex("<!--.*?-->", RegexOptions.Singleline)] private static partial Regex Comment();
 
     [GeneratedRegex(@"(?<![\p{L}\d])(?<b>(?:[1-3]\s?\.?\s?)?\p{L}{1,20}\.?)\s*(?<c>\d{1,3})\s*[,:]\s*(?<v>\d{1,3})(?:\s*[-–]\s*(?<e>\d{1,3}))?")]
     private static partial Regex Verse();

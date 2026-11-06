@@ -30,7 +30,13 @@ public partial class MainWindow
     void InitAutosave()
     {
         var timer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(6) };
-        timer.Tick += (_, _) => { if (_settings.AutoSaveDocs) AutoSaveDocument(); };   // off: saved with "Speichern", and when the document is left or the program closed
+        timer.Tick += (_, _) =>
+        {
+            if (!_settings.AutoSaveDocs) return;   // off: saved with "Speichern", and when the document is left or the program closed
+            // a title being typed is not saved half-way: renaming moves the links to it, and "Gnade" on the way to "Gnade 2" could be another document
+            if (DocTitleBox.IsFocused && _doc is { } d && (DocTitleBox.Text?.Trim() ?? "") != d.Title) return;
+            AutoSaveDocument();
+        };
         timer.Start();
     }
 
@@ -52,7 +58,7 @@ public partial class MainWindow
             else
             {
                 _vault.UpdateDocument(_doc.Id, title, body, _doc.Path, template, tags, folderId);
-                if (_doc.Title != title) { RenameDocLinks(_doc.Id, _doc.Title, title); _doc = _doc with { Title = title }; }
+                if (_doc.Title != title) _doc = _doc with { Title = title };
             }
             _docSnapshot = state;
             DocPathText.Text = L("Automatisch gespeichert um {0:HH:mm:ss}", DateTime.Now);

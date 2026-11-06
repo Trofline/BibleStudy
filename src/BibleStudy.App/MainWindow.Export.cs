@@ -52,17 +52,33 @@ public partial class MainWindow
     }
 
     /// <summary>The little Markdown the editor uses: headings, quotes, lists, bold, italic; [[links]] become plain titles.</summary>
-    static string MarkdownToHtml(string md, Func<string, string?>? hrefOf = null)
+    static string MarkdownToHtml(string md, Func<long?, string, string?>? hrefOf = null, Func<string, string?>? verseHref = null)
     {
         md = Regex.Replace(md, "<!--.*?-->", "", RegexOptions.Singleline);
         string Inline(string s)
         {
+            // verse references become stand-ins first, so the steps below (encoding, bold, italic) leave the finished link alone
+            var verseLinks = new List<string>();
+            if (verseHref is not null)
+                s = DocumentLinks.ReplaceVerses(s, span =>
+                {
+                    if (verseHref(span) is not { } href) return null;
+                    verseLinks.Add($"<a href=\"{H(href)}\">{H(span)}</a>");
+                    return $"{verseLinks.Count - 1}";
+                });
+            s = Inline2(s);
+            for (var i = 0; i < verseLinks.Count; i++) s = s.Replace($"{i}", verseLinks[i]);
+            return s;
+        }
+        string Inline2(string s)
+        {
             s = H(s);
             // [[Title|text]]: the text (or the title) shown, as a link when the document is part of the page
-            s = Regex.Replace(s, @"\[\[(?<t>[^\]|#]+)(?:[|#](?<a>[^\]]*))?\]\]", m =>
+            s = Regex.Replace(s, @"\[\[(?:#(?<id>\d+):)?(?<t>[^\]|#]+)(?:[|#](?<a>[^\]]*))?\]\]", m =>
             {
                 var shown = m.Groups["a"].Success && m.Groups["a"].Value.Trim().Length > 0 ? m.Groups["a"].Value.Trim() : m.Groups["t"].Value.Trim();
-                return hrefOf?.Invoke(WebUtility.HtmlDecode(m.Groups["t"].Value).Trim()) is { } href ? $"<a href=\"{H(href)}\">{shown}</a>" : shown;
+                long? number = long.TryParse(m.Groups["id"].Value, out var n) ? n : null;
+                return hrefOf?.Invoke(number, WebUtility.HtmlDecode(m.Groups["t"].Value).Trim()) is { } href ? $"<a href=\"{H(href)}\">{shown}</a>" : shown;
             });
             s = Regex.Replace(s, @"\*\*(.+?)\*\*", "<b>$1</b>");
             s = Regex.Replace(s, @"(?<![\*\w])\*(?!\s)(.+?)(?<!\s)\*(?![\*\w])", "<i>$1</i>");

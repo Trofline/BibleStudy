@@ -91,6 +91,16 @@ public sealed partial class VaultStore : SqliteDb
             if (Query($"SELECT 1 FROM pragma_table_info('todos') WHERE name='{column}'", _ => { }, _ => 1).Count == 0)
                 Exec($"ALTER TABLE todos ADD COLUMN {column} {type}");
         InitTrash();
+        Exec("CREATE TABLE IF NOT EXISTS doc_seq(high INTEGER NOT NULL)");
+        // links from older versions lead by title: they get the number of their document
+        try
+        {
+            using var con = Open();
+            using var tx = con.BeginTransaction();
+            NumberAllLinks(con);
+            tx.Commit();
+        }
+        catch (SqliteException) { /* the links still work by their titles; tried again next time */ }
     }
 
     /// <summary>
@@ -573,13 +583,15 @@ public sealed partial class VaultStore : SqliteDb
         using var con = Open();
         using var tx = con.BeginTransaction();
         using var cmd = con.CreateCommand();
-        cmd.CommandText = "INSERT INTO documents(title,body,path,template,created,updated,folder_id) VALUES($t,$b,$p,$m,$n,$n,$f); SELECT last_insert_rowid()";
+        // a number is never given twice, also not when the last document was deleted: a link to that one must not lead to a new one
+        cmd.CommandText = "INSERT INTO documents(id,title,body,path,template,created,updated,folder_id) VALUES((SELECT MAX(COALESCE((SELECT MAX(high) FROM doc_seq),0),COALESCE((SELECT MAX(id) FROM documents),0))+1),$t,$b,$p,$m,$n,$n,$f); SELECT last_insert_rowid()";
         cmd.Parameters.AddWithValue("$f", (object?)folderId ?? DBNull.Value);
         cmd.Parameters.AddWithValue("$t", title.Trim()); cmd.Parameters.AddWithValue("$b", body);
         cmd.Parameters.AddWithValue("$p", (object?)path ?? DBNull.Value); cmd.Parameters.AddWithValue("$m", template ? 1 : 0);
         cmd.Parameters.AddWithValue("$n", DateTime.UtcNow.ToString("o"));
         var id = (long)cmd.ExecuteScalar()!;
         SetDocTags(con, id, tags);
+        NumberAllLinks(con);   // also links elsewhere that were waiting for a document with this title
         tx.Commit();
         return id;
     }
@@ -588,6 +600,8 @@ public sealed partial class VaultStore : SqliteDb
     {
         using var con = Open();
         using var tx = con.BeginTransaction();
+        // first with the old title, so a link that only has that title gets the number before the title goes
+        NumberAllLinks(con);
         using (var cmd = con.CreateCommand())
         {
             cmd.CommandText = "UPDATE documents SET title=$t, body=$b, path=$p, template=$m, updated=$n, folder_id=$f WHERE id=$i";
@@ -598,10 +612,64 @@ public sealed partial class VaultStore : SqliteDb
             cmd.ExecuteNonQuery();
         }
         SetDocTags(con, id, tags);
+        NumberAllLinks(con);   // the new title goes into the links, and links waiting for this title find it
         tx.Commit();
     }
 
-    public void DeleteDocument(long id) => InTransaction(id, "DELETE FROM doc_tags WHERE doc_id=$i", "DELETE FROM documents WHERE id=$i");
+    /// <summary>
+    /// Brings every [[link]] in the documents and notes to the form [[#number:current title]]. A link leads by its number, so a title can change as often as it likes.
+    /// A title that several documents carry gives no number. Sermons keep their text, it is written anew from their own data. "updated" stays: the user did not write here.
+    /// </summary>
+    static void NumberAllLinks(SqliteConnection con)
+    {
+        var docs = new List<(long Id, string Title, string Body)>();
+        using (var read = con.CreateCommand())
+        {
+            read.CommandText = "SELECT id,title,body FROM documents";
+            using var r = read.ExecuteReader();
+            while (r.Read()) docs.Add((r.GetInt64(0), r.GetString(1), r.IsDBNull(2) ? "" : r.GetString(2)));
+        }
+        var titleOf = docs.ToDictionary(d => d.Id, d => d.Title);
+        var idOf = docs.GroupBy(d => d.Title.Trim(), StringComparer.OrdinalIgnoreCase).Where(g => g.Count() == 1).ToDictionary(g => g.Key, g => g.First().Id, StringComparer.OrdinalIgnoreCase);
+        string Number(string text) => DocumentLinks.NumberLinks(text, id => titleOf.GetValueOrDefault(id), t => idOf.TryGetValue(t, out var id) ? id : null);
+
+        foreach (var d in docs.Where(d => !d.Body.Contains("<!--sermon:", StringComparison.Ordinal)))
+        {
+            var body = Number(d.Body);
+            if (body == d.Body) continue;
+            using var up = con.CreateCommand();
+            up.CommandText = "UPDATE documents SET body=$b WHERE id=$i";
+            up.Parameters.AddWithValue("$b", body); up.Parameters.AddWithValue("$i", d.Id);
+            up.ExecuteNonQuery();
+        }
+        var notes = new List<(long Row, string Text)>();
+        using (var read = con.CreateCommand())
+        {
+            read.CommandText = "SELECT rowid,text FROM notes WHERE text LIKE '%[[%'";
+            using var r = read.ExecuteReader();
+            while (r.Read()) notes.Add((r.GetInt64(0), r.IsDBNull(1) ? "" : r.GetString(1)));
+        }
+        foreach (var n in notes)
+        {
+            var text = Number(n.Text);
+            if (text == n.Text) continue;
+            using var up = con.CreateCommand();
+            up.CommandText = "UPDATE notes SET text=$t WHERE rowid=$r";
+            up.Parameters.AddWithValue("$t", text); up.Parameters.AddWithValue("$r", n.Row);
+            up.ExecuteNonQuery();
+        }
+    }
+
+    public void DeleteDocument(long id) => InTransaction(id, "DELETE FROM doc_seq WHERE high < $i", "INSERT INTO doc_seq(high) SELECT $i WHERE NOT EXISTS(SELECT 1 FROM doc_seq)",
+        "DELETE FROM doc_tags WHERE doc_id=$i", "DELETE FROM documents WHERE id=$i");
+
+    /// <summary>The document a link leads to: by its number; when that one is gone or the link has none, by its title.</summary>
+    public static Document? Resolve(IEnumerable<Document> docs, DocumentLinks.DocLink link)
+    {
+        var all = docs as IReadOnlyCollection<Document> ?? docs.ToList();
+        return (link.Id is long id ? all.FirstOrDefault(d => d.Id == id) : null)
+            ?? all.FirstOrDefault(d => string.Equals(d.Title, link.Title, StringComparison.OrdinalIgnoreCase));
+    }
 
     /// <summary>Documents, newest change first; <paramref name="text"/> searches title, body and tags.</summary>
     public List<Document> GetDocuments(string? text = null, string? tag = null, bool? templates = null)

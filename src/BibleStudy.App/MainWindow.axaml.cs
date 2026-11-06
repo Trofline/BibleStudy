@@ -1,4 +1,4 @@
-﻿using Avalonia;
+using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
 using Avalonia.Controls.Documents;
@@ -255,7 +255,7 @@ public partial class MainWindow : Window
         foreach (var d in _vault.GetDocuments().OrderByDescending(d => d.Updated).Take(4))
         {
             var doc = d;
-            recent.Add((L("Dokument"), d.Title, Shorten(string.Join(" ", d.Body.Split((char)10).Where(l => !l.TrimStart().StartsWith("#") && !l.StartsWith("**Quelle")).Take(6)).Trim(), 80), () => { SetPanelOpen(true); SideTabs.SelectedIndex = KnowledgeTab; OpenDocument(doc); }));
+            recent.Add((L("Dokument"), d.Title, Shorten(string.Join(" ", DocumentLinks.WithLinkTexts(d.Body).Split((char)10).Where(l => !l.TrimStart().StartsWith("#") && !l.StartsWith("**Quelle")).Take(6)).Trim(), 80), () => { SetPanelOpen(true); SideTabs.SelectedIndex = KnowledgeTab; OpenDocument(doc); }));
         }
         foreach (var m in _vault.GetMarks().OrderByDescending(m => m.Id).Take(4))
         {

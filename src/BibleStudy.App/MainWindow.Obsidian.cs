@@ -1,4 +1,4 @@
-﻿using System.Diagnostics;
+using System.Diagnostics;
 using System.Text;
 using Avalonia.Platform.Storage;
 using BibleStudy.Core.Models;
@@ -127,7 +127,7 @@ public partial class MainWindow
             var md = new StringBuilder(Front(("verse", Yaml(Label(n.Ref)))));
             md.Append("# ").Append(Label(n.Ref)).Append("\n\n");
             if (await Text(n.Ref, n.Ref.Verse) is { Length: > 0 } verse) md.Append("> ").Append(verse).Append("\n\n");
-            md.Append(Linked(n.Text.Trim())).Append('\n');
+            md.Append(Linked(DocumentLinks.WithoutNumbers(n.Text).Trim())).Append('\n');
             var from = notes.Where(o => o.Ref != n.Ref && DocumentLinks.VerseRanges(o.Text).Any(x => x.First.Book == n.Ref.Book && x.First.Chapter == n.Ref.Chapter && n.Ref.Verse >= x.First.Verse && n.Ref.Verse <= x.EndVerse)).ToList();
             if (from.Count > 0)
             {
@@ -142,7 +142,7 @@ public partial class MainWindow
         {
             var md = new StringBuilder(Front(("tags", TagList(d.Tags))));
             if (d.Path is not null) md.Append(L("Verknüpfte Datei:")).Append($" [{Path.GetFileName(d.Path)}](<file:///{d.Path.Replace('\\', '/')}>)\n\n");
-            md.Append(Linked(d.Body));
+            md.Append(Linked(DocumentLinks.WithoutNumbers(d.Body)));
             Write(Path.Combine(Dir(d.FolderId), docFiles[d.Id] + ".md"), md.ToString());
         }
 

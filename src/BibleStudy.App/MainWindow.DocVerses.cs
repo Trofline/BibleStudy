@@ -4,6 +4,7 @@ using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Layout;
 using Avalonia.Media;
+using Avalonia.VisualTree;
 using BibleStudy.Core.Models;
 using BibleStudy.Core.Storage;
 
@@ -13,6 +14,7 @@ namespace BibleStudy.App;
 public partial class MainWindow
 {
     bool _docVersesAllVaults;
+    bool _marksHeld;
 
     sealed record SavedVerse(VerseRef Ref, string Label, string Text, string Vault);
 
@@ -46,9 +48,9 @@ public partial class MainWindow
             if (verses.Count == 0) { host.Children.Add(new TextBlock { Text = L("Noch keine gespeicherten Verse."), Classes = { "caption" } }); return; }
             foreach (var s in verses.Take(300))
             {
-                var title = new TextBlock { Text = _docVersesAllVaults ? $"{s.Label}  ·  {s.Vault}" : s.Label, FontWeight = FontWeight.SemiBold };
+                var title = new TextBlock { Text = _docVersesAllVaults ? $"{s.Label}  ·  {s.Vault}" : s.Label, FontWeight = FontWeight.SemiBold, TextWrapping = TextWrapping.Wrap };
                 var text = new TextBlock { Text = Shorten(s.Text, 90), Classes = { "caption" }, TextWrapping = TextWrapping.Wrap };
-                var b = new Button { Content = new StackPanel { Children = { title, text } }, HorizontalAlignment = HorizontalAlignment.Stretch, HorizontalContentAlignment = HorizontalAlignment.Left, Classes = { "tool" }, Padding = new(8, 4) };
+                var b = PickRow(new StackPanel { Children = { title, text } });
                 var verse = s;
                 b.Click += (_, _) => { fly.Hide(); InsertIntoDoc(QuoteBlock(verse.Text, verse.Label), null); };
                 host.Children.Add(b);
@@ -76,14 +78,19 @@ public partial class MainWindow
         {
             if (!e.DataTransfer.Contains(DataFormat.Text)) return;
             e.DragEffects = DragDropEffects.Copy; e.Handled = true;
-        }, RoutingStrategies.Tunnel);
+        }, RoutingStrategies.Bubble);
         DocBodyBox.AddHandler(DragDrop.DropEvent, (object? _, DragEventArgs e) =>
         {
             if (e.DataTransfer.TryGetText() is not { Length: > 0 } text) return;
             e.Handled = true;
-            DocBodyBox.Focus();
+            // where it was let go
+            if (DocBodyBox.GetVisualDescendants().OfType<Avalonia.Controls.Presenters.TextPresenter>().FirstOrDefault() is { } presenter)
+            {
+                var at = presenter.TextLayout.HitTestPoint(e.GetPosition(presenter)).TextPosition;
+                _docSel = (at, at);
+            }
             InsertIntoDoc(text, null);
-        }, RoutingStrategies.Tunnel);
+        }, RoutingStrategies.Bubble);
 
         Point? down = null; Entry? dragged = null; PointerPressedEventArgs? pressed = null;
         MarksList.AddHandler(PointerPressedEvent, (object? _, PointerPressedEventArgs e) =>
@@ -92,8 +99,16 @@ public partial class MainWindow
             var left = e.GetCurrentPoint(MarksList).Properties.IsLeftButtonPressed;
             down = left ? e.GetPosition(MarksList) : null;
             dragged = left ? (e.Source as StyledElement)?.DataContext as Entry : null;
+            _marksHeld = left;   // jumping to the verse waits for the release: it would take the document away from under the drag
         }, RoutingStrategies.Tunnel, true);
-        MarksList.AddHandler(PointerReleasedEvent, (object? _, PointerReleasedEventArgs e) => { down = null; dragged = null; }, RoutingStrategies.Tunnel, true);
+        MarksList.AddHandler(PointerReleasedEvent, async (object? _, PointerReleasedEventArgs e) =>
+        {
+            down = null; dragged = null;
+            if (!_marksHeld) return;
+            _marksHeld = false;
+            // after the list has handled the release itself
+            await Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(OnMarksListPickedAsync, Avalonia.Threading.DispatcherPriority.Input);
+        }, RoutingStrategies.Tunnel, true);
         MarksList.AddHandler(PointerMovedEvent, async (object? _, PointerEventArgs e) =>
         {
             if (down is not { } from || dragged is not { } entry || !e.GetCurrentPoint(MarksList).Properties.IsLeftButtonPressed) return;
@@ -103,7 +118,15 @@ public partial class MainWindow
             if (pressed is null || entry.Id is not long rowId || MarkOfRow(rowId) is not { } mark) return;
             var data = new DataTransfer();
             data.Add(DataTransferItem.CreateText(QuoteBlock(mark.Text.Length > 0 ? mark.Text : mark.Note, MarkLabel(mark))));
-            await DragDrop.DoDragDropAsync(pressed, data, DragDropEffects.Copy);
+            try { await DragDrop.DoDragDropAsync(pressed, data, DragDropEffects.Copy); }
+            finally
+            {
+                // no jump after a drag, and the row is not left picked
+                _marksHeld = false;
+                _marksListLoading = true;
+                MarksList.SelectedItem = null;
+                _marksListLoading = false;
+            }
         }, RoutingStrategies.Tunnel, true);
     }
 

@@ -2455,7 +2455,6 @@
   "Nummerierte Liste (Strg+Umschalt+7)": "Numbered list (Ctrl+Shift+7)",
   "Zitat (Strg+Umschalt+9)": "Quote (Ctrl+Shift+9)",
   "Trennlinie (Strg+Umschalt+−)": "Divider (Ctrl+Shift+−)",
-  "Text des Links, z. B. „klicke hier“ (leer: der Titel)": "Text of the link, e.g. “click here” (empty: the title)",
   "Als HTML-Datei speichern …": "Save as HTML file …",
   "Als Markdown speichern …": "Save as Markdown …",
   "Dokument als HTML speichern": "Save document as HTML",
@@ -2464,6 +2463,16 @@
   "Speichern nicht möglich: ": "Cannot save: ",
   "Ordner für den Markdown-Export wählen": "Choose a folder for the Markdown export",
   "{0} Dokument(e) als Markdown gespeichert in {1}": "{0} document(s) saved as Markdown in {1}",
-  "Auto-Speichern": "Auto-save",
-  "Das Dokument speichert sich alle paar Sekunden selbst. Aus: gespeichert wird mit „Speichern“, beim Verlassen des Dokuments und beim Schließen des Programms.": "The document saves itself every few seconds. Off: it is saved with “Save”, when you leave the document and when the program closes."
+  "Das Dokument speichert sich alle paar Sekunden selbst. Aus: gespeichert wird mit „Speichern“, beim Verlassen des Dokuments und beim Schließen des Programms.": "The document saves itself every few seconds. Off: it is saved with “Save”, when you leave the document and when the program closes.",
+  "z. B. klicke hier": "e.g. click here",
+  "Link ändern": "Change link",
+  "Angezeigter Text (leer: der Titel des Dokuments)": "Text shown (empty: the title of the document)",
+  "Text übernehmen": "Apply text",
+  "Führt zu: {0}": "Leads to: {0}",
+  "Dokument wählen:": "Choose a document:",
+  "Oder zu einem anderen Dokument führen:": "Or lead to another document:",
+  "Auto-Speichern: an": "Auto-save: on",
+  "Auto-Speichern: aus": "Auto-save: off",
+  "Als PDF, HTML oder Markdown, mit den verlinkten Dokumenten und Versen, damit die Links in der Datei funktionieren": "As PDF, HTML or Markdown, with the linked documents and verses, so that the links work in the file",
+  "Bibelstellen": "Bible passages"
 }

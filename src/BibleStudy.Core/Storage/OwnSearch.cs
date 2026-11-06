@@ -37,7 +37,7 @@ public static class OwnSearch
 
         foreach (var d in vault.GetDocuments())
             if (Match(d.Title, d.Body, string.Join(" ", d.Tags)))
-                hits.Add(new(OwnKind.Document, d.Title, Excerpt(d.Body, Has(d.Body, first) ? first : "", 90), null, d.Id));
+                hits.Add(new(OwnKind.Document, d.Title, Excerpt(DocumentLinks.WithLinkTexts(d.Body), Has(d.Body, first) ? first : "", 90), null, d.Id));
         foreach (var n in vault.GetNotes())
             if (Match(n.Text)) hits.Add(new(OwnKind.Note, "", Excerpt(n.Text, first), n.Ref, 0));
         foreach (var m in vault.GetMarks())
@@ -76,7 +76,7 @@ public static class OwnSearch
         foreach (var h in vault.GetHeadings(r.Book, r.Chapter))
             if (h.Ref == r) hits.Add(new(OwnKind.Heading, "", h.Text, h.Ref, h.Id));
         foreach (var d in vault.GetDocuments())
-            if (Mentions(d.Body, r)) hits.Add(new(OwnKind.Document, d.Title, Excerpt(d.Body, ""), null, d.Id));
+            if (Mentions(d.Body, r)) hits.Add(new(OwnKind.Document, d.Title, Excerpt(DocumentLinks.WithLinkTexts(d.Body), ""), null, d.Id));
         foreach (var p in vault.GetPrayers())
             if (p.Ref == r || Mentions(p.Text, r)) hits.Add(new(OwnKind.Prayer, "", Excerpt(p.Text, ""), p.Ref, p.Id));
         foreach (var t in vault.GetTodos())

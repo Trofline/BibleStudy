@@ -2455,7 +2455,6 @@
   "Nummerierte Liste (Strg+Umschalt+7)": "Нумерованный список (Ctrl+Shift+7)",
   "Zitat (Strg+Umschalt+9)": "Цитата (Ctrl+Shift+9)",
   "Trennlinie (Strg+Umschalt+−)": "Разделительная линия (Ctrl+Shift+−)",
-  "Text des Links, z. B. „klicke hier“ (leer: der Titel)": "Текст ссылки, например «нажмите здесь» (пусто: заголовок)",
   "Als HTML-Datei speichern …": "Сохранить как HTML-файл …",
   "Als Markdown speichern …": "Сохранить как Markdown …",
   "Dokument als HTML speichern": "Сохранить документ как HTML",
@@ -2464,6 +2463,16 @@
   "Speichern nicht möglich: ": "Не удалось сохранить: ",
   "Ordner für den Markdown-Export wählen": "Выберите папку для экспорта в Markdown",
   "{0} Dokument(e) als Markdown gespeichert in {1}": "Документов, сохранённых как Markdown: {0}, в {1}",
-  "Auto-Speichern": "Автосохранение",
-  "Das Dokument speichert sich alle paar Sekunden selbst. Aus: gespeichert wird mit „Speichern“, beim Verlassen des Dokuments und beim Schließen des Programms.": "Документ сам сохраняется каждые несколько секунд. Выключено: сохранение кнопкой «Сохранить», при выходе из документа и при закрытии программы."
+  "Das Dokument speichert sich alle paar Sekunden selbst. Aus: gespeichert wird mit „Speichern“, beim Verlassen des Dokuments und beim Schließen des Programms.": "Документ сам сохраняется каждые несколько секунд. Выключено: сохранение кнопкой «Сохранить», при выходе из документа и при закрытии программы.",
+  "z. B. klicke hier": "например, нажмите здесь",
+  "Link ändern": "Изменить ссылку",
+  "Angezeigter Text (leer: der Titel des Dokuments)": "Отображаемый текст (пусто: заголовок документа)",
+  "Text übernehmen": "Применить текст",
+  "Führt zu: {0}": "Ведёт к: {0}",
+  "Dokument wählen:": "Выберите документ:",
+  "Oder zu einem anderen Dokument führen:": "Или вести к другому документу:",
+  "Auto-Speichern: an": "Автосохранение: вкл.",
+  "Auto-Speichern: aus": "Автосохранение: выкл.",
+  "Als PDF, HTML oder Markdown, mit den verlinkten Dokumenten und Versen, damit die Links in der Datei funktionieren": "В PDF, HTML или Markdown, со связанными документами и стихами, чтобы ссылки работали в файле",
+  "Bibelstellen": "Библейские места"
 }

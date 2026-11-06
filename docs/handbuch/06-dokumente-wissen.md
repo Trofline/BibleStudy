@@ -21,20 +21,20 @@ Der Editor arbeitet wie ein Textprogramm:
 - oben das **Absatzformat** (Überschriften, Zitat, Listen),
 - **Fett** (Strg+B) und **Kursiv** (Strg+I),
 - Trennlinie,
-- **＋ Vers:** Bibelstelle eintippen und als Zitat oder Link einfügen, oder unten aus den gespeicherten Versen (Markierungen und Lesezeichen) wählen; „Aus allen Vaults“ zeigt auch die der anderen Vaults. Außerdem kannst du eine Markierung aus der Seitenleiste (Reiter Markierungen) mit der Maus ins Dokument ziehen, sie wird als Zitat eingefügt,
-- **[[ ]]:** ein anderes Dokument verlinken. Markierst du vorher ein Wort oder tippst oben im Feld einen Text ein (zum Beispiel „klicke hier“), steht dieser Text als Link im Dokument, und ein Klick führt trotzdem zum anderen Dokument (geschrieben als `[[Titel|klicke hier]]`),
+- **＋ Vers:** Bibelstelle eintippen und als Zitat oder Link einfügen, oder unten aus den gespeicherten Versen (Markierungen und Lesezeichen) wählen; „Aus allen Vaults“ zeigt auch die der anderen Vaults. Außerdem kannst du eine Markierung aus der Seitenleiste (Reiter Markierungen) mit der Maus ins Dokument ziehen, sie wird dort, wo du loslässt, als Zitat eingefügt,
+- **[[ ]]:** ein anderes Dokument verlinken. Markierst du vorher ein Wort oder tippst oben im Feld einen Text ein (zum Beispiel „klicke hier“), steht dieser Text als Link im Dokument, und ein Klick führt trotzdem zum anderen Dokument (geschrieben als `[[Titel|klicke hier]]`). Steht die Schreibmarke in einem Link, änderst du damit genau diesen Link: seinen Text, oder wohin er führt,
 - Rückgängig.
 
-Enter in einer Liste führt sie fort. Benennst du ein Dokument um, ziehen alle Links darauf in den anderen Dokumenten mit.
+Enter in einer Liste führt sie fort. Jedes Dokument hat eine feste Nummer, und ein Link führt über diese Nummer. Du kannst ein Dokument also beliebig oft umbenennen, seine Links bleiben gültig.
 
 **Lesen** (Strg+E) zeigt die fertige Seite ohne Schreibleiste, in der Verse und Links anklickbar sind. Bestehende Dokumente öffnen sich in dieser Ansicht, neue im Schreibmodus; mit **Schreiben** wechselst du zurück. Oben schaltest du **Auto-Speichern** ein oder aus (aus: gespeichert wird mit Speichern, beim Verlassen des Dokuments und beim Schließen). Das Dokument braucht dazu einen Titel; Strg+S speichert sofort.
 
-Das Menü **⋯** bietet **Drucken / PDF**, **Als HTML-Datei speichern …** und **Als Markdown speichern …**. Verlinkte Dokumente (und deren Links) werden mitgenommen: im Druck und in der HTML-Datei als weitere Abschnitte mit funktionierenden Sprungmarken, beim Markdown-Export als eigene Dateien in einem Ordner, auf die die Links zeigen.
+Der Knopf **Exportieren** bietet **Drucken / PDF**, **Als HTML-Datei speichern …** und **Als Markdown speichern …**. Alles, worauf das Dokument verweist, kommt mit, damit die Links in der Datei funktionieren: verlinkte Dokumente (auch deren Links) und der Text der erwähnten Verse. Im Druck und in der HTML-Datei sind das weitere Abschnitte, zu denen die Links springen; beim Markdown-Export eigene Dateien in einem Ordner, auf die die Links zeigen, die Verse in „Bibelstellen.md“.
 
 ## 6.3 Verknüpfen: Verse und [[Links]]
 
 - Schreibst du eine Bibelstelle wie „Joh 3,16“, wird sie zu einem Link, der zur Stelle springt.
-- `[[Titel]]` verlinkt ein anderes Dokument.
+- `[[Titel]]` verlinkt ein anderes Dokument. Beim Speichern bekommt der Link die Nummer des Dokuments und steht dann im Schreibmodus als `[[#12:Titel]]` oder `[[#12:Titel|eigener Text]]` im Text. In der Ansicht und im Export siehst du nur den Titel oder deinen Text.
 - Unter dem Dokument zeigen anklickbare Chips die **Verse, Links und Rückverweise (Backlinks)**: welche anderen Dokumente auf dieses zeigen.
 
 ## 6.4 Ordnen: Ordner und Kategorien

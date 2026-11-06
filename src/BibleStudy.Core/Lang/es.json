@@ -2455,7 +2455,6 @@
   "Nummerierte Liste (Strg+Umschalt+7)": "Lista numerada (Ctrl+Mayús+7)",
   "Zitat (Strg+Umschalt+9)": "Cita (Ctrl+Mayús+9)",
   "Trennlinie (Strg+Umschalt+−)": "Línea divisoria (Ctrl+Mayús+−)",
-  "Text des Links, z. B. „klicke hier“ (leer: der Titel)": "Texto del enlace, p. ej. «haz clic aquí» (vacío: el título)",
   "Als HTML-Datei speichern …": "Guardar como archivo HTML …",
   "Als Markdown speichern …": "Guardar como Markdown …",
   "Dokument als HTML speichern": "Guardar el documento como HTML",
@@ -2464,6 +2463,16 @@
   "Speichern nicht möglich: ": "No se puede guardar: ",
   "Ordner für den Markdown-Export wählen": "Elige una carpeta para la exportación a Markdown",
   "{0} Dokument(e) als Markdown gespeichert in {1}": "{0} documento(s) guardado(s) como Markdown en {1}",
-  "Auto-Speichern": "Autoguardado",
-  "Das Dokument speichert sich alle paar Sekunden selbst. Aus: gespeichert wird mit „Speichern“, beim Verlassen des Dokuments und beim Schließen des Programms.": "El documento se guarda solo cada pocos segundos. Desactivado: se guarda con «Guardar», al salir del documento y al cerrar el programa."
+  "Das Dokument speichert sich alle paar Sekunden selbst. Aus: gespeichert wird mit „Speichern“, beim Verlassen des Dokuments und beim Schließen des Programms.": "El documento se guarda solo cada pocos segundos. Desactivado: se guarda con «Guardar», al salir del documento y al cerrar el programa.",
+  "z. B. klicke hier": "p. ej. haz clic aquí",
+  "Link ändern": "Cambiar enlace",
+  "Angezeigter Text (leer: der Titel des Dokuments)": "Texto mostrado (vacío: el título del documento)",
+  "Text übernehmen": "Aplicar texto",
+  "Führt zu: {0}": "Lleva a: {0}",
+  "Dokument wählen:": "Elige un documento:",
+  "Oder zu einem anderen Dokument führen:": "O llevar a otro documento:",
+  "Auto-Speichern: an": "Autoguardado: activado",
+  "Auto-Speichern: aus": "Autoguardado: desactivado",
+  "Als PDF, HTML oder Markdown, mit den verlinkten Dokumenten und Versen, damit die Links in der Datei funktionieren": "Como PDF, HTML o Markdown, con los documentos enlazados y los versículos, para que los enlaces funcionen en el archivo",
+  "Bibelstellen": "Pasajes bíblicos"
 }

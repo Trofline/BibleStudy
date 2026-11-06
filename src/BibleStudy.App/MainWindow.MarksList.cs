@@ -184,7 +184,7 @@ public partial class MainWindow
 
     async Task OnMarksListPickedAsync()
     {
-        if (_marksListLoading || MarksList.SelectedItem is not Entry { Id: long id } e) return;
+        if (_marksHeld || _marksListLoading || MarksList.SelectedItem is not Entry { Id: long id } e) return;
         if (id >= ForeignRowBase)   // a mark of another vault: show the verse; changing it needs that vault
         {
             var vname = VaultNames().ElementAtOrDefault((int)((id - ForeignRowBase) / ForeignSpan) - 1) ?? "";

@@ -1,4 +1,4 @@
-﻿using System.Diagnostics;
+using System.Diagnostics;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Media;
@@ -72,8 +72,8 @@ public partial class MainWindow
     {
         if (text is null) { DocPathText.Text = hint ?? ""; return; }
         if (DocReadBtn.IsChecked == true) DocReadBtn.IsChecked = false;
-        var at = Math.Clamp(DocBodyBox.CaretIndex, 0, (DocBodyBox.Text ?? "").Length);
-        Splice(at, at, text);
+        RestoreDocSelection();   // the menu that inserts took the focus: the place is where the user left the text
+        Splice(_docSel.End, _docSel.End, text);
         DocBodyBox.Focus();
     }
 
@@ -83,8 +83,11 @@ public partial class MainWindow
     {
         var sameDocument = _doc is { } previous && previous.Id == d.Id && d.Id > 0 && DocEditorPanel.IsVisible;
         if (!sameDocument && _doc is not null && DocEditorPanel.IsVisible) AutoSaveDocument();   // following a link must not lose what was just typed
+        // what the caller holds can be old (a button made before another document was renamed, which changed the links in this one)
+        if (d.Id > 0 && _vault.GetDocuments().FirstOrDefault(x => x.Id == d.Id) is { } fresh) d = fresh;
         _doc = d;
-        DocTitleBox.Text = d.Title; DocBodyBox.Text = d.Body; DocTagsBox.Text = string.Join(", ", d.Tags.Where(t => !IsCategoryTag(t)));
+        DocTitleBox.Text = d.Title; DocBodyBox.Text = d.Body;
+        if (!sameDocument) _docSel = (0, 0); DocTagsBox.Text = string.Join(", ", d.Tags.Where(t => !IsCategoryTag(t)));
         FillCategoryBox(d);
         DocTemplateCheck.IsChecked = d.IsTemplate;
         var folders = FolderTree(_vault.GetFolders());
@@ -102,6 +105,7 @@ public partial class MainWindow
             if (DocReadBtn.IsChecked == read) { if (read) RenderPreview(); }
             else DocReadBtn.IsChecked = read;
         }
+        else if (DocReadBtn.IsChecked == true) RenderPreview();
         RefreshDocChips(d);
         UpdateDocStatus();
         _docSnapshot = DocState();
@@ -129,9 +133,7 @@ public partial class MainWindow
         if (_doc.Id == 0) { var id = _vault.AddDocument(title, body, _doc.Path, template, tags, folderId); _doc = _vault.GetDocuments().First(d => d.Id == id); }
         else
         {
-            var oldTitle = _doc.Title;
             _vault.UpdateDocument(_doc.Id, title, body, _doc.Path, template, tags, folderId);
-            RenameDocLinks(_doc.Id, oldTitle, title);
             _doc = _vault.GetDocuments().First(d => d.Id == _doc.Id);
         }
         OpenDocument(_doc);
@@ -149,10 +151,11 @@ public partial class MainWindow
         if (DocVerseChips.Children.Count == 0) DocVerseChips.Children.Add(new TextBlock { Text = "–", Opacity = 0.6 });
 
         var all = _vault.GetDocuments();
-        foreach (var title in DocumentLinks.WikiLinks(d.Body))
+        foreach (var link in DocumentLinks.Links(d.Body).DistinctBy(l => (l.Id, l.Title)))
         {
-            var target = all.FirstOrDefault(x => string.Equals(x.Title, title, StringComparison.OrdinalIgnoreCase));
-            var text = target is null ? L("„{0}“ (neu anlegen)", title) : title;
+            var target = VaultStore.Resolve(all, link);
+            var title = link.Title;
+            var text = target is null ? L("„{0}“ (neu anlegen)", title) : target.Title;
             DocLinkChips.Children.Add(Chip(text, () =>
             {
                 if (target is not null) OpenDocument(target);
@@ -161,7 +164,7 @@ public partial class MainWindow
         }
         if (DocLinkChips.Children.Count == 0) DocLinkChips.Children.Add(new TextBlock { Text = "–", Opacity = 0.6 });
 
-        foreach (var other in all.Where(x => x.Id != d.Id && DocumentLinks.WikiLinks(x.Body).Any(t => string.Equals(t, d.Title, StringComparison.OrdinalIgnoreCase))))
+        foreach (var other in all.Where(x => x.Id != d.Id && DocumentLinks.LinksTo(x.Body, d.Id, d.Title)))
             DocBackChips.Children.Add(Chip(other.Title, () => OpenDocument(other), trId, null));
         if (DocBackChips.Children.Count == 0) DocBackChips.Children.Add(new TextBlock { Text = "–", Opacity = 0.6 });
     }
@@ -227,8 +230,8 @@ public partial class MainWindow
         foreach (var d in docs)
         {
             var from = index["doc:" + d.Id];
-            foreach (var title in DocumentLinks.WikiLinks(d.Body))
-                if (docs.FirstOrDefault(x => string.Equals(x.Title, title, StringComparison.OrdinalIgnoreCase)) is { } t && t.Id != d.Id) edges.Add((from, index["doc:" + t.Id]));
+            foreach (var link in DocumentLinks.Links(d.Body))
+                if (VaultStore.Resolve(docs, link) is { } t && t.Id != d.Id) edges.Add((from, index["doc:" + t.Id]));
             foreach (var r in DocumentLinks.VerseRefs(d.Body))
                 edges.Add((from, Node($"v:{r.Book}|{r.Chapter}|{r.Verse}", () => new KnowledgeNode("verse", Label(r), $"{r.Book}|{r.Chapter}|{r.Verse}", HomeView.ColorOf(r.Book)))));
             foreach (var tag in d.Tags)
@@ -243,8 +246,8 @@ public partial class MainWindow
             edges.Add((from, Node("v:" + key, () => new KnowledgeNode("verse", Label(n.Ref), key, HomeView.ColorOf(n.Ref.Book)))));
             foreach (var r in DocumentLinks.VerseRefs(n.Text).Where(r => r != n.Ref))
                 edges.Add((from, Node($"v:{r.Book}|{r.Chapter}|{r.Verse}", () => new KnowledgeNode("verse", Label(r), $"{r.Book}|{r.Chapter}|{r.Verse}", HomeView.ColorOf(r.Book)))));
-            foreach (var title in DocumentLinks.WikiLinks(n.Text))
-                if (docs.FirstOrDefault(x => string.Equals(x.Title, title, StringComparison.OrdinalIgnoreCase)) is { } t) edges.Add((from, index["doc:" + t.Id]));
+            foreach (var link in DocumentLinks.Links(n.Text))
+                if (VaultStore.Resolve(docs, link) is { } t) edges.Add((from, index["doc:" + t.Id]));
         }
         Home.IsVisible = false; ReaderHost.IsVisible = false; GraphPane.IsVisible = false; MapPane.IsVisible = false; TimelinePane.IsVisible = false; FamilyPane.IsVisible = false; KnowledgePane.IsVisible = true;
         KnowledgePane.SetData(nodes, edges);

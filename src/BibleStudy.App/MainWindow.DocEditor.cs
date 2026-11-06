@@ -22,6 +22,20 @@ public partial class MainWindow
     readonly ComboBox _paragraphBox = new() { Width = 150 };
     bool _paragraphSync;
 
+    /// <summary>The selection in the text as the user made it. A click on a button of the bar moves the focus away, and the text box then forgets its selection.</summary>
+    (int Start, int End) _docSel;
+
+    /// <summary>Back into the text with the selection as the user left it, before a button of the bar works on it.</summary>
+    void RestoreDocSelection()
+    {
+        if (DocReadBtn.IsChecked == true) return;
+        var length = (DocBodyBox.Text ?? "").Length;
+        var (start, end) = (Math.Clamp(_docSel.Start, 0, length), Math.Clamp(_docSel.End, 0, length));
+        DocBodyBox.Focus();
+        DocBodyBox.SelectionStart = start; DocBodyBox.SelectionEnd = end;
+        _docSel = (start, end);
+    }
+
     FontFamily PageFont => this.TryFindResource("UiSerif", ActualThemeVariant, out var f) && f is FontFamily ff ? ff : ScriptureFont;
 
     void InitDocEditor()
@@ -29,11 +43,27 @@ public partial class MainWindow
         BuildRibbon();
         DocReadBtn.IsCheckedChanged += (_, _) => SetReadMode(DocReadBtn.IsChecked == true);
         DocBodyBox.TextChanged += (_, _) => UpdateDocStatus();
-        DocBodyBox.PropertyChanged += (_, e) => { if (e.Property == TextBox.CaretIndexProperty) SyncParagraphBox(); };
+        DocBodyBox.PropertyChanged += (_, e) =>
+        {
+            if (e.Property == TextBox.CaretIndexProperty) SyncParagraphBox();
+            // only while the box has the focus: when it loses the focus it clears its selection, and that must not count
+            if (DocBodyBox.IsFocused && (e.Property == TextBox.SelectionStartProperty || e.Property == TextBox.SelectionEndProperty))
+                _docSel = (Math.Min(DocBodyBox.SelectionStart, DocBodyBox.SelectionEnd), Math.Max(DocBodyBox.SelectionStart, DocBodyBox.SelectionEnd));
+        };
         DocEditorPanel.AddHandler(KeyDownEvent, OnDocKey, RoutingStrategies.Tunnel);
         InitDocDrag();
         DocAutoSaveBtn.IsChecked = _settings.AutoSaveDocs;
-        DocAutoSaveBtn.IsCheckedChanged += (_, _) => { _settings.AutoSaveDocs = DocAutoSaveBtn.IsChecked == true; SaveSettings(); };
+        DocAutoSaveBtn.IsCheckedChanged += (_, _) => { _settings.AutoSaveDocs = DocAutoSaveBtn.IsChecked == true; SaveSettings(); ShowAutoSaveState(); };
+        ShowAutoSaveState();
+    }
+
+    /// <summary>The switch says in words and with a filled or empty dot whether documents save themselves.</summary>
+    void ShowAutoSaveState()
+    {
+        var on = DocAutoSaveBtn.IsChecked == true;
+        var green = new SolidColorBrush(Color.Parse("#30A46C"));
+        var dot = new Avalonia.Controls.Shapes.Ellipse { Width = 9, Height = 9, StrokeThickness = 1.5, Stroke = on ? green : Brushes.Gray, Fill = on ? green : null, VerticalAlignment = VerticalAlignment.Center };
+        DocAutoSaveBtn.Content = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 7, Children = { dot, new TextBlock { Text = on ? L("Auto-Speichern: an") : L("Auto-Speichern: aus"), VerticalAlignment = VerticalAlignment.Center } } };
     }
 
     void OnDocKey(object? sender, KeyEventArgs e)
@@ -94,7 +124,7 @@ public partial class MainWindow
     {
         var b = new Button { Classes = { "tool" }, Width = width, Height = 30, Padding = new(0), Content = content, Margin = new(0, 1, 2, 1) };
         ToolTip.SetTip(b, tip);
-        b.Click += (_, _) => { click(); if (DocReadBtn.IsChecked != true) DocBodyBox.Focus(); };
+        b.Click += (_, _) => { RestoreDocSelection(); click(); if (DocReadBtn.IsChecked != true) DocBodyBox.Focus(); };
         return b;
     }
 
@@ -107,7 +137,9 @@ public partial class MainWindow
         _paragraphBox.SelectionChanged += (_, _) =>
         {
             if (_paragraphSync || _paragraphBox.SelectedIndex < 0) return;
-            SetBlock(Paragraphs[_paragraphBox.SelectedIndex].Kind);
+            var kind = Paragraphs[_paragraphBox.SelectedIndex].Kind;   // read first: going back into the text updates this box
+            RestoreDocSelection();
+            SetBlock(kind);
             DocBodyBox.Focus();
         };
         ToolTip.SetTip(_paragraphBox, L("Absatzformat der Zeile, in der die Schreibmarke steht (Strg+0 Text, Strg+1/2/3 Überschrift)"));
@@ -139,28 +171,65 @@ public partial class MainWindow
     /// </summary>
     void ShowLinkMenu(Control anchor)
     {
-        var from = Math.Min(DocBodyBox.SelectionStart, DocBodyBox.SelectionEnd); var to = Math.Max(DocBodyBox.SelectionStart, DocBodyBox.SelectionEnd);
-        var text = new TextBox { Text = (DocBodyBox.Text ?? "")[from..to].ReplaceLineEndings(" "), PlaceholderText = L("Text des Links, z. B. „klicke hier“ (leer: der Titel)"), Width = 300 };
-        var list = new StackPanel { Spacing = 2 };
-        var fly = new Flyout { Content = new StackPanel { Spacing = 6, Width = 300, Children = { new TextBlock { Text = L("Auf ein anderes Dokument verlinken"), FontWeight = FontWeight.SemiBold }, text, new ScrollViewer { MaxHeight = 260, Content = list } } } };
-        foreach (var d in _vault.GetDocuments().Where(x => x.Id != _doc?.Id).OrderBy(x => x.Title, StringComparer.CurrentCultureIgnoreCase))
+        var all = DocBodyBox.Text ?? "";
+        var from = Math.Clamp(_docSel.Start, 0, all.Length); var to = Math.Clamp(_docSel.End, from, all.Length);
+        // the cursor stands inside a link: this changes that link (its text, or where it leads, also for a link whose document is gone)
+        var existing = DocumentLinks.Links(all).FirstOrDefault(l => from >= l.Index && to <= l.Index + l.Length);
+        if (existing is not null) { from = existing.Index; to = existing.Index + existing.Length; }
+        var documents = _vault.GetDocuments();
+        var current = existing is null ? null : VaultStore.Resolve(documents, existing);
+
+        var text = new TextBox
         {
-            var title = d.Title;
-            var b = new Button { Content = title, Classes = { "tool" }, HorizontalAlignment = HorizontalAlignment.Stretch, HorizontalContentAlignment = HorizontalAlignment.Left };
-            b.Click += (_, _) =>
-            {
-                fly.Hide();
-                var shown = text.Text?.Trim() ?? "";
-                var link = shown.Length > 0 && !string.Equals(shown, title, StringComparison.Ordinal) ? $"[[{title}|{shown}]]" : $"[[{title}]]";
-                if (DocReadBtn.IsChecked == true) DocReadBtn.IsChecked = false;
-                Splice(from, to, link);
-                DocBodyBox.Focus();
-            };
+            Text = existing is not null ? existing.Text : all[from..to].ReplaceLineEndings(" ").Trim(),
+            PlaceholderText = L("z. B. klicke hier"),
+        };
+        var list = new StackPanel { Spacing = 2 };
+        var content = new StackPanel { Spacing = 6, Width = 340 };
+        var fly = new Flyout { Content = content };
+
+        void Write(Document target)
+        {
+            fly.Hide();
+            var link = DocumentLinks.LinkText(target.Id, target.Title, text.Text ?? "");
+            if (DocReadBtn.IsChecked == true) DocReadBtn.IsChecked = false;
+            DocBodyBox.Focus();
+            Splice(from, to, link);
+            Avalonia.Threading.Dispatcher.UIThread.Post(() => DocBodyBox.Focus());   // closing the menu hands the focus around once more
+        }
+
+        content.Children.Add(new TextBlock { Text = existing is not null ? L("Link ändern") : L("Auf ein anderes Dokument verlinken"), FontWeight = FontWeight.SemiBold });
+        content.Children.Add(new TextBlock { Text = L("Angezeigter Text (leer: der Titel des Dokuments)"), Classes = { "caption" }, TextWrapping = TextWrapping.Wrap });
+        content.Children.Add(text);
+        if (current is not null)
+        {
+            var keep = new Button { Content = L("Text übernehmen"), Classes = { "primary" }, HorizontalAlignment = HorizontalAlignment.Left };
+            keep.Click += (_, _) => Write(current);
+            text.KeyDown += (_, e) => { if (e.Key == Key.Enter) { e.Handled = true; Write(current); } };
+            content.Children.Add(new TextBlock { Text = L("Führt zu: {0}", current.Title), Classes = { "caption" }, TextWrapping = TextWrapping.Wrap });
+            content.Children.Add(keep);
+        }
+        content.Children.Add(new TextBlock { Text = current is null ? L("Dokument wählen:") : L("Oder zu einem anderen Dokument führen:"), Classes = { "caption" }, TextWrapping = TextWrapping.Wrap, Margin = new(0, 4, 0, 0) });
+        content.Children.Add(new ScrollViewer { MaxHeight = 280, Content = list, HorizontalScrollBarVisibility = Avalonia.Controls.Primitives.ScrollBarVisibility.Disabled });
+
+        foreach (var d in documents.Where(x => x.Id != _doc?.Id).OrderBy(x => x.Title, StringComparer.CurrentCultureIgnoreCase))
+        {
+            var doc = d;
+            var b = PickRow(new TextBlock { Text = d.Title, TextWrapping = TextWrapping.Wrap });
+            b.Click += (_, _) => Write(doc);
             list.Children.Add(b);
         }
         if (list.Children.Count == 0) list.Children.Add(new TextBlock { Text = L("Noch keine anderen Dokumente"), Classes = { "caption" } });
         fly.ShowAt(anchor);
+        Avalonia.Threading.Dispatcher.UIThread.Post(() => text.Focus());
     }
+
+    /// <summary>A line in a list to pick from: as wide as the list, the content on the left.</summary>
+    Button PickRow(Control content) => new()
+    {
+        Content = content, Classes = { "ghost" }, Foreground = Res("BsText"),
+        HorizontalAlignment = HorizontalAlignment.Stretch, HorizontalContentAlignment = HorizontalAlignment.Left, Padding = new(8, 5),
+    };
 
     // ---- verses ---------------------------------------------------------------------------------------------------------
 
@@ -255,6 +324,7 @@ public partial class MainWindow
         var a = selectFrom ?? start + text.Length; var b = selectTo ?? a;
         DocBodyBox.SelectionStart = a; DocBodyBox.SelectionEnd = b;
         if (a == b) DocBodyBox.CaretIndex = a;
+        _docSel = (Math.Min(a, b), Math.Max(a, b));
     }
 
     /// <summary>Start and end (without the line break) of the lines that the selection touches.</summary>
@@ -307,6 +377,12 @@ public partial class MainWindow
     {
         var from = Math.Min(DocBodyBox.SelectionStart, DocBodyBox.SelectionEnd); var to = Math.Max(DocBodyBox.SelectionStart, DocBodyBox.SelectionEnd);
         var t = DocBodyBox.Text ?? "";
+        // spaces at the edges stay outside the stars ("**Wort **" is no bold in other Markdown programs)
+        if (to > from && t[from..to].Trim().Length > 0)
+        {
+            while (char.IsWhiteSpace(t[from])) from++;
+            while (char.IsWhiteSpace(t[to - 1])) to--;
+        }
         var sel = t[from..to];
         if (sel.Length == 0) { Splice(from, to, mark + mark, from + mark.Length, from + mark.Length); return; }
         // the marks stand right around the selection (the text without them was selected): take them away there
@@ -373,7 +449,9 @@ public partial class MainWindow
     void SetReadMode(bool on)
     {
         DocBodyBox.IsVisible = !on; DocPreview.IsVisible = on;
-        DocRibbon.IsVisible = !on;   // the finished view is for reading: no editing bar
+        // the finished view is for reading: nothing of the editing around it
+        DocRibbonBar.IsVisible = DocMetaRow.IsVisible = DocSortExpander.IsVisible = DocSaveBtn.IsVisible = DocAutoSaveBtn.IsVisible = !on;
+        DocTitleBox.IsReadOnly = on;
         DocReadBtn.Content = on ? L("Schreiben") : L("Lesen");
         if (on) { RenderPreview(); AnimateIn(DocPreview, 0, 8); }
         else SyncParagraphBox();
@@ -381,10 +459,13 @@ public partial class MainWindow
 
     static readonly double[] HeadingSizes = [0, 30, 24, 20];
 
+    List<Document> _previewDocs = [];
+
     void RenderPreview()
     {
         DocPreview.Children.Clear();
-        var md = Regex.Replace(DocBodyBox.Text ?? "", "<!--.*?-->", "", RegexOptions.Singleline).ReplaceLineEndings("\n");
+        _previewDocs = _vault.GetDocuments();
+        var md = Regex.Replace(DocumentLinks.WithoutTitleHeading(DocBodyBox.Text ?? "", DocTitleBox.Text ?? ""), "<!--.*?-->", "", RegexOptions.Singleline).ReplaceLineEndings("\n");
         var para = new List<string>();
         void Flush() { if (para.Count > 0) { DocPreview.Children.Add(Inline(string.Join("\n", para), 18)); para.Clear(); } }
         foreach (var raw in md.Split('\n'))
@@ -427,7 +508,7 @@ public partial class MainWindow
         if (DocPreview.Children.Count == 0) DocPreview.Children.Add(new TextBlock { Text = L("Noch nichts geschrieben."), Classes = { "caption" } });
     }
 
-    [GeneratedRegex(@"\*\*(?<b>.+?)\*\*|(?<![\*\w])\*(?<i>[^\*\s][^\*]*?)\*(?![\*\w])|\[\[(?<l>[^\]|#]+)(?:[|#](?<a>[^\]]*))?\]\]")]
+    [GeneratedRegex(@"\*\*(?<b>.+?)\*\*|(?<![\*\w])\*(?<i>[^\*\s][^\*]*?)\*(?![\*\w])|\[\[(?:#(?<id>\d+):)?(?<l>[^\]|#]+)(?:[|#](?<a>[^\]]*))?\]\]")]
     private static partial Regex InlineMarks();
 
     sealed class InlineBuilder(InlineCollection into)
@@ -470,12 +551,12 @@ public partial class MainWindow
             else if (m.Groups["i"].Success) AddInlines(b, m.Groups["i"].Value, bold, true);
             else
             {
-                var title = m.Groups["l"].Value.Trim();
-                var shown = m.Groups["a"].Success && m.Groups["a"].Value.Length > 0 ? m.Groups["a"].Value : title;
-                AddLink(b, shown, bold, italic, () =>
+                // leads by the number of the document; shows the link's own text, or the title the document has now
+                var link = new DocumentLinks.DocLink(long.TryParse(m.Groups["id"].Value, out var number) ? number : null, m.Groups["l"].Value.Trim(), m.Groups["a"].Value.Trim(), 0, 0);
+                AddLink(b, link.Shown(VaultStore.Resolve(_previewDocs, link)?.Title), bold, italic, () =>
                 {
-                    if (_vault.FindDocument(title) is { } target) OpenDocument(target);
-                    else OpenDocument(new Document(0, title, "", null, false, DateTime.Now, []));
+                    if (VaultStore.Resolve(_vault.GetDocuments(), link) is { } target) OpenDocument(target);
+                    else OpenDocument(new Document(0, link.Title, "", null, false, DateTime.Now, []));
                 });
             }
             pos = m.Index + m.Length;

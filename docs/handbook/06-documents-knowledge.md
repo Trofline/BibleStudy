@@ -21,20 +21,20 @@ The editor works like a word processor:
 - at the top the **paragraph format** (Headings, Quote, lists),
 - **Bold** (Ctrl+B) and **Italic** (Ctrl+I),
 - Horizontal rule,
-- **＋ Verse:** type a Bible passage and insert it as a quote or link, or pick one of your saved verses (marks and bookmarks) from the list below; "From all vaults" also shows those of the other vaults. You can also drag a mark from the side panel (Marks tab) into the document with the mouse; it is inserted as a quote,
-- **[[ ]]:** link to another document. If you select a word first, or type a text in the box at the top (for example "click here"), that text appears as the link in the document and a click still leads to the other document (written as `[[Title|click here]]`),
+- **＋ Verse:** type a Bible passage and insert it as a quote or link, or pick one of your saved verses (marks and bookmarks) from the list below; "From all vaults" also shows those of the other vaults. You can also drag a mark from the side panel (Marks tab) into the document with the mouse; it is inserted as a quote where you let go,
+- **[[ ]]:** link to another document. If you select a word first, or type a text in the box at the top (for example "click here"), that text appears as the link in the document and a click still leads to the other document (written as `[[Title|click here]]`). With the cursor inside a link you change that very link: its text, or where it leads,
 - Undo.
 
-Enter in a list continues it. If you rename a document, all links to it in the other documents follow.
+Enter in a list continues it. Every document has a fixed number, and a link leads by that number. So you can rename a document as often as you like, its links stay valid.
 
 **Reading** (Ctrl+E) shows the finished page without the editing bar, in which verses and links are clickable. Existing documents open in this view, new ones in writing mode; **Write** takes you back. At the top you switch **Auto-save** on or off (off: saved with Save, when you leave the document and when the program closes). The document needs a title for this; Ctrl+S saves immediately.
 
-The **⋯** menu offers **Print / PDF**, **Save as HTML file …** and **Save as Markdown …**. Linked documents (and their links) come along: in print and the HTML file as further sections with working jump links, in the Markdown export as separate files in a folder that the links point to.
+The **Export** button offers **Print / PDF**, **Save as HTML file …** and **Save as Markdown …**. Everything the document refers to comes along, so that its links work in the file: linked documents (and their links) and the text of the verses it mentions. In print and the HTML file these are further sections the links jump to; in the Markdown export, separate files in a folder that the links point to, with the verses in "Bible passages.md".
 
 ## 6.3 Linking: Verses and [[Links]]
 
 - If you write a Bible passage like "John 3:16", it becomes a link that jumps to the passage.
-- `[[Title]]` links to another document.
+- `[[Title]]` links to another document. When saved, the link gets the number of the document and then reads `[[#12:Title]]` or `[[#12:Title|your own text]]` in writing mode. In the reading view and in exports you only see the title or your text.
 - Below the document, clickable chips show the **verses, links and backlinks**: which other documents point to this one.
 
 ## 6.4 Organizing: folders and categories
