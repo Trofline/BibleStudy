@@ -31,6 +31,7 @@ public partial class MainWindow
         DocBodyBox.TextChanged += (_, _) => UpdateDocStatus();
         DocBodyBox.PropertyChanged += (_, e) => { if (e.Property == TextBox.CaretIndexProperty) SyncParagraphBox(); };
         DocEditorPanel.AddHandler(KeyDownEvent, OnDocKey, RoutingStrategies.Tunnel);
+        InitDocDrag();
     }
 
     void OnDocKey(object? sender, KeyEventArgs e)
@@ -112,7 +113,7 @@ public partial class MainWindow
 
     Flyout BuildVerseFlyout()
     {
-        var reference = new TextBox { PlaceholderText = L("z. B. Joh 3,16-18"), Width = 250 };
+        var reference = new TextBox { PlaceholderText = L("z. B. Joh 3,16-18"), Width = 300 };
         var info = new TextBlock { Classes = { "caption" }, TextWrapping = TextWrapping.Wrap, MaxWidth = 250 };
         var quote = new Button { Content = L("Als Zitat einfügen"), Classes = { "primary" }, Margin = new(0, 0, 6, 0) };
         var link = new Button { Content = L("Nur als Link") };
@@ -127,6 +128,7 @@ public partial class MainWindow
             },
         };
         var fly = new Flyout { Content = content };
+        content.Children.Add(BuildSavedVersesPicker(fly, 300));
         fly.Opening += (_, _) =>
         {
             info.Text = "";

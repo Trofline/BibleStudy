@@ -170,7 +170,7 @@ public partial class MainWindow
         foreach (var c in Categories)
         {
             var cat = c;
-            var item = new MenuItem { Header = CategoryColors[Math.Clamp(cat.Color, 0, CategoryColors.Length - 1)].Dot + " " + cat.Name };
+            var item = new MenuItem { Header = CategoryColors[Math.Clamp(cat.Color, 0, CategoryColors.Length - 1)].Dot + " " + CategoryLabel(cat.Name) };
             item.Click += (_, _) => SetCategory(d, cat);
             category.Items.Add(item);
         }
@@ -204,7 +204,7 @@ public partial class MainWindow
         var tags = d.Tags.Where(t => !IsCategoryTag(t) && (category is not null || !Categories.Any(c => string.Equals(c.Name, t, StringComparison.OrdinalIgnoreCase)))).ToList();
         if (category is not null) tags.Add(CategoryPrefix + category.Name);
         _vault.UpdateDocument(d.Id, d.Title, d.Body, d.Path, d.IsTemplate, tags, d.FolderId);
-        DocInfo.Text = category is null ? L("„{0}“ hat jetzt keine Kategorie.", d.Title) : L("„{0}“ gehört jetzt zu „{1}“.", d.Title, category.Name);
+        DocInfo.Text = category is null ? L("„{0}“ hat jetzt keine Kategorie.", d.Title) : L("„{0}“ gehört jetzt zu „{1}“.", d.Title, CategoryLabel(category.Name));
         RefreshDocs();
     }
 

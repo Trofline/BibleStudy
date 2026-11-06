@@ -21,7 +21,7 @@ The editor works like a word processor:
 - at the top the **paragraph format** (Headings, Quote, lists),
 - **Bold** (Ctrl+B) and **Italic** (Ctrl+I),
 - Horizontal rule,
-- **＋ Verse:** type a Bible passage and insert it as a quote or link,
+- **＋ Verse:** type a Bible passage and insert it as a quote or link, or pick one of your saved verses (marks and bookmarks) from the list below; "From all vaults" also shows those of the other vaults. You can also drag a mark from the side panel (Marks tab) into the document with the mouse; it is inserted as a quote,
 - **[[ ]]:** link to another document,
 - Undo.
 

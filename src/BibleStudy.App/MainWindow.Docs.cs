@@ -44,6 +44,29 @@ public partial class MainWindow
         }
     }
 
+    static readonly string[] DefaultCategoryNames = ["Predigt", "Wortstudie", "Personenstudie", "Themenstudie", "Gebet", "Frage"];
+    static Dictionary<string, string>? _categoryAliases;
+
+    /// <summary>
+    /// The standard categories are saved once under the name in the language of that day. Shown, they follow the language in use now
+    /// (the saved name stays, because document tags refer to it).
+    /// </summary>
+    static string CategoryLabel(string name)
+    {
+        if (_categoryAliases is null)
+        {
+            var map = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+            foreach (var key in DefaultCategoryNames)
+            {
+                map[key] = key;
+                foreach (var lang in Loc.Languages)
+                    if (Loc.Texts(lang.Code).TryGetValue(key, out var translated)) map.TryAdd(translated, key);
+            }
+            _categoryAliases = map;
+        }
+        return _categoryAliases.TryGetValue(name, out var de) ? L(de) : name;
+    }
+
     static bool InCategory(Document d, string name) =>
         d.Tags.Any(t => string.Equals(t, CategoryPrefix + name, StringComparison.OrdinalIgnoreCase) || string.Equals(t, name, StringComparison.OrdinalIgnoreCase));
 
@@ -116,7 +139,7 @@ public partial class MainWindow
         }
         DocCategoryChips.Children.Add(Chip(L("Alle"), null, null, docs.Count));
         foreach (var c in Categories)
-            DocCategoryChips.Children.Add(Chip(c.Name, c.Name, Color.Parse(CategoryColors[Math.Clamp(c.Color, 0, CategoryColors.Length - 1)].Hex), docs.Count(d => InCategory(d, c.Name))));
+            DocCategoryChips.Children.Add(Chip(CategoryLabel(c.Name), c.Name, Color.Parse(CategoryColors[Math.Clamp(c.Color, 0, CategoryColors.Length - 1)].Hex), docs.Count(d => InCategory(d, c.Name))));
         DocCategoryChips.Children.Add(Chip(L("Ohne Kategorie"), "", null, docs.Count(d => CategoryOf(d) is null)));
 
         var add = new Button { Content = L("＋ Kategorie"), Classes = { "seg" }, Margin = new(0, 0, 6, 6) };
@@ -166,7 +189,7 @@ public partial class MainWindow
     {
         var items = new List<object> { L("(keine)") };
         items.AddRange(Categories.Select(c => (object)c));
-        DocCategoryBox.ItemTemplate = new Avalonia.Controls.Templates.FuncDataTemplate<object>((o, _) => new TextBlock { Text = o is DocCategory c ? CategoryColors[Math.Clamp(c.Color, 0, CategoryColors.Length - 1)].Dot + " " + c.Name : o?.ToString() ?? "" });
+        DocCategoryBox.ItemTemplate = new Avalonia.Controls.Templates.FuncDataTemplate<object>((o, _) => new TextBlock { Text = o is DocCategory c ? CategoryColors[Math.Clamp(c.Color, 0, CategoryColors.Length - 1)].Dot + " " + CategoryLabel(c.Name) : o?.ToString() ?? "" });
         DocCategoryBox.ItemsSource = items;
         var current = CategoryOf(d) ?? (d.Id == 0 && _docCategory is { Length: > 0 } pre ? Categories.FirstOrDefault(c => c.Name == pre) : null);
         DocCategoryBox.SelectedIndex = current is null ? 0 : Math.Max(0, Categories.IndexOf(current) + 1);

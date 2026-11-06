@@ -2448,5 +2448,9 @@
   "{0} Sicherungen ({1}) werden endgültig gelöscht und lassen sich nicht zurückholen.": "Копий: {0} ({1}) будут удалены навсегда, вернуть их будет нельзя.",
   "{0} Sicherungen gelöscht ({1} frei).": "Удалено копий: {0} (освобождено {1}).",
   "{0} Sicherungen konnten nicht gelöscht werden.": "Не удалось удалить копий: {0}.",
-  "Zeigt alle Sicherungen mit ihrer Größe. Hake an, was gelöscht werden soll.": "Показывает все копии с их размером. Отметь те, что нужно удалить."
+  "Zeigt alle Sicherungen mit ihrer Größe. Hake an, was gelöscht werden soll.": "Показывает все копии с их размером. Отметь те, что нужно удалить.",
+  "Aktuellen Reiter schließen": "Закрыть текущую вкладку",
+  "Aus allen Vaults": "Из всех хранилищ",
+  "Noch keine gespeicherten Verse.": "Сохранённых стихов пока нет.",
+  "Gespeicherte Verse": "Сохранённые стихи"
 }

@@ -21,7 +21,7 @@ Der Editor arbeitet wie ein Textprogramm:
 - oben das **Absatzformat** (Überschriften, Zitat, Listen),
 - **Fett** (Strg+B) und **Kursiv** (Strg+I),
 - Trennlinie,
-- **＋ Vers:** Bibelstelle eintippen und als Zitat oder Link einfügen,
+- **＋ Vers:** Bibelstelle eintippen und als Zitat oder Link einfügen, oder unten aus den gespeicherten Versen (Markierungen und Lesezeichen) wählen; „Aus allen Vaults“ zeigt auch die der anderen Vaults. Außerdem kannst du eine Markierung aus der Seitenleiste (Reiter Markierungen) mit der Maus ins Dokument ziehen, sie wird als Zitat eingefügt,
 - **[[ ]]:** ein anderes Dokument verlinken,
 - Rückgängig.
 

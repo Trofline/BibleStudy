@@ -2448,5 +2448,9 @@
   "{0} Sicherungen ({1}) werden endgültig gelöscht und lassen sich nicht zurückholen.": "{0} sauvegardes ({1}) seront supprimées définitivement et ne pourront pas être récupérées.",
   "{0} Sicherungen gelöscht ({1} frei).": "{0} sauvegardes supprimées ({1} libérés).",
   "{0} Sicherungen konnten nicht gelöscht werden.": "{0} sauvegardes n'ont pas pu être supprimées.",
-  "Zeigt alle Sicherungen mit ihrer Größe. Hake an, was gelöscht werden soll.": "Affiche toutes les sauvegardes avec leur taille. Coche celles à supprimer."
+  "Zeigt alle Sicherungen mit ihrer Größe. Hake an, was gelöscht werden soll.": "Affiche toutes les sauvegardes avec leur taille. Coche celles à supprimer.",
+  "Aktuellen Reiter schließen": "Fermer l'onglet actuel",
+  "Aus allen Vaults": "De tous les vaults",
+  "Noch keine gespeicherten Verse.": "Aucun verset enregistré pour l'instant.",
+  "Gespeicherte Verse": "Versets enregistrés"
 }

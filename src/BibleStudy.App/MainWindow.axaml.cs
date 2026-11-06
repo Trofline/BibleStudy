@@ -672,8 +672,17 @@ public partial class MainWindow : Window
     }
 
     /// <summary>Translucent so the text stays readable on both themes. A mark inside a marked verse (<paramref name="core"/>) is stronger: it is the most important part.</summary>
-    IBrush HighlightBrush(string hex, bool core = false) =>
-        new SolidColorBrush(MarkColor(hex), core ? (ActualThemeVariant == Avalonia.Styling.ThemeVariant.Dark ? 0.8 : 0.88) : ActualThemeVariant == Avalonia.Styling.ThemeVariant.Dark ? 0.45 : 0.55);
+    IBrush HighlightBrush(string hex, bool core = false)
+    {
+        var dark = ActualThemeVariant == Avalonia.Styling.ThemeVariant.Dark;
+        var alpha = core ? (dark ? 0.8 : 0.88) : dark ? 0.45 : 0.55;
+        var c = MarkColor(hex);
+        // Every word is its own Run; where two see-through backgrounds touch they overlap by a sliver and drew a dark line.
+        // So the colour is mixed with the page colour once and drawn solid.
+        if (Res("BsBackground") is not SolidColorBrush { Color: var bg }) return new SolidColorBrush(c, alpha);
+        byte Mix(byte f, byte b) => (byte)Math.Round(f * alpha + b * (1 - alpha));
+        return new SolidColorBrush(Color.FromRgb(Mix(c.R, bg.R), Mix(c.G, bg.G), Mix(c.B, bg.B)));
+    }
 
     /// <summary>The color of the text you have selected (before it is marked): the accent color, see-through.</summary>
     IBrush SelectionBrush() => new SolidColorBrush(SelectionInk(),ActualThemeVariant == Avalonia.Styling.ThemeVariant.Dark ? 0.5 : 0.38);

@@ -209,6 +209,12 @@ public partial class MainWindow
         OpenWork(g);
     }
 
+    /// <summary>Ctrl+W: closes the tab you are on (the reader itself stays).</summary>
+    void CloseActiveTab()
+    {
+        if (_activeWork is { } key && _windows.TryGetValue(key, out var d) && d.Win is null) Restore(d);
+    }
+
     void UpdateReadBar() => ReadBar.IsVisible = ReaderHost.IsVisible && !WorkHost.IsVisible && !_settings.FocusMode;
 
     // ---- tab strip -------------------------------------------------------------------------------------------------------

@@ -24,6 +24,7 @@ Alle Kürzel in der ersten Tabelle lassen sich ändern (*Einstellungen → Taste
 | Strg+G | Vers-Übersicht öffnen |
 | Strg+Umschalt+D | Dokumente öffnen |
 | Strg+Umschalt+O | Aktuelles Seitenfenster auslagern |
+| Strg+W | Aktuellen Reiter oben schließen (Lesen bleibt) |
 
 Mehrere dieser Kürzel funktionieren auch, während du in einem Textfeld tippst (zum Beispiel Strg+K).
 

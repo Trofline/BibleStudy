@@ -41,6 +41,7 @@ public partial class MainWindow
             new("guide", L("Vers-Übersicht öffnen"), "Ctrl+G", () => Sync(() => { SetPanelOpen(true); SideTabs.SelectedIndex = GuideTab; }), true),
             new("docs", L("Dokumente öffnen"), "Ctrl+Shift+D", () => Sync(() => OpenWork(NavGroups.First(g => g.Name == "Dokumente"))), true),
             new("popout", L("Aktuelles Seitenfenster auslagern"), "Ctrl+Shift+O", () => Sync(() => PopOutTab(SideTabs.SelectedIndex)), true),
+            new("closetab", L("Aktuellen Reiter schließen"), "Ctrl+W", () => Sync(CloseActiveTab), true),
             new("tabswitch", L("Zwischen Lesen und dem gewählten Reiter wechseln"), "Tab", () => Sync(SwitchReadTab)),
         ];
         BuildKeysPanel();

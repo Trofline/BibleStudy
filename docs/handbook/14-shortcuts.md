@@ -24,6 +24,7 @@ All shortcuts in the first table can be changed (*Settings → Keyboard shortcut
 | Ctrl+G | Open verse overview |
 | Ctrl+Shift+D | Open documents |
 | Ctrl+Shift+O | Detach the current side panel |
+| Ctrl+W | Close the current tab at the top (Reading stays) |
 
 Several of these shortcuts also work while you're typing in a text field (for example Ctrl+K).
 

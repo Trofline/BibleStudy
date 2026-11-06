@@ -2448,5 +2448,9 @@
   "{0} Sicherungen ({1}) werden endgültig gelöscht und lassen sich nicht zurückholen.": "{0} copias ({1}) se borrarán definitivamente y no se podrán recuperar.",
   "{0} Sicherungen gelöscht ({1} frei).": "{0} copias borradas ({1} liberados).",
   "{0} Sicherungen konnten nicht gelöscht werden.": "No se pudieron borrar {0} copias.",
-  "Zeigt alle Sicherungen mit ihrer Größe. Hake an, was gelöscht werden soll.": "Muestra todas las copias con su tamaño. Marca las que quieras borrar."
+  "Zeigt alle Sicherungen mit ihrer Größe. Hake an, was gelöscht werden soll.": "Muestra todas las copias con su tamaño. Marca las que quieras borrar.",
+  "Aktuellen Reiter schließen": "Cerrar la pestaña actual",
+  "Aus allen Vaults": "De todos los vaults",
+  "Noch keine gespeicherten Verse.": "Aún no hay versículos guardados.",
+  "Gespeicherte Verse": "Versículos guardados"
 }
