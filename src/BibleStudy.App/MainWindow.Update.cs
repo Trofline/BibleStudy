@@ -97,6 +97,8 @@ public partial class MainWindow
             {
                 var rel = Path.GetRelativePath(root, file);
                 if (CacheFolders.Contains(rel.Split(Path.DirectorySeparatorChar)[0])) continue;
+                var parts = rel.Split(Path.DirectorySeparatorChar);
+                if (parts.Length > 2 && parts[0] == "vaults" && IsGuestDir(Path.Combine(root, parts[0], parts[1]))) continue;   // guest imports are not backed up
                 if (Path.GetFullPath(file).StartsWith(backupDir, StringComparison.OrdinalIgnoreCase)) continue;   // a backup folder inside the data: not the backups themselves
                 if (file.EndsWith(".tmp", StringComparison.OrdinalIgnoreCase)) continue;
                 try

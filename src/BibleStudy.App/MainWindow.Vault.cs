@@ -49,7 +49,7 @@ public partial class MainWindow
         _noteRef = null; NoteEditor.Text = _noteLoaded = "";
         _vault = OpenVault(name);
         RefreshHiddenXrefs();
-        _settings.Vault = name; SaveSettings();
+        if (!IsGuestVault(name)) { _settings.Vault = name; SaveSettings(); }   // a guest vault is never the one that opens next time
         _read = _vault.GetReadChapters();
         _myXrefKey = null;
         _sermonVault = null; if (TabActive(PrayerTab)) BuildPrayerUi(); RefreshLists(); RefreshDocs(); RefreshQueue(); RefreshTodos(); RefreshBookmarks(); RefreshVaultUi();

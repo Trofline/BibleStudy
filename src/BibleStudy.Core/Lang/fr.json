@@ -2474,5 +2474,10 @@
   "Auto-Speichern: an": "Enregistrement auto : activé",
   "Auto-Speichern: aus": "Enregistrement auto : désactivé",
   "Als PDF, HTML oder Markdown, mit den verlinkten Dokumenten und Versen, damit die Links in der Datei funktionieren": "En PDF, HTML ou Markdown, avec les documents liés et les versets, pour que les liens fonctionnent dans le fichier",
-  "Bibelstellen": "Passages bibliques"
+  "Bibelstellen": "Passages bibliques",
+  "Als Gast importieren …": "Importer comme invité …",
+  "Öffnet die ZIP eines anderen Computers nur für diese Sitzung: Beim Schließen des Programms ist alles wieder weg, deine eigenen Vaults und Einstellungen bleiben unberührt": "Ouvre le ZIP d'un autre ordinateur pour cette session seulement : à la fermeture du programme tout disparaît, tes propres vaults et réglages restent intacts",
+  "Vault als Gast importieren": "Importer un vault comme invité",
+  "Gast {0:yyyy-MM-dd HH-mm}": "Invité {0:yyyy-MM-dd HH-mm}",
+  "Als Gast importiert: „{0}“. Er verschwindet, wenn du das Programm schließt; deine eigenen Daten bleiben unberührt.": "Importé comme invité : « {0} ». Il disparaît à la fermeture du programme ; tes propres données restent intactes."
 }

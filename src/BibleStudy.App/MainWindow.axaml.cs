@@ -83,6 +83,7 @@ public partial class MainWindow : Window
         CreatePlugins();
         _overlay = new StrongsOverlay(Path.Combine(_root, "strongs-overlay"));
         _provider = new CompositeProvider(_hello, _local, _pluginProvider) { Overlay = _overlay };
+        Closed += (_, _) => { try { DeleteGuestVaults(_root); } catch (Exception ex) { ErrorLog.Write(ex); } };
         Closed += (_, _) => { try { _overlay.CommitAll(); } catch (Exception ex) when (ex is IOException or UnauthorizedAccessException) { ErrorLog.Write(ex); } };
         _strongs = new StrongsDictionary(http, Path.Combine(_root, "cache"));
         _step = new StepLexicon(http, Path.Combine(_root, "cache"));
@@ -92,6 +93,7 @@ public partial class MainWindow : Window
         _settingsPath = Path.Combine(_root, "settings.json");
         _settings = AppSettings.Load(_settingsPath);
         CommentariesOn = _settings.ShowCommentaries; CompactLook = _settings.CompactLook; NavGroups = MakeNavGroups();
+        DeleteGuestVaults(_root);   // a guest import left over from a crash
         _vault = OpenVault(_settings.Vault);
         _read = _vault.GetReadChapters();
         _fontSize = _settings.FontSize;

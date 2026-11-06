@@ -850,6 +850,7 @@
                                 <WrapPanel>
                                     <Button x:Name="ExportBtn" Content="Exportieren …" Margin="0,0,6,6" />
                                     <Button x:Name="ImportBtn" Content="Importieren …" Margin="0,0,6,6" />
+                                    <Button x:Name="GuestImportBtn" Content="Als Gast importieren …" Margin="0,0,6,6" ToolTip.Tip="Öffnet die ZIP eines anderen Computers nur für diese Sitzung: Beim Schließen des Programms ist alles wieder weg, deine eigenen Vaults und Einstellungen bleiben unberührt" />
                                     <Button x:Name="ObsidianBtn" Content="Als Obsidian-Vault exportieren …" ToolTip.Tip="Schreibt den ganzen Vault als Markdown-Ordner: deine Ordner als Ordner, jede Notiz und jedes Dokument als eigene Datei, Bibelstellen als Links. Obsidian und andere Notiz-Programme öffnen ihn direkt." />
                                     <Button x:Name="LicensesBtn" Content="Quellen und Lizenzen …" ToolTip.Tip="Woher alle Texte und Daten stammen und unter welcher Lizenz sie stehen" />
                                 </WrapPanel>

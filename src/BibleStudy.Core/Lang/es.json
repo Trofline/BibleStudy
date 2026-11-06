@@ -2474,5 +2474,10 @@
   "Auto-Speichern: an": "Autoguardado: activado",
   "Auto-Speichern: aus": "Autoguardado: desactivado",
   "Als PDF, HTML oder Markdown, mit den verlinkten Dokumenten und Versen, damit die Links in der Datei funktionieren": "Como PDF, HTML o Markdown, con los documentos enlazados y los versículos, para que los enlaces funcionen en el archivo",
-  "Bibelstellen": "Pasajes bíblicos"
+  "Bibelstellen": "Pasajes bíblicos",
+  "Als Gast importieren …": "Importar como invitado …",
+  "Öffnet die ZIP eines anderen Computers nur für diese Sitzung: Beim Schließen des Programms ist alles wieder weg, deine eigenen Vaults und Einstellungen bleiben unberührt": "Abre el ZIP de otro ordenador solo para esta sesión: al cerrar el programa todo desaparece, tus propios vaults y ajustes no se tocan",
+  "Vault als Gast importieren": "Importar vault como invitado",
+  "Gast {0:yyyy-MM-dd HH-mm}": "Invitado {0:yyyy-MM-dd HH-mm}",
+  "Als Gast importiert: „{0}“. Er verschwindet, wenn du das Programm schließt; deine eigenen Daten bleiben unberührt.": "Importado como invitado: «{0}». Desaparece al cerrar el programa; tus propios datos no se tocan."
 }

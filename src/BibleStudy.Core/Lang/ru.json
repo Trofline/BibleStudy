@@ -2474,5 +2474,10 @@
   "Auto-Speichern: an": "Автосохранение: вкл.",
   "Auto-Speichern: aus": "Автосохранение: выкл.",
   "Als PDF, HTML oder Markdown, mit den verlinkten Dokumenten und Versen, damit die Links in der Datei funktionieren": "В PDF, HTML или Markdown, со связанными документами и стихами, чтобы ссылки работали в файле",
-  "Bibelstellen": "Библейские места"
+  "Bibelstellen": "Библейские места",
+  "Als Gast importieren …": "Импорт как гость …",
+  "Öffnet die ZIP eines anderen Computers nur für diese Sitzung: Beim Schließen des Programms ist alles wieder weg, deine eigenen Vaults und Einstellungen bleiben unberührt": "Открывает ZIP с другого компьютера только на этот сеанс: при закрытии программы всё исчезает, твои хранилища и настройки не затрагиваются",
+  "Vault als Gast importieren": "Импорт хранилища как гость",
+  "Gast {0:yyyy-MM-dd HH-mm}": "Гость {0:yyyy-MM-dd HH-mm}",
+  "Als Gast importiert: „{0}“. Er verschwindet, wenn du das Programm schließt; deine eigenen Daten bleiben unberührt.": "Импортировано как гость: «{0}». Исчезнет при закрытии программы; твои данные не затрагиваются."
 }

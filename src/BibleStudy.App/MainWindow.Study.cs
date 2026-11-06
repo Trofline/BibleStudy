@@ -33,6 +33,7 @@ public partial class MainWindow
         SpeakBtn.Click += async (_, _) => await ToggleSpeakAsync();
         ExportBtn.Click += async (_, _) => await ExportAsync();
         ImportBtn.Click += async (_, _) => await ImportAsync();
+        GuestImportBtn.Click += async (_, _) => await ImportAsync(guest: true);
         Closed += (_, _) => { _speech?.Dispose(); _voiceCts?.Cancel(); _voice.Dispose(); BibleStudy.Core.OllamaClient.StopStarted(); };
     }
 
@@ -215,23 +216,26 @@ public partial class MainWindow
         finally { try { File.Delete(snapshot); } catch (IOException) { } }
     }
 
-    async Task ImportAsync()
+    async Task ImportAsync(bool guest = false)
     {
         var files = await StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
         {
-            Title = L("Vault importieren"), AllowMultiple = false, FileTypeFilter = [new FilePickerFileType("ZIP-Archiv") { Patterns = ["*.zip"] }],
+            Title = guest ? L("Vault als Gast importieren") : L("Vault importieren"), AllowMultiple = false, FileTypeFilter = [new FilePickerFileType("ZIP-Archiv") { Patterns = ["*.zip"] }],
         });
         if (files.Count == 0 || files[0].TryGetLocalPath() is not { } path) return;
         try
         {
             using var zip = ZipFile.OpenRead(path);
             var vaultEntry = zip.GetEntry("vault.db") ?? throw new InvalidDataException(L("Die Datei enthält keinen Vault (vault.db)."));
-            var name = L("Import {0:yyyy-MM-dd HH-mm}", DateTime.Now);
-            for (var n = 2; Directory.Exists(Path.Combine(_root, "vaults", name)); n++) name = L("Import {0:yyyy-MM-dd HH-mm}", DateTime.Now) + $" ({n})";   // a second import in the same minute
+            var stem = guest ? L("Gast {0:yyyy-MM-dd HH-mm}", DateTime.Now) : L("Import {0:yyyy-MM-dd HH-mm}", DateTime.Now);
+            var name = stem;
+            for (var n = 2; Directory.Exists(Path.Combine(_root, "vaults", name)); n++) name = stem + $" ({n})";   // a second import in the same minute
             var target = Path.Combine(_root, "vaults", name, "vault.db");
             Directory.CreateDirectory(Path.GetDirectoryName(target)!);
             vaultEntry.ExtractToFile(target);
-            if (zip.GetEntry("settings.json") is { } settingsEntry)
+            if (guest) File.WriteAllText(Path.Combine(Path.GetDirectoryName(target)!, GuestFlag), "temporary: deleted when the program closes");
+            // a guest import leaves the settings of this computer alone (colors, switches)
+            if (!guest && zip.GetEntry("settings.json") is { } settingsEntry)
             {
                 using var reader = new StreamReader(settingsEntry.Open());
                 if (JsonSerializer.Deserialize<AppSettings>(reader.ReadToEnd()) is { } imported)
@@ -247,7 +251,7 @@ public partial class MainWindow
                 }
             }
             await SwitchVaultAsync(name);
-            BackupInfo.Text = L("Importiert als neuer Vault „{0}“.", name);
+            BackupInfo.Text = guest ? L("Als Gast importiert: „{0}“. Er verschwindet, wenn du das Programm schließt; deine eigenen Daten bleiben unberührt.", name) : L("Importiert als neuer Vault „{0}“.", name);
         }
         catch (Exception ex) { BackupInfo.Text = L("Import fehlgeschlagen: ") + ex.Message; }
     }
