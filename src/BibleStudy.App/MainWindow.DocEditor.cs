@@ -32,6 +32,8 @@ public partial class MainWindow
         DocBodyBox.PropertyChanged += (_, e) => { if (e.Property == TextBox.CaretIndexProperty) SyncParagraphBox(); };
         DocEditorPanel.AddHandler(KeyDownEvent, OnDocKey, RoutingStrategies.Tunnel);
         InitDocDrag();
+        DocAutoSaveBtn.IsChecked = _settings.AutoSaveDocs;
+        DocAutoSaveBtn.IsCheckedChanged += (_, _) => { _settings.AutoSaveDocs = DocAutoSaveBtn.IsChecked == true; SaveSettings(); };
     }
 
     void OnDocKey(object? sender, KeyEventArgs e)
@@ -43,8 +45,43 @@ public partial class MainWindow
         if (!DocBodyBox.IsFocused) return;
         if (ctrl && e.Key == Key.B) { e.Handled = true; Wrap("**"); return; }
         if (ctrl && e.Key == Key.I) { e.Handled = true; Wrap("*"); return; }
+        if (DocEditorKey(e) is { } action) { e.Handled = true; action(); return; }
         if (e.Key == Key.Enter && e.KeyModifiers == KeyModifiers.None && ContinueList()) e.Handled = true;
     }
+
+    /// <summary>
+    /// The formatting keys of the editor (they win over the program's own shortcuts while the text is focused, see OnShortcut):
+    /// Ctrl+0 normal text, Ctrl+1/2/3 headings, Ctrl+Shift+8 list, Ctrl+Shift+7 numbered list, Ctrl+Shift+9 quote, Ctrl+Shift+- rule.
+    /// </summary>
+    Action? DocEditorKey(KeyEventArgs e)
+    {
+        var ctrl = e.KeyModifiers.HasFlag(KeyModifiers.Control); var shift = e.KeyModifiers.HasFlag(KeyModifiers.Shift);
+        if (!ctrl || e.KeyModifiers.HasFlag(KeyModifiers.Alt)) return null;
+        if (!shift)
+            return e.Key switch
+            {
+                Key.D0 or Key.NumPad0 => () => SetBlock(""),
+                Key.D1 or Key.NumPad1 => () => SetBlock("#"),
+                Key.D2 or Key.NumPad2 => () => SetBlock("##"),
+                Key.D3 or Key.NumPad3 => () => SetBlock("###"),
+                _ => null,
+            };
+        return e.Key switch
+        {
+            Key.D8 => () => SetBlock("-"),
+            Key.D7 => () => SetBlock("1."),
+            Key.D9 => () => SetBlock(">"),
+            Key.OemMinus or Key.Subtract => InsertRule,
+            _ => null,
+        };
+    }
+
+    /// <summary>The gestures (as the program writes them) that belong to the document editor while its text is focused.</summary>
+    static readonly HashSet<string> DocEditorGestures =
+    [
+        "Ctrl+B", "Ctrl+I", "Ctrl+S", "Ctrl+E", "Ctrl+D0", "Ctrl+D1", "Ctrl+D2", "Ctrl+D3", "Ctrl+NumPad0", "Ctrl+NumPad1", "Ctrl+NumPad2", "Ctrl+NumPad3",
+        "Ctrl+Shift+D7", "Ctrl+Shift+D8", "Ctrl+Shift+D9", "Ctrl+Shift+Minus",
+    ];
 
     // ---- the bar --------------------------------------------------------------------------------------------------------
 
@@ -73,16 +110,16 @@ public partial class MainWindow
             SetBlock(Paragraphs[_paragraphBox.SelectedIndex].Kind);
             DocBodyBox.Focus();
         };
-        ToolTip.SetTip(_paragraphBox, L("Absatzformat der Zeile, in der die Schreibmarke steht"));
+        ToolTip.SetTip(_paragraphBox, L("Absatzformat der Zeile, in der die Schreibmarke steht (Strg+0 Text, Strg+1/2/3 Überschrift)"));
         DocRibbon.Children.Add(new Border { Classes = { "pill" }, Child = _paragraphBox, Margin = new(0, 1, 6, 1) });
 
         DocRibbon.Children.Add(RibbonButton(new TextBlock { Text = "B", FontWeight = FontWeight.Bold }, L("Fett (Strg+B)"), () => Wrap("**")));
         DocRibbon.Children.Add(RibbonButton(new TextBlock { Text = "I", FontStyle = FontStyle.Italic, FontFamily = PageFont, FontSize = 16 }, L("Kursiv (Strg+I)"), () => Wrap("*")));
         DocRibbon.Children.Add(RibbonSeparator());
-        DocRibbon.Children.Add(RibbonButton("•≡", L("Aufzählung"), () => SetBlock("-")));
-        DocRibbon.Children.Add(RibbonButton("1.", L("Nummerierte Liste"), () => SetBlock("1.")));
-        DocRibbon.Children.Add(RibbonButton("❝", L("Zitat"), () => SetBlock(">")));
-        DocRibbon.Children.Add(RibbonButton("—", L("Trennlinie"), InsertRule));
+        DocRibbon.Children.Add(RibbonButton("•≡", L("Aufzählung (Strg+Umschalt+8)"), () => SetBlock("-")));
+        DocRibbon.Children.Add(RibbonButton("1.", L("Nummerierte Liste (Strg+Umschalt+7)"), () => SetBlock("1.")));
+        DocRibbon.Children.Add(RibbonButton("❝", L("Zitat (Strg+Umschalt+9)"), () => SetBlock(">")));
+        DocRibbon.Children.Add(RibbonButton("—", L("Trennlinie (Strg+Umschalt+−)"), InsertRule));
         DocRibbon.Children.Add(RibbonSeparator());
 
         var verse = RibbonButton(L("＋ Vers"), L("Bibelstelle als Zitat oder Link einfügen"), () => { }, 74);
@@ -96,17 +133,33 @@ public partial class MainWindow
         DocRibbon.Children.Add(RibbonButton("↷", L("Wiederholen (Strg+Y)"), () => DocBodyBox.Redo()));
     }
 
+    /// <summary>
+    /// Link to another document: pick it from the list; the text of the link is what is selected in the document (or what is typed in the
+    /// box), so a link can read "klicke hier" and still lead to the document. Written as [[Title|text]].
+    /// </summary>
     void ShowLinkMenu(Control anchor)
     {
-        var menu = new MenuFlyout();
-        foreach (var d in _vault.GetDocuments().Where(x => x.Id != _doc?.Id).Take(60))
+        var from = Math.Min(DocBodyBox.SelectionStart, DocBodyBox.SelectionEnd); var to = Math.Max(DocBodyBox.SelectionStart, DocBodyBox.SelectionEnd);
+        var text = new TextBox { Text = (DocBodyBox.Text ?? "")[from..to].ReplaceLineEndings(" "), PlaceholderText = L("Text des Links, z. B. „klicke hier“ (leer: der Titel)"), Width = 300 };
+        var list = new StackPanel { Spacing = 2 };
+        var fly = new Flyout { Content = new StackPanel { Spacing = 6, Width = 300, Children = { new TextBlock { Text = L("Auf ein anderes Dokument verlinken"), FontWeight = FontWeight.SemiBold }, text, new ScrollViewer { MaxHeight = 260, Content = list } } } };
+        foreach (var d in _vault.GetDocuments().Where(x => x.Id != _doc?.Id).OrderBy(x => x.Title, StringComparer.CurrentCultureIgnoreCase))
         {
-            var title = d.Title; var item = new MenuItem { Header = title };
-            item.Click += (_, _) => InsertIntoDoc($"[[{title}]]", null);
-            menu.Items.Add(item);
+            var title = d.Title;
+            var b = new Button { Content = title, Classes = { "tool" }, HorizontalAlignment = HorizontalAlignment.Stretch, HorizontalContentAlignment = HorizontalAlignment.Left };
+            b.Click += (_, _) =>
+            {
+                fly.Hide();
+                var shown = text.Text?.Trim() ?? "";
+                var link = shown.Length > 0 && !string.Equals(shown, title, StringComparison.Ordinal) ? $"[[{title}|{shown}]]" : $"[[{title}]]";
+                if (DocReadBtn.IsChecked == true) DocReadBtn.IsChecked = false;
+                Splice(from, to, link);
+                DocBodyBox.Focus();
+            };
+            list.Children.Add(b);
         }
-        if (menu.Items.Count == 0) menu.Items.Add(new MenuItem { Header = L("Noch keine anderen Dokumente"), IsEnabled = false });
-        menu.ShowAt(anchor);
+        if (list.Children.Count == 0) list.Children.Add(new TextBlock { Text = L("Noch keine anderen Dokumente"), Classes = { "caption" } });
+        fly.ShowAt(anchor);
     }
 
     // ---- verses ---------------------------------------------------------------------------------------------------------
@@ -256,6 +309,16 @@ public partial class MainWindow
         var t = DocBodyBox.Text ?? "";
         var sel = t[from..to];
         if (sel.Length == 0) { Splice(from, to, mark + mark, from + mark.Length, from + mark.Length); return; }
+        // the marks stand right around the selection (the text without them was selected): take them away there
+        static int StarsBefore(string s, int at) { var n = 0; while (at - 1 - n >= 0 && s[at - 1 - n] == '*') n++; return n; }
+        static int StarsAfter(string s, int at) { var n = 0; while (at + n < s.Length && s[at + n] == '*') n++; return n; }
+        var around = mark == "**" ? StarsBefore(t, from) >= 2 && StarsAfter(t, to) >= 2
+            : StarsBefore(t, from) % 2 == 1 && StarsAfter(t, to) % 2 == 1;   // a single * is italic; ** or *** around it is not
+        if (around)
+        {
+            Splice(from - mark.Length, to + mark.Length, sel, from - mark.Length, from - mark.Length + sel.Length);
+            return;
+        }
         var wrapped = sel.Length > 2 * mark.Length && sel.StartsWith(mark, StringComparison.Ordinal) && sel.EndsWith(mark, StringComparison.Ordinal) && !(mark == "*" && sel.StartsWith("**", StringComparison.Ordinal));
         if (wrapped) { var inner = sel[mark.Length..^mark.Length]; Splice(from, to, inner, from, from + inner.Length); }
         else Splice(from, to, mark + sel + mark, from, from + sel.Length + 2 * mark.Length);
@@ -310,7 +373,7 @@ public partial class MainWindow
     void SetReadMode(bool on)
     {
         DocBodyBox.IsVisible = !on; DocPreview.IsVisible = on;
-        DocRibbon.IsEnabled = !on; DocRibbon.Opacity = on ? 0.45 : 1;
+        DocRibbon.IsVisible = !on;   // the finished view is for reading: no editing bar
         DocReadBtn.Content = on ? L("Schreiben") : L("Lesen");
         if (on) { RenderPreview(); AnimateIn(DocPreview, 0, 8); }
         else SyncParagraphBox();

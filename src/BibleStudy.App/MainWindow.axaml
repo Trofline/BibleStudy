@@ -534,6 +534,7 @@
                         <Grid x:Name="DocEditorPanel" IsVisible="False" RowDefinitions="Auto,Auto,Auto,*,Auto" Margin="12,12,6,8">
                             <DockPanel Margin="0,0,0,8">
                                 <Button x:Name="DocSaveBtn" DockPanel.Dock="Right" Content="Speichern" Classes="primary" />
+                                <ToggleButton x:Name="DocAutoSaveBtn" DockPanel.Dock="Right" Classes="pillbtn" Content="Auto-Speichern" Margin="0,0,6,0" ToolTip.Tip="Das Dokument speichert sich alle paar Sekunden selbst. Aus: gespeichert wird mit „Speichern“, beim Verlassen des Dokuments und beim Schließen des Programms." />
                                 <Button x:Name="DocMoreBtn" DockPanel.Dock="Right" Content="⋯" Classes="tool" Margin="0,0,6,0" ToolTip.Tip="Mehr" />
                                 <ToggleButton x:Name="DocReadBtn" DockPanel.Dock="Right" Classes="pillbtn" Content="Lesen" Margin="0,0,6,0" ToolTip.Tip="Zwischen Schreiben und fertiger Ansicht wechseln (Strg+E). In der Ansicht sind Verse und Links anklickbar." />
                                 <Button x:Name="DocBackBtn" Content="← Liste" HorizontalAlignment="Left" />

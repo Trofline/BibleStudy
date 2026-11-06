@@ -184,6 +184,8 @@ public sealed class AppSettings
     public bool TranslateMeanings { get; set; } = true;
     public List<DocCategory> Categories { get; set; } = [];
     public bool CategoriesSeeded { get; set; }
+    /// <summary>Documents save themselves every few seconds while they are open (the toggle above the editor).</summary>
+    public bool AutoSaveDocs { get; set; } = true;
     public string Commentary { get; set; } = "matthew-henry";
     public Dictionary<string, string> KeyBindings { get; set; } = [];
     /// <summary>Plugins the user has allowed: plugin id → fingerprint of its plugin.json at the time (a changed plugin must be allowed again).</summary>

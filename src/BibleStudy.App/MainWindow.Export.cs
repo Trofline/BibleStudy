@@ -52,13 +52,18 @@ public partial class MainWindow
     }
 
     /// <summary>The little Markdown the editor uses: headings, quotes, lists, bold, italic; [[links]] become plain titles.</summary>
-    static string MarkdownToHtml(string md)
+    static string MarkdownToHtml(string md, Func<string, string?>? hrefOf = null)
     {
         md = Regex.Replace(md, "<!--.*?-->", "", RegexOptions.Singleline);
         string Inline(string s)
         {
             s = H(s);
-            s = Regex.Replace(s, @"\[\[(.+?)\]\]", "$1");
+            // [[Title|text]]: the text (or the title) shown, as a link when the document is part of the page
+            s = Regex.Replace(s, @"\[\[(?<t>[^\]|#]+)(?:[|#](?<a>[^\]]*))?\]\]", m =>
+            {
+                var shown = m.Groups["a"].Success && m.Groups["a"].Value.Trim().Length > 0 ? m.Groups["a"].Value.Trim() : m.Groups["t"].Value.Trim();
+                return hrefOf?.Invoke(WebUtility.HtmlDecode(m.Groups["t"].Value).Trim()) is { } href ? $"<a href=\"{H(href)}\">{shown}</a>" : shown;
+            });
             s = Regex.Replace(s, @"\*\*(.+?)\*\*", "<b>$1</b>");
             s = Regex.Replace(s, @"(?<![\*\w])\*(?!\s)(.+?)(?<!\s)\*(?![\*\w])", "<i>$1</i>");
             return s;
@@ -91,15 +96,6 @@ public partial class MainWindow
     }
 
     // ---- what can be printed -------------------------------------------------------------------------------------------
-
-    void PrintDocument()
-    {
-        var title = DocTitleBox.Text?.Trim() ?? "";
-        var body = DocBodyBox.Text ?? "";
-        if (title.Length == 0 && body.Trim().Length == 0) { DocInfo.Text = L("Nichts zu drucken."); return; }
-        var tags = DocTagsBox.Text?.Trim() ?? "";
-        ExportPrint(title, $"<h1>{H(title)}</h1>" + (tags.Length > 0 ? $"<p class=\"meta\">{H(tags)}</p>" : "") + MarkdownToHtml(body), SafeName(title, L("Dokument")));
-    }
 
     void PrintPrayers()
     {

@@ -52,6 +52,9 @@ Mehrere dieser Kürzel funktionieren auch, während du in einem Textfeld tippst 
 |---|---|
 | Strg+B | Fett (im Dokument-Editor) |
 | Strg+I | Kursiv (im Dokument-Editor) |
+| Strg+0 / Strg+1 / Strg+2 / Strg+3 | Absatz: normaler Text / Überschrift 1 / 2 / 3 (im Dokument-Editor) |
+| Strg+Umschalt+8 / +7 / +9 | Aufzählung / nummerierte Liste / Zitat (im Dokument-Editor) |
+| Strg+Umschalt+− | Trennlinie (im Dokument-Editor) |
 | Strg+E | zwischen Schreiben und Lesen umschalten |
 | Strg+S | sofort speichern |
 | Enter in einer Liste | Liste fortführen |
@@ -60,7 +63,7 @@ Mehrere dieser Kürzel funktionieren auch, während du in einem Textfeld tippst 
 | Esc | abbrechen (zum Beispiel Teil-To-do, Kürzel-Aufnahme) |
 | Entf | Belegung eines Kürzels löschen (in den Einstellungen) |
 
-> Strg+B bedeutet je nach Ort etwas anderes: Im Dokument-Editor macht es Text **fett**, sonst blendet es die Seitenleiste ein oder aus.
+> Strg+B bedeutet je nach Ort etwas anderes: Im Dokument-Editor macht es Text **fett**, sonst blendet es die Seitenleiste ein oder aus. Dasselbe gilt für alle Kürzel dieser Tabelle: Steht die Schreibmarke im Text eines Dokuments, gehören sie dem Editor, auch wenn sie sonst im Programm etwas anderes tun (zum Beispiel Strg+0 für die Schriftgröße). Markierter Text wird mit Sternchen umschlossen, ein zweiter Druck nimmt sie wieder weg.
 
 ## 14.3 Maus
 

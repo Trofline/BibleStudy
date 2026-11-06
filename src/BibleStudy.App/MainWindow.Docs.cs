@@ -104,6 +104,10 @@ public partial class MainWindow
         var more = new MenuFlyout();
         var print = new MenuItem { Header = L("Drucken / PDF") };
         print.Click += (_, _) => PrintDocument();
+        var asHtml = new MenuItem { Header = L("Als HTML-Datei speichern …") };
+        asHtml.Click += async (_, _) => await SaveDocumentAsHtmlAsync();
+        var asMd = new MenuItem { Header = L("Als Markdown speichern …") };
+        asMd.Click += async (_, _) => await SaveDocumentAsMarkdownAsync();
         _miOpenFile.Header = L("Datei öffnen"); _miOpenFile.Click += (_, _) => OpenLinkedFile();
         _miFromTemplate.Header = L("Neu aus dieser Vorlage");
         _miFromTemplate.Click += (_, _) => { if (_doc is { } d) OpenDocument(new Document(0, L("Neu: ") + d.Title, d.Body, null, false, DateTime.Now, d.Tags)); };
@@ -113,7 +117,7 @@ public partial class MainWindow
             if (_doc is not { Id: > 0 } d) return;
             CloseDocument(); TrashDocumentWithUndo(d);
         };
-        more.Items.Add(print); more.Items.Add(_miOpenFile); more.Items.Add(_miFromTemplate); more.Items.Add(new Separator()); more.Items.Add(_miDelete);
+        more.Items.Add(print); more.Items.Add(asHtml); more.Items.Add(asMd); more.Items.Add(_miOpenFile); more.Items.Add(_miFromTemplate); more.Items.Add(new Separator()); more.Items.Add(_miDelete);
         DocMoreBtn.Flyout = more;
     }
 

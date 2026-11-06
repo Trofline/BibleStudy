@@ -14,6 +14,12 @@ public static partial class DocumentLinks
     public static IReadOnlyList<string> WikiLinks(string body) =>
         Wiki().Matches(body).Select(m => m.Groups["t"].Value.Trim()).Where(t => t.Length > 0).Distinct(StringComparer.OrdinalIgnoreCase).ToList();
 
+    /// <summary>The text with every [[Old]], [[Old|text]] and [[Old#part]] pointing to the new title (the text and the part stay). Renaming a document must not break the links to it.</summary>
+    public static string RenameLink(string body, string oldTitle, string newTitle) =>
+        Wiki().Replace(body, m => string.Equals(m.Groups["t"].Value.Trim(), oldTitle.Trim(), StringComparison.OrdinalIgnoreCase)
+            ? "[[" + newTitle.Trim() + m.Value[(2 + m.Groups["t"].Length)..]
+            : m.Value);
+
     /// <summary>Verse references in the text, first verse of a range, in order of appearance without duplicates.</summary>
     public static IReadOnlyList<VerseRef> VerseRefs(string body)
     {

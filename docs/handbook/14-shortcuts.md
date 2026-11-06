@@ -52,6 +52,9 @@ Several of these shortcuts also work while you're typing in a text field (for ex
 |---|---|
 | Ctrl+B | Bold (in the document editor) |
 | Ctrl+I | Italic (in the document editor) |
+| Ctrl+0 / Ctrl+1 / Ctrl+2 / Ctrl+3 | Paragraph: normal text / heading 1 / 2 / 3 (in the document editor) |
+| Ctrl+Shift+8 / +7 / +9 | Bulleted list / numbered list / quote (in the document editor) |
+| Ctrl+Shift+− | Divider (in the document editor) |
 | Ctrl+E | Switch between Write and Reading |
 | Ctrl+S | Save immediately |
 | Enter in a list | Continue the list |
@@ -60,7 +63,7 @@ Several of these shortcuts also work while you're typing in a text field (for ex
 | Esc | Cancel (for example a sub-to-do, shortcut recording) |
 | Delete | Clear the assignment of a shortcut (in Settings) |
 
-> Ctrl+B means something different depending on where you are: in the document editor it makes text **bold**, otherwise it shows or hides the side panel.
+> Ctrl+B means something different depending on where you are: in the document editor it makes text **bold**, otherwise it shows or hides the side panel. The same goes for every shortcut in this table: while the cursor is in the text of a document they belong to the editor, even if they do something else elsewhere in the program (for example Ctrl+0 for the font size). Selected text is wrapped in asterisks, pressing again takes them off.
 
 ## 14.3 Mouse
 

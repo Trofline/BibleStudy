@@ -8,6 +8,13 @@ public class DocumentTests : IDisposable
     readonly string _dir = Path.Combine(Path.GetTempPath(), "bs_" + Guid.NewGuid().ToString("N"));
 
     [Fact]
+    public void Renaming_a_document_keeps_its_links_working()
+    {
+        var body = "Siehe [[Alt]], [[alt|hier klicken]], [[Alt#Teil]] und [[Anderes]]. Alt bleibt.";
+        Assert.Equal("Siehe [[Neu]], [[Neu|hier klicken]], [[Neu#Teil]] und [[Anderes]]. Alt bleibt.", DocumentLinks.RenameLink(body, "Alt", "Neu"));
+    }
+
+    [Fact]
     public void Links_FindVerseReferencesInGermanAndEnglishSpellings()
     {
         var refs = DocumentLinks.VerseRefs("Siehe Joh 3,16 und 1. Kor 13,4-7, auch Rom 5:8 sowie Psalm 23,1. Genesis 1:1 gilt; \"Preis 3,50 Euro\" nicht, Hiob 1,2.");

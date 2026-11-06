@@ -122,6 +122,9 @@ public partial class MainWindow
             return;
         }
 
+        // writing a document: Ctrl+B (bold), Ctrl+I (italic), Ctrl+S, Ctrl+E belong to the editor, not to the program
+        if (DocBodyBox.IsFocused && DocEditorGestures.Contains(gesture)) return;
+
         var typing = TopLevel.GetTopLevel(this)?.FocusManager?.GetFocusedElement() is TextBox;
         var hit = _keyActions.FirstOrDefault(a => GestureOf(a) == gesture && GestureOf(a).Length > 0);
         if (hit is null || (typing && !hit.WhenTyping)) return;

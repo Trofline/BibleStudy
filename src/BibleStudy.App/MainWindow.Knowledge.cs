@@ -96,7 +96,12 @@ public partial class MainWindow
         _miFromTemplate.IsVisible = d.IsTemplate && d.Id > 0;
         _miDelete.IsVisible = d.Id > 0;
         DocListPanel.IsVisible = false; DocEditorPanel.IsVisible = true;
-        if (!sameDocument) DocReadBtn.IsChecked = false;   // saving keeps the mode; opening another document starts in writing mode
+        if (!sameDocument)   // saving keeps the mode; a document that exists opens in the finished view (read, click links), a new one in writing mode
+        {
+            var read = d.Id > 0;
+            if (DocReadBtn.IsChecked == read) { if (read) RenderPreview(); }
+            else DocReadBtn.IsChecked = read;
+        }
         RefreshDocChips(d);
         UpdateDocStatus();
         _docSnapshot = DocState();
@@ -122,7 +127,13 @@ public partial class MainWindow
         var template = DocTemplateCheck.IsChecked == true;
         var folderId = DocFolderBox.SelectedItem is Folder fo ? fo.Id : (long?)null;
         if (_doc.Id == 0) { var id = _vault.AddDocument(title, body, _doc.Path, template, tags, folderId); _doc = _vault.GetDocuments().First(d => d.Id == id); }
-        else { _vault.UpdateDocument(_doc.Id, title, body, _doc.Path, template, tags, folderId); _doc = _vault.GetDocuments().First(d => d.Id == _doc.Id); }
+        else
+        {
+            var oldTitle = _doc.Title;
+            _vault.UpdateDocument(_doc.Id, title, body, _doc.Path, template, tags, folderId);
+            RenameDocLinks(_doc.Id, oldTitle, title);
+            _doc = _vault.GetDocuments().First(d => d.Id == _doc.Id);
+        }
         OpenDocument(_doc);
         RefreshCollection();
         DocPathText.Text = (_doc.Path is null ? "" : L("Verknüpfte Datei: ") + _doc.Path + "\n") + L("Gespeichert.");

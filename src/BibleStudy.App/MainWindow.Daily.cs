@@ -30,7 +30,7 @@ public partial class MainWindow
     void InitAutosave()
     {
         var timer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(6) };
-        timer.Tick += (_, _) => AutoSaveDocument();
+        timer.Tick += (_, _) => { if (_settings.AutoSaveDocs) AutoSaveDocument(); };   // off: saved with "Speichern", and when the document is left or the program closed
         timer.Start();
     }
 
@@ -49,7 +49,11 @@ public partial class MainWindow
             var template = DocTemplateCheck.IsChecked == true;
             var folderId = DocFolderBox.SelectedItem is Folder fo ? fo.Id : (long?)null;
             if (_doc.Id == 0) { var id = _vault.AddDocument(title, body, _doc.Path, template, tags, folderId); _doc = _vault.GetDocuments().First(d => d.Id == id); }
-            else _vault.UpdateDocument(_doc.Id, title, body, _doc.Path, template, tags, folderId);
+            else
+            {
+                _vault.UpdateDocument(_doc.Id, title, body, _doc.Path, template, tags, folderId);
+                if (_doc.Title != title) { RenameDocLinks(_doc.Id, _doc.Title, title); _doc = _doc with { Title = title }; }
+            }
             _docSnapshot = state;
             DocPathText.Text = L("Automatisch gespeichert um {0:HH:mm:ss}", DateTime.Now);
         }

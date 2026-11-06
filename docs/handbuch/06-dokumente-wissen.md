@@ -22,10 +22,14 @@ Der Editor arbeitet wie ein Textprogramm:
 - **Fett** (Strg+B) und **Kursiv** (Strg+I),
 - Trennlinie,
 - **＋ Vers:** Bibelstelle eintippen und als Zitat oder Link einfügen, oder unten aus den gespeicherten Versen (Markierungen und Lesezeichen) wählen; „Aus allen Vaults“ zeigt auch die der anderen Vaults. Außerdem kannst du eine Markierung aus der Seitenleiste (Reiter Markierungen) mit der Maus ins Dokument ziehen, sie wird als Zitat eingefügt,
-- **[[ ]]:** ein anderes Dokument verlinken,
+- **[[ ]]:** ein anderes Dokument verlinken. Markierst du vorher ein Wort oder tippst oben im Feld einen Text ein (zum Beispiel „klicke hier“), steht dieser Text als Link im Dokument, und ein Klick führt trotzdem zum anderen Dokument (geschrieben als `[[Titel|klicke hier]]`),
 - Rückgängig.
 
-Enter in einer Liste führt sie fort. **Lesen** (Strg+E) zeigt die fertige Seite, in der Verse und Links anklickbar sind. Es wird **automatisch gespeichert**, auch während du schreibst (das Dokument braucht dazu einen Titel); Strg+S speichert sofort. Drucken oder als PDF geht über das Menü **⋯**.
+Enter in einer Liste führt sie fort. Benennst du ein Dokument um, ziehen alle Links darauf in den anderen Dokumenten mit.
+
+**Lesen** (Strg+E) zeigt die fertige Seite ohne Schreibleiste, in der Verse und Links anklickbar sind. Bestehende Dokumente öffnen sich in dieser Ansicht, neue im Schreibmodus; mit **Schreiben** wechselst du zurück. Oben schaltest du **Auto-Speichern** ein oder aus (aus: gespeichert wird mit Speichern, beim Verlassen des Dokuments und beim Schließen). Das Dokument braucht dazu einen Titel; Strg+S speichert sofort.
+
+Das Menü **⋯** bietet **Drucken / PDF**, **Als HTML-Datei speichern …** und **Als Markdown speichern …**. Verlinkte Dokumente (und deren Links) werden mitgenommen: im Druck und in der HTML-Datei als weitere Abschnitte mit funktionierenden Sprungmarken, beim Markdown-Export als eigene Dateien in einem Ordner, auf die die Links zeigen.
 
 ## 6.3 Verknüpfen: Verse und [[Links]]
 
