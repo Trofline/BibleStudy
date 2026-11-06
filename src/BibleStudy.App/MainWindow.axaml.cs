@@ -630,10 +630,12 @@ public partial class MainWindow : Window
         var num = new Run(_settings.VerseNumbers == "Hidden" ? (d.HasNote ? "✎ " : "") + (star.Length > 0 ? star + " " : "") : number + (d.HasNote ? "✎" : "") + star + " ") { FontSize = numSize, FontWeight = FontWeight.Bold, BaselineAlignment = _settings.VerseNumbers == "Normal" ? BaselineAlignment.Baseline : BaselineAlignment.Top };
         num.Bind(TextElement.ForegroundProperty, this.GetResourceObservable("BsVerseNumber"));
         Add(num);
+        (Run Run, object? Mark, bool Selected, bool Jesus)? mergeable = null;
         foreach (var s in v.Segments)
         {
             if (s.NoteId is int nid)
             {
+                mergeable = null;
                 if (d.Notes is null || !d.Notes.TryGetValue(nid, out var note)) { Add(new Run(" ")); continue; }
                 var marker = new Run(note.Letter + " ") { FontSize = size * 0.62, FontWeight = FontWeight.Bold, BaselineAlignment = BaselineAlignment.Superscript };
                 marker.Bind(TextElement.ForegroundProperty, this.GetResourceObservable("BsAccent"));
@@ -650,7 +652,20 @@ public partial class MainWindow : Window
             {
                 var piece = s.Text[points[i]..points[i + 1]];
                 var from = raw + points[i];
+                // Neighbouring pieces with the same background are drawn as one run: two backgrounds that touch leave a thin dark seam
+                // between them (their edges are anti-aliased). Not while the word study is on: there every word is painted on its own.
+                var selected = sel is { } sq && piece.Length > 0 && sq.Start <= from && sq.End >= from + piece.Length;
+                var markHere = selected ? null : marks.LastOrDefault(m => m.Start <= from && m.End >= from + piece.Length);
+                if (!study && (selected || markHere is not null) && mergeable is { } mg && mg.Selected == selected && ReferenceEquals(mg.Mark, markHere) && mg.Jesus == s.WordsOfJesus && piece.Length > 0)
+                {
+                    mg.Run.Text += piece;
+                    pos += piece.Length;
+                    if (s.Strongs is { Count: > 0 }) spans.Add(new WordSpan(pos - piece.Length, pos, [.. s.Strongs], s.Text, null, mg.Run, mg.Run.Background));
+                    runs[^1] = runs[^1] with { Len = runs[^1].Len + piece.Length };
+                    continue;
+                }
                 var run = new Run(piece);
+                mergeable = (selected || markHere is not null) ? (run, markHere, selected, s.WordsOfJesus) : null;
                 if (s.WordsOfJesus && _settings.JesusRed && Color.TryParse(_settings.JesusColor, out var jesusColor)) run.Foreground = new SolidColorBrush(jesusColor);
                 else if (s.WordsOfJesus && _settings.JesusRed) run.Bind(TextElement.ForegroundProperty, this.GetResourceObservable("BsJesus"));
                 if (sel is { } sp && piece.Length > 0 && sp.Start <= from && sp.End >= from + piece.Length) run.Background = SelectionBrush();
