@@ -1,4 +1,4 @@
-﻿using Avalonia;
+using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
 using Avalonia.Controls.Shapes;
@@ -25,8 +25,10 @@ public partial class MainWindow
         public Window? Win { get; set; }
         public required List<(TabItem Tab, Control Content, Border Wrap)> Items { get; init; }
         public required string Key { get; init; }
-        public required string Title { get; init; }
-        public required Control Panel { get; init; }
+        public required string Title { get; set; }
+        public string? Icon { get; init; }   // a tab that is not one of the fixed work areas brings its own
+        public required Control Panel { get; set; }
+        public Action? Rebuild { get; set; }   // makes new controls before the tab changes between the strip and a window (null: the controls move)
         public required Grid Host { get; init; }
         public required List<int> Indices { get; init; }
         public required bool Side { get; init; }        // a single side panel tab that was dragged out
@@ -146,6 +148,7 @@ public partial class MainWindow
     void Restore(Detached d)
     {
         if (!_windows.Remove(d.Key)) return;
+        _contextTabs.Remove(d.Key);
         d.Host.Children.Clear();
         foreach (var (tab, c, wrap) in d.Items) { wrap.Child = null; tab.Content = c; }
         if (d.Panel.Parent is Panel p) p.Children.Remove(d.Panel);
@@ -190,6 +193,7 @@ public partial class MainWindow
         UpdateReadBar();
         RebuildTabStrip();
         if (key is not null && _windows.TryGetValue(key, out var shown)) TabShown(shown.Current);
+        if (key is not null && _contextTabs.TryGetValue(key, out var context)) _ = DrawContextTabAsync(context);
     }
 
     string? _lastWorkTab;
@@ -201,6 +205,7 @@ public partial class MainWindow
     {
         if (_activeWork is not null) { ShowReader(); return; }
         var target = _settings.PinnedTab ?? _lastWorkTab;
+        if (target is not null && _contextTabs.TryGetValue(target, out var context)) { FocusContextTab(context); return; }
         if (target is null || NavGroups.FirstOrDefault(g => "group:" + g.Name == target) is not { } g)
         {
             StatusText.Text = L("Noch kein anderer Reiter offen. Öffne einen Reiter oder setze den Punkt an einem Reiter, dann wechselt Tab dorthin.");
@@ -225,8 +230,8 @@ public partial class MainWindow
         TabStrip.Children.Add(MakeTab(L("Lesen"), null, "M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"));
         foreach (var d in _windows.Values.Where(w => !w.Side).OrderBy(w => _settings.TabOrder.IndexOf(w.Key) is var i and >= 0 ? i : int.MaxValue).ToList())
         {
-            var g = NavGroups.First(x => "group:" + x.Name == d.Key);
-            TabStrip.Children.Add(MakeTab(L(d.Title), d.Key, g.Icon, closable: true));
+            var icon = d.Icon ?? NavGroups.First(x => "group:" + x.Name == d.Key).Icon;
+            TabStrip.Children.Add(MakeTab(L(d.Title), d.Key, icon, closable: true));
         }
         // "+" opens a new tab, like in a browser or the Explorer
         var plus = new Button { Classes = { "tool" }, Width = 30, Height = 30, VerticalAlignment = VerticalAlignment.Center, Margin = new(4, 0, 0, 2), Content = new Icon { Data = Geometry.Parse("M12 5v14 M5 12h14"), IconSize = 14 } };
@@ -311,14 +316,16 @@ public partial class MainWindow
             }
             reordered = false;
             dragged = true; from = null; e.Pointer.Capture(null);
-            OpenWorkWindow(NavGroups.First(g => "group:" + g.Name == key), this.PointToScreen(pos) - new PixelPoint(160, 20));
+            TearOutWork(key, this.PointToScreen(pos) - new PixelPoint(160, 20));
+            if (_contextTabs.TryGetValue(key, out var torn)) UpdatePopButton(torn);
         };
         b.Click += (_, _) =>
         {
             if (reordered) { reordered = false; return; }
             if (dragged) { dragged = false; return; }
             if (key is null) { ShowReader(); return; }
-            OpenWork(NavGroups.First(g => "group:" + g.Name == key));
+            if (_contextTabs.TryGetValue(key, out var own)) FocusContextTab(own);
+            else OpenWork(NavGroups.First(g => "group:" + g.Name == key));
         };
         return b;
     }
@@ -328,18 +335,26 @@ public partial class MainWindow
     void OpenWorkWindow(NavGroup g, PixelPoint? at)
     {
         var key = "group:" + g.Name;
-        if (_windows.TryGetValue(key, out var d))
-        {
-            if (d.Win is not null) { d.Win.Activate(); return; }
-            WorkHost.Children.Remove(d.Panel); d.Panel.IsVisible = true;
-            var wasActive = _activeWork == key;
-            OpenWindowFor(d, at);
-            if (wasActive) ShowWork(null);
-            return;
-        }
-        d = Build(key, g.Tabs.Select(t => t.Index).ToList(), g.Name == "Mehr" ? "Einstellungen" : g.Name, g.Tabs[0].Index, side: false);
+        if (_windows.ContainsKey(key)) { TearOutWork(key, at); return; }
+        var d = Build(key, g.Tabs.Select(t => t.Index).ToList(), g.Name == "Mehr" ? "Einstellungen" : g.Name, g.Tabs[0].Index, side: false);
         if (d is not null) OpenWindowFor(d, at);
     }
+
+    /// <summary>Makes a loose window of an open tab (a window it already is comes to the front).</summary>
+    void TearOutWork(string key, PixelPoint? at)
+    {
+        if (!_windows.TryGetValue(key, out var d)) return;
+        if (d.Win is not null) { d.Win.Activate(); return; }
+        WorkHost.Children.Remove(d.Panel);
+        d.Rebuild?.Invoke();
+        d.Panel.IsVisible = true;
+        var wasActive = _activeWork == key;
+        OpenWindowFor(d, at);
+        if (wasActive) ShowWork(null);
+    }
+
+    /// <summary>All tabs of cross references share one remembered window place: each reference of its own would pile up in the settings.</summary>
+    static string WindowStateKey(string key) => IsContextKey(key) ? ContextPrefix : key;
 
     void PopOutTab(int index, PixelPoint? at = null)
     {
@@ -351,7 +366,7 @@ public partial class MainWindow
     void OpenWindowFor(Detached d, PixelPoint? at)
     {
         // a place on a screen that is no longer connected would open the window where nobody can see it
-        var saved = _settings.Windows.TryGetValue(d.Key, out var s) && s.W > 0 && Screens.All.Any(sc => sc.WorkingArea.Contains(new PixelPoint(s.X + 40, s.Y + 20))) ? s : null;
+        var saved = _settings.Windows.TryGetValue(WindowStateKey(d.Key), out var s) && s.W > 0 && Screens.All.Any(sc => sc.WorkingArea.Contains(new PixelPoint(s.X + 40, s.Y + 20))) ? s : null;
         var win = new Window
         {
             Title = L("BibleStudy – {0}", L(d.Title)), Width = saved?.W ?? (d.Items.Count > 1 ? 640 : 520), Height = saved?.H ?? 800, MinWidth = 320, MinHeight = 240,
@@ -366,7 +381,7 @@ public partial class MainWindow
         {
             SaveWindowState(d.Key, win);
             win.Content = null; d.Win = null;
-            if (d.Redock && !d.Side) { d.Redock = false; DockWork(d); ShowWork(d.Key); }
+            if (d.Redock && !d.Side) { d.Redock = false; d.Rebuild?.Invoke(); DockWork(d); ShowWork(d.Key); }
             else Restore(d);
         };
 
@@ -430,6 +445,7 @@ public partial class MainWindow
 
     void SaveWindowState(string key, Window w)
     {
+        key = WindowStateKey(key);
         _settings.Windows[key] = new WindowBounds(w.Position.X, w.Position.Y, (int)w.Width, (int)w.Height, w.WindowState == WindowState.Maximized) { Key = key };
         SaveSettings();
     }
@@ -474,6 +490,17 @@ public partial class MainWindow
                 else OpenWork(g);
             }
             else if (w.Key.StartsWith("tab:") && int.TryParse(w.Key[4..], out var idx)) { _settings.Windows[w.Key] = w; PopOutTab(idx); }
+            else if (IsContextKey(w.Key) && ParseContextKey(w.Key) is { } context)
+            {
+                OpenContextTab(context.Target, context.End, show: false);
+                if (w.W > 0 && _contextTabs.TryGetValue(w.Key, out var tab))
+                {
+                    _settings.Windows[WindowStateKey(w.Key)] = w;
+                    TearOutWork(w.Key, null);
+                    UpdatePopButton(tab);
+                    _ = DrawContextTabAsync(tab);
+                }
+            }
         }
         ShowWork(l.ActiveWork);
         SaveSettings();

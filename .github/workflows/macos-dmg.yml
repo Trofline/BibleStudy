@@ -57,6 +57,8 @@ jobs:
           rm BibleStudy.iconset/icon_64x64.png
           iconutil -c icns BibleStudy.iconset -o "$APP/Resources/BibleStudy.icns"
           cp LICENSE THIRD-PARTY-NOTICES.md dmgroot/
+          # the list of files of this version: the in-app quick update starts from it
+          gh release download "$TAG" --pattern "BibleStudy-Update-${{ matrix.rid }}-$VERSION.json" --output "$APP/update-files.json" || true
 
       - name: Sign locally (no Apple account, so only an "ad hoc" signature)
         run: |

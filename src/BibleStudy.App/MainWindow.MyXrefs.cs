@@ -36,12 +36,12 @@ public partial class MainWindow
         var end = outgoing ? x.EndVerse : target.Verse;
         var text = "★ " + (outgoing ? "" : "↩ ") + Label(target) + (end > target.Verse ? "–" + end : "");
         if (x.Note.Length > 0) text += " · " + Shorten(x.Note, 24);
-        var chip = Chip(text, () => _ = GoToAsync(target.Book, target.Chapter, target.Verse), translationId, new CrossRef(target, end, 0));
+        var chip = Chip(text, () => FollowXref(target, end), translationId, new CrossRef(target, end, 0));
         chip.Bind(Border.BackgroundProperty, this.GetResourceObservable("BsAccentSoft"));
         chip.BorderBrush = Res("BsAccent") as IBrush ?? Brushes.Goldenrod;
         var del = new MenuItem { Header = L("Eigenen Querverweis löschen") };
         del.Click += async (_, _) => { _vault.DeleteMyXref(x.Id); _myXrefKey = null; await RedrawChapterAsync(); };
-        chip.ContextMenu = new ContextMenu { Items = { del } };
+        chip.ContextMenu = new ContextMenu { ItemsSource = XrefOpenItems(target, end).Append(del).ToList() };
         return chip;
     }
 

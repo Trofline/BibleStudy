@@ -65,7 +65,7 @@ public partial class MainWindow
         // a narrow window must keep room for the text: the thread graph gives way (its labels shorten themselves)
         ReaderHost.SizeChanged += (_, e) => ThreadPane.MaxWidth = Math.Clamp(e.NewSize.Width * 0.42, 290, ThreadGraph.GraphWidth);
         ThreadPane.Picked += ShowRefsFlyout;
-        ThreadPane.Jump += r => _ = GoToAsync(r.Target.Book, r.Target.Chapter, r.Target.Verse);
+        ThreadPane.Jump += r => FollowXref(r.Target, r.EndVerse);
         ThreadPane.BuildRequested += async () => await BuildGraphAsync();
         ReaderScroll.ScrollChanged += (_, _) => UpdateThread();
         ReaderHost.SizeChanged += (_, _) => UpdateThread();
@@ -142,7 +142,9 @@ public partial class MainWindow
         var list = new WrapPanel { MaxWidth = 340 };
         foreach (var r in refs.OrderByDescending(x => x.Score).Take(40))
             list.Children.Add(Chip(Label(r.Target) + (r.EndVerse > r.Target.Verse ? "–" + r.EndVerse : ""),
-                () => { flyout.Hide(); _ = GoToAsync(r.Target.Book, r.Target.Chapter, r.Target.Verse); }, (TranslationBox.SelectedItem as TranslationInfo)?.Id ?? "", r));
+                () => { flyout.Hide(); FollowXref(r.Target, r.EndVerse); }, (TranslationBox.SelectedItem as TranslationInfo)?.Id ?? "", r));
+        foreach (var (chip, r) in list.Children.OfType<Border>().Zip(refs.OrderByDescending(x => x.Score).Take(40)))
+            chip.ContextMenu = new ContextMenu { ItemsSource = XrefOpenItems(r.Target, r.EndVerse).ToList() };
         var head = new TextBlock { Text = title, FontWeight = FontWeight.SemiBold, TextWrapping = TextWrapping.Wrap, MaxWidth = 340, Margin = new(0, 0, 0, 8) };
         flyout.Content = new StackPanel { Children = { head, new ScrollViewer { MaxHeight = 320, Content = list } } };
         flyout.ShowAt(ThreadPane);
@@ -200,8 +202,8 @@ public partial class MainWindow
         foreach (var x in mine) wrap.Children.Add(MyXrefChip(x, verse, translationId));   // your own come first and stand out
         foreach (var r in refs.Take(6))
         {
-            var chip = Chip(Label(r.Target) + (r.EndVerse > r.Target.Verse ? "–" + r.EndVerse : ""), () => _ = GoToAsync(r.Target.Book, r.Target.Chapter, r.Target.Verse), translationId, r);
-            AttachHideXrefMenu(chip, new VerseRef(_curBook, _curChapter, verse), r.Target);
+            var chip = Chip(Label(r.Target) + (r.EndVerse > r.Target.Verse ? "–" + r.EndVerse : ""), () => FollowXref(r.Target, r.EndVerse), translationId, r);
+            AttachHideXrefMenu(chip, new VerseRef(_curBook, _curChapter, verse), r.Target, r.EndVerse);
             wrap.Children.Add(chip);
         }
         if (refs.Count > 6) wrap.Children.Add(Chip($"+{refs.Count - 6}", () => SideTabs.SelectedIndex = 4, translationId, null));

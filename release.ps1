@@ -2,8 +2,15 @@
 #   BibleStudy-Setup-<version>.exe     installer (also used by the in-app updater)
 #   BibleStudy-Portable-<version>.zip  portable version (data in the "Data" folder next to the program)
 #   SHA256SUMS.txt
-# Usage: .\release.ps1 -Version 1.0.0
-param([string]$Version = "1.0.0")
+#   BibleStudy-Update-<system>-<version>.json  list of the files of that version (the in-app quick update reads it)
+#   BibleStudy-Pack-<system>-<version>.bin     the files new in this version; all others stay in the packs of older releases
+# Usage: .\release.ps1 -Version 1.0.0          everything
+#        .\release.ps1 -Version 1.0.0 -Quick   lists and packs only: fast to build and to upload, no Actions needed. Publish it as a PRE-RELEASE:
+#                                                gh release create v1.0.0 release/* --prerelease --latest=false ...
+#                                              Copies from 1.6.7 on read pre-releases and update in-app, whatever they skipped. Older copies, and the download
+#                                              link, ask for "latest": they stay on the last full release and find a working installer there.
+# Never delete an old release: its pack can hold files that newer lists still point to.
+param([string]$Version = "1.0.0", [switch]$Quick)
 $ErrorActionPreference = 'Stop'
 $root = $PSScriptRoot
 $rel = Join-Path $root 'release'
@@ -23,8 +30,26 @@ dotnet publish "$root\src\BibleStudy.Mcp\BibleStudy.Mcp.csproj" -c Release -r wi
 if ($LASTEXITCODE) { throw 'publish mcp failed' }
 Copy-Item "$root\LICENSE", "$root\THIRD-PARTY-NOTICES.md" $stage
 
-Write-Host "== Installer payload"
+# ---- quick update: the list of files of each system, the files new since the last release in a pack ----
+dotnet build "$root\tools\BibleStudy.UpdatePack\BibleStudy.UpdatePack.csproj" -c Release --nologo -v q
+if ($LASTEXITCODE) { throw 'build of the pack tool failed' }
+function New-UpdatePack([string]$folder, [string]$rid) {
+    $prev = Join-Path $rel "previous-$rid"
+    New-Item -ItemType Directory -Force $prev | Out-Null
+    # the newest published release, a quick one too; without a list there (or without gh) every file goes into this pack
+    $newest = gh release list --repo trofline/BibleStudy --limit 1 --exclude-drafts --json tagName --jq '.[0].tagName' 2>$null
+    if ($newest) { gh release download $newest --repo trofline/BibleStudy --pattern "BibleStudy-Update-$rid-*.json" --dir $prev --clobber 2>$null }
+    $base = Get-ChildItem $prev -File | Select-Object -First 1
+    $packArgs = @($folder, $rid, $Version, $rel); if ($base) { $packArgs += $base.FullName }
+    dotnet "$root\tools\BibleStudy.UpdatePack\bin\Release\net10.0\BibleStudy.UpdatePack.dll" @packArgs
+    if ($LASTEXITCODE) { throw "pack $rid failed" }
+    Remove-Item -LiteralPath $prev -Recurse -Force
+}
+New-UpdatePack $stage 'win-x64'
+
 Add-Type -AssemblyName System.IO.Compression.FileSystem
+if (-not $Quick) {
+Write-Host "== Installer payload"
 $payload = Join-Path $rel 'payload.zip'
 [IO.Compression.ZipFile]::CreateFromDirectory($stage, $payload, 'Optimal', $false)
 
@@ -42,6 +67,7 @@ To move to another computer or USB stick, copy the whole folder.
 To remove the program: Settings > Updates and program > "Remove portable version" (asks whether to keep your data).
 "@
 [IO.Compression.ZipFile]::CreateFromDirectory((Join-Path $rel 'stage'), "$rel\BibleStudy-Portable-$Version.zip", 'Optimal', $false)
+}
 
 # ---- packages for Linux and macOS, made on Windows: the files need their "executable" flag, which a plain zip/tar from Windows lacks ----
 function Get-UnixMode([string]$name) {
@@ -105,7 +131,7 @@ function New-UnixTgz([string]$srcDir, [string]$tgzPath, [string]$topName) {
 }
 
 Write-Host "== Plugins: one package per folder in .\plugins and system (Windows zip, Linux tar.gz, macOS zip) to unpack into the program's plugin folder"
-foreach ($dir in Get-ChildItem (Join-Path $root 'plugins') -Directory) {
+foreach ($dir in $(if ($Quick) { @() } else { Get-ChildItem (Join-Path $root 'plugins') -Directory })) {
     $proj = Get-ChildItem $dir.FullName -Filter *.csproj | Select-Object -First 1
     if (-not $proj) { continue }
     $pjson = Get-Content (Join-Path $dir.FullName 'plugin.json') -Raw | ConvertFrom-Json
@@ -140,7 +166,8 @@ foreach ($rid in 'linux-x64', 'osx-arm64', 'osx-x64') {
     Copy-Item "$root\LICENSE", "$root\THIRD-PARTY-NOTICES.md" $u
     if ($rid -like 'linux*') {
         Copy-UnixText "$root\packaging\linux\README-Linux.txt" (Join-Path $u 'README-Linux.txt')
-        New-UnixTgz $u "$rel\BibleStudy-Linux-x64-$Version.tar.gz" 'BibleStudy'
+        New-UpdatePack $u $rid
+        if (-not $Quick) { New-UnixTgz $u "$rel\BibleStudy-Linux-x64-$Version.tar.gz" 'BibleStudy' }
     } else {
         # a real application "BibleStudy.app" (own name and icon in the Dock and the menu bar, no Terminal window): the program files go into
         # Contents\MacOS, next to it the icon and the description; the folder of the zip holds the app, the set-up script and the readme
@@ -154,10 +181,12 @@ foreach ($rid in 'linux-x64', 'osx-arm64', 'osx-x64') {
         Copy-Item "$root\LICENSE", "$root\THIRD-PARTY-NOTICES.md" $pkg
         Copy-UnixText "$root\packaging\macos\README-macOS.txt" (Join-Path $pkg 'README-macOS.txt')
         Copy-UnixText "$root\packaging\macos\Start-BibleStudy.command" (Join-Path $pkg 'Start-BibleStudy.command')
-        New-UnixZip $pkg "$rel\BibleStudy-macOS-$($rid.Split('-')[1])-$Version.zip" 'BibleStudy'
+        New-UpdatePack $contents $rid
+        if (-not $Quick) { New-UnixZip $pkg "$rel\BibleStudy-macOS-$($rid.Split('-')[1])-$Version.zip" 'BibleStudy' }
     }
     Remove-Item -LiteralPath (Join-Path $rel "unix-$rid") -Recurse -Force
 }
-Remove-Item -LiteralPath (Join-Path $rel 'stage'),(Join-Path $rel 'setup'), $payload -Recurse -Force
+Remove-Item -LiteralPath (Join-Path $rel 'stage') -Recurse -Force
+if (-not $Quick) { Remove-Item -LiteralPath (Join-Path $rel 'setup'), $payload -Recurse -Force }
 Get-ChildItem $rel -File | Where-Object { $_.Name -ne 'SHA256SUMS.txt' } | ForEach-Object { '{0}  {1}' -f (Get-FileHash $_.FullName -Algorithm SHA256).Hash.ToLower(), $_.Name } | Set-Content "$rel\SHA256SUMS.txt"
 Get-ChildItem $rel -File | ForEach-Object { '{0,-40} {1,8:N1} MB' -f $_.Name, ($_.Length / 1MB) }

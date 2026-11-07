@@ -33,6 +33,8 @@ public partial class MainWindow
         RestartBtn.Click += (_, _) => RestartProgram();
         // older versions downloaded updates in the background and installed them without asking: nothing waiting is installed any more
         if (_settings.PendingUpdateFile is { } waiting) { try { File.Delete(waiting); } catch (IOException) { } _settings.PendingUpdateFile = null; _settings.PendingUpdateVersion = null; SaveSettings(); }
+        if (DeltaUpdate.LastFailed(AppPaths.Root) is { } failedUpdate && failedUpdate.Version != AppPaths.Version && Updater.Parse(failedUpdate.Version) > Updater.Parse(AppPaths.Version))
+            UpdateStatus.Text = L("Das Update auf {0} hat nicht geklappt, die bisherige Version läuft weiter: {1}", failedUpdate.Version, failedUpdate.Reason);
         InitBackup();
         InitTour();
         InitPatchNotes();
@@ -163,20 +165,43 @@ public partial class MainWindow
         if (!manual && (_askedUpdate == info.Version || !IsVisible)) return;
         _askedUpdate = info.Version;
 
-        var canInstall = OperatingSystem.IsWindows() && (AppPaths.IsInstalled || AppPaths.IsPortable);   // the self-installing update is Windows only; elsewhere the download page opens
+        var plan = await PlanQuickUpdateAsync(info);
+        var canInstall = plan is not null || (OperatingSystem.IsWindows() && (AppPaths.IsInstalled || AppPaths.IsPortable));   // the full package installs itself on Windows only; elsewhere the download page opens
         if (!canInstall)
         {
             var open = await AskAsync(L("Neue Version {0}", info.Version), L("BibleStudy {0} ist erschienen (du hast {1}). Auf diesem System lädst du das neue Paket selbst herunter. Soll die Download-Seite geöffnet werden?", info.Version, AppPaths.Version), L("Seite öffnen"), L("Später"));
-            if (open == 0) { try { Process.Start(new ProcessStartInfo(info.PageUrl) { UseShellExecute = true }); } catch { /* no browser */ } }
+            // a quick release has no packages: the last full release has them
+            var downloads = info.DownloadUrl.Length > 0 ? info.PageUrl : $"https://github.com/{Updater.Repo}/releases/latest";
+            if (open == 0) { try { Process.Start(new ProcessStartInfo(downloads) { UseShellExecute = true }); } catch { /* no browser */ } }
             return;
         }
-        var answer = await AskAsync(L("Neue Version {0}", info.Version),
-            L("BibleStudy {0} ist erschienen (du hast {1}). Möchtest du es jetzt installieren?\n\nVorher wird eine Sicherung deiner Daten angelegt, danach startet das Programm neu. Ohne deine Zustimmung wird nichts installiert.", info.Version, AppPaths.Version),
-            L("Installieren"), L("Später"));
-        if (answer == 0) await InstallUpdateAsync(info);
+        var question = L("BibleStudy {0} ist erschienen (du hast {1}). Möchtest du es jetzt installieren?\n\nVorher wird eine Sicherung deiner Daten angelegt, danach startet das Programm neu. Ohne deine Zustimmung wird nichts installiert.", info.Version, AppPaths.Version);
+        if (plan is not null) question += "\n\n" + L("Es werden nur die geänderten Dateien geladen ({0:0.0} MB).", plan.DownloadBytes / 1048576.0);
+        var answer = await AskAsync(L("Neue Version {0}", info.Version), question, L("Installieren"), L("Später"));
+        if (answer == 0) await InstallUpdateAsync(info, plan);
     }
 
-    async Task InstallUpdateAsync(UpdateInfo info)
+    /// <summary>
+    /// What a quick update to this version would fetch; null when it is not possible (a release without a list of files, a copy that was not made
+    /// from a package, a folder it may not write to, a quick update to this version that already failed). The full package is the way then.
+    /// </summary>
+    async Task<DeltaPlan?> PlanQuickUpdateAsync(UpdateInfo info)
+    {
+        if (info.ManifestUrl is not { } url) return null;
+        if (DeltaUpdate.LastFailed(AppPaths.Root) is { } failed && failed.Version == info.Version) return null;
+        var root = DeltaUpdate.RootOf(AppPaths.ProgramDir);
+        if (DeltaUpdate.LoadInstalled(root) is not { } installed || installed.Rid != DeltaUpdate.Rid) return null;
+        try
+        {
+            var target = await _updater!.GetManifestAsync(url);
+            if (target.Rid != installed.Rid || target.Version != info.Version) return null;
+            // hashing the program files takes a moment: not on the UI thread
+            return await Task.Run(() => DeltaUpdate.CanWrite(root) ? DeltaUpdate.CreatePlan(target, installed, root, trustInstalled: OperatingSystem.IsMacOS()) : null);
+        }
+        catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException or System.Text.Json.JsonException or InvalidDataException or IOException or UnauthorizedAccessException) { ErrorLog.Write(ex); return null; }
+    }
+
+    async Task InstallUpdateAsync(UpdateInfo info, DeltaPlan? plan = null)
     {
         _updating = true;
         try
@@ -185,6 +210,24 @@ public partial class MainWindow
             var backup = await Task.Run(() => BackupData("vor-Update-" + info.Version));
             UpdateStatus.Text = L("Daten gesichert ({0}). Lade Update …", Path.GetFileName(backup));
             var progress = new Progress<double>(p => UpdateStatus.Text = L("Lade Update … {0:P0}", p));
+            if (plan is not null)
+            {
+                try
+                {
+                    await DeltaUpdate.DownloadAsync(plan, _http, progress);
+                    UpdateStatus.Text = L("Installiere – das Programm startet gleich neu …");
+                    _exiting = true;
+                    Close();   // the files are swapped when the program has ended (Program.Main)
+                    return;
+                }
+                catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException or InvalidDataException or IOException or UnauthorizedAccessException)
+                {
+                    ErrorLog.Write(ex);   // nothing of the program has changed yet: on to the full package
+                    if (!OperatingSystem.IsWindows()) throw;
+                }
+            }
+            if (info.DownloadUrl.Length == 0)
+                info = await _updater!.FindFullAsync(AppPaths.Version, AppPaths.IsPortable) ?? throw new InvalidOperationException(L("Für diese Version gibt es kein vollständiges Paket. Lade es bitte von der Download-Seite."));
             var file = await _updater!.DownloadAsync(info, progress);
             UpdateStatus.Text = L("Installiere – das Programm startet gleich neu …");
             _settings.PendingUpdateFile = file; _settings.PendingUpdateVersion = info.Version; SaveSettings();

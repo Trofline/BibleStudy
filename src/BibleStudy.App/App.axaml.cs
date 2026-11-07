@@ -45,6 +45,7 @@ public partial class App : Application
                     };
                     desktop.MainWindow = terms;
                     terms.Show();
+                    DeltaFinish.Confirm();   // a new version asks about its terms first: it did start
                 }
             }
         }
@@ -65,6 +66,7 @@ public partial class App : Application
             var main = new MainWindow();
             desktop.MainWindow = main;
             main.Show();
+            DeltaFinish.Confirm();
         }, Avalonia.Threading.DispatcherPriority.Background);
     }
 }

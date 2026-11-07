@@ -232,6 +232,7 @@ public sealed class AppSettings
     public List<string> PlanDoneDays { get; set; } = [];
     public WindowBounds? WindowBounds { get; set; }
     public string XrefDirection { get; set; } = "Out";   // Out | In | Both
+    public bool XrefClickOpensTab { get; set; }   // a click on a cross reference opens it in context in a tab instead of going there
     public bool Tray { get; set; }
     public bool CloseToTray { get; set; }
     public bool RememberWindow { get; set; } = true;

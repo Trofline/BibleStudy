@@ -1,4 +1,4 @@
-﻿using Avalonia;
+using Avalonia;
 using System;
 
 namespace BibleStudy.App;
@@ -9,8 +9,12 @@ class Program
     // SynchronizationContext-reliant code before AppMain is called: things aren't initialized
     // yet and stuff might break.
     [STAThread]
-    public static void Main(string[] args) => BuildAvaloniaApp()
-        .StartWithClassicDesktopLifetime(args);
+    public static void Main(string[] args)
+    {
+        DeltaFinish.AtStart();
+        BuildAvaloniaApp().StartWithClassicDesktopLifetime(args);
+        if (DeltaFinish.Run()) Environment.Exit(0);   // a quick update waited for the program to end
+    }
 
     // Avalonia configuration, don't remove; also used by visual designer.
     public static AppBuilder BuildAvaloniaApp()

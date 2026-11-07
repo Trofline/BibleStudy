@@ -2479,5 +2479,15 @@
   "Öffnet die ZIP eines anderen Computers nur für diese Sitzung: Beim Schließen des Programms ist alles wieder weg, deine eigenen Vaults und Einstellungen bleiben unberührt": "Opens the ZIP from another computer for this session only: when the program closes everything is gone again, your own vaults and settings stay untouched",
   "Vault als Gast importieren": "Import vault as guest",
   "Gast {0:yyyy-MM-dd HH-mm}": "Guest {0:yyyy-MM-dd HH-mm}",
-  "Als Gast importiert: „{0}“. Er verschwindet, wenn du das Programm schließt; deine eigenen Daten bleiben unberührt.": "Imported as guest: “{0}”. It disappears when you close the program; your own data stays untouched."
+  "Als Gast importiert: „{0}“. Er verschwindet, wenn du das Programm schließt; deine eigenen Daten bleiben unberührt.": "Imported as guest: “{0}”. It disappears when you close the program; your own data stays untouched.",
+  "Es werden nur die geänderten Dateien geladen ({0:0.0} MB).": "Only the changed files are downloaded ({0:0.0} MB).",
+  "Für diese Version gibt es kein vollständiges Paket. Lade es bitte von der Download-Seite.": "There is no full package for this version. Please get it from the download page.",
+  "Das Update auf {0} hat nicht geklappt, die bisherige Version läuft weiter: {1}": "The update to {0} did not work, the previous version keeps running: {1}",
+  "Im Zusammenhang in neuem Reiter öffnen": "Open in context in a new tab",
+  "Im Lesefenster dorthin gehen": "Go there in the reader",
+  "Vorheriges Kapitel": "Previous chapter",
+  "Im Lesefenster öffnen": "Open in the reader",
+  "In eigenem Fenster": "In its own window",
+  "Zurück in die Reiter": "Back into the tabs",
+  "Klick auf einen Querverweis öffnet ihn im Zusammenhang in einem neuen Reiter": "Clicking a cross reference opens it in context in a new tab"
 }

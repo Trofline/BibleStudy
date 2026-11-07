@@ -2479,5 +2479,15 @@
   "Öffnet die ZIP eines anderen Computers nur für diese Sitzung: Beim Schließen des Programms ist alles wieder weg, deine eigenen Vaults und Einstellungen bleiben unberührt": "Abre el ZIP de otro ordenador solo para esta sesión: al cerrar el programa todo desaparece, tus propios vaults y ajustes no se tocan",
   "Vault als Gast importieren": "Importar vault como invitado",
   "Gast {0:yyyy-MM-dd HH-mm}": "Invitado {0:yyyy-MM-dd HH-mm}",
-  "Als Gast importiert: „{0}“. Er verschwindet, wenn du das Programm schließt; deine eigenen Daten bleiben unberührt.": "Importado como invitado: «{0}». Desaparece al cerrar el programa; tus propios datos no se tocan."
+  "Als Gast importiert: „{0}“. Er verschwindet, wenn du das Programm schließt; deine eigenen Daten bleiben unberührt.": "Importado como invitado: «{0}». Desaparece al cerrar el programa; tus propios datos no se tocan.",
+  "Es werden nur die geänderten Dateien geladen ({0:0.0} MB).": "Solo se descargan los archivos modificados ({0:0.0} MB).",
+  "Für diese Version gibt es kein vollständiges Paket. Lade es bitte von der Download-Seite.": "No hay un paquete completo para esta versión. Descárgalo desde la página de descargas.",
+  "Das Update auf {0} hat nicht geklappt, die bisherige Version läuft weiter: {1}": "La actualización a {0} no ha funcionado; la versión anterior sigue en uso: {1}",
+  "Im Zusammenhang in neuem Reiter öffnen": "Abrir en contexto en una pestaña nueva",
+  "Im Lesefenster dorthin gehen": "Ir allí en el lector",
+  "Vorheriges Kapitel": "Capítulo anterior",
+  "Im Lesefenster öffnen": "Abrir en el lector",
+  "In eigenem Fenster": "En una ventana propia",
+  "Zurück in die Reiter": "Volver a las pestañas",
+  "Klick auf einen Querverweis öffnet ihn im Zusammenhang in einem neuen Reiter": "Hacer clic en una referencia cruzada la abre en contexto en una pestaña nueva"
 }

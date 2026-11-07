@@ -85,6 +85,7 @@ Im Neuen Testament unterscheiden sich die großen griechischen Ausgaben an manch
 
 Der Reiter *Vers → Querverweise* zeigt Verse, die mit dem angeklickten Vers zusammenhängen, mit Stimmenzahl, die stärksten zuerst. Du kannst
 
+- einen Querverweis **im Zusammenhang lesen**: Rechtsklick → *Im Zusammenhang in neuem Reiter öffnen* zeigt das ganze Kapitel in einem eigenen Reiter, die Verse des Verweises sind hervorgehoben und dein Lesefenster bleibt, wo es ist. Mit *In eigenem Fenster* (oder indem du den Reiter nach unten ziehst) liest du beide Stellen nebeneinander. Soll schon der normale Klick so öffnen, schalte das unter *Einstellungen → Lesen und Verhalten* ein,
 - einen Querverweis **dauerhaft ausblenden** (und unter *Einstellungen → Ausgeblendete Querverweise …* wieder einblenden),
 - einen **eigenen Querverweis** setzen (Rechtsklick auf den Vers → *Eigenen Querverweis setzen …*): Stelle und kurze Notiz eingeben. Er erscheint als goldener Chip mit ★ unter dem Vers und als Rückweg unter dem Zielvers; Rechtsklick auf den Chip löscht ihn. Eigene Querverweise gehören zum Vault und sind in der Sicherung enthalten.
 

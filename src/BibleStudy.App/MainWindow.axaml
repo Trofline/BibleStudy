@@ -697,6 +697,7 @@
                                 <CheckBox x:Name="AutoReadCheck" Content="Kapitel beim Weiterblättern (▶) als gelesen markieren" />
                                 <CheckBox x:Name="ScrollReadCheck" Content="Kapitel als gelesen markieren, wenn ich bis zum Ende gescrollt habe" />
                                 <CheckBox x:Name="AutoTagCheck" Content="Beim Speichern den Buchnamen als Tag vergeben" />
+                                <CheckBox x:Name="XrefTabCheck" Content="Klick auf einen Querverweis öffnet ihn im Zusammenhang in einem neuen Reiter" />
                                 <CheckBox x:Name="ShareMarksCheck" Content="Markierungen aus anderen Übersetzungen mitzeigen (gleiche Wörter oder gleiche Strong-Nummern)" />
                                 <CheckBox x:Name="SelectionPopupCheck" Content="Beim Auswählen von Text die Farben gleich über dem Text zeigen" />
                                 <TextBlock Text="Text markieren" Margin="0,4,0,0" />

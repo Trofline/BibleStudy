@@ -4,7 +4,8 @@ using System.Text.Json;
 
 namespace BibleStudy.Core;
 
-public sealed record UpdateInfo(string Version, string Notes, string AssetName, string DownloadUrl, string? Sha256, long Size, string PageUrl);
+/// <summary>A version to update to. A quick release has no full package (<see cref="DownloadUrl"/> is empty), only the list of files in <see cref="ManifestUrl"/>.</summary>
+public sealed record UpdateInfo(string Version, string Notes, string AssetName, string DownloadUrl, string? Sha256, long Size, string PageUrl, string? ManifestUrl = null);
 
 public sealed record ReleaseNote(string Version, string Notes, DateTime? Date, string PageUrl, UpdateInfo? Setup = null, UpdateInfo? Portable = null);
 
@@ -21,29 +22,64 @@ public sealed class Updater(HttpClient http)
         return Version.TryParse(v, out var parsed) ? parsed : null;
     }
 
-    /// <summary>The newest release if it is newer than the running version, otherwise null.</summary>
+    /// <summary>The newest version this copy can update to, otherwise null. Reads the list of releases: quick releases are pre-releases, which "latest" leaves out.</summary>
     public async Task<UpdateInfo?> CheckAsync(string currentVersion, bool portable, CancellationToken ct = default)
     {
-        using var req = new HttpRequestMessage(HttpMethod.Get, $"https://api.github.com/repos/{Repo}/releases/latest");
+        using var req = new HttpRequestMessage(HttpMethod.Get, $"https://api.github.com/repos/{Repo}/releases?per_page=40");
         req.Headers.UserAgent.Add(new ProductInfoHeaderValue("BibleStudy", currentVersion));
         req.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/vnd.github+json"));
         using var resp = await http.SendAsync(req, ct);
         if (resp.StatusCode == System.Net.HttpStatusCode.NotFound) return null;   // no release yet
         resp.EnsureSuccessStatusCode();
-        using var doc = JsonDocument.Parse(await resp.Content.ReadAsStringAsync(ct));
-        var root = doc.RootElement;
-        var tag = root.GetProperty("tag_name").GetString() ?? "";
-        if (Parse(tag) is not { } latest || Parse(currentVersion) is not { } current || latest <= current) return null;
-        var wanted = portable ? "Portable" : "Setup";
-        foreach (var a in root.GetProperty("assets").EnumerateArray())
+        return ParseUpdate(await resp.Content.ReadAsStringAsync(ct), currentVersion, portable, DeltaUpdate.Rid);
+    }
+
+    /// <summary>
+    /// Picks the newest newer release from the list of releases, with its full package for this kind of copy and its list of files for this system; either can
+    /// be missing. How many versions lie in between does not matter: the list of files of the newest one leads to every file, also in packs of older releases.
+    /// A pre-release counts only as a quick release (it has lists of files): programs before 1.6.7 ask for "latest" only, so they never see it and go to
+    /// the last full release instead of finding no installer.
+    /// </summary>
+    public static UpdateInfo? ParseUpdate(string json, string currentVersion, bool portable, string rid)
+    {
+        if (Parse(currentVersion) is not { } current) return null;
+        using var doc = JsonDocument.Parse(json);
+        UpdateInfo? best = null; Version? bestVersion = null;
+        foreach (var r in doc.RootElement.EnumerateArray())
         {
-            var name = a.GetProperty("name").GetString() ?? "";
-            if (!name.Contains(wanted, StringComparison.OrdinalIgnoreCase) || name.EndsWith(".sha256")) continue;
-            string? sha = null;
-            if (a.TryGetProperty("digest", out var d) && d.GetString() is { } digest && digest.StartsWith("sha256:")) sha = digest["sha256:".Length..];
-            return new UpdateInfo(latest.ToString(), root.TryGetProperty("body", out var b) ? b.GetString() ?? "" : "", name,
-                a.GetProperty("browser_download_url").GetString() ?? "", sha, a.GetProperty("size").GetInt64(), root.GetProperty("html_url").GetString() ?? "");
+            if (r.TryGetProperty("draft", out var draft) && draft.GetBoolean()) continue;
+            if (Parse(r.GetProperty("tag_name").GetString() ?? "") is not { } v || v <= current || (bestVersion is not null && v <= bestVersion)) continue;
+            var version = v.ToString();
+            string? manifest = null;
+            foreach (var a in r.GetProperty("assets").EnumerateArray())
+                if (a.GetProperty("name").GetString() == DeltaUpdate.ManifestAsset(rid, version)) manifest = a.GetProperty("browser_download_url").GetString();
+            if (r.TryGetProperty("prerelease", out var pre) && pre.GetBoolean() && manifest is null) continue;   // a real test version is not for everyone
+            var notes = r.TryGetProperty("body", out var b) ? b.GetString() ?? "" : "";
+            var page = r.GetProperty("html_url").GetString() ?? "";
+            var package = PackageOf(r, version, notes, page, portable ? "Portable" : "Setup");
+            if (package is null && manifest is null) continue;
+            best = (package ?? new UpdateInfo(version, notes, "", "", null, 0, page)) with { ManifestUrl = manifest };
+            bestVersion = v;
         }
+        return best;
+    }
+
+    /// <summary>The list of files of a version (small; only read when the release has one).</summary>
+    public async Task<UpdateManifest> GetManifestAsync(string url, CancellationToken ct = default)
+    {
+        using var req = new HttpRequestMessage(HttpMethod.Get, url);
+        req.Headers.UserAgent.Add(new ProductInfoHeaderValue("BibleStudy", AppPaths.Version));
+        using var resp = await http.SendAsync(req, ct);
+        resp.EnsureSuccessStatusCode();
+        return DeltaUpdate.ParseManifest(await resp.Content.ReadAsStringAsync(ct));
+    }
+
+    /// <summary>The newest release with a full package that is newer than the running version: a quick release has none, and a quick update can fail.</summary>
+    public async Task<UpdateInfo?> FindFullAsync(string currentVersion, bool portable, CancellationToken ct = default)
+    {
+        var current = Parse(currentVersion);
+        foreach (var r in await ListAsync(currentVersion, ct))
+            if (Parse(r.Version) > current && (portable ? r.Portable : r.Setup) is { } package) return package;
         return null;
     }
 
@@ -92,7 +128,8 @@ public sealed class Updater(HttpClient http)
         foreach (var r in doc.RootElement.EnumerateArray())
         {
             if (r.TryGetProperty("draft", out var d) && d.GetBoolean()) continue;
-            if (r.TryGetProperty("prerelease", out var p) && p.GetBoolean()) continue;
+            // a pre-release is shown only as a quick release (it has lists of files); a real test version stays out
+            if (r.TryGetProperty("prerelease", out var p) && p.GetBoolean() && !(r.TryGetProperty("assets", out var listed) && listed.ValueKind == JsonValueKind.Array && listed.EnumerateArray().Any(a => (a.GetProperty("name").GetString() ?? "").StartsWith("BibleStudy-Update-", StringComparison.Ordinal)))) continue;
             var tag = r.GetProperty("tag_name").GetString() ?? "";
             if (Parse(tag) is not { } v) continue;
             DateTime? date = r.TryGetProperty("published_at", out var pa) && pa.GetString() is { } s && DateTime.TryParse(s, null, System.Globalization.DateTimeStyles.RoundtripKind, out var dt) ? dt.ToLocalTime() : null;

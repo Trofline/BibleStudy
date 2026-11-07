@@ -2479,5 +2479,15 @@
   "Öffnet die ZIP eines anderen Computers nur für diese Sitzung: Beim Schließen des Programms ist alles wieder weg, deine eigenen Vaults und Einstellungen bleiben unberührt": "Открывает ZIP с другого компьютера только на этот сеанс: при закрытии программы всё исчезает, твои хранилища и настройки не затрагиваются",
   "Vault als Gast importieren": "Импорт хранилища как гость",
   "Gast {0:yyyy-MM-dd HH-mm}": "Гость {0:yyyy-MM-dd HH-mm}",
-  "Als Gast importiert: „{0}“. Er verschwindet, wenn du das Programm schließt; deine eigenen Daten bleiben unberührt.": "Импортировано как гость: «{0}». Исчезнет при закрытии программы; твои данные не затрагиваются."
+  "Als Gast importiert: „{0}“. Er verschwindet, wenn du das Programm schließt; deine eigenen Daten bleiben unberührt.": "Импортировано как гость: «{0}». Исчезнет при закрытии программы; твои данные не затрагиваются.",
+  "Es werden nur die geänderten Dateien geladen ({0:0.0} MB).": "Загружаются только изменённые файлы ({0:0.0} МБ).",
+  "Für diese Version gibt es kein vollständiges Paket. Lade es bitte von der Download-Seite.": "Для этой версии нет полного пакета. Загрузи его со страницы загрузок.",
+  "Das Update auf {0} hat nicht geklappt, die bisherige Version läuft weiter: {1}": "Обновление до {0} не удалось, продолжает работать прежняя версия: {1}",
+  "Im Zusammenhang in neuem Reiter öffnen": "Открыть в контексте на новой вкладке",
+  "Im Lesefenster dorthin gehen": "Перейти в окне чтения",
+  "Vorheriges Kapitel": "Предыдущая глава",
+  "Im Lesefenster öffnen": "Открыть в окне чтения",
+  "In eigenem Fenster": "В отдельном окне",
+  "Zurück in die Reiter": "Вернуть на вкладки",
+  "Klick auf einen Querverweis öffnet ihn im Zusammenhang in einem neuen Reiter": "Щелчок по перекрёстной ссылке открывает её в контексте на новой вкладке"
 }

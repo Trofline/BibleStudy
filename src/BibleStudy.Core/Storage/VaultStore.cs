@@ -132,11 +132,17 @@ public sealed partial class VaultStore : SqliteDb
     public void SetLastPosition(string book, int chapter) =>
         Exec("INSERT OR REPLACE INTO last_position(id,book,chapter) VALUES(1,$b,$c)", c => { c.Parameters.AddWithValue("$b", book); c.Parameters.AddWithValue("$c", chapter); });
 
-    public HashSet<(string Book, int Chapter)> GetReadChapters() =>
+    /// <summary>
+    /// The list of read chapters shared by all vaults. When set, "read" is not stored in this vault but there; null (a guest vault, the phone app)
+    /// keeps it in the vault itself.
+    /// </summary>
+    public ReadStore? SharedRead { get; init; }
+
+    public HashSet<(string Book, int Chapter)> GetReadChapters() => SharedRead is { } s ? s.Chapters() :
         Query("SELECT book,chapter FROM read_chapters", _ => { }, r => (r.GetString(0), r.GetInt32(1))).ToHashSet();
 
     /// <summary>When each chapter was marked as read (local time); chapters from older vaults without a date are left out.</summary>
-    public List<(string Book, int Chapter, DateTime At)> GetReadDates() =>
+    public List<(string Book, int Chapter, DateTime At)> GetReadDates() => SharedRead is { } s ? s.Dates() :
         Query("SELECT book,chapter,read_at FROM read_chapters WHERE read_at IS NOT NULL", _ => { },
             r => (r.GetString(0), r.GetInt32(1), DateTime.TryParse(r.GetString(2), null, System.Globalization.DateTimeStyles.RoundtripKind, out var t) ? t.ToLocalTime() : DateTime.MinValue))
         .Where(x => x.Item3 != DateTime.MinValue).ToList();
@@ -144,6 +150,7 @@ public sealed partial class VaultStore : SqliteDb
     /// <summary>Marks chapters of one book as read (or unread) in one transaction.</summary>
     public void SetRead(string book, IEnumerable<int> chapters, bool read)
     {
+        if (SharedRead is { } shared) { shared.Set(book, chapters, read); return; }
         using var con = Open();
         using var tx = con.BeginTransaction();
         using var cmd = con.CreateCommand();

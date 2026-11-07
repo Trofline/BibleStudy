@@ -37,16 +37,17 @@ public partial class MainWindow
     }
 
     /// <summary>Adds the menu "hide this cross reference for good" to a control that stands for the reference from <paramref name="from"/> to <paramref name="to"/>.</summary>
-    void AttachHideXrefMenu(Control control, VerseRef from, VerseRef to)
+    void AttachHideXrefMenu(Control control, VerseRef from, VerseRef to, int end)
     {
         var item = new MenuItem { Header = L("Diesen Querverweis dauerhaft ausblenden") };
         item.Click += async (_, _) => await HideXrefAsync(from, to);
-        control.ContextMenu = new ContextMenu { Items = { item } };
+        control.ContextMenu = new ContextMenu { ItemsSource = XrefOpenItems(to, end).Append(item).ToList() };
     }
 
     void InitHiddenXrefs()
     {
         RefreshHiddenXrefs();
+        InitContextTabs();
         HiddenXrefsBtn.Click += (_, _) => ShowHiddenXrefs();
         // the list of cross references in the side panel: right click on an entry
         XrefList.AddHandler(PointerPressedEvent, (object? _, PointerPressedEventArgs e) =>
@@ -57,6 +58,7 @@ public partial class MainWindow
                 {
                     var from = new VerseRef(_curBook, _curChapter, verse);
                     var menu = new MenuFlyout();
+                    foreach (var open in XrefOpenItems(entry.Ref, _xrefs.FirstOrDefault(x => x.Target == entry.Ref)?.EndVerse ?? entry.Ref.Verse)) menu.Items.Add(open);
                     var hide = new MenuItem { Header = L("Diesen Querverweis dauerhaft ausblenden") };
                     hide.Click += async (_, _) => await HideXrefAsync(from, entry.Ref);
                     menu.Items.Add(hide);

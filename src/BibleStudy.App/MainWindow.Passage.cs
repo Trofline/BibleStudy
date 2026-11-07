@@ -224,8 +224,8 @@ public partial class MainWindow
         {
             var target = x;
             var head = new Button { Classes = { "ghost" }, Padding = new(0), Content = $"{Label(x.Target)}{(x.EndVerse > x.Target.Verse ? "–" + x.EndVerse : "")}", FontWeight = FontWeight.SemiBold, Foreground = Res("BsAccent") };
-            head.Click += async (_, _) => await GoToAsync(target.Target.Book, target.Target.Chapter, target.Target.Verse);
-            AttachHideXrefMenu(head, r, target.Target);
+            head.Click += (_, _) => FollowXref(target.Target, target.EndVerse);
+            AttachHideXrefMenu(head, r, target.Target, target.EndVerse);
             xrefs.Children.Add(new StackPanel { Children = { head, new TextBlock { Text = t, TextWrapping = TextWrapping.Wrap, Opacity = 0.85 } } });
         }
         if (xr.Count == 0) xrefs.Children.Add(Muted(L("Keine Querverweise gefunden.")));

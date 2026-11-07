@@ -198,6 +198,7 @@ public partial class MainWindow
         try
         {
             _vault.BackupTo(snapshot);
+            if (!IsGuestVault(_vault.Name)) _readStore.CopyInto(snapshot);   // the shared reading progress travels with the vault
             if (File.Exists(path)) File.Delete(path);
             using (var zip = ZipFile.Open(path, ZipArchiveMode.Create))
             {
@@ -234,6 +235,7 @@ public partial class MainWindow
             Directory.CreateDirectory(Path.GetDirectoryName(target)!);
             vaultEntry.ExtractToFile(target);
             if (guest) File.WriteAllText(Path.Combine(Path.GetDirectoryName(target)!, GuestFlag), "temporary: deleted when the program closes");
+            else _readStore.MergeFrom(target);   // what the file says was read counts here too (nothing already read is removed)
             // a guest import leaves the settings of this computer alone (colors, switches)
             if (!guest && zip.GetEntry("settings.json") is { } settingsEntry)
             {

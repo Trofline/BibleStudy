@@ -15,6 +15,7 @@ public partial class MainWindow
     static readonly string[] PresetColors = ["#FFD54F", "#FFA95C", "#F26D6D", "#E983B8", "#B28DF0", "#6FA8F2", "#55C2C2", "#7ACB7A"];
 
     VaultStore _vault = null!;
+    ReadStore _readStore = null!;
     List<Mark> _chapterMarks = [];
     Dictionary<int, string> _wholeMarks = [];
     Mark? _editMark;
@@ -28,8 +29,9 @@ public partial class MainWindow
     {
         var path = Path.Combine(_root, "vaults", name, "vault.db");
         var fresh = !File.Exists(path);
-        var vault = new VaultStore(path, name);
-        if (fresh && name == "Standard") vault.ImportLegacy(Path.Combine(_root, "user.db"), PresetColors[0]);
+        // "read" is one list for all vaults; a guest vault keeps its own (it is thrown away afterwards and must not touch the list of this computer)
+        var vault = new VaultStore(path, name) { SharedRead = IsGuestVault(name) ? null : _readStore };
+        if (fresh && name == "Standard") { vault.ImportLegacy(Path.Combine(_root, "user.db"), PresetColors[0]); _readStore.MergeFrom(path); }
         return vault;
     }
 

@@ -94,6 +94,14 @@ public partial class MainWindow : Window
         _settings = AppSettings.Load(_settingsPath);
         CommentariesOn = _settings.ShowCommentaries; CompactLook = _settings.CompactLook; NavGroups = MakeNavGroups();
         DeleteGuestVaults(_root);   // a guest import left over from a crash
+        _readStore = new ReadStore(Path.Combine(_root, "read.db"));
+        if (_readStore.IsNew)   // first start with the shared list: what was read in any vault so far counts for all of them
+        {
+            var vaultsDir = Path.Combine(_root, "vaults");
+            if (Directory.Exists(vaultsDir))
+                foreach (var dir in Directory.GetDirectories(vaultsDir).Where(d => !IsGuestDir(d)))
+                    try { _readStore.MergeFrom(Path.Combine(dir, "vault.db")); } catch (Exception ex) { ErrorLog.Write(ex); }
+        }
         _vault = OpenVault(_settings.Vault);
         _read = _vault.GetReadChapters();
         _fontSize = _settings.FontSize;
@@ -400,6 +408,7 @@ public partial class MainWindow : Window
         if (Home.IsVisible) Home.Show(_books, _read, Home.OpenBook);
         if (SideTabs.SelectedIndex == SettingsTab) UpdateOfflineInfo();
         RefreshLists();
+        foreach (var tab in _contextTabs.Values.ToList()) _ = DrawContextTabAsync(tab);   // they read in this translation and name its books
         await RedrawChapterAsync(keepVerse);
     }
 
@@ -1055,6 +1064,7 @@ public partial class MainWindow : Window
     {
         if (sender is not ListBox { SelectedItem: Entry entry } list) return;
         list.SelectedItem = null;
+        if (list == XrefList) { FollowXref(entry.Ref, _xrefs.FirstOrDefault(x => x.Target == entry.Ref)?.EndVerse ?? entry.Ref.Verse); return; }
         await GoToAsync(entry.Ref.Book, entry.Ref.Chapter, entry.Ref.Verse);
     }
 }

@@ -64,7 +64,7 @@ Click a combination and press the new key. **Delete** removes an assignment, **E
 
 ## 13.6 Vault
 
-A **vault** is like a separate folder for a study project: highlights, notes, documents, reading list, to-dos, and your reading progress always belong to exactly one vault. You can create several (for example "Sermon" and "Private") and switch between them here. Each vault is a single file.
+A **vault** is like a separate folder for a study project: highlights, notes, documents, reading list, and to-dos always belong to exactly one vault. What you have **read**, on the other hand, is shared by all vaults. You can create several (for example "Sermon" and "Private") and switch between them here. Each vault is a single file.
 
 - **Create** makes a new vault.
 - **Delete this vault …** deletes it permanently, along with everything in it. The program creates a backup first; afterwards it can only be restored from that backup.
@@ -116,7 +116,7 @@ Claude Code (with Bible tools) or Ollama; the instruction for Claude; the MCP se
 
 ## 13.15 Updates and program
 
-- **Check for updates now.**
+- **Check for updates now.** From version 1.6.7 on, an update downloads only the changed files (usually a few MB), on Windows, Linux and macOS. If the new version does not start, the old one comes back automatically.
 - **Patch notes** (what's new).
 - **Project on GitHub.**
 - **Restart program.**

@@ -64,7 +64,7 @@ Klicke auf eine Kombination und drücke die neue Taste. **Entf** löscht eine Be
 
 ## 13.6 Vault
 
-Ein **Vault** ist wie eine eigene Mappe für ein Studienprojekt: Markierungen, Notizen, Dokumente, Leseliste, To-dos und dein Lesefortschritt gehören immer zu genau einem Vault. Du kannst mehrere anlegen (zum Beispiel „Predigt“ und „Privat“) und hier wechseln. Jeder Vault ist eine einzelne Datei.
+Ein **Vault** ist wie eine eigene Mappe für ein Studienprojekt: Markierungen, Notizen, Dokumente, Leseliste und To-dos gehören immer zu genau einem Vault. Was du **gelesen** hast, gilt dagegen für alle Vaults gemeinsam. Du kannst mehrere anlegen (zum Beispiel „Predigt“ und „Privat“) und hier wechseln. Jeder Vault ist eine einzelne Datei.
 
 - **Anlegen** erzeugt einen neuen Vault.
 - **Diesen Vault löschen …** löscht ihn endgültig mit allem, was darin ist. Vorher legt das Programm eine Sicherung an; danach lässt er sich nur noch daraus zurückholen.
@@ -116,7 +116,7 @@ Claude Code (mit Bibel-Werkzeugen) oder Ollama; die Anweisung für Claude; der M
 
 ## 13.15 Updates und Programm
 
-- **Jetzt nach Updates suchen.**
+- **Jetzt nach Updates suchen.** Ab Version 1.6.7 lädt ein Update nur die geänderten Dateien (meist wenige MB), auf Windows, Linux und macOS. Startet die neue Version nicht, kommt die alte automatisch zurück.
 - **Patch Notes** (was ist neu).
 - **Projekt auf GitHub.**
 - **Programm neu starten.**

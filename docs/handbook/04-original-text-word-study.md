@@ -85,6 +85,7 @@ In the New Testament, the major Greek editions differ in some places. Right-clic
 
 The tab *Verse → Cross-references* shows verses that are related to the clicked verse, with vote count, strongest first. You can
 
+- **read a cross reference in context**: right click → *Open in context in a new tab* shows the whole chapter in a tab of its own with the verses of the reference highlighted, while your reader stays where it is. With *In its own window* (or by dragging the tab downward) you read both passages side by side. To make a plain click open it this way, switch that on under *Settings → Reading and behavior*,
 - **hide a cross reference permanently** (and show it again under *Settings → Hidden cross references …*),
 - add an **own cross reference** (right-click the verse → *Add own cross reference …*): enter a passage and a short note. It appears as a golden chip with ★ below the verse and as a way back below the target verse; right-clicking the chip deletes it. Own cross references belong to the vault and are included in the backup.
 

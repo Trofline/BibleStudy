@@ -2479,5 +2479,15 @@
   "Öffnet die ZIP eines anderen Computers nur für diese Sitzung: Beim Schließen des Programms ist alles wieder weg, deine eigenen Vaults und Einstellungen bleiben unberührt": "Ouvre le ZIP d'un autre ordinateur pour cette session seulement : à la fermeture du programme tout disparaît, tes propres vaults et réglages restent intacts",
   "Vault als Gast importieren": "Importer un vault comme invité",
   "Gast {0:yyyy-MM-dd HH-mm}": "Invité {0:yyyy-MM-dd HH-mm}",
-  "Als Gast importiert: „{0}“. Er verschwindet, wenn du das Programm schließt; deine eigenen Daten bleiben unberührt.": "Importé comme invité : « {0} ». Il disparaît à la fermeture du programme ; tes propres données restent intactes."
+  "Als Gast importiert: „{0}“. Er verschwindet, wenn du das Programm schließt; deine eigenen Daten bleiben unberührt.": "Importé comme invité : « {0} ». Il disparaît à la fermeture du programme ; tes propres données restent intactes.",
+  "Es werden nur die geänderten Dateien geladen ({0:0.0} MB).": "Seuls les fichiers modifiés sont téléchargés ({0:0.0} Mo).",
+  "Für diese Version gibt es kein vollständiges Paket. Lade es bitte von der Download-Seite.": "Il n’existe pas de paquet complet pour cette version. Récupère-le sur la page de téléchargement.",
+  "Das Update auf {0} hat nicht geklappt, die bisherige Version läuft weiter: {1}": "La mise à jour vers {0} a échoué, la version précédente reste en service : {1}",
+  "Im Zusammenhang in neuem Reiter öffnen": "Ouvrir en contexte dans un nouvel onglet",
+  "Im Lesefenster dorthin gehen": "Y aller dans le lecteur",
+  "Vorheriges Kapitel": "Chapitre précédent",
+  "Im Lesefenster öffnen": "Ouvrir dans le lecteur",
+  "In eigenem Fenster": "Dans sa propre fenêtre",
+  "Zurück in die Reiter": "Revenir dans les onglets",
+  "Klick auf einen Querverweis öffnet ihn im Zusammenhang in einem neuen Reiter": "Un clic sur une référence croisée l’ouvre en contexte dans un nouvel onglet"
 }
