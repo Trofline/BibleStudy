@@ -50,7 +50,7 @@ public partial class MainWindow : Window
     readonly string _settingsPath;
     readonly AppSettings _settings;
     HashSet<(string Book, int Chapter)> _read = [];
-    readonly List<(string Book, int Chapter)> _history = [];
+    readonly List<Place> _history = [];
     string? _pendingTranslation;
     bool _firstBooks = true;
     bool _startupHome;
@@ -314,30 +314,52 @@ public partial class MainWindow : Window
     async Task GoBackAsync()
     {
         if (Home.IsVisible || GraphPane.IsVisible || FamilyPane.IsVisible || TimelinePane.IsVisible || MapPane.IsVisible || KnowledgePane.IsVisible) { ShowReader(); return; }
+        RememberPlace();
         if (_history.Count < 2) return;
         _forward.Add(_history[^1]);
         _history.RemoveAt(_history.Count - 1);
-        var (book, chapter) = _history[^1];
+        var target = _history[^1];
         _history.RemoveAt(_history.Count - 1); // GoToAsync records it again
-        _byHistory = true;
-        try { await GoToAsync(book, chapter); } finally { _byHistory = false; }
-        UpdateHistoryButtons();
+        await ShowPlaceAsync(target);
     }
 
     /// <summary>The way back again, after <see cref="GoBackAsync"/>; a new jump somewhere else forgets it (as in a browser).</summary>
     async Task GoForwardAsync()
     {
-        if (Home.IsVisible || GraphPane.IsVisible || FamilyPane.IsVisible || TimelinePane.IsVisible || MapPane.IsVisible || KnowledgePane.IsVisible) ShowReader();
+        if (Home.IsVisible || GraphPane.IsVisible || FamilyPane.IsVisible || TimelinePane.IsVisible || MapPane.IsVisible || KnowledgePane.IsVisible) { ShowReader(); return; }
         if (_forward.Count == 0) return;
-        var (book, chapter) = _forward[^1];
+        RememberPlace();
+        var target = _forward[^1];
         _forward.RemoveAt(_forward.Count - 1);
-        _byHistory = true;
-        try { await GoToAsync(book, chapter); } finally { _byHistory = false; }
-        UpdateHistoryButtons();
+        await ShowPlaceAsync(target);
     }
 
-    readonly List<(string Book, int Chapter)> _forward = [];
+    /// <summary>A place in the history: the chapter, and the verse and the scroll position it was left at.</summary>
+    sealed class Place(string book, int chapter, int? verse)
+    {
+        public string Book { get; } = book;
+        public int Chapter { get; } = chapter;
+        public int? Verse { get; set; } = verse;
+        public Avalonia.Vector? Offset { get; set; }
+    }
+
+    readonly List<Place> _forward = [];
     bool _byHistory;
+
+    /// <summary>Notes where the reader is right now in the current place of the history: going back returns to that very verse, not just to the chapter.</summary>
+    void RememberPlace()
+    {
+        if (_byHistory || _history.Count == 0 || _history[^1] is not { } p || p.Book != _curBook || p.Chapter != _curChapter) return;
+        p.Verse = _selected; p.Offset = ReaderScroll.Offset;
+    }
+
+    async Task ShowPlaceAsync(Place target)
+    {
+        _byHistory = true;
+        try { await GoToAsync(target.Book, target.Chapter, target.Verse); } finally { _byHistory = false; }
+        if (target.Offset is { } offset) Avalonia.Threading.Dispatcher.UIThread.Post(() => ReaderScroll.Offset = offset, Avalonia.Threading.DispatcherPriority.Background);
+        UpdateHistoryButtons();
+    }
 
     void UpdateHistoryButtons()
     {
@@ -437,6 +459,7 @@ public partial class MainWindow : Window
             var sameChapter = keepScroll && _curBook == b.Id && _curChapter == ch.Number;
             var keepOffset = ReaderScroll.Offset; var keepCols = _colScrolls.Select(s => s.Offset).ToList();
             // a text selection belongs to the chapter it was made in (kept, its offsets would mark the same verse number of the next chapter)
+            if (!sameChapter) RememberPlace();
             if (_curBook != b.Id || _curChapter != ch.Number) ClearTextSelection(false);
             _curBook = b.Id; _curChapter = ch.Number; _selected = null; _selVerses.Clear(); _anchorVerse = null;
             if (ReaderHost.IsVisible && !_switchingVault) { try { _vault.SetLastPosition(_curBook, _curChapter); } catch (Exception) { /* a convenience; never block reading */ } }
@@ -495,7 +518,9 @@ public partial class MainWindow : Window
             else ReaderScroll.Offset = default;
 
             ReadBtn.IsChecked = _read.Contains((b.Id, number));
-            if (_history.Count == 0 || _history[^1] != (b.Id, number)) { _history.Add((b.Id, number)); if (_history.Count > 100) _history.RemoveAt(0); if (!_byHistory) _forward.Clear(); }
+            // a jump inside the chapter to another verse is a step too (a cross reference a few verses on); clicking a verse is not
+            var last = _history.Count > 0 ? _history[^1] : null;
+            if (_byHistory || last is null || last.Book != b.Id || last.Chapter != number || (!keepScroll && focusVerse is int && last.Verse != focusVerse)) { _history.Add(new Place(b.Id, number, focusVerse)); if (_history.Count > 100) _history.RemoveAt(0); if (!_byHistory) _forward.Clear(); }
             UpdateHistoryButtons();
             _settings.TranslationId = t.Id; _settings.BookId = b.Id; _settings.Chapter = number;
             UpdateTitle(b.CommonName, number, t.ShortName);
