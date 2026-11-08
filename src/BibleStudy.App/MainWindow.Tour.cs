@@ -41,6 +41,7 @@ public partial class MainWindow
         if (_settings.TourPending) { _settings.LastSeenVersion = AppPaths.Version; StartTour(); return; }   // a new installation has nothing "new" to read
         if (!_settings.BackupAsked && _settings.BackupSchedule == "off") { _ = AskForBackupAsync(); return; }
         _ = ShowPatchNotesIfNewAsync();
+        _ = OfferReimportAsync();
         DispatcherTimer.RunOnce(ShowNewKeysTip, TimeSpan.FromSeconds(4));
     }
 

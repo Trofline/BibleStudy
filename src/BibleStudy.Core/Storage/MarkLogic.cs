@@ -20,6 +20,20 @@ public static class MarkLogic
             .Select(m => m.Id).ToList();
     }
 
+    /// <summary>
+    /// Where a marked text stands in the verse after the text was imported again: where it was (the offsets are still right), else the same words found in the new
+    /// text (the one nearest to the old place). Null when the words are no longer there (the import corrected them): the mark stays as it is then.
+    /// </summary>
+    public static (int Start, int End)? Realign(string markedText, int oldStart, string newVerseText)
+    {
+        if (markedText.Length == 0) return null;
+        if (oldStart >= 0 && oldStart + markedText.Length <= newVerseText.Length && string.CompareOrdinal(newVerseText, oldStart, markedText, 0, markedText.Length) == 0) return (oldStart, oldStart + markedText.Length);
+        var best = -1;
+        for (var at = newVerseText.IndexOf(markedText, StringComparison.Ordinal); at >= 0; at = newVerseText.IndexOf(markedText, at + 1, StringComparison.Ordinal))
+            if (best < 0 || Math.Abs(at - oldStart) < Math.Abs(best - oldStart)) best = at;
+        return best < 0 ? null : (best, best + markedText.Length);
+    }
+
     /// <summary>The name of a vault written in the file of an export: the file "name.txt", else the quoted name in "info.txt" of older exports.</summary>
     public static string? VaultNameFromExport(string? nameFile, string? infoFile)
     {

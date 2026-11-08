@@ -33,7 +33,22 @@ public sealed class LocalBibleStore : SqliteDb, IBibleProvider
             CREATE TABLE IF NOT EXISTS headings(translation TEXT, book TEXT, chapter INT, verse INT, ord INT, text TEXT, level INT);
             CREATE INDEX IF NOT EXISTS headings_pos ON headings(translation, book, chapter);
             """);
+        // which import made a translation and which file it came from (an older database has neither)
+        foreach (var column in new[] { "source TEXT", "importer INT" })
+            try { Exec("ALTER TABLE translations ADD COLUMN " + column); } catch (SqliteException) { /* already there */ }
     }
+
+    /// <summary>
+    /// The version of the import code that made a stored translation. 2 = since 1.6.12 (better PDF layout, no markers from HTML, headings). Older copies
+    /// (nothing stored) can be read again from their file for a better result.
+    /// </summary>
+    public const int CurrentImporter = 2;
+
+    /// <summary>A stored translation that was made by an older import.</summary>
+    public sealed record Outdated(string Id, string Name, string Language, string? Source);
+
+    public List<Outdated> GetOutdated() => Query("SELECT id,name,language,source FROM translations WHERE COALESCE(importer,0) < $v ORDER BY name", c => c.Parameters.AddWithValue("$v", CurrentImporter),
+        r => new Outdated(r.GetString(0), r.GetString(1), r.GetString(2), r.IsDBNull(3) ? null : r.GetString(3)));
 
     public static bool Owns(string translationId) => translationId.StartsWith(Prefix, StringComparison.Ordinal);
 
@@ -99,7 +114,7 @@ public sealed class LocalBibleStore : SqliteDb, IBibleProvider
         JsonSerializer.Deserialize<List<SegmentDto>>(json)!.Select(d => new Segment(d.T ?? "", d.J == true, d.S, d.N)).ToList();
 
     /// <summary>Stores a parsed Bible (replacing one with the same id) and returns its translation id.</summary>
-    public string Save(ParsedBible bible)
+    public string Save(ParsedBible bible, string? sourcePath = null)
     {
         var id = IdFor(bible);
         using var con = Open();
@@ -111,7 +126,8 @@ public sealed class LocalBibleStore : SqliteDb, IBibleProvider
             cmd.ExecuteNonQuery();
         }
         Run("DELETE FROM verses WHERE translation=$i", ("$i", id)); Run("DELETE FROM notes WHERE translation=$i", ("$i", id)); Run("DELETE FROM headings WHERE translation=$i", ("$i", id));
-        Run("INSERT OR REPLACE INTO translations VALUES($i,$n,$s,$l,$d)", ("$i", id), ("$n", bible.Name), ("$s", bible.ShortName), ("$l", bible.LanguageCode), ("$d", DateTime.UtcNow.ToString("o")));
+        Run("INSERT OR REPLACE INTO translations(id,name,short_name,language,imported,source,importer) VALUES($i,$n,$s,$l,$d,COALESCE($f,(SELECT source FROM translations WHERE id=$i)),$v)",
+            ("$i", id), ("$n", bible.Name), ("$s", bible.ShortName), ("$l", bible.LanguageCode), ("$d", DateTime.UtcNow.ToString("o")), ("$f", (object?)sourcePath ?? DBNull.Value), ("$v", CurrentImporter));
         using (var ins = con.CreateCommand())
         {
             ins.CommandText = "INSERT OR REPLACE INTO verses VALUES($t,$b,$c,$v,$s)";

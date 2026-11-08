@@ -68,6 +68,8 @@ public sealed class AppSettings
     public List<string> CustomSubColors { get; set; } = [];   // own colors for sub-marks, chosen with the "+" in the settings
     /// <summary>Which headings show in the text: All, Smart (my own, the translation's only where I have none), Mine, Translation, None.</summary>
     public string HeadingMode { get; set; } = "All";
+    /// <summary>The import version for which the question "read the imported Bibles again?" was answered (so it comes once per import version).</summary>
+    public int ImportRefreshAsked { get; set; }
     public string SubMarkColor { get; set; } = "";   // color of a sub-mark inside a marked verse; "" = the accent color of the program
     public string SelectionColor { get; set; } = "Accent";   // "Accent" (the accent color of the program), "Gray" or "Blue"
     public string DarkBackground { get; set; } = "Nachtblau";   // one of the dark backgrounds (see MainWindow.Qol)

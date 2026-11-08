@@ -56,7 +56,9 @@ public partial class MainWindow
             var bible = await Task.Run(() => BibleImporters.Read(path, language, progress));
             if (bible.Verses.Count == 0) throw new InvalidDataException(L("Keine Verse gefunden."));
             ImportBibleInfo.Text = L("{0} Verse gelesen, werden gespeichert …", bible.Verses.Count);
-            var id = await Task.Run(() => _local.Save(bible));
+            var existed = (await _local.GetTranslationsAsync()).Any(t => t.Name == bible.Name);
+            var id = await Task.Run(() => _local.Save(bible, path));
+            if (existed) await RealignMarksAsync(id);   // the text may have moved by a letter: marks keep their words
             _store.ForgetTranslation(id); _corpora.Remove(id); _strongIndexes.Remove(id);   // text changed: rebuild search index and concordance on demand
             await RefreshLocalBibleBoxAsync();
             await ReloadTranslationsAsync(id);

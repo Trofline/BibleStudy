@@ -276,6 +276,10 @@ public sealed partial class VaultStore : SqliteDb
         return id;
     }
 
+    /// <summary>Moves a mark to other offsets in the verse text (after the text of its translation was imported again).</summary>
+    public void SetMarkRange(long id, int start, int end) =>
+        Exec("UPDATE marks SET start_off=$s, end_off=$e WHERE id=$i", c => { c.Parameters.AddWithValue("$s", start); c.Parameters.AddWithValue("$e", end); c.Parameters.AddWithValue("$i", id); });
+
     public void UpdateMark(long id, string color, string note, long? folderId, IEnumerable<string> tags)
     {
         using var con = Open();
