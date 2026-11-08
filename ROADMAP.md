@@ -96,7 +96,7 @@ Regeln für die Abarbeitung:
 - [x] Tastaturbedienung komplett (Tab-Reihenfolge, Pfeiltasten in Listen), gemeinsam mit der Screenreader-Phase
 - [x] Automatischer Test, der Screenshots der wichtigsten Ansichten (hell/dunkel, klein/groß) erzeugt, damit Layout-Fehler früher auffallen
 - [x] PDF-Import für gedruckte Bibeln (Spalten, Kopfzeile, Verszahlen, Überschriften, Parallelstellen, Fußnoten; getestet mit der Schlachter 2000: 31.007 von rund 31.100 Versen)
-- [x] PDF-Import: Kapitelanfänge ohne Überschrift sicherer erkennen (z. B. Josua 20 geht noch verloren), erste Kapitel der Bücher mit Seitenspalte, Kapitel-/Verszählung der Übersetzung (Joel/Maleachi) auf die Standardzählung abbilden
+- [x] PDF-Import: Kapitelanfänge ohne Überschrift sicherer erkennen (umgesetzt: Absatz-Einzug, Satzende, fehlende „2“, Doppelseiten, Buchtitel „Offenbarung“; Rest: Römer 10,1, Josua 20,2, Jeremia 20,7-8, 4. Mose 7,83 fehlen in der PDF-Nummerierung; Joel/Maleachi folgen der Zählung der Übersetzung)
 
 ## Wünsche von Elias, 8. November 2026 (Fehler, Markierungen, Import)
 - [x] Vault-Name: beim Import eines Exports den ursprünglichen Namen übernehmen (nicht „Import <Datum>“); Vault umbenennen können (Einstellungen → Vault)

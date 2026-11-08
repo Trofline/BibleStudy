@@ -17,7 +17,7 @@ public sealed record PdfPageWords(double Width, IReadOnlyList<PdfWord> Words);
 /// </summary>
 public static class PdfBibleLayout
 {
-    enum Kind { Text, Verse, Book, Heading }
+    enum Kind { Text, Verse, Book, Heading, Para }
 
     sealed record Token(Kind Kind, string Text, int Number = 0, string? Book = null, bool Ligature = false);
 
@@ -31,7 +31,7 @@ public static class PdfBibleLayout
     {
         if (size >= bodySize - 1.5 || size <= bodySize - 3.5 || text.Length > 8) return false;
         var letters = text.Where(char.IsLetter).ToList();
-        return letters.Count > 0 && letters.All(char.IsUpper) && text.All(c => char.IsLetter(c) || ".,;:!?)(][»«›‹\"”’-".Contains(c));
+        return letters.Count >= 2 && letters.All(char.IsUpper) && text.All(c => char.IsLetter(c) || ".,;:!?)(][»«›‹\"”’-".Contains(c));
     }
 
     static (string Text, bool Ligature) Unligate(string s)
@@ -52,9 +52,12 @@ public static class PdfBibleLayout
     {
         var tokens = new List<Token>();
         string? lastBook = null; var pendingTitle = -1;
+        var seenPages = new HashSet<string>();
         foreach (var page in pages)
         {
-            var words = page.Words.Where(w => w.Text.Length > 0 && w.Left >= 0 && w.Left < page.Width).ToList();
+            // a PDF that holds the same page twice (some copies repeat whole stretches of pages) is read once
+            if (page.Words.Count >= 150 && !seenPages.Add(page.Words.Count + ":" + string.Join(' ', page.Words.Take(120).Select(w => w.Text)))) continue;
+            var words = WithoutRepeats(page.Words.Where(w => w.Text.Length > 0 && w.Left >= 0 && w.Left < page.Width));
             if (words.Count < 20) continue;
             // the body size is the most common size of plain words (a page with none, e.g. all in italics, is no Bible text)
             var sizes = words.Where(w => !w.Bold && !w.Italic).GroupBy(w => Math.Round(w.Size * 2) / 2).OrderByDescending(g => g.Count()).FirstOrDefault();
@@ -105,8 +108,20 @@ public static class PdfBibleLayout
             var headingLines = body.GroupBy(b => (b.Left < split ? 0 : 1, Math.Round(b.Bottom / 3)))
                 .Where(g => g.All(x => x.Italic) && (g.Count() >= 2 || IsHeadingWord(g.First().Text))).Select(g => g.Key).ToHashSet();
             foreach (var col in new[] { 0, 1 })
-                foreach (var w in body.Where(b => (b.Left < split ? 0 : 1) == col).OrderByDescending(b => Math.Round(b.Bottom / 3)).ThenBy(b => b.Left))
+            {
+                var colWords = body.Where(b => (b.Left < split ? 0 : 1) == col).ToList();
+                var firstOfLine = colWords.GroupBy(b => Math.Round(b.Bottom / 3)).ToDictionary(g => g.Key, g => g.OrderBy(x => x.Left).First());
+                var margin = firstOfLine.Count == 0 ? 0 : firstOfLine.Values.GroupBy(x => Math.Round(x.Left)).OrderByDescending(g => g.Count()).First().Key;
+                // a paragraph begins on an indented line that follows a line which stops short of the right edge (the text is justified, so only the last line of a paragraph does)
+                var lineEnd = colWords.GroupBy(b => Math.Round(b.Bottom / 3)).ToDictionary(g => g.Key, g => g.Max(x => x.Left + x.Text.Length * x.Size * 0.5));
+                var edge = lineEnd.Count == 0 ? 0 : lineEnd.Values.OrderByDescending(v => v).Skip(lineEnd.Count / 10).First();
+                var ordered = lineEnd.Keys.OrderByDescending(k => k).ToList();
+                var indentedLines = new HashSet<double>();
+                for (var li = 0; li < ordered.Count; li++)
+                    if (firstOfLine[ordered[li]] is { Italic: false } f && f.Left - margin is >= 6 and <= 40 && (li == 0 || lineEnd[ordered[li - 1]] < edge - 12)) indentedLines.Add(ordered[li]);
+                foreach (var w in colWords.OrderByDescending(b => Math.Round(b.Bottom / 3)).ThenBy(b => b.Left))
                 {
+                    if (indentedLines.Remove(Math.Round(w.Bottom / 3))) tokens.Add(new Token(Kind.Para, ""));
                     if (w.Italic && headingLines.Contains((col, Math.Round(w.Bottom / 3))))
                     {
                         var word = Unligate(w.Text).Text;
@@ -124,6 +139,7 @@ public static class PdfBibleLayout
                     var (plain, lig) = Unligate(w.Text);
                     tokens.Add(new Token(Kind.Text, plain, 0, null, lig));
                 }
+            }
         }
 
         // words that were hyphenated at the end of a line, or split behind a ligature ("ﬂ äche")
@@ -141,27 +157,33 @@ public static class PdfBibleLayout
             else if (a.Ligature && (a.Text.EndsWith("fl") || a.Text.EndsWith("fi") || a.Text.EndsWith("ff") || a.Text.EndsWith("ffi") || a.Text.EndsWith("ffl")) && (b.Text.Length > 1 || b.Text[0] is 'n' or 'e' or 's' or 'r')) { tokens[i] = a with { Text = a.Text + b.Text, Ligature = false }; tokens.RemoveAt(i + 1); i--; }
         }
 
+        JoinSplitWords(tokens);
+        TitlesInCapitals(tokens);
+
         var result = new List<(string, int, int, string)>();
         var headings = new List<(string, int, int, string)>(); var pending = new List<string>();
-        string? bookId = null; var chapter = 0; var verse = 0; var text = new StringBuilder(); var headingAt = -1;
+        string? bookId = null; var chapter = 0; var verse = 0; var text = new StringBuilder(); var headingAt = -1; var paras = new List<int>();
         // the headings seen since the last verse number stand in front of the verse that begins now
         void PlaceHeadings() { foreach (var h in pending) if (bookId is not null && chapter > 0 && verse > 0 && h.Length > 0) headings.Add((bookId, chapter, verse, h)); pending.Clear(); }
-        void Flush() { if (bookId is not null && chapter > 0 && verse > 0 && text.Length > 0) result.Add((bookId, chapter, verse, text.ToString().Trim())); text.Clear(); headingAt = -1; }
+        void Flush() { if (bookId is not null && chapter > 0 && verse > 0 && text.Length > 0) result.Add((bookId, chapter, verse, text.ToString().Trim())); text.Clear(); headingAt = -1; paras.Clear(); }
         foreach (var t in tokens)
         {
             switch (t.Kind)
             {
                 case Kind.Book: Flush(); bookId = t.Book; chapter = 0; verse = 0; pending.Clear(); break;
+                case Kind.Para: if (bookId is not null && text.Length > 0) paras.Add(text.Length); break;
                 case Kind.Heading: if (bookId is not null) { headingAt = text.Length; pending.Add(t.Text); } break;
-                case Kind.Verse when bookId is not null && t.Number == 2 && verse != 1:
+                case Kind.Verse when bookId is not null && (t.Number == 2 && verse != 1 || t.Number == 3 && verse > 5 && headingAt >= 0):
                 {
-                    // the count starts again: a new chapter. Its first verse is what follows the last heading; everything before belongs to the old verse
+                    // the count starts again: a new chapter. Its first verse is what follows the last heading; everything before belongs to the old verse.
+                    // (A "3" counts the same when the "2" is missing in the print: after a heading the numbers cannot go from 20 back to 3 within a chapter.)
                     var all = text.ToString();
-                    var cut = headingAt >= 0 ? headingAt : (chapter == 0 ? (all.Length <= 600 ? 0 : -1) : all.Length);   // no heading in a book's first chapter: a short text before verse 2 is verse 1
+                    // in a book's first chapter the text before verse 2 is verse 1 (the headings stand in front of it, also when the page puts them behind it)
+                    var cut = chapter == 0 ? (headingAt >= 0 && headingAt < all.Length ? headingAt : (all.Length <= 600 ? 0 : -1)) : headingAt >= 0 && headingAt < all.Length - 2 ? headingAt : NewVerseOneStart(all, paras);   // a heading with no text behind it was set after its paragraph: the paragraph is found by its indent
                     var first = cut >= 0 && cut < all.Length ? all[cut..].Trim() : "";
                     text.Clear(); text.Append(cut >= 0 ? all[..cut] : "");
                     Flush();
-                    chapter++; verse = 1; PlaceHeadings(); text.Append(first); Flush(); verse = 2;
+                    chapter++; verse = 1; PlaceHeadings(); text.Append(first); Flush(); verse = t.Number;
                     break;
                 }
                 case Kind.Verse when bookId is not null && chapter > 0 && t.Number > verse && t.Number <= verse + 3: Flush(); verse = t.Number; PlaceHeadings(); break;
@@ -172,6 +194,83 @@ public static class PdfBibleLayout
         return result.Count >= 500 ? new Result(result, headings) : null;
     }
 
+
+    static string Core(string w) => w.Trim('.', ',', ';', ':', '!', '?', '»', '«', '›', '‹', '"', '“', '”', '„', '(', ')', '[', ']', '—');
+
+    /// <summary>
+    /// Letters that the print set apart from their word ("gin g en", "de r", "An stoßes") are joined again when the joined word occurs elsewhere in the same Bible
+    /// and the pieces do not (a real word is never changed: only fragments are put back).
+    /// </summary>
+    static void JoinSplitWords(List<Token> tokens)
+    {
+        var freq = new Dictionary<string, int>();
+        foreach (var t in tokens) if (t.Kind == Kind.Text && Core(t.Text) is { Length: > 0 } c && c.All(char.IsLetter)) freq[c] = freq.GetValueOrDefault(c) + 1;
+        int F(string w) => freq.GetValueOrDefault(w);
+        bool Plain(int i, bool forward) => i >= 0 && i < tokens.Count && tokens[i].Kind == Kind.Text && tokens[i].Text.Length > 0 && (forward ? true : char.IsLetter(tokens[i].Text[^1]));
+        for (var i = 1; i + 1 < tokens.Count; i++)
+        {
+            if (tokens[i].Kind != Kind.Text) continue;
+            var t = tokens[i].Text;
+            if (t.Length == 1 && char.IsLower(t[0]) && "bcdfghjklmnprstvwxz".Contains(t[0]) && Plain(i - 1, false) && Plain(i + 1, true))
+            {
+                var a = tokens[i - 1].Text; var b = tokens[i + 1].Text;
+                if (F(Core(a + t + b)) >= 2 && Core(a).All(char.IsLetter) && F(Core(a)) < F(Core(a + t + b)) * 2) { tokens[i - 1] = tokens[i - 1] with { Text = a + t + b }; tokens.RemoveRange(i, 2); i--; continue; }
+                if (F(Core(a + t)) >= 2 && a.Length >= 2 && char.IsLetter(a[^1])) { tokens[i - 1] = tokens[i - 1] with { Text = a + t }; tokens.RemoveAt(i); i--; continue; }
+                if (F(Core(t + b)) >= 2 && char.IsLetter(b[0])) { tokens[i + 1] = tokens[i + 1] with { Text = t + b }; tokens.RemoveAt(i); i--; continue; }
+            }
+            else if (Plain(i - 1, false) && tokens[i - 1].Kind == Kind.Text && Core(tokens[i - 1].Text) is { Length: > 1 } a2 && a2.All(char.IsLetter) && tokens[i - 1].Text[^1] != '-' && Core(t) is { Length: > 1 } b2 && b2.All(char.IsLetter)
+                     && !t.StartsWith('-') && F(b2) <= 2 && F(a2 + b2) >= 2 && char.IsLower(b2[0]) && t == b2 + t[b2.Length..])
+            { tokens[i - 1] = tokens[i - 1] with { Text = tokens[i - 1].Text + t }; tokens.RemoveAt(i); i--; }
+        }
+    }
+
+    static readonly HashSet<string> DivineNames = ["HERR", "HERRN", "GOTT", "GOTTES", "HERRN,", "HERR,", "JAH", "JHWH"];
+
+    /// <summary>A line of capital letters in the text (a part title like "DIE URZEIT" or "DAS LEIDEN UND STERBEN JESU CHRISTI") is a heading, not part of a verse.</summary>
+    static void TitlesInCapitals(List<Token> tokens)
+    {
+        bool Caps(Token t) => t.Kind == Kind.Text && Core(t.Text) is { Length: >= 3 } c && c.All(char.IsLetter) && c.All(char.IsUpper);
+        for (var i = 0; i < tokens.Count; i++)
+        {
+            if (!Caps(tokens[i])) continue;
+            var j = i; while (j + 1 < tokens.Count && Caps(tokens[j + 1])) j++;
+            // also the small words in between, which are capitals too, but short ("UND")
+            if (j > i && Enumerable.Range(i, j - i + 1).Any(k => !DivineNames.Contains(Core(tokens[k].Text))))
+            {
+                var title = string.Join(' ', Enumerable.Range(i, j - i + 1).Select(k => tokens[k].Text));
+                tokens.RemoveRange(i, j - i + 1);
+                tokens.Insert(i, new Token(Kind.Heading, title));
+            }
+            i = Math.Max(i, j - (j - i));
+        }
+    }
+
+    /// <summary>Some pages carry their text twice, one layer over the other (the same word at the same place): it is read once.</summary>
+    static List<PdfWord> WithoutRepeats(IEnumerable<PdfWord> words)
+    {
+        var kept = new List<PdfWord>(); var byText = new Dictionary<string, List<PdfWord>>();
+        foreach (var w in words)
+        {
+            if (!byText.TryGetValue(w.Text, out var same)) byText[w.Text] = same = [];
+            if (same.Any(o => Math.Abs(o.Left - w.Left) < 1.5 && Math.Abs(o.Bottom - w.Bottom) < 1.5)) continue;
+            same.Add(w); kept.Add(w);
+        }
+        return kept;
+    }
+
+    /// <summary>
+    /// Where the first verse of a new chapter begins in a text that holds the last verse of the old chapter and the unnumbered first verse of the new one, when no heading
+    /// marks it: at the last paragraph start (the first verse of a chapter begins a paragraph), else at the last sentence end. all.Length when nothing is certain.
+    /// </summary>
+    static int NewVerseOneStart(string all, List<int> paragraphStarts)
+    {
+        var para = paragraphStarts.Where(p => p > 0 && p < all.Length - 8).DefaultIfEmpty(-1).Max();
+        if (para > 0) return para;
+        var cut = -1;
+        for (var i = 1; i + 2 < all.Length; i++)
+            if (all[i] == ' ' && ".!?".Contains(all[i - 1]) && i - 1 > 10 && (char.IsUpper(all[i + 1]) || all[i + 1] is '»' or '„' or '“') && all.Length - i > 25) cut = i + 1;
+        return cut > 0 ? cut : all.Length;
+    }
 
     static readonly Dictionary<string, string> Ordinals = new(StringComparer.OrdinalIgnoreCase) { ["erste"] = "1", ["zweite"] = "2", ["dritte"] = "3", ["erster"] = "1", ["zweiter"] = "2", ["dritter"] = "3", ["1."] = "1", ["2."] = "2", ["3."] = "3" };
 
@@ -186,6 +285,8 @@ public static class PdfBibleLayout
         var last = words[^1];
         if (number is not null && bookFromName($"{number}. {last}") is { } numbered) return numbered;
         if (bookFromName(title) is { } whole) return whole;
+        // "Die Offenbarung des Johannes", "Die Klagelieder des Jeremia": the name of the book comes before the name of the author, who is a book of his own
+        foreach (var w in words[..^1]) if (w.Length > 4 && char.IsUpper(w[0]) && bookFromName(w) is { } named) return named;
         for (var take = Math.Min(3, words.Length); take >= 1; take--)
             if (bookFromName(string.Join(' ', words[^take..])) is { } suffix) return suffix;
         return null;

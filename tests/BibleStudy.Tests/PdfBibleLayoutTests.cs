@@ -106,4 +106,89 @@ public class PdfBibleLayoutTests
     [InlineData("ERR", 8.0, false)]     // as large as the body text: a real capital word
     [InlineData("TEXTLICH", 5.7, true)]
     public void SmallCapitalsAreRecognised(string text, double size, bool expected) => Assert.Equal(expected, PdfBibleLayout.IsSmallCaps(text, size, 8.0));
+    // ---- layout faults of real printed Bibles --------------------------------------------------------------------------
+
+    static List<(string, double, double, double, bool, bool)> Head() => [.. Line(520, 150, "RUT 1.2", 10)];
+
+    [Fact]
+    public void ARepeatedPageIsReadOnce()
+    {
+        var pages = new List<PdfPageWords>();
+        for (var p = 0; p < 301; p++)
+        {
+            var w = Head();
+            w.AddRange(Line(510, 22, "Die Heimkehr", 8, italic: true));   // a heading in front of the first verse of each chapter
+            w.AddRange(Line(500, 22, $"Es kam Hunger {p}", 8));
+            w.AddRange(Line(490, 22, "2", 7, bold: true)); w.AddRange(Line(490, 40, $"Der Mann {p}", 8));
+            for (var i = 0; i < 200; i++) w.Add(("x", 200 + i % 100, 100 + i / 100, 8, true, false));   // bold words that are no verse numbers: left out, but they make a full page
+            pages.Add(Page([.. w]));
+        }
+        pages.Add(pages[5]);   // the same page once more, as some copies of a PDF repeat whole stretches
+        var result = PdfBibleLayout.Read(pages, Book);
+        Assert.NotNull(result);
+        Assert.Single(result!, v => v.Text == "Es kam Hunger 5");
+    }
+
+    [Fact]
+    public void AChapterWithoutHeadingBeginsAtTheIndentedParagraph()
+    {
+        var w = Head();
+        w.AddRange(Line(500, 22, "Es kam Hunger", 8));
+        w.AddRange(Line(490, 22, "2", 7, bold: true)); w.AddRange(Line(490, 40, "Der Mann hieß Elimelech und seine Frau", 8));
+        w.AddRange(Line(480, 22, "Noomi ging fort", 8));                  // last line of the paragraph: short
+        w.AddRange(Line(470, 34, "Und Ruth ging aufs Feld", 8));         // indented: the first verse of chapter 2, no heading before it
+        w.AddRange(Line(460, 22, "2", 7, bold: true)); w.AddRange(Line(460, 40, "Sie las Ähren auf", 8));
+        // longer lines so that the short one is recognised as the end of a paragraph
+        for (var y = 450; y > 380; y -= 10) w.AddRange(Line(y, 22, "Dies ist eine lange Zeile mit sehr vielen Wörtern darin für den Rand rechts", 8));
+        var result = PdfBibleLayout.Read(Repeated(w), Book);
+        Assert.NotNull(result);
+        Assert.Contains(result!, v => v is { Chapter: 1, Verse: 2 } && v.Text == "Der Mann hieß Elimelech und seine Frau Noomi ging fort");
+        Assert.Contains(result!, v => v is { Chapter: 2, Verse: 1 } && v.Text == "Und Ruth ging aufs Feld");
+    }
+
+    [Fact]
+    public void AMissingTwoDoesNotSwallowTheChapter()
+    {
+        var w = Head();
+        w.AddRange(Line(510, 22, "Die Heimkehr", 8, italic: true));
+        w.AddRange(Line(500, 22, "Es kam Hunger", 8));
+        for (var v = 2; v <= 8; v++) { w.AddRange(Line(500 - v * 10, 22, v.ToString(), 7, bold: true)); w.AddRange(Line(500 - v * 10, 40, $"Vers {v}", 8)); }
+        w.AddRange(Line(410, 22, "Die Zuflucht", 8, italic: true));       // heading of the next chapter
+        w.AddRange(Line(400, 22, "Und der Herr sprach: Bestimmt Städte", 8));   // chapter 2 verse 1 and 2 (the printed number 2 is missing)
+        w.AddRange(Line(390, 22, "3", 7, bold: true)); w.AddRange(Line(390, 40, "Dorthin soll fliehen", 8));
+        var result = PdfBibleLayout.Read(Repeated(w), Book);
+        Assert.NotNull(result);
+        Assert.Contains(result!, v => v is { Chapter: 2, Verse: 1 } && v.Text.StartsWith("Und der Herr sprach"));
+        Assert.Contains(result!, v => v is { Chapter: 2, Verse: 3 } && v.Text == "Dorthin soll fliehen");
+        Assert.DoesNotContain(result!, v => v is { Chapter: 1, Verse: 8 } && v.Text.Contains("Städte"));
+    }
+
+    [Fact]
+    public void ATitleInCapitalsIsAHeadingNotPartOfTheVerse()
+    {
+        var w = Head();
+        w.AddRange(Line(500, 22, "Es kam Hunger", 8));
+        w.AddRange(Line(490, 22, "2", 7, bold: true)); w.AddRange(Line(490, 40, "Der Mann hieß Elimelech", 8));
+        w.AddRange(Line(480, 22, "DAS LEIDEN UND STERBEN CHRISTI", 8));
+        w.AddRange(Line(470, 22, "Und Noomi stand auf", 8));
+        w.AddRange(Line(460, 22, "2", 7, bold: true)); w.AddRange(Line(460, 40, "Ruth ging", 8));
+        var full = PdfBibleLayout.ReadFull(Repeated(w), Book);
+        Assert.NotNull(full);
+        Assert.Contains(full!.Headings, h => h.Text.Contains("STERBEN"));
+        Assert.DoesNotContain(full.Verses, v => v.Text.Contains("STERBEN"));
+    }
+
+    [Fact]
+    public void LettersSetApartFromTheirWordAreJoinedWhenTheWordIsKnown()
+    {
+        var w = Head();
+        w.AddRange(Line(510, 22, "Die Heimkehr", 8, italic: true));
+        w.AddRange(Line(500, 22, "Es kam Hunger", 8));
+        w.AddRange(Line(490, 22, "2", 7, bold: true)); w.AddRange(Line(490, 40, "Sie gin g en hin", 8));
+        w.AddRange(Line(480, 22, "3", 7, bold: true)); w.AddRange(Line(480, 40, "Sie gingen heim", 8));
+        w.AddRange(Line(470, 22, "4", 7, bold: true)); w.AddRange(Line(470, 40, "Dann gingen fort", 8));
+        var result = PdfBibleLayout.Read(Repeated(w), Book);
+        Assert.NotNull(result);
+        Assert.Contains(result!, v => v is { Chapter: 1, Verse: 2 } && v.Text == "Sie gingen hin");
+    }
 }
