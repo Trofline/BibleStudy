@@ -194,6 +194,11 @@ public partial class MainWindow
             FileTypeChoices = [new FilePickerFileType("ZIP-Archiv") { Patterns = ["*.zip"] }],
         });
         if (file?.TryGetLocalPath() is not { } path) return;
+        ExportToPath(path);
+    }
+
+    internal void ExportToPath(string path)
+    {
         var snapshot = Path.Combine(Path.GetTempPath(), $"bs_{Guid.NewGuid():N}.db");
         try
         {
@@ -225,6 +230,11 @@ public partial class MainWindow
             Title = guest ? L("Vault als Gast importieren") : L("Vault importieren"), AllowMultiple = false, FileTypeFilter = [new FilePickerFileType("ZIP-Archiv") { Patterns = ["*.zip"] }],
         });
         if (files.Count == 0 || files[0].TryGetLocalPath() is not { } path) return;
+        await ImportFromPathAsync(path, guest);
+    }
+
+    internal async Task ImportFromPathAsync(string path, bool guest)
+    {
         try
         {
             using var zip = ZipFile.OpenRead(path);

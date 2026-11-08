@@ -72,5 +72,7 @@ public sealed class ReadStore : SqliteDb
             using var cmd = con.CreateCommand(); cmd.CommandText = sql; cmd.ExecuteNonQuery();
         }
         tx.Commit();
+        // let go of the file: the connection goes back to the pool, and an attached file would stay locked (the export could not pack it)
+        using (var detach = con.CreateCommand()) { detach.CommandText = "DETACH DATABASE target"; detach.ExecuteNonQuery(); }
     }
 }
