@@ -154,6 +154,7 @@ public static partial class BibleImporters
         // The verse number button is closed first; drop everything up to and including it.
         var afterButton = fragment.IndexOf("</button>", StringComparison.Ordinal);
         if (afterButton >= 0) fragment = fragment[(afterButton + 9)..];
+        fragment = RemoveSpans(fragment, "strong-no", "text-variant");   // the number after a word ("G760") and the marker of the text edition ("TR", "NA", "MT") are not part of the text
         var segments = new List<Segment>();
         foreach (Match t in Token().Matches(fragment))
         {
@@ -172,6 +173,44 @@ public static partial class BibleImporters
             else if (t.Groups["plain"].Success) { var text = WebUtility.HtmlDecode(t.Groups["plain"].Value); if (text.Length > 0) segments.Add(new Segment(text)); }
         }
         return Normalize(segments);
+    }
+
+    /// <summary>Takes out every &lt;span&gt; whose class list contains one of the given classes, with what is inside it (also nested spans).</summary>
+    public static string RemoveSpans(string html, params string[] classes)
+    {
+        if (!html.Contains("<span", StringComparison.Ordinal)) return html;
+        var sb = new System.Text.StringBuilder(html.Length);
+        var pos = 0;
+        while (pos < html.Length)
+        {
+            var open = html.IndexOf("<span", pos, StringComparison.Ordinal);
+            if (open < 0) break;
+            var end = html.IndexOf('>', open);
+            if (end < 0) break;
+            var tag = html.AsSpan(open, end - open);
+            var wanted = false;
+            foreach (var c in classes) if (tag.IndexOf("class=\"", StringComparison.Ordinal) >= 0 && ClassIn(tag.ToString(), c)) { wanted = true; break; }
+            if (!wanted) { sb.Append(html, pos, end + 1 - pos); pos = end + 1; continue; }
+            sb.Append(html, pos, open - pos);
+            // to the </span> that closes this one: spans inside it open and close again
+            var depth = 1; var at = end + 1;
+            while (depth > 0 && at < html.Length)
+            {
+                var nextOpen = html.IndexOf("<span", at, StringComparison.Ordinal); var nextClose = html.IndexOf("</span>", at, StringComparison.Ordinal);
+                if (nextClose < 0) { at = html.Length; break; }
+                if (nextOpen >= 0 && nextOpen < nextClose) { depth++; at = nextOpen + 5; } else { depth--; at = nextClose + 7; }
+            }
+            pos = at;
+        }
+        sb.Append(html, Math.Min(pos, html.Length), Math.Max(0, html.Length - pos));
+        return sb.ToString();
+
+        static bool ClassIn(string tag, string name)
+        {
+            var i = tag.IndexOf("class=\"", StringComparison.Ordinal) + 7;
+            var close = tag.IndexOf('"', i);
+            return close > i && tag[i..close].Split(' ', StringSplitOptions.RemoveEmptyEntries).Contains(name);
+        }
     }
 
     /// <summary>Collapses repeated spaces across segment borders and trims the verse.</summary>

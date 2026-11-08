@@ -97,3 +97,15 @@ Regeln für die Abarbeitung:
 - [ ] Automatischer Test, der Screenshots der wichtigsten Ansichten (hell/dunkel, klein/groß) erzeugt, damit Layout-Fehler früher auffallen
 - [x] PDF-Import für gedruckte Bibeln (Spalten, Kopfzeile, Verszahlen, Überschriften, Parallelstellen, Fußnoten; getestet mit der Schlachter 2000: 31.007 von rund 31.100 Versen)
 - [ ] PDF-Import: Kapitelanfänge ohne Überschrift sicherer erkennen (z. B. Josua 20 geht noch verloren), erste Kapitel der Bücher mit Seitenspalte, Kapitel-/Verszählung der Übersetzung (Joel/Maleachi) auf die Standardzählung abbilden
+
+## Wünsche von Elias, 8. November 2026 (Fehler, Markierungen, Import)
+- [x] Vault-Name: beim Import eines Exports den ursprünglichen Namen übernehmen (nicht „Import <Datum>“); Vault umbenennen können (Einstellungen → Vault)
+- [x] Untermarkierung: Farbwechsel in den Einstellungen gilt auch für schon gemachte Untermarkierungen
+- [x] Untermarkierungsfarbe wandert mit Export/Import des Vaults mit
+- [x] Markierungen beim Wechsel der Übersetzung mitnehmen: eine Markierung aus einer Übersetzung erscheint auch in der anderen (auch eine Untermarkierung wie „Götterwesen“ ↔ „Gott“) und bleibt nicht an der alten Übersetzung „festgesetzt“
+- [x] Lesen: Zifferntasten tippen → springt zu diesem Vers
+- [x] Lesen: Bild-auf / Bild-ab scrollen den Text
+- [x] PDF-Import (Schlachter 2000): „HERR“ wird zu „H“ und der Satz bricht ab; falsche Buchstaben im Wort („d aß“, „b“ in Lukas 16,28) → Import verbessern
+- [x] HTML-Import (Elberfelder): Strong-Nummern und Textvarianten-Marker („G6137 NA/G1782 TR“) landen im Verstext → beim Import erkennen und entfernen bzw. als Strong-Daten behalten
+- [x] Import: Überschriften der Übersetzung (z. B. Schlachter 2000) mit importieren und anzeigen
+- [x] Import-Prüfung mit KI: Regeln einlesen und mit der Übersetzung an die KI schicken; die KI korrigiert die Datei, der Nutzer lädt die korrigierte Fassung herunter und importiert sie (umgesetzt als Prüfbericht: Nach dem Import erkennt BibleStudy typische Fehler und speichert eine Markdown-Datei mit Regeln und Fundstellen für eine KI; die korrigierte USFM-Datei kann samt Überschriften (\s1) wieder importiert werden. Die KI selbst wird nicht aus dem Programm angesprochen.)

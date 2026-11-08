@@ -687,6 +687,16 @@
                                 <CheckBox x:Name="CompactLookCheck" Content="Kompakte Ansicht: alles rechts in der Leiste wie früher (gilt nach Neustart)" />
                                 <CheckBox x:Name="CommentariesCheck" Content="Kommentare anzeigen (Menschenwerk, nicht der Bibeltext; gilt nach Neustart)" />
                                 <CheckBox x:Name="JustifyCheck" Content="Blocksatz" />
+                                <StackPanel Orientation="Horizontal" Spacing="10">
+                                    <TextBlock Text="Überschriften anzeigen" VerticalAlignment="Center" />
+                                    <Border Classes="pill"><ComboBox x:Name="HeadingModeBox" MinWidth="260" SelectedIndex="0" ToolTip.Tip="Eigene Überschriften schreibst du selbst, die der Übersetzung kommen aus dem Import. Hier legst du fest, was im Lesetext erscheint.">
+                                        <ComboBoxItem Content="Alle (eigene und der Übersetzung)" />
+                                        <ComboBoxItem Content="Eigene, die der Übersetzung nur wo ich keine habe" />
+                                        <ComboBoxItem Content="Nur eigene" />
+                                        <ComboBoxItem Content="Nur die der Übersetzung" />
+                                        <ComboBoxItem Content="Keine" />
+                                    </ComboBox></Border>
+                                </StackPanel>
                                 <CheckBox x:Name="AnimationsCheck" Content="Animationen (Seitenleiste, Reiter, Kapitel gleiten sanft ein)" />
                                 <StackPanel Orientation="Horizontal" Spacing="10">
                                     <TextBlock Text="Stärke der Animationen" VerticalAlignment="Center" />
@@ -785,6 +795,7 @@
                                     <TextBox x:Name="NewVaultBox" Width="170" PlaceholderText="Name des neuen Vaults" />
                                     <Button x:Name="NewVaultBtn" Content="Anlegen" />
                                 </StackPanel>
+                                <Button x:Name="RenameVaultBtn" Content="Diesen Vault umbenennen …" HorizontalAlignment="Left" ToolTip.Tip="Gibt dem oben gewählten Vault einen neuen Namen. Alles darin bleibt, wie es ist." />
                                 <Button x:Name="DeleteVaultBtn" Content="Diesen Vault löschen …" HorizontalAlignment="Left" ToolTip.Tip="Löscht den oben gewählten Vault mit allem, was darin ist. Vorher wird eine Sicherung angelegt." />
                                 <TextBlock x:Name="VaultInfo" Classes="caption" TextWrapping="Wrap" />
                             </StackPanel></Border>
@@ -802,6 +813,7 @@
                                     <Button x:Name="RemoveBibleBtn" Content="Entfernen" />
                                 </StackPanel>
                                 <TextBlock x:Name="ImportBibleInfo" Classes="caption" TextWrapping="Wrap" />
+                                <Button x:Name="ImportCheckBtn" Content="Prüfbericht für KI speichern" IsVisible="False" HorizontalAlignment="Left" ToolTip.Tip="Speichert eine Markdown-Datei mit den Regeln und den gefundenen Fehlern. Gib sie mit der Quelldatei an eine KI; die korrigierte USFM-Datei importierst du dann hier." />
                             </StackPanel></Border>
 
                             <Border Classes="card"><StackPanel Spacing="8">

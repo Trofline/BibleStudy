@@ -16,11 +16,26 @@ namespace BibleStudy.App;
 public partial class MainWindow
 {
     List<Heading> _headings = [];
+    bool OwnHeadingsShown => _settings.HeadingMode is not ("Translation" or "None");
     readonly List<(Heading H, Control C)> _headingControls = [];
+
+    /// <summary>The headings that belong to the translation itself (an imported Bible with headings): plain, not editable, in front of the verse.</summary>
+    void AddTranslationHeadings(Panel panel, Chapter? chapter, int verse)
+    {
+        if (chapter?.Headings is not { Count: > 0 } list || _settings.HeadingMode is "Mine" or "None") return;
+        if (_settings.HeadingMode == "Smart" && _headings.Any(m => m.Ref.Verse == verse)) return;   // mine win where both stand in front of one verse
+        foreach (var h in list.Where(h => h.BeforeVerse == verse))
+        {
+            var text = new TextBlock { Text = h.Text, FontSize = 19, FontWeight = FontWeight.SemiBold, FontFamily = UiSerif, TextWrapping = TextWrapping.Wrap };
+            text.Bind(TextBlock.ForegroundProperty, this.GetResourceObservable("BsAccent"));
+            panel.Children.Add(new Border { Padding = new(10, 16, 10, 2), Child = text });
+        }
+    }
 
     /// <summary>Puts the headings that stand in front of a verse into the page (before the verse is added).</summary>
     void AddHeadings(Panel panel, int verse)
     {
+        if (!OwnHeadingsShown) return;
         foreach (var h in _headings.Where(h => h.Ref.Verse == verse))
         {
             var c = HeadingControl(h);
@@ -34,6 +49,7 @@ public partial class MainWindow
     {
         foreach (var (_, c) in _headingControls) (c.Parent as Panel)?.Children.Remove(c);
         _headingControls.Clear();
+        if (!OwnHeadingsShown) return;
         foreach (var h in _headings)
         {
             if (!_verseBoxes.TryGetValue(h.Ref.Verse, out var box) || box.Parent is not Panel panel) continue;

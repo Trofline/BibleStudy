@@ -8,6 +8,37 @@ namespace BibleStudy.Core.Storage;
 /// </summary>
 public static class MarkLogic
 {
+    /// <summary>
+    /// The sub-marks among these marks: a mark of a part of a verse that lies inside a verse marked as a whole and has the sub-mark color.
+    /// Used to give the old sub-marks the new color when the color is changed in the settings.
+    /// </summary>
+    public static List<long> SubMarkIds(IReadOnlyList<Mark> marks, string subColor)
+    {
+        var wholes = marks.Where(m => m.WholeVerse).ToList();
+        return marks.Where(m => !m.WholeVerse && string.Equals(m.Color, subColor, StringComparison.OrdinalIgnoreCase)
+            && wholes.Any(w => w.Ref.Book == m.Ref.Book && w.Ref.Chapter == m.Ref.Chapter && w.Ref.Verse <= m.LastVerse && w.LastVerse >= m.Ref.Verse))
+            .Select(m => m.Id).ToList();
+    }
+
+    /// <summary>The name of a vault written in the file of an export: the file "name.txt", else the quoted name in "info.txt" of older exports.</summary>
+    public static string? VaultNameFromExport(string? nameFile, string? infoFile)
+    {
+        var name = nameFile?.Trim();
+        if (string.IsNullOrEmpty(name) && infoFile is not null)
+        {
+            var open = infoFile.IndexOf('"'); var close = infoFile.IndexOf('"', open + 1);
+            if (open >= 0 && close > open) name = infoFile[(open + 1)..close].Trim();
+        }
+        return string.IsNullOrEmpty(name) ? null : name;
+    }
+
+    /// <summary>A vault name that is allowed as a folder name on Windows, Linux and macOS (the same rules as for a new vault).</summary>
+    public static bool IsValidVaultName(string name)
+    {
+        var device = name.Split('.')[0].Trim().ToUpperInvariant() is "CON" or "PRN" or "AUX" or "NUL" or "COM1" or "COM2" or "COM3" or "COM4" or "LPT1" or "LPT2" or "LPT3";
+        return name.Length > 0 && name.Length <= 80 && name.IndexOfAny(Path.GetInvalidFileNameChars()) < 0 && name.Trim('.').Length > 0 && !name.EndsWith('.') && !name.EndsWith(' ') && !device;
+    }
+
     /// <summary>The text of a verse as marks count it: the segments without footnote markers, exactly as written.</summary>
     public static string RawText(IReadOnlyList<Segment> segments) => string.Concat(segments.Where(s => s.NoteId is null).Select(s => s.Text));
 
@@ -62,16 +93,46 @@ public static class MarkLogic
         var at = targetText.IndexOf(wanted, StringComparison.OrdinalIgnoreCase);
         if (at >= 0) return (at, at + wanted.Length);
 
-        // Strong numbers: the numbers of the marked words, found again in the other text
+        if (ProjectByStrong(source, t, target, targetText, wanted, out var evidence) is { } byStrong) return byStrong;
+        if (evidence) return null;   // the numbers speak, and against a guess: no mark rather than a wrong one
+        return ProjectByPosition(sourceText, t, targetText);
+    }
+
+    /// <summary>Strong numbers: the numbers of the marked words, found again in the other text.</summary>
+    static (int Start, int End)? ProjectByStrong(IReadOnlyList<Segment> source, (int Start, int End) t, IReadOnlyList<Segment> target, string targetText, string wanted, out bool evidence)
+    {
         var ids = SegmentsIn(source, t.Start, t.End).SelectMany(x => x.Seg.Strongs ?? []).ToHashSet();
+        evidence = false;
         if (ids.Count == 0 || ids.Count > 14) return null;
         var hits = SegmentsIn(target, 0, targetText.Length).Where(x => x.Seg.Strongs is { Count: > 0 } && x.Seg.Strongs.Any(ids.Contains)).ToList();
         if (hits.Count == 0) return null;
+        evidence = true;
         var found = hits.SelectMany(h => h.Seg.Strongs!).Where(ids.Contains).ToHashSet();
         if (found.Count * 2 < ids.Count) return null;   // fewer than half of the words found again
         var from = hits.Min(h => h.Start); var to = hits.Max(h => h.End);
         if (to - from > wanted.Length * 1.5 + 12) return null;   // the hits are spread over the verse: not the same passage
         return Trim(targetText, from, to);
+    }
+
+    static List<(int Start, int End)> WordsOf(string text) => System.Text.RegularExpressions.Regex.Matches(text, @"[\p{L}\p{N}]+").Select(m => (m.Index, m.Index + m.Length)).ToList();
+
+    /// <summary>
+    /// The last resort for texts that carry no Strong numbers (imported translations): a few marked words are looked for at the same relative place of the other
+    /// verse. Only when both verses are about equally long and the mark is short, because a long mark would drift. It is a good guess, not a certainty.
+    /// </summary>
+    public static (int Start, int End)? ProjectByPosition(string sourceText, (int Start, int End) t, string targetText)
+    {
+        var sw = WordsOf(sourceText); var tw = WordsOf(targetText);
+        if (sw.Count < 3 || tw.Count < 3) return null;
+        var ratio = (double)tw.Count / sw.Count;
+        if (ratio < 0.65 || ratio > 1.55) return null;
+        var first = sw.FindIndex(w => w.End > t.Start && w.Start < t.End);
+        var last = sw.FindLastIndex(w => w.End > t.Start && w.Start < t.End);
+        if (first < 0 || last - first + 1 > 5) return null;
+        var from = Math.Clamp((int)Math.Floor((double)first / sw.Count * tw.Count + 0.0001), 0, tw.Count - 1);
+        var to = Math.Clamp((int)Math.Ceiling((double)(last + 1) / sw.Count * tw.Count - 0.0001) - 1, from, tw.Count - 1);
+        if (to - from > (last - first) + 1) to = from + (last - first) + 1;
+        return (tw[from].Start, tw[to].End);
     }
 
     // ---- cutting a part out of existing marks -----------------------------------------------------------------------

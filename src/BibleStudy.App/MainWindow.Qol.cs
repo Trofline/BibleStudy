@@ -17,6 +17,7 @@ namespace BibleStudy.App;
 public partial class MainWindow
 {
     static readonly string[] ReaderFonts = ["Crimson Text", "Georgia", "Cambria", "Palatino Linotype", "Segoe UI", "Verdana"];
+    static readonly string[] HeadingModes = ["All", "Smart", "Mine", "Translation", "None"];
     static readonly string[] VerseNumberModes = ["Small", "Normal", "Hidden"];
 
     // name, accent in light theme, accent in dark theme
@@ -35,6 +36,7 @@ public partial class MainWindow
         FontBox.SelectedItem = ReaderFonts.Contains(_settings.ReaderFont) ? _settings.ReaderFont : ReaderFonts[0];
         LineSlider.Value = _settings.LineSpacing; WidthSlider.Value = _settings.ReaderWidth; SpeakSlider.Value = _settings.SpeakRate;
         VerseNumberBox.SelectedIndex = Math.Max(0, Array.IndexOf(VerseNumberModes, _settings.VerseNumbers));
+        HeadingModeBox.SelectedIndex = Math.Max(0, Array.IndexOf(HeadingModes, _settings.HeadingMode));
         TranslateMeaningsCheck.IsChecked = _settings.TranslateMeanings;
         TranslateMeaningsCheck.IsCheckedChanged += (_, _) => { _settings.TranslateMeanings = TranslateMeaningsCheck.IsChecked == true; SaveSettings(); };
         CommentariesCheck.IsChecked = _settings.ShowCommentaries;
@@ -59,6 +61,7 @@ public partial class MainWindow
         FontBox.SelectionChanged += (_, _) => { if (FontBox.SelectedItem is string f) { _settings.ReaderFont = f; Redraw(); } };
         LineSlider.ValueChanged += (_, e) => { _settings.LineSpacing = Math.Round(e.NewValue, 1); LineLabel.Text = L("Zeilenabstand: {0:0.0}", _settings.LineSpacing); Redraw(); };
         WidthSlider.ValueChanged += (_, e) => { _settings.ReaderWidth = (int)e.NewValue; WidthLabel.Text = L("Textbreite: {0}", _settings.ReaderWidth); if (_qolReady) { FitReader(); SaveSettings(); } };
+        HeadingModeBox.SelectionChanged += (_, _) => { _settings.HeadingMode = HeadingModes[Math.Max(0, HeadingModeBox.SelectedIndex)]; Redraw(); };
         VerseNumberBox.SelectionChanged += (_, _) => { _settings.VerseNumbers = VerseNumberModes[Math.Max(0, VerseNumberBox.SelectedIndex)]; Redraw(); };
         JesusRedCheck.IsCheckedChanged += (_, _) => { _settings.JesusRed = JesusRedCheck.IsChecked == true; Redraw(); };
         // own color for the words of Jesus: fixed choices, the first one ("" ) is the program default that follows the theme
@@ -104,7 +107,7 @@ public partial class MainWindow
         ClearHistoryBtn.Click += (_, _) => { _settings.SearchHistory.Clear(); SaveSettings(); RefreshSearchHistory(); };
         ResetSettingsBtn.Click += (_, _) =>
         {
-            FontSlider.Value = 22; LineSlider.Value = 1.7; WidthSlider.Value = 760; FontBox.SelectedItem = ReaderFonts[0]; VerseNumberBox.SelectedIndex = 0;
+            FontSlider.Value = 22; LineSlider.Value = 1.7; WidthSlider.Value = 760; FontBox.SelectedItem = ReaderFonts[0]; VerseNumberBox.SelectedIndex = 0; HeadingModeBox.SelectedIndex = 0;
             JesusRedCheck.IsChecked = true; _settings.JesusColor = ""; BuildJesusColors(); JustifyCheck.IsChecked = false; HeadingCheck.IsChecked = true; ApplyAccent("Messing"); BuildAccentPanel();
         };
 

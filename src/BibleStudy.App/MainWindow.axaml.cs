@@ -498,6 +498,7 @@ public partial class MainWindow : Window
             if (_independent) BuildIndependent(cols, size, noted, notes!, t);
             else foreach (var num in cols.SelectMany(c => c.C?.Verses.Select(v => v.Number) ?? []).Distinct().Order())
             {
+                AddTranslationHeadings(ReaderPanel, cols[0].C, num);
                 AddHeadings(ReaderPanel, num);
                 var row = NewRow(cols.Count);
                 for (var i = 0; i < cols.Count; i++)

@@ -43,11 +43,11 @@ public partial class MainWindow
         return [.. names.Order(StringComparer.CurrentCultureIgnoreCase)];
     }
 
-    async Task SwitchVaultAsync(string name)
+    async Task SwitchVaultAsync(string name, bool alreadySaved = false)
     {
         // an open document is saved into the vault it belongs to, before the other vault takes over
         // (saved afterwards it went into the new vault and could overwrite a document there that has the same number)
-        CloseEditor(); CloseDocument(); SaveNoteDraft(); SaveSermonBeforeVaultChange();
+        if (!alreadySaved) { CloseEditor(); CloseDocument(); SaveNoteDraft(); SaveSermonBeforeVaultChange(); }
         _noteRef = null; NoteEditor.Text = _noteLoaded = "";
         _vault = OpenVault(name);
         RefreshHiddenXrefs();
@@ -67,8 +67,7 @@ public partial class MainWindow
     {
         var name = NewVaultBox.Text?.Trim() ?? "";
         // "." or ".." would put the vault outside the vault folder; Windows also refuses names ending in a dot or space and device names like CON
-        var device = name.Split('.')[0].Trim().ToUpperInvariant() is "CON" or "PRN" or "AUX" or "NUL" or "COM1" or "COM2" or "COM3" or "COM4" or "LPT1" or "LPT2" or "LPT3";
-        if (name.Length == 0 || name.IndexOfAny(Path.GetInvalidFileNameChars()) >= 0 || name.Trim('.').Length == 0 || name.EndsWith('.') || device) { VaultInfo.Text = L("Ungültiger Name (keine Sonderzeichen wie \\ / : * ? \" < > |)."); return; }
+        if (!MarkLogic.IsValidVaultName(name)) { VaultInfo.Text = L("Ungültiger Name (keine Sonderzeichen wie \\ / : * ? \" < > |)."); return; }
         NewVaultBox.Text = "";
         await SwitchVaultAsync(name);
     }
@@ -158,6 +157,7 @@ public partial class MainWindow
         BuildDefaultColorPanel();
         RefreshVaultUi(); RefreshQueue(); RefreshTodos(); RefreshBookmarks();
         DeleteVaultBtn.Click += async (_, _) => await DeleteVaultAsync();
+        RenameVaultBtn.Click += (_, _) => ShowRenameVault();
     }
 
     // ---- highlights -------------------------------------------------------------------------------------------------

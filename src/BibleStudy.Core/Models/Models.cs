@@ -43,7 +43,10 @@ public readonly record struct VerseRef(string Book, int Chapter, int Verse);
 /// <summary>Plain verse text for indexing.</summary>
 public sealed record VerseText(string BookId, int Chapter, int Number, string Text);
 
-public sealed record Chapter(string TranslationId, string BookId, int Number, IReadOnlyList<Verse> Verses, IReadOnlyList<Footnote>? Footnotes = null);
+/// <summary>A heading that belongs to the translation itself (an imported Bible with headings): it stands in front of the verse <paramref name="BeforeVerse"/>.</summary>
+public sealed record ChapterHeading(int BeforeVerse, string Text, int Level = 2);
+
+public sealed record Chapter(string TranslationId, string BookId, int Number, IReadOnlyList<Verse> Verses, IReadOnlyList<Footnote>? Footnotes = null, IReadOnlyList<ChapterHeading>? Headings = null);
 
 /// <summary>A cross reference target (EndVerse = Target.Verse for single verses) with its relevance score.</summary>
 public sealed record CrossRef(VerseRef Target, int EndVerse, int Score);

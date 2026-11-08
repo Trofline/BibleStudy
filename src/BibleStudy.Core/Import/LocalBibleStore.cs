@@ -9,7 +9,8 @@ namespace BibleStudy.Core.Import;
 
 /// <summary>A Bible read from a file the user owns, before it is stored.</summary>
 public sealed record ParsedVerse(string Book, int Chapter, int Verse, IReadOnlyList<Segment> Segments);
-public sealed record ParsedBible(string Name, string ShortName, string LanguageCode, IReadOnlyList<ParsedVerse> Verses, IReadOnlyList<(string Book, int Chapter, Footnote Note)> Footnotes);
+public sealed record ParsedBible(string Name, string ShortName, string LanguageCode, IReadOnlyList<ParsedVerse> Verses, IReadOnlyList<(string Book, int Chapter, Footnote Note)> Footnotes,
+    IReadOnlyList<(string Book, int Chapter, int Verse, string Text)>? Headings = null);
 
 /// <summary>
 /// Translations imported from the user's own files (private use). Stored only on this computer in one SQLite file.
@@ -29,6 +30,8 @@ public sealed class LocalBibleStore : SqliteDb, IBibleProvider
             CREATE TABLE IF NOT EXISTS verses(translation TEXT, book TEXT, chapter INT, verse INT, segs TEXT, PRIMARY KEY(translation,book,chapter,verse));
             CREATE TABLE IF NOT EXISTS notes(translation TEXT, book TEXT, chapter INT, note_id INT, verse INT, text TEXT);
             CREATE INDEX IF NOT EXISTS notes_pos ON notes(translation, book, chapter);
+            CREATE TABLE IF NOT EXISTS headings(translation TEXT, book TEXT, chapter INT, verse INT, ord INT, text TEXT, level INT);
+            CREATE INDEX IF NOT EXISTS headings_pos ON headings(translation, book, chapter);
             """);
     }
 
@@ -73,7 +76,11 @@ public sealed class LocalBibleStore : SqliteDb, IBibleProvider
         {
             c.Parameters.AddWithValue("$t", translationId); c.Parameters.AddWithValue("$b", bookId); c.Parameters.AddWithValue("$c", chapter);
         }, r => new Footnote(r.GetInt32(0), r.GetInt32(1), r.GetString(2)));
-        return Task.FromResult(new Chapter(translationId, bookId, chapter, verses, notes));
+        var headings = Query("SELECT verse,text,level FROM headings WHERE translation=$t AND book=$b AND chapter=$c ORDER BY verse, ord", c =>
+        {
+            c.Parameters.AddWithValue("$t", translationId); c.Parameters.AddWithValue("$b", bookId); c.Parameters.AddWithValue("$c", chapter);
+        }, r => new ChapterHeading(r.GetInt32(0), r.GetString(1), r.GetInt32(2)));
+        return Task.FromResult(new Chapter(translationId, bookId, chapter, verses, notes, headings.Count > 0 ? headings : null));
     }
 
     public async Task<IReadOnlyList<VerseText>> GetAllVersesAsync(string translationId, CancellationToken ct = default)
@@ -103,7 +110,7 @@ public sealed class LocalBibleStore : SqliteDb, IBibleProvider
             foreach (var (k, v) in args) cmd.Parameters.AddWithValue(k, v);
             cmd.ExecuteNonQuery();
         }
-        Run("DELETE FROM verses WHERE translation=$i", ("$i", id)); Run("DELETE FROM notes WHERE translation=$i", ("$i", id));
+        Run("DELETE FROM verses WHERE translation=$i", ("$i", id)); Run("DELETE FROM notes WHERE translation=$i", ("$i", id)); Run("DELETE FROM headings WHERE translation=$i", ("$i", id));
         Run("INSERT OR REPLACE INTO translations VALUES($i,$n,$s,$l,$d)", ("$i", id), ("$n", bible.Name), ("$s", bible.ShortName), ("$l", bible.LanguageCode), ("$d", DateTime.UtcNow.ToString("o")));
         using (var ins = con.CreateCommand())
         {
@@ -120,6 +127,16 @@ public sealed class LocalBibleStore : SqliteDb, IBibleProvider
             var pb = ins.Parameters.Add("$b", SqliteType.Text); var pc = ins.Parameters.Add("$c", SqliteType.Integer); var pn = ins.Parameters.Add("$n", SqliteType.Integer);
             var pv = ins.Parameters.Add("$v", SqliteType.Integer); var px = ins.Parameters.Add("$x", SqliteType.Text);
             foreach (var (book, chapter, note) in bible.Footnotes) { pb.Value = book; pc.Value = chapter; pn.Value = note.NoteId; pv.Value = note.Verse; px.Value = note.Text; ins.ExecuteNonQuery(); }
+        }
+        if (bible.Headings is { Count: > 0 })
+        {
+            using var ins = con.CreateCommand();
+            ins.CommandText = "INSERT INTO headings VALUES($t,$b,$c,$v,$o,$x,2)";
+            ins.Parameters.AddWithValue("$t", id);
+            var pb = ins.Parameters.Add("$b", SqliteType.Text); var pc = ins.Parameters.Add("$c", SqliteType.Integer); var pv = ins.Parameters.Add("$v", SqliteType.Integer);
+            var po = ins.Parameters.Add("$o", SqliteType.Integer); var px = ins.Parameters.Add("$x", SqliteType.Text);
+            var order = 0;
+            foreach (var (book, chapter, verse, text) in bible.Headings) { pb.Value = book; pc.Value = chapter; pv.Value = verse; po.Value = order++; px.Value = text; ins.ExecuteNonQuery(); }
         }
         tx.Commit();
         return id;
@@ -148,6 +165,7 @@ public sealed class LocalBibleStore : SqliteDb, IBibleProvider
     {
         Exec("DELETE FROM verses WHERE translation=$i", c => c.Parameters.AddWithValue("$i", translationId));
         Exec("DELETE FROM notes WHERE translation=$i", c => c.Parameters.AddWithValue("$i", translationId));
+        Exec("DELETE FROM headings WHERE translation=$i", c => c.Parameters.AddWithValue("$i", translationId));
         Exec("DELETE FROM translations WHERE id=$i", c => c.Parameters.AddWithValue("$i", translationId));
     }
 }

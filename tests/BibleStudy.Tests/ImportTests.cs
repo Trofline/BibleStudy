@@ -69,4 +69,33 @@ public class ImportTests : IDisposable
     }
 
     public void Dispose() { SqliteConnection.ClearAllPools(); try { Directory.Delete(_dir, true); } catch { } }
+
+    [Fact]
+    public void Number_and_edition_markers_after_a_word_are_not_part_of_the_text()
+    {
+        var html = "Asa<span class=\"strong-no cp-option\"> G760 <span class=\"text-variant\">TR</span></span> zeugte <b>Josaphat</b><span class=\"other\">!</span>";
+        Assert.Equal("Asa zeugte <b>Josaphat</b><span class=\"other\">!</span>", BibleImporters.RemoveSpans(html, "strong-no", "text-variant"));
+        Assert.Equal("kein span", BibleImporters.RemoveSpans("kein span", "strong-no"));
+    }
+
+    [Fact]
+    public void Headings_of_an_imported_bible_are_stored_and_come_back_with_the_chapter()
+    {
+        var path = Path.Combine(Path.GetTempPath(), "bs_head_" + Guid.NewGuid().ToString("N") + ".db");
+        try
+        {
+                var store = new LocalBibleStore(path);
+            {
+                var id = store.Save(new ParsedBible("Mit Überschriften", "MÜ", "de",
+                    [new ParsedVerse("GEN", 1, 1, [new Segment("Am Anfang")]), new ParsedVerse("GEN", 1, 2, [new Segment("Und die Erde")])], [],
+                    [("GEN", 1, 1, "Die Schöpfung"), ("GEN", 1, 2, "Der Anfang der Erde")]));
+                var chapter = store.GetChapterAsync(id, "GEN", 1).GetAwaiter().GetResult();
+                Assert.Equal(["Die Schöpfung", "Der Anfang der Erde"], chapter.Headings!.Select(h => h.Text).ToArray());
+                Assert.Equal([1, 2], chapter.Headings!.Select(h => h.BeforeVerse).ToArray());
+                store.Remove(id);
+                Assert.Null(store.GetChapterAsync(id, "GEN", 1).GetAwaiter().GetResult().Headings);
+            }
+        }
+        finally { Microsoft.Data.Sqlite.SqliteConnection.ClearAllPools(); try { File.Delete(path); } catch (IOException) { } }
+    }
 }

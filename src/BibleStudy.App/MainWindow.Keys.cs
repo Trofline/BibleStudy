@@ -1,4 +1,5 @@
-﻿using Avalonia.Controls;
+﻿using Avalonia;
+using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Layout;
@@ -99,8 +100,50 @@ public partial class MainWindow
         }
     }
 
+    // ---- keys of the reading tab: a number jumps to that verse, Page up / Page down scroll ------------------------------------------
+
+    string _jumpDigits = ""; DateTime _jumpAt;
+
+    /// <summary>True when the keys belong to the text: the reading view is shown and nothing that takes keys itself (a text box, a list, an open menu) has the focus.</summary>
+    bool ReadingKeysApply(KeyEventArgs e)
+    {
+        if (e.KeyModifiers != KeyModifiers.None || !ReaderHost.IsVisible || Home.IsVisible || _capturing is not null || _curBook == "") return false;
+        var focused = TopLevel.GetTopLevel(this)?.FocusManager?.GetFocusedElement();
+        if (focused is TextBox or ComboBox or ListBoxItem or ListBox or Slider or MenuItem or TabItem) return false;
+        return focused is not Visual v || !v.GetVisualAncestors().Contains(SidePanel);
+
+    }
+
+    static int DigitOf(Key k) => k is >= Key.D0 and <= Key.D9 ? k - Key.D0 : k is >= Key.NumPad0 and <= Key.NumPad9 ? k - Key.NumPad0 : -1;
+
+    /// <summary>Digits typed one after the other (within a second and a bit) make the verse number: 1, then 2 jumps to verse 12, if there is one.</summary>
+    void JumpToTypedVerse(int digit)
+    {
+        var last = _verseBoxes.Count == 0 ? 0 : _verseBoxes.Keys.Max();
+        if (last == 0 && !_independent) return;
+        if (_independent) last = Math.Max(last, 176);
+        var text = (DateTime.Now - _jumpAt).TotalMilliseconds > 1300 ? "" : _jumpDigits;
+        if (!int.TryParse(text + digit, out var n) || n < 1 || n > last) { text = ""; n = digit; }   // too big: a new number starts with this digit
+        if (n < 1 || n > last || (!_independent && !_verseBoxes.ContainsKey(n))) return;
+        _jumpDigits = text + digit; if (_jumpDigits.TrimStart('0').Length == 0) _jumpDigits = ""; _jumpAt = DateTime.Now;
+        SelectVerse(n); ScrollToVerse(n);
+        StatusText.Text = L("Vers {0}", n);
+    }
+
+    void PageScroll(int direction)
+    {
+        void By(ScrollViewer s) => s.Offset = new Vector(s.Offset.X, Math.Clamp(s.Offset.Y + direction * Math.Max(40, s.Viewport.Height * 0.9), 0, Math.Max(0, s.Extent.Height - s.Viewport.Height)));
+        if (_independent) { for (var j = 0; j < _colScrolls.Count; j++) if (!IsForeign(j)) By(_colScrolls[j]); }
+        else By(ReaderScroll);
+    }
+
     async void OnShortcut(object? sender, KeyEventArgs e)
     {
+        if (!e.Handled && ReadingKeysApply(e))
+        {
+            if (DigitOf(e.Key) is >= 0 and var digit) { e.Handled = true; JumpToTypedVerse(digit); return; }
+            if (e.Key is Key.PageDown or Key.PageUp) { e.Handled = true; PageScroll(e.Key == Key.PageDown ? 1 : -1); return; }
+        }
         var gesture = GestureText(e);
         if (gesture is null) return;
 

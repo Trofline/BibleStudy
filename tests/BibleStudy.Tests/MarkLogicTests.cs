@@ -65,8 +65,46 @@ public class MarkLogicTests
     public void Project_gives_nothing_when_it_cannot_be_sure()
     {
         var a = Seg(("alpha beta gamma", null));
-        var b = Seg(("one two three", null));
+        var b = Seg(("one two three four five six seven eight", null));   // far longer: a guess by position would be wrong
         Assert.Null(MarkLogic.Project(a, 0, 5, b));
+    }
+
+    [Fact]
+    public void Project_guesses_by_position_when_neither_text_has_Strong_numbers()
+    {
+        var a = Seg(("Da sprach Gott: Es werde Licht, und es ward Licht.", null));
+        var b = Seg(("Und Gott sagte: Es werde Licht! Und es wurde Licht.", null));
+        var start = MarkLogic.RawText(a).IndexOf("Gott", StringComparison.Ordinal);
+        var r = MarkLogic.Project(a, start, start + 4, b)!.Value;
+        Assert.Equal("Gott", MarkLogic.RawText(b)[r.Start..r.End]);
+    }
+
+    [Fact]
+    public void Position_guess_refuses_long_marks_and_verses_of_very_different_length()
+    {
+        var text = "eins zwei drei vier fünf sechs sieben acht neun zehn";
+        Assert.Null(MarkLogic.ProjectByPosition(text, (0, 30), text));            // six words marked
+        Assert.Null(MarkLogic.ProjectByPosition(text, (0, 4), "nur drei Worte")); // far shorter
+    }
+
+    [Fact]
+    public void Sub_marks_are_those_of_the_sub_color_inside_a_marked_verse()
+    {
+        Mark M(long id, int verse, int start, string color) => new(id, "x", new VerseRef("GEN", 1, verse), start, start < 0 ? -1 : start + 4, "", color, "", null, []);
+        var marks = new List<Mark> { M(1, 3, -1, "#F26D6D"), M(2, 3, 5, "#112233"), M(3, 4, 5, "#112233"), M(4, 3, 5, "#FFD54F") };
+        Assert.Equal([2L], MarkLogic.SubMarkIds(marks, "#112233"));   // verse 4 has no marked verse around it; mark 4 has another color
+    }
+
+    [Fact]
+    public void Vault_name_is_read_from_the_export()
+    {
+        Assert.Equal("Predigt", MarkLogic.VaultNameFromExport("Predigt\n", null));
+        Assert.Equal("Meine Studie", MarkLogic.VaultNameFromExport(null, "BibleStudy vault \"Meine Studie\", exported 2026-11-08 10:00"));
+        Assert.Null(MarkLogic.VaultNameFromExport("", "no quotes here"));
+        Assert.True(MarkLogic.IsValidVaultName("Predigt 2026"));
+        Assert.False(MarkLogic.IsValidVaultName("a/b"));
+        Assert.False(MarkLogic.IsValidVaultName("CON"));
+        Assert.False(MarkLogic.IsValidVaultName(".."));
     }
 }
 

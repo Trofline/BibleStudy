@@ -66,6 +66,8 @@ public sealed class AppSettings
     public bool MarksAllVaults { get; set; }   // the collection and the text show the marks of all vaults, not only of the active one
     public bool SelectWholeWords { get; set; } = true;   // a selection always starts and ends at word borders
     public List<string> CustomSubColors { get; set; } = [];   // own colors for sub-marks, chosen with the "+" in the settings
+    /// <summary>Which headings show in the text: All, Smart (my own, the translation's only where I have none), Mine, Translation, None.</summary>
+    public string HeadingMode { get; set; } = "All";
     public string SubMarkColor { get; set; } = "";   // color of a sub-mark inside a marked verse; "" = the accent color of the program
     public string SelectionColor { get; set; } = "Accent";   // "Accent" (the accent color of the program), "Gray" or "Blue"
     public string DarkBackground { get; set; } = "Nachtblau";   // one of the dark backgrounds (see MainWindow.Qol)

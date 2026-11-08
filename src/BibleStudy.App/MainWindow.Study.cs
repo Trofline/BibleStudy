@@ -205,8 +205,9 @@ public partial class MainWindow
                 zip.CreateEntryFromFile(snapshot, "vault.db");
                 // only the settings the import takes over: a vault is shared with other people, the relay password, the name for studying
                 // together, the allowed plugins or the AI instruction must not go along
-                var shared = new AppSettings { CustomColors = _settings.CustomColors, ColorNames = _settings.ColorNames, DefaultColor = _settings.DefaultColor, AutoTagBook = _settings.AutoTagBook, AutoMarkRead = _settings.AutoMarkRead };
+                var shared = new AppSettings { CustomColors = _settings.CustomColors, ColorNames = _settings.ColorNames, DefaultColor = _settings.DefaultColor, AutoTagBook = _settings.AutoTagBook, AutoMarkRead = _settings.AutoMarkRead, SubMarkColor = _settings.SubMarkColor, CustomSubColors = _settings.CustomSubColors };
                 using (var s = new StreamWriter(zip.CreateEntry("settings.json").Open())) s.Write(JsonSerializer.Serialize(shared));
+                using (var n = new StreamWriter(zip.CreateEntry("name.txt").Open(), new System.Text.UTF8Encoding(false))) n.Write(_vault.Name);   // the import gives the vault its name again
                 var info = zip.CreateEntry("info.txt");
                 using var writer = new StreamWriter(info.Open());
                 writer.Write(L("BibleStudy vault \"{0}\", exported {1:yyyy-MM-dd HH:mm}", _vault.Name, DateTime.Now));
@@ -228,7 +229,11 @@ public partial class MainWindow
         {
             using var zip = ZipFile.OpenRead(path);
             var vaultEntry = zip.GetEntry("vault.db") ?? throw new InvalidDataException(L("Die Datei enthält keinen Vault (vault.db)."));
-            var stem = guest ? L("Gast {0:yyyy-MM-dd HH-mm}", DateTime.Now) : L("Import {0:yyyy-MM-dd HH-mm}", DateTime.Now);
+            // the vault keeps the name it had when it was exported; an export without a name (or an unusable one) gets a name of the time
+            string? Read(string entry) { if (zip.GetEntry(entry) is not { } e) return null; using var r = new StreamReader(e.Open()); return r.ReadToEnd(); }
+            var given = MarkLogic.VaultNameFromExport(Read("name.txt"), Read("info.txt")) is { } g && MarkLogic.IsValidVaultName(g) ? g : null;
+            var stem = given is not null ? (guest ? L("{0} (Gast)", given) : given)
+                : guest ? L("Gast {0:yyyy-MM-dd HH-mm}", DateTime.Now) : L("Import {0:yyyy-MM-dd HH-mm}", DateTime.Now);
             var name = stem;
             for (var n = 2; Directory.Exists(Path.Combine(_root, "vaults", name)); n++) name = stem + $" ({n})";   // a second import in the same minute
             var target = Path.Combine(_root, "vaults", name, "vault.db");
@@ -248,6 +253,11 @@ public partial class MainWindow
                     foreach (var (hex, nm) in imported.ColorNames.Take(40))   // meanings of the colors; yours stay where both name the same color
                         if (NormalizeHex(hex) is { } key && nm.Trim() is { Length: > 0 } t && !_settings.ColorNames.ContainsKey(key)) _settings.ColorNames[key] = t.Length > 30 ? t[..30] : t;
                     _settings.AutoTagBook = imported.AutoTagBook; _settings.AutoMarkRead = imported.AutoMarkRead;
+                    // the color of the sub-marks travels with them, so they look the same here
+                    if (NormalizeHex(imported.SubMarkColor) is { } sub) _settings.SubMarkColor = sub;
+                    foreach (var hex in imported.CustomSubColors.Take(6).Select(NormalizeHex).OfType<string>())
+                        if (!_settings.CustomSubColors.Contains(hex, StringComparer.OrdinalIgnoreCase)) _settings.CustomSubColors.Add(hex);
+                    BuildSubMarkPanel();
                     AutoTagCheck.IsChecked = _settings.AutoTagBook; AutoReadCheck.IsChecked = _settings.AutoMarkRead;
                     BuildDefaultColorPanel();
                 }

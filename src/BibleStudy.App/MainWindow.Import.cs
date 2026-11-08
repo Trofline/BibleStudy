@@ -8,11 +8,20 @@ namespace BibleStudy.App;
 public partial class MainWindow
 {
     bool _importing;
+    string? _lastImportReport, _lastImportReportName;
 
     void InitImport()
     {
         ImportBibleBtn.Click += async (_, _) => await ImportBibleAsync();
         RemoveBibleBtn.Click += async (_, _) => await RemoveImportedAsync();
+        ImportCheckBtn.Click += (_, _) =>
+        {
+            if (_lastImportReport is null) return;
+            var path = Path.Combine(ExportFolder, _lastImportReportName);
+            File.WriteAllText(path, _lastImportReport, new System.Text.UTF8Encoding(false));
+            ImportBibleInfo.Text = L("Prüfbericht gespeichert: {0}. Gib ihn zusammen mit der Quelldatei an eine KI und lade die korrigierte USFM-Datei wieder hier hinein.", path);
+            try { System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(ExportFolder) { UseShellExecute = true }); } catch { }
+        };
         _ = RefreshLocalBibleBoxAsync();
     }
 
@@ -52,6 +61,15 @@ public partial class MainWindow
             await RefreshLocalBibleBoxAsync();
             await ReloadTranslationsAsync(id);
             ImportBibleInfo.Text = L("„{0}“ importiert: {1} Verse, {2} Fußnoten. Sie steht jetzt in der Übersetzungsliste ({3}).", bible.Name, bible.Verses.Count, bible.Footnotes.Count, bible.ShortName);
+            try
+            {
+                var check = ImportCheck.Analyze(bible);
+                _lastImportReport = ImportCheck.BuildReport(bible, check);
+                _lastImportReportName = SafeName(bible.ShortName, "import") + "-import-check.md";
+                ImportCheckBtn.IsVisible = true;
+                ImportBibleInfo.Text += " " + (check.Clean ? L("Die Prüfung fand nichts Auffälliges.") : L("Die Prüfung fand {0} auffällige Stellen: Der Bericht für eine KI lässt sich speichern.", check.Counts.Values.Sum()));
+            }
+            catch { ImportCheckBtn.IsVisible = false; /* the check is a help, never a reason to fail an import */ }
             return ImportBibleInfo.Text;
         }
         catch (Exception ex) { ImportBibleInfo.Text = L("Import fehlgeschlagen: ") + ex.Message; return ImportBibleInfo.Text; }

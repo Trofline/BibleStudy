@@ -18,6 +18,14 @@ public static partial class BibleImporters
     {
         readonly Dictionary<(string, int, int), StringBuilder> _by = [];
         readonly List<(string, int, int)> _order = [];
+        readonly List<(string Book, int Chapter, int Verse, string Text)> _headings = [];
+
+        /// <summary>A heading of the translation that stands in front of this verse.</summary>
+        public void Heading(string book, int chapter, int verse, string text)
+        {
+            text = Whitespace().Replace(text, " ").Trim();
+            if (text.Length > 0 && chapter >= 1 && verse >= 1) _headings.Add((book, chapter, verse, text));
+        }
 
         public void Add(string book, int chapter, int verse, string text)
         {
@@ -33,7 +41,7 @@ public static partial class BibleImporters
         {
             if (_order.Count < 10) throw new InvalidDataException(L("In der Datei wurden kaum Verse gefunden. Ist es wirklich eine Bibelübersetzung in diesem Format?"));
             var verses = _order.Select(k => new ParsedVerse(k.Item1, k.Item2, k.Item3, [new Segment(_by[k].ToString())])).ToList();
-            return new ParsedBible(name, name.Length > 12 ? name[..12].Trim() : name, languageCode, verses, []);
+            return new ParsedBible(name, name.Length > 12 ? name[..12].Trim() : name, languageCode, verses, [], _headings.Count > 0 ? _headings : null);
         }
     }
 
@@ -199,6 +207,13 @@ public static partial class BibleImporters
                 {
                     var vm = UsfmVerse().Match(rest);
                     if (vm.Success) { verse = int.Parse(vm.Groups["n"].Value); if (book is not null) c.Add(book, chapter, verse, UsfmInline().Replace(vm.Groups["t"].Value, "")); }
+                    continue;
+                }
+                if (marker is "s" or "s1" or "s2" or "s3")
+                {
+                    // a section heading stands before the next verse
+                    var title = UsfmInline().Replace(rest, "").Trim();
+                    if (book is not null && chapter > 0 && title.Length > 0) c.Heading(book, chapter, verse + 1, title);
                     continue;
                 }
                 if (UsxHeadingStyles.Contains(marker) || marker is "ca" or "cp" or "va" or "vp" or "restore" or "sts") continue;   // headings, parallel passages …

@@ -94,7 +94,7 @@ public partial class MainWindow
             if (hex.Length == 0) dot.Bind(Border.BackgroundProperty, this.GetResourceObservable("BsAccent")); else dot.Background = new SolidColorBrush(MarkColor(hex));
             ToolTip.SetTip(dot, hex.Length == 0 ? L("Akzentfarbe") : hex);
             var captured = hex;
-            dot.PointerPressed += (_, _) => { _settings.SubMarkColor = captured; SaveSettings(); BuildSubMarkPanel(); };
+            dot.PointerPressed += (_, _) => ChangeSubMarkColor(captured);
             SubMarkPanel.Children.Add(dot);
         }
         var add = new Border
@@ -115,7 +115,7 @@ public partial class MainWindow
             _settings.CustomSubColors.Add(hex);
             if (_settings.CustomSubColors.Count > 6) _settings.CustomSubColors.RemoveAt(0);
         }
-        _settings.SubMarkColor = hex; SaveSettings(); BuildSubMarkPanel();
+        ChangeSubMarkColor(hex);
     });
 
     /// <summary>A small window with a color picker; <paramref name="chosen"/> gets the color (#RRGGBB) when the user saves.</summary>
