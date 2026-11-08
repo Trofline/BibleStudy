@@ -99,7 +99,7 @@ public static class PdfBibleLayout
                 if (w.Bottom >= headY - 2) continue;                           // running head and page number
                 var isNumber = w.Text.All(char.IsAsciiDigit) && w.Text.Length <= 3;
                 if (w.Italic) { if (Near(w.Size, bodySize, 0.8)) body.Add(w); continue; }   // headings (italic, body size); footnote letters are smaller
-                if (w.Bold) { if (isNumber && w.Size >= bodySize - 1.6 && w.Size <= bodySize) body.Add(w); continue; }
+                if (w.Bold) { if (isNumber && w.Size >= bodySize - 1.6 && w.Size <= bodySize + 0.9) body.Add(w); continue; }   // a few pages set the numbers a little larger than the text
                 if (IsSmallCaps(w.Text, w.Size, bodySize)) { body.Add(w); continue; }   // "ERR", "ERRN," in "HERR", "HERRN,": small capitals, maybe with a punctuation mark behind
                 if (Near(w.Size, bodySize)) body.Add(w);                        // parallel passages, footnotes and titles are other sizes
             }
@@ -134,13 +134,24 @@ public static class PdfBibleLayout
                         else tokens.Add(new Token(Kind.Heading, word));
                         continue;
                     }
-                    if (w.Size < bodySize - 1.5) { if (tokens.Count > 0 && tokens[^1].Kind == Kind.Text) tokens[^1] = tokens[^1] with { Text = tokens[^1].Text + w.Text }; continue; }
+                    if (w.Size < bodySize - 1.5)
+                    {
+                        // small capitals ("ERR" behind the large "H"): they belong to the capital in front of them; anywhere else a small word is no part of the verse
+                        var last = tokens.Count > 0 && tokens[^1].Kind == Kind.Text ? tokens[^1] : null;
+                        if (last is not null && last.Text.EndsWith('H') && (last.Text.Length == 1 || !char.IsLetter(last.Text[^2]) || char.IsLower(last.Text[^2]) == false)) tokens[^1] = last with { Text = last.Text + w.Text };
+                        else if (w.Text.StartsWith("ERR", StringComparison.Ordinal) && IsSmallCaps(w.Text, w.Size, bodySize)) tokens.Add(new Token(Kind.Text, "H" + w.Text));
+                        continue;
+                    }
                     if (w.Bold && !w.Italic && w.Text.All(char.IsAsciiDigit)) { tokens.Add(new Token(Kind.Verse, w.Text, int.Parse(w.Text))); continue; }
                     var (plain, lig) = Unligate(w.Text);
                     tokens.Add(new Token(Kind.Text, plain, 0, null, lig));
                 }
             }
         }
+
+        // a word hyphenated at the end of a column goes on at the top of the next one: that line is no paragraph start
+        for (var i = 1; i < tokens.Count; i++)
+            if (tokens[i].Kind == Kind.Para && tokens[i - 1] is { Kind: Kind.Text } before && before.Text.EndsWith('-')) tokens.RemoveAt(i--);
 
         // words that were hyphenated at the end of a line, or split behind a ligature ("ﬂ äche")
         for (var i = 0; i + 1 < tokens.Count; i++)
@@ -211,12 +222,21 @@ public static class PdfBibleLayout
         {
             if (tokens[i].Kind != Kind.Text) continue;
             var t = tokens[i].Text;
+            if (t.Length == 2 && char.IsLetter(t[0]) && t[1] == '-' && Plain(i - 1, false) && Plain(i + 1, true) && char.IsLower(tokens[i + 1].Text[0]) && Core(tokens[i - 1].Text) is { Length: > 2 } fragment && fragment.All(char.IsLetter) && F(fragment) <= 2)
+            {
+                tokens[i - 1] = tokens[i - 1] with { Text = tokens[i - 1].Text + t[0] + tokens[i + 1].Text }; tokens.RemoveRange(i, 2); i--; continue;
+            }
+            // "g" + "e-" + "stoßen": a lone letter before a letter with a hyphen is one word with what comes after the hyphen
+            if (t.Length == 2 && char.IsLower(t[0]) && t[1] == '-' && tokens[i - 1] is { Kind: Kind.Text, Text.Length: 1 } lone && char.IsLower(lone.Text[0]) && Plain(i + 1, true) && char.IsLower(tokens[i + 1].Text[0]))
+            {
+                tokens[i - 1] = lone with { Text = lone.Text + t[0] + tokens[i + 1].Text }; tokens.RemoveRange(i, 2); i--; continue;
+            }
             if (t.Length == 1 && char.IsLower(t[0]) && "bcdfghjklmnprstvwxz".Contains(t[0]) && Plain(i - 1, false) && Plain(i + 1, true))
             {
                 var a = tokens[i - 1].Text; var b = tokens[i + 1].Text;
                 if (F(Core(a + t + b)) >= 2 && Core(a).All(char.IsLetter) && F(Core(a)) < F(Core(a + t + b)) * 2) { tokens[i - 1] = tokens[i - 1] with { Text = a + t + b }; tokens.RemoveRange(i, 2); i--; continue; }
                 if (F(Core(a + t)) >= 2 && a.Length >= 2 && char.IsLetter(a[^1])) { tokens[i - 1] = tokens[i - 1] with { Text = a + t }; tokens.RemoveAt(i); i--; continue; }
-                if (F(Core(t + b)) >= 2 && char.IsLetter(b[0])) { tokens[i + 1] = tokens[i + 1] with { Text = t + b }; tokens.RemoveAt(i); i--; continue; }
+                if (F(Core(t + b)) >= 1 && char.IsLetter(b[0])) { tokens[i + 1] = tokens[i + 1] with { Text = t + b }; tokens.RemoveAt(i); i--; continue; }
             }
             else if (Plain(i - 1, false) && tokens[i - 1].Kind == Kind.Text && Core(tokens[i - 1].Text) is { Length: > 1 } a2 && a2.All(char.IsLetter) && tokens[i - 1].Text[^1] != '-' && Core(t) is { Length: > 1 } b2 && b2.All(char.IsLetter)
                      && !t.StartsWith('-') && F(b2) <= 2 && F(a2 + b2) >= 2 && char.IsLower(b2[0]) && t == b2 + t[b2.Length..])
