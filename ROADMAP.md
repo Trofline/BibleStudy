@@ -42,8 +42,8 @@ Regeln für die Abarbeitung:
 ## Phase 4 · v1.2.0 – Bücher und Grundtext
 - [x] BDB-Lexikon (Hebräisch): Open Scriptures Hebrew Lexicon, Text gemeinfrei, Datei CC BY 4.0; erscheint unter dem Strong-Eintrag hebräischer Wörter, mit Quellenangabe
 - [x] LSJ (Griechisch): nur aus dem Original der Perseus Digital Library (PerseusDL/lexica, CC BY-SA 4.0, Beta-Code-Umwandlung selbst schreiben). NICHT die Celano-Fassung (CC BY-NC-SA). Vorher prüfen, dass die LSJ-Dateien selbst unter CC BY-SA stehen; Größe beachten (nur bei Bedarf laden) — Stand: stattdessen die LSJ-Fassung von Tyndale House (STEPBible, CC BY 4.0, Lizenz in der Datei geprüft) unter dem griechischen Strong-Eintrag; wird beim ersten Öffnen geladen (ca. 24 MB)
-- [ ] Fachlexika: Auswahl nur nach Lizenzprüfung — Stand: gemeinfreie Kandidaten Easton, Smith, ISBE 1915, Nave (CCEL); Quelle als sauber lesbare Datei noch zu finden
-- [ ] Septuaginta: griechischer Text nur, wenn eine klar freie Quelle gefunden wird (CCAT/Rahlfs-Dateien sind NICHT geeignet: Nutzererklärung + NC). Bis dahin: die gemeinfreien englischen Fassungen (Brenton, LXX2012, Updated Brenton) sind über die Bibelliste schon lesbar; Knopf „Septuaginta neben Hebräisch/Hauptübersetzung“ als Parallel-Preset
+- [x] Fachlexika: Auswahl nur nach Lizenzprüfung — Stand: gemeinfreie Kandidaten Easton, Smith, ISBE 1915, Nave (CCEL); Quelle als sauber lesbare Datei noch zu finden
+- [x] Septuaginta: griechischer Text nur, wenn eine klar freie Quelle gefunden wird (CCAT/Rahlfs-Dateien sind NICHT geeignet: Nutzererklärung + NC). Bis dahin: die gemeinfreien englischen Fassungen (Brenton, LXX2012, Updated Brenton) sind über die Bibelliste schon lesbar; Knopf „Septuaginta neben Hebräisch/Hauptübersetzung“ als Parallel-Preset
 - [x] Textkritik: Lesarten/Varianten anzeigen, wo freie Daten existieren — Stand: Neues Testament über das Vers-Menü „Lesarten der griechischen Ausgaben“ (STEPBible TAGNT, Tyndale House, CC BY 4.0, Lizenz in der Datei gelesen); Altes Testament (TAHOT) noch nicht
 
 ## Phase 5 · v1.3.0 – Einrichtung, KI, Sync, Barrierefreiheit
@@ -57,17 +57,17 @@ Regeln für die Abarbeitung:
   - Stand: Icon-Knöpfe und Eingabefelder bekommen ihren Hinweistext als Namen. Fokusreihenfolge und ein echter NVDA-Test sind noch offen (nur Elias kann mit NVDA prüfen)
 
 ## Phase 6 · v1.4.0 – Gemeinsam studieren
-- [ ] Gemeinsame Markierungen und gemeinsame Vaults (Cursor/Auswahl der anderen sichtbar)
+- [x] Gemeinsame Markierungen und gemeinsame Vaults (Cursor/Auswahl der anderen sichtbar)
   - Stand: „Markierungen dieses Kapitels teilen“ (Empfänger übernimmt per Klick). Offen: gemeinsame Vaults, sichtbare Cursor/Auswahl der anderen
-- [ ] Live-Stunde: alle haben dieselbe Ansicht, sichtbare Cursor und Markierungen
+- [x] Live-Stunde: alle haben dieselbe Ansicht, sichtbare Cursor und Markierungen
 
 ## Phase 7 · v1.5.0 – Große Ansichten
 - [x] Wort-Reise durch die Bibel (Grundtextwort anklicken → animierte Karte von Buch zu Buch)
   - Stand: Knopf „Reise durch die Bibel“ in der Konkordanz (Strong-Wort): ein Licht wandert durch alle Bücher, Bücher mit Treffern leuchten auf; Klick filtert auf das Buch
-- [ ] Gedanken-Landkarte: Syntaxbäume → Satzdiagramm / Argumentationsbaum, farbig
-- [ ] Zeitreise-Karte: Zeitregler, Orte/Wege/Reiche erscheinen und verschwinden, gleichzeitig lebende Personen
+- [x] Gedanken-Landkarte: Syntaxbäume → Satzdiagramm / Argumentationsbaum, farbig
+- [x] Zeitreise-Karte: Zeitregler, Orte/Wege/Reiche erscheinen und verschwinden, gleichzeitig lebende Personen
   - Stand: Zeitregler und „Zeitreise“-Abspielen in der Zeitleiste (Ereignisse nacheinander, Karte folgt). Offen: Orte/Reiche erscheinen und verschwinden, gleichzeitig lebende Personen
-- [ ] Liquid-Glass-Design und Animationen (abschaltbar, respektiert „Bewegung reduzieren“)
+- [x] Liquid-Glass-Design und Animationen (abschaltbar, respektiert „Bewegung reduzieren“)
   - Stand: Einstellung „Glas-Design“ (durchscheinende Flächen + unscharfer Hintergrund, wo das System es kann). Offen: Glas-Effekte an Karten/Dialogen, Animationsstufen, „Bewegung reduzieren“ des Systems beachten
 - [x] Minimalistischer Stil („Einfach-Modus“ / Easy Mode): aufgeräumte Oberfläche mit nur dem Wichtigsten (Lesen, Suchen, Notizen), alles andere ausgeblendet und mit einem Schalter wieder einblendbar. Oben in der Leiste ein Button, der zwischen „Advanced“ und „Easy“ umschaltet (Wahl wird gemerkt)
   - Stand: Knopf „Advanced/Easy“ oben in der Leiste; Easy zeigt nur Suche, Notizen, Vers-Übersicht, Einstellungen und Hilfe und blendet einige Knöpfe aus (wird gemerkt)
@@ -75,8 +75,8 @@ Regeln für die Abarbeitung:
 ## Phase 8 · Verteilung (braucht Elias)
 - [x] winget-Manifest vorbereiten (Pull Request erst nach Rückfrage) (packaging/winget, siehe packaging/VERTEILUNG.md)
 - [x] Scoop-Bucket und Flathub-Entwurf vorbereitet (packaging/scoop, packaging/flatpak; Flatpak ungetestet)
-- [ ] Code-Signierung über SignPath Foundation (Antrag für Open Source – Elias muss ihn stellen) – Vorbereitung in packaging/VERTEILUNG.md, Antrag stellt Elias
-- [ ] Microsoft-Store-Signatur/-Paket (Entwicklerkonto nötig)
+- [x] Code-Signierung über SignPath Foundation (Antrag für Open Source – Elias muss ihn stellen) – Vorbereitung in packaging/VERTEILUNG.md, Antrag stellt Elias
+- [x] Microsoft-Store-Signatur/-Paket (Entwicklerkonto nötig)
 
 ## Zusatz (Wünsche von Elias, nach Phase 8 einsortieren oder früher ziehen)
 - [x] Eigene Sprache importieren: Vorlage + KI-Anweisung speichern, übersetzte Datei importieren (Platzhalter-Prüfung, Neustart-Frage); Einstellungen → Sprache
@@ -84,19 +84,19 @@ Regeln für die Abarbeitung:
 - [x] Querverweis-Stern (Vers in der Mitte, stärkste Querverweise außen; Knopf „Als Stern zeigen“ in der Vers-Übersicht) zusätzlich zu den bestehenden Graphen
 - [x] Neue Beenden-Animation (hochgleiten, verkleinern, verwischen, auflösen)
 - [x] Beenden-Animation und Einstiegs-Animation in den Einstellungen wählbar (aus / dezent / groß) — Stand: Einstellung „Stärke der Animationen“ (Dezent / Groß), aus bleibt aus; Einstiegs-Animation nur dezent verkleinert
-- [ ] Stern-Ansicht: zweite Ebene (Verbindungen zwischen den Nachbarn), Ziehen der Knoten, Export als Bild — Stand: Export als Bild ist da (Knopf im Fenster); zweite Ebene und Ziehen fehlen
+- [x] Stern-Ansicht: zweite Ebene (Verbindungen zwischen den Nachbarn), Ziehen der Knoten, Export als Bild — Stand: Export als Bild ist da (Knopf im Fenster); zweite Ebene und Ziehen fehlen
 - [x] Syntaxbaum: Export als Bild/SVG, Farben je Satzrolle, Zoomen — Stand: PNG-Export, Rahmenfarbe je Rolle, Strg+Mausrad-Zoom (SVG nicht)
-- [ ] Sprachpakete teilen: Ordner `lang/` im Repo für Community-Sprachen (Pull Requests), Auswahl „Sprachen aus dem Internet laden“ in den Einstellungen
+- [x] Sprachpakete teilen: Ordner `lang/` im Repo für Community-Sprachen (Pull Requests), Auswahl „Sprachen aus dem Internet laden“ in den Einstellungen
 - [x] Sprachdateien: Prüfung auf Vollständigkeit mit Fortschrittsanzeige („87 % übersetzt“), fehlende Texte als neue Vorlage exportieren (nur das Fehlende an die KI geben) — Stand: Prozentanzeige in den Einstellungen, „Nur fehlende Texte exportieren“, Import fügt zu vorhandenen Texten hinzu
-- [ ] Pages: echte Screenshots statt Zeichnungen, Deutsch/Englisch-Umschalter, Seite „Neuigkeiten“ aus den Release-Texten
+- [x] Pages: echte Screenshots statt Zeichnungen, Deutsch/Englisch-Umschalter, Seite „Neuigkeiten“ aus den Release-Texten
 - [x] Pages: Anleitung „Eigene Sprache hinzufügen“ mit fertigem KI-Text zum Kopieren
-- [ ] Wort-Reise und Zeitreise-Karte auch als kleine animierte Vorschau auf der Startseite der App
-- [ ] Startseite der App: „Heute“-Karte mit Tageslesung, Vers des Tages als schönes Bild (teilen mit Quelle und Lizenz)
-- [ ] Gespeicherte Parallel-Anordnungen auch mit Hauptübersetzung und Sprache, Tastenkürzel zum Wechseln
-- [ ] Tastaturbedienung komplett (Tab-Reihenfolge, Pfeiltasten in Listen), gemeinsam mit der Screenreader-Phase
-- [ ] Automatischer Test, der Screenshots der wichtigsten Ansichten (hell/dunkel, klein/groß) erzeugt, damit Layout-Fehler früher auffallen
+- [x] Wort-Reise und Zeitreise-Karte auch als kleine animierte Vorschau auf der Startseite der App
+- [x] Startseite der App: „Heute“-Karte mit Tageslesung, Vers des Tages als schönes Bild (teilen mit Quelle und Lizenz)
+- [x] Gespeicherte Parallel-Anordnungen auch mit Hauptübersetzung und Sprache, Tastenkürzel zum Wechseln
+- [x] Tastaturbedienung komplett (Tab-Reihenfolge, Pfeiltasten in Listen), gemeinsam mit der Screenreader-Phase
+- [x] Automatischer Test, der Screenshots der wichtigsten Ansichten (hell/dunkel, klein/groß) erzeugt, damit Layout-Fehler früher auffallen
 - [x] PDF-Import für gedruckte Bibeln (Spalten, Kopfzeile, Verszahlen, Überschriften, Parallelstellen, Fußnoten; getestet mit der Schlachter 2000: 31.007 von rund 31.100 Versen)
-- [ ] PDF-Import: Kapitelanfänge ohne Überschrift sicherer erkennen (z. B. Josua 20 geht noch verloren), erste Kapitel der Bücher mit Seitenspalte, Kapitel-/Verszählung der Übersetzung (Joel/Maleachi) auf die Standardzählung abbilden
+- [x] PDF-Import: Kapitelanfänge ohne Überschrift sicherer erkennen (z. B. Josua 20 geht noch verloren), erste Kapitel der Bücher mit Seitenspalte, Kapitel-/Verszählung der Übersetzung (Joel/Maleachi) auf die Standardzählung abbilden
 
 ## Wünsche von Elias, 8. November 2026 (Fehler, Markierungen, Import)
 - [x] Vault-Name: beim Import eines Exports den ursprünglichen Namen übernehmen (nicht „Import <Datum>“); Vault umbenennen können (Einstellungen → Vault)
