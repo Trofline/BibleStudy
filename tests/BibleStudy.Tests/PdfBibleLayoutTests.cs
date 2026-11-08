@@ -164,6 +164,35 @@ public class PdfBibleLayoutTests
     }
 
     [Fact]
+    public void ASentenceEndingInAQuoteStillMarksTheChapterStart()
+    {
+        var w = Head();
+        w.AddRange(Line(510, 22, "Die Heimkehr", 8, italic: true));
+        w.AddRange(Line(500, 22, "Es kam Hunger", 8));
+        w.AddRange(Line(490, 22, "2", 7, bold: true)); w.AddRange(Line(490, 40, "Er sprach: »Geht hin!« Der Wunsch", 8));
+        w.AddRange(Line(480, 22, "meines Herzens ist es", 8));
+        w.AddRange(Line(470, 22, "2", 7, bold: true)); w.AddRange(Line(470, 40, "Ruth ging", 8));
+        var result = PdfBibleLayout.Read(Repeated(w), Book);
+        Assert.NotNull(result);
+        Assert.Contains(result!, v => v is { Chapter: 1, Verse: 2 } && v.Text == "Er sprach: »Geht hin!«");
+    }
+
+    [Fact]
+    public void ATwoDigitVerseNumberWithItsFirstDigitInTheRegularFontIsOneNumber()
+    {
+        var w = Head();
+        w.AddRange(Line(510, 22, "Die Heimkehr", 8, italic: true));
+        w.AddRange(Line(500, 22, "Es kam Hunger", 8));
+        for (var v = 2; v <= 8; v++) { w.AddRange(Line(500 - v * 10, 22, v.ToString(), 7, bold: true)); w.AddRange(Line(500 - v * 10, 40, $"Vers {v}", 8)); }
+        // verse 9 is printed as a regular "9" and a bold "9" right behind it ("99") – not a verse number that follows, so it is a plain text here;
+        // the real case: the number 10 is a regular "1" and a bold "0"
+        w.Add(("1", 22, 400, 8, false, false)); w.Add(("0", 26.4, 400, 7, true, false)); w.AddRange(Line(400, 40, "Vers 10", 8));
+        var result = PdfBibleLayout.Read(Repeated(w), Book);
+        Assert.NotNull(result);
+        Assert.Contains(result!, v => v is { Chapter: 1, Verse: 10 } && v.Text == "Vers 10");
+    }
+
+    [Fact]
     public void ATitleInCapitalsIsAHeadingNotPartOfTheVerse()
     {
         var w = Head();

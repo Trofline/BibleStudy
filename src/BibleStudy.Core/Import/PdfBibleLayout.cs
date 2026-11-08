@@ -107,6 +107,7 @@ public static class PdfBibleLayout
             // Italic words are a heading when they fill a line on their own; between the other words of a line they are words the translators added: part of the verse
             var headingLines = body.GroupBy(b => (b.Left < split ? 0 : 1, Math.Round(b.Bottom / 3)))
                 .Where(g => g.All(x => x.Italic) && (g.Count() >= 2 || IsHeadingWord(g.First().Text))).Select(g => g.Key).ToHashSet();
+            double lastRight = 0, lastBottom = 0;
             foreach (var col in new[] { 0, 1 })
             {
                 var colWords = body.Where(b => (b.Left < split ? 0 : 1) == col).ToList();
@@ -142,9 +143,18 @@ public static class PdfBibleLayout
                         else if (w.Text.StartsWith("ERR", StringComparison.Ordinal) && IsSmallCaps(w.Text, w.Size, bodySize)) tokens.Add(new Token(Kind.Text, "H" + w.Text));
                         continue;
                     }
-                    if (w.Bold && !w.Italic && w.Text.All(char.IsAsciiDigit)) { tokens.Add(new Token(Kind.Verse, w.Text, int.Parse(w.Text))); continue; }
+                    if (w.Bold && !w.Italic && w.Text.All(char.IsAsciiDigit))
+                    {
+                        var number = w.Text;
+                        // "8" in the regular font right in front of a bold "3" on the same line is the verse number 83
+                        if (tokens.Count > 0 && tokens[^1] is { Kind: Kind.Text, Text.Length: 1 } digit && char.IsAsciiDigit(digit.Text[0]) && lastRight > 0 && Math.Abs(lastBottom - w.Bottom) < 1.5 && w.Left - lastRight < 2.5)
+                        { number = digit.Text + number; tokens.RemoveAt(tokens.Count - 1); }
+                        tokens.Add(new Token(Kind.Verse, number, int.Parse(number)));
+                        lastRight = 0; continue;
+                    }
                     var (plain, lig) = Unligate(w.Text);
                     tokens.Add(new Token(Kind.Text, plain, 0, null, lig));
+                    lastRight = w.Left + w.Text.Length * w.Size * 0.5; lastBottom = w.Bottom;
                 }
             }
         }
@@ -194,7 +204,10 @@ public static class PdfBibleLayout
                     var first = cut >= 0 && cut < all.Length ? all[cut..].Trim() : "";
                     text.Clear(); text.Append(cut >= 0 ? all[..cut] : "");
                     Flush();
-                    chapter++; verse = 1; PlaceHeadings(); text.Append(first); Flush(); verse = t.Number;
+                    chapter++; verse = 1; PlaceHeadings();
+                    if (t.Number == 3 && SplitFirstSentence(first) is var (one, two)) { text.Append(one); Flush(); verse = 2; text.Append(two); Flush(); }
+                    else { text.Append(first); Flush(); }
+                    verse = t.Number;
                     break;
                 }
                 case Kind.Verse when bookId is not null && chapter > 0 && t.Number > verse && t.Number <= verse + 3: Flush(); verse = t.Number; PlaceHeadings(); break;
@@ -205,6 +218,14 @@ public static class PdfBibleLayout
         return result.Count >= 500 ? new Result(result, headings) : null;
     }
 
+
+    /// <summary>Verse 1 and 2 of a chapter whose printed "2" is missing: the first sentence (up to a full stop or a colon followed by a capital) and the rest.</summary>
+    static (string One, string Two)? SplitFirstSentence(string text)
+    {
+        for (var i = 15; i + 16 < text.Length; i++)
+            if (text[i] == ' ' && ".!?:;".Contains(text[i - 1]) && (char.IsUpper(text[i + 1]) || text[i + 1] is '»' or '„' or '“')) return (text[..i].Trim(), text[(i + 1)..].Trim());
+        return null;
+    }
 
     static string Core(string w) => w.Trim('.', ',', ';', ':', '!', '?', '»', '«', '›', '‹', '"', '“', '”', '„', '(', ')', '[', ']', '—');
 
@@ -288,7 +309,7 @@ public static class PdfBibleLayout
         if (para > 0) return para;
         var cut = -1;
         for (var i = 1; i + 2 < all.Length; i++)
-            if (all[i] == ' ' && ".!?".Contains(all[i - 1]) && i - 1 > 10 && (char.IsUpper(all[i + 1]) || all[i + 1] is '»' or '„' or '“') && all.Length - i > 25) cut = i + 1;
+            if (all[i] == ' ' && (".!?".Contains(all[i - 1]) || "«»“”’›\"".Contains(all[i - 1]) && ".!?,".Contains(all[i - 2])) && i - 1 > 10 && (char.IsUpper(all[i + 1]) || all[i + 1] is '»' or '„' or '“') && all.Length - i > 25) cut = i + 1;
         return cut > 0 ? cut : all.Length;
     }
 
