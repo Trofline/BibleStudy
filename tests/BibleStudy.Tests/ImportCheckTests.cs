@@ -25,12 +25,38 @@ public class ImportCheckTests
             V(3, "Da gin g en sie hinaus"),
             V(4, "Der H sprach zu ihm"),
             V(5, ""),
-            V(7, "Und so weiter und so fort.")));
+            V(7, "Und so weiter und so fort."), V(8, "Sie gingen heim."), V(9, "Dann gingen sie fort.")));
         foreach (var kind in new[] { "leftover-marker", "space-before-punctuation", "split-word", "lone-capital", "empty-verse", "verse-gap" })
             Assert.True(r.Counts.ContainsKey(kind), kind);
         var report = ImportCheck.BuildReport(Bible(V(1, "x")), r);
         Assert.Contains("USFM", report);
         Assert.Contains("GEN 1,1", report);
+    }
+}
+
+public class MissingChapterTests
+{
+    static ParsedVerse V(string book, int c, int v) => new(book, c, v, [new Segment("Ein Vers im Text.")]);
+
+    [Fact]
+    public void A_missing_first_chapter_and_a_cut_off_book_are_found()
+    {
+        // Acts without chapter 1, Genesis only up to chapter 3, and enough other books to count as a whole Bible
+        var verses = new List<ParsedVerse>();
+        for (var c = 2; c <= 28; c++) verses.Add(V("ACT", c, 1));
+        for (var c = 1; c <= 3; c++) verses.Add(V("GEN", c, 1));
+        for (var b = 0; b < 20; b++) verses.Add(V("X" + b, 1, 1));
+        var r = ImportCheck.Analyze(new ParsedBible("T", "T", "de", verses, []));
+        Assert.Contains(r.Findings, f => f is { Kind: "missing-chapter", Book: "ACT", Chapter: 1 });
+        Assert.Contains(r.Findings, f => f is { Kind: "missing-chapter", Book: "GEN", Chapter: 4 });
+        Assert.Contains(r.Findings, f => f is { Kind: "missing-book", Book: "EXO" });
+    }
+
+    [Fact]
+    public void A_single_book_is_not_told_off_for_the_other_books()
+    {
+        var r = ImportCheck.Analyze(new ParsedBible("T", "T", "de", [V("RUT", 1, 1), V("RUT", 2, 1), V("RUT", 3, 1), V("RUT", 4, 1)], []));
+        Assert.DoesNotContain(r.Findings, f => f.Kind == "missing-book");
     }
 }
 

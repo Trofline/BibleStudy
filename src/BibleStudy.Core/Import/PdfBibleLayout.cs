@@ -139,7 +139,8 @@ public static class PdfBibleLayout
                     {
                         // small capitals ("ERR" behind the large "H"): they belong to the capital in front of them; anywhere else a small word is no part of the verse
                         var last = tokens.Count > 0 && tokens[^1].Kind == Kind.Text ? tokens[^1] : null;
-                        if (last is not null && last.Text.EndsWith('H') && (last.Text.Length == 1 || !char.IsLetter(last.Text[^2]) || char.IsLower(last.Text[^2]) == false)) tokens[^1] = last with { Text = last.Text + w.Text };
+                        if (last is { Text.Length: 1 } && char.IsUpper(last.Text[0]) && IsSmallCaps(w.Text, w.Size, bodySize)) tokens[^1] = last with { Text = last.Text + w.Text };   // "D" + "AS": a title that begins with a large capital
+                        else if (last is not null && last.Text.EndsWith('H') && (last.Text.Length == 1 || !char.IsLetter(last.Text[^2]) || char.IsLower(last.Text[^2]) == false)) tokens[^1] = last with { Text = last.Text + w.Text };
                         else if (w.Text.StartsWith("ERR", StringComparison.Ordinal) && IsSmallCaps(w.Text, w.Size, bodySize)) tokens.Add(new Token(Kind.Text, "H" + w.Text));
                         continue;
                     }
@@ -252,7 +253,7 @@ public static class PdfBibleLayout
             {
                 tokens[i - 1] = lone with { Text = lone.Text + t[0] + tokens[i + 1].Text }; tokens.RemoveRange(i, 2); i--; continue;
             }
-            if (t.Length == 1 && char.IsLower(t[0]) && "bcdfghjklmnprstvwxz".Contains(t[0]) && Plain(i - 1, false) && Plain(i + 1, true))
+            if (t.Length == 1 && char.IsLower(t[0]) && "bcdefghjklmnprstvwxz".Contains(t[0]) && Plain(i - 1, false) && Plain(i + 1, true))
             {
                 var a = tokens[i - 1].Text; var b = tokens[i + 1].Text;
                 if (F(Core(a + t + b)) >= 2 && Core(a).All(char.IsLetter) && F(Core(a)) < F(Core(a + t + b)) * 2) { tokens[i - 1] = tokens[i - 1] with { Text = a + t + b }; tokens.RemoveRange(i, 2); i--; continue; }
@@ -260,7 +261,7 @@ public static class PdfBibleLayout
                 if (F(Core(t + b)) >= 1 && char.IsLetter(b[0])) { tokens[i + 1] = tokens[i + 1] with { Text = t + b }; tokens.RemoveAt(i); i--; continue; }
             }
             else if (Plain(i - 1, false) && tokens[i - 1].Kind == Kind.Text && Core(tokens[i - 1].Text) is { Length: > 1 } a2 && a2.All(char.IsLetter) && tokens[i - 1].Text[^1] != '-' && Core(t) is { Length: > 1 } b2 && b2.All(char.IsLetter)
-                     && !t.StartsWith('-') && F(b2) <= 2 && F(a2 + b2) >= 2 && char.IsLower(b2[0]) && t == b2 + t[b2.Length..])
+                     && !t.StartsWith('-') && (F(b2) <= 2 || F(a2) <= 2 && tokens[i - 1].Text == a2) && F(a2 + b2) >= 2 && char.IsLower(b2[0]) && (a2 + b2).Length >= 5 && t == b2 + t[b2.Length..])
             { tokens[i - 1] = tokens[i - 1] with { Text = tokens[i - 1].Text + t }; tokens.RemoveAt(i); i--; }
         }
     }
