@@ -20,7 +20,8 @@ public static class AppPaths
         : Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "BibleStudy");
 
     /// <summary>Default place for backups the program makes on its own (before updates).</summary>
-    public static string BackupDir => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "BibleStudy-Backup");
+    /// <summary>The folder of the backups (the variable BIBLESTUDY_BACKUPDIR moves it: automated tests must not write into the real one).</summary>
+    public static string BackupDir => Environment.GetEnvironmentVariable("BIBLESTUDY_BACKUPDIR") is { Length: > 0 } d ? d : Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "BibleStudy-Backup");
 
     public static string Version
     {

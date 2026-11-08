@@ -19,7 +19,7 @@ public partial class MainWindow
     {
         get
         {
-            var dir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "BibleStudy", "Export");
+            var dir = Environment.GetEnvironmentVariable("BIBLESTUDY_EXPORTDIR") is { Length: > 0 } custom ? custom : Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "BibleStudy", "Export");   // the variable is for automated tests
             Directory.CreateDirectory(dir);
             return dir;
         }

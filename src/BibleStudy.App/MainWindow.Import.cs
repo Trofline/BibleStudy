@@ -7,6 +7,8 @@ namespace BibleStudy.App;
 /// <summary>Import of Bible files the user owns (private use, stored only locally).</summary>
 public partial class MainWindow
 {
+    /// <summary>Set by automated tests of the window: nothing is opened on the screen of the person who runs them.</summary>
+    internal static bool NoShell;
     bool _importing;
     string? _lastImportReport, _lastImportReportName;
 
@@ -20,7 +22,7 @@ public partial class MainWindow
             var path = Path.Combine(ExportFolder, _lastImportReportName);
             File.WriteAllText(path, _lastImportReport, new System.Text.UTF8Encoding(false));
             ImportBibleInfo.Text = L("Prüfbericht gespeichert: {0}. Gib ihn zusammen mit der Quelldatei an eine KI und lade die korrigierte USFM-Datei wieder hier hinein.", path);
-            try { System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(ExportFolder) { UseShellExecute = true }); } catch { }
+            if (!NoShell) try { System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(ExportFolder) { UseShellExecute = true }); } catch { }
         };
         _ = RefreshLocalBibleBoxAsync();
     }
