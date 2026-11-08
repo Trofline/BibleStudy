@@ -621,7 +621,7 @@ public partial class MainWindow
         }
         name.KeyDown += (_, e) => { if (e.Key == Key.Enter) Commit(); };
         Fill();
-        fly.ShowAt(LayoutTopBtn);
+        fly.ShowAt(Anchor(LayoutTopBtn));
     }
 
     void InitWindows()

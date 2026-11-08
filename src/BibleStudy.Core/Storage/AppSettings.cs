@@ -1,4 +1,4 @@
-﻿using System.Text.Json;
+using System.Text.Json;
 
 namespace BibleStudy.Core.Storage;
 
@@ -13,6 +13,29 @@ public sealed class DocCategory
 }
 
 /// <summary>A saved arrangement: side panel and detached windows.</summary>
+/// <summary>A place in the history of the reader, kept over the restart after an update.</summary>
+public sealed class ResumePlace
+{
+    public string Book { get; set; } = "";
+    public int Chapter { get; set; }
+    public int? Verse { get; set; }
+    public double? OffsetX { get; set; }
+    public double? OffsetY { get; set; }
+}
+
+/// <summary>Where the reader was when the program restarted itself for an update; used once by the next start.</summary>
+public sealed class ResumeState
+{
+    public string Book { get; set; } = "";
+    public int Chapter { get; set; }
+    public int? Verse { get; set; }
+    public double OffsetX { get; set; }
+    public double OffsetY { get; set; }
+    public bool Home { get; set; }
+    public List<ResumePlace> History { get; set; } = [];
+    public List<ResumePlace> Forward { get; set; } = [];
+}
+
 public sealed class LayoutPreset
 {
     public bool SideOpen { get; set; } = true;
@@ -231,6 +254,7 @@ public sealed class AppSettings
     public string? PlanStart { get; set; }
     public List<string> PlanDoneDays { get; set; } = [];
     public WindowBounds? WindowBounds { get; set; }
+    public ResumeState? Resume { get; set; }   // set just before the restart after an update
     public string XrefDirection { get; set; } = "Out";   // Out | In | Both
     public bool XrefClickOpensTab { get; set; }   // a click on a cross reference opens it in context in a tab instead of going there
     public bool Tray { get; set; }

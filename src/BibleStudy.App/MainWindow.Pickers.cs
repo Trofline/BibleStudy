@@ -215,7 +215,7 @@ public partial class MainWindow
         Fill();
         var stack = new StackPanel { Width = 660, Children = { search, new ScrollViewer { Content = grid, Height = Math.Min(430, Math.Max(250, Bounds.Height - 230)), HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled } } };
         flyout = NewPickerFlyout(stack);
-        flyout.ShowAt(LangBtn);
+        flyout.ShowAt(Anchor(LangBtn));
         search.Focus();
     }
 

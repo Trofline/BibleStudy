@@ -171,7 +171,7 @@ public partial class MainWindow
         flyout.Closed += async (_, _) => { if (_settings.XrefMinVotes != before) await RedrawChapterAsync(); };   // redraw once, not at every click
         var votesHelp = new TextBlock { Text = L("Nur Querverweise mit mindestens so vielen Stimmen im Text zeigen (0 = alle, 100 = nur die wichtigsten). Die Liste im Seitenfeld bleibt vollständig."), Classes = { "caption" }, TextWrapping = TextWrapping.Wrap, MaxWidth = 300 };
         flyout.Content = new StackPanel { Spacing = 8, Children = { inText, thread, new TextBlock { Text = L("Mindestens Stimmen:"), Margin = new(0, 6, 0, 0) }, votes, votesHelp } };
-        flyout.ShowAt(ViewBtn);
+        flyout.ShowAt(Anchor(ViewBtn));
     }
 
     // ---- in the text ------------------------------------------------------------------------------------------------

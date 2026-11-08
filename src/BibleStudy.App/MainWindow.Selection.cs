@@ -469,6 +469,6 @@ public partial class MainWindow
         var title = new TextBlock { Text = L("Farbe fürs Schnellmarkieren"), FontWeight = FontWeight.SemiBold };
         var picker = BuildRgbPicker(Pick, out var custom, out var apply);
         flyout.Content = new StackPanel { Spacing = 8, Width = 280, Children = { title, ColorChoice(Pick, QuickColor()), custom, picker, apply } };
-        flyout.ShowAt(QuickColorBtn);
+        flyout.ShowAt(Anchor(QuickColorBtn));
     }
 }

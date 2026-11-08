@@ -312,7 +312,7 @@ public partial class MainWindow
             var normal = new Button { Content = L("Normale Farben …") };
             normal.Click += (_, _) => { flyout.Hide(); _normalMarking = true; ShowColorFlyout(); };
             flyout.Content = new StackPanel { Spacing = 8, Width = 280, Children = { title, sub, normal, remove } };
-            flyout.ShowAt(MarkBtn);
+            flyout.ShowAt(Anchor(MarkBtn));
             return;
         }
         var swatches = ColorChoice(Pick);
@@ -323,7 +323,7 @@ public partial class MainWindow
             Spacing = 8, Width = 280,
             Children = { title, swatches, custom, picker, apply, error, remove },
         };
-        flyout.ShowAt(MarkBtn);
+        flyout.ShowAt(Anchor(MarkBtn));
     }
 
     void BuildDefaultColorPanel()

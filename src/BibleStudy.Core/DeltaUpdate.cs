@@ -29,12 +29,14 @@ public sealed record DeltaPlan(UpdateManifest Target, string Root, List<UpdateFi
 public static class DeltaUpdate
 {
     public const string ManifestName = "update-files.json";
-    const string StagingName = ".update-staging", ReadyName = "ready.json", JournalName = ".update-journal.json", OkName = ".update-ok", OldSuffix = ".bsold";
+    const string StagingName = ".update-staging", ReadyName = "ready.json", RestartName = "restart", JournalName = ".update-journal.json", OkName = ".update-ok", TrialName = ".update-trial", OldSuffix = ".bsold", FailSuffix = ".bsfail";
+    /// <summary>How many starts of a version installed "when closing" may end without a window before its files are taken back.</summary>
+    public const int TrialStarts = 3;
     const string FailedName = "update-failed.txt";
 
     static readonly JsonSerializerOptions Json = new() { WriteIndented = false };
     static readonly Regex SafeName = new(@"^[A-Za-z0-9._-]+$");
-    static readonly HashSet<string> NeverTouched = new(StringComparer.OrdinalIgnoreCase) { "Data", "portable.flag", "installed.flag", ManifestName, StagingName, JournalName, OkName };
+    static readonly HashSet<string> NeverTouched = new(StringComparer.OrdinalIgnoreCase) { "Data", "portable.flag", "installed.flag", ManifestName, StagingName, JournalName, OkName, TrialName };
 
     /// <summary>The system this copy of the program was built for, as release.ps1 names it.</summary>
     public static string Rid => (OperatingSystem.IsWindows() ? "win" : OperatingSystem.IsMacOS() ? "osx" : "linux") + "-" + RuntimeInformation.ProcessArchitecture.ToString().ToLowerInvariant();
@@ -244,6 +246,12 @@ public static class DeltaUpdate
     /// <summary>True when a complete download waits to be installed.</summary>
     public static bool IsReady(string root) => File.Exists(Path.Combine(root, StagingName, ReadyName));
 
+    /// <summary>The user chose "install now": the program starts again when the files are in place (otherwise it just ends and the new version comes at the next start).</summary>
+    public static void RequestRestart(string root) => File.WriteAllText(Path.Combine(root, StagingName, RestartName), "");
+
+    /// <summary>True when the waiting update should start the program again. Read before <see cref="Swap"/>, which clears the staging folder.</summary>
+    public static bool RestartRequested(string root) => File.Exists(Path.Combine(root, StagingName, RestartName));
+
     /// <summary>The version waiting to be installed.</summary>
     public static string WaitingVersion(string root) =>
         (JsonSerializer.Deserialize<Ready>(File.ReadAllText(Path.Combine(root, StagingName, ReadyName)), Json) ?? throw new InvalidDataException("ready")).Version;
@@ -292,11 +300,47 @@ public static class DeltaUpdate
         {
             var target = Full(root, rel);
             var old = target + OldSuffix;
-            if (File.Exists(old)) File.Move(old, target, overwrite: true);
+            if (File.Exists(old)) MoveBack(old, target);
             else if (journal.Files.Contains(rel) && File.Exists(target) && (journal.Finished || !File.Exists(Full(Path.Combine(root, StagingName), rel)))) File.Delete(target);   // a file the old version did not have
         }
-        foreach (var name in new[] { JournalName, OkName }) { try { File.Delete(Path.Combine(root, name)); } catch (IOException) { } }
+        foreach (var name in new[] { JournalName, OkName, TrialName }) { try { File.Delete(Path.Combine(root, name)); } catch (IOException) { } }
         try { if (Directory.Exists(Path.Combine(root, StagingName))) Directory.Delete(Path.Combine(root, StagingName), true); } catch (Exception ex) when (ex is IOException or UnauthorizedAccessException) { }
+    }
+
+    /// <summary>Puts an old file back. When the new one is in use by the running program (a version that took itself back), it is renamed aside first (allowed even then).</summary>
+    static void MoveBack(string old, string target)
+    {
+        try { File.Move(old, target, overwrite: true); }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            var aside = target + FailSuffix;
+            File.Move(target, aside, overwrite: true);
+            File.Move(old, target);
+        }
+    }
+
+    /// <summary>The first real start of a version that was installed when the program closed (nobody saw its window): from now on its starts are counted until a window is up.</summary>
+    public static void StartTrial(string root) { try { File.WriteAllText(Path.Combine(root, TrialName), "0"); } catch (IOException) { } }
+
+    public static void ClearTrial(string root) { try { File.Delete(Path.Combine(root, TrialName)); } catch (IOException) { } }
+
+    /// <summary>
+    /// Called first at every start. Counts the start while a trial runs; true when <see cref="TrialStarts"/> starts of this version already ended without
+    /// confirming a window: the caller then takes the version back (<see cref="Rollback"/>) and starts the old one.
+    /// </summary>
+    public static bool TrialFailed(string root, string runningVersion)
+    {
+        var path = Path.Combine(root, TrialName);
+        if (!File.Exists(path)) return false;
+        try
+        {
+            if (ReadJournal(root) is not { Finished: true } journal || journal.To != runningVersion) { File.Delete(path); return false; }
+            var count = int.TryParse(File.ReadAllText(path), out var n) ? n : 0;
+            if (count >= TrialStarts) return true;
+            File.WriteAllText(path, (count + 1).ToString());
+        }
+        catch (IOException) { }
+        return false;
     }
 
     static void WriteJournal(string root, Journal journal)
@@ -330,16 +374,30 @@ public static class DeltaUpdate
     /// </summary>
     public static void CleanUp(string root, string runningVersion)
     {
+        SweepFailed(root);
         var staging = Path.Combine(root, StagingName);
         if (File.Exists(Path.Combine(root, JournalName)))
         {
             var journal = ReadJournal(root);
             if (journal is null || !journal.Finished) { Rollback(root); return; }
-            if (journal.To == runningVersion && !IsConfirmed(root)) return;
+            if (journal.To == runningVersion && (!IsConfirmed(root) || File.Exists(Path.Combine(root, TrialName)))) return;   // not yet proven: the way back stays open
             PurgeOld(root, journal);
         }
         if (Directory.Exists(staging))
             try { Directory.Delete(staging, true); } catch (Exception ex) when (ex is IOException or UnauthorizedAccessException) { }
+    }
+
+    /// <summary>Files a version that took itself back left behind (they were in use at that time).</summary>
+    static void SweepFailed(string root)
+    {
+        try
+        {
+            var dirs = Directory.EnumerateDirectories(root).Where(d => !Path.GetFileName(d).Equals("Data", StringComparison.OrdinalIgnoreCase) && !Path.GetFileName(d).Equals(StagingName, StringComparison.OrdinalIgnoreCase)).Prepend(root);
+            foreach (var dir in dirs)
+                foreach (var f in Directory.EnumerateFiles(dir, "*" + FailSuffix, dir == root ? SearchOption.TopDirectoryOnly : SearchOption.AllDirectories))
+                    try { File.Delete(f); } catch (Exception ex) when (ex is IOException or UnauthorizedAccessException) { }
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException) { }
     }
 
     /// <summary>Deletes the old files of a confirmed update once nothing holds them any more.</summary>

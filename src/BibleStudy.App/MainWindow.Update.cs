@@ -1,4 +1,4 @@
-﻿using System.Diagnostics;
+using System.Diagnostics;
 using System.IO.Compression;
 using System.Text;
 using Avalonia;
@@ -39,6 +39,7 @@ public partial class MainWindow
         InitTour();
         InitPatchNotes();
         InitTopBar();
+        InitReadBarFit();
         InitReadingAids();
         InitCommentarySearch();
         InitEasyMode();
@@ -176,9 +177,14 @@ public partial class MainWindow
             return;
         }
         var question = L("BibleStudy {0} ist erschienen (du hast {1}). Möchtest du es jetzt installieren?\n\nVorher wird eine Sicherung deiner Daten angelegt, danach startet das Programm neu. Ohne deine Zustimmung wird nichts installiert.", info.Version, AppPaths.Version);
-        if (plan is not null) question += "\n\n" + L("Es werden nur die geänderten Dateien geladen ({0:0.0} MB).", plan.DownloadBytes / 1048576.0);
-        var answer = await AskAsync(L("Neue Version {0}", info.Version), question, L("Installieren"), L("Später"));
-        if (answer == 0) await InstallUpdateAsync(info, plan);
+        if (plan is null)
+        {
+            if (await AskAsync(L("Neue Version {0}", info.Version), question, L("Installieren"), L("Später")) == 0) await InstallUpdateAsync(info);
+            return;
+        }
+        question += "\n\n" + L("Es werden nur die geänderten Dateien geladen ({0:0.0} MB). Du kannst gleich weiterlesen, wo du warst, oder ungestört weiterarbeiten: Dann lädt es im Hintergrund und kommt beim nächsten Schließen drauf.", plan.DownloadBytes / 1048576.0);
+        var answer = await AskAsync(L("Neue Version {0}", info.Version), question, L("Jetzt installieren"), L("Beim Schließen installieren"), L("Später"));
+        if (answer is 0 or 1) await InstallUpdateAsync(info, plan, onClose: answer == 1);
     }
 
     /// <summary>
@@ -201,7 +207,7 @@ public partial class MainWindow
         catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException or System.Text.Json.JsonException or InvalidDataException or IOException or UnauthorizedAccessException) { ErrorLog.Write(ex); return null; }
     }
 
-    async Task InstallUpdateAsync(UpdateInfo info, DeltaPlan? plan = null)
+    async Task InstallUpdateAsync(UpdateInfo info, DeltaPlan? plan = null, bool onClose = false)
     {
         _updating = true;
         try
@@ -215,7 +221,18 @@ public partial class MainWindow
                 try
                 {
                     await DeltaUpdate.DownloadAsync(plan, _http, progress);
+                    if (onClose)
+                    {
+                        // _updating stays on: no second offer while this one waits. The files are swapped when the program ends (Program.Main)
+                        UpdateStatus.Text = L("Version {0} ist bereit und kommt beim nächsten Schließen des Programms drauf.", info.Version);
+                        _trayUpdateText = UpdateStatus.Text; UpdateTrayUpdateItem();
+                        StatusText.Text = UpdateStatus.Text;
+                        return;
+                    }
                     UpdateStatus.Text = L("Installiere – das Programm startet gleich neu …");
+                    DeltaUpdate.RequestRestart(DeltaUpdate.RootOf(AppPaths.ProgramDir));
+                    CaptureResume();
+                    _closeAnimated = true;   // the blink: no goodbye
                     _exiting = true;
                     Close();   // the files are swapped when the program has ended (Program.Main)
                     return;
@@ -223,7 +240,7 @@ public partial class MainWindow
                 catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException or InvalidDataException or IOException or UnauthorizedAccessException)
                 {
                     ErrorLog.Write(ex);   // nothing of the program has changed yet: on to the full package
-                    if (!OperatingSystem.IsWindows()) throw;
+                    if (!OperatingSystem.IsWindows() || onClose) throw;   // in the background nothing big is fetched unasked
                 }
             }
             if (info.DownloadUrl.Length == 0)

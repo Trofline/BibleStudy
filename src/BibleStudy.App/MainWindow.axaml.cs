@@ -92,6 +92,7 @@ public partial class MainWindow : Window
         _store = new UserStore(Path.Combine(_root, "user.db"));
         _settingsPath = Path.Combine(_root, "settings.json");
         _settings = AppSettings.Load(_settingsPath);
+        TakeResume();
         CommentariesOn = _settings.ShowCommentaries; CompactLook = _settings.CompactLook; NavGroups = MakeNavGroups();
         DeleteGuestVaults(_root);   // a guest import left over from a crash
         _readStore = new ReadStore(Path.Combine(_root, "read.db"));
@@ -105,7 +106,7 @@ public partial class MainWindow : Window
         _vault = OpenVault(_settings.Vault);
         _read = _vault.GetReadChapters();
         _fontSize = _settings.FontSize;
-        _startupHome = _settings.StartOnHome;
+        _startupHome = _resume is { } resume ? resume.Home : _settings.StartOnHome;
         FontSlider.Value = _fontSize;
         FontLabel.Text = L("Schriftgröße: {0}", _fontSize);
         StartHomeCheck.IsChecked = _settings.StartOnHome;
@@ -475,7 +476,7 @@ public partial class MainWindow : Window
             var size = cols.Count > 2 ? _fontSize - 3 : _fontSize;
 
             ReaderPanel.Children.Clear(); _verseBoxes.Clear(); _wordCells.Clear(); _cells.Clear(); _headingControls.Clear(); _hoverSpan = null;
-            if (_animKey != $"{_curBook}{_curChapter}") { _animKey = $"{_curBook}{_curChapter}"; AnimateIn(ReaderPanel); }
+            if (_animKey != $"{_curBook}{_curChapter}") { _animKey = $"{_curBook}{_curChapter}"; if (_resume is null) AnimateIn(ReaderPanel); }
             _singleColumn = cols.Count == 1;
             // a column with a passage of its own cannot run verse by verse next to the others: it gets its own scroller
             _colPassage = [null, .. extraCols.Select(e => e.Own is { } o ? $"{BookName(o.Book)} {o.Chapter}" : null)];
@@ -517,6 +518,7 @@ public partial class MainWindow : Window
             else if (sameChapter) KeepPlace();
             else ReaderScroll.Offset = default;
 
+            ApplyResume();
             ReadBtn.IsChecked = _read.Contains((b.Id, number));
             // a jump inside the chapter to another verse is a step too (a cross reference a few verses on); clicking a verse is not
             var last = _history.Count > 0 ? _history[^1] : null;

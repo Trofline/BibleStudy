@@ -154,6 +154,7 @@ public sealed class Updater(HttpClient http)
         }
         var wanted = lang == "de" ? "Neu in" : "New in";
         var hit = sections.FirstOrDefault(s => s.Head.StartsWith(wanted, StringComparison.OrdinalIgnoreCase));
+        if (hit.Lines is null) hit = sections.FirstOrDefault(s => s.Head.StartsWith("New in", StringComparison.OrdinalIgnoreCase));   // notes written in English only
         if (hit.Lines is null) return notes.Trim();
         return string.Join("\n", hit.Lines.TakeWhile(l => !l.StartsWith("Dateien:", StringComparison.OrdinalIgnoreCase) && !l.StartsWith("Files:", StringComparison.OrdinalIgnoreCase))).Trim();
     }

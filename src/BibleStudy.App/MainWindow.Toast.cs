@@ -17,7 +17,7 @@ public partial class MainWindow
     DispatcherTimer? _undoToastTimer;
     Func<Task>? _undoToastAction;
 
-    void ShowUndoToast(string text, Func<Task> undo)
+    void ShowUndoToast(string text, Func<Task> undo, string? button = null)
     {
         if (_undoToast is null)
         {
@@ -39,6 +39,7 @@ public partial class MainWindow
             Grid.SetRowSpan(_undoToast, 2);
         }
         _undoToastText!.Text = text;
+        _undoToastBtn!.Content = button ?? L("Rückgängig");
         _undoToastAction = undo;
         if (_undoToast.Parent is null) ReaderHost.Children.Add(_undoToast);
         _undoToastTimer?.Stop();

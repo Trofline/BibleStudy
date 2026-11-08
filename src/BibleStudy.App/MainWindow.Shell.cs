@@ -1,4 +1,4 @@
-﻿using Avalonia;
+using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Media;
@@ -69,25 +69,33 @@ public partial class MainWindow
         CloseBtn.Click += (_, _) => Close();
 
         // window position and start mode
-        if (_settings.RememberWindow && _settings.WindowBounds is { } b && Screens.All.Any(s => s.WorkingArea.Contains(new PixelPoint(b.X + 40, b.Y + 20))))
+        if ((_settings.RememberWindow || _resuming) && _settings.WindowBounds is { } b && Screens.All.Any(s => s.WorkingArea.Contains(new PixelPoint(b.X + 40, b.Y + 20))))
         {
             WindowStartupLocation = WindowStartupLocation.Manual;
             Position = new PixelPoint(b.X, b.Y); Width = Math.Max(MinWidth, b.W); Height = Math.Max(MinHeight, b.H);
             if (b.Maximized) WindowState = WindowState.Maximized;
         }
-        if (_settings.StartMode == "Maximized") WindowState = WindowState.Maximized;
+        // a small screen: the window never starts bigger than the usable part of it (sizes are device-independent units, the work area is in pixels)
+        if (((WindowStartupLocation == WindowStartupLocation.Manual ? Screens.ScreenFromPoint(Position) : null) ?? Screens.Primary) is { } screen)
+        {
+            var scale = Math.Max(0.5, screen.Scaling);
+            var room = new Size(screen.WorkingArea.Width / scale, screen.WorkingArea.Height / scale);
+            MinWidth = Math.Min(MinWidth, room.Width); MinHeight = Math.Min(MinHeight, room.Height);
+            Width = Math.Min(Width, room.Width); Height = Math.Min(Height, room.Height);
+        }
+        if (_settings.StartMode == "Maximized" && !_resuming) WindowState = WindowState.Maximized;
         var startupDone = false;
         Opened += (_, _) =>
         {
             if (startupDone) return;   // Opened fires on every Show(), e.g. when coming back from the tray
             startupDone = true;
-            if (_settings.StartMode == "Minimized")
+            if (_settings.StartMode == "Minimized" && !_resuming)
             {
                 // hiding inside Opened leaves the window unable to show again; wait until it is fully up
                 if (_settings.Tray && _tray is not null) DispatcherTimer.RunOnce(Hide, TimeSpan.FromMilliseconds(400));
                 else WindowState = WindowState.Minimized;
             }
-            if (_settings.RestoreWindows && _settings.LastLayout is { Windows.Count: > 0 } last)
+            if ((_settings.RestoreWindows || _resuming) && _settings.LastLayout is { Windows.Count: > 0 } last)
                 Dispatcher.UIThread.Post(() => OpenLayoutWindows(last), DispatcherPriority.Background);
         };
         Closing += OnWindowClosing;
@@ -160,6 +168,17 @@ public partial class MainWindow
         Activate();
     }
 
+    string? _trayUpdateText;
+    NativeMenuItem? _trayUpdateItem;
+
+    /// <summary>With the program in the tray it is not "closed" by the window: the menu says that a downloaded update is installed when the program is really quit.</summary>
+    void UpdateTrayUpdateItem()
+    {
+        if (_trayUpdateItem is null) return;
+        _trayUpdateItem.Header = _trayUpdateText ?? "";
+        _trayUpdateItem.IsVisible = !string.IsNullOrEmpty(_trayUpdateText);
+    }
+
     void UpdateTray()
     {
         if (!_settings.Tray)
@@ -172,7 +191,9 @@ public partial class MainWindow
         var menu = new NativeMenu();
         var open = new NativeMenuItem(L("BibleStudy öffnen")); open.Click += (_, _) => RestoreFromTray();
         var quit = new NativeMenuItem(L("Beenden")); quit.Click += (_, _) => { _exiting = true; Close(); };
-        menu.Items.Add(open); menu.Items.Add(new NativeMenuItemSeparator()); menu.Items.Add(quit);
+        _trayUpdateItem = new NativeMenuItem { IsEnabled = false, IsVisible = false };
+        menu.Items.Add(open); menu.Items.Add(_trayUpdateItem); menu.Items.Add(new NativeMenuItemSeparator()); menu.Items.Add(quit);
+        UpdateTrayUpdateItem();
         _tray = new TrayIcon { Icon = Icon, ToolTipText = "BibleStudy", Menu = menu, IsVisible = true };
         _tray.Clicked += (_, _) => RestoreFromTray();
         TrayIcon.SetIcons(Application.Current!, [_tray]);

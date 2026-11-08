@@ -2480,7 +2480,6 @@
   "Vault als Gast importieren": "Импорт хранилища как гость",
   "Gast {0:yyyy-MM-dd HH-mm}": "Гость {0:yyyy-MM-dd HH-mm}",
   "Als Gast importiert: „{0}“. Er verschwindet, wenn du das Programm schließt; deine eigenen Daten bleiben unberührt.": "Импортировано как гость: «{0}». Исчезнет при закрытии программы; твои данные не затрагиваются.",
-  "Es werden nur die geänderten Dateien geladen ({0:0.0} MB).": "Загружаются только изменённые файлы ({0:0.0} МБ).",
   "Für diese Version gibt es kein vollständiges Paket. Lade es bitte von der Download-Seite.": "Для этой версии нет полного пакета. Загрузи его со страницы загрузок.",
   "Das Update auf {0} hat nicht geklappt, die bisherige Version läuft weiter: {1}": "Обновление до {0} не удалось, продолжает работать прежняя версия: {1}",
   "Im Zusammenhang in neuem Reiter öffnen": "Открыть в контексте на новой вкладке",
@@ -2489,5 +2488,11 @@
   "Im Lesefenster öffnen": "Открыть в окне чтения",
   "In eigenem Fenster": "В отдельном окне",
   "Zurück in die Reiter": "Вернуть на вкладки",
-  "Klick auf einen Querverweis öffnet ihn im Zusammenhang in einem neuen Reiter": "Щелчок по перекрёстной ссылке открывает её в контексте на новой вкладке"
+  "Klick auf einen Querverweis öffnet ihn im Zusammenhang in einem neuen Reiter": "Щелчок по перекрёстной ссылке открывает её в контексте на новой вкладке",
+  "Es werden nur die geänderten Dateien geladen ({0:0.0} MB). Du kannst gleich weiterlesen, wo du warst, oder ungestört weiterarbeiten: Dann lädt es im Hintergrund und kommt beim nächsten Schließen drauf.": "Загружаются только изменённые файлы ({0:0.0} МБ). Можно сразу продолжить чтение с того же места или спокойно работать дальше: тогда загрузка пройдёт в фоне, а обновление применится при следующем закрытии программы.",
+  "Jetzt installieren": "Установить сейчас",
+  "Beim Schließen installieren": "Установить при закрытии",
+  "Version {0} ist bereit und kommt beim nächsten Schließen des Programms drauf.": "Версия {0} готова и применится при следующем закрытии программы.",
+  "Aktualisiert auf Version {0}.": "Обновлено до версии {0}.",
+  "Was ist neu?": "Что нового?"
 }

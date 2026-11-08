@@ -116,7 +116,7 @@ Claude Code (with Bible tools) or Ollama; the instruction for Claude; the MCP se
 
 ## 13.15 Updates and program
 
-- **Check for updates now.** From version 1.6.7 on, an update downloads only the changed files (usually a few MB), on Windows, Linux and macOS. If the new version does not start, the old one comes back automatically.
+- **Check for updates now.** From version 1.6.7 on, an update downloads only the changed files (usually a few MB), on Windows, Linux and macOS. If the new version does not start, the old one comes back automatically. *Install now* restarts briefly and you read on exactly where you were. *Install when closing* downloads in the background and applies the update the next time you quit.
 - **Patch notes** (what's new).
 - **Project on GitHub.**
 - **Restart program.**

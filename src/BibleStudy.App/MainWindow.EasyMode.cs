@@ -22,6 +22,8 @@ public partial class MainWindow
         var wide = Bounds.Width;
         ReadQuick.IsVisible = !_settings.EasyMode && !CompactLook && wide >= 1600;
         ReadQuickMore.IsVisible = wide >= 1800;
+        SidePanel.MaxWidth = Math.Max(300, wide - 460);   // a narrow window keeps room for the text: the panel gives way
+        FitReadBar();
     }
 
     void ApplyEasyMode()
@@ -38,6 +40,6 @@ public partial class MainWindow
         UpdateReadQuick();
         // the chosen side tab might be hidden now: go to the first one that is shown
         if (easy && !EasySideTabs.Contains(SideTabs.SelectedIndex)) SideTabs.SelectedIndex = 0;
-        FitTopBar();
+        FitTopBar(); FitReadBar();
     }
 }

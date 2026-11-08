@@ -116,7 +116,7 @@ Claude Code (mit Bibel-Werkzeugen) oder Ollama; die Anweisung für Claude; der M
 
 ## 13.15 Updates und Programm
 
-- **Jetzt nach Updates suchen.** Ab Version 1.6.7 lädt ein Update nur die geänderten Dateien (meist wenige MB), auf Windows, Linux und macOS. Startet die neue Version nicht, kommt die alte automatisch zurück.
+- **Jetzt nach Updates suchen.** Ab Version 1.6.7 lädt ein Update nur die geänderten Dateien (meist wenige MB), auf Windows, Linux und macOS. Startet die neue Version nicht, kommt die alte automatisch zurück. *Jetzt installieren* startet kurz neu und du liest genau dort weiter, wo du warst. *Beim Schließen installieren* lädt im Hintergrund und spielt das Update beim nächsten Beenden ein.
 - **Patch Notes** (was ist neu).
 - **Projekt auf GitHub.**
 - **Programm neu starten.**

@@ -107,6 +107,41 @@ public class DeltaUpdateTests : IDisposable
     }
 
     [Fact]
+    public async Task InstalledWhenClosing_StaysTakeBackAbleUntilAWindowWasSeen()
+    {
+        var (root, output, m1, m2) = TwoVersions();
+        var before = Directory.GetFiles(root, "*", SearchOption.AllDirectories).ToDictionary(f => f, File.ReadAllText);
+        await DeltaUpdate.DownloadAsync(DeltaUpdate.CreatePlan(m2, m1, root, false), new HttpClient(new Packs(output)), null);
+        DeltaUpdate.Swap(root);
+        Assert.True(DeltaUpdate.ConfirmStarted(root, "2.0.0"));   // the windowless check passed
+        DeltaUpdate.StartTrial(root);
+        for (var i = 0; i < DeltaUpdate.TrialStarts; i++)
+        {
+            Assert.False(DeltaUpdate.TrialFailed(root, "2.0.0"));   // a start that never shows its window
+            DeltaUpdate.CleanUp(root, "2.0.0");
+            Assert.True(File.Exists(Path.Combine(root, "a.dll.bsold")));   // nothing is deleted while it is not proven
+        }
+        Assert.True(DeltaUpdate.TrialFailed(root, "2.0.0"));
+        DeltaUpdate.Rollback(root);
+        Assert.Equal(before, Directory.GetFiles(root, "*", SearchOption.AllDirectories).ToDictionary(f => f, File.ReadAllText));
+        Assert.False(DeltaUpdate.TrialFailed(root, "2.0.0"));
+    }
+
+    [Fact]
+    public async Task InstalledWhenClosing_AWindowProvesIt()
+    {
+        var (root, output, m1, m2) = TwoVersions();
+        await DeltaUpdate.DownloadAsync(DeltaUpdate.CreatePlan(m2, m1, root, false), new HttpClient(new Packs(output)), null);
+        DeltaUpdate.Swap(root);
+        DeltaUpdate.ConfirmStarted(root, "2.0.0"); DeltaUpdate.StartTrial(root);
+        Assert.False(DeltaUpdate.TrialFailed(root, "2.0.0"));
+        DeltaUpdate.ClearTrial(root);   // the window is up
+        DeltaUpdate.CleanUp(root, "2.0.0");
+        Assert.Empty(Directory.GetFiles(root, "*.bsold", SearchOption.AllDirectories));
+        Assert.False(DeltaUpdate.TrialFailed(root, "2.0.0"));
+    }
+
+    [Fact]
     public async Task Rollback_RestoresEveryFile()
     {
         var (root, output, m1, m2) = TwoVersions();
@@ -332,6 +367,29 @@ public class DeltaUpdateTests : IDisposable
         var target = FiveVersions()[^1].Manifest;
         Assert.Equal("v1.1.0", target.Files.Single(f => f.Path == "lib.dll").Tag);       // not changed since: not uploaded again
         Assert.Equal("v1.0.0", target.Files.Single(f => f.Path == "same.dll").Tag);
+    }
+
+    [Fact]
+    public async Task InstallNowOrWhenClosing_IsDecidedPerUpdate_AndForgottenAfterwards()
+    {
+        var (root, output, m1, m2) = TwoVersions();
+        await DeltaUpdate.DownloadAsync(DeltaUpdate.CreatePlan(m2, m1, root, false), new HttpClient(new Packs(output)), null);
+        Assert.False(DeltaUpdate.RestartRequested(root));   // "when closing" is what a waiting update does unless told otherwise
+        DeltaUpdate.RequestRestart(root);
+        Assert.True(DeltaUpdate.RestartRequested(root));
+        DeltaUpdate.Swap(root);
+        Assert.False(DeltaUpdate.RestartRequested(root));
+        Assert.False(File.Exists(Path.Combine(root, "restart")));   // not a file of the program
+    }
+
+    [Fact]
+    public async Task ADownloadWaitingFromAnEndedSession_IsThrownAwayNotInstalledUnasked()
+    {
+        var (root, output, m1, m2) = TwoVersions();
+        await DeltaUpdate.DownloadAsync(DeltaUpdate.CreatePlan(m2, m1, root, false), new HttpClient(new Packs(output)), null);
+        DeltaUpdate.CleanUp(root, "1.0.0");
+        Assert.False(DeltaUpdate.IsReady(root));
+        Assert.Equal("old a", Read(root, "a.dll"));
     }
 
     [Fact]

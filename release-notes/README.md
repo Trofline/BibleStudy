@@ -30,3 +30,5 @@ Example:
 
 Features and improvements get a real explanation. A `[Fehler behoben]` / `[Hotfix]` item is only one short line
 saying what now works (e.g. "Kapitel-Pfeile bleiben am Anfang und Ende der Bibel stehen"), without describing the defect or its cause.
+
+Since 1.6.9 the notes are written in English only (one `## New in <version>` section); the program shows them to all languages.

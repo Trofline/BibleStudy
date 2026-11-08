@@ -2480,7 +2480,6 @@
   "Vault als Gast importieren": "Import vault as guest",
   "Gast {0:yyyy-MM-dd HH-mm}": "Guest {0:yyyy-MM-dd HH-mm}",
   "Als Gast importiert: „{0}“. Er verschwindet, wenn du das Programm schließt; deine eigenen Daten bleiben unberührt.": "Imported as guest: “{0}”. It disappears when you close the program; your own data stays untouched.",
-  "Es werden nur die geänderten Dateien geladen ({0:0.0} MB).": "Only the changed files are downloaded ({0:0.0} MB).",
   "Für diese Version gibt es kein vollständiges Paket. Lade es bitte von der Download-Seite.": "There is no full package for this version. Please get it from the download page.",
   "Das Update auf {0} hat nicht geklappt, die bisherige Version läuft weiter: {1}": "The update to {0} did not work, the previous version keeps running: {1}",
   "Im Zusammenhang in neuem Reiter öffnen": "Open in context in a new tab",
@@ -2489,5 +2488,11 @@
   "Im Lesefenster öffnen": "Open in the reader",
   "In eigenem Fenster": "In its own window",
   "Zurück in die Reiter": "Back into the tabs",
-  "Klick auf einen Querverweis öffnet ihn im Zusammenhang in einem neuen Reiter": "Clicking a cross reference opens it in context in a new tab"
+  "Klick auf einen Querverweis öffnet ihn im Zusammenhang in einem neuen Reiter": "Clicking a cross reference opens it in context in a new tab",
+  "Es werden nur die geänderten Dateien geladen ({0:0.0} MB). Du kannst gleich weiterlesen, wo du warst, oder ungestört weiterarbeiten: Dann lädt es im Hintergrund und kommt beim nächsten Schließen drauf.": "Only the changed files are downloaded ({0:0.0} MB). You can read on right away where you were, or keep working undisturbed: then it downloads in the background and is applied the next time you close the program.",
+  "Jetzt installieren": "Install now",
+  "Beim Schließen installieren": "Install when closing",
+  "Version {0} ist bereit und kommt beim nächsten Schließen des Programms drauf.": "Version {0} is ready and is applied the next time you close the program.",
+  "Aktualisiert auf Version {0}.": "Updated to version {0}.",
+  "Was ist neu?": "What's new?"
 }

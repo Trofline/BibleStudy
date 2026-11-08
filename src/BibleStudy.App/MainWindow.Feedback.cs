@@ -32,7 +32,7 @@ public partial class MainWindow
             menu.Items.Add(new Separator());
             Item(L("Ideen und Fehler ansehen …"), () => OpenUrl(IssuesUrl));
             Item(L("Letzten Fehler anzeigen"), ShowErrorLog);
-            menu.ShowAt(FeedbackTopBtn);
+            menu.ShowAt(Anchor(FeedbackTopBtn));
         };
         // the installer makes the entry itself; a portable or development copy must not bend it to another program file
         StartMenuBtn.IsVisible = OperatingSystem.IsWindows() && !AppPaths.IsInstalled;

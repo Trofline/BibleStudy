@@ -2480,7 +2480,6 @@
   "Vault als Gast importieren": "Importer un vault comme invité",
   "Gast {0:yyyy-MM-dd HH-mm}": "Invité {0:yyyy-MM-dd HH-mm}",
   "Als Gast importiert: „{0}“. Er verschwindet, wenn du das Programm schließt; deine eigenen Daten bleiben unberührt.": "Importé comme invité : « {0} ». Il disparaît à la fermeture du programme ; tes propres données restent intactes.",
-  "Es werden nur die geänderten Dateien geladen ({0:0.0} MB).": "Seuls les fichiers modifiés sont téléchargés ({0:0.0} Mo).",
   "Für diese Version gibt es kein vollständiges Paket. Lade es bitte von der Download-Seite.": "Il n’existe pas de paquet complet pour cette version. Récupère-le sur la page de téléchargement.",
   "Das Update auf {0} hat nicht geklappt, die bisherige Version läuft weiter: {1}": "La mise à jour vers {0} a échoué, la version précédente reste en service : {1}",
   "Im Zusammenhang in neuem Reiter öffnen": "Ouvrir en contexte dans un nouvel onglet",
@@ -2489,5 +2488,11 @@
   "Im Lesefenster öffnen": "Ouvrir dans le lecteur",
   "In eigenem Fenster": "Dans sa propre fenêtre",
   "Zurück in die Reiter": "Revenir dans les onglets",
-  "Klick auf einen Querverweis öffnet ihn im Zusammenhang in einem neuen Reiter": "Un clic sur une référence croisée l’ouvre en contexte dans un nouvel onglet"
+  "Klick auf einen Querverweis öffnet ihn im Zusammenhang in einem neuen Reiter": "Un clic sur une référence croisée l’ouvre en contexte dans un nouvel onglet",
+  "Es werden nur die geänderten Dateien geladen ({0:0.0} MB). Du kannst gleich weiterlesen, wo du warst, oder ungestört weiterarbeiten: Dann lädt es im Hintergrund und kommt beim nächsten Schließen drauf.": "Seuls les fichiers modifiés sont téléchargés ({0:0.0} Mo). Tu peux reprendre tout de suite ta lecture là où tu étais, ou continuer sans interruption : le téléchargement se fait alors en arrière-plan et la mise à jour s’applique à la prochaine fermeture du programme.",
+  "Jetzt installieren": "Installer maintenant",
+  "Beim Schließen installieren": "Installer à la fermeture",
+  "Version {0} ist bereit und kommt beim nächsten Schließen des Programms drauf.": "La version {0} est prête et s’appliquera à la prochaine fermeture du programme.",
+  "Aktualisiert auf Version {0}.": "Mis à jour vers la version {0}.",
+  "Was ist neu?": "Quoi de neuf ?"
 }

@@ -17,21 +17,36 @@ static class DeltaFinish
     /// <summary>At the very start of the program, before anything is loaded from the program folder.</summary>
     public static void AtStart()
     {
-        try { DeltaUpdate.CleanUp(Root, AppPaths.Version); }
+        try
+        {
+            // a version installed when the program closed was never seen with a window: when it keeps failing to show one, it is taken back here
+            if (DeltaUpdate.TrialFailed(Root, AppPaths.Version))
+            {
+                var exe = Environment.ProcessPath; var failed = AppPaths.Version;
+                DeltaUpdate.Rollback(Root);
+                DeltaUpdate.NoteFailed(AppPaths.Root, failed, $"no window after {DeltaUpdate.TrialStarts} starts");
+                if (exe is not null && StartProgram(exe) is not null) Environment.Exit(0);
+                return;
+            }
+            DeltaUpdate.CleanUp(Root, AppPaths.Version);
+        }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException) { ErrorLog.Write(ex); }
     }
 
     /// <summary>The window of this version is up: the old process waiting for that may end. The old files are deleted once it has.</summary>
-    public static void Confirm()
+    public static void Confirm(bool trialOnly = false)
     {
         try
         {
             if (!DeltaUpdate.ConfirmStarted(Root, AppPaths.Version)) return;
+            if (trialOnly) { DeltaUpdate.StartTrial(Root); }   // nobody sees a window now: the proof comes at the first real start
+            else DeltaUpdate.ClearTrial(Root);
             if (OperatingSystem.IsWindows() && AppPaths.IsInstalled)
             {
                 using var key = Registry.CurrentUser.OpenSubKey(@"Software\Microsoft\Windows\CurrentVersion\Uninstall\BibleStudy", writable: true);
                 key?.SetValue("DisplayVersion", AppPaths.Version);
             }
+            if (trialOnly) return;
             _ = Task.Run(async () =>
             {
                 await Task.Delay(TimeSpan.FromSeconds(20));
@@ -50,6 +65,7 @@ static class DeltaFinish
         if (exe is null) return false;
         Process.GetCurrentProcess().Dispose();   // what is needed after the swap is loaded before it: those files may be replaced
         var version = "?";
+        var restart = DeltaUpdate.RestartRequested(root);
         try
         {
             version = DeltaUpdate.WaitingVersion(root);
@@ -61,16 +77,50 @@ static class DeltaFinish
             ErrorLog.Write(ex);
             DeltaUpdate.Rollback(root);
             DeltaUpdate.NoteFailed(AppPaths.Root, version, ex.Message);
-            StartProgram(exe);
+            if (restart) StartProgram(exe);
             return true;
         }
-        if (!StartAndWait(exe, root, out var reason))
+        string reason;
+        if (restart ? !StartAndWait(exe, root, out reason) : !CheckWithoutWindow(exe, root, out reason))
         {
             try { DeltaUpdate.Rollback(root); } catch (Exception ex) when (ex is IOException or UnauthorizedAccessException) { ErrorLog.Write(ex); }
             DeltaUpdate.NoteFailed(AppPaths.Root, version, reason);
-            StartProgram(exe);
+            if (restart) StartProgram(exe);
         }
         return true;
+    }
+
+    /// <summary>
+    /// "Install when closing": nobody is there to see a window, and at the next start the old process that could take the update back is gone. So the new
+    /// version is tried now, without a window: it loads its parts and reports back (<see cref="CheckAndExit"/>).
+    /// </summary>
+    static bool CheckWithoutWindow(string exe, string root, out string reason)
+    {
+        try
+        {
+            using var check = Process.Start(new ProcessStartInfo(exe, CheckArgument) { UseShellExecute = false, WorkingDirectory = Path.GetDirectoryName(exe)! });
+            if (check is null) { reason = "no process"; return false; }
+            if (!check.WaitForExit(60_000)) { check.Kill(); reason = "check timed out"; return false; }
+            reason = $"check: exit code {check.ExitCode}";
+            return check.ExitCode == 0 && DeltaUpdate.IsConfirmed(root);
+        }
+        catch (Exception ex) when (ex is System.ComponentModel.Win32Exception or InvalidOperationException) { reason = ex.Message; return false; }
+    }
+
+    public const string CheckArgument = "--update-check";
+
+    /// <summary>Runs in the new version, without a window: its own parts and what they use directly must load. Returns the exit code; not 0 sends the old files back.</summary>
+    public static int CheckAndExit()
+    {
+        try
+        {
+            foreach (var part in new[] { typeof(DeltaFinish).Assembly, typeof(AppPaths).Assembly })
+                foreach (var name in part.GetReferencedAssemblies()) System.Reflection.Assembly.Load(name);
+            _ = Program.BuildAvaloniaApp();
+            Confirm(trialOnly: true);
+            return 0;
+        }
+        catch (Exception ex) { ErrorLog.Write(ex); return 1; }
     }
 
     static bool StartAndWait(string exe, string root, out string reason)

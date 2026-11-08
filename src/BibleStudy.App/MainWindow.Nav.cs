@@ -150,9 +150,9 @@ public partial class MainWindow
                 menu.Items.Add(item);
             }
             menu.Items.Add(new Separator());
-            var neu = new MenuItem { Header = L("＋  Neuer Vault …") }; neu.Click += (_, _) => flyout.ShowAt(VaultTopBtn);
+            var neu = new MenuItem { Header = L("＋  Neuer Vault …") }; neu.Click += (_, _) => flyout.ShowAt(Anchor(VaultTopBtn));
             menu.Items.Add(neu);
-            menu.ShowAt(VaultTopBtn);
+            menu.ShowAt(Anchor(VaultTopBtn));
         };
         RefreshVaultUi();
     }

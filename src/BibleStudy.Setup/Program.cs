@@ -148,26 +148,31 @@ sealed class SetupForm : Form
     {
         _o = o;
         Text = "BibleStudy – Setup"; FormBorderStyle = FormBorderStyle.FixedDialog; MaximizeBox = false; StartPosition = FormStartPosition.CenterScreen;
-        ClientSize = new Size(500, 330); Font = new Font("Segoe UI", 9.5f);
+        // everything below is laid out in pixels of a 96 dpi screen: the form and all its controls grow with the screen scaling (before, the text grew and the
+        // window did not, so buttons and texts ended up on top of each other on laptops with 125–150 %)
+        AutoScaleDimensions = new SizeF(96f, 96f); AutoScaleMode = AutoScaleMode.Dpi;
+        ClientSize = new Size(500, 372); Font = new Font("Segoe UI", 9.5f);
+        // a screen that is still too small gets scroll bars instead of cut-off buttons
+        AutoScroll = true; AutoScrollMinSize = new Size(500, 372);
         _dir.Text = o.Dir!;
         var title = new Label { Text = update ? Tr.T("titleUpdate") : Tr.T("titleInstall"), Font = new Font("Segoe UI Semibold", 15f), AutoSize = true, Location = new(20, 16) };
         var info = new Label
         {
             Text = Tr.T("info1") + "\n\n" + Tr.T("info2"),
-            Location = new(20, 56), Size = new(460, 100),
+            Location = new(20, 56), Size = new(460, 142),
         };
-        var where = new Label { Text = Tr.T("folder"), AutoSize = true, Location = new(20, 166) };
-        _dir.Location = new(20, 188);
-        var browse = new Button { Text = Tr.T("change"), Location = new(390, 186), Width = 90 };
+        var where = new Label { Text = Tr.T("folder"), AutoSize = true, Location = new(20, 208) };
+        _dir.Location = new(20, 230);
+        var browse = new Button { Text = Tr.T("change"), Location = new(390, 228), Width = 90 };
         browse.Click += (_, _) =>
         {
             using var d = new FolderBrowserDialog { SelectedPath = _dir.Text };
             if (d.ShowDialog() == DialogResult.OK) _dir.Text = Path.GetFileName(d.SelectedPath).Equals("BibleStudy", StringComparison.OrdinalIgnoreCase) ? d.SelectedPath : Path.Combine(d.SelectedPath, "BibleStudy");
         };
-        _desktop.Location = new(20, 224);
-        _bar.Location = new(20, 254); _status.Location = new(20, 254);
-        _go.Location = new(350, 282);
-        var close = new Button { Text = Tr.T("close"), Location = new(250, 282), Width = 90, Height = 32 };
+        _desktop.Location = new(20, 266);
+        _bar.Location = new(20, 296); _status.Location = new(20, 296);
+        _go.Location = new(350, 324);
+        var close = new Button { Text = Tr.T("close"), Location = new(250, 324), Width = 90, Height = 32 };
         close.Click += (_, _) => Close();
         _go.Click += async (_, _) => await Go();
         Controls.AddRange([title, info, where, _dir, browse, _desktop, _bar, _status, _go, close]);
@@ -187,12 +192,12 @@ sealed class SetupForm : Form
         try
         {
             await Task.Run(() => Installer.Run(_o, s => BeginInvoke(() => _status.Text = s)));
-            _bar.Visible = false; _status.Top = 254; _status.Text = Tr.T("installed");
+            _bar.Visible = false; _status.Top = 296; _status.Text = Tr.T("installed");
             _done = true; _go.Text = Tr.T("start"); _go.Enabled = true;
         }
         catch (Exception ex)
         {
-            _bar.Visible = false; _status.Top = 254; _status.Text = Tr.T("error") + ex.Message;
+            _bar.Visible = false; _status.Top = 296; _status.Text = Tr.T("error") + ex.Message;
             _go.Enabled = true; _dir.Enabled = true;
         }
     }

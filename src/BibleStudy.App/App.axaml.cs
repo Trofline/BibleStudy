@@ -17,6 +17,7 @@ public partial class App : Application
     public override void OnFrameworkInitializationCompleted()
     {
         ErrorLog.Install();
+        Window.WindowOpenedEvent.AddClassHandler<Window>((w, _) => KeepOnScreen(w));
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
             var args = Environment.GetCommandLineArgs();
@@ -53,10 +54,35 @@ public partial class App : Application
         base.OnFrameworkInitializationCompleted();
     }
 
+    /// <summary>A window made for a big screen must not reach beyond a small one: the other windows (not the main window, which has its own rules) never grow past the usable area and are moved back inside it.</summary>
+    static void KeepOnScreen(Window w)
+    {
+        if (w is MainWindow || w is SplashWindow || w.WindowState != WindowState.Normal || w.Screens.ScreenFromWindow(w) is not { } screen) return;
+        var k = Math.Max(0.5, w.RenderScaling); var area = screen.WorkingArea;
+        w.MaxWidth = Math.Min(w.MaxWidth, area.Width / k); w.MaxHeight = Math.Min(w.MaxHeight, area.Height / k);
+        Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+        {
+            var size = new PixelSize((int)(w.Bounds.Width * k), (int)(w.Bounds.Height * k));
+            var x = Math.Clamp(w.Position.X, area.X, Math.Max(area.X, area.Right - size.Width));
+            var y = Math.Clamp(w.Position.Y, area.Y, Math.Max(area.Y, area.Bottom - size.Height));
+            if (x != w.Position.X || y != w.Position.Y) w.Position = new PixelPoint(x, y);
+            // a form taller than the space it got (a small screen) scrolls instead of cutting off its buttons; one with its own scrolling parts reports a small height and stays as it is
+            if (w.Content is Control body and not ScrollViewer && w.Bounds.Width > 0)
+            {
+                body.Measure(new Size(w.Bounds.Width, double.PositiveInfinity));
+                if (body.DesiredSize.Height > w.Bounds.Height + 1)
+                {
+                    w.Content = null;
+                    w.Content = new ScrollViewer { Content = body, VerticalScrollBarVisibility = Avalonia.Controls.Primitives.ScrollBarVisibility.Auto, HorizontalScrollBarVisibility = Avalonia.Controls.Primitives.ScrollBarVisibility.Disabled };
+                }
+            }
+        }, Avalonia.Threading.DispatcherPriority.Background);
+    }
+
     static void StartMain(IClassicDesktopStyleApplicationLifetime desktop, AppSettings st)
     {
         // A start window shows the loading progress (not when the program starts minimized into the tray).
-        if (st.StartMode != "Minimized")
+        if (st.StartMode != "Minimized" && st.Resume is null)   // right after an update the window just comes back
         {
             try { new SplashWindow(st.Logo).Show(); SplashWindow.Report(0.1, L("Starte …")); } catch { /* the splash is optional */ }
         }

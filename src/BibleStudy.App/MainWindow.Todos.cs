@@ -50,7 +50,7 @@ public partial class MainWindow
         flyout.Closed += (_, _) => { _todoPopupList = null; _todoPopupCount = null; _todoEditing = null; _todoAddingTo = null; };
         _todoPopupList = list; _todoPopupCount = count;
         RefreshTodos();
-        flyout.ShowAt(TodoTopBtn);
+        flyout.ShowAt(Anchor(TodoTopBtn));
         box.Focus();
     }
 
