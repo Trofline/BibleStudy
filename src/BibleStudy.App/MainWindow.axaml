@@ -331,7 +331,12 @@
                             <Button x:Name="SearchQueueBtn" IsVisible="False" Content="Alle Treffer zur Leseliste" HorizontalAlignment="Left" />
                         </StackPanel>
                         </ScrollViewer>
-                        <ListBox x:Name="SearchList" ItemTemplate="{StaticResource EntryTpl}" ScrollViewer.HorizontalScrollBarVisibility="Disabled" />
+                        <Grid>
+                            <ListBox x:Name="SearchList" ItemTemplate="{StaticResource EntryTpl}" ScrollViewer.HorizontalScrollBarVisibility="Disabled" />
+                            <ScrollViewer x:Name="SearchAlt" IsVisible="False" HorizontalScrollBarVisibility="Disabled">
+                                <StackPanel x:Name="SearchAltPanel" Spacing="4" Margin="0,0,10,8" />
+                            </ScrollViewer>
+                        </Grid>
                     </DockPanel>
                 </TabItem>
                 <TabItem ToolTip.Tip="Sammlung: Markierungen, Ordner, Tags">

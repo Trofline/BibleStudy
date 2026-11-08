@@ -101,10 +101,93 @@ public static class SearchEngine
         if (node is null) return new([], error, false);
         if (strongs is null && (UsesStrongs(node) || options.Original)) return new([], null, true);
 
+        // "A WITHIN 2 VERSES B": the parts must stand in verses close together, which is what the verse range of the search does
+        var range = 0;
+        node = LiftVerseDistance(node, ref range);
+        if (range != 0) options = options with { Range = range < 0 || options.Range < 0 ? -1 : Math.Max(range, options.Range) };
+
         var ctx = new Ctx(strongs, options);
         var scope = books is null ? corpus : corpus.Where(v => books.Contains(v.Ref.Book)).ToList();
-        var results = options.Range != 0 && node is AndNode { Items.Count: > 1 } and ? RunNear(scope, and, ctx) : RunSingle(scope, node, ctx);
+        var sentence = node as NearNode ?? (node as AndNode)?.Items.OfType<NearNode>().FirstOrDefault(n => n.Unit == NearUnit.Sentence);
+        var results = sentence is { Unit: NearUnit.Sentence } ? RunSentence(scope, sentence, node is AndNode all ? all.Items.Where(i => !ReferenceEquals(i, sentence)).ToList() : [], ctx)
+            : options.Range != 0 && node is AndNode { Items.Count: > 1 } and ? RunNear(scope, and, ctx) : RunSingle(scope, node, ctx);
         return new(results, null, false, ctx.Used.Count > 0 ? ctx.Used.OrderBy(x => x[0]).ThenBy(x => int.Parse(x[1..])).ToList() : null);
+    }
+
+    /// <summary>Turns the parts of a verse distance (WITHIN 2 VERSES) into plain AND parts and reports the distance: n verses, or -1 for the whole chapter.</summary>
+    static SearchNode LiftVerseDistance(SearchNode n, ref int range)
+    {
+        switch (n)
+        {
+            case NearNode { Unit: NearUnit.Verses or NearUnit.Chapter, Not: false } v:
+            {
+                var d = v.Unit == NearUnit.Chapter ? -1 : v.Words;
+                range = range < 0 || d < 0 ? -1 : Math.Max(range, d);
+                var parts = new List<SearchNode>();
+                foreach (var side in new[] { v.Left, v.Right }) AddFlat(LiftVerseDistance(side, ref range), parts);
+                return new AndNode(parts);
+            }
+            case AndNode a:
+            {
+                var parts = new List<SearchNode>();
+                foreach (var item in a.Items) AddFlat(LiftVerseDistance(item, ref range), parts);
+                return parts.Count == a.Items.Count && parts.SequenceEqual(a.Items) ? a : new AndNode(parts);
+            }
+            default: return n;
+        }
+    }
+
+    static void AddFlat(SearchNode n, List<SearchNode> into) { if (n is AndNode a) into.AddRange(a.Items); else into.Add(n); }
+
+    /// <summary>
+    /// A WITHIN 1 SENTENCE B. Sentences are found by their punctuation (. ! ?) and may run over several verses, which is common in the letters.
+    /// A new chapter always starts a new sentence. A translation without punctuation is one long sentence per chapter.
+    /// </summary>
+    static List<SearchResult> RunSentence(IReadOnlyList<CorpusVerse> scope, NearNode near, IReadOnlyList<SearchNode> extras, Ctx ctx)
+    {
+        static bool Ends(char c) => c is '.' or '!' or '?';
+        var lefts = new List<(int Sentence, int Verse, (int, int) Span)>();
+        var rights = new Dictionary<int, List<(int Verse, int Start, (int, int) Span)>>();
+        var number = 0;
+        for (var i = 0; i < scope.Count; i++)
+        {
+            var v = scope[i];
+            if (i > 0 && (scope[i - 1].Ref.Book != v.Ref.Book || scope[i - 1].Ref.Chapter != v.Ref.Chapter)) number++;
+            int SentenceAt(int position) { var n = number; for (var k = 0; k < position; k++) if (Ends(v.Text[k])) n++; return n; }
+            if (extras.All(x => Eval(x, v, ctx, [])))
+            {
+                var a = new List<(int, int)>(); var b = new List<(int, int)>();
+                if (Eval(near.Left, v, ctx, a)) foreach (var s in Merge(a)) lefts.Add((SentenceAt(s.Start), i, s));
+                if (Eval(near.Right, v, ctx, b))
+                    foreach (var s in Merge(b))
+                    {
+                        var n = SentenceAt(s.Start);
+                        if (!rights.TryGetValue(n, out var list)) rights[n] = list = [];
+                        list.Add((i, s.Start, s));
+                    }
+            }
+            number += v.Text.Count(Ends);
+        }
+
+        var spans = new SortedDictionary<int, List<(int, int)>>();
+        void Keep(int verse, (int, int) s) { if (!spans.TryGetValue(verse, out var list)) spans[verse] = list = []; list.Add(s); }
+        var reach = Math.Max(1, near.Words) - 1;   // WITHIN 1 SENTENCE: the same one
+        foreach (var (sentence, verse, span) in lefts)
+        {
+            var close = false;
+            for (var n = sentence - reach; n <= sentence + reach; n++)
+            {
+                if (!rights.TryGetValue(n, out var list)) continue;
+                foreach (var r in list)
+                {
+                    if (near.Ordered && (r.Verse, r.Start).CompareTo((verse, span.Item1)) <= 0) continue;
+                    close = true;
+                    if (!near.Not) Keep(r.Verse, r.Span);
+                }
+            }
+            if (close != near.Not) Keep(verse, span);
+        }
+        return spans.Select(kv => new SearchResult(scope[kv.Key].Ref, scope[kv.Key].Text, Merge(kv.Value))).ToList();
     }
 
     static List<SearchResult> RunSingle(IEnumerable<CorpusVerse> scope, SearchNode node, Ctx ctx)
@@ -193,6 +276,7 @@ public static class SearchEngine
         // prepared once per search, not once per verse (wildcards and word forms are costly to build)
         public Dictionary<string, Func<string, bool>> Matchers { get; } = [];
         public Dictionary<LemmaNode, Func<string, bool>> Lemmas { get; } = [];
+        public Dictionary<PhraseNode, Func<string, bool>[]> Phrases { get; } = new(ReferenceEqualityComparer.Instance);
     }
 
     static bool Eval(SearchNode n, CorpusVerse v, Ctx c, List<(int, int)> spans)
@@ -201,7 +285,8 @@ public static class SearchEngine
         {
             case WordNode w: return c.Options.Original ? Original(w.Text, v, c, spans) : Word(w.Text, v, c, spans);
             case OriginalNode o: return Original(o.Text, v, c, spans);
-            case PhraseNode p: return Phrase(p.Words, v, c.Options.CaseSensitive, spans);
+            case PhraseNode p: return Phrase(p, v, c, spans);
+            case FuzzyNode f: return Fuzzy(f.Text, v, c, spans);
             case LemmaNode l: return Lemma(l, v, c, spans);
             case StrongNode s:
             {
@@ -258,12 +343,16 @@ public static class SearchEngine
     static bool Near(NearNode n, CorpusVerse v, Ctx c, List<(int, int)> spans)
     {
         var a = new List<(int, int)>(); var b = new List<(int, int)>();
-        if (!Eval(n.Left, v, c, a) || !Eval(n.Right, v, c, b)) return false;
+        if (!Eval(n.Left, v, c, a)) return false;
+        var rightFound = Eval(n.Right, v, c, b);
+        if (!rightFound && !n.Not) return false;
+        var limit = n.Unit == NearUnit.Words ? n.Words : 999;   // a distance in verses is checked by the verse range of the search; in the verse itself anything goes
         var keep = new List<(int, int)>();
         foreach (var sa in Merge(a))
         {
             var (aFirst, aLast) = WordRange(v, sa);
             if (aFirst < 0) continue;
+            var close = false;
             foreach (var sb in Merge(b))
             {
                 var (bFirst, bLast) = WordRange(v, sb);
@@ -272,9 +361,11 @@ public static class SearchEngine
                 if (bFirst > aLast) distance = bFirst - aLast;
                 else if (!n.Ordered && aFirst > bLast) distance = aFirst - bLast;
                 else continue;   // overlapping, or in the wrong order for DANN
-                if (distance > n.Words) continue;
-                keep.Add(sa); keep.Add(sb);
+                if (distance > limit) continue;
+                close = true;
+                if (!n.Not) { keep.Add(sa); keep.Add(sb); }
             }
+            if (n.Not && !close) keep.Add(sa);   // NOT WITHIN: the left word without the right one close to it
         }
         if (keep.Count == 0) return false;
         spans.AddRange(keep);
@@ -285,11 +376,7 @@ public static class SearchEngine
     static Func<string, bool> Matcher(string text, SearchOptions o)
     {
         var q = SearchQuery.Fold(text, !o.CaseSensitive);
-        if (q.Contains('*'))
-        {
-            var rx = new Regex("^" + string.Join(@"[\p{L}\p{N}]*", q.Split('*').Select(Regex.Escape)) + "$", RegexOptions.CultureInvariant);
-            return rx.IsMatch;
-        }
+        if (SearchQuery.HasWildcard(q)) return SearchQuery.WildcardRegex(q).IsMatch;
         return o.Match switch
         {
             WordMatch.Whole => t => t == q,
@@ -309,6 +396,40 @@ public static class SearchEngine
             hit = true; spans.Add(v.Words[i]);
         }
         return hit;
+    }
+
+    /// <summary>Words that differ from the search word by a few letters (one up to six letters long, two beyond that).</summary>
+    static bool Fuzzy(string text, CorpusVerse v, Ctx c, List<(int, int)> spans)
+    {
+        var q = SearchQuery.Fold(text, !c.Options.CaseSensitive);
+        var max = q.Length <= 6 ? 1 : 2;
+        var hit = false;
+        for (var i = 0; i < v.Words.Length; i++)
+        {
+            if (Math.Abs(v.Words[i].Len - q.Length) > max) continue;
+            if (Distance(v.Word(i, !c.Options.CaseSensitive), q, max) > max) continue;
+            hit = true; spans.Add(v.Words[i]);
+        }
+        return hit;
+    }
+
+    /// <summary>Edit distance between two words (letters added, removed or changed); stops counting once it is above <paramref name="max"/>.</summary>
+    internal static int Distance(string a, string b, int max)
+    {
+        var prev = new int[b.Length + 1]; var cur = new int[b.Length + 1];
+        for (var j = 0; j <= b.Length; j++) prev[j] = j;
+        for (var i = 1; i <= a.Length; i++)
+        {
+            cur[0] = i; var best = cur[0];
+            for (var j = 1; j <= b.Length; j++)
+            {
+                cur[j] = Math.Min(Math.Min(prev[j] + 1, cur[j - 1] + 1), prev[j - 1] + (a[i - 1] == b[j - 1] ? 0 : 1));
+                best = Math.Min(best, cur[j]);
+            }
+            if (best > max) return max + 1;
+            (prev, cur) = (cur, prev);
+        }
+        return prev[b.Length];
     }
 
     /// <summary>The word as it stands in the Hebrew/Greek text: every Strong number the translation tags on a matching word, wherever it occurs.</summary>
@@ -332,14 +453,17 @@ public static class SearchEngine
         return hit;
     }
 
-    static bool Phrase(IReadOnlyList<string> words, CorpusVerse v, bool cs, List<(int, int)> spans)
+    /// <summary>The words of a phrase must stand directly behind each other; a word with * or ? in it ("Engel * Herrn") matches by pattern.</summary>
+    static bool Phrase(PhraseNode node, CorpusVerse v, Ctx c, List<(int, int)> spans)
     {
-        var q = words.Select(w => SearchQuery.Fold(w, !cs)).ToArray();
+        var cs = c.Options.CaseSensitive;
+        if (!c.Phrases.TryGetValue(node, out var q))
+            c.Phrases[node] = q = node.Words.Select(w => SearchQuery.Fold(w, !cs)).Select<string, Func<string, bool>>(f => SearchQuery.HasWildcard(f) ? SearchQuery.WildcardRegex(f).IsMatch : t => t == f).ToArray();
         var hit = false;
         for (var i = 0; i + q.Length <= v.Words.Length; i++)
         {
             var ok = true;
-            for (var k = 0; k < q.Length && ok; k++) ok = v.Word(i + k, !cs) == q[k];
+            for (var k = 0; k < q.Length && ok; k++) ok = q[k](v.Word(i + k, !cs));
             if (!ok) continue;
             hit = true;
             var last = v.Words[i + q.Length - 1];
@@ -401,8 +525,7 @@ public static class SearchEngine
     static Func<string, bool> LemmaMatcher(LemmaNode l)
     {
         var pattern = SearchQuery.Fold(l.Pattern, l.IgnoreCase);
-        if (pattern.Contains('*'))
-            return new Regex("^" + string.Join(@"[\p{L}\p{N}]*", pattern.Split('*').Select(Regex.Escape)) + "$", RegexOptions.CultureInvariant).IsMatch;
+        if (SearchQuery.HasWildcard(pattern)) return SearchQuery.WildcardRegex(pattern).IsMatch;
         var lowerStart = pattern.Length > 0 && char.IsLower(pattern[0]);
         var isVerb = pattern.EndsWith("en", StringComparison.Ordinal) && pattern.Length > 4 && lowerStart;
         var stem = isVerb ? pattern[..^2] : pattern;

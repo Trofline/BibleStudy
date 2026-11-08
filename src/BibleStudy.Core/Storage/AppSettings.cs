@@ -155,6 +155,10 @@ public sealed class AppSettings
     public string RelayPassword { get; set; } = "";
     public bool CollabSendLocation { get; set; } = true;
     public List<SavedSearch> SavedSearches { get; set; } = [];
+    /// <summary>How the hits are shown: 0 verses, 1 aligned, 2 grid, 3 comparison, 4 analysis.</summary>
+    public int SearchView { get; set; }
+    /// <summary>Translations that are searched alongside the current one in the grid and the comparison.</summary>
+    public List<string> SearchCompare { get; set; } = [];
     /// <summary>Version and date of the consent to the terms of studying together ("1|2026-10-28"); empty = not agreed.</summary>
     public string CollabConsent { get; set; } = "";
     /// <summary>Terms of use accepted at the first start ("1|2026-10-28"); empty = not yet.</summary>

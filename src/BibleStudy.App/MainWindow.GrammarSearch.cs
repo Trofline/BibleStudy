@@ -89,6 +89,7 @@ public partial class MainWindow
         // ---- clause search: roles in the same clause ------------------------------------------------------------------------
         _grammarView.Children.Add(new TextBlock { Text = L("Satzrollen-Suche"), FontWeight = FontWeight.SemiBold, TextWrapping = TextWrapping.Wrap, Margin = new(0, 18, 0, 0) });
         _grammarView.Children.Add(new TextBlock { Text = L("Findet Sätze, in denen alle Rollen zusammen vorkommen, z. B. Subjekt Jesus und Objekt Petrus. Das Wort kann eine Strong-Nummer, die griechische Grundform oder die englische Bedeutung sein; leer heißt: irgendein Wort in dieser Rolle."), Classes = { "caption" }, TextWrapping = TextWrapping.Wrap });
+        _grammarView.Children.Add(new TextBlock { Text = L("Im Wort-Feld geht auch: Jesus / Petrus (eines davon), -Petrus (nicht dieses Wort in der Rolle), Platzhalter * und ?."), Classes = { "caption" }, TextWrapping = TextWrapping.Wrap });
         var rows = new StackPanel { Spacing = 6 };
         var roleResult = new StackPanel { Spacing = 6 };
         void AddRow(int roleIndex)

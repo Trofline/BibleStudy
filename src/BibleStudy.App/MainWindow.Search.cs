@@ -71,6 +71,16 @@ public partial class MainWindow
         (L("Gnade -Wahrheit"), L("Minus schließt ein Wort aus")),
         (L("Gnade NAH5 Wahrheit"), L("Abstand: beide höchstens 5 Wörter voneinander entfernt, in beliebiger Reihenfolge (NAH1 bis NAH999)")),
         (L("Herr DANN3 Gott"), L("Reihenfolge: Gott steht nach Herr, höchstens 3 Wörter dahinter")),
+        (L("Gnade BEFORE 5 WORDS Wahrheit"), L("Wie in Logos: BEFORE / AFTER (Reihenfolge), NEAR (ca. 8 Wörter) und WITHIN 3 WORDS (beliebige Reihenfolge); groß geschrieben")),
+        (L("Gnade NOT Zorn"), L("NOT oder ANDNOT wie -Zorn; AND ist dasselbe wie ein Leerzeichen")),
+        (L("Gnade WITHIN 2 VERSES Wahrheit"), L("Abstand in Versen: WITHIN 2 VERSES, WITHIN 1 CHAPTER (im selben Kapitel) oder WITHIN 0 VERSES (im selben Vers)")),
+        (L("Gnade WITHIN 1 SENTENCE Wahrheit"), L("Im selben Satz, auch über Versgrenzen hinweg (Sätze enden bei . ! ?)")),
+        (L("Gnade NOT WITHIN 3 WORDS Wahrheit"), L("Gnade, aber nicht mit Wahrheit in der Nähe (höchstens 3 Wörter entfernt)")),
+        (L("~Gnaden"), L("Unscharf: findet auch ähnliche Schreibweisen (ein Buchstabe mehr, weniger oder anders)")),
+        (L("Gnade in:\"Mt 5-7\""), L("Nur in einer Stelle oder einem Buch suchen: in:\"Mt 5-7\", in:Joh, in:\"Röm 1-8; Gal\"")),
+        (L("Gram:\"verb aorist passive\""), L("Grammatik des Grundtexts (Griechisch NT, Hebräisch AT), mit Wörtern kombinierbar: Gram:\"verb aorist\" Gnade; auch Gram:\"noun genitive G26\"")),
+        (L("M?nn"),L("? steht für genau einen Buchstaben (Mann, Männ …), * für beliebig viele")),
+        (L("\"Engel * Herrn\""), L("Platzhalter in Wendungen: * steht für genau ein beliebiges Wort")),
         (L("(L=hüten / L=weiden) (Schaf / Herde)"), L("Gruppen in Klammern, mit Grundformen")),
         (L("L=gehen"), L("Grundform: findet ging, gegangen, geht …")),
         (L("L=Haus*"), L("Platzhalter *: Hausbewohner, Hausgeborene …")),
@@ -267,16 +277,23 @@ public partial class MainWindow
                 foreach (var (k, v) in entity.Notes) _hitNotes[k] = v;
             }
 
-            // 3. full-text / lemma / Strong search
-            if (!_store.IsIndexed(t.Id))
+            // 2c. Gram:"verb aorist" (grammar of the Greek/Hebrew text) and in:"Mt 1-5" (only these passages); the rest is an ordinary search
+            if (await ResolveGrammarAsync(query) is { } gram)
             {
-                SearchInfo.Text = L("Einmalig: {0} wird für die Suche geladen und indexiert …", t.ShortName);
-                var verses = await _provider.GetAllVersesAsync(t.Id);
-                await Task.Run(() => _store.Index(t.Id, verses));
-                _corpora.Remove(t.Id);
+                if (gram.Failed || gram.Verses.Count == 0)
+                {
+                    if (!gram.Failed) SearchInfo.Text = L("Keine Treffer in {0}.", t.ShortName);
+                    SearchList.ItemsSource = null; _hits = []; return;
+                }
+                if (entityFilter is null) entityFilter = gram.Verses; else entityFilter.IntersectWith(gram.Verses);
+                query = gram.Rest;
+                foreach (var (k, v) in gram.Notes) _hitNotes[k] = _hitNotes.TryGetValue(k, out var old) ? old + "\n" + v : v;
             }
-            if (!_corpora.TryGetValue(t.Id, out var corpus))
-                _corpora[t.Id] = corpus = await Task.Run(() => _store.GetCorpus(t.Id).Select(c => new CorpusVerse(c.Ref, c.Text)).ToList());
+            query = ScopeFilter.Extract(query, out var ranges, out var scopeError);
+            if (scopeError is not null) { SearchInfo.Text = scopeError; SearchList.ItemsSource = null; _hits = []; return; }
+
+            // 3. full-text / lemma / Strong search
+            var corpus = await CorpusForAsync(t);
 
             _currentBookForSearch = _curBook;
             var scope = SearchScopeBox.SelectedIndex is var si and > 0 && si < Scopes.Length ? Scopes[si].Match : null;
@@ -291,6 +308,7 @@ public partial class MainWindow
             }
             var searched = narrowTo is null ? corpus : corpus.Where(c => narrowTo.Contains(c.Ref)).ToList();
             if (entityFilter is not null) searched = searched.Where(c => entityFilter.Contains(c.Ref)).ToList();
+            if (ranges is not null) searched = searched.Where(c => ScopeFilter.Contains(ranges, c.Ref)).ToList();
 
             _strongIndexes.TryGetValue(t.Id, out var strongs);
             var outcome = query.Length == 0
@@ -298,24 +316,16 @@ public partial class MainWindow
                 : await Task.Run(() => SearchEngine.Run(searched, query, strongs, options, books));
             if (outcome.NeedsStrongs)
             {
-                if (!_store.IsStrongsIndexed(t.Id))
-                {
-                    if (_building) { SearchInfo.Text = L("Die Konkordanz wird gerade aufgebaut – bitte kurz warten."); return; }
-                    _building = true;
-                    try
-                    {
-                        var progress = new Progress<(int Done, int Total)>(p => SearchInfo.Text = L("Einmalig: Strong-Index für {0} wird aufgebaut … {1}/{2} Kapitel", t.ShortName, p.Done, p.Total));
-                        await ConcordanceBuilder.BuildAsync(_provider, _store, t.Id, progress);
-                    }
-                    finally { _building = false; }
-                }
-                _strongIndexes[t.Id] = strongs = await Task.Run(() => new StrongIndex(_store.GetAllOccurrences(t.Id)));
+                strongs = await StrongsForAsync(t);
+                if (strongs is null) return;
                 outcome = await Task.Run(() => SearchEngine.Run(searched, query, strongs, options, books));
             }
             if (outcome.Error is not null) { SearchInfo.Text = outcome.Error; SearchList.ItemsSource = null; _hits = []; return; }
 
             RememberSearch(text);
             _hits = outcome.Results.ToList();
+            var (runFilter, runEntity, runRanges) = (narrowTo, entityFilter, ranges);
+            NoteSearchRun(new(query, options, books, IsJesusScope(SearchScopeBox.SelectedIndex), r => (runFilter is null || runFilter.Contains(r)) && (runEntity is null || runEntity.Contains(r)) && (runRanges is null || ScopeFilter.Contains(runRanges, r))));
             if (entityBest is { Count: > 0 }) _hits = _hits.OrderByDescending(h => entityBest.GetValueOrDefault(h.Ref)).ToList();   // strongest references first
             ShowHits(t);
             ShowSearchStrongs(outcome.Strongs);
@@ -327,7 +337,10 @@ public partial class MainWindow
     void ShowHits(TranslationInfo t)
     {
         var list = CurrentHits().ToList();
+        _fillingHits = true;
         SearchList.ItemsSource = list.Take(ShownHits).Select(h => new Entry(h.Ref, $"{Label(h.Ref)}\n{h.Marked()}" + (_hitNotes.TryGetValue(h.Ref, out var note) ? "\n" + note : ""))).ToList();
+        _fillingHits = false;
+        ShowSearchView();
         var words = list.Sum(h => h.Spans.Count);
         SearchInfo.Text = _hits.Count == 0 ? L("Keine Treffer in {0}.", t.ShortName)
             : words == 0 ? L("{0} Verse in {1}{2}", list.Count, t.ShortName, (list.Count > ShownHits ? L(" (erste {0} angezeigt)", ShownHits) : ""))

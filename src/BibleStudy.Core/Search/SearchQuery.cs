@@ -17,7 +17,11 @@ public sealed record NotNode(SearchNode Inner) : SearchNode;
 public sealed record AndNode(IReadOnlyList<SearchNode> Items) : SearchNode;
 public sealed record OrNode(IReadOnlyList<SearchNode> Items) : SearchNode;
 /// <summary>Gnade NAH5 Wahrheit: both within 5 words of each other, in either order. Gnade DANN5 Wahrheit: Wahrheit follows Gnade within 5 words.</summary>
-public sealed record NearNode(SearchNode Left, SearchNode Right, int Words, bool Ordered) : SearchNode;
+public sealed record NearNode(SearchNode Left, SearchNode Right, int Words, bool Ordered, NearUnit Unit = NearUnit.Words, bool Not = false) : SearchNode;
+/// <summary>What the distance of a <see cref="NearNode"/> counts: words inside a verse, whole verses, or "somewhere in the same chapter".</summary>
+public enum NearUnit { Words, Verses, Chapter, Sentence }
+/// <summary>~Gnaden: the word with a small spelling difference (a letter more, less or different).</summary>
+public sealed record FuzzyNode(string Text) : SearchNode;
 
 public static partial class SearchQuery
 {
@@ -43,11 +47,23 @@ public static partial class SearchQuery
 
     public static string NormalizeStrong(string s) => $"{char.ToUpperInvariant(s[0])}{int.Parse(s[1..].TrimEnd('a', 'b', 'c', 'A', 'B', 'C'))}";
 
+    /// <summary>* stands for any number of letters, ? for exactly one.</summary>
+    public static bool HasWildcard(string s) => s.Contains('*') || s.Contains('?');
+
+    public static Regex WildcardRegex(string folded) => new("^" + string.Concat(folded.Select(ch => ch switch
+    {
+        '*' => @"[\p{L}\p{N}]*",
+        '?' => @"[\p{L}\p{N}]",
+        _ => Regex.Escape(ch.ToString()),
+    })) + "$", RegexOptions.CultureInvariant);
+
     /// <summary>Parses a query. Returns null (and a message) when there is nothing to search for.</summary>
     public static SearchNode? Parse(string input, out string? error)
     {
         error = null;
         var tokens = Tokenize(input);
+        // the Bible texts here carry no paragraph marks: better to say so than to search for the word PARAGRAPH
+        if (tokens.Any(t => t.Kind == K.Term && !t.Quoted && t.Text is "PARAGRAPH" or "PARAGRAPHS")) { error = L("Absätze sind in den Bibeltexten nicht gekennzeichnet. Nimm WITHIN 1 SENTENCE oder WITHIN 3 VERSES."); return null; }
         var pos = 0;
         // a ")" without its "(" ends a group; at the top it is skipped, so the words after it still count
         var parts = new List<SearchNode>();
@@ -115,6 +131,8 @@ public static partial class SearchQuery
             }
             var text = sb.ToString();
             if (text.Equals("OR", StringComparison.OrdinalIgnoreCase) || text.Equals("ODER", StringComparison.OrdinalIgnoreCase)) list.Add(new(K.Or));
+            else if (text == "AND") { /* the words of a search belong together anyway */ }
+            else if (text is "NOT" or "ANDNOT") list.Add(new(K.Minus));
             else if (text.Length > 0) list.Add(new(K.Term, text));
             if (i == start) i++;
         }
@@ -152,15 +170,60 @@ public static partial class SearchQuery
     static SearchNode? ParseNear(List<Tok> t, ref int p)
     {
         var left = ParseUnary(t, ref p);
-        while (left is not null && p < t.Count && t[p].Kind == K.Term && !t[p].Quoted && NearRx().Match(t[p].Text) is { Success: true } m)
+        while (left is not null && p < t.Count)
         {
-            p++;
+            // "A NOT WITHIN 3 WORDS B": a minus sign (NOT) in front of the operator turns it around
+            var q = p; var not = false;
+            if (t[q].Kind == K.Minus && q + 1 < t.Count && t[q + 1].Kind == K.Term && !t[q + 1].Quoted && IsOperator(t[q + 1].Text)) { not = true; q++; }
+            if (t[q].Kind != K.Term || t[q].Quoted) break;
+            int words, used; bool ordered, swap = false; var unit = NearUnit.Words;
+            if (NearRx().Match(t[q].Text) is { Success: true } m)
+            {
+                used = 1; words = int.Parse(m.Groups["n"].Value); ordered = m.Groups["k"].Value.ToUpperInvariant() is "DANN" or "THEN";
+            }
+            else if (!LogosOperator(t, q, out words, out used, out ordered, out swap, out unit)) break;
+            p = q + used;
             var right = ParseUnary(t, ref p);
             if (right is null) break;
-            var ordered = m.Groups["k"].Value.ToUpperInvariant() is "DANN" or "THEN";
-            left = new NearNode(left, right, Math.Clamp(int.Parse(m.Groups["n"].Value), 1, 999), ordered);
+            words = Math.Clamp(words, unit == NearUnit.Verses ? 0 : 1, 999);
+            left = swap ? new NearNode(right, left, words, true, unit, not) : new NearNode(left, right, words, ordered, unit, not);
         }
         return left;
+    }
+
+    static bool IsOperator(string s) => NearRx().IsMatch(s) || s is "BEFORE" or "AFTER" or "NEAR" or "WITHIN";
+
+    /// <summary>The operators known from Logos, in capitals: A BEFORE B, A AFTER B, A NEAR B (8 words), A WITHIN 3 WORDS B, A WITHIN 2 VERSES B, A WITHIN 1 CHAPTER B; BEFORE and AFTER take a distance too (A BEFORE 5 WORDS B).</summary>
+    static bool LogosOperator(List<Tok> t, int p, out int words, out int used, out bool ordered, out bool swap, out NearUnit unit)
+    {
+        words = 8; used = 1; ordered = false; swap = false; unit = NearUnit.Words;
+        switch (t[p].Text)
+        {
+            case "BEFORE": words = 999; ordered = true; break;
+            case "AFTER": words = 999; ordered = true; swap = true; break;
+            case "NEAR" or "WITHIN": break;
+            default: return false;
+        }
+        var next = p + 1;
+        if (next < t.Count && t[next].Kind == K.Term && int.TryParse(t[next].Text, out var n))
+        {
+            words = n; used++; next++;
+            if (next < t.Count && t[next].Kind == K.Term)
+            {
+                var u = t[next].Text;
+                if (u is "WORDS" or "WORD") used++;
+                else if (u is "VERSES" or "VERSE") { unit = NearUnit.Verses; used++; }
+                else if (u is "CHAPTERS" or "CHAPTER") { unit = NearUnit.Chapter; used++; }
+                else if (u is "SENTENCES" or "SENTENCE") { unit = NearUnit.Sentence; used++; }
+            }
+        }
+        else if (next < t.Count && t[next].Kind == K.Term && t[next].Text is "CHAPTER" or "VERSE" or "SENTENCE")
+        {
+            // "WITHIN CHAPTER" / "WITHIN VERSE" / "WITHIN SENTENCE" without a number
+            unit = t[next].Text switch { "CHAPTER" => NearUnit.Chapter, "SENTENCE" => NearUnit.Sentence, _ => NearUnit.Verses };
+            words = unit == NearUnit.Verses ? 0 : 1; used++;
+        }
+        return true;
     }
 
     static SearchNode? ParseUnary(List<Tok> t, ref int p)
@@ -192,6 +255,8 @@ public static partial class SearchQuery
         if (text.Length == 0) return null;
         if (tok.Quoted) return Phrase(text);
 
+        if (text.Length > 1 && text[0] == '~' && WordRx().IsMatch(text[1..]) && !text.Contains('*')) return new FuzzyNode(NotWordRx().Replace(text[1..], ""));
+
         var lemma = LemmaRx().Match(text);
         if (lemma.Success) return new LemmaNode(lemma.Groups["w"].Value, lemma.Groups["m"].Value == "~");
 
@@ -203,8 +268,9 @@ public static partial class SearchQuery
 
         if (IsStrongId(text)) return new StrongNode(NormalizeStrong(text));
         // punctuation never stands inside a word of the text: "Herr," is Herr, "Menschen-Sohn" are two words in a row
-        var parts = NotWordRx().Split(text).Where(x => x.Length > 0).ToList();
-        return parts.Count switch { 0 => null, 1 => new WordNode(parts[0]), _ => parts.Any(x => x.Contains('*')) ? new AndNode(parts.Select(x => (SearchNode)new WordNode(x)).ToList()) : new PhraseNode(parts) };
+        // a "?" at the very end is a question mark of the text, inside or in front of a word it stands for exactly one letter
+        var parts = NotWordRx().Split(text.TrimEnd('?')).Where(x => x.Length > 0).ToList();
+        return parts.Count switch { 0 => null, 1 => new WordNode(parts[0]), _ => parts.Any(HasWildcard) ? new AndNode(parts.Select(x => (SearchNode)new WordNode(x)).ToList()) : new PhraseNode(parts) };
     }
 
     static SearchNode? Phrase(string text)
@@ -218,6 +284,6 @@ public static partial class SearchQuery
     [GeneratedRegex(@"^[Ll](?<m>[=~])(?<w>.+)$")] private static partial Regex LemmaRx();
     [GeneratedRegex(@"^[Oo]=(?<w>.+)$")] private static partial Regex OriginalRx();
     [GeneratedRegex(@"^(?<id>[GgHh]\d{1,4}[a-cA-C]?)=(?<w>.+)$")] private static partial Regex StrongWordRx();
-    [GeneratedRegex(@"[\p{L}\p{N}]+")] private static partial Regex WordRx();
-    [GeneratedRegex(@"[^\p{L}\p{N}*]+")] private static partial Regex NotWordRx();
+    [GeneratedRegex(@"[\p{L}\p{N}*?]+")] private static partial Regex WordRx();
+    [GeneratedRegex(@"[^\p{L}\p{N}*?]+")] private static partial Regex NotWordRx();
 }
