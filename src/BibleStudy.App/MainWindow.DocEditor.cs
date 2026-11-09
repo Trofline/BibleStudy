@@ -570,7 +570,9 @@ public partial class MainWindow
         foreach (var (index, length, r) in DocumentLinks.VerseSpans(text))
         {
             if (index > pos) AddRun(b, text[pos..index], bold, italic);
-            AddLink(b, text.Substring(index, length), bold, italic, () => _ = GoToAsync(r.Book, r.Chapter, r.Verse));
+            var span = text.Substring(index, length);
+            var end = DocumentLinks.VerseRanges(span).FirstOrDefault().EndVerse;
+            AddLink(b, span, bold, italic, () => _ = GoToRangeAsync(r, end));
             pos = index + length;
         }
         if (pos < text.Length) AddRun(b, text[pos..], bold, italic);

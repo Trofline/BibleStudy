@@ -12,12 +12,24 @@ public partial class MainWindow
 {
     static string RangeLabel(Func<VerseRef, string> label, VerseRef r, int end) => label(r) + (end > r.Verse ? "–" + end : "");
 
-    Button LinkChip(string text, string tip, VerseRef go)
+    Button LinkChip(string text, string tip, VerseRef go, int end = 0)
     {
         var b = new Button { Content = text, Classes = { "ghost" }, Padding = new(8, 3), Margin = new(0, 0, 6, 4), FontSize = 12.5 };
         ToolTip.SetTip(b, tip);
-        b.Click += async (_, _) => await GoToAsync(go.Book, go.Chapter, go.Verse);
+        b.Click += async (_, _) => await GoToRangeAsync(go, end);
         return b;
+    }
+
+    /// <summary>Goes to a place and chooses all its verses: "2. Mose 20,8-11" chooses 8 to 11, not only 8.</summary>
+    async Task GoToRangeAsync(VerseRef first, int end)
+    {
+        await GoToAsync(first.Book, first.Chapter, first.Verse);
+        if (end <= first.Verse || _curBook != first.Book || _curChapter != first.Chapter) return;
+        _selVerses.Clear();
+        foreach (var n in _verseBoxes.Keys.Where(n => n >= first.Verse && n <= end)) _selVerses.Add(n);
+        if (_selVerses.Count < 2) return;
+        _anchorVerse = first.Verse;
+        FinishVerseChoice(first.Verse);   // the side panel shows the first verse, as before
     }
 
     static TextBlock LinkCaption(string text) => new() { Text = text, Classes = { "caption" }, VerticalAlignment = VerticalAlignment.Center, Margin = new(0, 0, 8, 4) };
@@ -31,7 +43,7 @@ public partial class MainWindow
         {
             if (first == _noteRef || !seen.Add((first, end))) continue;
             if (NoteLinksPanel.Children.Count == 0) NoteLinksPanel.Children.Add(LinkCaption(L("Verweist auf:")));
-            NoteLinksPanel.Children.Add(LinkChip("→ " + RangeLabel(Label, first, end), L("Zu dieser Stelle springen"), first));
+            NoteLinksPanel.Children.Add(LinkChip("→ " + RangeLabel(Label, first, end), L("Zu dieser Stelle springen"), first, end));
             if (seen.Count >= 30) break;
         }
         NoteLinksPanel.IsVisible = NoteLinksPanel.Children.Count > 0;

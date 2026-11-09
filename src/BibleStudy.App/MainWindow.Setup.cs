@@ -61,7 +61,12 @@ public partial class MainWindow
 
         var win = new Window { Title = L("Einrichtung"), Width = 560, SizeToContent = SizeToContent.Height, MinWidth = 420, CanResize = false, Background = Res("BsSurface"), Icon = Icon, WindowStartupLocation = WindowStartupLocation.CenterOwner, Content = stack };
         var closing = false;
-        win.Closed += (_, _) => done.TrySetResult();
+        win.Closed += (_, _) =>
+        {
+            // an update or the end of the program in the middle of it: the setup comes back at the next start
+            if (!_exiting) { _settings.SetupDone = true; SaveSettings(); }
+            done.TrySetResult();
+        };
         skip.Click += (_, _) => { closing = true; win.Close(); };
         go.Click += async (_, _) =>
         {
@@ -81,7 +86,7 @@ public partial class MainWindow
                 if (refs.IsChecked == true) { status.Text = L("Querverweise werden geladen …"); await BuildGraphAsync(); }
             }
             catch (Exception ex) { status.Text = L("Fehler: ") + ex.Message; await Task.Delay(2500); }
-            _settings.Language = chosenCode; SaveSettings();
+            _settings.Language = chosenCode; _settings.SetupDone = true; SaveSettings();
             closing = true; win.Close();
             if (chosenCode != Loc.Code) Restart();
         };

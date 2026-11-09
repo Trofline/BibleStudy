@@ -37,7 +37,7 @@ public partial class MainWindow
         if (!IsVisible || _touring) return;
         // another window (notice, update question) is open: try again a little later
         if (OwnedWindows.Count > 0 || SplashWindow.IsShowing) { DispatcherTimer.RunOnce(() => OfferTour(), TimeSpan.FromSeconds(5)); return; }
-        if (_settings.TourPending && !_settings.SetupShown) { _settings.SetupShown = true; SaveSettings(); _ = RunSetupThenTourAsync(); return; }
+        if (_settings.TourPending && !_settings.SetupDone) { _ = RunSetupThenTourAsync(); return; }
         if (_settings.TourPending) { _settings.LastSeenVersion = AppPaths.Version; StartTour(); return; }   // a new installation has nothing "new" to read
         if (!_settings.BackupAsked && _settings.BackupSchedule == "off") { _ = AskForBackupAsync(); return; }
         _ = ShowPatchNotesIfNewAsync();
@@ -178,5 +178,6 @@ public partial class MainWindow
         DispatcherTimer.RunOnce(() => { _palette.IsOpen = false; if (QuickJumpBox.IsFocused) Focus(); }, TimeSpan.FromMilliseconds(250));
         if (!_settings.TourPending) return;
         _settings.TourPending = false; SaveSettings();
+        if (_settings.AutoUpdate) DispatcherTimer.RunOnce(async () => await CheckForUpdateAsync(manual: false), TimeSpan.FromSeconds(2));   // it waited for the first start to be over
     }
 }

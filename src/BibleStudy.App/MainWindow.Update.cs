@@ -150,9 +150,12 @@ public partial class MainWindow
     /// </summary>
     string? _askedUpdate;   // the version that was offered in this run: "Later" is not asked again until the next start
 
+    /// <summary>During the first start (setup and tour) no update is offered by itself: installing it would restart the program in the middle of the setup.</summary>
+    bool UpdateMayAsk(bool manual) => manual || !_settings.TourPending;
+
     async Task CheckForUpdateAsync(bool manual)
     {
-        if (_updating) return;
+        if (_updating || !UpdateMayAsk(manual)) return;
         _updater ??= new Updater(_http);
         UpdateStatus.Text = L("Suche nach Updates …");
         UpdateInfo? info;

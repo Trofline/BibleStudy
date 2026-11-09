@@ -55,7 +55,7 @@ public partial class MainWindow
     void FollowXref(VerseRef target, int end)
     {
         if (_settings.XrefClickOpensTab) OpenContextTab(target, end);
-        else _ = GoToAsync(target.Book, target.Chapter, target.Verse);
+        else _ = GoToRangeAsync(target, end);
     }
 
     /// <summary>The right-click choices of a cross reference: always the tab, and going there when a click opens tabs.</summary>
@@ -66,7 +66,7 @@ public partial class MainWindow
         yield return tab;
         if (!_settings.XrefClickOpensTab) yield break;
         var go = new MenuItem { Header = L("Im Lesefenster dorthin gehen") };
-        go.Click += (_, _) => _ = GoToAsync(target.Book, target.Chapter, target.Verse);
+        go.Click += (_, _) => _ = GoToRangeAsync(target, end);
         yield return go;
     }
 

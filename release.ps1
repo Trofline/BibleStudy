@@ -19,6 +19,11 @@ if ($rel -ne (Join-Path $root 'release')) { throw 'unexpected release path' }
 if (Test-Path $rel) { Remove-Item -LiteralPath $rel -Recurse -Force }
 New-Item -ItemType Directory -Force $stage | Out-Null
 
+# the starters build without -Version: the project must carry the number of the newest release, or they show (and update from) an old one
+$appProject = "$root\src\BibleStudy.App\BibleStudy.App.csproj"
+$appXml = [IO.File]::ReadAllText($appProject)
+[IO.File]::WriteAllText($appProject, ([regex]'<Version>[^<]*</Version>').Replace($appXml, "<Version>$Version</Version>", 1), [Text.UTF8Encoding]::new($false))
+
 Write-Host '== Checking that every text is translated'
 dotnet test "$root\tests\BibleStudy.Tests\BibleStudy.Tests.csproj" --filter "FullyQualifiedName~LocalizationTests" --nologo -v q
 if ($LASTEXITCODE) { throw 'Translations are incomplete: fix the missing texts before releasing' }

@@ -183,6 +183,28 @@ Press2(C<Button>("QueueStartBtn")); Settle(500);
 Check("a single verse offers Done", (C<Button>("QueueBarNextBtn").Content as string) == "Fertig", C<Button>("QueueBarNextBtn").Content?.ToString() ?? "");
 Click(C<Button>("QueueBarNextBtn")); Settle(500);
 Check("done empties the list and ends", qVault.GetQueue().Count == 0 && !C<Border>("QueueBar").IsVisible);
+// a link to several verses chooses all of them
+var rangeBook = (string)typeof(MainWindow).GetField("_curBook", All)!.GetValue(win)!; var rangeCh = (int)typeof(MainWindow).GetField("_curChapter", All)!.GetValue(win)!;
+var rangeTask = (Task)Call("GoToRangeAsync", new BibleStudy.Core.Models.VerseRef(rangeBook, rangeCh, 3), 6)!;
+for (var i = 0; i < 40 && !rangeTask.IsCompleted; i++) { Pump(2); Thread.Sleep(50); }
+Settle(300);
+var chosen = ((HashSet<int>)typeof(MainWindow).GetField("_selVerses", All)!.GetValue(win)!).Order().ToList();
+Check("a range link chooses every verse of it", chosen.SequenceEqual(new[] { 3, 4, 5, 6 }), string.Join(",", chosen));
+Check("the side panel follows the first verse", Selected() == 3, Selected().ToString());
+// the first start: no update question, and the setup counts only when it was finished
+var firstSettings = F<AppSettings>("_settings"); var (tourBefore, setupBefore) = (firstSettings.TourPending, firstSettings.SetupDone);
+// (only for a moment, without pumping: the program's own timer would otherwise start a setup of its own)
+firstSettings.TourPending = true;
+var askDuringFirstStart = (bool)Call("UpdateMayAsk", false)!; var askByHand = (bool)Call("UpdateMayAsk", true)!;
+firstSettings.TourPending = false;
+Check("no update question by itself during the first start", !askDuringFirstStart);
+Check("looking for updates by hand still works", askByHand);
+Check("updates are offered again afterwards", (bool)Call("UpdateMayAsk", false)! == true);
+var setupWin = Dlg(() => { firstSettings.SetupDone = false; return Call("RunSetupWizardAsync"); }, out _);
+Check("the open setup does not count as done", !firstSettings.SetupDone);
+Press2(Plain(setupWin).First(b => (b.Content as string) == "Überspringen"));
+Check("the closed setup counts as done", firstSettings.SetupDone);
+(firstSettings.TourPending, firstSettings.SetupDone) = (tourBefore, setupBefore);
 // typing in a text box must not jump
 var box = C<TextBox>("SearchBox"); box.Focus(); Settle(200); var offBefore = scroll.Offset.Y;
 t2.KeyPress(Key.D2, RawInputModifiers.None, PhysicalKey.None, null); t2.KeyRelease(Key.D2, RawInputModifiers.None, PhysicalKey.None, null); Settle(300);

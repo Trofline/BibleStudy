@@ -135,8 +135,8 @@ public sealed class AppSettings
     public string OllamaTranslateSize { get; set; } = "small";
     /// <summary>Easy mode (only the essentials) or Advanced (everything).</summary>
     public bool EasyMode { get; set; }
-    /// <summary>The setup window of the first start was shown (once per installation).</summary>
-    public bool SetupShown { get; set; }
+    /// <summary>The setup of the first start was finished or skipped; an update or the end of the program in the middle of it does not count.</summary>
+    public bool SetupDone { get; set; }
     public bool XrefInText { get; set; }
     /// <summary>Cross references with fewer votes are not shown in the text and in the graph beside it (0 = all). The list in the side panel stays complete.</summary>
     public int XrefMinVotes { get; set; }
