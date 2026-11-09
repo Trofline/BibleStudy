@@ -17,6 +17,19 @@ public class ImportCheckTests
     }
 
     [Fact]
+    public void Verses_the_text_itself_leaves_out_are_no_faults_and_er_naehrt_is_no_split_word()
+    {
+        var r = ImportCheck.Analyze(Bible(
+            new("ACT", 8, 36, [new Segment("Als sie aber des Weges zogen, kamen sie an ein Wasser.")]),
+            new("ACT", 8, 37, [new Segment("[–]")]),
+            new("ACT", 8, 38, [new Segment("Und er hieß den Wagen halten und beide stiegen hinab.")]),
+            new("EPH", 5, 29, [new Segment("er nährt und pflegt es, denn er nährt es gern.")]),
+            new("EPH", 5, 30, [new Segment("Wer ernährt wird, ernährt sich ernährt.")]),
+            new("EPH", 5, 31, [new Segment("Sie ernährt ihn, und er ernährt sie.")])));
+        Assert.False(r.Counts.ContainsKey("very-short-verse")); Assert.False(r.Counts.ContainsKey("empty-verse")); Assert.False(r.Counts.ContainsKey("split-word"));
+    }
+
+    [Fact]
     public void Finds_the_typical_faults()
     {
         var r = ImportCheck.Analyze(Bible(

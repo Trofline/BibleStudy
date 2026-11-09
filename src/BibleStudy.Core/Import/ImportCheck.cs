@@ -19,6 +19,8 @@ public static class ImportCheck
 
     static readonly Regex Marker = new(@"\b[GH]\d{3,4}\b|\{[^}\s]{1,12}\}|<[^>]{1,20}>|&[a-z]+;|\b(?:NA|TR)\b", RegexOptions.Compiled);
     static readonly Regex SpaceBeforePunct = new(@"\p{L} [,.;:!?](?!\p{L}|\d)", RegexOptions.Compiled);
+    /// <summary>Verses that critical-text translations (Elberfelder, Schlachter ...) leave out or mark as "[–]": an empty verse there is the translation, not a fault.</summary>
+    static readonly HashSet<string> KnownOmitted = ["MAT 17:21", "MAT 18:11", "MAT 23:14", "MRK 7:16", "MRK 9:44", "MRK 9:46", "MRK 11:26", "MRK 15:28", "LUK 17:36", "LUK 23:17", "JHN 5:4", "ACT 8:37", "ACT 15:34", "ACT 24:7", "ACT 28:29", "ROM 16:24", "1JN 5:7"];
     static readonly Regex WordRx = new(@"\p{L}+", RegexOptions.Compiled);
     static readonly Regex LoneCap = new(@"(?<![\p{L}\p{N}])[HDKL](?=[ .,;:]|$)", RegexOptions.Compiled);
     static readonly Regex Odd = new(@"[\u0000-\u0008\u000B\u000C\u000E-\u001F�­]|\s{2,}", RegexOptions.Compiled);
@@ -52,7 +54,7 @@ public static class ImportCheck
                 // three pieces with a single letter in the middle ("gin g en")
                 if (b.Length == 1 && i + 2 < words.Count && words[i + 2].Index == b.Index + 2 && text[b.Index + 1] == ' ' && freq.GetValueOrDefault(a.Value + b.Value + words[i + 2].Value) >= 2 && freq.GetValueOrDefault(a.Value) <= 2) return a.Index;
                 var joined = a.Value + b.Value;
-                if (joined.Length >= 5 && freq.GetValueOrDefault(joined) >= 2 && (freq.GetValueOrDefault(a.Value) <= 2 || freq.GetValueOrDefault(b.Value) <= 2) && char.IsLower(b.Value[0])) return a.Index;
+                if (joined.Length >= 5 && freq.GetValueOrDefault(joined) >= 2 && freq.GetValueOrDefault(a.Value) <= 3 && freq.GetValueOrDefault(b.Value) <= 3 && char.IsLower(b.Value[0])) return a.Index;
             }
             return -1;
         }
@@ -60,6 +62,8 @@ public static class ImportCheck
         foreach (var v in bible.Verses)
         {
             var text = string.Concat(v.Segments.Where(s => s.NoteId is null).Select(s => s.Text));
+            var omitted = KnownOmitted.Contains($"{v.Book} {v.Chapter}:{v.Verse}") && !text.Any(char.IsLetter);   // "[–]" or nothing at a place the text itself leaves out
+            if (omitted) continue;
             if (string.IsNullOrWhiteSpace(text)) { Add("empty-verse", v, text); continue; }
             if (Marker.Match(text) is { Success: true } m1) Add("leftover-marker", v, text, m1.Index);
             if (Odd.Match(text) is { Success: true } m2) Add("odd-characters", v, text, m2.Index);
