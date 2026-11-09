@@ -102,7 +102,7 @@ public partial class MainWindow
 
     // ---- keys of the reading tab: a number jumps to that verse, Page up / Page down scroll ------------------------------------------
 
-    string _jumpDigits = ""; DateTime _jumpAt;
+    readonly BibleStudy.Core.TypedNumber _jumpNumber = new(); string _jumpChapter = "";
 
     /// <summary>True when the keys belong to the text: the reading view is shown and nothing that takes keys itself (a text box, a list, an open menu) has the focus.</summary>
     bool ReadingKeysApply(KeyEventArgs e)
@@ -116,18 +116,18 @@ public partial class MainWindow
 
     static int DigitOf(Key k) => k is >= Key.D0 and <= Key.D9 ? k - Key.D0 : k is >= Key.NumPad0 and <= Key.NumPad9 ? k - Key.NumPad0 : -1;
 
-    /// <summary>Digits typed one after the other (within a second and a bit) make the verse number: 1, then 2 jumps to verse 12, if there is one.</summary>
+    /// <summary>Digits typed one after the other make the verse number: 1 jumps to verse 1, a 2 right after it to verse 12, if there is one. After a pause a new number starts.</summary>
     void JumpToTypedVerse(int digit)
     {
         var last = _verseBoxes.Count == 0 ? 0 : _verseBoxes.Keys.Max();
         if (last == 0 && !_independent) return;
         if (_independent) last = Math.Max(last, 176);
-        var text = (DateTime.Now - _jumpAt).TotalMilliseconds > 1300 ? "" : _jumpDigits;
-        if (!int.TryParse(text + digit, out var n) || n < 1 || n > last) { text = ""; n = digit; }   // too big: a new number starts with this digit
-        if (n < 1 || n > last || (!_independent && !_verseBoxes.ContainsKey(n))) return;
-        _jumpDigits = text + digit; if (_jumpDigits.TrimStart('0').Length == 0) _jumpDigits = ""; _jumpAt = DateTime.Now;
+        var chapter = _curBook + " " + _curChapter;
+        if (chapter != _jumpChapter) { _jumpChapter = chapter; _jumpNumber.Reset(); }
+        if (_jumpNumber.Type(digit, Environment.TickCount64, x => x >= 1 && x <= last && (_independent || _verseBoxes.ContainsKey(x))) is not int n) return;
         SelectVerse(n); ScrollToVerse(n);
         StatusText.Text = L("Vers {0}", n);
+        _jumpNumber.Finished(Environment.TickCount64);
     }
 
     void PageScroll(int direction)

@@ -83,7 +83,7 @@ public partial class MainWindow : Window
         CreatePlugins();
         _overlay = new StrongsOverlay(Path.Combine(_root, "strongs-overlay"));
         _provider = new CompositeProvider(_hello, _local, _pluginProvider) { Overlay = _overlay };
-        Closed += (_, _) => { try { DeleteGuestVaults(_root); RemoveGuestBibles(); } catch (Exception ex) { ErrorLog.Write(ex); } };
+        Closed += (_, _) => { try { EndQueueRun(); DeleteGuestVaults(_root); RemoveGuestBibles(); } catch (Exception ex) { ErrorLog.Write(ex); } };
         Closed += (_, _) => { try { _overlay.CommitAll(); } catch (Exception ex) when (ex is IOException or UnauthorizedAccessException) { ErrorLog.Write(ex); } };
         _strongs = new StrongsDictionary(http, Path.Combine(_root, "cache"));
         _step = new StepLexicon(http, Path.Combine(_root, "cache"));

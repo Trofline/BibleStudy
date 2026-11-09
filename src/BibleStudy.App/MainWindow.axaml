@@ -263,6 +263,22 @@
             </Grid>
         </Border>
 
+        <!-- Walking through the reading list: its own strip, so it covers no text -->
+        <Border x:Name="QueueBar" DockPanel.Dock="Bottom" IsVisible="False" Padding="16,4" Background="{DynamicResource BsSurface}"
+                BorderBrush="{DynamicResource BsBorder}" BorderThickness="0,1,0,0">
+            <StackPanel Orientation="Horizontal" Spacing="6" HorizontalAlignment="Left">
+                <TextBlock x:Name="QueueBarCount" Classes="caption" FontWeight="SemiBold" VerticalAlignment="Center" />
+                <Button x:Name="QueueBarListBtn" Classes="ghost" Padding="8,0" MinHeight="0" Height="30" ToolTip.Tip="Alle Verse der Leseliste zeigen">
+                    <TextBlock x:Name="QueueBarTitle" FontWeight="SemiBold" VerticalAlignment="Center" MaxWidth="280" TextTrimming="CharacterEllipsis" />
+                </Button>
+                <Button x:Name="QueueBarPrevBtn" Classes="tool" Width="36" Height="30" ToolTip.Tip="Voriger Vers der Leseliste">
+                    <local:Icon Data="M15 18l-6-6 6-6" IconSize="16" />
+                </Button>
+                <Button x:Name="QueueBarNextBtn" Classes="primary" MinHeight="0" Height="30" Padding="12,0" VerticalContentAlignment="Center" Content="Nächster ▶" />
+                <Button x:Name="QueueBarEndBtn" Classes="ghost" MinHeight="0" Height="30" Padding="10,0" VerticalContentAlignment="Center" Content="Beenden" ToolTip.Tip="Beenden: besuchte Verse werden von der Leseliste genommen" />
+            </StackPanel>
+        </Border>
+
         <!-- Side panel with icon rail -->
         <Border x:Name="SidePanel" DockPanel.Dock="Right" Width="430" Background="{DynamicResource BsSurface}"
                 BorderBrush="{DynamicResource BsBorder}" BorderThickness="1,0,0,0">
@@ -442,10 +458,10 @@
                     <TabItem.Header><local:Icon Data="M10 12h11 M10 18h11 M10 6h11 M4 10h2 M4 6h1v4 M6 18H4c0-1 2-2 2-3s-1-1.5-2-1" /></TabItem.Header>
                     <DockPanel Margin="16,14,12,12">
                         <StackPanel DockPanel.Dock="Top" Spacing="6" Margin="0,0,0,8">
-                            <TextBlock Classes="caption" TextWrapping="Wrap" Text="Die Leseliste ist ein Stapel Verse zum Nacheinander-Lesen: „Nächster ▶“ springt zum obersten Vers und nimmt ihn vom Stapel." />
+                            <TextBlock Classes="caption" TextWrapping="Wrap" Text="Die Leseliste ist ein Stapel Verse zum Nacheinander-Lesen. „Starten“ geht sie durch; die besuchten Verse verschwinden erst beim Beenden von der Liste." />
                             <TextBlock x:Name="QueueInfo" FontWeight="SemiBold" TextWrapping="Wrap" />
                             <WrapPanel>
-                                <Button x:Name="QueueNextBtn" Content="Nächster ▶" Classes="primary" Margin="0,0,6,6" ToolTip.Tip="Springt zum ersten Eintrag und nimmt ihn von der Leseliste" />
+                                <Button x:Name="QueueStartBtn" Content="Starten" Classes="primary" Margin="0,0,6,6" ToolTip.Tip="Geht die Leseliste von oben durch; unten erscheint eine Leiste zum Weitergehen" />
                                 <Button x:Name="QueueAddBtn" Content="Vers hinzufügen" Margin="0,0,6,6" />
                                 <Button x:Name="QueueRemoveBtn" Content="Entfernen" Margin="0,0,6,6" />
                                 <Button x:Name="QueueClearBtn" Content="Leeren" Margin="0,0,6,6" />

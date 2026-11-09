@@ -22,7 +22,7 @@ public class LanguageFilesTests
             ["@name"] = "Italiano",
             ["Version {0}"] = "Versione {0}",          // fine
             ["Patch Notes"] = "Note di rilascio",       // fine
-            ["Jetzt: {0} · noch {1} offen"] = "Ora: {0}", // placeholder missing -> skipped
+            ["{0} Verse abgehakt · {1} noch auf der Leseliste"] = "Ora: {0}", // placeholder missing -> skipped
             ["Kein solcher Text im Programm"] = "x",     // unknown key -> ignored
         };
         var result = LanguageFiles.Check(System.Text.Json.JsonSerializer.Serialize(file));

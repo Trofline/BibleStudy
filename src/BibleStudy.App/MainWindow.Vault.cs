@@ -49,6 +49,7 @@ public partial class MainWindow
         // an open document is saved into the vault it belongs to, before the other vault takes over
         // (saved afterwards it went into the new vault and could overwrite a document there that has the same number)
         if (!alreadySaved) { CloseEditor(); CloseDocument(); SaveNoteDraft(); SaveSermonBeforeVaultChange(); }
+        EndQueueRun();   // what was read goes off the list of the vault it was read in
         _noteRef = null; NoteEditor.Text = _noteLoaded = "";
         _vault = OpenVault(name);
         RefreshHiddenXrefs();
@@ -139,14 +140,19 @@ public partial class MainWindow
         };
         MarkQueueBtn.Click += (_, _) => { if (_editMark is { } m) AddToQueue([m.Ref]); };
 
-        QueueNextBtn.Click += async (_, _) => await QueueNextAsync();
+        WireQueueRun();
         QueueAddBtn.Click += (_, _) =>
         {
             if (_selected is int v) AddToQueue([new VerseRef(_curBook, _curChapter, v)]); else StatusText.Text = L("Erst einen Vers anklicken.");
         };
         QueueRemoveBtn.Click += (_, _) => { if (QueueList.SelectedItem is Entry { Id: long id }) { _vault.RemoveFromQueue(id); RefreshQueue(); } };
         QueueClearBtn.Click += (_, _) => { _vault.ClearQueue(); RefreshQueue(); };
-        QueueList.SelectionChanged += async (_, _) => { if (QueueList.SelectedItem is Entry e) await GoToAsync(e.Ref.Book, e.Ref.Chapter, e.Ref.Verse); };
+        QueueList.SelectionChanged += async (_, _) =>
+        {
+            if (QueueList.SelectedItem is not Entry e) return;
+            if (_queueRun is not null && e.Id is long id) await QueueRunGoToAsync(id);
+            else await GoToAsync(e.Ref.Book, e.Ref.Chapter, e.Ref.Verse);
+        };
         XrefQueueBtn.Click += (_, _) => { if (_xrefs.Count > 0) AddToQueue(_xrefs.Select(x => x.Target)); };
         TodoBox.KeyDown += (_, e) => { if (e.Key == Key.Enter) AddTodo(); };
         InitTodos();
@@ -410,16 +416,11 @@ public partial class MainWindow
     void RefreshQueue()
     {
         var items = _vault.GetQueue();
-        QueueList.ItemsSource = items.Select(q => new Entry(q.Ref, q.Label, q.Id)).ToList();
-        QueueInfo.Text = items.Count == 0 ? L("Die Leseliste ist leer. Füge Verse über „Vers hinzufügen“ hinzu oder schicke Suchergebnisse und Querverweise hierher; „Nächster“ springt dann der Reihe nach durch.") : L("{0} Verse auf der Leseliste", items.Count);
-    }
-
-    async Task QueueNextAsync()
-    {
-        if (_vault.GetQueue().FirstOrDefault() is not { } first) { QueueInfo.Text = L("Die Leseliste ist leer."); return; }
-        _vault.RemoveFromQueue(first.Id);
-        RefreshQueue();
-        QueueInfo.Text = L("Jetzt: {0} · noch {1} offen", first.Label, _vault.GetQueue().Count);
-        await GoToAsync(first.Ref.Book, first.Ref.Chapter, first.Ref.Verse);
+        if (_queueRun is { } run) { run.Sync(items.Select(q => q.Id)); if (run.Count == 0) _queueRun = null; }
+        QueueList.ItemsSource = items.Select(q => new Entry(q.Ref, (_queueRun?.Visited.Contains(q.Id) == true ? "✓ " : "") + q.Label, q.Id)).ToList();
+        QueueInfo.Text = items.Count == 0 ? L("Die Leseliste ist leer. Füge Verse über „Vers hinzufügen“ hinzu oder schicke Suchergebnisse und Querverweise hierher; „Starten“ geht sie dann der Reihe nach durch.")
+            : _queueRun is { } r ? L("Vers {0} von {1} · {2} besucht", r.Position + 1, r.Count, r.Visited.Count)
+            : L("{0} Verse auf der Leseliste", items.Count);
+        UpdateQueueBar(items);
     }
 }
