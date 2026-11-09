@@ -2571,5 +2571,11 @@
   "Beim Schließen installieren": "Installer à la fermeture",
   "Version {0} ist bereit und kommt beim nächsten Schließen des Programms drauf.": "La version {0} est prête et s’appliquera à la prochaine fermeture du programme.",
   "Aktualisiert auf Version {0}.": "Mis à jour vers la version {0}.",
-  "Was ist neu?": "Quoi de neuf ?"
+  "Was ist neu?": "Quoi de neuf ?",
+  "Alle Vaults exportieren": "Exporter tous les vaults",
+  "Alle Vaults exportieren …": "Exporter tous les vaults …",
+  "Eine ZIP zum Mitnehmen: alle Vaults mit Markierungen, Notizen, Dokumenten, Listen und Lesefortschritt, aber ohne Bibeltexte. Auf einem anderen Computer lässt sie sich mit „Importieren“ oder „Als Gast importieren“ öffnen, um weiterzuarbeiten.": "Un ZIP à emporter : tous les vaults avec surlignages, notes, documents, listes et progression de lecture, mais sans textes bibliques. Sur un autre ordinateur, il s'ouvre avec « Importer » ou « Importer comme invité » pour continuer à travailler.",
+  "Alle Vaults ({0}) exportiert nach {1}": "Tous les vaults ({0}) exportés vers {1}",
+  "{0} Vaults als Gast importiert. Sie verschwinden, wenn du das Programm schließt; deine eigenen Daten bleiben unberührt.": "{0} vaults importés comme invité. Ils disparaissent à la fermeture du programme ; vos propres données restent intactes.",
+  "{0} Vaults importiert, jeweils als neuer Vault.": "{0} vaults importés, chacun comme nouveau vault."
 }

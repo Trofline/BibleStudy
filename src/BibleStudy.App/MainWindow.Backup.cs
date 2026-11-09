@@ -11,7 +11,8 @@ public partial class MainWindow
     const int AutoBackupsKept = 10;
     bool _backingUp;
 
-    string BackupFolder => _settings.BackupFolder is { Length: > 0 } f ? f : AppPaths.BackupDir;
+    string BackupFolder => Environment.GetEnvironmentVariable("BIBLESTUDY_BACKUPDIR") is { Length: > 0 } t ? t   // automated tests: never the real folder
+        : _settings.BackupFolder is { Length: > 0 } f ? f : AppPaths.BackupDir;
 
     static TimeSpan Interval(string schedule) => schedule switch { "daily" => TimeSpan.FromDays(1), "weekly" => TimeSpan.FromDays(7), "monthly" => TimeSpan.FromDays(30), _ => TimeSpan.Zero };
 

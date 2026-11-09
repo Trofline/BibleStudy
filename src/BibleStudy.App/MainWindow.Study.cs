@@ -32,6 +32,7 @@ public partial class MainWindow
         };
         SpeakBtn.Click += async (_, _) => await ToggleSpeakAsync();
         ExportBtn.Click += async (_, _) => await ExportAsync();
+        ExportAllBtn.Click += async (_, _) => await ExportAllAsync();
         ImportBtn.Click += async (_, _) => await ImportAsync();
         GuestImportBtn.Click += async (_, _) => await ImportAsync(guest: true);
         Closed += (_, _) => { _speech?.Dispose(); _voiceCts?.Cancel(); _voice.Dispose(); BibleStudy.Core.OllamaClient.StopStarted(); };
@@ -238,6 +239,7 @@ public partial class MainWindow
         try
         {
             using var zip = ZipFile.OpenRead(path);
+            if (zip.Entries.Any(e => e.FullName.StartsWith(BundleDir, StringComparison.Ordinal))) { await ImportAllAsync(zip, guest); return; }   // made by "export all vaults"
             var vaultEntry = zip.GetEntry("vault.db") ?? throw new InvalidDataException(L("Die Datei enthält keinen Vault (vault.db)."));
             // the vault keeps the name it had when it was exported; an export without a name (or an unusable one) gets a name of the time
             string? Read(string entry) { if (zip.GetEntry(entry) is not { } e) return null; using var r = new StreamReader(e.Open()); return r.ReadToEnd(); }
@@ -252,7 +254,17 @@ public partial class MainWindow
             if (guest) File.WriteAllText(Path.Combine(Path.GetDirectoryName(target)!, GuestFlag), "temporary: deleted when the program closes");
             else _readStore.MergeFrom(target);   // what the file says was read counts here too (nothing already read is removed)
             // a guest import leaves the settings of this computer alone (colors, switches)
-            if (!guest && zip.GetEntry("settings.json") is { } settingsEntry)
+            if (!guest) ApplyImportedSettings(zip);
+            await SwitchVaultAsync(name);
+            BackupInfo.Text = guest ? L("Als Gast importiert: „{0}“. Er verschwindet, wenn du das Programm schließt; deine eigenen Daten bleiben unberührt.", name) : L("Importiert als neuer Vault „{0}“.", name);
+        }
+        catch (Exception ex) { BackupInfo.Text = L("Import fehlgeschlagen: ") + ex.Message; }
+    }
+
+    void ApplyImportedSettings(ZipArchive zip)
+    {
+        {
+            if (zip.GetEntry("settings.json") is { } settingsEntry)
             {
                 using var reader = new StreamReader(settingsEntry.Open());
                 if (JsonSerializer.Deserialize<AppSettings>(reader.ReadToEnd()) is { } imported)
@@ -272,9 +284,6 @@ public partial class MainWindow
                     BuildDefaultColorPanel();
                 }
             }
-            await SwitchVaultAsync(name);
-            BackupInfo.Text = guest ? L("Als Gast importiert: „{0}“. Er verschwindet, wenn du das Programm schließt; deine eigenen Daten bleiben unberührt.", name) : L("Importiert als neuer Vault „{0}“.", name);
         }
-        catch (Exception ex) { BackupInfo.Text = L("Import fehlgeschlagen: ") + ex.Message; }
     }
 }

@@ -875,6 +875,7 @@
                                 <TextBlock Classes="caption" TextWrapping="Wrap" Text="Exportiert den aktiven Vault (Markierungen, Ordner, Tags, Notizen, Dokumente, Leseliste, To-dos, Lesefortschritt) und deine Einstellungen als eine ZIP-Datei. Beim Import entsteht ein neuer Vault." />
                                 <WrapPanel>
                                     <Button x:Name="ExportBtn" Content="Exportieren …" Margin="0,0,6,6" />
+                                    <Button x:Name="ExportAllBtn" Content="Alle Vaults exportieren …" Margin="0,0,6,6" ToolTip.Tip="Eine ZIP zum Mitnehmen: alle Vaults mit Markierungen, Notizen, Dokumenten, Listen und Lesefortschritt, aber ohne Bibeltexte. Auf einem anderen Computer lässt sie sich mit „Importieren“ oder „Als Gast importieren“ öffnen, um weiterzuarbeiten." />
                                     <Button x:Name="ImportBtn" Content="Importieren …" Margin="0,0,6,6" />
                                     <Button x:Name="GuestImportBtn" Content="Als Gast importieren …" Margin="0,0,6,6" ToolTip.Tip="Öffnet die ZIP eines anderen Computers nur für diese Sitzung: Beim Schließen des Programms ist alles wieder weg, deine eigenen Vaults und Einstellungen bleiben unberührt" />
                                     <Button x:Name="ObsidianBtn" Content="Als Obsidian-Vault exportieren …" ToolTip.Tip="Schreibt den ganzen Vault als Markdown-Ordner: deine Ordner als Ordner, jede Notiz und jedes Dokument als eigene Datei, Bibelstellen als Links. Obsidian und andere Notiz-Programme öffnen ihn direkt." />

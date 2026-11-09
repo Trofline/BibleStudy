@@ -8,7 +8,7 @@ namespace BibleStudy.App;
 public partial class MainWindow
 {
     /// <summary>Set by automated tests of the window: nothing is opened on the screen of the person who runs them.</summary>
-    internal static bool NoShell;
+    public static bool NoShell;
     bool _importing;
     string? _lastImportReport, _lastImportReportName;
 

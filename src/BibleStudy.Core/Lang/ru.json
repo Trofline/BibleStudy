@@ -2571,5 +2571,11 @@
   "Beim Schließen installieren": "Установить при закрытии",
   "Version {0} ist bereit und kommt beim nächsten Schließen des Programms drauf.": "Версия {0} готова и применится при следующем закрытии программы.",
   "Aktualisiert auf Version {0}.": "Обновлено до версии {0}.",
-  "Was ist neu?": "Что нового?"
+  "Was ist neu?": "Что нового?",
+  "Alle Vaults exportieren": "Экспортировать все хранилища",
+  "Alle Vaults exportieren …": "Экспортировать все хранилища …",
+  "Eine ZIP zum Mitnehmen: alle Vaults mit Markierungen, Notizen, Dokumenten, Listen und Lesefortschritt, aber ohne Bibeltexte. Auf einem anderen Computer lässt sie sich mit „Importieren“ oder „Als Gast importieren“ öffnen, um weiterzuarbeiten.": "ZIP, чтобы взять с собой: все хранилища с пометками, заметками, документами, списками и прогрессом чтения, но без текстов Библии. На другом компьютере он открывается через «Импорт» или «Импорт как гость», чтобы продолжить работу.",
+  "Alle Vaults ({0}) exportiert nach {1}": "Все хранилища ({0}) экспортированы в {1}",
+  "{0} Vaults als Gast importiert. Sie verschwinden, wenn du das Programm schließt; deine eigenen Daten bleiben unberührt.": "{0} хранилищ импортировано как гость. Они исчезнут при закрытии программы; ваши данные не затрагиваются.",
+  "{0} Vaults importiert, jeweils als neuer Vault.": "{0} хранилищ импортировано, каждое как новое."
 }

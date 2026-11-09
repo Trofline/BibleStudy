@@ -2571,5 +2571,11 @@
   "Beim Schließen installieren": "Install when closing",
   "Version {0} ist bereit und kommt beim nächsten Schließen des Programms drauf.": "Version {0} is ready and is applied the next time you close the program.",
   "Aktualisiert auf Version {0}.": "Updated to version {0}.",
-  "Was ist neu?": "What's new?"
+  "Was ist neu?": "What's new?",
+  "Alle Vaults exportieren": "Export all vaults",
+  "Alle Vaults exportieren …": "Export all vaults …",
+  "Eine ZIP zum Mitnehmen: alle Vaults mit Markierungen, Notizen, Dokumenten, Listen und Lesefortschritt, aber ohne Bibeltexte. Auf einem anderen Computer lässt sie sich mit „Importieren“ oder „Als Gast importieren“ öffnen, um weiterzuarbeiten.": "A ZIP to take along: all vaults with highlights, notes, documents, lists and reading progress, but without Bible texts. On another computer it opens with \"Import\" or \"Import as guest\" so you can keep working.",
+  "Alle Vaults ({0}) exportiert nach {1}": "All vaults ({0}) exported to {1}",
+  "{0} Vaults als Gast importiert. Sie verschwinden, wenn du das Programm schließt; deine eigenen Daten bleiben unberührt.": "{0} vaults imported as a guest. They disappear when you close the program; your own data stays untouched.",
+  "{0} Vaults importiert, jeweils als neuer Vault.": "{0} vaults imported, each as a new vault."
 }
