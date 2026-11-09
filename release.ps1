@@ -23,6 +23,9 @@ Write-Host '== Checking that every text is translated'
 dotnet test "$root\tests\BibleStudy.Tests\BibleStudy.Tests.csproj" --filter "FullyQualifiedName~LocalizationTests" --nologo -v q
 if ($LASTEXITCODE) { throw 'Translations are incomplete: fix the missing texts before releasing' }
 
+Write-Host '== Running the window tests'
+& "$root\run-uitests.ps1" | Select-String -Pattern '^FAIL|^ALL OK'
+
 Write-Host "== Publishing program $Version"
 dotnet publish "$root\src\BibleStudy.App\BibleStudy.App.csproj" -c Release -r win-x64 --self-contained true -p:PublishReadyToRun=true -p:Version=$Version -p:DebugType=none -o $stage
 if ($LASTEXITCODE) { throw 'publish app failed' }

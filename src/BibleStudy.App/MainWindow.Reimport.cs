@@ -41,13 +41,25 @@ public partial class MainWindow
         var done = 0;
         foreach (var o in list)
         {
-            var path = o.Source is { Length: > 0 } s && File.Exists(s) ? s : await (ask ?? AskForFileAsync)(o);
+            var path = o.Source is { Length: > 0 } s && File.Exists(s) ? s : await FindMovedFileAsync(o) ?? await (ask ?? AskForFileAsync)(o);
             if (path is null) continue;
             await ImportBibleFromAsync(path, o.Language);
             done++;
         }
         ImportBibleInfo.Text = L("{0} von {1} Bibeln neu eingelesen.", done, list.Count);
         return done;
+    }
+
+    /// <summary>A file that is no longer where it was: the same name is taken, a similar name only after asking (it could be another Bible).</summary>
+    async Task<string?> FindMovedFileAsync(LocalBibleStore.Outdated o)
+    {
+        if (o.Source is not { Length: > 0 } source) return null;
+        string Known(Environment.SpecialFolder f) => Environment.GetFolderPath(f);
+        var places = new[] { Known(Environment.SpecialFolder.MyDocuments), Path.Combine(Known(Environment.SpecialFolder.UserProfile), "Downloads"), Known(Environment.SpecialFolder.DesktopDirectory) };
+        var hit = await Task.Run(() => ImportFileFinder.Find(source, places));
+        if (hit is null) return null;
+        if (hit.Exact) return hit.Path;
+        return await AskAsync(L("Ist das die richtige Datei?"), L("Die Datei von „{0}“ liegt nicht mehr an ihrem Platz. Gefunden wurde diese ähnliche Datei:\n{1}", o.Name, hit.Path), L("Ja, diese Datei"), L("Nein")) == 0 ? hit.Path : null;
     }
 
     async Task<string?> AskForFileAsync(LocalBibleStore.Outdated o)

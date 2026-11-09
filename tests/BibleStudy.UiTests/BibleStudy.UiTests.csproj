@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Drives the real main window without showing it. Run with run-uitests.ps1 in the root of the repository; release.ps1 runs it too. -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Version>9.9.9</Version>
+    <NoWarn>$(NoWarn);CS8602;CS8600;CS8604;CS8321</NoWarn>
+    <ApplicationManifest>..\..\src\BibleStudy.App\app.manifest</ApplicationManifest>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Avalonia.Headless" Version="12.1.4" />
+    <PackageReference Include="Avalonia.Skia" Version="12.1.4" />
+    <ProjectReference Include="..\..\src\BibleStudy.App\BibleStudy.App.csproj" />
+  </ItemGroup>
+</Project>

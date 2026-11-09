@@ -126,6 +126,12 @@ public partial class MainWindow
         }
         var toTray = !_exiting && _settings.CloseToTray && _tray is not null && _settings.Tray;
         if (_closeAnimating) { e.Cancel = true; return; }
+        if (!toTray && e.CloseReason == WindowCloseReason.WindowClosing && GuestWorkNeedsQuestion())
+        {
+            e.Cancel = true;
+            Dispatcher.UIThread.Post(() => _ = AskGuestWorkThenCloseAsync());
+            return;
+        }
         if (!_closeAnimated && CloseStyle != "none" && IsVisible && WindowState != WindowState.Minimized && e.CloseReason == WindowCloseReason.WindowClosing)
         {
             e.Cancel = true; _closeAnimating = true;

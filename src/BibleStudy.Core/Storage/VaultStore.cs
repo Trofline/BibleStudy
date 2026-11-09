@@ -91,6 +91,7 @@ public sealed partial class VaultStore : SqliteDb
             if (Query($"SELECT 1 FROM pragma_table_info('todos') WHERE name='{column}'", _ => { }, _ => 1).Count == 0)
                 Exec($"ALTER TABLE todos ADD COLUMN {column} {type}");
         InitTrash();
+        Exec("CREATE TABLE IF NOT EXISTS mark_places(mark_id INT, translation TEXT, verse INT, start_off INT, end_off INT, PRIMARY KEY(mark_id, translation, verse))");   // a place corrected by hand
         Exec("CREATE TABLE IF NOT EXISTS doc_seq(high INTEGER NOT NULL)");
         // links from older versions lead by title: they get the number of their document
         try
@@ -305,7 +306,7 @@ public sealed partial class VaultStore : SqliteDb
         return m.Id;
     }
 
-    public void DeleteMark(long id) => InTransaction(id, "DELETE FROM mark_tags WHERE mark_id=$i", "DELETE FROM marks WHERE id=$i");
+    public void DeleteMark(long id) => InTransaction(id, "DELETE FROM mark_tags WHERE mark_id=$i", "DELETE FROM mark_places WHERE mark_id=$i", "DELETE FROM marks WHERE id=$i");
 
     /// <summary>Marks filtered by chapter, folder (<paramref name="noFolder"/> = only unfiled) and/or tag; in Bible order.</summary>
     public List<Mark> GetMarks(string? book = null, int? chapter = null, long? folderId = null, bool noFolder = false, string? tag = null)
@@ -351,7 +352,7 @@ public sealed partial class VaultStore : SqliteDb
         using var con = Open();
         using var tx = con.BeginTransaction();
         foreach (var id in ids)
-            foreach (var sql in new[] { "DELETE FROM mark_tags WHERE mark_id=$i", "DELETE FROM marks WHERE id=$i" })
+            foreach (var sql in new[] { "DELETE FROM mark_tags WHERE mark_id=$i", "DELETE FROM mark_places WHERE mark_id=$i", "DELETE FROM marks WHERE id=$i" })
             {
                 using var cmd = con.CreateCommand();
                 cmd.CommandText = sql; cmd.Parameters.AddWithValue("$i", id);

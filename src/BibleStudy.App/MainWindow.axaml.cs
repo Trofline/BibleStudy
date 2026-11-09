@@ -585,7 +585,7 @@ public partial class MainWindow : Window
     sealed class CellRef(SelectableTextBlock tb, CellData data) { public SelectableTextBlock Tb { get; } = tb; public CellData Data { get; set; } = data; }
 
     /// <summary>The part of a verse that a mark covers in a cell; Core = a mark inside a verse that is marked as a whole (the most important part of it); Shared = made in another translation.</summary>
-    sealed record CellMark(Mark Mark, int Start, int End, bool Core, bool Shared);
+    sealed record CellMark(Mark Mark, int Start, int End, bool Core, bool Shared, bool Estimated = false);
 
     readonly List<CellRef> _cells = [];
 
@@ -632,19 +632,28 @@ public partial class MainWindow : Window
                 if (MarkLogic.PartIn(m, d.Number, rawText.Length) is { } p) list.Add(new CellMark(m, p.Start, p.End, core, false));
             }
             else if (_settings.ShareMarksAcrossTranslations && m.TranslationId != Mark.AnyTranslation && SharedPart(m, d, rawText) is { } q)
-                list.Add(new CellMark(m, q.Start, q.End, core, true));
+                list.Add(new CellMark(m, q.Start, q.End, core, true, q.Estimated));
         }
         return [.. list.OrderBy(x => x.Shared ? 0 : 1)];   // the marks made in this very translation lie on top
     }
 
-    /// <summary>Where a mark made in another translation lies in this verse (null if it cannot be told for sure).</summary>
-    (int Start, int End)? SharedPart(Mark m, CellData d, string rawText)
+    /// <summary>The marks of other translations on this verse that cannot be placed in this one: they are not lost, a small sign says so.</summary>
+    List<Mark> UnplacedMarks(CellData d, string rawText)
     {
-        if (!_markSources.TryGetValue(m.TranslationId, out var ch) || ch.Verses.FirstOrDefault(x => x.Number == d.Number) is not { } sourceVerse) return MarkLogic.ProjectByStoredText(m, rawText);   // its translation is not here: the words the mark stored
+        if (d.Foreign || !_settings.ShareMarksAcrossTranslations) return [];
+        return _chapterMarks.Where(m => !m.WholeVerse && m.Covers(d.Number) && m.TranslationId != d.T.Id && m.TranslationId != Mark.AnyTranslation && SharedPart(m, d, rawText) is null).ToList();
+    }
+
+    /// <summary>Where a mark made in another translation lies in this verse (null if it cannot be told for sure).</summary>
+    (int Start, int End, bool Estimated)? SharedPart(Mark m, CellData d, string rawText)
+    {
+        if (_chapterMarks.Contains(m) && _markPlaces.TryGetValue((m.Id, d.T.Id, d.Number), out var byHand) && byHand.End <= rawText.Length) return (byHand.Start, byHand.End, false);   // set by hand
+        if (!_markSources.TryGetValue(m.TranslationId, out var ch) || ch.Verses.FirstOrDefault(x => x.Number == d.Number) is not { } sourceVerse)
+            return MarkLogic.ProjectByStoredText(m, rawText) is { } stored ? (stored.Start, stored.End, false) : null;   // its translation is not here: the words the mark stored
         var sourceLen = MarkLogic.RawText(sourceVerse.Segments).Length;
         if (MarkLogic.PartIn(m, d.Number, sourceLen) is not { } part) return null;
-        if (part.Start <= 0 && part.End >= sourceLen) return (0, rawText.Length);   // the whole verse lies inside the mark
-        return MarkLogic.Project(sourceVerse.Segments, part.Start, part.End, d.V.Segments);
+        if (part.Start <= 0 && part.End >= sourceLen) return (0, rawText.Length, false);   // the whole verse lies inside the mark
+        return MarkLogic.ProjectChecked(sourceVerse.Segments, part.Start, part.End, d.V.Segments);
     }
 
     /// <summary>Draws the text of a verse cell (number, words, footnote markers, marks and the selection).</summary>
@@ -669,6 +678,13 @@ public partial class MainWindow : Window
         var num = new Run(_settings.VerseNumbers == "Hidden" ? (d.HasNote ? "✎ " : "") + (star.Length > 0 ? star + " " : "") : number + (d.HasNote ? "✎" : "") + star + " ") { FontSize = numSize, FontWeight = FontWeight.Bold, BaselineAlignment = _settings.VerseNumbers == "Normal" ? BaselineAlignment.Baseline : BaselineAlignment.Top };
         num.Bind(TextElement.ForegroundProperty, this.GetResourceObservable("BsVerseNumber"));
         Add(num);
+        if (UnplacedMarks(d, rawText) is { Count: > 0 } unplaced)
+        {
+            var sign = new Run("° ") { FontSize = size * 0.62, FontWeight = FontWeight.Bold, BaselineAlignment = BaselineAlignment.Superscript };
+            sign.Bind(TextElement.ForegroundProperty, this.GetResourceObservable("BsAccent"));
+            spans.Add(new WordSpan(pos, pos + sign.Text!.Length, [], "°", L("Hier nicht darstellbar: {0}", string.Join("; ", unplaced.Select(m => "„" + Shorten(m.Text, 60) + "“")))));
+            Add(sign);
+        }
         (Run Run, object? Mark, bool Selected, bool Jesus)? mergeable = null;
         foreach (var s in v.Segments)
         {
@@ -712,6 +728,7 @@ public partial class MainWindow : Window
                 {
                     run.Background = HighlightBrush(mark.Mark.Color, mark.Core);
                     if (mark.Core) run.FontWeight = FontWeight.SemiBold;
+                    if (mark.Estimated && !study) run.TextDecorations = EstimatedUnderline;   // only a guess at the place: a click corrects it
                 }
                 if (s.Strongs is { Count: > 0 })
                 {

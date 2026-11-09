@@ -231,6 +231,19 @@ public partial class MainWindow
             Title = guest ? L("Vault als Gast importieren") : L("Vault importieren"), AllowMultiple = false, FileTypeFilter = [new FilePickerFileType("ZIP-Archiv") { Patterns = ["*.zip"] }],
         });
         if (files.Count == 0 || files[0].TryGetLocalPath() is not { } path) return;
+        (string Text, bool IsGuestWork) look;
+        try { look = ImportPreview(path); }
+        catch (Exception ex) { BackupInfo.Text = L("Import fehlgeschlagen: ") + ex.Message; return; }
+        if (look.IsGuestWork && !guest)
+        {
+            var how = await AskAsync(L("Gast-Arbeit einmischen?"),
+                look.Text + "\n\n" + L("Diese Datei wurde am Ende einer Gast-Sitzung gesichert. Beim Einmischen kommt alles Neue in deine Vaults mit demselben Namen. Es wird nichts gelöscht oder überschrieben; wo sich beide unterscheiden, bleibt beides erhalten. Vorher wird eine Sicherung angelegt."),
+                L("Einmischen"), L("Als neue Vaults"), L("Abbrechen"));
+            if (how == 0) await MergeGuestWorkAsync(path);
+            else if (how == 1) await ImportFromPathAsync(path, false);
+            return;
+        }
+        if (await AskAsync(guest ? L("Vault als Gast importieren") : L("Vault importieren"), look.Text, L("Importieren"), L("Abbrechen")) != 0) return;
         await ImportFromPathAsync(path, guest);
     }
 
@@ -251,7 +264,7 @@ public partial class MainWindow
             var target = Path.Combine(_root, "vaults", name, "vault.db");
             Directory.CreateDirectory(Path.GetDirectoryName(target)!);
             vaultEntry.ExtractToFile(target);
-            if (guest) File.WriteAllText(Path.Combine(Path.GetDirectoryName(target)!, GuestFlag), "temporary: deleted when the program closes");
+            if (guest) RememberGuest(name, given ?? name);
             else _readStore.MergeFrom(target);   // what the file says was read counts here too (nothing already read is removed)
             // a guest import leaves the settings of this computer alone (colors, switches)
             if (!guest) ApplyImportedSettings(zip);

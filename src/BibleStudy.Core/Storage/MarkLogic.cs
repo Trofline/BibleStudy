@@ -98,18 +98,22 @@ public static class MarkLogic
     /// that read alike); then the Strong numbers of the marked words are followed when both translations carry them. Null when neither is certain:
     /// a mark must never wander to the wrong words.
     /// </summary>
-    public static (int Start, int End)? Project(IReadOnlyList<Segment> source, int start, int end, IReadOnlyList<Segment> target)
+    public static (int Start, int End)? Project(IReadOnlyList<Segment> source, int start, int end, IReadOnlyList<Segment> target) =>
+        ProjectChecked(source, start, end, target) is { } p ? (p.Start, p.End) : null;
+
+    /// <summary>Like <see cref="Project"/>, and says whether the place is only an estimate (found by its position in the verse).</summary>
+    public static (int Start, int End, bool Estimated)? ProjectChecked(IReadOnlyList<Segment> source, int start, int end, IReadOnlyList<Segment> target)
     {
         var sourceText = RawText(source); var targetText = RawText(target);
         if (Trim(sourceText, start, end) is not { } t) return null;
         var wanted = sourceText[t.Start..t.End];
 
         var at = targetText.IndexOf(wanted, StringComparison.OrdinalIgnoreCase);
-        if (at >= 0) return (at, at + wanted.Length);
+        if (at >= 0) return (at, at + wanted.Length, false);
 
-        if (ProjectByStrong(source, t, target, targetText, wanted, out var evidence) is { } byStrong) return byStrong;
+        if (ProjectByStrong(source, t, target, targetText, wanted, out var evidence) is { } byStrong) return (byStrong.Start, byStrong.End, false);
         if (evidence) return null;   // the numbers speak, and against a guess: no mark rather than a wrong one
-        return ProjectByPosition(sourceText, t, targetText);
+        return ProjectByPosition(sourceText, t, targetText) is { } byPlace ? (byPlace.Start, byPlace.End, true) : null;
     }
 
     /// <summary>
@@ -135,7 +139,7 @@ public static class MarkLogic
         return Trim(targetText, from, to);
     }
 
-    static List<(int Start, int End)> WordsOf(string text) => System.Text.RegularExpressions.Regex.Matches(text, @"[\p{L}\p{N}]+").Select(m => (m.Index, m.Index + m.Length)).ToList();
+    public static List<(int Start, int End)> WordsOf(string text) => System.Text.RegularExpressions.Regex.Matches(text, @"[\p{L}\p{N}]+").Select(m => (m.Index, m.Index + m.Length)).ToList();
 
     /// <summary>
     /// The last resort for texts that carry no Strong numbers (imported translations): a few marked words are looked for at the same relative place of the other

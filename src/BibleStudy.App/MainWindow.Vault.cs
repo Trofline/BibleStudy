@@ -17,6 +17,7 @@ public partial class MainWindow
     VaultStore _vault = null!;
     ReadStore _readStore = null!;
     List<Mark> _chapterMarks = [];
+    Dictionary<(long Mark, string Translation, int Verse), (int Start, int End)> _markPlaces = [];
     Dictionary<int, string> _wholeMarks = [];
     Mark? _editMark;
     string _editColor = PresetColors[0];
@@ -166,6 +167,7 @@ public partial class MainWindow
     {
         LoadChapterBookmarks();
         _chapterMarks = _vault.GetMarks(_curBook, _curChapter);
+        _markPlaces = _vault.GetMarkPlaces();
         _wholeMarks = [];
         foreach (var m in _chapterMarks.Where(m => m.WholeVerse))   // a mark of several verses colors each of them
             for (var v = m.Ref.Verse; v <= m.LastVerse; v++) _wholeMarks[v] = m.Color;

@@ -207,9 +207,63 @@ public partial class MainWindow
         }
     }
 
+    /// <summary>A mark whose place in this translation is only a guess: the first and the last word are clicked, the place is kept for this translation.</summary>
+    async Task CorrectPlaceAsync(Mark m, CellData d, string rawText, int start, int end)
+    {
+        var words = MarkLogic.WordsOf(rawText);
+        if (words.Count == 0) return;
+        var from = words.FindIndex(w => w.End > start); var to = words.FindLastIndex(w => w.Start < end);
+        if (from < 0 || to < from) { from = 0; to = 0; }
+        var chips = new List<Avalonia.Controls.Primitives.ToggleButton>();
+        void Paint() { for (var i = 0; i < chips.Count; i++) chips[i].IsChecked = i >= from && i <= to; }
+        var firstClick = true;
+        var panel = new WrapPanel();
+        for (var i = 0; i < words.Count; i++)
+        {
+            var k = i;
+            var chip = new Avalonia.Controls.Primitives.ToggleButton { Content = rawText[words[i].Start..words[i].End], Margin = new(0, 0, 4, 4) };
+            chip.Click += (_, _) =>
+            {
+                if (firstClick) { from = to = k; }
+                else if (k < from) { to = from; from = k; }
+                else to = k;
+                firstClick = !firstClick;
+                Paint();
+            };
+            chips.Add(chip); panel.Children.Add(chip);
+        }
+        Paint();
+        var save = false;
+        var win = new Window { Title = L("Stelle korrigieren"), Width = 560, SizeToContent = SizeToContent.Height, Background = Res("BsSurface"), Icon = Icon, WindowStartupLocation = WindowStartupLocation.CenterOwner, CanResize = false };
+        var ok = new Button { Content = L("Übernehmen"), Margin = new(8, 0, 0, 0) }; ok.Classes.Add("primary");
+        var cancel = new Button { Content = L("Abbrechen"), Margin = new(8, 0, 0, 0) };
+        ok.Click += (_, _) => { save = true; win.Close(); };
+        cancel.Click += (_, _) => win.Close();
+        win.Content = new StackPanel
+        {
+            Margin = new(22),
+            Children =
+            {
+                new TextBlock { Text = L("Stelle korrigieren"), FontSize = 18, FontWeight = FontWeight.SemiBold, Margin = new(0, 0, 0, 10) },
+                new TextBlock { Text = L("Markiert wurde „{0}“ in einer anderen Übersetzung. Die Stelle hier ist nur geschätzt. Klicke das erste und das letzte Wort an, die dazugehören.", Shorten(m.Text, 80)), TextWrapping = TextWrapping.Wrap, Margin = new(0, 0, 0, 10) },
+                panel,
+                new WrapPanel { HorizontalAlignment = HorizontalAlignment.Right, Margin = new(0, 14, 0, 0), Children = { ok, cancel } },
+            },
+        };
+        await ShowModalAsync(win);
+        if (!save) return;
+        _vault.SetMarkPlace(m.Id, d.T.Id, d.Number, words[from].Start, words[to].End);
+        await RedrawChapterAsync();
+    }
+
     /// <summary>A click (no dragging) on words that are marked: the whole mark is selected and the colors show over it, so it can be recolored or removed without marking the words again.</summary>
     void SelectMarkAt(CellRef cell, int raw)
     {
+        if (cell.Tb.Tag is CellInfo here)
+        {
+            var at = CellMarks(cell.Data, here.RawText).Where(x => x.Start <= raw && raw < x.End).ToList();
+            if (!at.Any(x => !x.Shared) && at.FirstOrDefault(x => x.Estimated && _chapterMarks.Contains(x.Mark)) is { } guess) { _ = CorrectPlaceAsync(guess.Mark, cell.Data, here.RawText, guess.Start, guess.End); return; }
+        }
         if (!_settings.SelectionPopup || cell.Tb.Tag is not CellInfo info) return;
         var hit = CellMarks(cell.Data, info.RawText).Where(x => !x.Shared && x.Mark.Id >= 0 && x.Start <= raw && raw < x.End).OrderBy(x => x.End - x.Start).FirstOrDefault();
         if (hit is null) return;
