@@ -640,7 +640,7 @@ public partial class MainWindow : Window
     /// <summary>Where a mark made in another translation lies in this verse (null if it cannot be told for sure).</summary>
     (int Start, int End)? SharedPart(Mark m, CellData d, string rawText)
     {
-        if (!_markSources.TryGetValue(m.TranslationId, out var ch) || ch.Verses.FirstOrDefault(x => x.Number == d.Number) is not { } sourceVerse) return null;
+        if (!_markSources.TryGetValue(m.TranslationId, out var ch) || ch.Verses.FirstOrDefault(x => x.Number == d.Number) is not { } sourceVerse) return MarkLogic.ProjectByStoredText(m, rawText);   // its translation is not here: the words the mark stored
         var sourceLen = MarkLogic.RawText(sourceVerse.Segments).Length;
         if (MarkLogic.PartIn(m, d.Number, sourceLen) is not { } part) return null;
         if (part.Start <= 0 && part.End >= sourceLen) return (0, rawText.Length);   // the whole verse lies inside the mark

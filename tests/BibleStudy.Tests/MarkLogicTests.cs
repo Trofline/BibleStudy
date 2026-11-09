@@ -26,6 +26,16 @@ public class MarkLogicTests
     }
 
     [Fact]
+    public void A_mark_without_its_translation_is_found_by_its_words_nearest_to_its_old_place()
+    {
+        var stored = new Mark(9, "gone", new VerseRef("GEN", 1, 4), 30, 33, "und", "#FFD54F", "", null, []);
+        Assert.Equal((33, 36), MarkLogic.ProjectByStoredText(stored, "Licht und Finsternis schied Gott und Tag"));
+        Assert.Null(MarkLogic.ProjectByStoredText(stored with { Text = "Gnade" }, "Licht und Finsternis"));
+        Assert.Null(MarkLogic.ProjectByStoredText(stored with { EndVerse = 6 }, "Licht und Finsternis"));
+        Assert.Null(MarkLogic.ProjectByStoredText(stored with { Start = -1 }, "Licht und Finsternis"));
+    }
+
+    [Fact]
     public void A_mark_over_several_verses_covers_the_ends_partly_and_the_middle_wholly()
     {
         var m = new Mark(1, "*", new VerseRef("GEN", 1, 4), 10, 7, "x", "#FFD54F", "", null, [], 6);

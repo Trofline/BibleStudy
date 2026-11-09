@@ -112,6 +112,13 @@ public static class MarkLogic
         return ProjectByPosition(sourceText, t, targetText);
     }
 
+    /// <summary>
+    /// Where a mark stands when the translation it was made in is not on this computer (a vault taken along): only its stored words can be looked for, the
+    /// occurrence nearest to its old place. Null for a mark over several verses (its words cannot be divided among them) and when the words are not in this verse.
+    /// </summary>
+    public static (int Start, int End)? ProjectByStoredText(Mark m, string targetText) =>
+        m.WholeVerse || m.MultiVerse ? null : Realign(m.Text.Trim(), m.Start, targetText);
+
     /// <summary>Strong numbers: the numbers of the marked words, found again in the other text.</summary>
     static (int Start, int End)? ProjectByStrong(IReadOnlyList<Segment> source, (int Start, int End) t, IReadOnlyList<Segment> target, string targetText, string wanted, out bool evidence)
     {
