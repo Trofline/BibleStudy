@@ -57,7 +57,7 @@ public partial class MainWindow
         _sermonVault = null; if (TabActive(PrayerTab)) BuildPrayerUi(); RefreshLists(); RefreshDocs(); RefreshQueue(); RefreshTodos(); RefreshBookmarks(); RefreshVaultUi();
         if (_windows.TryGetValue("group:Dokumente", out var docs)) docs.SelectAction?.Invoke(docs.Current);
         if (_windows.TryGetValue("group:Predigt", out var sermon)) sermon.SelectAction?.Invoke(sermon.Current);
-        if (Home.IsVisible) ShowHome();   // "continue" and "keep working" belong to the vault just opened
+        if (Home.IsVisible) ShowHome(leaveWork: false);   // "continue" and "keep working" belong to the vault just opened; a settings tab stays open
         _switchingVault = true;   // the chapter that stays on screen was not read in the new vault
         try { await RedrawChapterAsync(); }
         finally { _switchingVault = false; }
