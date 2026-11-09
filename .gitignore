@@ -9,6 +9,8 @@ build-out/
 # personal helper scripts, local only
 /_*.bat
 /publish-release.ps1
+/run-uitests.ps1
+/run-update-probe.ps1
 
 # local release helper
 /Release veroeffentlichen.bat

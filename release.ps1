@@ -24,10 +24,10 @@ dotnet test "$root\tests\BibleStudy.Tests\BibleStudy.Tests.csproj" --filter "Ful
 if ($LASTEXITCODE) { throw 'Translations are incomplete: fix the missing texts before releasing' }
 
 Write-Host '== Running the window tests'
-& "$root\run-uitests.ps1" | Select-String -Pattern '^FAIL|^ALL OK'
+if (Test-Path "$root\run-uitests.ps1") { & "$root\run-uitests.ps1" | Select-String -Pattern '^FAIL|^ALL OK' }   # local only
 
 Write-Host '== Opening the data of the last version with this one'
-& "$root\run-update-probe.ps1" | Select-String -Pattern '^FAIL|^ALL OK|^Comparing'
+if (Test-Path "$root\run-update-probe.ps1") { & "$root\run-update-probe.ps1" | Select-String -Pattern '^FAIL|^ALL OK|^Comparing' }   # local only
 
 Write-Host "== Publishing program $Version"
 dotnet publish "$root\src\BibleStudy.App\BibleStudy.App.csproj" -c Release -r win-x64 --self-contained true -p:PublishReadyToRun=true -p:Version=$Version -p:DebugType=none -o $stage
