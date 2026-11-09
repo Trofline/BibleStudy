@@ -25,14 +25,79 @@ public static class ImportCheck
     static readonly Regex LoneCap = new(@"(?<![\p{L}\p{N}])[HDKL](?=[ .,;:]|$)", RegexOptions.Compiled);
     static readonly Regex Odd = new(@"[\u0000-\u0008\u000B\u000C\u000E-\u001F�­]|\s{2,}", RegexOptions.Compiled);
 
-    public static Result Analyze(ParsedBible bible)
+    static readonly string[] FixableKinds = ["leftover-marker", "odd-characters", "space-before-punctuation", "split-word", "lone-capital"];
+
+    /// <summary>The verses with faults an AI can repair from the text alone, as a task with one line per verse. Empty when there is nothing to do.</summary>
+    public static string CorrectionPrompt(ParsedBible bible, int maxVerses = 300)
+    {
+        var check = Analyze(bible, int.MaxValue);
+        var wanted = check.Findings.Where(f => FixableKinds.Contains(f.Kind)).Select(f => (f.Book, f.Chapter, f.Verse)).Distinct().Take(maxVerses).ToHashSet();
+        if (wanted.Count == 0) return "";
+        var sb = new StringBuilder();
+        sb.AppendLine("These verses of a Bible translation were read from a file automatically and contain reading errors (words split by blanks, left-over numbers or markers, blanks before punctuation, stray capitals).");
+        sb.AppendLine("Correct only those errors. Never reword, never modernise, never add words. Keep the divine names as they are (for example HERR). Use no tools.");
+        sb.AppendLine("Answer with nothing but one line for each verse you changed, in exactly the form of the lines below. Leave out verses that are correct.");
+        sb.AppendLine();
+        foreach (var v in bible.Verses.Where(v => wanted.Contains((v.Book, v.Chapter, v.Verse)))) sb.AppendLine($"{v.Book} {v.Chapter},{v.Verse}: {RawOf(v)}");
+        return sb.ToString();
+    }
+
+    static string RawOf(ParsedVerse v) => string.Concat(v.Segments.Where(s => s.NoteId is null).Select(s => s.Text));
+
+    static readonly Regex AnswerLine = new(@"^\s*([1-3A-Z][A-Z0-9]{2})\s+(\d+),(\d+):\s*(.+?)\s*$", RegexOptions.Compiled | RegexOptions.Multiline);
+
+    /// <summary>Puts the lines of such an answer into the Bible. A line that changes too much (a reworded verse) or names no verse is not taken.</summary>
+    public static (ParsedBible Bible, int Applied, int Refused) ApplyCorrections(ParsedBible bible, string answer)
+    {
+        var lines = new Dictionary<(string, int, int), string>();
+        foreach (Match m in AnswerLine.Matches(answer)) lines[(m.Groups[1].Value, int.Parse(m.Groups[2].Value), int.Parse(m.Groups[3].Value))] = m.Groups[4].Value;
+        int applied = 0, refused = 0;
+        var verses = new List<ParsedVerse>(bible.Verses.Count);
+        var known = bible.Verses.Select(v => (v.Book, v.Chapter, v.Verse)).ToHashSet();
+        refused += lines.Keys.Count(k => !known.Contains(k));
+        foreach (var v in bible.Verses)
+        {
+            if (!lines.TryGetValue((v.Book, v.Chapter, v.Verse), out var text) || text == RawOf(v)) { verses.Add(v); continue; }
+            if (ImportFileFinder.Similarity(RawOf(v), text) < 0.8) { refused++; verses.Add(v); continue; }
+            verses.Add(v with { Segments = WithText(v.Segments, text) });
+            applied++;
+        }
+        return (bible with { Verses = verses }, applied, refused);
+    }
+
+    /// <summary>The verse with another text; only the part that differs is touched, so footnote markers and Strong numbers around it stay where they are.</summary>
+    public static IReadOnlyList<Segment> WithText(IReadOnlyList<Segment> segments, string text)
+    {
+        var old = string.Concat(segments.Where(s => s.NoteId is null).Select(s => s.Text));
+        var head = 0;
+        while (head < old.Length && head < text.Length && old[head] == text[head]) head++;
+        var tail = 0;
+        while (tail < old.Length - head && tail < text.Length - head && old[old.Length - 1 - tail] == text[text.Length - 1 - tail]) tail++;
+        var middle = text[head..(text.Length - tail)];
+        var result = new List<Segment>(); var pos = 0; var placed = false;
+        foreach (var s in segments)
+        {
+            if (s.NoteId is not null) { result.Add(s); continue; }
+            var len = s.Text.Length;
+            var keepHead = Math.Clamp(head - pos, 0, len);
+            var tailFrom = Math.Clamp(old.Length - tail - pos, keepHead, len);
+            var insert = !placed && head <= pos + len;
+            if (insert) placed = true;
+            var piece = s.Text[..keepHead] + (insert ? middle : "") + s.Text[tailFrom..];
+            if (piece.Length > 0) result.Add(s with { Text = piece });
+            pos += len;
+        }
+        return result;
+    }
+
+    public static Result Analyze(ParsedBible bible, int maxPerKind = 25)
     {
         var findings = new List<Finding>();
         var counts = new Dictionary<string, int>();
         void Add(string kind, ParsedVerse v, string text, int at = 0)
         {
             counts[kind] = counts.GetValueOrDefault(kind) + 1;
-            if (findings.Count(f => f.Kind == kind) < 25)
+            if (findings.Count(f => f.Kind == kind) < maxPerKind)
             {
                 var from = Math.Max(0, at - 25); var len = Math.Min(text.Length - from, 70);
                 findings.Add(new Finding(kind, v.Book, v.Chapter, v.Verse, text.Substring(from, len)));

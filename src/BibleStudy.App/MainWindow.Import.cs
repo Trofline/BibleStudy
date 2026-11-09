@@ -13,12 +13,14 @@ public partial class MainWindow
     /// <summary>Set by automated tests of the window: nothing is opened on the screen of the person who runs them.</summary>
     public static bool NoShell;
     bool _importing;
-    string? _lastImportReport, _lastImportReportName;
+    string? _lastImportReport, _lastImportReportName, _lastImportId;
+    ParsedBible? _lastImportBible;
 
     void InitImport()
     {
         ImportBibleBtn.Click += async (_, _) => await ImportBibleAsync();
         RemoveBibleBtn.Click += async (_, _) => await RemoveImportedAsync();
+        ImportAiBtn.Click += async (_, _) => await CorrectWithAiAsync();
         ImportCheckBtn.Click += (_, _) =>
         {
             if (_lastImportReport is null) return;
@@ -52,26 +54,29 @@ public partial class MainWindow
     /// <summary>Imports a Bible file without asking (the once-only reading again of all imports).</summary>
     internal Task<string> ImportBibleFromAsync(string path, string language) => ImportBibleCoreAsync(path, language, null);
 
-    /// <summary>Before a Bible that is already here is replaced: what would change. True = replace. Nothing to show when the text is the same.</summary>
-    internal async Task<bool> ConfirmReplaceAsync(string id, ParsedBible bible)
+    /// <summary>Before a Bible that is already here is replaced: what would change. Gives the Bible to save (verses that were unticked keep their old text), null = keep the old one.</summary>
+    internal async Task<ParsedBible?> ConfirmReplaceAsync(string id, ParsedBible bible)
     {
         var old = await _local.GetAllVersesAsync(id);
         var diff = await Task.Run(() => ImportDiff.Compare(old, bible));
-        if (diff.None) return true;
-        var replace = false;
+        if (diff.None) return bible;
+        ParsedBible? chosen = null;
+        var ticks = new List<(CheckBox Box, ImportDiff.Change Change)>();
         var win = new Window { Title = L("Bibel ersetzen?"), Width = 720, Height = 620, Background = Res("BsSurface"), Icon = Icon, WindowStartupLocation = WindowStartupLocation.CenterOwner };
         var list = new StackPanel { Spacing = 10 };
         foreach (var c in diff.Samples)
         {
             var (was, now) = ImportDiff.Focus(c.Old, c.New);
-            var row = new StackPanel { Spacing = 2, Children = { new TextBlock { Text = $"{BookName(c.Book)} {c.Chapter},{c.Verse}", FontWeight = FontWeight.SemiBold } } };
+            var tick = new CheckBox { IsChecked = true, Content = new TextBlock { Text = $"{BookName(c.Book)} {c.Chapter},{c.Verse}", FontWeight = FontWeight.SemiBold } };
+            ticks.Add((tick, c));
+            var row = new StackPanel { Spacing = 2, Children = { tick } };
             if (c.Old.Length > 0) row.Children.Add(new TextBlock { Text = "− " + was, TextWrapping = TextWrapping.Wrap, Foreground = Res("BsMuted") });
             if (c.New.Length > 0) row.Children.Add(new TextBlock { Text = "+ " + now, TextWrapping = TextWrapping.Wrap });
             list.Children.Add(row);
         }
         var ok = new Button { Content = L("Ersetzen"), Margin = new(8, 0, 0, 0) }; ok.Classes.Add("primary");
         var cancel = new Button { Content = L("Abbrechen"), Margin = new(8, 0, 0, 0) };
-        ok.Click += (_, _) => { replace = true; win.Close(); };
+        ok.Click += (_, _) => { chosen = ImportDiff.Without(bible, ticks.Where(t => t.Box.IsChecked != true).Select(t => t.Change).ToList()); win.Close(); };
         cancel.Click += (_, _) => win.Close();
         var head = new StackPanel
         {
@@ -86,11 +91,11 @@ public partial class MainWindow
         DockPanel.SetDock(head, Dock.Top); DockPanel.SetDock(buttons, Dock.Bottom);
         win.Content = new DockPanel { Margin = new(22), Children = { head, buttons, new ScrollViewer { Content = list } } };
         await ShowModalAsync(win);
-        return replace;
+        return chosen;
     }
 
     /// <summary>Imports a Bible file; an already imported translation with the same id is replaced and its search index rebuilt on demand.</summary>
-    async Task<string> ImportBibleCoreAsync(string path, string language, Func<string, ParsedBible, Task<bool>>? confirm)
+    async Task<string> ImportBibleCoreAsync(string path, string language, Func<string, ParsedBible, Task<ParsedBible?>>? confirm)
     {
         if (_importing) return L("Ein Import läuft bereits.");
         _importing = true; ImportBibleBtn.IsEnabled = false;
@@ -103,8 +108,11 @@ public partial class MainWindow
             ImportBibleInfo.Text = L("{0} Verse gelesen, werden gespeichert …", bible.Verses.Count);
             var earlier = (await _local.GetTranslationsAsync()).FirstOrDefault(t => t.Name == bible.Name);
             var existed = earlier is not null;
-            if (earlier is not null && confirm is not null && !await confirm(earlier.Id, bible))
-                return ImportBibleInfo.Text = L("Nicht ersetzt: „{0}“ bleibt, wie sie war.", bible.Name);
+            if (earlier is not null && confirm is not null)
+            {
+                if (await confirm(earlier.Id, bible) is not { } wanted) return ImportBibleInfo.Text = L("Nicht ersetzt: „{0}“ bleibt, wie sie war.", bible.Name);
+                bible = wanted;
+            }
             var id = await Task.Run(() => _local.Save(bible, path));
             if (existed) await RealignMarksAsync(id);   // the text may have moved by a letter: marks keep their words
             _store.ForgetTranslation(id); _corpora.Remove(id); _strongIndexes.Remove(id);   // text changed: rebuild search index and concordance on demand
@@ -117,13 +125,55 @@ public partial class MainWindow
                 _lastImportReport = ImportCheck.BuildReport(bible, check);
                 _lastImportReportName = SafeName(bible.ShortName, "import") + "-import-check.md";
                 ImportCheckBtn.IsVisible = true;
+                _lastImportBible = bible; _lastImportId = id;
+                ImportAiBtn.IsVisible = ImportCheck.CorrectionPrompt(bible).Length > 0;
                 ImportBibleInfo.Text += " " + (check.Clean ? L("Die Prüfung fand nichts Auffälliges.") : L("Die Prüfung fand {0} auffällige Stellen: Der Bericht für eine KI lässt sich speichern.", check.Counts.Values.Sum()));
             }
-            catch { ImportCheckBtn.IsVisible = false; /* the check is a help, never a reason to fail an import */ }
+            catch { ImportCheckBtn.IsVisible = false; ImportAiBtn.IsVisible = false; /* the check is a help, never a reason to fail an import */ }
             return ImportBibleInfo.Text;
         }
         catch (Exception ex) { ImportBibleInfo.Text = L("Import fehlgeschlagen: ") + ex.Message; return ImportBibleInfo.Text; }
         finally { _importing = false; ImportBibleBtn.IsEnabled = true; }
+    }
+
+    /// <summary>Hands the verses with reading errors to Claude; the answer goes through the same window as any other replacement.</summary>
+    async Task CorrectWithAiAsync()
+    {
+        if (_lastImportBible is not { } bible) return;
+        if (_settings.AiEngine == "ollama") { ImportBibleInfo.Text = L("Die Korrektur geht bisher nur mit Claude Code, nicht mit Ollama. Der Prüfbericht lässt sich aber speichern."); return; }
+        var exe = ClaudeCli.FindExecutable();
+        if (exe is null) { ImportBibleInfo.Text = L("Claude Code wurde nicht gefunden (siehe Einstellungen)."); return; }
+        ImportAiBtn.IsEnabled = false;
+        try
+        {
+            ImportBibleInfo.Text = L("Claude korrigiert die auffälligen Verse …");
+            var answer = new System.Text.StringBuilder(); string? final = null; string? error = null;
+            var workDir = Path.Combine(_root, "ai", "import-check");
+            Directory.CreateDirectory(workDir);
+            await ClaudeCli.RunAsync(exe, workDir, ImportCheck.CorrectionPrompt(bible), null, "You correct reading errors in Bible texts and answer only in the requested form.", ClaudeCli.WriteMcpConfig(workDir, McpExe),
+                string.IsNullOrWhiteSpace(_settings.AiModel) ? null : _settings.AiModel,
+                ev => { if (ev is ClaudeTextDelta d) lock (answer) answer.Append(d.Text); else if (ev is ClaudeResult r) { if (r.IsError) error = r.Text; else final = r.Text; } }, CancellationToken.None);
+            if (error is not null) { ImportBibleInfo.Text = L("Fehler: ") + error; return; }
+            await ApplyAiAnswerAsync(final is { Length: > 0 } ? final : answer.ToString());
+        }
+        catch (Exception ex) { ImportBibleInfo.Text = L("Fehler: ") + ex.Message; }
+        finally { ImportAiBtn.IsEnabled = true; }
+    }
+
+    /// <summary>Applies an answer of the AI: shown first, saved only when it is accepted; marks keep their words.</summary>
+    internal async Task ApplyAiAnswerAsync(string answer)
+    {
+        if (_lastImportBible is not { } bible || _lastImportId is not { } id) return;
+        var (corrected, applied, refused) = ImportCheck.ApplyCorrections(bible, answer);
+        if (applied == 0) { ImportBibleInfo.Text = L("Die Antwort enthielt keine brauchbare Korrektur ({0} abgelehnt).", refused); return; }
+        if (await ConfirmReplaceAsync(id, corrected) is not { } wanted) { ImportBibleInfo.Text = L("Nicht ersetzt: „{0}“ bleibt, wie sie war.", bible.Name); return; }
+        await Task.Run(() => _local.Save(wanted));
+        await RealignMarksAsync(id);
+        _store.ForgetTranslation(id); _corpora.Remove(id); _strongIndexes.Remove(id);
+        _lastImportBible = wanted;
+        ImportAiBtn.IsVisible = ImportCheck.CorrectionPrompt(wanted).Length > 0;
+        await ReloadTranslationsAsync(id);
+        ImportBibleInfo.Text = L("{0} Verse korrigiert, {1} Vorschläge abgelehnt, weil sie zu viel geändert hätten.", applied, refused);
     }
 
     async Task RemoveImportedAsync()

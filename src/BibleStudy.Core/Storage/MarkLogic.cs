@@ -120,8 +120,35 @@ public static class MarkLogic
     /// Where a mark stands when the translation it was made in is not on this computer (a vault taken along): only its stored words can be looked for, the
     /// occurrence nearest to its old place. Null for a mark over several verses (its words cannot be divided among them) and when the words are not in this verse.
     /// </summary>
-    public static (int Start, int End)? ProjectByStoredText(Mark m, string targetText) =>
-        m.WholeVerse || m.MultiVerse ? null : Realign(m.Text.Trim(), m.Start, targetText);
+    public static (int Start, int End)? ProjectByStoredText(Mark m, string targetText, int? verse = null)
+    {
+        if (m.WholeVerse) return null;
+        var text = m.Text.Trim();
+        if (!m.MultiVerse) return Realign(text, m.Start, targetText);
+        // over several verses: the first verse must end with the start of the words, the last begin with their end, one between lie inside them
+        var v = verse ?? m.Ref.Verse;
+        if (v == m.Ref.Verse)
+        {
+            for (var s = 0; s <= targetText.Length - MinStoredPiece; s++)
+            {
+                var piece = targetText[s..].TrimEnd();
+                if (piece.Length >= MinStoredPiece && text.StartsWith(piece, StringComparison.Ordinal)) return (s, s + piece.Length);
+            }
+            return null;
+        }
+        if (v == m.LastVerse)
+        {
+            for (var e = targetText.Length; e >= MinStoredPiece; e--)
+            {
+                var piece = targetText[..e].TrimStart();
+                if (piece.Length >= MinStoredPiece && text.EndsWith(piece, StringComparison.Ordinal)) return (targetText.Length - targetText.TrimStart().Length, e);
+            }
+            return null;
+        }
+        return targetText.Trim() is { Length: >= MinStoredPiece } whole && text.Contains(whole, StringComparison.Ordinal) ? (0, targetText.Length) : null;
+    }
+
+    const int MinStoredPiece = 3;
 
     /// <summary>Strong numbers: the numbers of the marked words, found again in the other text.</summary>
     static (int Start, int End)? ProjectByStrong(IReadOnlyList<Segment> source, (int Start, int End) t, IReadOnlyList<Segment> target, string targetText, string wanted, out bool evidence)

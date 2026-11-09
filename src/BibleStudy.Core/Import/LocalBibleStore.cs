@@ -177,6 +177,44 @@ public sealed class LocalBibleStore : SqliteDb, IBibleProvider
         return id;
     }
 
+    static readonly (string Table, string Column)[] OwnTables = [("translations", "id"), ("verses", "translation"), ("notes", "translation"), ("headings", "translation")];
+
+    /// <summary>Writes these translations into a small file of their own, to be taken along. The path of the source file stays here.</summary>
+    public void CopyTo(IEnumerable<string> ids, string path)
+    {
+        _ = new LocalBibleStore(path);
+        using var con = Open();
+        void Do(string sql, string? id = null) { using var c = con.CreateCommand(); c.CommandText = sql; if (sql.Contains("$p")) c.Parameters.AddWithValue("$p", path); if (id is not null) c.Parameters.AddWithValue("$i", id); c.ExecuteNonQuery(); }
+        Do("ATTACH DATABASE $p AS t");
+        using (var tx = con.BeginTransaction())
+        {
+            foreach (var id in ids)
+                foreach (var (table, column) in OwnTables) Do($"INSERT INTO t.{table} SELECT * FROM main.{table} WHERE {column}=$i", id);
+            Do("UPDATE t.translations SET source=NULL");
+            tx.Commit();
+        }
+        Do("DETACH DATABASE t");
+    }
+
+    /// <summary>Adds the translations of such a file that are not here yet (by id or by name); returns the ids that were added.</summary>
+    public List<string> AddFrom(string path)
+    {
+        var there = new LocalBibleStore(path).Query("SELECT id,name FROM translations", _ => { }, r => (Id: r.GetString(0), Name: r.GetString(1)));
+        var here = Query("SELECT id,name FROM translations", _ => { }, r => (Id: r.GetString(0), Name: r.GetString(1)));
+        var added = there.Where(x => Owns(x.Id) && here.All(h => h.Id != x.Id && h.Name != x.Name)).Select(x => x.Id).ToList();
+        using var con = Open();
+        void Do(string sql, string? id = null) { using var c = con.CreateCommand(); c.CommandText = sql; if (sql.Contains("$p")) c.Parameters.AddWithValue("$p", path); if (id is not null) c.Parameters.AddWithValue("$i", id); c.ExecuteNonQuery(); }
+        Do("ATTACH DATABASE $p AS t");
+        using (var tx = con.BeginTransaction())
+        {
+            foreach (var id in added)
+                foreach (var (table, column) in OwnTables) Do($"INSERT INTO main.{table} SELECT * FROM t.{table} WHERE {column}=$i", id);
+            tx.Commit();
+        }
+        Do("DETACH DATABASE t");
+        return added;
+    }
+
     public void Remove(string translationId)
     {
         Exec("DELETE FROM verses WHERE translation=$i", c => c.Parameters.AddWithValue("$i", translationId));

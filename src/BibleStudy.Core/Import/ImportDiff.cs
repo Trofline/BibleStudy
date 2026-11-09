@@ -34,6 +34,22 @@ public static class ImportDiff
         return new Result(changed, added, gone.Count, samples);
     }
 
+    /// <summary>The new Bible with the changes that were not wanted taken back: such a verse keeps its old text (a removed one stays, an added one does not come).</summary>
+    public static ParsedBible Without(ParsedBible bible, IReadOnlyCollection<Change> rejected)
+    {
+        if (rejected.Count == 0) return bible;
+        var byKey = rejected.ToDictionary(c => (c.Book, c.Chapter, c.Verse));
+        var verses = new List<ParsedVerse>();
+        foreach (var v in bible.Verses)
+        {
+            if (!byKey.TryGetValue((v.Book, v.Chapter, v.Verse), out var c)) { verses.Add(v); continue; }
+            if (c.Old.Length > 0) verses.Add(v with { Segments = [new Segment(c.Old)] });
+        }
+        var present = bible.Verses.Select(v => (v.Book, v.Chapter, v.Verse)).ToHashSet();
+        verses.AddRange(rejected.Where(c => c.New.Length == 0 && !present.Contains((c.Book, c.Chapter, c.Verse))).Select(c => new ParsedVerse(c.Book, c.Chapter, c.Verse, [new Segment(c.Old)])));
+        return bible with { Verses = verses };
+    }
+
     /// <summary>The part of two versions of a verse that differs, with a little of the text around it ("… words …").</summary>
     public static (string Old, string New) Focus(string a, string b, int context = 24)
     {

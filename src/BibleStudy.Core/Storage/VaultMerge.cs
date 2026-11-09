@@ -7,7 +7,13 @@ using Microsoft.Data.Sqlite;
 namespace BibleStudy.Core.Storage;
 
 /// <summary>What was brought into a vault by <see cref="VaultStore.MergeFrom"/>. Conflicts = places where both sides differ and both were kept.</summary>
-public sealed record MergeResult(int Marks, int Notes, int Documents, int Others, int Conflicts);
+public sealed record MergeResult(int Marks, int Notes, int Documents, int Others, int Conflicts, IReadOnlyList<MergeConflict>? Items = null);
+
+/// <summary>One place where both copies differ and both were kept. Kind: mark, note, doc. CopyId = the second document that was added.</summary>
+public sealed record MergeConflict(string Kind, long Id, VerseRef? Ref, long CopyId, string Label, string Mine, string Theirs);
+
+/// <summary>Something that was deleted in the other copy and is still here, unchanged. Kind: mark, note, doc.</summary>
+public sealed record MergeDeletion(string Kind, long Id, VerseRef? Ref, string Label);
 
 /// <summary>What a vault holds, for the look at a file before it is imported.</summary>
 public sealed record VaultSummary(int Marks, int Notes, int Documents, int Todos, IReadOnlyList<string> Translations);
@@ -83,6 +89,7 @@ public sealed partial class VaultStore
     {
         var other = new VaultStore(otherDbPath, "merge");
         int marks = 0, notes = 0, documents = 0, others = 0, conflicts = 0;
+        var items = new List<MergeConflict>();
 
         // folders: the same name at the same place of the tree is the same folder
         var mineFolders = GetFolders();
@@ -107,15 +114,14 @@ public sealed partial class VaultStore
         long? MappedFolder(long? id) => id is long x && folderMap.TryGetValue(x, out var m) ? m : null;
 
         // marks: the same words of the same verses are the same mark (a whole verse is the same in every translation)
-        static string Key(Mark m) => $"{(m.WholeVerse ? "" : m.TranslationId)}|{m.Ref.Book}|{m.Ref.Chapter}|{m.Ref.Verse}|{m.LastVerse}|{m.Start}|{m.End}";
         var mineMarks = new Dictionary<string, Mark>();
-        foreach (var m in GetMarks()) mineMarks.TryAdd(Key(m), m);
+        foreach (var m in GetMarks()) mineMarks.TryAdd(MarkKey(m), m);
         var markMap = new Dictionary<long, long>();
         foreach (var o in other.GetMarks())
         {
-            if (mineMarks.TryGetValue(Key(o), out var hit))
+            if (mineMarks.TryGetValue(MarkKey(o), out var hit))
             {
-                var note = MergeText(hit.Note, o.Note, out var c); if (c) conflicts++;
+                var note = MergeText(hit.Note, o.Note, out var c); if (c) { conflicts++; items.Add(new MergeConflict("mark", hit.Id, hit.Ref, 0, hit.Text, hit.Note, o.Note)); }
                 var tags = hit.Tags.Union(o.Tags).ToList();
                 var folder = hit.FolderId ?? MappedFolder(o.FolderId);
                 if (note != hit.Note || tags.Count != hit.Tags.Count || folder != hit.FolderId) UpdateMark(hit.Id, hit.Color, note, folder, tags);
@@ -138,7 +144,7 @@ public sealed partial class VaultStore
             var theirs = Unnumbered(o.Text);
             if (!mineNotes.TryGetValue(o.Ref, out var hit)) { SetNote(o.Ref, theirs); if (MappedFolder(o.FolderId) is { } f) SetNoteFolder(o.Ref, f); notes++; continue; }
             var mine = Unnumbered(hit.Text);
-            var merged = MergeText(mine, theirs, out var c); if (c) conflicts++;
+            var merged = MergeText(mine, theirs, out var c); if (c) { conflicts++; items.Add(new MergeConflict("note", 0, o.Ref, 0, "", mine, theirs)); }
             if (merged != mine) { SetNote(o.Ref, merged); notes++; }
         }
 
@@ -155,9 +161,9 @@ public sealed partial class VaultStore
             {
                 title = $"{o.Title} ({copySuffix})";
                 if (mineDocs.Any(d => string.Equals(d.Title, title, StringComparison.OrdinalIgnoreCase) && Same(d))) continue;   // brought in earlier
-                conflicts++;
             }
-            AddDocument(title, body, o.Path, o.IsTemplate, o.Tags, MappedFolder(o.FolderId));
+            var added = AddDocument(title, body, o.Path, o.IsTemplate, o.Tags, MappedFolder(o.FolderId));
+            if (hit is not null) { conflicts++; items.Add(new MergeConflict("doc", hit.Id, null, added, hit.Title, hit.Body, body)); }
             documents++;
         }
 
@@ -210,6 +216,60 @@ public sealed partial class VaultStore
             }
             using var detach = con.CreateCommand(); detach.CommandText = "DETACH DATABASE g"; detach.ExecuteNonQuery();   // let go of the file
         }
-        return new MergeResult(marks, notes, documents, others, conflicts);
+        return new MergeResult(marks, notes, documents, others, conflicts, items);
+    }
+
+    static string MarkKey(Mark m) => $"{(m.WholeVerse ? "" : m.TranslationId)}|{m.Ref.Book}|{m.Ref.Chapter}|{m.Ref.Verse}|{m.LastVerse}|{m.Start}|{m.End}";
+
+    /// <summary>Settles a place where both differ. 0 = mine, 1 = theirs, 2 = both (as the merge left it).</summary>
+    public void ResolveConflict(MergeConflict c, int choice)
+    {
+        if (choice == 2) return;
+        var text = choice == 0 ? c.Mine : c.Theirs;
+        switch (c.Kind)
+        {
+            case "mark":
+                if (GetMarks().FirstOrDefault(m => m.Id == c.Id) is { } mark) UpdateMark(mark.Id, mark.Color, text, mark.FolderId, mark.Tags);
+                break;
+            case "note":
+                SetNote(c.Ref!.Value, text);
+                break;
+            case "doc":
+                if (choice == 1 && GetDocuments().FirstOrDefault(d => d.Id == c.Id) is { } doc) UpdateDocument(doc.Id, doc.Title, text, doc.Path, doc.IsTemplate, doc.Tags, doc.FolderId);
+                DeleteDocument(c.CopyId);
+                break;
+        }
+    }
+
+    /// <summary>What was deleted between the copy that was taken along (basePath) and the copy that came back, and is unchanged here.</summary>
+    public List<MergeDeletion> FindDeletions(string basePath, string otherDbPath)
+    {
+        var before = new VaultStore(basePath, "base"); var after = new VaultStore(otherDbPath, "after");
+        var list = new List<MergeDeletion>();
+        var left = after.GetMarks().Select(MarkKey).ToHashSet();
+        var mine = new Dictionary<string, Mark>();
+        foreach (var m in GetMarks()) mine.TryAdd(MarkKey(m), m);
+        foreach (var b in before.GetMarks())
+            if (!left.Contains(MarkKey(b)) && mine.TryGetValue(MarkKey(b), out var hit) && hit.Note == b.Note) list.Add(new MergeDeletion("mark", hit.Id, hit.Ref, hit.Text));
+        var notesLeft = after.GetNotes().Select(n => n.Ref).ToHashSet();
+        var myNotes = GetNotes().ToDictionary(n => n.Ref);
+        foreach (var b in before.GetNotes())
+            if (!notesLeft.Contains(b.Ref) && myNotes.TryGetValue(b.Ref, out var hit) && Unnumbered(hit.Text).Trim() == Unnumbered(b.Text).Trim()) list.Add(new MergeDeletion("note", 0, b.Ref, hit.Text));
+        var docsLeft = after.GetDocuments().Select(d => d.Title).ToHashSet(StringComparer.OrdinalIgnoreCase);
+        var myDocs = GetDocuments();
+        foreach (var b in before.GetDocuments())
+            if (!docsLeft.Contains(b.Title) && myDocs.FirstOrDefault(d => string.Equals(d.Title, b.Title, StringComparison.OrdinalIgnoreCase)) is { } hit && Unnumbered(hit.Body).Trim() == Unnumbered(b.Body).Trim()) list.Add(new MergeDeletion("doc", hit.Id, null, hit.Title));
+        return list;
+    }
+
+    /// <summary>Deletes one of them; it stays in the trash for a while, like anything else that is deleted.</summary>
+    public void ApplyDeletion(MergeDeletion d)
+    {
+        switch (d.Kind)
+        {
+            case "mark": TrashMark(d.Id); break;
+            case "note": TrashNote(d.Ref!.Value); break;
+            case "doc": TrashDocument(d.Id); break;
+        }
     }
 }

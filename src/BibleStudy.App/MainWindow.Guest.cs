@@ -12,6 +12,8 @@ public partial class MainWindow
     const string GuestFlag = "gast.flag";
     const string GuestOrigin = "gast.origin";
     const string GuestBase = "gast.base";
+    const string GuestOriginal = "gast.orig.db";
+    const string GuestBibles = "gast-bibeln.txt";
     bool _guestAsked;
 
     static bool IsGuestDir(string vaultDir) => File.Exists(Path.Combine(vaultDir, GuestFlag));
@@ -29,12 +31,22 @@ public partial class MainWindow
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException) { ErrorLog.Write(ex); }
     }
 
+    /// <summary>Bibles that came with a guest import go when it goes.</summary>
+    void RemoveGuestBibles()
+    {
+        var file = Path.Combine(_root, GuestBibles);
+        if (!File.Exists(file)) return;
+        foreach (var id in File.ReadAllLines(file).Where(l => l.Length > 0)) _local.Remove(id);
+        File.Delete(file);
+    }
+
     /// <summary>Marks a freshly unpacked vault as a guest: where it came from, and how it looked, to tell later whether anything was changed.</summary>
     void RememberGuest(string name, string origin)
     {
         var dir = Path.Combine(_root, "vaults", name);
         File.WriteAllText(Path.Combine(dir, GuestFlag), "temporary: deleted when the program closes");
         File.WriteAllText(Path.Combine(dir, GuestOrigin), origin);
+        File.Copy(Path.Combine(dir, "vault.db"), Path.Combine(dir, GuestOriginal), true);   // to tell later what was deleted as a guest
         File.WriteAllText(Path.Combine(dir, GuestBase), OpenVault(name).Fingerprint());
     }
 

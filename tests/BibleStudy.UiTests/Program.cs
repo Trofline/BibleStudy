@@ -22,7 +22,8 @@ Directory.CreateDirectory(shots);
 AppBuilder.Configure<App>().UseSkia().UseHeadless(new AvaloniaHeadlessPlatformOptions { UseHeadlessDrawing = false }).WithInterFont().SetupWithoutStarting();
 
 Popup? lastPopup = null;
-Popup.IsOpenProperty.Changed.AddClassHandler<Popup>((p, e) => { if (e.NewValue is true) lastPopup = p; });
+var openPopups = new HashSet<Popup>();
+Popup.IsOpenProperty.Changed.AddClassHandler<Popup>((p, e) => { if (e.NewValue is true) { lastPopup = p; openPopups.Add(p); } else openPopups.Remove(p); });
 TopLevel? OpenPopup() => lastPopup is { IsOpen: true, Child: { } child } ? TopLevel.GetTopLevel(child) : null;
 var fails = 0;
 void Check(string name, bool ok, string detail = "") { Console.WriteLine((ok ? "PASS " : "FAIL ") + name + (ok ? "" : "  -> " + detail)); if (!ok) fails++; }
@@ -60,6 +61,36 @@ void Press(Key key, RawInputModifiers m)
     t.KeyPress(key, m, PhysicalKey.None, null); t.KeyRelease(key, m, PhysicalKey.None, null); Pump(3);
 }
 Button Rib(string tipStart) => C<WrapPanel>("DocRibbon").Children.OfType<Button>().First(b => (ToolTip.GetTip(b) as string ?? "").StartsWith(tipStart));
+
+// opens a question window by a call and waits for it (a notice of the first start is closed before)
+Window Dlg(Func<object?> start, out object? task)
+{
+    foreach (var w0 in win.OwnedWindows.ToList()) w0.Close();
+    Settle(300);
+    task = start();
+    Window? d = null; var t0 = DateTime.Now;
+    while (d is null && (DateTime.Now - t0).TotalSeconds < 10) { Pump(2); Thread.Sleep(80); d = win.OwnedWindows.FirstOrDefault(w => w.IsVisible); }
+    if (d is null) throw new InvalidOperationException("no window came up");
+    return d;
+}
+void Press2(Button b) { b.RaiseEvent(new Avalonia.Interactivity.RoutedEventArgs(Button.ClickEvent)); Settle(500); }
+List<Button> Plain(Window d) => d.GetLogicalDescendants().OfType<Button>().Where(b => b is not Avalonia.Controls.Primitives.ToggleButton).ToList();
+// a real mouse click on a piece of text
+void ClickRun(SelectableTextBlock tb, Avalonia.Controls.Documents.Run target)
+{
+    var idx = 0;
+    foreach (var i in tb.Inlines!) { if (ReferenceEquals(i, target)) break; idx += ((Avalonia.Controls.Documents.Run)i).Text!.Length; }
+    var r = tb.TextLayout.HitTestTextPosition(idx);
+    // where the glyph is drawn: a raised small sign does not fill its line
+    var p = tb.TranslatePoint(new Point(r.X + 2, r.Y + r.Height / 2), win)!.Value;
+    for (var y = 1.0; y < r.Height; y += 1)
+    {
+        var q = tb.TranslatePoint(new Point(r.X + 2, r.Y + y), win)!.Value;
+        if (ReferenceEquals(win.InputHitTest(q), tb)) { p = q; break; }
+    }
+    win.MouseMove(p); win.MouseDown(p, MouseButton.Left); Pump(2); win.MouseUp(p, MouseButton.Left); Pump(6);
+}
+SelectableTextBlock TbOf(int verse) => (SelectableTextBlock)((System.Collections.IEnumerable)F<object>("_cells")).Cast<object>().Select(c => (Data: c.GetType().GetProperty("Data")!.GetValue(c)!, Tb: c.GetType().GetProperty("Tb")!.GetValue(c)!)).First(c => (int)c.Data.GetType().GetProperty("Number")!.GetValue(c.Data)! == verse).Tb;
 
 void Settle(int ms = 400) { for (var i = 0; i < 6; i++) { Pump(4); Thread.Sleep(ms / 6); } }
 void Wait(Func<bool> done, int seconds = 25) { var s = DateTime.Now; while (!done() && (DateTime.Now - s).TotalSeconds < seconds) { Pump(2); Thread.Sleep(80); } Pump(8); Thread.Sleep(100); Pump(8); }
@@ -182,7 +213,7 @@ RunTask("ImportFromPathAsync", allZip, false); Settle(900);
 Check("normal import added copies", Directory.GetDirectories(Path.Combine(data, "vaults")).Length == vaultsBefore * 3, Directory.GetDirectories(Path.Combine(data, "vaults")).Length.ToString());
 Console.WriteLine("BackupInfo: " + C<TextBlock>("BackupInfo").Text);
 // B3) a look before the import; work done as a guest goes home
-var look = ((string Text, bool IsGuestWork))Call("ImportPreview", allZip)!;
+var look = ((string Text, bool IsGuestWork, bool SameName))Call("ImportPreview", allZip)!;
 Console.WriteLine("preview: " + look.Text.Replace("\n", " | "));
 Check("preview names the vaults", look.Text.Contains("Zweit Test") && look.Text.Contains("Umbenannt Test"), look.Text);
 Check("nothing changed in the guests yet", ((List<string>)Call("ChangedGuestVaults")!).Count == 0, string.Join(",", (List<string>)Call("ChangedGuestVaults")!));
@@ -195,11 +226,46 @@ var workZip = Path.Combine(Path.GetTempPath(), "bs_guestwork.zip"); File.Delete(
 Call("SaveGuestWorkTo", workZip, changedGuests);
 using (var z = System.IO.Compression.ZipFile.OpenRead(workZip))
     Check("guest work has its home name", z.GetEntry("vaults/Zweit Test/vault.db") is not null && z.GetEntry("guest-work.txt") is not null, string.Join(",", z.Entries.Select(e => e.FullName)));
-Check("preview knows guest work", (((string Text, bool IsGuestWork))Call("ImportPreview", workZip)!).IsGuestWork);
+Check("preview knows guest work", (((string Text, bool IsGuestWork, bool SameName))Call("ImportPreview", workZip)!).IsGuestWork);
 RunTask("MergeGuestWorkAsync", workZip); Settle(900);
 Console.WriteLine("BackupInfo: " + C<TextBlock>("BackupInfo").Text);
 Check("guest note arrived at home", ((VaultStore)Call("StoreOf", "Zweit Test")!).GetNotes().Any(n => n.Text == "Vom Gast geschrieben"));
 Check("merge made a backup in the test folder only", Directory.GetFiles(BibleStudy.Core.AppPaths.BackupDir, "*Einmischen*").Length + Directory.GetFiles(BibleStudy.Core.AppPaths.BackupDir, "*merging*").Length > 0);
+// B4) both sides differ, and something was deleted as a guest: the review, then undo
+{
+    var home = (VaultStore)Call("StoreOf", "Zweit Test")!;
+    var round = Path.Combine(Path.GetTempPath(), "bs_round2.zip"); File.Delete(round);
+    Call("ExportAllToPath", round);
+    var before = Directory.GetDirectories(vaultsDir).Select(Path.GetFileName).ToHashSet();
+    RunTask("ImportFromPathAsync", round, true); Settle(900);
+    var g2 = Directory.GetDirectories(vaultsDir).Select(Path.GetFileName).Where(n => !before.Contains(n)).First(n => File.ReadAllText(Path.Combine(vaultsDir, n!, "gast.origin")) == "Zweit Test")!;
+    var gs = (VaultStore)Call("StoreOf", g2)!;
+    gs.SetNote(new BibleStudy.Core.Models.VerseRef("GEN", 1, 7), "");
+    gs.SetNote(new BibleStudy.Core.Models.VerseRef("GEN", 1, 8), "Gastfassung");
+    home.SetNote(new BibleStudy.Core.Models.VerseRef("GEN", 1, 8), "Heimfassung");
+    var w2 = Path.Combine(Path.GetTempPath(), "bs_work2.zip"); File.Delete(w2);
+    Call("SaveGuestWorkTo", w2, new List<string> { g2 });
+    RunTask("MergeGuestWorkAsync", w2); Settle(900);
+    Check("undo is offered after a merge", C<Button>("MergeUndoBtn").IsVisible);
+    var review = Dlg(() => Call("ReviewMergeAsync"), out var rt);
+    var combo = review.GetLogicalDescendants().OfType<ComboBox>().Single(); combo.SelectedIndex = 1;
+    var del = review.GetLogicalDescendants().OfType<CheckBox>().Single();
+    Check("what was deleted as a guest is listed, not ticked", del.IsChecked == false);
+    del.IsChecked = true; Pump(4);
+    Press2(Plain(review)[0]);
+    await (Task)rt!;
+    var notes = home.GetNotes();
+    Check("their text was chosen", notes.Single(n => n.Ref.Verse == 8).Text == "Gastfassung", notes.Single(n => n.Ref.Verse == 8).Text);
+    Check("the deletion was applied", notes.All(n => n.Ref.Verse != 7));
+    RunTask("UndoMergeCoreAsync"); Settle(900);
+    notes = ((VaultStore)Call("StoreOf", "Zweit Test")!).GetNotes();
+    Check("undo brings the old state back", notes.Single(n => n.Ref.Verse == 8).Text == "Heimfassung" && notes.Any(n => n.Ref.Verse == 7));
+    Check("undo is gone after use", !C<Button>("MergeUndoBtn").IsVisible);
+    // a normal export can be mixed in too
+    Check("same name is noticed", (((string Text, bool IsGuestWork, bool SameName))Call("ImportPreview", round)!).SameName);
+    RunTask("MergeGuestWorkAsync", zipPath); Settle(900);
+    Check("a file of one vault can be mixed in", (C<TextBlock>("BackupInfo").Text ?? "").StartsWith("Eingemischt"), C<TextBlock>("BackupInfo").Text ?? "");
+}
 // C) import check report: faulty USFM, then button
 var bsl = "\\";
 var uf = Path.Combine(Path.GetTempPath(), "bs_faulty.usfm");
@@ -262,20 +328,54 @@ RunTask("GoToAsync", "GEN", 1, (int?)1); Settle(1000);
 var coloredA = RunsOf((Control)F<System.Collections.IDictionary>("_verseBoxes")[3]!).Where(r => r.Background is not null).Select(r => r.Text).ToList();
 Console.WriteLine("colored runs in A verse 3: " + string.Join("|", coloredA));
 Check("mark still shows in the translation it was made in", coloredA.Count > 0);
+// choosing what goes along, with a real window
+{
+    var d = Dlg(() => Call("ChooseVaultsAsync"), out var t);
+    var boxes2 = d.GetLogicalDescendants().OfType<CheckBox>().ToList();
+    var bibleBox = boxes2.First(b => b.Content as string == "bs_faulty");
+    Check("bibles are not ticked at first", bibleBox.IsChecked == false);
+    bibleBox.IsChecked = true; boxes2[0].IsChecked = false; Pump(4);
+    Press2(Plain(d)[0]);
+    var boxed = t!.GetType().GetProperty("Result")!.GetValue(t)!;
+    var (cv, cb) = ((List<string>, List<string>))boxed;
+    Check("the ticks count", !cv.Contains((string)boxes2[0].Content!) && cb.Count == 1, string.Join(",", cv) + " / " + string.Join(",", cb));
+    var withB = Path.Combine(Path.GetTempPath(), "bs_bible.zip"); File.Delete(withB);
+    Call("WriteVaultsZip", withB, new List<(string, string)> { ("Zweit Test", "Zweit Test") }, false, cb);
+    using (var z = System.IO.Compression.ZipFile.OpenRead(withB)) Check("the bible is in the file", z.GetEntry("bibles.db") is not null);
+    var pv = ((string Text, bool IsGuestWork, bool SameName))Call("ImportPreview", withB)!;
+    Check("preview names the bible", pv.Text.Contains("bs_faulty"), pv.Text);
+}
+// the answer of an AI: shown first, one verse unticked keeps its old text
+{
+    Check("the AI button shows after a faulty import", C<Button>("ImportAiBtn").IsVisible);
+    var ans = "GEN 1,1: Der H sprach, und G1001 NA/G21 TR es ward gingen.\nGEN 1,2: Der H sprach, und G1002 NA/G22 TR es ward gingen.";
+    var d = Dlg(() => Call("ApplyAiAnswerAsync", ans), out var t);
+    var ticks = d.GetLogicalDescendants().OfType<CheckBox>().ToList();
+    Check("each verse has its tick", ticks.Count == 2);
+    ticks[1].IsChecked = false; Pump(4);
+    Press2(Plain(d)[0]);
+    Settle(900);
+    var localS = F<BibleStudy.Core.Import.LocalBibleStore>("_local");
+    var fid = (await localS.GetTranslationsAsync()).First(x => x.Name == "bs_faulty").Id;
+    var after = (await localS.GetChapterAsync(fid, "GEN", 1)).Verses;
+    Check("the ticked verse is corrected", after[0].Text.Contains("ward gingen"), after[0].Text);
+    Check("the unticked verse keeps its text", after[1].Text.Contains("gin g en"), after[1].Text);
+}
 // replacing a Bible: the changes are shown first, and cancelling leaves it alone
 {
     var faulty = (await F<BibleStudy.Core.Import.LocalBibleStore>("_local").GetTranslationsAsync()).First(t => t.Name == "bs_faulty");
     var newer = new BibleStudy.Core.Import.ParsedBible("bs_faulty", "x", "de", [new BibleStudy.Core.Import.ParsedVerse("GEN", 1, 1, [new BibleStudy.Core.Models.Segment("Ganz neuer Text")])], []);
-    var confirm = (Task<bool>)typeof(MainWindow).GetMethod("ConfirmReplaceAsync", All)!.Invoke(win, [faulty.Id, newer])!;
+    var confirm = (Task<BibleStudy.Core.Import.ParsedBible?>)typeof(MainWindow).GetMethod("ConfirmReplaceAsync", All)!.Invoke(win, [faulty.Id, newer])!;
     Window? cw = null; var ct = DateTime.Now;
     while (cw is null && (DateTime.Now - ct).TotalSeconds < 10) { Pump(2); Thread.Sleep(80); cw = win.OwnedWindows.FirstOrDefault(w => w.IsVisible); }
     Check("replace window opens", cw is not null);
     var shown = string.Join(" ", cw!.GetLogicalDescendants().OfType<TextBlock>().Select(t => t.Text));
     Console.WriteLine("replace window: " + shown[..Math.Min(160, shown.Length)]);
     Check("replace window shows the new text", shown.Contains("Ganz neuer Text"));
-    cw.GetLogicalDescendants().OfType<Button>().Last().RaiseEvent(new Avalonia.Interactivity.RoutedEventArgs(Button.ClickEvent)); Settle(300);
-    Check("cancel means no", confirm.IsCompleted && !confirm.Result);
+    Press2(Plain(cw)[^1]);
+    Check("cancel means no", confirm.IsCompleted && confirm.Result is null);
 }
+tbx.SelectedItem = tbx.Items.OfType<BibleStudy.Core.Models.TranslationInfo>().First(x => x.Id == tid); Settle(700);   // the correction above switched to the corrected Bible
 // a sub-mark from a translation this computer does not have: found by its stored words
 vFinal.AddMark("weg_bibel", new BibleStudy.Core.Models.VerseRef("GEN", 1, 4), sIdx, sIdx + 9, "Testbibel", "#43A047", "", null, []);
 vFinal.AddMark("weg_bibel", new BibleStudy.Core.Models.VerseRef("GEN", 1, 5), sIdx, sIdx + 10, "Gibtsnicht", "#43A047", "", null, []);
@@ -287,6 +387,28 @@ Check("mark of a missing translation shows by its words", gone4.Any(t => t!.Cont
 Check("mark whose words are not in the verse stays away", !gone5.Any(t => t!.Contains("Gibtsnicht")) && gone5.Count == 0, string.Join("|", gone5));
 Check("a sign says that a mark cannot be shown here", RunsOf((Control)F<System.Collections.IDictionary>("_verseBoxes")[5]!).Any(r => r.Text == "° "));
 Check("no sign where the mark is shown", !RunsOf((Control)F<System.Collections.IDictionary>("_verseBoxes")[4]!).Any(r => r.Text == "° "));
+// real mouse clicks: the sign shows why, a guessed place opens the correction
+{
+    var signRun = TbOf(5).Inlines!.OfType<Avalonia.Controls.Documents.Run>().First(r => r.Text == "° ");
+    foreach (var stale in openPopups.ToList()) stale.IsOpen = false;   // a window left open by an earlier step would take the click
+    Settle(200);
+    ClickRun(TbOf(5), signRun); Settle(300);
+    var shownPop = OpenPopup()?.GetVisualDescendants().OfType<TextBlock>().Select(t => t.Text).ToList() ?? [];
+    Check("a click on the sign says which mark", shownPop.Any(t => t is not null && t.Contains("Gibtsnicht")), string.Join("|", shownPop));
+    if (lastPopup is { } lp) lp.IsOpen = false;
+    Settle(200);
+    tbx.SelectedItem = tbx.Items.OfType<BibleStudy.Core.Models.TranslationInfo>().First(x => x.Id == tidB); Settle(700);
+    vFinal.AddMark(tid, new BibleStudy.Core.Models.VerseRef("GEN", 1, 2), sIdx, sIdx + 9, "Testbibel", "#43A047", "", null, []);
+    RunTask("GoToAsync", "GEN", 1, (int?)1); Settle(1200);
+    var dashed = TbOf(2).Inlines!.OfType<Avalonia.Controls.Documents.Run>().First(r => r.Background is not null && r.TextDecorations is not null);
+    foreach (var w0 in win.OwnedWindows.ToList()) w0.Close(); Settle(300);
+    ClickRun(TbOf(2), dashed);
+    Window? cor = null; var t1 = DateTime.Now;
+    while (cor is null && (DateTime.Now - t1).TotalSeconds < 6) { Pump(2); Thread.Sleep(80); cor = win.OwnedWindows.FirstOrDefault(w => w.IsVisible); }
+    Check("a click on a guessed place opens the correction", cor is not null && cor.GetLogicalDescendants().OfType<Avalonia.Controls.Primitives.ToggleButton>().Any());
+    if (cor is not null) Press2(Plain(cor)[^1]);
+    tbx.SelectedItem = tbx.Items.OfType<BibleStudy.Core.Models.TranslationInfo>().First(x => x.Id == tid); Settle(700);
+}
 // ===== once-only question: read the imported Bibles again =====
 {
     var bs3 = "\\";

@@ -152,3 +152,97 @@ public class ImportDiffTests
         Assert.Null(ImportFileFinder.Find(Path.Combine(root, "weg", "Luther1912.pdf"), [root]));
     }
 }
+
+public class MergeReviewTests
+{
+    static string TempDir() { var d = Path.Combine(Path.GetTempPath(), "bs_review_" + Guid.NewGuid().ToString("N")); Directory.CreateDirectory(d); return d; }
+    static VerseRef R(int v) => new("GEN", 1, v);
+
+    [Fact]
+    public void A_conflict_can_be_settled_either_way()
+    {
+        var dir = TempDir();
+        var home = new VaultStore(Path.Combine(dir, "h.db"), "h"); var gp = Path.Combine(dir, "g.db"); var guest = new VaultStore(gp, "g");
+        home.SetNote(R(1), "A"); guest.SetNote(R(1), "B");
+        home.AddDocument("D", "eins", null, false, []); guest.AddDocument("D", "zwei", null, false, []);
+        var r = home.MergeFrom(gp, "Gast");
+        Assert.Equal(2, r.Items!.Count);
+        home.ResolveConflict(r.Items.Single(i => i.Kind == "note"), 1);
+        Assert.Equal("B", home.GetNotes().Single().Text);
+        home.ResolveConflict(r.Items.Single(i => i.Kind == "doc"), 1);
+        Assert.Equal("zwei", home.GetDocuments().Single().Body);
+    }
+
+    [Fact]
+    public void What_was_deleted_as_a_guest_is_found_unless_it_changed_here()
+    {
+        var dir = TempDir();
+        var bp = Path.Combine(dir, "b.db"); var gp = Path.Combine(dir, "g.db");
+        var home = new VaultStore(Path.Combine(dir, "h.db"), "h"); var b = new VaultStore(bp, "b"); var g = new VaultStore(gp, "g");
+        foreach (var v in new[] { home, b }) { v.AddMark("t", R(1), 0, 3, "abc", "#111111", "", null, []); v.SetNote(R(2), "weg"); v.SetNote(R(3), "alt"); }
+        home.SetNote(R(3), "hier geändert");
+        var found = home.FindDeletions(bp, gp);
+        Assert.Equal(2, found.Count);
+        foreach (var d in found) home.ApplyDeletion(d);
+        Assert.Empty(home.GetMarks());
+        Assert.Equal("hier geändert", home.GetNotes().Single().Text);
+        Assert.Equal(2, home.GetTrash().Count);
+    }
+
+    [Fact]
+    public void Marks_over_several_verses_are_found_by_their_words()
+    {
+        var m = new Mark(1, "gone", R(1), 6, 4, "Anfang schuf Gott die Himmel und die Erde", "#111111", "", null, [], 3);
+        Assert.Equal((3, 15), MarkLogic.ProjectByStoredText(m, "Im Anfang schuf", 1));
+        Assert.Equal((0, 8), MarkLogic.ProjectByStoredText(m, "Gott die", 2));
+        Assert.Equal((0, 19), MarkLogic.ProjectByStoredText(m, "Himmel und die Erde und mehr", 3));
+        Assert.Null(MarkLogic.ProjectByStoredText(m, "etwas ganz anderes", 2));
+    }
+}
+
+public class AiCorrectionTests
+{
+    static ParsedBible B(params ParsedVerse[] v) => new("T", "T", "de", v, []);
+
+    [Fact]
+    public void Only_the_differing_part_changes_and_footnotes_stay()
+    {
+        IReadOnlyList<Segment> segs = [new("Da gin g "), new("", NoteId: 1), new("en sie hinaus")];
+        var r = ImportCheck.WithText(segs, "Da gingen sie hinaus");
+        Assert.Equal("Da gingen sie hinaus", string.Concat(r.Where(s => s.NoteId is null).Select(s => s.Text)));
+        Assert.Contains(r, s => s.NoteId == 1);
+    }
+
+    [Fact]
+    public void An_answer_is_applied_and_a_reworded_verse_refused()
+    {
+        var b = B(new ParsedVerse("GEN", 1, 1, [new Segment("Im Anfang schuf Gott d en Himmel")]), new ParsedVerse("GEN", 1, 2, [new Segment("Und die Erde war wüst und leer")]));
+        var (x, ok, no) = ImportCheck.ApplyCorrections(b, "Hier die Korrektur:\nGEN 1,1: Im Anfang schuf Gott den Himmel\nGEN 1,2: Ganz etwas anderes steht jetzt hier\nEXO 9,9: gibt es nicht");
+        Assert.Equal((1, 2), (ok, no));
+        Assert.Equal("Im Anfang schuf Gott den Himmel", x.Verses[0].Segments[0].Text);
+        Assert.Equal("Und die Erde war wüst und leer", x.Verses[1].Segments[0].Text);
+    }
+
+    [Fact]
+    public void Unticked_changes_keep_the_old_text()
+    {
+        var b = B(new ParsedVerse("GEN", 1, 1, [new Segment("neu")]), new ParsedVerse("GEN", 1, 3, [new Segment("dazu")]));
+        var r = ImportDiff.Without(b, [new("GEN", 1, 1, "alt", "neu"), new("GEN", 1, 3, "", "dazu"), new("GEN", 1, 4, "weg", "")]);
+        Assert.Equal(new[] { "alt", "weg" }, r.Verses.Select(v => v.Segments[0].Text));
+    }
+
+    [Fact]
+    public void Bibles_travel_in_a_file_of_their_own_and_never_replace()
+    {
+        var d = Path.Combine(Path.GetTempPath(), "bs_bib_" + Guid.NewGuid().ToString("N")); Directory.CreateDirectory(d);
+        var a = new LocalBibleStore(Path.Combine(d, "a.db"));
+        var id = a.Save(B(new ParsedVerse("GEN", 1, 1, [new Segment("Text")])), @"C:\privat\datei.pdf");
+        var file = Path.Combine(d, "x.db");
+        a.CopyTo([id], file);
+        var c = new LocalBibleStore(Path.Combine(d, "c.db"));
+        Assert.Equal(new[] { id }, c.AddFrom(file));
+        Assert.Null(c.GetOutdated().FirstOrDefault()?.Source);
+        Assert.Equal("Text", c.GetChapterAsync(id, "GEN", 1).Result.Verses[0].Text);
+        Assert.Empty(c.AddFrom(file));
+    }
+}

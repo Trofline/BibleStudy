@@ -33,6 +33,8 @@ public partial class MainWindow
         SpeakBtn.Click += async (_, _) => await ToggleSpeakAsync();
         ExportBtn.Click += async (_, _) => await ExportAsync();
         ExportAllBtn.Click += async (_, _) => await ExportAllAsync();
+        MergeUndoBtn.Click += async (_, _) => await UndoMergeAsync();
+        MergeUndoBtn.IsVisible = Directory.Exists(MergeUndoDir);
         ImportBtn.Click += async (_, _) => await ImportAsync();
         GuestImportBtn.Click += async (_, _) => await ImportAsync(guest: true);
         Closed += (_, _) => { _speech?.Dispose(); _voiceCts?.Cancel(); _voice.Dispose(); BibleStudy.Core.OllamaClient.StopStarted(); };
@@ -231,15 +233,15 @@ public partial class MainWindow
             Title = guest ? L("Vault als Gast importieren") : L("Vault importieren"), AllowMultiple = false, FileTypeFilter = [new FilePickerFileType("ZIP-Archiv") { Patterns = ["*.zip"] }],
         });
         if (files.Count == 0 || files[0].TryGetLocalPath() is not { } path) return;
-        (string Text, bool IsGuestWork) look;
+        (string Text, bool IsGuestWork, bool SameName) look;
         try { look = ImportPreview(path); }
         catch (Exception ex) { BackupInfo.Text = L("Import fehlgeschlagen: ") + ex.Message; return; }
-        if (look.IsGuestWork && !guest)
+        if ((look.IsGuestWork || look.SameName) && !guest)
         {
-            var how = await AskAsync(L("Gast-Arbeit einmischen?"),
-                look.Text + "\n\n" + L("Diese Datei wurde am Ende einer Gast-Sitzung gesichert. Beim Einmischen kommt alles Neue in deine Vaults mit demselben Namen. Es wird nichts gelöscht oder überschrieben; wo sich beide unterscheiden, bleibt beides erhalten. Vorher wird eine Sicherung angelegt."),
+            var how = await AskAsync(look.IsGuestWork ? L("Gast-Arbeit einmischen?") : L("In vorhandene Vaults einmischen?"),
+                look.Text + "\n\n" + (look.IsGuestWork ? L("Diese Datei wurde am Ende einer Gast-Sitzung gesichert. Beim Einmischen kommt alles Neue in deine Vaults mit demselben Namen. Es wird nichts gelöscht oder überschrieben; wo sich beide unterscheiden, bleibt beides erhalten. Vorher wird eine Sicherung angelegt.") : L("Vaults mit diesem Namen gibt es hier schon. Beim Einmischen kommt alles Neue zu ihnen dazu; es wird nichts gelöscht oder überschrieben, und vorher wird eine Sicherung angelegt.")),
                 L("Einmischen"), L("Als neue Vaults"), L("Abbrechen"));
-            if (how == 0) await MergeGuestWorkAsync(path);
+            if (how == 0) { await MergeGuestWorkAsync(path); await ReviewMergeAsync(); }
             else if (how == 1) await ImportFromPathAsync(path, false);
             return;
         }

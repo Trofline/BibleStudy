@@ -83,7 +83,7 @@ public partial class MainWindow : Window
         CreatePlugins();
         _overlay = new StrongsOverlay(Path.Combine(_root, "strongs-overlay"));
         _provider = new CompositeProvider(_hello, _local, _pluginProvider) { Overlay = _overlay };
-        Closed += (_, _) => { try { DeleteGuestVaults(_root); } catch (Exception ex) { ErrorLog.Write(ex); } };
+        Closed += (_, _) => { try { DeleteGuestVaults(_root); RemoveGuestBibles(); } catch (Exception ex) { ErrorLog.Write(ex); } };
         Closed += (_, _) => { try { _overlay.CommitAll(); } catch (Exception ex) when (ex is IOException or UnauthorizedAccessException) { ErrorLog.Write(ex); } };
         _strongs = new StrongsDictionary(http, Path.Combine(_root, "cache"));
         _step = new StepLexicon(http, Path.Combine(_root, "cache"));
@@ -95,6 +95,7 @@ public partial class MainWindow : Window
         TakeResume();
         CommentariesOn = _settings.ShowCommentaries; CompactLook = _settings.CompactLook; NavGroups = MakeNavGroups();
         DeleteGuestVaults(_root);   // a guest import left over from a crash
+        RemoveGuestBibles();
         _readStore = new ReadStore(Path.Combine(_root, "read.db"));
         if (_readStore.IsNew)   // first start with the shared list: what was read in any vault so far counts for all of them
         {
@@ -649,7 +650,7 @@ public partial class MainWindow : Window
     {
         if (_chapterMarks.Contains(m) && _markPlaces.TryGetValue((m.Id, d.T.Id, d.Number), out var byHand) && byHand.End <= rawText.Length) return (byHand.Start, byHand.End, false);   // set by hand
         if (!_markSources.TryGetValue(m.TranslationId, out var ch) || ch.Verses.FirstOrDefault(x => x.Number == d.Number) is not { } sourceVerse)
-            return MarkLogic.ProjectByStoredText(m, rawText) is { } stored ? (stored.Start, stored.End, false) : null;   // its translation is not here: the words the mark stored
+            return MarkLogic.ProjectByStoredText(m, rawText, d.Number) is { } stored ? (stored.Start, stored.End, false) : null;   // its translation is not here: the words the mark stored
         var sourceLen = MarkLogic.RawText(sourceVerse.Segments).Length;
         if (MarkLogic.PartIn(m, d.Number, sourceLen) is not { } part) return null;
         if (part.Start <= 0 && part.End >= sourceLen) return (0, rawText.Length, false);   // the whole verse lies inside the mark
@@ -791,7 +792,7 @@ public partial class MainWindow : Window
             else if (StudyBtn.IsChecked == true) _ = ShowStudyAsync(span);
         }
         // a click on the verse number marks the whole verse: the colors show over it (like over selected text)
-        var onNumber = cell.Runs.Count > 0 && hit < cell.Runs[0].Tb;
+        var onNumber = cell.Runs.Count > 0 && hit < cell.Runs[0].Tb && span?.Note is null;   // the small sign beside the number is not the number
         if (!foreign && props.IsLeftButtonPressed && !withKeys && onNumber && _settings.SelectionPopup && !_settings.QuickMark)
         {
             e.Handled = true;
@@ -804,13 +805,14 @@ public partial class MainWindow : Window
             if (_wholeMarks.TryGetValue(verse, out var have) && string.Equals(have, QuickColor(), StringComparison.OrdinalIgnoreCase)) _ = RemoveMarksAsync();
             else _ = ApplyColorAsync(QuickColor());
         }
+        else if (span?.Note is not null && props.IsLeftButtonPressed && !withKeys) e.Handled = true;   // its little window stays open: no selection starts here
         else if (!foreign && props.IsLeftButtonPressed && !withKeys) BeginTextSelection(e, tb, cell);
         else if (!foreign && props.IsLeftButtonPressed) e.Handled = true;   // Ctrl/Shift choose verses; the built-in selection must not start
     }
 
     void ShowFootnote(Control anchor, WordSpan span)
     {
-        var title = new TextBlock { Text = L("Fußnote {0}", span.Word), FontWeight = FontWeight.SemiBold };
+        var title = new TextBlock { Text = span.Word == "°" ? L("Markierung") : L("Fußnote {0}", span.Word), FontWeight = FontWeight.SemiBold };
         title.Bind(TextBlock.ForegroundProperty, this.GetResourceObservable("BsAccent"));
         var body = new TextBlock { Text = span.Note, TextWrapping = TextWrapping.Wrap, MaxWidth = 340 };
         new Flyout { Content = new StackPanel { Spacing = 4, Children = { title, body } }, Placement = PlacementMode.Pointer }.ShowAt(anchor);
