@@ -66,4 +66,44 @@ public class ReviewFindingsTests : IDisposable
         var refs = DocumentLinks.VerseRefs("Schau mal 3,5 Meter weiter, ich hab 3,5 Euro. Mal 3,6 und Hab 2,4 gelten, auch joh 3,16.");
         Assert.Equal([new VerseRef("MAL", 3, 6), new VerseRef("HAB", 2, 4), new VerseRef("JHN", 3, 16)], refs);
     }
+
+    [Fact]
+    public void RelayPassword_IsNotReadableInTheSettingsFile()
+    {
+        var path = Path.Combine(_dir, "settings.json");
+        new AppSettings { RelayPassword = "geheim123" }.Save(path);
+        if (OperatingSystem.IsWindows()) Assert.DoesNotContain("geheim123", File.ReadAllText(path));
+        Assert.Equal("geheim123", AppSettings.Load(path).RelayPassword);
+        // a file of an older version holds it as plain text
+        File.WriteAllText(path, "{\"RelayPassword\":\"alt\"}");
+        Assert.Equal("alt", AppSettings.Load(path).RelayPassword);
+    }
+
+    [Fact]
+    public void Plugin_MustBeAllowedAgain_WhenItsProgramChanges()
+    {
+        var dir = Path.Combine(_dir, "plugins", "demo");
+        Directory.CreateDirectory(dir);
+        File.WriteAllText(Path.Combine(dir, "plugin.json"), "{\"id\":\"demo\",\"name\":\"Demo\",\"command\":\"run.bat\"}");
+        File.WriteAllText(Path.Combine(dir, "run.bat"), "echo 1");
+        var approved = new Dictionary<string, string>();
+        using var manager = new BibleStudy.Core.Plugins.PluginManager(Path.Combine(_dir, "plugins"), () => approved);
+        var first = Assert.Single(manager.Discover());
+        approved["demo"] = first.Hash;
+        Assert.True(manager.IsAllowed(first));
+        File.WriteAllText(Path.Combine(dir, "data.txt"), "what the plugin writes does not count");
+        Assert.True(manager.IsAllowed(Assert.Single(manager.Discover())));
+        File.WriteAllText(Path.Combine(dir, "run.bat"), "echo 2");
+        Assert.False(manager.IsAllowed(Assert.Single(manager.Discover())));
+    }
+
+    [Fact]
+    public void GetNote_ReadsTheOneVerse()
+    {
+        var vault = new VaultStore(Path.Combine(_dir, "n.db"), "t");
+        vault.SetNote(new VerseRef("JHN", 3, 16), "eins");
+        vault.SetNote(new VerseRef("JHN", 3, 17), "zwei");
+        Assert.Equal("zwei", vault.GetNote(new VerseRef("JHN", 3, 17))?.Text);
+        Assert.Null(vault.GetNote(new VerseRef("JHN", 3, 18)));
+    }
 }

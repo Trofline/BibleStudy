@@ -16,6 +16,19 @@ public partial class MainWindow
 {
     readonly HashSet<string> _noteOpen = [];
     bool _notesTouched;
+    bool _notesStale, _notesQueued;
+
+    /// <summary>
+    /// After a click on a verse: the list of notes is drawn again only when it is seen, and once for several quick clicks (typing verse numbers);
+    /// otherwise when it is shown next. What mentions this verse is looked up at once.
+    /// </summary>
+    void RefreshNotesTreeIfShown()
+    {
+        if (!(TabActive(2) && (SidePanel.IsVisible || _windows.Values.Any(d => d.Current == 2)))) { _notesStale = true; ShowNoteLinks(backlinks: true); return; }
+        if (_notesQueued) return;
+        _notesQueued = true;
+        Avalonia.Threading.Dispatcher.UIThread.Post(() => { _notesQueued = false; RefreshNotesTree(); }, Avalonia.Threading.DispatcherPriority.Background);
+    }
     bool _noteFolderLoading;
 
     void InitNotes()
@@ -63,7 +76,7 @@ public partial class MainWindow
         _noteFolderLoading = true;
         var folders = FolderTree(_vault.GetFolders());
         NoteFolderBox.ItemsSource = new List<object> { L("(kein Ordner)") }.Concat(folders).ToList();
-        var current = _vault.GetNotes().FirstOrDefault(n => n.Ref == r)?.FolderId;
+        var current = _vault.GetNote(r)?.FolderId;
         NoteFolderBox.SelectedIndex = current is long id && folders.FindIndex(f => f.Id == id) is var i and >= 0 ? i + 1 : 0;
         _noteFolderLoading = false;
     }
@@ -73,6 +86,7 @@ public partial class MainWindow
     void RefreshNotesTree()
     {
         if (_vault is null) return;
+        _notesStale = false;
         var all = _vault.GetNotes();
         ShowNoteLinks(backlinks: true);   // a note that was saved or deleted changes what mentions this verse
         if (!_exQuiet && _exBuilt && TabActive(ExplorerTab)) RefreshExplorer();

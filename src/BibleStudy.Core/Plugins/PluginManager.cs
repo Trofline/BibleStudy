@@ -30,7 +30,7 @@ public sealed class PluginCommand
     public string Title { get; set; } = "";
 }
 
-/// <summary>A plugin folder as found on disk. <paramref name="Hash"/> is the fingerprint of its plugin.json: a changed file must be allowed again.</summary>
+/// <summary>A plugin folder as found on disk. <paramref name="Hash"/> is the fingerprint of its plugin.json and its program files: a changed plugin must be allowed again.</summary>
 public sealed record PluginInfo(PluginManifest Manifest, string Dir, string Hash, string? Problem);
 
 /// <summary>
@@ -50,6 +50,25 @@ public sealed partial class PluginManager(string pluginsDir, Func<IReadOnlyDicti
 
     [GeneratedRegex("^[a-z0-9][a-z0-9-]{0,39}$")] private static partial Regex IdPattern();
 
+    static readonly HashSet<string> ProgramFiles = new(StringComparer.OrdinalIgnoreCase) { ".exe", ".dll", ".so", ".dylib", ".py", ".pyc", ".js", ".mjs", ".cjs", ".ps1", ".psm1", ".bat", ".cmd", ".sh", ".jar", ".rb", ".pl", ".lua" };
+
+    /// <summary>
+    /// plugin.json and every file that can run (programs, libraries, scripts), with their places in the folder: allowing a plugin allows exactly
+    /// these files. Before, only plugin.json counted, so a program swapped later ran without a new question. Data the plugin writes does not count.
+    /// </summary>
+    static string Fingerprint(string dir, byte[] manifest)
+    {
+        using var sha = IncrementalHash.CreateHash(HashAlgorithmName.SHA256);
+        sha.AppendData(manifest);
+        foreach (var file in Directory.EnumerateFiles(dir, "*", SearchOption.AllDirectories).Where(f => ProgramFiles.Contains(Path.GetExtension(f))).Select(f => Path.GetRelativePath(dir, f).Replace('\\', '/')).Order(StringComparer.Ordinal))
+        {
+            sha.AppendData(System.Text.Encoding.UTF8.GetBytes(file + "\n"));
+            using var s = File.OpenRead(Path.Combine(dir, file));
+            sha.AppendData(SHA256.HashData(s));
+        }
+        return Convert.ToHexString(sha.GetHashAndReset());
+    }
+
     public IReadOnlyList<PluginInfo> Discover()
     {
         var list = new List<PluginInfo>();
@@ -65,7 +84,7 @@ public sealed partial class PluginManager(string pluginsDir, Func<IReadOnlyDicti
             try
             {
                 var bytes = File.ReadAllBytes(file);
-                hash = Convert.ToHexString(SHA256.HashData(bytes));
+                hash = Fingerprint(dir, bytes);
                 m = JsonSerializer.Deserialize<PluginManifest>(bytes, Json) ?? new();
             }
             catch (Exception ex) when (ex is JsonException or IOException) { m = new() { Name = Path.GetFileName(dir) }; problem = L("plugin.json ist nicht lesbar: {0}", ex.Message); }

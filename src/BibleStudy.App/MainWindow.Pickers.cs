@@ -68,12 +68,35 @@ public partial class MainWindow
 
     void UpdatePickerLabels()
     {
-        LangBtn.Content = PickerLabel(LanguageBox.SelectedItem as string ?? L("Sprache"));
+        LangBtn.Content = PickerLabel(LanguageBox.SelectedItem is string lang ? LangLabel(lang) : L("Sprache"));
         TransBtn.Content = PickerLabel(TranslationBox.SelectedItem is TranslationInfo t ? t.ShortName : L("Übersetzung"));
         BookBtn.Content = PickerLabel(BookBox.SelectedItem is BookInfo b ? b.CommonName : L("Buch"));
         ChapterBtn.Content = PickerLabel(((int)(ChapterBox.Value ?? 1)).ToString());
         FocusBookBtn.Content = BookBox.SelectedItem is BookInfo fb ? fb.CommonName : L("Buch");
         FocusChapterBtn.Content = ((int)(ChapterBox.Value ?? 1)).ToString();
+    }
+
+    readonly Dictionary<string, string> _langLabels = [];
+
+    /// <summary>
+    /// The name of a language as its speakers write it ("Deutsch", "Español", "Русский"); the list of translations gives only the English one.
+    /// A language .NET does not know keeps its English name.
+    /// </summary>
+    string LangLabel(string english)
+    {
+        if (_langLabels.TryGetValue(english, out var known)) return known;
+        var code = _all.FirstOrDefault(t => t.LanguageName == english)?.Language ?? "";
+        string label = english;
+        try
+        {
+            var c = System.Globalization.CultureInfo.GetCultures(System.Globalization.CultureTypes.NeutralCultures)
+                .FirstOrDefault(x => x.ThreeLetterISOLanguageName == code || x.Name == code);
+            if (c is { NativeName.Length: > 0 } && c.Name != "" && !c.NativeName.StartsWith("Unknown", StringComparison.OrdinalIgnoreCase))
+                label = char.ToUpper(c.NativeName[0], c) + c.NativeName[1..];
+        }
+        catch (System.Globalization.CultureNotFoundException) { }
+        if (code != "") _langLabels[english] = label;   // before the list is loaded nothing is known yet
+        return label;
     }
 
     Flyout NewPickerFlyout(Control content) => new() { Content = content, Placement = PlacementMode.BottomEdgeAlignedLeft };
@@ -204,11 +227,11 @@ public partial class MainWindow
             grid.Children.Clear();
             var q = SearchQuery.Fold(search.Text?.Trim() ?? "", true);
             var common = new[] { "German", "English", "French", "Spanish", "Italian", "Latin", "Greek", "Hebrew" };
-            foreach (var l in langs.OrderBy(l => q.Length == 0 && Array.IndexOf(common, l) is var i and >= 0 ? i : 99).ThenBy(l => l))
+            foreach (var l in langs.OrderBy(l => q.Length == 0 && Array.IndexOf(common, l) is var i and >= 0 ? i : 99).ThenBy(LangLabel, StringComparer.Create(BibleStudy.Core.Loc.Culture, true)))
             {
-                if (q.Length > 0 && !SearchQuery.Fold(l, true).Contains(q)) continue;
+                if (q.Length > 0 && !SearchQuery.Fold(l + " " + LangLabel(l), true).Contains(q)) continue;
                 var lang = l;
-                grid.Children.Add(PickerTile(l, l == current, () => { LanguageBox.SelectedItem = lang; flyout!.Hide(); }, 150, null, 38));
+                grid.Children.Add(PickerTile(LangLabel(l), l == current, () => { LanguageBox.SelectedItem = lang; flyout!.Hide(); }, 150, null, 38, LangLabel(l) != l ? l : null));
             }
         }
         search.TextChanged += (_, _) => Fill();

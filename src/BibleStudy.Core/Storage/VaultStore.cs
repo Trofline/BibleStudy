@@ -169,6 +169,11 @@ public sealed partial class VaultStore : SqliteDb
         Query("SELECT book,chapter,verse,text,folder_id FROM notes ORDER BY book,chapter,verse", _ => { },
             r => new Note(new VerseRef(r.GetString(0), r.GetInt32(1), r.GetInt32(2)), r.GetString(3), r.IsDBNull(4) ? null : r.GetInt64(4)));
 
+    /// <summary>The note on one verse, or null: one row instead of all notes (it is read on every click on a verse).</summary>
+    public Note? GetNote(VerseRef v) =>
+        Query("SELECT book,chapter,verse,text,folder_id FROM notes WHERE book=$b AND chapter=$c AND verse=$v", c => { c.Parameters.AddWithValue("$b", v.Book); c.Parameters.AddWithValue("$c", v.Chapter); c.Parameters.AddWithValue("$v", v.Verse); },
+            r => new Note(new VerseRef(r.GetString(0), r.GetInt32(1), r.GetInt32(2)), r.GetString(3), r.IsDBNull(4) ? null : r.GetInt64(4))).FirstOrDefault();
+
     /// <summary>Saves the note; empty text deletes it. The folder of an existing note stays as it is.</summary>
     public void SetNote(VerseRef v, string text)
     {

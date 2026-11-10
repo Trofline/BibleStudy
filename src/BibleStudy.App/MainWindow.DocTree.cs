@@ -74,7 +74,7 @@ public partial class MainWindow
             Children =
             {
                 new TextBlock { Text = open ? "▾" : "▸", Width = 12, VerticalAlignment = VerticalAlignment.Center, Opacity = 0.7 },
-                new TextBlock { Text = "📁", VerticalAlignment = VerticalAlignment.Center },
+                FolderGlyph(),
                 new TextBlock { Text = name, FontWeight = FontWeight.SemiBold, VerticalAlignment = VerticalAlignment.Center },
                 new TextBlock { Text = count.ToString(), Classes = { "caption" }, VerticalAlignment = VerticalAlignment.Center },
             },
@@ -158,7 +158,7 @@ public partial class MainWindow
         foreach (var f in FolderTree(_vault.GetFolders()))
         {
             var folder = f;
-            var item = new MenuItem { Header = new string(' ', folder.Depth * 4) + "📁 " + folder.Name };
+            var item = new MenuItem { Header = new string(' ', folder.Depth * 4) + folder.Name, Icon = FolderGlyph() };
             item.Click += (_, _) => MoveDocument(d, folder.Id, folder.Name);
             move.Items.Add(item);
         }
@@ -170,7 +170,7 @@ public partial class MainWindow
         foreach (var c in Categories)
         {
             var cat = c;
-            var item = new MenuItem { Header = CategoryColors[Math.Clamp(cat.Color, 0, CategoryColors.Length - 1)].Dot + " " + CategoryLabel(cat.Name) };
+            var item = new MenuItem { Header = CategoryChip(cat.Color, CategoryLabel(cat.Name)) };
             item.Click += (_, _) => SetCategory(d, cat);
             category.Items.Add(item);
         }
@@ -234,7 +234,7 @@ public partial class MainWindow
             {
                 if (Math.Abs(p.X - _dragFrom.X) + Math.Abs(p.Y - _dragFrom.Y) < 8) return;   // a click must not become a drag
                 _dragging = true;
-                DocDragText.Text = "📄 " + d.Title;
+                DocDragText.Text = "↳ " + d.Title;
                 DocDragGhost.IsVisible = true;
             }
             Canvas.SetLeft(DocDragGhost, Math.Min(p.X + 14, Math.Max(0, DocHost.Bounds.Width - 200)));

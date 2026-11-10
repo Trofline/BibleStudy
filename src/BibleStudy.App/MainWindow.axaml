@@ -51,7 +51,7 @@
                             <TextBlock x:Name="VaultTopText" FontSize="12.5" FontWeight="Medium" VerticalAlignment="Center" MaxWidth="110" TextTrimming="CharacterEllipsis" />
                         </StackPanel>
                     </Button>
-                    <Button x:Name="ModeTopBtn" Classes="ghost" Margin="0,0,6,0" ToolTip.Tip="Zwischen Advanced (alles) und Easy (nur das Wichtigste) wechseln">
+                    <Button x:Name="ModeTopBtn" Classes="ghost" Margin="0,0,6,0" ToolTip.Tip="Zwischen allen Funktionen und dem Einfach-Modus wechseln">
                         <TextBlock x:Name="ModeTopText" FontSize="12.5" FontWeight="SemiBold" VerticalAlignment="Center" />
                     </Button>
                     <Button x:Name="TodoTopBtn" Classes="tool" ToolTip.Tip="Meine To-dos: eine freie Liste zum Abhaken">
@@ -165,16 +165,20 @@
                         <Button x:Name="ViewBtn" Classes="toolx" ToolTip.Tip="Querverweise im Text, Graph neben dem Text">
                             <StackPanel Orientation="Horizontal" Spacing="6"><local:Icon Data="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z M9 12a3 3 0 1 0 6 0a3 3 0 1 0-6 0z" IconSize="17" VerticalAlignment="Center" /><TextBlock Text="Ansicht" VerticalAlignment="Center" /></StackPanel>
                         </Button>
-                        <Button x:Name="GraphBtn" Classes="toolx" ToolTip.Tip="Querverweis-Graph (Netzwerk und Bogen)">
+                        <!-- the rarely used views share one menu (they were four buttons without labels); the buttons stay for their code and the shortcuts -->
+                        <Button x:Name="ViewsBtn" Classes="toolx" ToolTip.Tip="Graph, Karte, Zeitleiste, Stammbaum">
+                            <StackPanel Orientation="Horizontal" Spacing="6"><local:Icon Data="M3 3h7v7H3z M14 3h7v7h-7z M14 14h7v7h-7z M3 14h7v7H3z" IconSize="17" VerticalAlignment="Center" /><TextBlock Text="Ansichten" VerticalAlignment="Center" /><TextBlock Text="▾" FontSize="10" VerticalAlignment="Center" /></StackPanel>
+                        </Button>
+                        <Button x:Name="GraphBtn" Classes="toolx" IsVisible="False" ToolTip.Tip="Querverweis-Graph (Netzwerk und Bogen)">
                             <StackPanel Orientation="Horizontal" Spacing="6"><local:Icon Data="M5 12a2 2 0 1 0 4 0a2 2 0 1 0-4 0z M15 5a2 2 0 1 0 4 0a2 2 0 1 0-4 0z M15 19a2 2 0 1 0 4 0a2 2 0 1 0-4 0z M8.7 11l6.6-4.9 M8.7 13l6.6 4.9" IconSize="17" VerticalAlignment="Center" /><TextBlock Text="Graph" VerticalAlignment="Center" /></StackPanel>
                         </Button>
-                        <Button x:Name="MapBtn" Classes="toolx" ToolTip.Tip="Karte: Orte des Kapitels oder Buches">
+                        <Button x:Name="MapBtn" Classes="toolx" IsVisible="False" ToolTip.Tip="Karte: Orte des Kapitels oder Buches">
                             <StackPanel Orientation="Horizontal" Spacing="6"><local:Icon Data="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0z M9 10a3 3 0 1 0 6 0a3 3 0 1 0-6 0z" IconSize="17" VerticalAlignment="Center" /><TextBlock Text="Karte" VerticalAlignment="Center" /></StackPanel>
                         </Button>
-                        <Button x:Name="TimelineBtn" Classes="toolx" ToolTip.Tip="Zeitleiste der Bibel mit Karte">
+                        <Button x:Name="TimelineBtn" Classes="toolx" IsVisible="False" ToolTip.Tip="Zeitleiste der Bibel mit Karte">
                             <StackPanel Orientation="Horizontal" Spacing="6"><local:Icon Data="M3 12h18 M6 8v8 M12 5v14 M18 9v6" IconSize="17" VerticalAlignment="Center" /><TextBlock Text="Zeitleiste" VerticalAlignment="Center" /></StackPanel>
                         </Button>
-                        <Button x:Name="FamilyBtn" Classes="toolx" ToolTip.Tip="Stammbaum einer Person">
+                        <Button x:Name="FamilyBtn" Classes="toolx" IsVisible="False" ToolTip.Tip="Stammbaum einer Person">
                             <StackPanel Orientation="Horizontal" Spacing="6"><local:Icon Data="M12 3v6 M5 21v-6a3 3 0 0 1 3-3h8a3 3 0 0 1 3 3v6 M12 9v3 M9 3h6v4H9z M2 21h6v-3H2z M16 21h6v-3h-6z" IconSize="17" VerticalAlignment="Center" /><TextBlock Text="Stammbaum" VerticalAlignment="Center" /></StackPanel>
                         </Button>
                         <Button x:Name="ParallelBtn" Classes="toolx" ToolTip.Tip="Weitere Übersetzung als Spalte daneben (max. 3)">
@@ -652,6 +656,9 @@
                                 <Button x:Name="LangMissingBtn" Content="Nur fehlende Texte exportieren" Margin="0,0,8,6" />
                                 <TextBlock x:Name="LangProgressText" Classes="caption" TextWrapping="Wrap" />
                                 <TextBlock x:Name="LangImportInfo" Classes="caption" TextWrapping="Wrap" />
+
+                                <!-- the card held about 35 settings in one row; the small headings group them -->
+                                <TextBlock Text="Farben" FontWeight="SemiBold" Margin="0,14,0,0" />
                                 <Grid ColumnDefinitions="170,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto" >
                                     <TextBlock Text="Design" VerticalAlignment="Center" />
                                     <Border Classes="pill" Grid.Column="1" HorizontalAlignment="Left">
@@ -674,13 +681,19 @@
                                     <TextBlock Grid.Row="4" Text="Farbe der Untermarkierung" VerticalAlignment="Center" TextWrapping="Wrap" Margin="0,8,8,0" />
                                     <WrapPanel x:Name="SubMarkPanel" Grid.Row="4" Grid.Column="1" Margin="0,8,0,0" />
                                 </Grid>
-                                <TextBlock x:Name="FontLabel" Text="Schriftgröße" Margin="0,8,0,0" />
+                                <CheckBox x:Name="JesusRedCheck" Content="Worte Jesu farbig hervorheben" />
+                                <TextBlock Classes="caption" Text="Farbe der Worte Jesu (unabhängig vom Farbschema)" />
+                                <WrapPanel x:Name="JesusColorPanel" />
+                                <CheckBox x:Name="HighContrastCheck" Content="Hoher Kontrast (Text, Rahmen und Hinweise kräftiger)" />
+
+                                <TextBlock Text="Schrift und Text" FontWeight="SemiBold" Margin="0,14,0,0" />
+                                <TextBlock x:Name="FontLabel" Text="Schriftgröße" Margin="0,4,0,0" />
                                 <Slider x:Name="FontSlider" Classes="setting" Minimum="14" Maximum="40" Value="22" TickFrequency="1" IsSnapToTickEnabled="True" />
                                 <TextBlock x:Name="LineLabel" Text="Zeilenabstand" Margin="0,8,0,0" />
                                 <Slider x:Name="LineSlider" Classes="setting" Minimum="1.2" Maximum="2.4" Value="1.7" TickFrequency="0.1" IsSnapToTickEnabled="True" />
                                 <TextBlock x:Name="WidthLabel" Text="Textbreite" Margin="0,8,0,0" />
                                 <Slider x:Name="WidthSlider" Classes="setting" Minimum="480" Maximum="1100" Value="760" TickFrequency="20" IsSnapToTickEnabled="True" />
-                                <Grid ColumnDefinitions="110,*" RowDefinitions="Auto,Auto" >
+                                <Grid ColumnDefinitions="170,*" RowDefinitions="Auto,Auto" >
                                     <TextBlock Text="Schriftart" VerticalAlignment="Center" />
                                     <Border Classes="pill" Grid.Column="1" HorizontalAlignment="Left"><ComboBox x:Name="FontBox" Width="180" /></Border>
                                     <TextBlock Grid.Row="1" Text="Versnummern" VerticalAlignment="Center" Margin="0,8,0,0" />
@@ -692,17 +705,9 @@
                                         </ComboBox>
                                     </Border>
                                 </Grid>
-                                <CheckBox x:Name="JesusRedCheck" Content="Worte Jesu farbig hervorheben" />
-                                <TextBlock Classes="caption" Text="Farbe der Worte Jesu (unabhängig vom Farbschema)" />
-                                <WrapPanel x:Name="JesusColorPanel" />
-                                <CheckBox x:Name="HighContrastCheck" Content="Hoher Kontrast (Text, Rahmen und Hinweise kräftiger)" />
                                 <CheckBox x:Name="ReadableTextCheck" Content="Leichter lesbare Schrift (schlicht, mit mehr Buchstabenabstand, z. B. bei Legasthenie)" />
-                                <CheckBox x:Name="HebrewVowelsCheck" Content="Hebräisch: Vokalzeichen anzeigen" />
-                                <CheckBox x:Name="HebrewAccentsCheck" Content="Hebräisch: Akzentzeichen (Kantillation) anzeigen" />
-                                <CheckBox x:Name="TranslateMeaningsCheck" Content="Wortbedeutungen in meine Sprache übersetzen (KI mit deinem Claude, wird gespeichert)" />
-                                <CheckBox x:Name="CompactLookCheck" Content="Kompakte Ansicht: alles rechts in der Leiste wie früher (gilt nach Neustart)" />
-                                <CheckBox x:Name="CommentariesCheck" Content="Kommentare anzeigen (Menschenwerk, nicht der Bibeltext; gilt nach Neustart)" />
                                 <CheckBox x:Name="JustifyCheck" Content="Blocksatz" />
+                                <CheckBox x:Name="HeadingCheck" Content="Großes Kapitel-Kopfstück (sonst schlicht)" />
                                 <StackPanel Orientation="Horizontal" Spacing="10">
                                     <TextBlock Text="Überschriften anzeigen" VerticalAlignment="Center" />
                                     <Border Classes="pill"><ComboBox x:Name="HeadingModeBox" MinWidth="260" SelectedIndex="0" ToolTip.Tip="Eigene Überschriften schreibst du selbst, die der Übersetzung kommen aus dem Import. Hier legst du fest, was im Lesetext erscheint.">
@@ -713,6 +718,15 @@
                                         <ComboBoxItem Content="Keine" />
                                     </ComboBox></Border>
                                 </StackPanel>
+
+                                <TextBlock Text="Grundtext" FontWeight="SemiBold" Margin="0,14,0,0" />
+                                <CheckBox x:Name="HebrewVowelsCheck" Content="Hebräisch: Vokalzeichen anzeigen" />
+                                <CheckBox x:Name="HebrewAccentsCheck" Content="Hebräisch: Akzentzeichen (Kantillation) anzeigen" />
+                                <CheckBox x:Name="TranslateMeaningsCheck" Content="Wortbedeutungen in meine Sprache übersetzen (KI mit deinem Claude, wird gespeichert)" />
+
+                                <TextBlock Text="Ansicht und Bewegung" FontWeight="SemiBold" Margin="0,14,0,0" />
+                                <CheckBox x:Name="CompactLookCheck" Content="Kompakte Ansicht: alles rechts in der Leiste wie früher (gilt nach Neustart)" />
+                                <CheckBox x:Name="CommentariesCheck" Content="Kommentare anzeigen (Menschenwerk, nicht der Bibeltext; gilt nach Neustart)" />
                                 <CheckBox x:Name="AnimationsCheck" Content="Animationen (Seitenleiste, Reiter, Kapitel gleiten sanft ein)" />
                                 <StackPanel Orientation="Horizontal" Spacing="10">
                                     <TextBlock Text="Stärke der Animationen" VerticalAlignment="Center" />
@@ -725,7 +739,6 @@
                                     <TextBlock Text="Schließ-Animation" VerticalAlignment="Center" />
                                     <Border Classes="pill"><ComboBox x:Name="CloseAnimBox" MinWidth="260" /></Border>
                                 </StackPanel>
-                                <CheckBox x:Name="HeadingCheck" Content="Großes Kapitel-Kopfstück (sonst schlicht)" />
                                 <TextBlock Classes="caption" Text="Programmsymbol (Fenster, Taskleiste, Titelleiste, Startbild)" />
                                 <WrapPanel x:Name="LogoPanel" />
                             </StackPanel></Border>
@@ -994,7 +1007,7 @@
                             <TextBlock FontWeight="SemiBold" Text="Griechisch und Hebräisch tippen, Suchen merken, Karte, Verweis-Netz" />
                             <TextBlock TextWrapping="Wrap" Text="Neben dem Suchfeld und im Strong-Wörterbuch öffnet „α א“ eine Tastatur für griechische und hebräische Buchstaben; man kann auch lateinisch tippen („logos“ → λογος, „shalom“ → שלם). Mit ☆ merkst du eine Suche samt Optionen, „Gemerkte Suchen“ ruft sie wieder auf. Unter den Treffern legen „Treffer als Dokument“ und „Treffer als Tabelle (CSV)“ die Verse ab, und „Orte auf der Karte“ zeigt, wo die genannten Orte liegen (größerer Punkt = mehr Verse). Strg+K → „Verweis-Netz“ zeigt die Querverweise zwischen AT- und NT-Büchern als Bild; ein Klick auf ein Buch zeigt seine Verse. Die Satzrollen-Suche (unter Analyse, Grammatik) findet griechische Sätze nach Rollen, z. B. Subjekt Jesus und Objekt Petrus." />
                             <TextBlock FontWeight="SemiBold" Text="Graphen" />
-                            <TextBlock TextWrapping="Wrap" Text="Der Knopf „Graph“ hat mehrere Ansichten: Netzwerk (ein Kapitel und seine Verweise, per Doppelklick erweiterbar), Bogen (die ganze Bibel), AT ↔ NT (Verweise zwischen den Testamenten), Kreis (alle Bücher im Kreis mit Bändern), Autoren (die Bibelschreiber nach traditioneller Zuschreibung), Wort-Netz (Wörter, die oft in denselben Versen stehen), Personen-Netz (wer in denselben Kapiteln vorkommt) und Themen-Netz (verwandte Wörter eines Themas). In den Netzen kannst du Knoten ziehen, mit dem Mausrad zoomen, einen Knoten anklicken (Nachbarn leuchten) und doppelklicken, um mehr davon zu laden. Auf der Karte zeigt „Reiseweg zeigen“ die Orte, die bei einer Person genannt werden, in der Reihenfolge der Bibel." />
+                            <TextBlock TextWrapping="Wrap" Text="„Ansichten“ → „Graph“ zeigt mehrere Darstellungen: Netzwerk (ein Kapitel und seine Verweise, per Doppelklick erweiterbar), Bogen (die ganze Bibel), AT ↔ NT (Verweise zwischen den Testamenten), Kreis (alle Bücher im Kreis mit Bändern), Autoren (die Bibelschreiber nach traditioneller Zuschreibung), Wort-Netz (Wörter, die oft in denselben Versen stehen), Personen-Netz (wer in denselben Kapiteln vorkommt) und Themen-Netz (verwandte Wörter eines Themas). In den Netzen kannst du Knoten ziehen, mit dem Mausrad zoomen, einen Knoten anklicken (Nachbarn leuchten) und doppelklicken, um mehr davon zu laden. Auf der Karte zeigt „Reiseweg zeigen“ die Orte, die bei einer Person genannt werden, in der Reihenfolge der Bibel." />
                             <TextBlock TextWrapping="Wrap" Text="In Wort-, Personen- und Themen-Netz kannst du mehrere Begriffe mit + verbinden, z. B. „Tag + Herr“ oder „Petrus + Johannes“: Das Netz zeigt dann nur, was zu allen zusammen passt (Verse bzw. Kapitel, in denen alle vorkommen)." />
                             <TextBlock FontWeight="SemiBold" Text="Fehler, Ideen, Rückmeldung" />
                             <TextBlock TextWrapping="Wrap" Text="Unter Einstellungen → „Feedback und Windows-Suche“ öffnen „Fehler melden“, „Idee vorschlagen“ und „Feedback geben“ ein vorbereitetes Ticket auf GitHub (Version und System stehen schon drin, nichts wird ohne dein Absenden gesendet). Dort siehst du auch alle Ideen und Fehler anderer. „Im Startmenü eintragen“ sorgt dafür, dass Windows BibleStudy über die Suche findet." />

@@ -29,7 +29,7 @@ The license of each translation or commentary is shown in the program next to th
 | Avalonia UI 12 (incl. Avalonia.Controls.ColorPicker) | MIT |
 | Inter font (Avalonia.Fonts.Inter) | SIL OFL 1.1 |
 | Crimson Text (Copyright 2010 The Crimson Text Project Authors, github.com/skosch/Crimson-Text) | SIL OFL 1.1 |
-| Microsoft.Data.Sqlite, Microsoft.Extensions.Hosting, System.Speech | MIT |
+| Microsoft.Data.Sqlite, Microsoft.Extensions.Hosting, System.Speech, System.Security.Cryptography.ProtectedData | MIT |
 | ModelContextProtocol C# SDK | MIT / Apache-2.0 |
 | SIPSorcery (WebRTC data channel for studying together) | BSD-3-Clause |
 | UglyToad.PdfPig (reading text from PDF files the user imports) | Apache-2.0 |

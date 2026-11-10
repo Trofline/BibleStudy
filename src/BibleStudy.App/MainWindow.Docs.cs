@@ -14,14 +14,33 @@ namespace BibleStudy.App;
 public partial class MainWindow
 {
     const string CategoryPrefix = "kat:";
-    static readonly (string Hex, string Dot)[] CategoryColors =
+    static readonly (string Hex, string Name)[] CategoryColors =
     [
-        ("#E5484D", "🔴"), ("#F76B15", "🟠"), ("#F5C518", "🟡"), ("#30A46C", "🟢"), ("#3E63DD", "🔵"), ("#8E4EC6", "🟣"), ("#A87B4F", "🟤"),
+        ("#E5484D", "red"), ("#F76B15", "orange"), ("#F5C518", "yellow"), ("#30A46C", "green"), ("#3E63DD", "blue"), ("#8E4EC6", "purple"), ("#A87B4F", "brown"),
     ];
 
     string? _docCategory;   // null = all, "" = without category, otherwise the category name
 
     readonly MenuItem _miOpenFile = new(), _miFromTemplate = new(), _miDelete = new();
+
+    /// <summary>A category as a colored dot and its name (the dots were emoji, unlike every other symbol of the program).</summary>
+    static Control CategoryChip(int color, string label) => new StackPanel
+    {
+        Orientation = Orientation.Horizontal, Spacing = 8,
+        Children =
+        {
+            new Border { Width = 11, Height = 11, CornerRadius = new(6), VerticalAlignment = VerticalAlignment.Center, Background = new SolidColorBrush(Color.Parse(CategoryColors[Math.Clamp(color, 0, CategoryColors.Length - 1)].Hex)) },
+            new TextBlock { Text = label, VerticalAlignment = VerticalAlignment.Center },
+        },
+    };
+
+    /// <summary>The folder symbol of the explorer, in the accent color.</summary>
+    Control FolderGlyph()
+    {
+        var icon = new Icon { Data = Geometry.Parse(FolderIcon), IconSize = 15, VerticalAlignment = VerticalAlignment.Center };
+        icon.Bind(Avalonia.Controls.Documents.TextElement.ForegroundProperty, this.GetResourceObservable("BsAccent"));
+        return icon;
+    }
 
     static bool IsCategoryTag(string tag) => tag.StartsWith(CategoryPrefix, StringComparison.OrdinalIgnoreCase);
 
@@ -196,7 +215,7 @@ public partial class MainWindow
     {
         var items = new List<object> { L("(keine)") };
         items.AddRange(Categories.Select(c => (object)c));
-        DocCategoryBox.ItemTemplate = new Avalonia.Controls.Templates.FuncDataTemplate<object>((o, _) => new TextBlock { Text = o is DocCategory c ? CategoryColors[Math.Clamp(c.Color, 0, CategoryColors.Length - 1)].Dot + " " + CategoryLabel(c.Name) : o?.ToString() ?? "" });
+        DocCategoryBox.ItemTemplate = new Avalonia.Controls.Templates.FuncDataTemplate<object>((o, _) => o is DocCategory c ? CategoryChip(c.Color, CategoryLabel(c.Name)) : new TextBlock { Text = o?.ToString() ?? "" });
         DocCategoryBox.ItemsSource = items;
         var current = CategoryOf(d) ?? (d.Id == 0 && _docCategory is { Length: > 0 } pre ? Categories.FirstOrDefault(c => c.Name == pre) : null);
         DocCategoryBox.SelectedIndex = current is null ? 0 : Math.Max(0, Categories.IndexOf(current) + 1);

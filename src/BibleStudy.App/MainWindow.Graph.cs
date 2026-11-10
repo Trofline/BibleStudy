@@ -109,6 +109,7 @@ public partial class MainWindow
         var opening = open && !SidePanel.IsVisible;
         SidePanel.IsVisible = SideSplitter.IsVisible = open;
         if (opening) AnimateIn(SidePanel, 48, 0);
+        if (opening && _notesStale && SideTabs.SelectedIndex == 2) RefreshNotesTree();
         PanelBtn.IsChecked = open;
         _settings.SideOpen = open;
         SaveSettings();

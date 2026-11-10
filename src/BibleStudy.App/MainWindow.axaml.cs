@@ -1014,10 +1014,10 @@ public partial class MainWindow : Window
         var r = new VerseRef(_curBook, _curChapter, n);
         if (_noteRef != r) SaveNoteDraft();
         NoteTarget.Text = L("Notiz zu ") + Label(r);
-        NoteEditor.Text = _noteLoaded = _vault.GetNotes().FirstOrDefault(x => x.Ref == r)?.Text ?? "";
+        NoteEditor.Text = _noteLoaded = _vault.GetNote(r)?.Text ?? "";
         _noteRef = r;
         LoadNoteFolderBox(r);
-        RefreshNotesTree();   // the row of this note is shown as the current one
+        RefreshNotesTreeIfShown();   // the row of this note is shown as the current one (only when the list is seen: it was rebuilt on every click)
         _ = ShowXrefsAsync(r);
         if (TabActive(GrundtextTab)) _ = ShowGrundtextAsync(r);
         if (TabActive(GuideTab)) _ = ShowGuideAsync(r);

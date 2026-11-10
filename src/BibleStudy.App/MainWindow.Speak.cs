@@ -120,7 +120,7 @@ public partial class MainWindow
         if (_settings.SpeakVoice == "natural" && NaturalVoice.IsAvailable)
         {
             if (NaturalVoice.For(culture?.TwoLetterISOLanguageName, _settings.SpeakVoiceIds.GetValueOrDefault(culture?.TwoLetterISOLanguageName ?? "")) is { } voice) { await SpeakNaturalAsync(text, voice); return; }
-            StatusText.Text = L("Für {0} gibt es keine natürliche Stimme; es wird die Windows-Stimme genutzt.", t.LanguageName);
+            StatusText.Text = L("Für {0} gibt es keine natürliche Stimme; es wird die Windows-Stimme genutzt.", LangLabel(t.LanguageName));
         }
         SpeakWindows(text, culture, t);
     }
@@ -138,7 +138,7 @@ public partial class MainWindow
             _speech.Rate = Math.Clamp(_settings.SpeakRate, -10, 10);
             if (culture is not null)
                 try { _speech.SelectVoiceByHints(VoiceGender.NotSet, VoiceAge.NotSet, 0, culture); }
-                catch (ArgumentException) { StatusText.Text = L("Keine Windows-Stimme für {0} installiert; es wird die Standardstimme genutzt.", t.LanguageName); }
+                catch (ArgumentException) { StatusText.Text = L("Keine Windows-Stimme für {0} installiert; es wird die Standardstimme genutzt.", LangLabel(t.LanguageName)); }
             _speakFull = text; _speakOffset = 0; _speakAbs = 0; _speakNatural = false;
             _speech.SpeakAsync(text);
             SpeakBtn.IsChecked = true;
