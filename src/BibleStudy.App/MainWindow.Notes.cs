@@ -114,7 +114,7 @@ public partial class MainWindow
             var folder = f;
             var menu = new MenuFlyout();
             var delete = new MenuItem { Header = L("Ordner löschen (die Notizen bleiben)") };
-            delete.Click += (_, _) => { _vault.DeleteFolder(folder.Id); RefreshCollection(); };
+            delete.Click += (_, _) => TrashFolderWithUndo(folder.Id, folder.Name);
             menu.Items.Add(delete);
             Group("f:" + f.Id, f.Name, inFolder.Count, body => { foreach (var n in inFolder) body.Children.Add(NoteRow(n, folders)); }, menu, f.Depth);
         }
@@ -158,14 +158,7 @@ public partial class MainWindow
             move.Items.Add(item);
         }
         var delete = new MenuItem { Header = L("Notiz löschen") };
-        delete.Click += async (_, _) =>
-        {
-            if (await AskAsync(L("Notiz löschen?"), L("Die Notiz zu {0} wirklich löschen?", Label(n.Ref)), L("Abbrechen"), L("Löschen")) != 1) return;
-            _vault.SetNote(n.Ref, "");
-            if (_noteRef == n.Ref) { NoteEditor.Text = _noteLoaded = ""; }
-            RefreshLists();
-            RefreshCells();
-        };
+        delete.Click += (_, _) => TrashNoteWithUndo(n.Ref);   // into the trash, with "Rückgängig" (no question, as for marks)
         menu.Items.Add(move); menu.Items.Add(new Separator()); menu.Items.Add(delete);
         row.ContextFlyout = menu;
         return row;

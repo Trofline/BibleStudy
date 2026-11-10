@@ -27,7 +27,29 @@ public partial class App : Application
             else
             {
                 AppSettings st;
-                try { st = AppSettings.Load(path); } catch { st = new(); }
+                try { st = AppSettings.Load(path); }
+                catch (IOException)
+                {
+                    // held by another program (sync, virus scanner) for longer: starting with empty settings would save them over the real ones
+                    desktop.ShutdownMode = ShutdownMode.OnExplicitShutdown;
+                    var close = new Button { Content = L("Beenden"), HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Right };
+                    var w = new Window
+                    {
+                        Title = "BibleStudy", Width = 440, SizeToContent = SizeToContent.Height, WindowStartupLocation = WindowStartupLocation.CenterScreen, CanResize = false,
+                        Content = new StackPanel
+                        {
+                            Margin = new Thickness(20), Spacing = 14,
+                            Children = { new TextBlock { TextWrapping = Avalonia.Media.TextWrapping.Wrap, Text = L("Die Einstellungen sind gerade von einem anderen Programm gesperrt (etwa Sync oder Virenscanner). Bitte gleich neu starten; deine Einstellungen bleiben erhalten.") }, close },
+                        },
+                    };
+                    close.Click += (_, _) => w.Close();
+                    w.Closed += (_, _) => desktop.Shutdown();
+                    desktop.MainWindow = w;
+                    w.Show();
+                    base.OnFrameworkInitializationCompleted();
+                    return;
+                }
+                catch { st = new(); }
 
                 if (st.TermsAccepted.StartsWith(TermsWindow.Version + "|", StringComparison.Ordinal)) StartMain(desktop, st);
                 else

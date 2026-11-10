@@ -29,7 +29,7 @@ public partial class MainWindow
             new("forward", L("Vorwärts zur nächsten Stelle"), "Alt+Right", GoForwardAsync, true),
             new("home", L("Startseite"), "Alt+Home", () => Sync(ShowHome), true),
             new("prev", L("Voriges Kapitel"), "Ctrl+Left", () => StepChapterAsync(-1)),
-            new("next", L("Nächstes Kapitel"), "Ctrl+Right", () => StepChapterAsync(1)),
+            new("next", L("Nächstes Kapitel"), "Ctrl+Right", () => Sync(() => Click(NextBtn))),   // as the button: "mark as read when going on" counts here too
             new("read", L("Kapitel als gelesen markieren"), "Ctrl+R", () => Sync(() => { if (_curBook != "") SetRead(_curBook, [_curChapter], !_read.Contains((_curBook, _curChapter))); })),
             new("bookmark", L("Vers merken"), "Ctrl+D", () => Sync(ToggleBookmark)),
             new("copy", L("Vers mit Stelle kopieren"), "Ctrl+Shift+C", CopyVerseAsync, true),
@@ -43,7 +43,7 @@ public partial class MainWindow
             new("docs", L("Dokumente öffnen"), "Ctrl+Shift+D", () => Sync(() => OpenWork(NavGroups.First(g => g.Name == "Dokumente"))), true),
             new("popout", L("Aktuelles Seitenfenster auslagern"), "Ctrl+Shift+O", () => Sync(() => PopOutTab(SideTabs.SelectedIndex)), true),
             new("closetab", L("Aktuellen Reiter schließen"), "Ctrl+W", () => Sync(CloseActiveTab), true),
-            new("tabswitch", L("Zwischen Lesen und dem gewählten Reiter wechseln"), "Tab", () => Sync(SwitchReadTab)),
+            new("tabswitch", L("Zwischen Lesen und dem gewählten Reiter wechseln"), "Ctrl+Tab", () => Sync(SwitchReadTab)),
         ];
         BuildKeysPanel();
         ResetKeysBtn.Click += (_, _) => { _settings.KeyBindings.Clear(); SaveSettings(); BuildKeysPanel(); };

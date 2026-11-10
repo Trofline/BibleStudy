@@ -18,6 +18,7 @@ public partial class MainWindow
 
     void InitImport()
     {
+        ImportLangBox.Text = BibleStudy.Core.Loc.Code;   // the language of the program, not always German
         ImportBibleBtn.Click += async (_, _) => await ImportBibleAsync();
         RemoveBibleBtn.Click += async (_, _) => await RemoveImportedAsync();
         ImportAiBtn.Click += async (_, _) => await CorrectWithAiAsync();
@@ -48,7 +49,7 @@ public partial class MainWindow
             FileTypeFilter = [new FilePickerFileType(L("Bibeldateien")) { Patterns = ["*.bblx", "*.mybible", "*.xml", "*.osis", "*.usx", "*.usfm", "*.sfm", "*.zip", "*.md", "*.markdown", "*.txt", "*.csv", "*.tsv", "*.json", "*.html", "*.htm", "*.xhtml", "*.epub", "*.docx", "*.odt", "*.rtf", "*.fb2", "*.pdf"] }],
         });
         if (files.Count == 0 || files[0].TryGetLocalPath() is not { } path) return;
-        await ImportBibleCoreAsync(path, string.IsNullOrWhiteSpace(ImportLangBox.Text) ? "de" : ImportLangBox.Text.Trim(), ConfirmReplaceAsync);
+        await ImportBibleCoreAsync(path, string.IsNullOrWhiteSpace(ImportLangBox.Text) ? BibleStudy.Core.Loc.Code : ImportLangBox.Text.Trim(), ConfirmReplaceAsync);
     }
 
     /// <summary>Imports a Bible file without asking (the once-only reading again of all imports).</summary>

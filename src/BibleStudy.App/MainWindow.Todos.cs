@@ -161,12 +161,12 @@ public partial class MainWindow
         if (t.Due is { } due && !t.Done)
         {
             var late = due < today;
-            var text = due == today ? L("heute") : due == today.AddDays(1) ? L("morgen") : due.ToString("dd.MM.yyyy");
+            var text = due == today ? L("heute") : due == today.AddDays(1) ? L("morgen") : due.ToString("d", Loc.Culture);
             var badge = new TextBlock { Text = text, FontSize = 12, FontWeight = late ? FontWeight.SemiBold : FontWeight.Normal, Foreground = late ? new SolidColorBrush(Color.Parse("#E5484D")) : Res("BsMuted"), VerticalAlignment = VerticalAlignment.Center };
             if (late) ToolTip.SetTip(badge, L("Überfällig"));
             tools.Children.Add(badge);
         }
-        else if (t.Due is { } doneDue) tools.Children.Add(new TextBlock { Text = doneDue.ToString("dd.MM.yyyy"), FontSize = 12, Opacity = 0.5, VerticalAlignment = VerticalAlignment.Center });
+        else if (t.Due is { } doneDue) tools.Children.Add(new TextBlock { Text = doneDue.ToString("d", Loc.Culture), FontSize = 12, Opacity = 0.5, VerticalAlignment = VerticalAlignment.Center });
         if (t.Ref is { } r)
         {
             var link = new Button { Content = Label(r), FontSize = 12, Padding = new(8, 2) };

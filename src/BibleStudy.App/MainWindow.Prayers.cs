@@ -68,7 +68,7 @@ public partial class MainWindow
         var text = new TextBlock { Text = p.Text, TextWrapping = TextWrapping.Wrap, Opacity = isDone ? 0.7 : 1 };
         var meta = new TextBlock
         {
-            Text = isDone ? L("Aufgeschrieben {0:dd.MM.yyyy} · erhört {1:dd.MM.yyyy}", p.Created, p.Answered) : L("Aufgeschrieben {0:dd.MM.yyyy} ({1})", p.Created, Ago(p.Created)),
+            Text = isDone ? L("Aufgeschrieben {0:d} · erhört {1:d}", p.Created, p.Answered) : L("Aufgeschrieben {0:d} ({1})", p.Created, Ago(p.Created)),
             Classes = { "caption" },
         };
         var row = new WrapPanel();

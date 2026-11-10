@@ -120,7 +120,7 @@ public static partial class DocumentLinks
         var result = new List<VerseRef>();
         foreach (Match m in Verse().Matches(body))
         {
-            if (!Names.Value.TryGetValue(Normalize(m.Groups["b"].Value), out var book)) continue;
+            if (!TryBook(m, out var book)) continue;
             var r = new VerseRef(book, int.Parse(m.Groups["c"].Value), int.Parse(m.Groups["v"].Value));
             if (!result.Contains(r)) result.Add(r);
         }
@@ -133,7 +133,7 @@ public static partial class DocumentLinks
         var result = new List<(VerseRef, int)>();
         foreach (Match m in Verse().Matches(body))
         {
-            if (!Names.Value.TryGetValue(Normalize(m.Groups["b"].Value), out var book)) continue;
+            if (!TryBook(m, out var book)) continue;
             var first = new VerseRef(book, int.Parse(m.Groups["c"].Value), int.Parse(m.Groups["v"].Value));
             result.Add((first, m.Groups["e"].Success ? Math.Max(first.Verse, int.Parse(m.Groups["e"].Value)) : first.Verse));
         }
@@ -145,10 +145,24 @@ public static partial class DocumentLinks
     {
         var result = new List<(int, int, VerseRef)>();
         foreach (Match m in Verse().Matches(text))
-            if (Names.Value.TryGetValue(Normalize(m.Groups["b"].Value), out var book))
+            if (TryBook(m, out var book))
                 result.Add((m.Index, m.Length, new VerseRef(book, int.Parse(m.Groups["c"].Value), int.Parse(m.Groups["v"].Value))));
         return result;
     }
+
+    /// <summary>
+    /// The book of a reference found in running text. Short names that are everyday words as well ("mal 3,5", "hab 3,5", "am 2,4")
+    /// count only when written with a capital letter, as a book name is.
+    /// </summary>
+    static bool TryBook(Match m, out string book)
+    {
+        var name = m.Groups["b"].Value.Trim();
+        book = Names.Value.TryGetValue(Normalize(name), out var id) ? id : "";
+        if (book == "") return false;
+        return !(char.IsLower(name[0]) && EverydayWords.Contains(Normalize(name)));
+    }
+
+    static readonly HashSet<string> EverydayWords = ["mal", "hab", "am", "ex", "job", "mark"];
 
     /// <summary>USFM id for a book name or abbreviation (German or English), or null.</summary>
     public static string? BookId(string name) => Names.Value.TryGetValue(Normalize(name), out var id) ? id : null;

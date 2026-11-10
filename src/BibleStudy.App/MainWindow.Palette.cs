@@ -95,7 +95,9 @@ public partial class MainWindow
         yield return C(L("Lesepläne"), () => Work("Planen", PlanTab));
         yield return C(L("Gebete"), () => Work("Planen", PrayerTab));
         yield return C(L("Leseliste"), () => Work("Planen", 6));
-        yield return C(L("Sprachen"), () => Work("Planen", LearnTab));
+        yield return C(L("Sprachen"), () => { OpenWork(GroupOf(LearnTab)!, LearnTab); return Task.CompletedTask; });   // its group differs between the normal and the compact look
+        // the trash holds documents as well, but lives in the explorer of the marks: from here it is found without knowing that
+        yield return C(L("Papierkorb"), () => { OpenWork(GroupOf(ExplorerTab)!, ExplorerTab); BuildExplorer(); ExOpenTrash(); return Task.CompletedTask; });
         yield return C(L("Statistik"), () => Work("Planen", StatsTab));
         yield return C(L("Satzdiagramm"), () => Side(SentenceTab));
         yield return C(L("Perikopen-Analyse"), () => Side(PericopeTab));

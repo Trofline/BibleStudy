@@ -234,8 +234,9 @@ public partial class MainWindow
         foreach (var b in Rail.Children.OfType<Button>()) b.Classes.Set("active", ReferenceEquals(b.Tag, group));
 
         SubPills.Children.Clear();
-        if (group.Tabs.Length > 1)
-            foreach (var tab in group.Tabs)
+        var shownTabs = group.Tabs.Where(t => !_settings.EasyMode || EasySideTabs.Contains(t.Index)).ToArray();   // Easy mode offers no pill for a tab it hides
+        if (shownTabs.Length > 1)
+            foreach (var tab in shownTabs)
             {
                 var t = tab;
                 var pill = new Button { Classes = { "seg" }, Content = L(t.Label) };
@@ -243,7 +244,7 @@ public partial class MainWindow
                 pill.Click += (_, _) => SideTabs.SelectedIndex = t.Index;
                 SubPills.Children.Add(pill);
             }
-        SubPills.IsVisible = group.Tabs.Length > 1;
+        SubPills.IsVisible = shownTabs.Length > 1;
         if (_vaultBar is not null) _vaultBar.IsVisible = group.ShowVault;
         var hint = group.Tabs.FirstOrDefault(t => t.Index == current)?.Hint ?? "";
         if (group.ShowVault) hint += $"";

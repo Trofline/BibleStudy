@@ -72,7 +72,10 @@ public sealed class CollabPeer : IDisposable
         };
         pc.onconnectionstatechange += state =>
         {
-            if (state is RTCPeerConnectionState.failed or RTCPeerConnectionState.closed or RTCPeerConnectionState.disconnected) Closed?.Invoke(state.ToString());
+            if (state is RTCPeerConnectionState.failed or RTCPeerConnectionState.closed) Closed?.Invoke(state.ToString());
+            // "disconnected" often comes back by itself (a short gap of the Wi-Fi): only when it lasts is the session over
+            else if (state is RTCPeerConnectionState.disconnected)
+                _ = Task.Delay(TimeSpan.FromSeconds(15)).ContinueWith(_ => { if (pc.connectionState == RTCPeerConnectionState.disconnected) Closed?.Invoke(state.ToString()); }, TaskScheduler.Default);
         };
         return pc;
     }

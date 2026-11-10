@@ -199,7 +199,7 @@ public partial class MainWindow
     string? _lastWorkTab;
 
     /// <summary>
-    /// The Tab key: from the reading tab to the pinned tab (the dot on a tab), or to the tab you were on last; from any other tab back to reading.
+    /// Ctrl+Tab (it was Tab, which then no longer moved the focus from button to button): from the reading tab to the pinned tab (the dot on a tab), or to the tab you were on last; from any other tab back to reading.
     /// </summary>
     void SwitchReadTab()
     {
@@ -263,13 +263,13 @@ public partial class MainWindow
         ToolTip.SetTip(b, key is null ? L("Zurück zum Bibeltext") : windowed ? L("Liegt in einem eigenen Fenster – klicken holt es nach vorn") : L("Klicken wechselt hierher. Nach unten ziehen macht ein eigenes Fenster daraus."));
         if (closable && key is not null)
         {
-            // the dot: the Tab key always switches between reading and this tab (no dot anywhere: the tab you were on last)
+            // the dot: Ctrl+Tab always switches between reading and this tab (no dot anywhere: the tab you were on last)
             var pinned = _settings.PinnedTab == key;
             var dot = new Button { Classes = { "tool" }, Width = 18, Height = 22, Padding = new(0), Opacity = pinned ? 1 : 0.45,
                 Content = new Ellipse { Width = 8, Height = 8, StrokeThickness = 1.5 } };
             ((Ellipse)dot.Content).Bind(Shape.StrokeProperty, this.GetResourceObservable(pinned ? "BsAccent" : "BsMuted"));
             if (pinned) ((Ellipse)dot.Content).Bind(Shape.FillProperty, this.GetResourceObservable("BsAccent"));
-            ToolTip.SetTip(dot, pinned ? L("Tab wechselt immer zwischen Lesen und diesem Reiter. Klicken hebt das auf.") : L("Klicken: Die Tab-Taste wechselt dann immer zwischen Lesen und diesem Reiter."));
+            ToolTip.SetTip(dot, pinned ? L("Strg+Tab wechselt immer zwischen Lesen und diesem Reiter. Klicken hebt das auf.") : L("Klicken: Strg+Tab wechselt dann immer zwischen Lesen und diesem Reiter."));
             dot.Click += (_, e) => { e.Handled = true; _settings.PinnedTab = pinned ? null : key; SaveSettings(); RebuildTabStrip(); };
             row.Children.Insert(0, dot);
         }
@@ -626,12 +626,6 @@ public partial class MainWindow
 
     void InitWindows()
     {
-        // the status bar stays, but steps aside while the mouse is over it (it would cover small things otherwise)
-        StatusBar.PointerEntered += (_, _) => StatusBar.Opacity = 0;
-        StatusBar.PointerExited += (_, _) => StatusBar.Opacity = 1;
-        // ... but over the version number it comes back (and shows the result of the update check)
-        VersionChip.PointerEntered += (_, _) => StatusBar.Opacity = 1;
-        VersionChip.PointerExited += (_, _) => { if (StatusBar.IsPointerOver) StatusBar.Opacity = 0; };
         // the search options and the hit chips never push the hit list out of the panel: they scroll within half of the height
         SearchDock.SizeChanged += (_, e) => SearchTopScroll.MaxHeight = Math.Max(160, e.NewSize.Height * 0.55);
         LayoutTopBtn.Click += (_, _) => ShowLayoutMenu();

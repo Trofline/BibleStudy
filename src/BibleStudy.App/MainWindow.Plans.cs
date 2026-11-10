@@ -104,7 +104,7 @@ public partial class MainWindow
         next.Click += (_, _) => { _planDayShown = Math.Min(plan.Days, day + 1); BuildPlanUi(); };
         DockPanel.SetDock(prev, Dock.Left); DockPanel.SetDock(next, Dock.Right);
         nav.Children.Add(prev); nav.Children.Add(next);
-        nav.Children.Add(new TextBlock { Text = L("Tag {0}", day) + (day == Math.Min(today, plan.Days) ? L(" (heute)") : "") + $" · {start.AddDays(day - 1):dd.MM.yyyy}", HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Center, FontWeight = FontWeight.SemiBold });
+        nav.Children.Add(new TextBlock { Text = L("Tag {0}", day) + (day == Math.Min(today, plan.Days) ? L(" (heute)") : "") + $" · {start.AddDays(day - 1).ToString("d", Loc.Culture)}", HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Center, FontWeight = FontWeight.SemiBold });
         PlanPanel.Children.Add(nav);
 
         var chapters = PlanDay(plan, day);

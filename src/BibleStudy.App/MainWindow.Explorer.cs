@@ -374,7 +374,7 @@ public partial class MainWindow
     }
 
     /// <summary>Notes have no id of their own (one note per verse): the verse is the key.</summary>
-    static long NoteKey(VerseRef r) => (long)Math.Abs(r.Book.GetHashCode() % 100_000) * 1_000_000 + r.Chapter * 1000 + r.Verse;
+    static long NoteKey(VerseRef r) => (long)r.Book.Aggregate(0, (h, c) => (h * 31 + c) % 100_000) * 1_000_000 + r.Chapter * 1000 + r.Verse;   // the same book always gives the same number, two books never the same one
 
     void RefreshExplorer()
     {

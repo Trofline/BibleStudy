@@ -80,7 +80,7 @@ public partial class MainWindow
     void ShowBackupState()
     {
         BackupFolderText.Text = L("Sicherungsordner: {0}", BackupFolder);
-        AutoBackupInfo.Text = DateTime.TryParse(_settings.LastAutoBackup, out var last) ? L("Letzte Sicherung: {0:dd.MM.yyyy HH:mm}", last) : L("Noch keine Sicherung gemacht.");
+        AutoBackupInfo.Text = DateTime.TryParse(_settings.LastAutoBackup, out var last) ? L("Letzte Sicherung: {0:g}", last) : L("Noch keine Sicherung gemacht.");
     }
 
     async Task AutoBackupIfDueAsync()
@@ -108,7 +108,12 @@ public partial class MainWindow
             if (manual) AutoBackupInfo.Text += "  " + path;
             else StatusText.Text = L("Automatische Sicherung gespeichert: {0}", path);
         }
-        catch (Exception ex) { AutoBackupInfo.Text = L("Sicherung fehlgeschlagen") + ": " + ex.Message; }
+        catch (Exception ex)
+        {
+            AutoBackupInfo.Text = L("Sicherung fehlgeschlagen") + ": " + ex.Message;
+            // an automatic backup that fails (the folder on a stick that is not there) must not fail unseen for months
+            if (!manual) ShowUndoToast(L("Automatische Sicherung fehlgeschlagen: {0}", ex.Message), () => { OpenWork(NavGroups.First(g => g.Name == "Mehr"), SettingsTab); return Task.CompletedTask; }, L("Einstellungen"));
+        }
         finally { _backingUp = false; BackupNowBtn.IsEnabled = true; }
     }
 
