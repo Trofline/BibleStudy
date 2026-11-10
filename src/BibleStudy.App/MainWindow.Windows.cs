@@ -77,6 +77,7 @@ public partial class MainWindow
         else if (index == MemoryTab) BuildMemoryUi();
         else if (index == BookmarksTab) RefreshBookmarks();
         else if (index == StatsTab) BuildStatsUi();
+        else if (index == 2 && _notesStale) RefreshNotesTree();
         else if (index == SentenceTab) _ = ShowSentenceAsync(true);
         else if (index == PericopeTab) _ = ShowPericopeAsync(false);
         else if (index == HandbookTab) BuildHandbookUi();
@@ -242,7 +243,7 @@ public partial class MainWindow
             foreach (var name in new[] { "Bücher", "Dokumente", "Predigt", "Planen", "Markierung", "Studium", "Lernen", "Mehr", "Hilfe" })   // the inner names; the menu shows them translated
             {
                 if (NavGroups.FirstOrDefault(x => x.Name == name) is not { } g) continue;
-                var item = new MenuItem { Header = name == "Mehr" ? L("Einstellungen") : L(name), IsEnabled = !_windows.ContainsKey("group:" + name) };
+                var item = new MenuItem { Header = name == "Mehr" ? L("Einstellungen") : RailName(name), IsEnabled = !_windows.ContainsKey("group:" + name) };
                 item.Click += (_, _) => OpenWork(g, name == "Mehr" ? SettingsTab : null);
                 menu.Items.Add(item);
             }
@@ -265,17 +266,21 @@ public partial class MainWindow
         {
             // the dot: Ctrl+Tab always switches between reading and this tab (no dot anywhere: the tab you were on last)
             var pinned = _settings.PinnedTab == key;
-            var dot = new Button { Classes = { "tool" }, Width = 18, Height = 22, Padding = new(0), Opacity = pinned ? 1 : 0.45,
+            var dot = new Button { Classes = { "tool" }, Width = 18, Height = 22, Padding = new(0), Opacity = pinned ? 1 : active ? 0.45 : 0,
                 Content = new Ellipse { Width = 8, Height = 8, StrokeThickness = 1.5 } };
             ((Ellipse)dot.Content).Bind(Shape.StrokeProperty, this.GetResourceObservable(pinned ? "BsAccent" : "BsMuted"));
             if (pinned) ((Ellipse)dot.Content).Bind(Shape.FillProperty, this.GetResourceObservable("BsAccent"));
             ToolTip.SetTip(dot, pinned ? L("Strg+Tab wechselt immer zwischen Lesen und diesem Reiter. Klicken hebt das auf.") : L("Klicken: Strg+Tab wechselt dann immer zwischen Lesen und diesem Reiter."));
             dot.Click += (_, e) => { e.Handled = true; _settings.PinnedTab = pinned ? null : key; SaveSettings(); RebuildTabStrip(); };
             row.Children.Insert(0, dot);
+            // with ten tabs a dot and an ✕ on each looked restless: they show on the open tab and under the mouse (a set dot always)
+            if (!pinned && !active) { b.PointerEntered += (_, _) => dot.Opacity = 0.45; b.PointerExited += (_, _) => dot.Opacity = 0; }
         }
         if (closable)
         {
-            var x = new Button { Classes = { "tool" }, Width = 22, Height = 22, Padding = new(0), Content = new Icon { Data = Geometry.Parse("M18 6L6 18 M6 6l12 12"), IconSize = 12 } };
+            var x = new Button { Classes = { "tool" }, Width = 22, Height = 22, Padding = new(0), Opacity = active ? 1 : 0, Content = new Icon { Data = Geometry.Parse("M18 6L6 18 M6 6l12 12"), IconSize = 12 } };
+            ToolTip.SetTip(x, L("Schließen"));
+            if (!active) { b.PointerEntered += (_, _) => x.Opacity = 1; b.PointerExited += (_, _) => x.Opacity = 0; }
             x.Click += (_, e) => { e.Handled = true; if (key is not null && _windows.TryGetValue(key, out var d)) { if (d.Win is not null) d.Win.Close(); else Restore(d); } };
             row.Children.Add(x);
         }

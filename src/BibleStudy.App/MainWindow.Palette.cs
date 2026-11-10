@@ -23,6 +23,7 @@ public partial class MainWindow
     readonly ListBox _paletteList = new() { MaxHeight = 440 };
     List<PaletteItem> _paletteItems = [];
     int _paletteVersion;
+    string _paletteText = "";   // what the list was made for: Enter before it caught up with the typing goes by the text itself
 
     void InitPalette()
     {
@@ -56,6 +57,7 @@ public partial class MainWindow
                     e.Handled = true;
                     var item = _paletteList.SelectedIndex is >= 0 and var i && i < _paletteItems.Count ? _paletteItems[i] : null;
                     var text = QuickJumpBox.Text?.Trim() ?? "";
+                    if (text != _paletteText) item = null;
                     _palette.IsOpen = false; QuickJumpBox.Text = ""; Focus();
                     if (item is not null) await item.Run(); else await QuickJumpAsync(text);
                     break;
@@ -129,6 +131,8 @@ public partial class MainWindow
     {
         var version = ++_paletteVersion;
         var text = QuickJumpBox.Text?.Trim() ?? "";
+        // while typing fast only the last letter starts the search through documents, notes and marks (each key used to start one)
+        if (text.Length > 0) { await Task.Delay(140); if (version != _paletteVersion) return; }
         var items = new List<PaletteItem>();
 
         if (text.Length == 0) items.AddRange(Commands());   // all of them: the list scrolls
@@ -144,7 +148,10 @@ public partial class MainWindow
             items.AddRange(Commands().Where(c => c.Title.Contains(text, StringComparison.CurrentCultureIgnoreCase) || c.Sub.Contains(text, StringComparison.CurrentCultureIgnoreCase) || ByKind(c)).Take(25));
 
             // everything of your own: documents, notes, highlights (with their notes and tags), prayers, to-dos, own cross references
-            foreach (var h in OwnSearch.Search(_vault, text, 8))
+            var vault = _vault;
+            var own = await Task.Run(() => OwnSearch.Search(vault, text, 8));   // off the window: a big vault must not make the typing stutter
+            if (version != _paletteVersion) return;
+            foreach (var h in own)
             {
                 var hit = h;
                 items.Add(new(OwnKindLabel(hit.Kind), OwnTitle(hit), Shorten(hit.Snippet, 80), () => OpenOwn(hit)));
@@ -193,7 +200,7 @@ public partial class MainWindow
 
     void ShowPalette(List<PaletteItem> items)
     {
-        _paletteItems = items;
+        _paletteItems = items; _paletteText = QuickJumpBox.Text?.Trim() ?? "";
         _paletteList.ItemsSource = items.Select(i =>
         {
             var badge = new Border { Width = 74, CornerRadius = new(6), Padding = new(6, 1), VerticalAlignment = VerticalAlignment.Center, Margin = new(0, 0, 10, 0), Child = new TextBlock { Text = i.Kind, FontSize = 11, HorizontalAlignment = HorizontalAlignment.Center } };

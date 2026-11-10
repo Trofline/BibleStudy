@@ -24,6 +24,9 @@ public partial class MainWindow
     /// <summary>The compact look: like in the early versions, everything in the side panel. The work areas Studium and Original are gone, their tabs sit in Vers, Suchen and Planen again.</summary>
     static bool CompactLook;
 
+    /// <summary>The name a group shows: "Markierung" is the explorer of marks and notes (the side panel has "Markierungen" as well), "Mehr" holds the settings.</summary>
+    static string RailName(string group) => group switch { "Mehr" => L("Optionen"), "Markierung" => L("Explorer"), _ => L(group) };
+
     static NavGroup[] MakeNavGroups()
     {
         var all = BuildNavGroups();
@@ -166,7 +169,7 @@ public partial class MainWindow
             var icon = new Icon { Data = Geometry.Parse(g.Icon), IconSize = 22, HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center };
             var label = new TextBlock { Text = L(g.Name), FontSize = 11, FontWeight = FontWeight.Medium, HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center };
             var button = new Button { Classes = { "rail" }, Tag = g, Content = new StackPanel { Spacing = 4, Children = { icon, label } } };
-            ToolTip.SetTip(button, g.Tabs.Length > 1 ? string.Join(" · ", g.Tabs.Select(t => L(t.Label))) : g.Tabs[0].Hint);
+            ToolTip.SetTip(button, (g.Tabs.Length > 1 ? string.Join(" · ", g.Tabs.Select(t => L(t.Label))) : g.Tabs[0].Hint) + "\n" + L("Aus der Leiste ziehen: eigenes Fenster."));
             // drag a tab out of the side panel = its own window
             Avalonia.Point? dragFrom = null; var dragged = false;
             button.AddHandler(PointerPressedEvent, (object? _, Avalonia.Input.PointerPressedEventArgs e) => { if (e.GetCurrentPoint(button).Properties.IsLeftButtonPressed) { dragFrom = e.GetPosition(this); dragged = false; } }, Avalonia.Interactivity.RoutingStrategies.Tunnel | Avalonia.Interactivity.RoutingStrategies.Bubble, true);
@@ -198,7 +201,7 @@ public partial class MainWindow
         {
             var g = group;
             var icon = new Icon { Data = Geometry.Parse(g.Icon), IconSize = 22, HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center };
-            var label = new TextBlock { Text = g.Name == "Mehr" ? L("Optionen") : L(g.Name), FontSize = 11, FontWeight = FontWeight.Medium, HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center };
+            var label = new TextBlock { Text = RailName(g.Name), FontSize = 11, FontWeight = FontWeight.Medium, HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center };
             var button = new Button { Classes = { "rail" }, Tag = "adv", Content = new StackPanel { Spacing = 4, Children = { icon, label } } };
             ToolTip.SetTip(button, label.Text + ": " + (g.Tabs.Length > 1 ? string.Join(" · ", g.Tabs.Select(t => L(t.Label))) : g.Tabs[0].Hint));   // the name too: in a low window only the symbol is left
             button.Click += (_, _) => OpenWork(g);
@@ -220,6 +223,7 @@ public partial class MainWindow
             if (SideTabs.SelectedIndex == AnalysisTab) BuildAnalysisUi();
             else if (SideTabs.SelectedIndex == CollabTab) TabShown(CollabTab);
             else if (SideTabs.SelectedIndex is SentenceTab or PericopeTab) TabShown(SideTabs.SelectedIndex);
+            else if (SideTabs.SelectedIndex == 2 && _notesStale) RefreshNotesTree();
             SyncNav();
         };
         if (GroupOf(SideTabs.SelectedIndex) is { Windowed: true }) SideTabs.SelectedIndex = 0;
@@ -248,6 +252,6 @@ public partial class MainWindow
         if (_vaultBar is not null) _vaultBar.IsVisible = group.ShowVault;
         var hint = group.Tabs.FirstOrDefault(t => t.Index == current)?.Hint ?? "";
         if (group.ShowVault) hint += $"";
-        SubHint.Text = hint + (group.Windowed ? "" : L("  Tipp: Das Symbol links aus der Leiste ziehen = eigenes Fenster."));
+        SubHint.Text = hint;   // the tip about dragging stood under every tab; it is in the tooltip of the rail now
     }
 }

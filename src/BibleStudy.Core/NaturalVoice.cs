@@ -13,6 +13,8 @@ public static class NaturalVoice
     public sealed record Voice(string Language, string Id, string Name, string Folder, string License, int SizeMb = 63);
 
     public const string PiperUrl = "https://github.com/rhasspy/piper/releases/download/2023.11.14-2/piper_windows_amd64.zip";
+    /// <summary>SHA-256 of that very file: what is downloaded and then started must be exactly it.</summary>
+    public const string PiperSha256 = "f3c58906402b24f3a96d92145f58acba6d86c9b5db896d207f78dc80811efcea";
     public const string VoiceBase = "https://huggingface.co/rhasspy/piper-voices/resolve/main/";
     public const string SourceUrl = "https://github.com/rhasspy/piper";
 
@@ -61,6 +63,9 @@ public static class NaturalVoice
         {
             var zip = Path.Combine(dir, "piper.zip.part");
             await DownloadAsync(http, PiperUrl, zip, "Piper", progress, ct);
+            string hash;
+            await using (var s = File.OpenRead(zip)) hash = Convert.ToHexStringLower(await System.Security.Cryptography.SHA256.HashDataAsync(s, ct));
+            if (hash != PiperSha256) { File.Delete(zip); throw new InvalidDataException(Loc.L("Piper: Die heruntergeladene Datei ist nicht die erwartete (Prüfsumme weicht ab).")); }
             var target = Path.Combine(dir, "piper");
             if (Directory.Exists(target)) Directory.Delete(target, true);
             ZipFile.ExtractToDirectory(zip, dir, overwriteFiles: true);   // the zip holds one folder "piper"

@@ -15,7 +15,8 @@ public partial class MainWindow
         if (await AskAsync(L("Vault löschen?"), text, L("Sicherung anlegen und löschen"), L("Abbrechen")) != 0) return;
 
         string backup;
-        try { backup = BackupData("vor-dem-Loeschen"); }
+        VaultInfo.Text = L("Sichere deine Daten …");
+        try { backup = await Task.Run(() => BackupData("vor-dem-Loeschen")); }   // in the background: the window must not freeze
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
         {
             VaultInfo.Text = L("Die Sicherung ließ sich nicht anlegen, deshalb wurde nichts gelöscht: {0}", ex.Message);

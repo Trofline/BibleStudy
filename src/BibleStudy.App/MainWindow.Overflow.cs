@@ -105,12 +105,28 @@ public partial class MainWindow
         // the first one leaves first
         _readSpill =
         [
-            new(ParallelBtn, () => !_settings.EasyMode), new(FamilyBtn, () => true), new(TimelineBtn, () => true), new(MapBtn, () => true),
-            new(GraphBtn, () => !_settings.EasyMode), new(BookmarkBtn, () => true), new(QuickMarkBtn, () => true, QuickColorBtn),
+            new(ParallelBtn, () => !_settings.EasyMode), new(ViewsBtn, () => true),
+            new(BookmarkBtn, () => true), new(QuickMarkBtn, () => true, QuickColorBtn),
             new(AudioBtn, () => true), new(SpeakBtn, () => true), new(StudyBtn, () => !_settings.EasyMode), new(MarkBtn, () => true), new(ViewBtn, () => true),
         ];
         ReadBar.PropertyChanged += (_, e) => { if (e.Property == BoundsProperty || e.Property == IsVisibleProperty) FitReadBar(); };
         ReadMoreBtn.Click += (_, _) => ShowSpill(ReadMoreBtn, _readHidden);
+        ViewsBtn.Click += (_, _) =>
+        {
+            var menu = new MenuFlyout { Placement = PlacementMode.BottomEdgeAlignedLeft };
+            void Item(string text, Button target, string icon)
+            {
+                var m = new MenuItem { Header = text, Icon = new Icon { Data = Avalonia.Media.Geometry.Parse(icon), IconSize = 16 } };
+                ToolTip.SetTip(m, ToolTip.GetTip(target));
+                m.Click += (_, _) => Dispatcher.UIThread.Post(() => target.RaiseEvent(new RoutedEventArgs(Button.ClickEvent)), DispatcherPriority.Background);
+                menu.Items.Add(m);
+            }
+            if (!_settings.EasyMode) Item(L("Graph"), GraphBtn, "M5 12a2 2 0 1 0 4 0a2 2 0 1 0-4 0z M15 5a2 2 0 1 0 4 0a2 2 0 1 0-4 0z M15 19a2 2 0 1 0 4 0a2 2 0 1 0-4 0z M8.7 11l6.6-4.9 M8.7 13l6.6 4.9");
+            Item(L("Karte"), MapBtn, "M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0z M9 10a3 3 0 1 0 6 0a3 3 0 1 0-6 0z");
+            Item(L("Zeitleiste"), TimelineBtn, "M3 12h18 M6 8v8 M12 5v14 M18 9v6");
+            Item(L("Stammbaum"), FamilyBtn, "M12 3v6 M5 21v-6a3 3 0 0 1 3-3h8a3 3 0 0 1 3 3v6 M12 9v3 M9 3h6v4H9z M2 21h6v-3H2z M16 21h6v-3h-6z");
+            menu.ShowAt(Anchor(ViewsBtn));
+        };
         FitReadBar();
     }
 
@@ -131,12 +147,26 @@ public partial class MainWindow
             return sum <= available;
         }
         void Labels(bool on) { foreach (var t in _readLabels) t.IsVisible = on; }
+        // the labels give way one button at a time, the least needed first (they all went at once, so a wide window showed only symbols)
+        static IEnumerable<TextBlock> LabelsOf(ContentControl c) => c.Content is StackPanel sp ? sp.Children.OfType<TextBlock>() : [];
+        ContentControl[] labelOrder = [ParallelBtn, AudioBtn, SpeakBtn, StudyBtn, BookmarkBtn, QuickMarkBtn, ViewBtn, ViewsBtn, MarkBtn, ReadBtn];
         // a group whose buttons all moved away leaves nothing behind (its frame would stay as a little stub)
         void Frames() { foreach (var p in _readPills) p.IsVisible = p.Child is not Panel g || g.Children.Any(c => c.IsVisible); }
         Labels(true);
+        // the extra shortcuts on the left (wide windows only) go before any label: what they open is in the rail as well
+        ReadQuick.IsVisible = !_settings.EasyMode && !CompactLook && Bounds.Width >= 1600;
+        ReadQuickMore.IsVisible = Bounds.Width >= 1800;
         RunSpill(ReadMoreBtn, _readSpill, _readHidden, () => true);
         Frames();
         if (Fits()) return;
+        if (ReadQuickMore.IsVisible) { ReadQuickMore.IsVisible = false; if (Fits()) return; }
+        if (ReadQuick.IsVisible) { ReadQuick.IsVisible = false; if (Fits()) return; }
+        foreach (var c in labelOrder)
+        {
+            if (!c.IsVisible) continue;
+            foreach (var t in LabelsOf(c)) t.IsVisible = false;
+            if (Fits()) return;
+        }
         Labels(false);   // icons only: the tooltips say what they are
         foreach (var p in _readPills) p.IsVisible = true;
         RunSpill(ReadMoreBtn, _readSpill, _readHidden, () => { Frames(); return Fits(); });

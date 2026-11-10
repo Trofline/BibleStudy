@@ -156,7 +156,25 @@ public sealed class AppSettings
     /// <summary>Optional own relay server (TURN) for studying together when no direct connection is possible.</summary>
     public string RelayUrl { get; set; } = "";
     public string RelayUser { get; set; } = "";
-    public string RelayPassword { get; set; } = "";
+    /// <summary>The password itself; in the file it stands locked to this Windows user (see <see cref="RelayPasswordStored"/>).</summary>
+    [System.Text.Json.Serialization.JsonIgnore] public string RelayPassword { get; set; } = "";
+
+    /// <summary>
+    /// What settings.json holds: on Windows the password locked with the Windows account (DPAPI), so it is not readable in the file or in a
+    /// backup; elsewhere as it is. A file of an older version holds it as plain text and is read as before.
+    /// </summary>
+    [System.Text.Json.Serialization.JsonPropertyName("RelayPassword")]
+    public string RelayPasswordStored
+    {
+        get => RelayPassword.Length == 0 || !OperatingSystem.IsWindows() ? RelayPassword
+            : "dpapi:" + Convert.ToBase64String(System.Security.Cryptography.ProtectedData.Protect(System.Text.Encoding.UTF8.GetBytes(RelayPassword), null, System.Security.Cryptography.DataProtectionScope.CurrentUser));
+        set
+        {
+            if (value is null || !value.StartsWith("dpapi:", StringComparison.Ordinal)) { RelayPassword = value ?? ""; return; }
+            try { RelayPassword = OperatingSystem.IsWindows() ? System.Text.Encoding.UTF8.GetString(System.Security.Cryptography.ProtectedData.Unprotect(Convert.FromBase64String(value[6..]), null, System.Security.Cryptography.DataProtectionScope.CurrentUser)) : ""; }
+            catch (Exception ex) when (ex is System.Security.Cryptography.CryptographicException or FormatException) { RelayPassword = ""; }   // another computer or user: it has to be typed again
+        }
+    }
     public bool CollabSendLocation { get; set; } = true;
     public List<SavedSearch> SavedSearches { get; set; } = [];
     /// <summary>How the hits are shown: 0 verses, 1 aligned, 2 grid, 3 comparison, 4 analysis.</summary>

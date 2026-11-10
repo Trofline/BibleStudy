@@ -73,7 +73,9 @@ public partial class MainWindow
         {
             var k = i;
             var b = new Button { Content = buttons[i], Margin = new(8, 0, 0, 0) };
-            if (i == 0) { b.Classes.Add("primary"); b.IsDefault = true; }   // Enter: the first answer (the careful one where there is a choice)
+            if (i == 0) b.Classes.Add("primary");
+            // Enter answers only a window with one button: the first of several is sometimes the far-reaching one ("delete")
+            if (buttons.Length == 1) b.IsDefault = true;
             b.Click += (_, _) => { result = k; win.Close(); };
             row.Children.Add(b);
         }

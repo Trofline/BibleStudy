@@ -21,6 +21,7 @@ public partial class MainWindow
     void InitTour()
     {
         TourBtn.Click += (_, _) => StartTour();
+        InitHelpPage();
         // a while after the start, when the splash screen and the notice about sources are gone
         DispatcherTimer.RunOnce(() => OfferTour(), TimeSpan.FromSeconds(6));
     }
@@ -70,7 +71,7 @@ public partial class MainWindow
             new(() => MarkBtn, PlacementMode.Bottom, L("Verse anklicken und markieren"), L("Klick auf einen Vers: rechts siehst du Querverweise und kannst eine Notiz schreiben. Rechtsklick öffnet das Menü. Text markieren und hier einfärben.")),
             new(() => StudyBtn, PlacementMode.Bottom, L("Wortstudie"), L("Einschalten, dann ein unterstrichenes Wort antippen: Bedeutung im Hebräischen oder Griechischen, und alle Stellen, an denen es vorkommt.")),
             new(() => ParallelBtn, PlacementMode.Bottom, L("Parallel"), L("Weitere Übersetzungen als Spalten daneben. Jede Spalte kann auch eine andere Bibelstelle zeigen, z. B. 1. Mose neben Daniel.")),
-            new(() => BookmarkBtn, PlacementMode.Bottom, L("Merken"), L("Setzt ein Lesezeichen auf den Vers (Strg+D), zum späteren Zurückspringen. Unter „Lesezeichen“ rechts findest du sie wieder.")),
+            new(() => BookmarkBtn, PlacementMode.Bottom, L("Merken"), L("Setzt ein Lesezeichen auf den Vers (Strg+D), zum späteren Zurückspringen. Unter „Merken“ rechts in der Leiste findest du sie wieder.")),
             new(() => Rail, PlacementMode.Left, L("Die Leiste rechts"), L("Suchen, Vers (Querverweise, Grundtext), Notizen, Dokumente, Predigt, Planen (Lesepläne, To-dos, Gebete, Auswendiglernen), Zusammen und KI. Ziehst du ein Symbol aus der Leiste, wird es ein eigenes Fenster.")),
             new(() => QuickJumpBox, PlacementMode.Bottom, L("Gehe zu … (Strg+K)"), L("Ein Feld für alles: eine Bibelstelle („Röm 8,28“), ein Wort, ein Befehl, ein Dokument. Tippen, mit den Pfeilen wählen, Enter.")),
             new(() => TodoTopBtn, PlacementMode.Bottom, L("To-dos"), L("Eine freie Liste zum Abhaken, von überall erreichbar.")),

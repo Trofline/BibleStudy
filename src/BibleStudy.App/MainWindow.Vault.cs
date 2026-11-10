@@ -290,12 +290,32 @@ public partial class MainWindow
         var start = Avalonia.Media.Color.Parse(_settings.DefaultColor);
         Slider Channel(byte v) => new() { Minimum = 0, Maximum = 255, Value = v, Height = 24 };
         var sr = Channel(start.R); var sg = Channel(start.G); var sb = Channel(start.B);
-        var preview = new Border { Height = 28, CornerRadius = new(8) };
+        var preview = new Border { Height = 28, Width = 90, CornerRadius = new(8) };
         string Current() => $"#{(int)sr.Value:X2}{(int)sg.Value:X2}{(int)sb.Value:X2}";
-        void Update() => preview.Background = new SolidColorBrush(Avalonia.Media.Color.Parse(Current()));
+        // the code of the color can be typed or pasted (#3E63DD); the sliders follow it, and it follows them
+        var code = new TextBox { Width = 110, MaxLength = 7, VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center };
+        ToolTip.SetTip(code, L("Farbcode, z. B. #3E63DD"));
+        var typing = false;
+        void Update() { preview.Background = new SolidColorBrush(Avalonia.Media.Color.Parse(Current())); if (!typing) code.Text = Current(); }
         sr.ValueChanged += (_, _) => Update(); sg.ValueChanged += (_, _) => Update(); sb.ValueChanged += (_, _) => Update();
+        code.TextChanged += (_, _) =>
+        {
+            if (NormalizeHex(code.Text) is not { } hex || hex == Current()) return;
+            var c = Avalonia.Media.Color.Parse(hex);
+            typing = true; sr.Value = c.R; sg.Value = c.G; sb.Value = c.B; typing = false;
+        };
         Update();
-        var panel = new StackPanel { IsVisible = startOpen, Spacing = 2, Children = { new TextBlock { Text = L("Rot · Grün · Blau"), Classes = { "caption" } }, sr, sg, sb, preview } };
+        // each slider says which color it is (they were three bars without a name)
+        Control Row(string name, Slider s)
+        {
+            var g = new Grid { ColumnDefinitions = new("44,*") };
+            Grid.SetColumn(s, 1);
+            g.Children.Add(new TextBlock { Text = name, Classes = { "caption" }, VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center });
+            g.Children.Add(s);
+            return g;
+        }
+        var bottom = new StackPanel { Orientation = Avalonia.Layout.Orientation.Horizontal, Spacing = 10, Margin = new(0, 4, 0, 0), Children = { preview, code } };
+        var panel = new StackPanel { IsVisible = startOpen, Spacing = 2, Children = { Row(L("Rot"), sr), Row(L("Grün"), sg), Row(L("Blau"), sb), bottom } };
         var open = new Button { Content = L("＋ Eigene Farbe …"), IsVisible = !startOpen };
         var apply = new Button { Content = L("Farbe verwenden und speichern"), Classes = { "primary" }, IsVisible = startOpen };
         open.Click += (_, _) => { panel.IsVisible = true; apply.IsVisible = true; open.IsVisible = false; };

@@ -37,7 +37,8 @@ public partial class MainWindow
     /// <summary>Reads each of these Bibles again from its file (the remembered one, else the user is asked for it).</summary>
     internal async Task<int> ReimportAsync(List<LocalBibleStore.Outdated> list, Func<LocalBibleStore.Outdated, Task<string?>>? ask = null)
     {
-        try { BackupData(L("vor dem Neu-Einlesen")); } catch { /* a backup that fails must not stop the better import; the old text stays until the new one is saved */ }
+        var label = L("vor dem Neu-Einlesen");
+        try { await Task.Run(() => BackupData(label)); } catch { /* a backup that fails must not stop the better import; the old text stays until the new one is saved */ }
         var done = 0;
         foreach (var o in list)
         {

@@ -37,7 +37,7 @@ public partial class MainWindow
         foreach (var t in options)
         {
             var estimated = built.ContainsKey(t.Id);
-            var text = new StackPanel { Spacing = 2, Children = { new TextBlock { Text = $"{t.Name}  ({t.ShortName})  ·  {t.LanguageName}", TextWrapping = TextWrapping.Wrap, FontWeight = FontWeight.SemiBold } } };
+            var text = new StackPanel { Spacing = 2, Children = { new TextBlock { Text = $"{t.Name}  ({t.ShortName})  ·  {LangLabel(t.LanguageName)}", TextWrapping = TextWrapping.Wrap, FontWeight = FontWeight.SemiBold } } };
             if (estimated) text.Children.Add(new TextBlock { Text = L("⚠ Strong-Nummern nachträglich ergänzt (Schätzung, nicht fehlerfrei) – bitte prüfen"), FontSize = 12, TextWrapping = TextWrapping.Wrap });
             list.Items.Add(new ListBoxItem { Tag = t, Content = text, Background = estimated ? new SolidColorBrush(amber, 0.22) : null });
         }

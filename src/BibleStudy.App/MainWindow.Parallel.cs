@@ -92,7 +92,7 @@ public partial class MainWindow
     {
         var color = ColumnColor(i);
         var name = new TextBlock { Text = t.ShortName + (i < _colPassage.Count && _colPassage[i] is { } passage ? " · " + passage : "") + (c is null ? L(" (Kapitel nicht verfügbar)") : ""), FontWeight = FontWeight.Bold, FontSize = 14, TextTrimming = TextTrimming.CharacterEllipsis };
-        var sub = new TextBlock { Text = t.LanguageName, FontSize = 11.5, Opacity = 0.7, TextTrimming = TextTrimming.CharacterEllipsis };
+        var sub = new TextBlock { Text = LangLabel(t.LanguageName), FontSize = 11.5, Opacity = 0.7, TextTrimming = TextTrimming.CharacterEllipsis };
         return new Border
         {
             Background = new SolidColorBrush(color, 0.16), BorderBrush = new SolidColorBrush(color), BorderThickness = new(0, 0, 0, 3),

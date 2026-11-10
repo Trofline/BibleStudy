@@ -225,7 +225,8 @@ public partial class MainWindow
         try
         {
             await SwitchVaultAsync(_vault.Name);   // what is open is saved first
-            BackupData(L("vor dem Einmischen"));
+            var label = L("vor dem Einmischen");
+            await Task.Run(() => BackupData(label));   // a big vault takes a while: the window must not freeze
             Directory.CreateDirectory(dir);
             if (Directory.Exists(MergeUndoDir)) Directory.Delete(MergeUndoDir, true);
             Directory.CreateDirectory(MergeUndoDir);

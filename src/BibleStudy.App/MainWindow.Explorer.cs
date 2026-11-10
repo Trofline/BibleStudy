@@ -135,7 +135,7 @@ public partial class MainWindow
         free.Items.Add(new MenuItem());   // a menu without items does not open
         listScroll.ContextMenu = free;
         // a click on the free space takes the selection away
-        listScroll.PointerPressed += (_, e) => { if (e.Source == listScroll || e.Source is StackPanel) { _exSel.Clear(); _trSel.Clear(); FillExplorerList(); } };
+        listScroll.PointerPressed += (_, e) => { if (e.Source == listScroll || e.Source is StackPanel) { _exSel.Clear(); var trash = _trSel.Count > 0; _trSel.Clear(); if (trash) FillExplorerList(); else ExShowSelection(); } };
 
         var split = new GridSplitter { Width = 8, Background = Brushes.Transparent, ResizeDirection = GridResizeDirection.Columns };
         var body = new Grid { ColumnDefinitions = new("240,8,*"), Margin = new(14, 0, 14, 0) };
@@ -186,7 +186,7 @@ public partial class MainWindow
             case Key.Z when ctrl: ExUndoLast(); break;
             case Key.X when ctrl: ExCut(); break;
             case Key.V when ctrl: ExPaste(_exFolder); break;
-            case Key.A when ctrl: _exSel.Clear(); _exSel.AddRange(_exRows); FillExplorerList(); break;
+            case Key.A when ctrl: _exSel.Clear(); _exSel.AddRange(_exRows); if (_exInTrash) FillExplorerList(); else ExShowSelection(); break;
             case Key.Up when alt: if (_exFolder is long f) ExNavigate(FolderById(f)?.ParentId); break;
             case Key.Up: ExStep(-1, shift); break;
             case Key.Down: ExStep(1, shift); break;
@@ -234,7 +234,7 @@ public partial class MainWindow
         if (rows.FirstOrDefault(x => (!again || x.i != at) && (Starts(x.r.Title) || Starts(x.r.Place))) is { r: not null } found)
         {
             _exSel.Clear(); _exSel.Add(found.r); _exAnchor = found.r;
-            FillExplorerList();
+            ExShowSelection();
             ExRowControl(found.r)?.BringIntoView();
         }
     }
@@ -259,7 +259,7 @@ public partial class MainWindow
             for (var i = anchor; i != next + step; i += step) _exSel.Add(_exRows[i]);   // the last one is where the cursor is
         }
         else { _exSel.Add(_exRows[next]); _exAnchor = _exRows[next]; }
-        FillExplorerList();
+        ExShowSelection();
         ExRowControl(_exRows[next])?.BringIntoView();
     }
 
@@ -518,9 +518,7 @@ public partial class MainWindow
         foreach (var r in rows) _exList.Children.Add(ListRow(r, all));
         _exEmpty.IsVisible = rows.Count == 0;
         _exEmpty.Text = words.Length > 0 ? L("Nichts gefunden.") : L("Dieser Ordner ist leer. Ziehe Markierungen, Notizen oder Ordner hierher, oder lege mit „＋ Neuer Ordner“ einen Unterordner an.");
-        var folders = rows.Count(r => r.Kind == ExKind.Folder);
-        _exInfo.Text = L("{0} Ordner, {1} Einträge", folders, rows.Count - folders) + (_exSel.Count > 0 ? "  ·  " + L("{0} ausgewählt", _exSel.Count) : "")
-            + "  ·  " + L("Doppelklick oder Enter öffnet · Ziehen oder Strg+X / Strg+V ordnet ein · Pfeiltasten wählen, mit Umschalt mehrere · Entf löscht · Strg+Z macht rückgängig · F2 benennt um");
+        ExUpdateInfo();
     }
 
     /// <summary>The column heads: a click sorts by that column, a second click turns the order round.</summary>
@@ -548,7 +546,7 @@ public partial class MainWindow
 
     Control ListRow(ExItem item, List<ExItem> all)
     {
-        var selected = _exSel.Any(s => s.Kind == item.Kind && s.Id == item.Id);
+
         var grid = new Grid { ColumnDefinitions = new("28,*,140,110") };
         Control lead = item.Kind switch
         {
@@ -569,7 +567,8 @@ public partial class MainWindow
         Grid.SetColumn(name, 1); Grid.SetColumn(place, 2); Grid.SetColumn(kind, 3);
         grid.Children.Add(lead); grid.Children.Add(name); grid.Children.Add(place); grid.Children.Add(kind);
         var row = new Border { Padding = new(8, 7), CornerRadius = new(8), Child = grid, Margin = new(0, 1), Cursor = new Cursor(StandardCursorType.Hand), Opacity = _exCut?.Any(c => SameItem(c, item)) == true ? 0.45 : 1 };
-        void Paint(bool hover) => row.Background = selected ? Res("BsAccentSoft") ?? Brushes.Transparent : hover ? Res("BsHover") ?? Brushes.Transparent : Brushes.Transparent;
+        void Paint(bool hover) => row.Background = _exSel.Any(s => s.Kind == item.Kind && s.Id == item.Id) ? Res("BsAccentSoft") ?? Brushes.Transparent : hover ? Res("BsHover") ?? Brushes.Transparent : Brushes.Transparent;
+        row.Tag = (Action)(() => Paint(row.IsPointerOver && !_exDragging));   // a new choice only paints the rows again (see ExShowSelection)
         Paint(false);
         row.PointerEntered += (_, _) => { if (!_exDragging) Paint(true); };
         row.PointerExited += (_, _) => { if (!_exDragging) Paint(false); };
@@ -815,7 +814,7 @@ public partial class MainWindow
             _exDrag = _exSel.Count > 0 && _exSel.Any(s => s.Kind == item.Kind && s.Id == item.Id) ? _exSel.ToList() : [item];
             _exFrom = e.GetPosition(ExplorerHost); _exDragging = false;
             e.Pointer.Capture(row);
-            FillExplorerListKeepingCapture(row, e.Pointer);
+            ExShowSelection();   // the rows stay as they are (the list used to be built anew on every click), so the pointer keeps its capture
         };
         row.PointerMoved += (_, e) =>
         {
@@ -841,23 +840,26 @@ public partial class MainWindow
             e.Pointer.Capture(null);
             Reset();
             if (wasDragging && target is not null) ExMove(items, target.Folder);
-            else if (!wasDragging && !e.KeyModifiers.HasFlag(KeyModifiers.Control) && !e.KeyModifiers.HasFlag(KeyModifiers.Shift) && _exSel.Count > 1) { _exSel.Clear(); _exSel.Add(item); FillExplorerList(); }
+            else if (!wasDragging && !e.KeyModifiers.HasFlag(KeyModifiers.Control) && !e.KeyModifiers.HasFlag(KeyModifiers.Shift) && _exSel.Count > 1) { _exSel.Clear(); _exSel.Add(item); ExShowSelection(); }
         };
         row.PointerCaptureLost += (_, _) => { if (_exDrag is not null && !_exKeepCapture) Reset(); };
     }
 
     bool _exKeepCapture;
 
-    /// <summary>Shows the new selection; the row under the pointer is drawn again, so the capture moves to its new copy.</summary>
-    void FillExplorerListKeepingCapture(Control old, IPointer pointer)
+    /// <summary>Shows a new choice of rows: only their color and the line below change, nothing is read from the vault again.</summary>
+    void ExShowSelection()
     {
-        _exKeepCapture = true;
-        try
-        {
-            var index = _exList.Children.IndexOf(old);
-            FillExplorerList();
-            if (index >= 0 && index < _exList.Children.Count) pointer.Capture(_exList.Children[index]);
-        }
-        finally { _exKeepCapture = false; }
+        if (_exInTrash) { FillExplorerList(); return; }
+        foreach (var c in _exList.Children) if (c.Tag is Action paint) paint();
+        ExUpdateInfo();
+    }
+
+    void ExUpdateInfo()
+    {
+        var folders = _exRows.Count(r => r.Kind == ExKind.Folder);
+        _exInfo.Text = L("{0} Ordner, {1} Einträge", folders, _exRows.Count - folders) + (_exSel.Count > 0 ? "  ·  " + L("{0} ausgewählt", _exSel.Count) : "");
+        // the keys stood here as one long line all the time; they are one hover away now
+        ToolTip.SetTip(_exInfo, L("Doppelklick oder Enter öffnet · Ziehen oder Strg+X / Strg+V ordnet ein · Pfeiltasten wählen, mit Umschalt mehrere · Entf löscht · Strg+Z macht rückgängig · F2 benennt um"));
     }
 }
