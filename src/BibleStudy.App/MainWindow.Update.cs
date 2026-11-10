@@ -73,11 +73,12 @@ public partial class MainWindow
         {
             var k = i;
             var b = new Button { Content = buttons[i], Margin = new(8, 0, 0, 0) };
-            if (i == 0) b.Classes.Add("primary");
+            if (i == 0) { b.Classes.Add("primary"); b.IsDefault = true; }   // Enter: the first answer (the careful one where there is a choice)
             b.Click += (_, _) => { result = k; win.Close(); };
             row.Children.Add(b);
         }
         win.Content = new StackPanel { Margin = new(22), Children = { new TextBlock { Text = title, FontSize = 18, FontWeight = FontWeight.SemiBold, Margin = new(0, 0, 0, 10) }, new TextBlock { Text = text, TextWrapping = TextWrapping.Wrap }, row } };
+        win.KeyDown += (_, e) => { if (e.Key == Avalonia.Input.Key.Escape) { e.Handled = true; win.Close(); } };   // Esc: no answer, as the ✕ of the window
         await ShowModalAsync(win);
         return result;
     }

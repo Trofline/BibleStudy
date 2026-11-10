@@ -231,7 +231,7 @@ public partial class MainWindow
         foreach (var t in items)
         {
             var tr = t;
-            var license = t.License.PublicDomain ? L("gemeinfrei") : t.License.Attribution;
+            var license = t.License.PublicDomain ? L("gemeinfrei") : t.License.Attribution switch { "required" => L("Namensnennung nötig"), "not-required" => L("ohne Namensnennung"), var a => a };
             var content = new StackPanel
             {
                 Spacing = 1, HorizontalAlignment = HorizontalAlignment.Left,
@@ -256,11 +256,22 @@ public partial class MainWindow
             var pen = new Button { Content = "✎", Classes = { "tool" }, Width = 28, Height = 28, Padding = new(0), HorizontalAlignment = HorizontalAlignment.Right, VerticalAlignment = VerticalAlignment.Top, Margin = new(0, 4, 4, 0) };
             ToolTip.SetTip(pen, L("Umbenennen …"));
             pen.Click += (_, _) => { flyout!.Hide(); ShowRenameTranslation(tr); };
-            panel.Children.Add(new Grid { Width = 340, Height = 52, Margin = new(0, 0, 6, 6), Children = { b, pen } });
+            var tile = new Grid { Width = 340, Height = 52, Margin = new(0, 0, 6, 6), Children = { b, pen }, Tag = SearchQuery.Fold($"{t.Name} {t.ShortName} {t.EnglishName}", true) };
+            panel.Children.Add(tile);
         }
         // the hint belongs here (it used to stand under the books, where it meant nothing)
         panel.Children.Add(new TextBlock { Text = L("Rechtsklick auf eine Übersetzung: eigenen Namen vergeben"), Classes = { "caption" }, Margin = new(2, 4, 0, 0), Width = 692, TextWrapping = TextWrapping.Wrap });
-        flyout = NewPickerFlyout(new ScrollViewer { Content = panel, Width = 720, MaxHeight = Math.Max(300, Bounds.Height - 130), HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled });
+        // a language with a hundred translations (English) needs a search, as the books and the languages have one
+        var search = new TextBox { PlaceholderText = L("Übersetzung suchen …"), Margin = new(0, 0, 0, 10), Width = 692, HorizontalAlignment = HorizontalAlignment.Left };
+        search.TextChanged += (_, _) =>
+        {
+            var q = SearchQuery.Fold(search.Text?.Trim() ?? "", true);
+            foreach (var c in panel.Children.OfType<Grid>()) c.IsVisible = q.Length == 0 || ((string)c.Tag!).Contains(q, StringComparison.Ordinal);
+        };
+        var body = new StackPanel { Children = { search, new ScrollViewer { Content = panel, MaxHeight = Math.Max(250, Bounds.Height - 190), HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled } } };
+        if (items.Count < 12) search.IsVisible = false;   // a handful of tiles is seen at a glance
+        flyout = NewPickerFlyout(new Border { Child = body, Width = 720 });
         flyout.ShowAt(TransBtn);
+        if (search.IsVisible) search.Focus();
     }
 }

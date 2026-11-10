@@ -41,7 +41,7 @@ public partial class MainWindow
         }
         foreach (var f in files)
         {
-            var box = new CheckBox { Content = $"{f.LastWriteTime:dd.MM.yyyy HH:mm}   ·   {BackupKind(f.Name)}   ·   {SizeText(f.Length)}", Margin = new(0, 2) };
+            var box = new CheckBox { Content = $"{f.LastWriteTime.ToString("g", Loc.Culture)}   ·   {BackupKind(f.Name)}   ·   {SizeText(f.Length)}", Margin = new(0, 2) };
             ToolTip.SetTip(box, f.FullName);
             box.IsCheckedChanged += (_, _) => Update();
             boxes.Add((box, f)); list.Children.Add(box);

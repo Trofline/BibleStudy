@@ -113,7 +113,7 @@ public partial class MainWindow
             fly.ShowAt(anchor);
         };
         var delete = new MenuItem { Header = L("Ordner löschen (die Dokumente bleiben erhalten)") };
-        delete.Click += (_, _) => { _vault.DeleteFolder(id); _closedDocFolders.Remove(id); RefreshDocs(); RefreshCollection(); };
+        delete.Click += (_, _) => { _closedDocFolders.Remove(id); TrashFolderWithUndo(id, name); };
         return new ContextMenu { Items = { rename, delete } };
     }
 
@@ -121,7 +121,7 @@ public partial class MainWindow
     {
         var cat = CategoryOf(d);
         var head = new DockPanel();
-        var date = new TextBlock { Text = d.Updated.ToLocalTime().ToString("dd.MM."), Classes = { "caption" }, VerticalAlignment = VerticalAlignment.Center, Margin = new(8, 0, 0, 0) };
+        var date = new TextBlock { Text = d.Updated.ToLocalTime().ToString("M", Loc.Culture), Classes = { "caption" }, VerticalAlignment = VerticalAlignment.Center, Margin = new(8, 0, 0, 0) };
         DockPanel.SetDock(date, Dock.Right);
         head.Children.Add(date);
         var left = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 8 };

@@ -171,7 +171,13 @@ public partial class MainWindow : Window
         BookmarkBtn.Click += (_, _) => ToggleBookmark();
         ParallelBtn.Click += (_, _) => AddColumn();
         NoteSaveBtn.Click += async (_, _) => await SaveNoteAsync(NoteEditor.Text ?? "");
-        NoteDeleteBtn.Click += async (_, _) => { NoteEditor.Text = ""; await SaveNoteAsync(""); };
+        NoteDeleteBtn.Click += async (_, _) =>
+        {
+            // a saved note goes into the trash and can come back; a draft that was never saved is just emptied
+            var at = _noteRef ?? (_selected is int v ? new VerseRef(_curBook, _curChapter, v) : null);
+            if (at is { } r && _vault.GetNotes().Any(x => x.Ref == r)) TrashNoteWithUndo(r);
+            else { NoteEditor.Text = ""; await SaveNoteAsync(""); }
+        };
         InitSearch();
         InitKeyboards();
         InitSavedSearches();
@@ -217,6 +223,9 @@ public partial class MainWindow : Window
     string BookName(string id) => _books.FirstOrDefault(b => b.Id == id)?.CommonName ?? id;
     string Label(VerseRef r) => $"{BookName(r.Book)} {r.Chapter}:{r.Verse}";
 
+    /// <summary>The Bible the very first start opens: one in the language the program speaks (a public-domain classic of it).</summary>
+    static string FirstBible() => Loc.Code switch { "en" => "eng_kjv", "es" => "spa_r09", "fr" => "fra_lsg", "ru" => "rus_syn", _ => "deu_elbbk" };
+
     async Task InitAsync()
     {
         try
@@ -226,12 +235,17 @@ public partial class MainWindow : Window
             _all = Named(await _provider.GetTranslationsAsync());
             _langs = _all.Select(t => t.LanguageName).Where(l => l != "").Distinct().Order().ToList();
             LanguageBox.ItemsSource = _langs;
-            var wanted = _all.FirstOrDefault(t => t.Id == (_settings.TranslationId ?? "deu_elbbk")) ?? _all.FirstOrDefault(t => t.Id == "eng_kjv");
+            var wanted = _all.FirstOrDefault(t => t.Id == (_settings.TranslationId ?? FirstBible())) ?? _all.FirstOrDefault(t => t.Id == "eng_kjv");
             _pendingTranslation = wanted?.Id;
             SplashWindow.Report(0.75, L("Lade Bücher …"));
             LanguageBox.SelectedItem = wanted?.LanguageName ?? _langs.FirstOrDefault();
         }
-        catch (Exception ex) { StatusText.Text = L("Fehler: ") + ex.Message; }
+        catch (Exception ex)
+        {
+            StatusText.Text = L("Fehler: ") + ex.Message;
+            // the very first start without a connection: nothing to read yet, so say so where it is seen and offer to try again
+            if (_all.Count == 0) ShowUndoToast(L("Die Bibelübersetzungen konnten nicht geladen werden (keine Verbindung?)."), InitAsync, L("Erneut versuchen"));
+        }
         // after "Restart program" the user is taken back to the settings page
         if (Environment.GetCommandLineArgs().Contains("--open-settings")) OpenWork(NavGroups.First(g => g.Name == "Mehr"), SettingsTab);
     }
@@ -534,13 +548,17 @@ public partial class MainWindow : Window
             if (_startupHome) { _startupHome = false; ShowHome(); }
 
             StatusText.Text = string.Join("  |  ", cols.Select(c =>
-                L("{0}: {1}, Namensnennung: {2}", c.T.Name, (c.T.License.PublicDomain ? L("gemeinfrei") : L("Lizenz ") + c.T.LicenseUrl), c.T.License.Attribution))) + L(" · Quelle: {0}", _provider.Name);
+                L("{0}: {1}, Namensnennung: {2}", c.T.Name, (c.T.License.PublicDomain ? L("gemeinfrei") : L("Lizenz ") + c.T.LicenseUrl), AttributionText(c.T.License.Attribution)))) + L(" · Quelle: {0}", _provider.Name);
         }
-        catch (Exception ex) { if (generation == _showGeneration) StatusText.Text = L("Kapitel nicht verfügbar: ") + ex.Message; }
+        catch (Exception ex) when (generation == _showGeneration) { ChapterFailed(ex, focusVerse); }
+        catch (Exception) { }
         finally { SplashWindow.Done(); }
     }
 
     int _showGeneration;
+
+    /// <summary>The server says "required" or "not-required"; the status line says it in the language of the program.</summary>
+    static string AttributionText(string a) => a switch { "required" => L("erforderlich"), "not-required" => L("nicht nötig"), "-" or "" => "–", _ => a };
 
     static async Task<Chapter?> TryAsync(Task<Chapter> task)
     {
@@ -1095,8 +1113,10 @@ public partial class MainWindow : Window
 
     async Task SaveNoteAsync(string text)
     {
-        if (_selected is not int v) { StatusText.Text = L("Erst einen Vers anklicken."); return; }
-        _vault.SetNote(new VerseRef(_curBook, _curChapter, v), text); if (!string.IsNullOrWhiteSpace(text) && SelectedNoteFolder() is long f2) _vault.SetNoteFolder(new VerseRef(_curBook, _curChapter, v), f2);
+        // the verse the editor shows (its name stands above it), even when the click went into the empty space beside the text since
+        var r = _noteRef ?? (_selected is int v ? new VerseRef(_curBook, _curChapter, v) : null);
+        if (r is not { } at) { StatusText.Text = L("Erst einen Vers anklicken."); return; }
+        _vault.SetNote(at, text); if (!string.IsNullOrWhiteSpace(text) && SelectedNoteFolder() is long f2) _vault.SetNoteFolder(at, f2);
         _noteLoaded = text;
         RefreshLists();
         RefreshCells();

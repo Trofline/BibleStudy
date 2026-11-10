@@ -29,7 +29,7 @@ public static partial class SearchQuery
     public static char FoldChar(char c)
     {
         if (c == 'ß') return 's';
-        if (c < 128) return c;
+        if (c < 128 || char.IsSurrogate(c)) return c;   // half of a character outside the basic plane (an emoji in an imported text) has no form of its own
         var d = c.ToString().Normalize(NormalizationForm.FormD);
         foreach (var x in d) if (CharUnicodeInfo.GetUnicodeCategory(x) != UnicodeCategory.NonSpacingMark) return x;
         return c;

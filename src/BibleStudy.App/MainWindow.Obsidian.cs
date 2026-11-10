@@ -191,7 +191,7 @@ public partial class MainWindow
 
         // the start page: what is where
         string Rel(string dir, string file) => Path.GetRelativePath(root, Path.Combine(dir, file)).Replace('\\', '/');
-        var exported = L("Export aus BibleStudy vom {0:dd.MM.yyyy HH:mm}.", DateTime.Now);
+        var exported = L("Export aus BibleStudy vom {0:g}.", DateTime.Now);
         var start = new StringBuilder("# " + _vault.Name + "\n\n" + exported);
         if (t is not null) start.Append(' ').Append(L("Bibeltext: {0}", t.ShortName));
         start.Append("\n\n");

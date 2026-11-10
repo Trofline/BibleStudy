@@ -20,7 +20,11 @@ public partial class MainWindow
     /// Trash: the entries a removal put into the trash (thrown away again when the step is taken back, so nothing comes back twice).
     /// Jump: taking the step back opens its chapter (not for a mark deleted in the list of marks, far from the text).
     /// </summary>
-    sealed record UndoStep(string Vault, string Book, int Chapter, List<Mark> Marks, List<long>? Trash = null, bool Jump = true);
+    sealed record UndoStep(string Vault, string Book, int Chapter, List<Mark> Marks, List<long>? Trash = null, bool Jump = true)
+    {
+        /// <summary>The places corrected by hand of these marks in other translations (they would be lost with the marks put back).</summary>
+        public List<(long Mark, string Translation, int Verse, int Start, int End)> Places { get; init; } = [];
+    }
 
     readonly List<UndoStep> _markUndo = [];
 
@@ -29,7 +33,9 @@ public partial class MainWindow
 
     void PushUndo(string book, int chapter, bool jump = true)
     {
-        _markUndo.Add(new UndoStep(_vault.Name, book, chapter, _vault.GetMarks(book, chapter), Jump: jump));
+        var marks = _vault.GetMarks(book, chapter); var ids = marks.Select(m => m.Id).ToHashSet();
+        var places = _vault.GetMarkPlaces().Where(p => ids.Contains(p.Key.Mark)).Select(p => (p.Key.Mark, p.Key.Translation, p.Key.Verse, p.Value.Start, p.Value.End)).ToList();
+        _markUndo.Add(new UndoStep(_vault.Name, book, chapter, marks, Jump: jump) { Places = places });
         if (_markUndo.Count > 40) _markUndo.RemoveAt(0);
     }
 
@@ -41,7 +47,11 @@ public partial class MainWindow
         _markUndo.RemoveAt(_markUndo.Count - 1);
         if (step.Jump && (step.Book != _curBook || step.Chapter != _curChapter)) await GoToAsync(step.Book, step.Chapter);
         _vault.DeleteMarks(_vault.GetMarks(step.Book, step.Chapter).Select(m => m.Id));
-        foreach (var m in step.Marks) _vault.AddMark(m.TranslationId, m.Ref, m.Start, m.End, m.Text, m.Color, m.Note, m.FolderId, m.Tags, m.EndVerse);
+        foreach (var m in step.Marks)
+        {
+            var id = _vault.AddMark(m.TranslationId, m.Ref, m.Start, m.End, m.Text, m.Color, m.Note, m.FolderId, m.Tags, m.EndVerse);
+            foreach (var p in step.Places.Where(p => p.Mark == m.Id)) _vault.SetMarkPlace(id, p.Translation, p.Verse, p.Start, p.End);
+        }
         foreach (var t in step.Trash ?? []) _vault.DeleteFromTrash(t);
         HideUndoToast();
         ClearTextSelection(true);

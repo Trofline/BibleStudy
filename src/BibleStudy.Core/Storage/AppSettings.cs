@@ -282,7 +282,7 @@ public sealed class AppSettings
         for (var attempt = 0; existed && json is null; attempt++)
         {
             try { json = File.ReadAllText(path); }
-            catch (IOException) when (attempt < 5) { Thread.Sleep(200); }
+            catch (IOException) when (attempt < 25) { Thread.Sleep(200); }
         }
         AppSettings s;
         try { s = json is null ? new() : JsonSerializer.Deserialize<AppSettings>(json) ?? new(); }

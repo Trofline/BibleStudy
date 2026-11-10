@@ -95,7 +95,7 @@ public partial class MainWindow
             ApplyCollectionFilter();
         };
         TagFilterBox.SelectionChanged += (_, _) => { if (!_vaultUiLoading) ApplyCollectionFilter(); };
-        DeleteFolderBtn.Click += (_, _) => { if (FolderFilterBox.SelectedItem is Folder f) { _vault.DeleteFolder(f.Id); RefreshCollection(); } };
+        DeleteFolderBtn.Click += (_, _) => { if (FolderFilterBox.SelectedItem is Folder f) TrashFolderWithUndo(f.Id, f.Name); };
         NewFolderBox.KeyDown += (_, e) =>
         {
             if (e.Key != Key.Enter || string.IsNullOrWhiteSpace(NewFolderBox.Text)) return;
@@ -146,7 +146,14 @@ public partial class MainWindow
             if (_selected is int v) AddToQueue([new VerseRef(_curBook, _curChapter, v)]); else StatusText.Text = L("Erst einen Vers anklicken.");
         };
         QueueRemoveBtn.Click += (_, _) => { if (QueueList.SelectedItem is Entry { Id: long id }) { _vault.RemoveFromQueue(id); RefreshQueue(); } };
-        QueueClearBtn.Click += (_, _) => { _vault.ClearQueue(); RefreshQueue(); };
+        QueueClearBtn.Click += (_, _) =>
+        {
+            var before = _vault.GetQueue();
+            if (before.Count == 0) return;
+            _vault.ClearQueue(); RefreshQueue();
+            // one click emptied the whole list: it can come back
+            ShowUndoToast(L("Leseliste geleert ({0} Verse).", before.Count), () => { _vault.AddToQueue(before.Select(q => (q.Ref, q.Label))); RefreshQueue(); return Task.CompletedTask; });
+        };
         QueueList.SelectionChanged += async (_, _) =>
         {
             if (QueueList.SelectedItem is not Entry e) return;
@@ -411,6 +418,8 @@ public partial class MainWindow
         _vault.AddToQueue(list.Select(r => (r, Label(r))));
         RefreshQueue();
         QueueInfo.Text = L("{0} hinzugefügt · {1} auf der Leseliste", list.Count, _vault.GetQueue().Count);
+        // said where it is seen: the list itself is usually not open when verses are sent there from the search or the cross references
+        if (list.Count > 0) ShowUndoToast(QueueInfo.Text, () => { OpenWork(GroupOf(6)!, 6); return Task.CompletedTask; }, L("Leseliste"));
     }
 
     void RefreshQueue()

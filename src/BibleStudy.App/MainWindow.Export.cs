@@ -119,7 +119,7 @@ public partial class MainWindow
         var sb = new StringBuilder($"<h1>{H(L("Gebetsliste"))}</h1>");
         string Item(Prayer p) =>
             $"<li>{(p.Answered is not null ? "<span class=\"done\">" : "<span>")}{H(p.Text)}" + (p.Ref is { } r ? $" <i>({H(Label(r))})</i>" : "")
-            + $" <span class=\"small\">{p.Created:dd.MM.yyyy}" + (p.Answered is not null ? $" → {p.Answered:dd.MM.yyyy}" : "") + "</span>"
+            + $" <span class=\"small\">{p.Created.ToString("d", Loc.Culture)}" + (p.Answered is { } answered ? $" → {answered.ToString("d", Loc.Culture)}" : "") + "</span>"
             + (p.Answered is not null && p.Note.Length > 0 ? $"<br><span class=\"small\">{H(p.Note)}</span>" : "") + "</span></li>";
         var open = all.Where(p => p.Answered is null).ToList();
         var done = all.Where(p => p.Answered is not null).ToList();
@@ -138,7 +138,7 @@ public partial class MainWindow
             var chapters = PlanDay(plan, d);
             var done = chapters.Count > 0 && chapters.All(c => _read.Contains(c));
             var refs = string.Join(", ", chapters.GroupBy(c => c.Book).Select(g => g.Count() == 1 ? $"{BookName(g.Key)} {g.First().Chapter}" : $"{BookName(g.Key)} {g.First().Chapter}–{g.Last().Chapter}"));
-            sb.Append($"<li>{(done ? "☑" : "☐")} <b>{H(L("Tag {0}", d))}</b> <span class=\"small\">{start.AddDays(d - 1):dd.MM.yyyy}</span> · {H(refs)}</li>");
+            sb.Append($"<li>{(done ? "☑" : "☐")} <b>{H(L("Tag {0}", d))}</b> <span class=\"small\">{start.AddDays(d - 1).ToString("d", Loc.Culture)}</span> · {H(refs)}</li>");
         }
         sb.Append("</ul>");
         ExportPrint(plan.Name, sb.ToString(), SafeName(plan.Name, "plan"));

@@ -1,3 +1,4 @@
+using BibleStudy.Core.Models;
 using Avalonia.Controls;
 using Avalonia.Layout;
 using Avalonia.Media;
@@ -53,5 +54,28 @@ public partial class MainWindow
         _undoToastTimer?.Stop();
         _undoToastAction = null;
         if (_undoToast?.Parent is not null) ReaderHost.Children.Remove(_undoToast);
+    }
+}
+
+public partial class MainWindow
+{
+    /// <summary>
+    /// A chapter that could not be loaded (offline, server down): the pickers go back to the chapter that is still shown, so the text and
+    /// everything done with it (marks, notes) stay on the same place, and a bar that cannot be missed offers to try again.
+    /// </summary>
+    void ChapterFailed(Exception ex, int? focusVerse)
+    {
+        var wanted = (Book: (BookBox.SelectedItem as BookInfo)?.Id, Chapter: (int)(ChapterBox.Value ?? 1));
+        StatusText.Text = L("Kapitel nicht verfügbar: ") + ex.Message;
+        if (_curBook != "" && _books.FirstOrDefault(b => b.Id == _curBook) is { } shown && (wanted.Book != _curBook || wanted.Chapter != _curChapter))
+        {
+            _loading = true;
+            BookBox.SelectedItem = shown;
+            ChapterBox.Value = _curChapter;
+            _loading = false;
+        }
+        var name = wanted.Book is { } id ? $"{BookName(id)} {wanted.Chapter}" : "";
+        ShowUndoToast(L("{0} konnte nicht geladen werden (keine Verbindung?).", name).Trim(),
+            async () => { if (wanted.Book is { } id) await GoToAsync(id, wanted.Chapter, focusVerse); }, L("Erneut versuchen"));
     }
 }

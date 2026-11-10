@@ -58,7 +58,7 @@ public sealed partial class TextVariants(HttpClient http, string cacheDir)
     /// <summary>Rows where the editions differ (a word missing from some, or another reading given), grouped by verse.</summary>
     public static Dictionary<string, List<GreekVariant>> Parse(string text)
     {
-        var map = new Dictionary<string, List<GreekVariant>>();
+        var map = new Dictionary<string, List<GreekVariant>>(StringComparer.OrdinalIgnoreCase);   // the rows name the books "1Co", the program asks with "1CO"
         foreach (var raw in text.Split('\n'))
         {
             var c = raw.TrimEnd('\r').Split('\t');

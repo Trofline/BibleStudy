@@ -3,12 +3,12 @@ using Avalonia.Controls;
 namespace BibleStudy.App;
 
 /// <summary>
-/// Easy mode: only what is needed for reading, searching and notes (search, notes, verse overview, settings, help; fewer buttons on top).
+/// Easy mode: only what is needed for reading, searching and notes (search, verse overview, notes, bookmarks; settings and help stay on top; fewer buttons there).
 /// A button in the top bar switches between "Advanced" (everything) and "Easy"; the choice is remembered. Nothing is removed or lost.
 /// </summary>
 public partial class MainWindow
 {
-    static readonly HashSet<int> EasySideTabs = [0, 2, 12, 13, HandbookTab];
+    static readonly HashSet<int> EasySideTabs = [0, 2, GuideTab, BookmarksTab, 12, 13, HandbookTab];
 
     void InitEasyMode()
     {
@@ -34,12 +34,13 @@ public partial class MainWindow
         for (var i = 0; i < SideTabs.ItemCount; i++)
             if (SideTabs.Items[i] is TabItem tab) tab.IsVisible = !easy || EasySideTabs.Contains(i);
         foreach (Control c in new Control[] { TodoTopBtn, FeedbackTopBtn, KeysTopBtn, ParallelBtn, GraphBtn, StudyBtn }) c.IsVisible = !easy;
-        foreach (var b in Rail.Children.OfType<Button>()) if (b.Tag is NavGroup { Name: var gn } && gn == K("Vers")) b.IsVisible = !easy;
+        // a group of the side panel stays in the rail when Easy mode keeps one of its tabs (the verse overview, not the Greek; no AI, no studying together)
+        foreach (var b in Rail.Children.OfType<Button>()) if (b.Tag is NavGroup g) b.IsVisible = !easy || g.Tabs.Any(t => EasySideTabs.Contains(t.Index));
         // the extra shortcuts that fill the rail and the reading bar are for Advanced only: Easy looks like it always did
         foreach (var c in Rail.Children.OfType<Control>()) if (c.Tag is "adv") c.IsVisible = !easy && !CompactLook;
         UpdateReadQuick();
         // the chosen side tab might be hidden now: go to the first one that is shown
         if (easy && !EasySideTabs.Contains(SideTabs.SelectedIndex)) SideTabs.SelectedIndex = 0;
-        FitTopBar(); FitReadBar();
+        SyncNav(); FitTopBar(); FitReadBar();
     }
 }

@@ -133,7 +133,7 @@ public partial class MainWindow
         var query = (SearchBox.Text ?? "").Trim();
         var sb = new StringBuilder();
         sb.Append("# ").Append(L("Suche: {0}", query)).Append("\n\n");
-        sb.Append(L("{0} Verse in {1} · {2:dd.MM.yyyy}", hits.Count, t.ShortName, DateTime.Now)).Append("\n\n");
+        sb.Append(L("{0} Verse in {1} · {2:d}", hits.Count, t.ShortName, DateTime.Now)).Append("\n\n");
         foreach (var h in hits.Take(1000))
         {
             sb.Append("- **").Append(Label(h.Ref)).Append("** ").Append(h.Text.Trim());
