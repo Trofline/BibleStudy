@@ -90,7 +90,7 @@ Was sich öffnet:
 - **Text, Markdown, Webseiten, Bilder** (PNG, JPG, GIF, BMP, WebP).
 - Alles andere, etwa Tabellen oder Audio, öffnet **mit seinem eigenen Programm**.
 
-Neue, umbenannte oder gelöschte Dateien im Ordner erscheinen von selbst; eine geöffnete Datei, die gerade geändert wurde, wird neu gezeigt. Bibelstellen im Text („Röm 8,28“) sind farbig unterstrichen; ein Klick darauf öffnet die Stelle im Lesen-Tab, bei „Röm 8,28-30“ mit allen drei Versen gewählt. Dieselben Stellen stehen auch als Knöpfe über dem Text. Zusammen mit der **geteilten Ansicht** (Kapitel 2.12) steht sie dann direkt neben der Datei.
+Neue, umbenannte oder gelöschte Dateien im Ordner erscheinen von selbst; eine geöffnete Datei, die gerade geändert wurde, wird neu gezeigt. Bibelstellen im Text („Röm 8,28“) sind farbig unterstrichen; ein Klick darauf öffnet die Stelle im Lesen-Tab, bei „Röm 8,28-30“ mit allen drei Versen gewählt. Dieselben Stellen stehen auch als Knöpfe über dem Text. Der Knopf links neben den Dateireitern blendet die Ordnerliste aus und wieder ein; so hat das Dokument die ganze Breite, gerade in der geteilten Ansicht. Zusammen mit der **geteilten Ansicht** (Kapitel 2.12) steht sie dann direkt neben der Datei.
 
 **Inhaltsverzeichnis:** Hat eine Datei ein eigenes Inhaltsverzeichnis, steht es im Text; jede Zeile ist anklickbar und springt zu ihrem Abschnitt. Der Knopf **Inhalt** über der Datei zeigt das Verzeichnis jederzeit als Liste mit Suchfeld, auch weit unten im Dokument. Hat eine Datei kein Verzeichnis, listet „Inhalt“ ihre Überschriften; bei einem PDF seine Lesezeichen (ein Klick springt zur Seite).
 

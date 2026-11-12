@@ -88,7 +88,11 @@ public partial class MainWindow
         _matViewer.Bind(Border.BackgroundProperty, this.GetResourceObservable("BsBackground"));
         _matViewer.Bind(Border.BorderBrushProperty, this.GetResourceObservable("BsBorder"));
         _matViewer.PointerPressed += (_, _) => _matViewer.Focus();
-        var rightTop = new StackPanel { Children = { stripScroll, _matActions, _matRefs, _matInfo } };
+        // the folder list can be hidden, so the file gets the whole width (in the split view above all); the button stays beside the tabs
+        var treeBtn = new Button { Classes = { "tool" }, Width = 32, Height = 32, Margin = new(0, 0, 6, 4), VerticalAlignment = VerticalAlignment.Top, Content = new Icon { Data = Geometry.Parse("M4 4h16v16H4z M10 4v16"), IconSize = 16 } };
+        var stripRow = new DockPanel { Children = { treeBtn, stripScroll } };
+        DockPanel.SetDock(treeBtn, Dock.Left);
+        var rightTop = new StackPanel { Children = { stripRow, _matActions, _matRefs, _matInfo } };
         var right = new DockPanel { Margin = new(8, 12, 14, 12) };
         DockPanel.SetDock(rightTop, Dock.Top); right.Children.Add(rightTop); right.Children.Add(_matViewer);
 
@@ -98,6 +102,21 @@ public partial class MainWindow
         Grid.SetColumn(splitter, 1); Grid.SetColumn(right, 2);
         grid.Children.Add(left); grid.Children.Add(splitter); grid.Children.Add(right);
         MaterialsHost.Children.Add(grid);
+        var treeWidth = grid.ColumnDefinitions[0].Width;
+        void ApplyTree()
+        {
+            var hide = _settings.MaterialsTreeHidden;
+            var col = grid.ColumnDefinitions[0];
+            if (hide && col.Width.Value > 0) treeWidth = col.Width;   // the width the splitter left, for showing it again
+            col.MinWidth = hide ? 0 : 170;
+            col.Width = hide ? new GridLength(0) : treeWidth;
+            grid.ColumnDefinitions[1].Width = new GridLength(hide ? 0 : 6);
+            left.IsVisible = splitter.IsVisible = !hide;
+            right.Margin = new(hide ? 14 : 8, 12, 14, 12);
+            ToolTip.SetTip(treeBtn, hide ? L("Ordnerliste einblenden") : L("Ordnerliste ausblenden"));
+        }
+        treeBtn.Click += (_, _) => { _settings.MaterialsTreeHidden = !_settings.MaterialsTreeHidden; SaveSettings(); ApplyTree(); };
+        ApplyTree();
 
         RefreshMaterialsTree();
         _settings.MaterialsOpen.RemoveAll(p => !File.Exists(p));
