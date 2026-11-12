@@ -90,7 +90,7 @@ What opens:
 - **Text, Markdown, web pages, pictures** (PNG, JPG, GIF, BMP, WebP).
 - Everything else, such as spreadsheets or audio, opens **in its own program**.
 
-New, renamed or deleted files in the folder appear by themselves; an open file that was just changed is shown anew. Bible references in the text ("Rom 8:28") are colored and underlined; a click opens the passage in the Read tab, for "Rom 8:28-30" with all three verses chosen. The same references also stand as buttons above the text. Together with the **split view** (chapter 2.12) it then stands right beside the file.
+New, renamed or deleted files in the folder appear by themselves; an open file that was just changed is shown anew. Bible references in the text ("Rom 8:28") are colored and underlined; a click opens the passage in the Read tab, for "Rom 8:28-30" with all three verses chosen. The same references also stand as buttons above the text. The button left of the file tabs hides the folder list and shows it again, so the file gets the whole width, above all in the split view. Together with the **split view** (chapter 2.12) it then stands right beside the file.
 
 **Table of contents:** if a file has a table of contents of its own, it stands in the text; every line can be clicked and jumps to its section. The **Contents** button above the file shows it at any time as a list with a search field, even far down in the document. A file without one lists its headings under "Contents"; a PDF its bookmarks (a click jumps to the page).
 

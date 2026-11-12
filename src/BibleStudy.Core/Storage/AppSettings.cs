@@ -84,6 +84,8 @@ public sealed class AppSettings
     public List<string> MaterialsOpen { get; set; } = [];
     /// <summary>The folders of the materials tree that are closed (paths relative to the materials folder); the others are open.</summary>
     public List<string> MaterialsCollapsed { get; set; } = [];
+    /// <summary>The folder list of the materials is hidden, so the file has the whole width.</summary>
+    public bool MaterialsTreeHidden { get; set; }
     public bool SelectWholeWords { get; set; } = true;   // a selection always starts and ends at word borders
     public List<string> CustomSubColors { get; set; } = [];   // own colors for sub-marks, chosen with the "+" in the settings
     /// <summary>Which headings show in the text: All, Smart (my own, the translation's only where I have none), Mine, Translation, None.</summary>
