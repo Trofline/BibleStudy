@@ -101,6 +101,10 @@ public partial class MainWindow
         // the trash holds documents as well, but lives in the explorer of the marks: from here it is found without knowing that
         yield return C(L("Papierkorb"), () => { OpenWork(GroupOf(ExplorerTab)!, ExplorerTab); BuildExplorer(); ExOpenTrash(); return Task.CompletedTask; });
         yield return C(L("Statistik"), () => Work("Planen", StatsTab));
+        yield return C(L("Materialien"), () => Work("Material", MaterialsTab));
+        if (CommentariesOn) yield return C(L("Kommentare"), () => { OpenCommentary(_selected is int v ? new VerseRef(_curBook, _curChapter, v) : null); return Task.CompletedTask; });
+        yield return C(L("Geteilte Ansicht an/aus"), () => { SplitTopBtn.IsChecked = SplitTopBtn.IsChecked != true; return Task.CompletedTask; });
+        yield return C(L("Timer stellen"), () => { ShowTimerFlyout(ClockChip.IsVisible ? ClockChip : StatusBar); return Task.CompletedTask; });
         yield return C(L("Satzdiagramm"), () => Side(SentenceTab));
         yield return C(L("Perikopen-Analyse"), () => Side(PericopeTab));
         yield return C(L("Chiasmus-Finder"), ShowChiasmFinderAsync);

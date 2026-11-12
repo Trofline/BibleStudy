@@ -121,3 +121,9 @@ Claude Code (with Bible tools) or Ollama; the instruction for Claude; the MCP se
 - **Project on GitHub.**
 - **Restart program.**
 - **Remove program …** (asks whether your data should be kept).
+
+## 13.16 Clock, timer and taskbar
+
+- **Show a clock at the bottom right**: the time in the status bar. A click on the clock sets a **timer** (5 to 90 minutes or a time of your own). The time left stands beside the clock; a click on it pauses, resumes or stops the timer. When it runs out, the window comes to the front and a bar offers "Again".
+- **Maximized: bring up an auto-hidden taskbar …** (Windows only, off by default): with the Windows taskbar set to hide automatically, it does not come up over a maximized program. With this setting the window leaves one line free at the taskbar's edge; moving the mouse there brings the taskbar up.
+- The **marker button** at the top beside the to-dos turns the marks of all vaults on and off, like the button in the list of marks.

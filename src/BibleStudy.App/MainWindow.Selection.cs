@@ -410,6 +410,7 @@ public partial class MainWindow
 
     void HideSelectionPopup()
     {
+        _popupChoices = []; _popupIndex = -1;
         if (_selPopupOutside is { } h) { RemoveHandler(PointerPressedEvent, h); _selPopupOutside = null; }
         if (_selPopup is not { } p) return;
         _selPopup = null;
@@ -444,6 +445,7 @@ public partial class MainWindow
         ToolTip.SetTip(clear, L("Markierung entfernen"));
         clear.PointerPressed += (_, _) => { HideSelectionPopup(); _ = RemoveMarksAsync(); };
         colors.Children.Add(clear);
+        var choices = new List<(Control Item, Action Run)> { (clear, () => { HideSelectionPopup(); _ = RemoveMarksAsync(); }) };
         var current = wholeVerse is int cv && _wholeMarks.TryGetValue(cv, out var curHex) ? curHex : null;   // a verse that is marked already shows its color
         if (wholeVerse is null && InsideMarkedVerse())
         {
@@ -452,8 +454,14 @@ public partial class MainWindow
             ToolTip.SetTip(sub, L("Hebt den wichtigsten Teil im markierten Vers hervor"));
             sub.Click += (_, _) => Pick(SubMarkColor());
             colors.Children.Add(sub);
+            choices.Add((sub, () => Pick(SubMarkColor())));
         }
-        else foreach (var hex in PresetColors.Concat(_settings.CustomColors).Take(14)) colors.Children.Add(Swatch(hex, Pick, current is not null && string.Equals(current, hex, StringComparison.OrdinalIgnoreCase), 24));
+        else foreach (var hex in PresetColors.Concat(_settings.CustomColors).Take(14))
+        {
+            var h = hex;
+            var sw = Swatch(h, Pick, current is not null && string.Equals(current, h, StringComparison.OrdinalIgnoreCase), 24);
+            colors.Children.Add(sw); choices.Add((sw, () => Pick(h)));
+        }
         var more = new Button { Content = "…", Classes = { "tool" }, Width = 28, Height = 28, Margin = new(0, -2, 0, 0) };
         ToolTip.SetTip(more, L("Weitere Farben und Optionen"));
         // in a marked verse the "…" leads to the normal colors (for an ordinary mark instead of a sub-mark); elsewhere to all colors and options
@@ -464,6 +472,12 @@ public partial class MainWindow
             else ShowColorFlyout();
         };
         colors.Children.Add(more);
+        choices.Add((more, () => more.RaiseEvent(new Avalonia.Interactivity.RoutedEventArgs(Button.ClickEvent))));
+        // the arrow keys walk through the colors, Enter or Space takes one (see VerseKeys); start on the color the verse has, else on the first color
+        _popupChoices = choices;
+        _popupIndex = -1;
+        var startAt = current is not null ? choices.FindIndex(c => c.Item is Border b && ToolTip.GetTip(b) is string t && t.Contains(current, StringComparison.OrdinalIgnoreCase)) : -1;
+        _popupStart = startAt >= 0 ? startAt : Math.Min(1, choices.Count - 1);
         var card = new Border { Padding = new(10, 8, 4, 2), CornerRadius = new(10), BorderThickness = new(1), Child = colors };
         card.Bind(Border.BackgroundProperty, this.GetResourceObservable("BsSurface"));
         card.Bind(Border.BorderBrushProperty, this.GetResourceObservable("BsBorder"));

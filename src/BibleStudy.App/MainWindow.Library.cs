@@ -17,7 +17,7 @@ public partial class MainWindow
 
     IReadOnlyList<CommentaryInfo> _commentaries = [];
     (string Id, string Book, int Chapter)? _shownCommentary;
-    readonly List<(int Verse, Border Card)> _commentaryCards = [];
+    readonly List<(int From, int To, Border Card, List<(SelectableTextBlock Text, string Raw)> Paragraphs)> _commentaryCards = [];
     IReadOnlyList<LexiconItem>? _lexIndex;
     (string Book, int Chapter)? _lexChapter;
     bool _libraryLoading;
@@ -68,39 +68,75 @@ public partial class MainWindow
                 CommentaryInfo.Text = chapter is null || (chapter.Notes.Count == 0 && chapter.Introduction.Length == 0)
                     ? L("{0} hat zu {1} {2} keine Anmerkungen. Wähle oben einen anderen Kommentar.", c.Name, BookName(_curBook), _curChapter)
                     : L("{0} zu {1} {2} · {3} · Englisch", c.Name, BookName(_curBook), _curChapter, (c.LicenseUrl.Contains("publicdomain") ? L("gemeinfrei") : L("Lizenz ") + c.LicenseUrl));
+                _commentaryInfo = CommentaryInfo.Text;
                 if (chapter is null) return;
                 if (chapter.Introduction.Length > 0)
                     CommentaryPanel.Children.Add(new Expander { Header = L("Einleitung"), HorizontalAlignment = HorizontalAlignment.Stretch, Content = new SelectableTextBlock { Text = chapter.Introduction, TextWrapping = TextWrapping.Wrap } });
-                foreach (var note in chapter.Notes) CommentaryPanel.Children.Add(CommentaryCard(c, note));
+                // which verses each note is about (a section or one verse), so the label and the marking fit
+                var lastVerse = _verseBoxes.Count > 0 ? _verseBoxes.Keys.Max() : 0;
+                var ranges = CommentaryRanges.Of(c.Id, chapter.Notes, _curChapter, lastVerse);
+                for (var i = 0; i < chapter.Notes.Count; i++) CommentaryPanel.Children.Add(CommentaryCard(c, chapter.Notes[i], ranges[i].From, ranges[i].To));
+                _commentaryInfo = CommentaryInfo.Text;
             }
             HighlightCommentary();
         }
         catch (Exception ex) { CommentaryInfo.Text = L("Kommentar nicht verfügbar: ") + ex.Message; }
     }
 
-    Border CommentaryCard(CommentaryInfo c, CommentaryNote note)
+    Border CommentaryCard(CommentaryInfo c, CommentaryNote note, int from, int to)
     {
         var r = new VerseRef(_curBook, _curChapter, note.Verse);
-        var go = new Button { Classes = { "ghost" }, Padding = new(0), Content = L("Vers {0}", note.Verse), FontWeight = FontWeight.SemiBold, Foreground = Res("BsAccent") };
+        var go = new Button { Classes = { "ghost" }, Padding = new(0), Content = CommentaryRanges.Label(from, to), FontWeight = FontWeight.SemiBold, Foreground = Res("BsAccent") };
+        ToolTip.SetTip(go, L("Zur Stelle im Text springen"));
         go.Click += async (_, _) => await GoToAsync(r.Book, r.Chapter, r.Verse);
         var cite = new Button { Classes = { "ghost" }, Content = L("In Dokument zitieren"), FontSize = 12 };
         cite.Click += (_, _) => CiteIntoDocument(L("> {0}\n> — {1} zu {2}\n\n", note.Text.Replace("\n\n", L("\n>\n> ")), c.Name, Label(r)), $"{c.Name}: {Label(r)}", r);
         var head = new DockPanel { Children = { cite, go } };
         DockPanel.SetDock(cite, Dock.Right);
-        var card = new Border { Classes = { "card" }, Child = new StackPanel { Spacing = 6, Children = { head, new SelectableTextBlock { Text = note.Text, TextWrapping = TextWrapping.Wrap, LineHeight = 21 } } } };
-        _commentaryCards.Add((note.Verse, card));
+        // the note in its paragraphs (the source separates them with line breaks; as one block it was a wall of text)
+        var body = new StackPanel { Spacing = 8 };
+        var paras = new List<(SelectableTextBlock, string)>();
+        foreach (var p in note.Text.Split('\n').Select(s => s.Trim()).Where(s => s.Length > 0))
+        {
+            var tb = new SelectableTextBlock { Text = p, TextWrapping = TextWrapping.Wrap, LineHeight = 21, Padding = new(4, 2) };
+            body.Children.Add(tb); paras.Add((tb, p));
+        }
+        var card = new Border { Classes = { "card" }, Child = new StackPanel { Spacing = 6, Children = { head, body } } };
+        _commentaryCards.Add((from, to, card, paras));
         return card;
     }
 
-    /// <summary>Marks the note that covers the selected verse and scrolls to it.</summary>
+    string _commentaryInfo = "";
+
+    /// <summary>
+    /// Marks the note about the selected verse (its section or the verse itself) and scrolls to it; inside a long section the paragraph
+    /// that speaks of the verse ("v. 16") is marked and shown. A verse without a note of its own says so instead of showing the note of another verse.
+    /// </summary>
     void HighlightCommentary()
     {
-        if (_selected is not int v || _commentaryCards.Count == 0) return;
-        var target = _commentaryCards.Where(x => x.Verse <= v).Select(x => x.Card).LastOrDefault() ?? _commentaryCards[0].Card;
-        foreach (var (_, card) in _commentaryCards) card.BorderBrush = card == target ? Res("BsAccent") : Res("BsBorder");
+        if (_selected is not int v || _commentaryCards.Count == 0 || CommentaryBox.SelectedItem is not CommentaryInfo c) return;
+        var accent = (Res("BsAccent") as ISolidColorBrush)?.Color ?? Colors.Goldenrod;
+        var hit = _commentaryCards.LastOrDefault(x => x.From <= v && v <= x.To);
+        Control? scrollTo = hit.Card;
+        foreach (var (_, _, card, paras) in _commentaryCards)
+        {
+            var on = card == hit.Card;
+            card.BorderBrush = on ? Res("BsAccent") : Res("BsBorder");
+            card.BorderThickness = new Thickness(on ? 2 : 1);
+            foreach (var (tb, text) in paras)
+            {
+                var mention = on && hit.From != hit.To && CommentaryRanges.Mentions(text, _curChapter, v, c.Id == "john-calvin");
+                tb.Background = mention ? new SolidColorBrush(accent, 0.16) : null;
+                if (mention && scrollTo == hit.Card) scrollTo = tb;
+            }
+        }
+        CommentaryInfo.Text = hit.Card is null
+            ? _commentaryInfo + "\n" + L("Zu Vers {0} hat {1} keine eigene Anmerkung.", v, c.Name)
+            : _commentaryInfo + "\n" + L("Markiert: die Anmerkung zu {0}.", CommentaryRanges.Label(hit.From, hit.To));
+        if (scrollTo is null) return;
         Avalonia.Threading.Dispatcher.UIThread.Post(() =>
         {
-            if (target.TranslatePoint(new Point(0, 0), CommentaryPanel) is { } p) CommentaryScroll.Offset = new Vector(0, Math.Max(0, p.Y - 8));
+            if (scrollTo.TranslatePoint(new Point(0, 0), CommentaryPanel) is { } p) CommentaryScroll.Offset = new Vector(0, Math.Max(0, p.Y - 8));
         }, Avalonia.Threading.DispatcherPriority.Background);
     }
 

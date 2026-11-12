@@ -51,7 +51,7 @@ public partial class MainWindow
 
     /// <summary>True while the tab is on screen: in the side panel, in the main window's work area or in its own window.</summary>
     bool TabActive(int index) =>
-        SideTabs.SelectedIndex == index || _windows.Values.Any(d => d.Current == index && (d.Win is not null || d.Key == _activeWork));
+        SideTabs.SelectedIndex == index || _windows.Values.Any(d => d.Current == index && (d.Win is not null || d.Key == _activeWork || InPane(d.Key)));
 
     /// <summary>
     /// Brings a side tab into view for a result that was just put into it: its own window to the front when it was dragged out,
@@ -82,6 +82,7 @@ public partial class MainWindow
         else if (index == PericopeTab) _ = ShowPericopeAsync(false);
         else if (index == HandbookTab) BuildHandbookUi();
         else if (index == ExplorerTab) { BuildExplorer(); RefreshExplorer(); ExplorerHost.Focus(); }
+        else if (index == MaterialsTab) BuildMaterials();
         else if (index == GrundtextTab && _selected is int gv) _ = ShowGrundtextAsync(new VerseRef(_curBook, _curChapter, gv));
         else if (index == CollabTab && CollabPanel.Children.Count == 0) BuildCollabUi();
         else if (index == AnalysisTab) BuildAnalysisUi();
@@ -153,6 +154,7 @@ public partial class MainWindow
         d.Host.Children.Clear();
         foreach (var (tab, c, wrap) in d.Items) { wrap.Child = null; tab.Content = c; }
         if (d.Panel.Parent is Panel p) p.Children.Remove(d.Panel);
+        if (Panes.Contains(d.Key)) { Panes.Remove(d.Key); _settings.SplitWidths.Clear(); if (_settings.SplitView) LayoutPanes(); }
         if (_activeWork == d.Key) ShowWork(null); else RebuildTabStrip();
         SyncNav();
     }
@@ -168,7 +170,7 @@ public partial class MainWindow
             if (d.Win is not null) d.Win.Activate(); else ShowWork(key);
             return;
         }
-        d = Build(key, g.Tabs.Select(t => t.Index).ToList(), g.Name == "Mehr" ? "Einstellungen" : g.Name, start ?? g.Tabs[0].Index, side: false);
+        d = Build(key, g.Tabs.Select(t => t.Index).ToList(), GroupTitle(g.Name), start ?? g.Tabs[0].Index, side: false);
         if (d is null) return;
         DockWork(d);
         ShowWork(key);
@@ -185,10 +187,13 @@ public partial class MainWindow
     void ShowWork(string? key)
     {
         if (key is not null && !(_windows.TryGetValue(key, out var d) && d.Win is null)) key = null;
+        // split view: the tab goes into an area beside the others (null leaves the areas as they are)
+        if (_settings.SplitView) { if (key is not null) ShowInPane(key); else { UpdateReadBar(); RebuildTabStrip(); } return; }
+        if (key is not null && _windows.TryGetValue(key, out var left) && left.Panel.Parent != WorkHost) { (left.Panel.Parent as Panel)?.Children.Remove(left.Panel); WorkHost.Children.Add(left.Panel); }
         var before = _activeWork;
         _activeWork = key;
         if (key is not null) _lastWorkTab = key;
-        foreach (var w in _windows.Values.Where(w => w.Win is null)) w.Panel.IsVisible = w.Key == key;
+        foreach (var w in _windows.Values.Where(w => w.Win is null && w.Panel.Parent == WorkHost)) w.Panel.IsVisible = w.Key == key;
         if (key is not null && key != before && _windows.TryGetValue(key, out var fresh)) AnimateIn(fresh.Panel);
         WorkHost.IsVisible = key is not null;
         UpdateReadBar();
@@ -221,7 +226,7 @@ public partial class MainWindow
         if (_activeWork is { } key && _windows.TryGetValue(key, out var d) && d.Win is null) Restore(d);
     }
 
-    void UpdateReadBar() => ReadBar.IsVisible = ReaderHost.IsVisible && !WorkHost.IsVisible && !_settings.FocusMode;
+    void UpdateReadBar() => ReadBar.IsVisible = ReaderHost.IsVisible && (_settings.SplitView ? Panes.Contains(ReaderPane) : !WorkHost.IsVisible) && !_settings.FocusMode;
 
     // ---- tab strip -------------------------------------------------------------------------------------------------------
 
@@ -237,25 +242,32 @@ public partial class MainWindow
         // "+" opens a new tab, like in a browser or the Explorer
         var plus = new Button { Classes = { "tool" }, Width = 30, Height = 30, VerticalAlignment = VerticalAlignment.Center, Margin = new(4, 0, 0, 2), Content = new Icon { Data = Geometry.Parse("M12 5v14 M5 12h14"), IconSize = 14 } };
         ToolTip.SetTip(plus, L("Neuer Reiter"));
-        plus.Click += (_, _) =>
+        plus.Click += (_, _) => ShowNewTabMenu(plus);
+        TabStrip.Children.Add(plus);
+    }
+
+    /// <summary>The tabs that can be opened (from the "+" of the tab strip, or from the empty right side of the split view).</summary>
+    void ShowNewTabMenu(Control plus)
+    {
         {
             var menu = new MenuFlyout();
-            foreach (var name in new[] { "Bücher", "Dokumente", "Predigt", "Planen", "Markierung", "Studium", "Lernen", "Mehr", "Hilfe" })   // the inner names; the menu shows them translated
+            foreach (var name in new[] { "Bücher", "Dokumente", "Material", "Predigt", "Planen", "Markierung", "Studium", "Lernen", "Mehr", "Hilfe" })   // the inner names; the menu shows them translated
             {
                 if (NavGroups.FirstOrDefault(x => x.Name == name) is not { } g) continue;
-                var item = new MenuItem { Header = name == "Mehr" ? L("Einstellungen") : RailName(name), IsEnabled = !_windows.ContainsKey("group:" + name) };
+                var open = _windows.ContainsKey("group:" + name);
+                // in the split view an open tab can still be chosen: it then comes to the side it belongs to
+                var item = new MenuItem { Header = name is "Mehr" or "Material" ? L(GroupTitle(name)) : RailName(name), IsEnabled = !open || _settings.SplitView };
                 item.Click += (_, _) => OpenWork(g, name == "Mehr" ? SettingsTab : null);
                 menu.Items.Add(item);
             }
             menu.ShowAt(plus);
-        };
-        TabStrip.Children.Add(plus);
+        }
     }
 
     Button MakeTab(string label, string? key, string icon, bool closable = false)
     {
         var windowed = key is not null && _windows.TryGetValue(key, out var w) && w.Win is not null;
-        var active = !windowed && key == _activeWork;
+        var active = !windowed && (_settings.SplitView ? Panes.Contains(key ?? ReaderPane) : key == _activeWork);
         var row = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 7 };
         row.Children.Add(new Icon { Data = Geometry.Parse(icon), IconSize = 16, VerticalAlignment = VerticalAlignment.Center });
         row.Children.Add(new TextBlock { Text = label + (windowed ? "  ⧉" : ""), VerticalAlignment = VerticalAlignment.Center });
@@ -286,25 +298,49 @@ public partial class MainWindow
         }
 
         Point? from = null; var dragged = false;
-        b.AddHandler(PointerPressedEvent, (object? _, PointerPressedEventArgs e) => { if (key is not null && e.GetCurrentPoint(b).Properties.IsLeftButtonPressed) { from = e.GetPosition(this); dragged = false; } }, RoutingStrategies.Tunnel | RoutingStrategies.Bubble, true);
+        b.AddHandler(PointerPressedEvent, (object? _, PointerPressedEventArgs e) => { if ((key is not null || _settings.SplitView) && e.GetCurrentPoint(b).Properties.IsLeftButtonPressed) { from = e.GetPosition(this); dragged = false; } }, RoutingStrategies.Tunnel | RoutingStrategies.Bubble, true);
         b.Tag = key;
         var reordered = false;
-        b.PointerReleased += (_, _) =>
+        var sideDrag = false;
+        // handled events too: the button itself marks the release as handled
+        b.AddHandler(PointerReleasedEvent, (object? _, PointerReleasedEventArgs e) =>
         {
             from = null;
+            if (sideDrag)
+            {
+                // split view: the tab goes into the area it was dropped on (middle) or into a new area beside it (edge)
+                sideDrag = false; dragged = true;
+                ShowSplitDropZone(null);
+                if (PaneDropTarget(e.GetPosition(MainArea)) is { } t) PlaceTabAt(key, t.Index, t.Insert);
+                return;
+            }
             if (!reordered) return;
             // the order the user dragged the tabs into is kept
             _settings.TabOrder = TabStrip.Children.OfType<Button>().Select(x => x.Tag as string).OfType<string>().ToList();
             SaveSettings();
-        };
+        }, RoutingStrategies.Bubble, true);
         b.PointerMoved += (_, e) =>
         {
-            if (from is null || dragged || key is null) return;
+            if (sideDrag)
+            {
+                var at = e.GetPosition(this);
+                if (key is not null && (at.X < 0 || at.Y < 0 || at.X > Bounds.Width || at.Y > Bounds.Height))
+                {
+                    // out of the window: a loose window, as without the split view
+                    sideDrag = false; ShowSplitDropZone(null); dragged = true; e.Pointer.Capture(null);
+                    TearOutWork(key!, this.PointToScreen(at) - new PixelPoint(160, 20));
+                    return;
+                }
+                ShowSplitDropZone(PaneDropTarget(e.GetPosition(MainArea)));
+                return;
+            }
+            if (from is null || dragged || (key is null && !_settings.SplitView)) return;
             var pos = e.GetPosition(this);
             var top = TabBar.TranslatePoint(new Point(0, 0), this)?.Y ?? 60;
             if (pos.Y < top + TabBar.Bounds.Height + 34 && pos.Y > top - 34)
             {
                 // still in the tab strip: moving sideways past a neighbour's middle swaps the two, like tabs in the Explorer
+                if (key is null) return;   // "Lesen" stays first
                 var x = e.GetPosition(TabStrip).X;
                 if (Math.Abs(pos.X - from.Value.X) < 6 && !reordered) return;
                 var kids = TabStrip.Children;
@@ -320,10 +356,34 @@ public partial class MainWindow
                 return;
             }
             reordered = false;
+            if (_settings.SplitView && MainArea.IsVisible)
+            {
+                // split view: the tab is dragged over the areas; letting go puts it there (out of the window: a loose window)
+                sideDrag = true; from = null; dragged = true;
+                ShowSplitDropZone(PaneDropTarget(e.GetPosition(MainArea)));
+                return;
+            }
+            if (key is null) return;
             dragged = true; from = null; e.Pointer.Capture(null);
             TearOutWork(key, this.PointToScreen(pos) - new PixelPoint(160, 20));
             if (_contextTabs.TryGetValue(key, out var torn)) UpdatePopButton(torn);
         };
+        if (key is not null)
+            b.ContextRequested += (_, e) =>
+            {
+                // right click: which side of the split view, or a window of its own
+                e.Handled = true;
+                var menu = new MenuFlyout();
+                if (_settings.SplitView)
+                {
+                    menu.Items.Add(MenuAction(L("In einem neuen Bereich daneben zeigen"), () => PlaceTabAt(key, Panes.Count, true)));
+                    if (Panes.Contains(key) && Panes.Count > 1) menu.Items.Add(MenuAction(L("Aus der geteilten Ansicht nehmen"), () => RemoveFromPanes(key)));
+                }
+                else menu.Items.Add(MenuAction(L("Geteilte Ansicht: neben dem Bibeltext zeigen"), () => { SplitTopBtn.IsChecked = true; ShowWork(key); }));
+                menu.Items.Add(MenuAction(L("In eigenem Fenster"), () => TearOutWork(key, null)));
+                menu.Items.Add(MenuAction(L("Schließen"), () => { if (_windows.TryGetValue(key, out var d)) { if (d.Win is not null) d.Win.Close(); else Restore(d); } }));
+                menu.ShowAt(b);
+            };
         b.Click += (_, _) =>
         {
             if (reordered) { reordered = false; return; }
@@ -341,7 +401,7 @@ public partial class MainWindow
     {
         var key = "group:" + g.Name;
         if (_windows.ContainsKey(key)) { TearOutWork(key, at); return; }
-        var d = Build(key, g.Tabs.Select(t => t.Index).ToList(), g.Name == "Mehr" ? "Einstellungen" : g.Name, g.Tabs[0].Index, side: false);
+        var d = Build(key, g.Tabs.Select(t => t.Index).ToList(), GroupTitle(g.Name), g.Tabs[0].Index, side: false);
         if (d is not null) OpenWindowFor(d, at);
     }
 
@@ -350,12 +410,14 @@ public partial class MainWindow
     {
         if (!_windows.TryGetValue(key, out var d)) return;
         if (d.Win is not null) { d.Win.Activate(); return; }
-        WorkHost.Children.Remove(d.Panel);
+        (d.Panel.Parent as Panel)?.Children.Remove(d.Panel);
+        var hadPane = Panes.Remove(key);
         d.Rebuild?.Invoke();
         d.Panel.IsVisible = true;
         var wasActive = _activeWork == key;
         OpenWindowFor(d, at);
         if (wasActive) ShowWork(null);
+        if (hadPane && _settings.SplitView) { _settings.SplitWidths.Clear(); LayoutPanes(); RebuildTabStrip(); }
     }
 
     /// <summary>All tabs of cross references share one remembered window place: each reference of its own would pile up in the settings.</summary>
@@ -422,6 +484,7 @@ public partial class MainWindow
             ShowDockZone(d, true, inside && armed);   // faint while moving, strong when letting go would dock it
         };
         win.Closed += (_, _) => ShowDockZone(d, false, false);
+        win.AddHandler(KeyDownEvent, OnMaterialsKey, RoutingStrategies.Tunnel);   // Tab between the open materials works in their own window too
 
         win.Show(this);
         RebuildTabStrip();
@@ -638,7 +701,7 @@ public partial class MainWindow
         PopOutDocsBtn.Click += (_, _) => OpenWork(NavGroups.First(g => g.Name == "Dokumente"));
         // anything else that takes over the main area ends the work tab
         foreach (var pane in new Control[] { Home, GraphPane, MapPane, TimelinePane, FamilyPane, KnowledgePane })
-            pane.PropertyChanged += (_, e) => { { if (e.Property != IsVisibleProperty || !pane.IsVisible) return; AnimateIn(pane); if (_activeWork is not null) ShowWork(null); } };
+            pane.PropertyChanged += (_, e) => { { if (e.Property != IsVisibleProperty || !pane.IsVisible) return; AnimateIn(pane); if (_settings.SplitView) EnsureReaderPane(); else if (_activeWork is not null) ShowWork(null); } };
         WorkHost.PropertyChanged += (_, e) => { if (e.Property == IsVisibleProperty) UpdateReadBar(); };
         RebuildTabStrip();
         SetActiveLayout(_settings.ActiveLayout);

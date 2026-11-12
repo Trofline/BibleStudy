@@ -122,3 +122,24 @@ The **Listen** button plays a **spoken recording** of the chapter you are readin
 ## 2.10 The bookmark star
 
 Verses with a bookmark carry a star ★ next to the verse number. More on this in [Chapter 5](05-notes-highlights-bookmarks.md).
+
+## 2.11 Reading with the keyboard
+
+- **↑ / ↓** scroll the text. With a verse chosen, they move to the verse above or below.
+- **Shift + ↑ / ↓** chooses several verses, from the one chosen first to the current one.
+- **← / →** go to the previous or next chapter.
+- **Space** shows the colors for the chosen verses (or the chosen text). With no verse chosen yet, it chooses the topmost visible one.
+- In the colors the **arrow keys** pick a color, **Enter** or **Space** applies it. **Esc** or **↑** in the top row closes the colors; then the arrow keys move between verses again.
+- **Esc** without colors open clears the choice.
+
+## 2.12 Split view
+
+The button with the split rectangle at the top right turns on the **split view** (it is off at first). Then up to **four areas stand side by side**, for example the Bible on the left and the document you are writing, or the materials of a Bible study, on the right.
+
+- A tab you open appears in the area used last, beside the text.
+- **Dragging tabs:** drag a tab from the top onto the **middle** of an area and it replaces it. Dragged onto the **left or right edge**, it gets a new area there. Dragged out of the window, it becomes a window of its own as before.
+- **Reading** can be dragged into another area the same way.
+- **Right-click** a tab: "Show in a new area beside" or "Take out of the split view".
+- The **lines** between the areas can be dragged. The **✕** in the head of an area closes the area; the tab stays open at the top.
+- Turning it on folds the side panel away so the areas have room (**Ctrl+B** brings it back).
+- Whether the split view is on, its areas and their widths are kept for the next start.

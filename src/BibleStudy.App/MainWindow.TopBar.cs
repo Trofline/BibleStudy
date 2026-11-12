@@ -18,7 +18,7 @@ public partial class MainWindow
         // least needed first: they leave in this order and come back in the opposite one
         _topSpill =
         [
-            new(KeysTopBtn, () => !_settings.EasyMode), new(LayoutTopBtn, () => true), new(FeedbackTopBtn, () => !_settings.EasyMode),
+            new(KeysTopBtn, () => !_settings.EasyMode), new(LayoutTopBtn, () => true), new(SplitTopBtn, () => !_settings.EasyMode), new(MarksTopBtn, () => true), new(FeedbackTopBtn, () => !_settings.EasyMode),
             new(TodoTopBtn, () => !_settings.EasyMode), new(ThemeBtn, () => true), new(ModeTopBtn, () => true), new(VaultTopBtn, () => true),
             new(LangBtn, () => true, ((Panel)LangBtn.Parent!).Children.OfType<Avalonia.Controls.Shapes.Rectangle>().First()),
             new(LogoImage, () => true, null, Silent: true),

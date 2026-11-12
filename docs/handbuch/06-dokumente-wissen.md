@@ -74,3 +74,26 @@ Im Reiter *Zusammen* kannst du ein Dokument als **Kopie** an die verbundene Pers
 - **Lieber verlinken als kopieren.** `[[Titel]]` statt den Text noch einmal zu schreiben.
 - **Wenige Kategorien.** Fünf bis sieben reichen (zum Beispiel Predigt, Studie, Andacht, Person, Wort).
 - **Wöchentlich 10 Minuten aufräumen:** unverlinkte Dokumente im Graphen suchen und verknüpfen.
+
+## 6.11 Materialien einer Bibelstunde
+
+Der Reiter **Materialien** (in der Leiste „Material“) zeigt Unterlagen, die du bekommen hast, direkt im Programm, ohne dass du mit Alt+Tab zu Word wechseln musst.
+
+1. **Ordner wählen …** und, wenn du willst, **Unterordner mit einlesen** (standardmäßig an).
+2. Links erscheinen die Dateien als Baum wie im Explorer. Ein Klick öffnet eine Datei rechts.
+3. **Tab** und **Umschalt+Tab** wechseln zwischen den geöffneten Dateien; jede hat oben einen kleinen Reiter mit ✕.
+
+Was sich öffnet:
+
+- **Word (.docx und das alte .doc)**, **OpenDocument (.odt)**, **RTF**, **PowerPoint (.pptx)**: Text mit Überschriften, Listen, Tabellenzeilen, Fett und Kursiv, dazu die Bilder aus der Datei (beim alten .doc nur der Text). Auch große Mappen mit Hunderten von Seiten öffnen sich in ein, zwei Sekunden.
+- **PDF**: als **Seitenbilder**, also so, wie es gedruckt aussieht, auch eingescannte Blätter. „Nur Text zeigen“ schaltet auf den Text um, der sich markieren und kopieren lässt.
+- **Text, Markdown, Webseiten, Bilder** (PNG, JPG, GIF, BMP, WebP).
+- Alles andere, etwa Tabellen oder Audio, öffnet **mit seinem eigenen Programm**.
+
+Neue, umbenannte oder gelöschte Dateien im Ordner erscheinen von selbst; eine geöffnete Datei, die gerade geändert wurde, wird neu gezeigt. Bibelstellen im Text („Röm 8,28“) sind farbig unterstrichen; ein Klick darauf öffnet die Stelle im Lesen-Tab, bei „Röm 8,28-30“ mit allen drei Versen gewählt. Dieselben Stellen stehen auch als Knöpfe über dem Text. Zusammen mit der **geteilten Ansicht** (Kapitel 2.12) steht sie dann direkt neben der Datei.
+
+**Inhaltsverzeichnis:** Hat eine Datei ein eigenes Inhaltsverzeichnis, steht es im Text; jede Zeile ist anklickbar und springt zu ihrem Abschnitt. Der Knopf **Inhalt** über der Datei zeigt das Verzeichnis jederzeit als Liste mit Suchfeld, auch weit unten im Dokument. Hat eine Datei kein Verzeichnis, listet „Inhalt“ ihre Überschriften; bei einem PDF seine Lesezeichen (ein Klick springt zur Seite).
+
+**Ordner auf- und zuklappen:** Die zwei Knöpfe über dem Baum klappen alle Ordner auf oder zu. Welche Ordner offen sind, merkt sich das Programm für den nächsten Start.
+
+**Bibelstellen:** Die ersten Stellen aus der Datei stehen als Knöpfe über dem Text; „Alle … Bibelstellen“ zeigt die ganze Liste.

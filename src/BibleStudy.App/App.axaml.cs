@@ -18,6 +18,8 @@ public partial class App : Application
     {
         ErrorLog.Install();
         Window.WindowOpenedEvent.AddClassHandler<Window>((w, _) => KeepOnScreen(w));
+        // every submenu shows the same "›" (the theme's own arrow is hidden in App.axaml, it was cut off at the edge)
+        Control.LoadedEvent.AddClassHandler<MenuItem>((m, _) => { if (m.ItemCount > 0 && m.Header is string s) m.Header = MainWindow.SubHeader(s); });
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
             var args = Environment.GetCommandLineArgs();

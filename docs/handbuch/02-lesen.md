@@ -122,3 +122,24 @@ Der Knopf **Hören** spielt eine **gesprochene Aufnahme** des Kapitels ab, das d
 ## 2.10 Der Lesezeichen-Stern
 
 Verse mit Lesezeichen tragen einen Stern ★ neben der Versnummer. Mehr dazu in [Kapitel 5](05-notizen-markierungen-lesezeichen.md).
+
+## 2.11 Lesen mit der Tastatur
+
+- **↑ / ↓** scrollen den Text. Ist ein Vers gewählt, springen sie zum Vers darüber oder darunter.
+- **Umschalt + ↑ / ↓** wählt mehrere Verse, vom zuerst gewählten bis zum aktuellen.
+- **← / →** blättern zum vorigen oder nächsten Kapitel.
+- **Leertaste** zeigt die Farben für die gewählten Verse (oder den gewählten Text). Ist noch kein Vers gewählt, wählt sie den obersten sichtbaren.
+- In den Farben wählen die **Pfeiltasten** eine Farbe, **Enter** oder die **Leertaste** übernimmt sie. **Esc** oder **↑** in der obersten Reihe schließt die Farben, danach bewegen die Pfeiltasten wieder die Verse.
+- **Esc** ohne offene Farben hebt die Auswahl auf.
+
+## 2.12 Geteilte Ansicht
+
+Der Knopf mit dem geteilten Rechteck oben rechts schaltet die **geteilte Ansicht** ein (zu Beginn ist sie aus). Dann stehen bis zu **vier Bereiche nebeneinander**, zum Beispiel links die Bibel und rechts das Dokument, an dem du schreibst, oder die Materialien einer Bibelstunde.
+
+- Ein Reiter, den du öffnest, erscheint im zuletzt benutzten Bereich neben dem Text.
+- **Reiter ziehen:** Ziehst du einen Reiter von oben auf die **Mitte** eines Bereichs, ersetzt er ihn. Auf den **linken oder rechten Rand** gezogen, bekommt er einen neuen Bereich dort. Aus dem Fenster heraus gezogen, wird er wie bisher ein eigenes Fenster.
+- Auch **„Lesen“** lässt sich so in einen anderen Bereich ziehen.
+- **Rechtsklick** auf einen Reiter: „In einem neuen Bereich daneben zeigen“ oder „Aus der geteilten Ansicht nehmen“.
+- Die **Linien** zwischen den Bereichen lassen sich ziehen. Das **✕** im Kopf eines Bereichs schließt den Bereich; der Reiter bleibt oben offen.
+- Beim Einschalten klappt die Seitenleiste ein, damit die Bereiche Platz haben (**Strg+B** holt sie zurück).
+- Ob die geteilte Ansicht an ist, welche Bereiche es gibt und wie breit sie sind, bleibt beim nächsten Start erhalten.

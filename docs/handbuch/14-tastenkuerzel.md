@@ -83,3 +83,14 @@ Mehrere dieser Kürzel funktionieren auch, während du in einem Textfeld tippst 
 ## 14.4 Eigene Kürzel für Spaltenfarben und mehr
 
 Die Spaltenfarben der Parallel-Ansicht haben kein Tastenkürzel; sie liegen am Farb-Knopf der Parallel-Leiste.
+
+## 14.5 Lesen mit den Pfeiltasten
+
+| Taste | Wirkung |
+|---|---|
+| ↑ / ↓ | Text scrollen; mit gewähltem Vers: Vers darüber / darunter |
+| Umschalt + ↑ / ↓ | Mehrere Verse wählen |
+| ← / → | Voriges / nächstes Kapitel |
+| Leertaste | Farben für die gewählten Verse zeigen |
+| In den Farben: Pfeiltasten, Enter, Esc | Farbe wählen, übernehmen, schließen |
+| Tab / Umschalt+Tab (Materialien) | Nächste / vorige geöffnete Datei |

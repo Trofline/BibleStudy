@@ -46,6 +46,7 @@ public partial class MainWindow
         Item(L("Notiz schreiben"), () => { Open(2); NoteEditor.Focus(); });
         Item(HeadingBefore(verse) is null ? L("Überschrift davor einfügen …") : L("Überschrift davor bearbeiten …"), () => ShowHeadingEditor(r, HeadingBefore(verse), anchor));
         Item(L("Merken / nicht mehr merken"), ToggleBookmark);
+        if (CommentariesOn) Item(L("Kommentar zu diesem Vers"), () => OpenCommentary(r));
         menu.Items.Add(new Separator());
 
         // the rest in two groups
@@ -160,6 +161,15 @@ public partial class MainWindow
         else foreach (var h in about.Take(25)) GuidePanel.Children.Add(OwnRow(h));
         if (about.Count > 25) GuidePanel.Children.Add(Muted(L("… und {0} weitere. Das Suchfeld oben (Strg+K) findet alles Eigene.", about.Count - 25)));
 
+        // the note of the chosen commentary on this verse (only with the commentaries turned on)
+        if (CommentariesOn)
+        {
+            GuidePanel.Children.Add(Eyebrow(L("Kommentar")));
+            var comment = new StackPanel { Spacing = 6 };
+            comment.Children.Add(Muted(L("Lade …")));
+            GuidePanel.Children.Add(comment);
+            _ = FillGuideCommentaryAsync(r, version, comment);
+        }
         // other translations
         GuidePanel.Children.Add(Eyebrow(L("Übersetzungen im Vergleich")));
         var compare = new StackPanel { Spacing = 8 };
