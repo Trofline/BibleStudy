@@ -103,10 +103,15 @@ public partial class MainWindow
         };
         MarksList.SelectionChanged += async (_, _) => await OnMarksListPickedAsync();
         MarksDetailBtn.IsCheckedChanged += (_, _) => ApplyCollectionFilter();
-        MarksAllVaultsBtn.IsChecked = _settings.MarksAllVaults;   // the state is kept between starts
+        MarksAllVaultsBtn.IsChecked = MarksTopBtn.IsChecked = _settings.MarksAllVaults;   // the state is kept between starts
+        // the same switch sits in the top bar, so it can be turned on and off without opening the marks panel
+        MarksTopBtn.IsCheckedChanged += (_, _) => MarksAllVaultsBtn.IsChecked = MarksTopBtn.IsChecked;
         MarksAllVaultsBtn.IsCheckedChanged += (_, _) =>
         {
+            MarksTopBtn.IsChecked = MarksAllVaultsBtn.IsChecked;
+            if (_settings.MarksAllVaults == (MarksAllVaultsBtn.IsChecked == true)) return;
             _settings.MarksAllVaults = MarksAllVaultsBtn.IsChecked == true; SaveSettings();
+            StatusText.Text = _settings.MarksAllVaults ? L("Markierungen aller Vaults werden gezeigt.") : L("Nur die Markierungen des aktiven Vaults werden gezeigt.");
             _foldersTouched = false; CloseEditor(); ApplyCollectionFilter();
             RefreshCells();   // the marks of the other vaults show in the text, or go away again
         };

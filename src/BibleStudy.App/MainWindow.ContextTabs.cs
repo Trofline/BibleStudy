@@ -87,7 +87,7 @@ public partial class MainWindow
             FocusContextTab(open);
             return;
         }
-        var oldest = _contextTabs.Values.FirstOrDefault(t => t.Work.Win is null && t.Work.Key != _activeWork);
+        var oldest = _contextTabs.Values.FirstOrDefault(t => t.Work.Win is null && t.Work.Key != _activeWork && !InPane(t.Work.Key));
         if (_contextTabs.Values.Count(t => t.Work.Win is null) >= MaxContextTabs && oldest is not null) Restore(oldest.Work);
 
         var work = new Detached { Items = [], Key = key, Title = ContextLabel(target, end), Panel = new DockPanel(), Host = new Grid(), Indices = [], Side = false, Current = -1, Icon = ContextIcon };

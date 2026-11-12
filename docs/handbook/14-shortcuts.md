@@ -83,3 +83,14 @@ Several of these shortcuts also work while you're typing in a text field (for ex
 ## 14.4 Custom shortcuts for column colors and more
 
 The column colors of the Parallel view have no keyboard shortcut; they're found on the color button in the Parallel bar.
+
+## 14.5 Reading with the arrow keys
+
+| Key | Effect |
+|---|---|
+| ↑ / ↓ | Scroll the text; with a verse chosen: verse above / below |
+| Shift + ↑ / ↓ | Choose several verses |
+| ← / → | Previous / next chapter |
+| Space | Show the colors for the chosen verses |
+| In the colors: arrow keys, Enter, Esc | Pick a color, apply it, close |
+| Tab / Shift+Tab (Materials) | Next / previous open file |

@@ -39,7 +39,7 @@ public partial class MainWindow
         ToolTip.SetTip(ModeTopBtn, easy ? L("Einfach-Modus ist an. Klick: alle Funktionen zeigen.") : L("Alle Funktionen sind sichtbar. Klick: Einfach-Modus mit dem Wichtigsten."));
         for (var i = 0; i < SideTabs.ItemCount; i++)
             if (SideTabs.Items[i] is TabItem tab) tab.IsVisible = !easy || EasySideTabs.Contains(i);
-        foreach (Control c in new Control[] { TodoTopBtn, FeedbackTopBtn, KeysTopBtn, ParallelBtn, StudyBtn }) c.IsVisible = !easy;
+        foreach (Control c in new Control[] { TodoTopBtn, SplitTopBtn, FeedbackTopBtn, KeysTopBtn, ParallelBtn, StudyBtn }) c.IsVisible = !easy;
         // a group of the side panel stays in the rail when Easy mode keeps one of its tabs (the verse overview, not the Greek; no AI, no studying together)
         foreach (var b in Rail.Children.OfType<Button>()) if (b.Tag is NavGroup g) b.IsVisible = !easy || g.Tabs.Any(t => EasySideTabs.Contains(t.Index));
         // the extra shortcuts that fill the rail and the reading bar are for Advanced only: Easy looks like it always did

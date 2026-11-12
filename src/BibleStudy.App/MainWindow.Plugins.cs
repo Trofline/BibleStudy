@@ -98,7 +98,7 @@ public partial class MainWindow
         if (current is not null && fresh.All(t => t.Id != current.Id))
         {
             // the open translation itself is gone, so the reader has to reload; the user is taken back to the plugin list afterwards
-            var inSettings = _activeWork == "group:Mehr";
+            var inSettings = _activeWork == "group:Mehr" || InPane("group:Mehr");
             await ReloadTranslationsAsync(null);
             if (inSettings)
             {

@@ -64,6 +64,26 @@ public sealed class AppSettings
     /// <summary>A small bar with the colors appears over the selected text (no click on the mark button needed).</summary>
     public bool SelectionPopup { get; set; } = true;
     public bool MarksAllVaults { get; set; }   // the collection and the text show the marks of all vaults, not only of the active one
+    /// <summary>The clock at the bottom right of the status bar.</summary>
+    public bool ShowClock { get; set; } = true;
+    /// <summary>The length of the timer chosen last, in minutes.</summary>
+    public int TimerMinutes { get; set; } = 10;
+    /// <summary>Split view: the work area shows up to four areas side by side (the Bible text and tabs), each as wide as the user drags it.</summary>
+    public bool SplitView { get; set; }
+    /// <summary>The areas of the split view from left to right: "reader" for the Bible text, otherwise the key of a tab (like "group:Dokumente").</summary>
+    public List<string> SplitPanes { get; set; } = [];
+    /// <summary>The widths of those areas as shares (they are scaled to the window).</summary>
+    public List<double> SplitWidths { get; set; } = [];
+    /// <summary>A maximized window leaves a line free at the edge of an automatically hidden taskbar, so the taskbar comes up when the mouse goes there (Windows).</summary>
+    public bool TaskbarReveal { get; set; }
+    /// <summary>The folder of the "Materials" tab (the documents of a Bible study someone sent you); "" = none chosen yet.</summary>
+    public string MaterialsFolder { get; set; } = "";
+    /// <summary>The materials tab also lists the files in the sub-folders.</summary>
+    public bool MaterialsSubfolders { get; set; } = true;
+    /// <summary>The files open in the materials tab (full paths), in their order.</summary>
+    public List<string> MaterialsOpen { get; set; } = [];
+    /// <summary>The folders of the materials tree that are closed (paths relative to the materials folder); the others are open.</summary>
+    public List<string> MaterialsCollapsed { get; set; } = [];
     public bool SelectWholeWords { get; set; } = true;   // a selection always starts and ends at word borders
     public List<string> CustomSubColors { get; set; } = [];   // own colors for sub-marks, chosen with the "+" in the settings
     /// <summary>Which headings show in the text: All, Smart (my own, the translation's only where I have none), Mine, Translation, None.</summary>

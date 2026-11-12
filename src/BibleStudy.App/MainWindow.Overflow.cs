@@ -84,7 +84,7 @@ public partial class MainWindow
     /// <summary>What a click on the button would do. Switches that change by a state need the state changed, the others just get the click.</summary>
     void Activate(Control c)
     {
-        if (c == StudyBtn || c == QuickMarkBtn) ((ToggleButton)c).IsChecked = ((ToggleButton)c).IsChecked != true;
+        if (c == StudyBtn || c == QuickMarkBtn || c == MarksTopBtn || c == SplitTopBtn) ((ToggleButton)c).IsChecked = ((ToggleButton)c).IsChecked != true;
         else c.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
     }
 

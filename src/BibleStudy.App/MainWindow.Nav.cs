@@ -27,6 +27,9 @@ public partial class MainWindow
     /// <summary>The name a group shows: "Markierung" is the explorer of marks and notes (the side panel has "Markierungen" as well), "Mehr" holds the settings.</summary>
     static string RailName(string group) => group switch { "Mehr" => L("Optionen"), "Markierung" => L("Explorer"), _ => L(group) };
 
+    /// <summary>The title of a group as a tab: the settings are "Einstellungen", the materials "Materialien" (the rail has room for "Material" only).</summary>
+    static string GroupTitle(string group) => group switch { "Mehr" => "Einstellungen", "Material" => K("Materialien"), _ => group };
+
     static NavGroup[] MakeNavGroups()
     {
         var all = BuildNavGroups();
@@ -77,6 +80,10 @@ public partial class MainWindow
         new(K("Dokumente"), "M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z M14 2v6h6 M8 13h8 M8 17h8",
         [
             new(KnowledgeTab, K("Schreiben"), L("Eigene Texte und verknüpfte Dateien. Verse wie „Joh 3,16“ und [[Titel]] werden zu Links.")),
+        ], Windowed: true),
+        new(K("Material"), "M2 7a2 2 0 0 1 2-2h5l2 2h9a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2z M8 13h8 M8 16h5",
+        [
+            new(MaterialsTab, K("Materialien"), L("Die Unterlagen einer Bibelstunde: wähle einen Ordner, klicke eine Datei an, und sie öffnet sich hier. Tab wechselt zwischen den geöffneten Dateien.")),
         ], Windowed: true),
         new(K("Predigt"), "M4 21h16 M6 21V8l6-5 6 5v13 M12 3v5 M10 21v-5h4v5",
         [
@@ -204,7 +211,8 @@ public partial class MainWindow
             var label = new TextBlock { Text = RailName(g.Name), FontSize = 11, FontWeight = FontWeight.Medium, HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center };
             var button = new Button { Classes = { "rail" }, Tag = "adv", Content = new StackPanel { Spacing = 4, Children = { icon, label } } };
             ToolTip.SetTip(button, label.Text + ": " + (g.Tabs.Length > 1 ? string.Join(" · ", g.Tabs.Select(t => L(t.Label))) : g.Tabs[0].Hint));   // the name too: in a low window only the symbol is left
-            button.Click += (_, _) => OpenWork(g);
+            // the group is looked up by name at the click: it may have been built anew since (commentaries on or off)
+            button.Click += (_, _) => OpenWork(NavGroups.FirstOrDefault(x => x.Name == g.Name) ?? g);
             Rail.Children.Add(button);
         }
         SideTabs.SelectionChanged += (_, e) =>

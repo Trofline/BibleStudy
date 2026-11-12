@@ -67,7 +67,7 @@ public partial class MainWindow
         if (index is null) return;
         var words = query.Split(' ', StringSplitOptions.RemoveEmptyEntries);
         var found = index.Where(h => words.All(w => h.Text.Contains(w, StringComparison.CurrentCultureIgnoreCase))).ToList();
-        CommentaryPanel.Children.Clear();
+        CommentaryPanel.Children.Clear(); _commentaryCards.Clear();   // the cards of the chapter are gone: marking a verse must not reach for them
         CommentaryInfo.Text = found.Count == 0 ? L("Keine Treffer in {0}.", c.Name) : L("{0} Treffer in {1}{2}", found.Count, c.Name, found.Count > 100 ? L(" (die ersten 100)") : "");
         var back = new Button { Content = L("← Zurück zum Kapitel"), HorizontalAlignment = HorizontalAlignment.Left };
         back.Click += async (_, _) => { _shownCommentary = null; await ShowCommentaryAsync(); };

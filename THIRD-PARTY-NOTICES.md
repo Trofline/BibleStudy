@@ -33,6 +33,8 @@ The license of each translation or commentary is shown in the program next to th
 | ModelContextProtocol C# SDK | MIT / Apache-2.0 |
 | SIPSorcery (WebRTC data channel for studying together) | BSD-3-Clause |
 | UglyToad.PdfPig (reading text from PDF files the user imports) | Apache-2.0 |
+| PDFtoImage (showing the pages of PDF files in the materials tab) | MIT |
+| PDFium (Google, built by bblanchon/pdfium-binaries; draws the PDF pages) | BSD-3-Clause / Apache-2.0 |
 
 ## User-imported files
 

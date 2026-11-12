@@ -74,3 +74,26 @@ In the *Together* tab you can send a document as a **copy** to the connected per
 - **Link rather than copy.** `[[Title]]` instead of writing the text again.
 - **Few categories.** Five to seven are enough (for example Sermon, Study, Devotion, Person, Word).
 - **Tidy up for 10 minutes weekly:** look for unlinked documents in the graph and connect them.
+
+## 6.11 Materials of a Bible study
+
+The **Materials** tab (on the rail "Material") shows papers you were given right inside the program, so you need not switch to Word with Alt+Tab.
+
+1. **Choose folder …** and, if you like, **Include sub-folders** (on by default).
+2. On the left the files appear as a tree like in the Explorer. A click opens a file on the right.
+3. **Tab** and **Shift+Tab** switch between the open files; each has a small tab with ✕ at the top.
+
+What opens:
+
+- **Word (.docx and the old .doc)**, **OpenDocument (.odt)**, **RTF**, **PowerPoint (.pptx)**: text with headings, lists, table rows, bold and italic, and the pictures in the file (for the old .doc the text only). Even big folders of hundreds of pages open in a second or two.
+- **PDF**: as **page images**, so it looks as printed, scanned sheets included. "Show text only" switches to the text, which can be selected and copied.
+- **Text, Markdown, web pages, pictures** (PNG, JPG, GIF, BMP, WebP).
+- Everything else, such as spreadsheets or audio, opens **in its own program**.
+
+New, renamed or deleted files in the folder appear by themselves; an open file that was just changed is shown anew. Bible references in the text ("Rom 8:28") are colored and underlined; a click opens the passage in the Read tab, for "Rom 8:28-30" with all three verses chosen. The same references also stand as buttons above the text. Together with the **split view** (chapter 2.12) it then stands right beside the file.
+
+**Table of contents:** if a file has a table of contents of its own, it stands in the text; every line can be clicked and jumps to its section. The **Contents** button above the file shows it at any time as a list with a search field, even far down in the document. A file without one lists its headings under "Contents"; a PDF its bookmarks (a click jumps to the page).
+
+**Opening and closing folders:** the two buttons above the tree open or close all folders. Which folders are open is kept for the next start.
+
+**Bible references:** the first references in the file stand as buttons above the text; "All … Bible references" shows the whole list.

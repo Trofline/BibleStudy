@@ -121,3 +121,9 @@ Claude Code (mit Bibel-Werkzeugen) oder Ollama; die Anweisung für Claude; der M
 - **Projekt auf GitHub.**
 - **Programm neu starten.**
 - **Programm entfernen …** (fragt, ob deine Daten bleiben sollen).
+
+## 13.16 Uhr, Timer und Taskleiste
+
+- **Uhr unten rechts zeigen**: die Uhrzeit in der Statusleiste. Ein Klick auf die Uhr stellt einen **Timer** (5 bis 90 Minuten oder eine eigene Zeit). Die Restzeit steht neben der Uhr; ein Klick darauf hält den Timer an, setzt ihn fort oder beendet ihn. Ist er abgelaufen, kommt das Fenster nach vorn und eine Leiste bietet „Noch einmal“ an.
+- **Maximiert: automatisch ausgeblendete Taskleiste … einblenden** (nur Windows, standardmäßig aus): Ist die Windows-Taskleiste auf „automatisch ausblenden“ gestellt, kommt sie bei einem maximierten Programm sonst nicht hoch. Mit dieser Einstellung lässt das Fenster am Rand der Taskleiste eine Pixelzeile frei; fährt die Maus dorthin, erscheint die Taskleiste.
+- Der **Marker-Knopf** oben neben den To-dos schaltet die Markierungen aller Vaults ein und aus, wie der Knopf in der Markierungsliste.

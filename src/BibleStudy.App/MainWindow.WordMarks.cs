@@ -22,7 +22,7 @@ public partial class MainWindow
     int _markCursor = -1;
 
     /// <summary>The header of a menu entry that opens a submenu in the right-click menu. The theme draws no arrow there (it does in the submenus), so the entry carries its own at the right end.</summary>
-    static Control SubHeader(string text)
+    internal static Control SubHeader(string text)
     {
         var arrow = new TextBlock { Text = "›", FontSize = 16, Margin = new(24, -2, 0, 0), VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center, Opacity = 0.7 };
         DockPanel.SetDock(arrow, Dock.Right);

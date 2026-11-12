@@ -40,7 +40,7 @@ public partial class MainWindow
         TranslateMeaningsCheck.IsChecked = _settings.TranslateMeanings;
         TranslateMeaningsCheck.IsCheckedChanged += (_, _) => { _settings.TranslateMeanings = TranslateMeaningsCheck.IsChecked == true; SaveSettings(); };
         CommentariesCheck.IsChecked = _settings.ShowCommentaries;
-        CommentariesCheck.IsCheckedChanged += (_, _) => { _settings.ShowCommentaries = CommentariesCheck.IsChecked == true; SaveSettings(); StatusText.Text = L("Die Einstellung gilt nach einem Neustart."); };
+        CommentariesCheck.IsCheckedChanged += (_, _) => { _settings.ShowCommentaries = CommentariesCheck.IsChecked == true; SaveSettings(); ApplyCommentariesSetting(_settings.ShowCommentaries); };
         CompactLookCheck.IsChecked = _settings.CompactLook;
         CompactLookCheck.IsCheckedChanged += (_, _) => { _settings.CompactLook = CompactLookCheck.IsChecked == true; SaveSettings(); StatusText.Text = L("Die Einstellung gilt nach einem Neustart."); };
         JesusRedCheck.IsChecked = _settings.JesusRed; JustifyCheck.IsChecked = _settings.Justify;

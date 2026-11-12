@@ -54,6 +54,12 @@
                     <Button x:Name="ModeTopBtn" Classes="ghost" Margin="0,0,6,0" ToolTip.Tip="Zwischen allen Funktionen und dem Einfach-Modus wechseln">
                         <TextBlock x:Name="ModeTopText" FontSize="12.5" FontWeight="SemiBold" VerticalAlignment="Center" />
                     </Button>
+                    <ToggleButton x:Name="MarksTopBtn" Classes="tool" ToolTip.Tip="Markierungen aller Vaults zeigen (an) oder nur die des aktiven Vaults (aus)">
+                        <local:Icon Data="m9 11-6 6v3h9l3-3 M22 12l-4.6 4.6a2 2 0 0 1-2.8 0l-5.2-5.2a2 2 0 0 1 0-2.8L14 4" />
+                    </ToggleButton>
+                    <ToggleButton x:Name="SplitTopBtn" Classes="tool" ToolTip.Tip="Geteilte Ansicht: Reiter nebeneinander zeigen (an/aus)">
+                        <local:Icon Data="M5 3h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z M12 3v18" />
+                    </ToggleButton>
                     <Button x:Name="TodoTopBtn" Classes="tool" ToolTip.Tip="Meine To-dos: eine freie Liste zum Abhaken">
                         <local:Icon Data="M21 10.5V19a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h12.5 m9 11 3 3L22 4" />
                     </Button>
@@ -231,7 +237,13 @@
         <Border x:Name="StatusBar" DockPanel.Dock="Bottom" Padding="16,6" Height="32" Background="{DynamicResource BsSurface}"
                 BorderBrush="{DynamicResource BsBorder}" BorderThickness="0,1,0,0">
             <Border.Transitions><Transitions><DoubleTransition Property="Opacity" Duration="0:0:0.15" /></Transitions></Border.Transitions>
-            <Grid ColumnDefinitions="*,Auto,Auto">
+            <Grid ColumnDefinitions="*,Auto,Auto,Auto,Auto">
+                <Button x:Name="TimerChip" Grid.Column="3" Classes="ghost" Padding="8,0" MinHeight="0" Height="22" Margin="4,0,0,0" IsVisible="False" ToolTip.Tip="Laufender Timer. Klicken: anhalten, fortsetzen oder beenden.">
+                    <TextBlock x:Name="TimerChipText" Classes="caption" FontWeight="SemiBold" VerticalAlignment="Center" />
+                </Button>
+                <Button x:Name="ClockChip" Grid.Column="4" Classes="ghost" Padding="8,0" MinHeight="0" Height="22" Margin="4,0,0,0" ToolTip.Tip="Uhrzeit. Klicken: Timer stellen.">
+                    <TextBlock x:Name="ClockText" Classes="caption" FontWeight="SemiBold" VerticalAlignment="Center" />
+                </Button>
                 <TextBlock x:Name="StatusText" Classes="caption" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" ToolTip.Tip="{Binding #StatusText.Text}" />
                 <Button x:Name="UpdateChip" Grid.Column="1" Classes="ghost" Padding="8,0" MinHeight="0" Height="22" Margin="8,0,0,0" IsVisible="False" ToolTip.Tip="Stand der Updates. Klicken: jetzt nach Updates suchen.">
                     <TextBlock x:Name="UpdateChipText" Classes="caption" VerticalAlignment="Center" />
@@ -814,6 +826,8 @@
                                 <CheckBox x:Name="CloseToTrayCheck" Content="Beim Schließen in den Infobereich minimieren (Beenden über Rechtsklick auf das Symbol)" />
                                 <CheckBox x:Name="RememberWindowCheck" Content="Fensterposition und -größe merken" />
                                 <CheckBox x:Name="RestoreWindowsCheck" Content="Geöffnete Fenster (Dokumente, Bücher …) beim Start wiederherstellen" />
+                                <CheckBox x:Name="TaskbarRevealCheck" Content="Maximiert: automatisch ausgeblendete Taskleiste mit der Maus am Bildschirmrand einblenden" />
+                                <CheckBox x:Name="ShowClockCheck" Content="Uhr unten rechts zeigen (Klick darauf stellt einen Timer)" />
                             </StackPanel></Border>
 
                             <Border Classes="card"><StackPanel Spacing="8">
@@ -991,6 +1005,14 @@
                             <TextBlock TextWrapping="Wrap" Text="Ein Feld für alles: Bibelstellen („Röm 8,28“), Bücher, Befehle, Dokumente, Notizen, Gebete und Strong-Nummern. Während du tippst, erscheinen die Treffer; Pfeiltasten und Enter wählen. Alles andere startet die Textsuche." />
                             <TextBlock FontWeight="SemiBold" Text="Verse" />
                             <TextBlock TextWrapping="Wrap" Text="Vers anklicken: Notiz, Lesezeichen und Querverweise beziehen sich darauf. Rechtsklick auf einen Vers: kopieren, als Bild exportieren, zum Auswendiglernen vormerken, in ein Dokument einfügen." />
+                            <TextBlock FontWeight="SemiBold" Text="Mit der Tastatur lesen und markieren" />
+                            <TextBlock TextWrapping="Wrap" Text="↑ und ↓ scrollen den Text. Ist ein Vers gewählt, springen sie zum Vers darüber oder darunter; Umschalt+↑/↓ wählt mehrere Verse. ← und → blättern das Kapitel. Die Leertaste zeigt die Farben: Pfeiltasten wählen eine Farbe, Enter übernimmt sie, Esc (oder ↑ in der obersten Reihe) schließt sie. Esc ohne Farben hebt die Auswahl auf." />
+                            <TextBlock FontWeight="SemiBold" Text="Geteilte Ansicht" />
+                            <TextBlock TextWrapping="Wrap" Text="Der Knopf mit dem geteilten Rechteck oben schaltet sie ein: bis zu vier Bereiche nebeneinander, zum Beispiel links die Bibel und rechts ein Dokument oder die Materialien. Einen Reiter auf die Mitte eines Bereichs ziehen ersetzt ihn, auf seinen Rand legt ihn als neuen Bereich daneben, aus dem Fenster heraus macht ein eigenes Fenster daraus. Die Linien zwischen den Bereichen lassen sich ziehen. Auch „Lesen“ lässt sich so verschieben. Alles bleibt beim nächsten Start erhalten." />
+                            <TextBlock FontWeight="SemiBold" Text="Materialien" />
+                            <TextBlock TextWrapping="Wrap" Text="Der Reiter „Materialien“ zeigt die Unterlagen einer Bibelstunde im Programm, ohne Word zu öffnen: Ordner wählen (auf Wunsch mit Unterordnern), Datei anklicken. Word (auch das alte .doc), PDF (als Seitenbilder oder als Text), PowerPoint, OpenDocument, RTF, Text, Markdown, Webseiten und Bilder öffnen sich hier. Ein Inhaltsverzeichnis in der Datei ist anklickbar, der Knopf „Inhalt“ zeigt es als Liste mit Suche. Tab und Umschalt+Tab wechseln zwischen den geöffneten Dateien. Neue oder geänderte Dateien erscheinen von selbst; die Knöpfe über dem Baum klappen alle Ordner auf oder zu." />
+                            <TextBlock FontWeight="SemiBold" Text="Uhr und Timer" />
+                            <TextBlock TextWrapping="Wrap" Text="Unten rechts steht die Uhrzeit. Ein Klick darauf stellt einen Timer (5 bis 90 Minuten oder eine eigene Zeit); die Restzeit steht daneben. Ist er abgelaufen, kommt das Fenster nach vorn. Oben schaltet der Marker-Knopf die Markierungen aller Vaults ein und aus." />
                             <TextBlock FontWeight="SemiBold" Text="Parallel" />
                             <TextBlock TextWrapping="Wrap" Text="Zeigt bis zu drei weitere Übersetzungen versgenau nebeneinander, jede Spalte in eigener Farbe mit Kopfzeile. „Synchron scrollen“ lässt alle Spalten zusammen laufen; ausgeschaltet scrollt jede für sich." />
                             <TextBlock TextWrapping="Wrap" Text="Mit dem Symbol neben „Synchron scrollen“ wählst du, welche Spalten zusammen laufen (z. B. nur die zweite und vierte); die übrigen scrollen für sich." />
@@ -1116,13 +1138,17 @@
                 <TabItem Header="Explorer">
                     <Panel x:Name="ExplorerHost" />
                 </TabItem>
+                <TabItem Header="Materialien">
+                    <Panel x:Name="MaterialsHost" />
+                </TabItem>
             </TabControl>
             </DockPanel>
         </Border>
         <Border x:Name="SideSplitter" DockPanel.Dock="Right" Width="8" Background="Transparent" Cursor="SizeWestEast" />
 
-        <!-- Reader -->
-        <Grid>
+        <!-- Reader; in the split view a second tab sits on the right, the line between them can be dragged -->
+        <Grid x:Name="MainArea">
+        <Grid x:Name="LeftArea">
             <Grid x:Name="ReaderHost" ColumnDefinitions="*,Auto" RowDefinitions="Auto,*">
                 <Grid x:Name="ParallelHeader" IsVisible="False" Margin="42,10,42,2" />
                 <ScrollViewer x:Name="ReaderScroll" Grid.Row="1">
@@ -1137,6 +1163,9 @@
             <local:FamilyView x:Name="FamilyPane" IsVisible="False" Background="{DynamicResource BsBackground}" />
             <local:KnowledgeView x:Name="KnowledgePane" IsVisible="False" Background="{DynamicResource BsBackground}" />
             <Grid x:Name="WorkHost" IsVisible="False" Background="{DynamicResource BsSurface}" />
+        </Grid>
+        <!-- while a tab is dragged in the split view: where letting go puts it -->
+        <Border x:Name="SplitDropZone" IsVisible="False" IsHitTestVisible="False" BorderThickness="3" CornerRadius="6" ZIndex="80" HorizontalAlignment="Left" />
         </Grid>
     </DockPanel>
 </Window>

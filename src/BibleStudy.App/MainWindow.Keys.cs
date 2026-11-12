@@ -139,6 +139,7 @@ public partial class MainWindow
 
     async void OnShortcut(object? sender, KeyEventArgs e)
     {
+        if (HandleVerseKeys(e)) return;
         if (!e.Handled && ReadingKeysApply(e))
         {
             if (DigitOf(e.Key) is >= 0 and var digit) { e.Handled = true; JumpToTypedVerse(digit); return; }
