@@ -67,18 +67,17 @@ public static class EswordNotes
                 while (r.Read())
                 {
                     if (r.IsDBNull(0) || r.IsDBNull(5)) continue;
+                    // a row with a number that is no number is left out, the others of the file still come in
+                    if (Number(r, 0) is not { } bookNumber || BookId(bookNumber, mySword) is not { } b) continue;
+                    var ch = Number(r, 1) ?? 0;
+                    var v = Number(r, 2) ?? 0;
+                    var ce = Number(r, 3) ?? ch;
+                    var ve = Number(r, 4) ?? v;
                     var body = ToText(Convert.ToString(r.GetValue(5)) ?? "");
                     if (body.Length == 0) continue;
-                    var b = BookId(Convert.ToInt32(r.GetValue(0)), mySword);
-                    if (b is null) continue;
-                    var ch = r.IsDBNull(1) ? 0 : Convert.ToInt32(r.GetValue(1));
-                    var v = r.IsDBNull(2) ? 0 : Convert.ToInt32(r.GetValue(2));
-                    var ce = r.IsDBNull(3) ? ch : Convert.ToInt32(r.GetValue(3));
-                    var ve = r.IsDBNull(4) ? v : Convert.ToInt32(r.GetValue(4));
-                    var bookName = BookData.UsfmIds.Contains(b) ? b : b;
                     if (ch > 0 && v > 0) notes.Add(new ImportedNote(new VerseRef(b, ch, v), ce == ch && ve > v ? ve : v, body));
-                    else if (ch > 0) texts.Add(new ImportedText($"{name}: {bookName} {ch}", body));
-                    else texts.Add(new ImportedText($"{name}: {bookName}", body));
+                    else if (ch > 0) texts.Add(new ImportedText($"{name}: {b} {ch}", body));
+                    else texts.Add(new ImportedText($"{name}: {b}", body));
                 }
             }
             else if (title is not null)
@@ -95,6 +94,20 @@ public static class EswordNotes
             }
         }
         return new ImportedNotes(name, notes, texts);
+    }
+
+    /// <summary>A whole number from a column (stored as a number or as text); null when it is empty or no number.</summary>
+    static int? Number(SqliteDataReader r, int column)
+    {
+        if (r.IsDBNull(column)) return null;
+        var value = r.GetValue(column);
+        return value switch
+        {
+            long l when l is >= int.MinValue and <= int.MaxValue => (int)l,
+            double d when d == Math.Floor(d) && Math.Abs(d) < int.MaxValue => (int)d,
+            string s when int.TryParse(s.Trim(), System.Globalization.NumberStyles.Integer, System.Globalization.CultureInfo.InvariantCulture, out var i) => i,
+            _ => null,
+        };
     }
 
     /// <summary>e-Sword counts the books 1–66; MySword commentaries use the numbers of MyBible (10, 20 … 730).</summary>

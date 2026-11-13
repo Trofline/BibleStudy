@@ -26,6 +26,7 @@ public partial class MainWindow
     long _liveHandoutDoc;
     bool _liveRefreshQueued;
     StackPanel? _liveDynamic;
+    readonly List<string> _livePollLog = [];   // the polls that were ended, with their results, for the archive
 
     Dictionary<string, string> LivePageTexts() => new()
     {
@@ -57,6 +58,7 @@ public partial class MainWindow
         _live = room;
         _liveStarted = DateTime.Now;
         _livePassages = [];
+        _livePollLog.Clear();
         _liveAddress = LiveRoom.LocalAddresses().FirstOrDefault().Address ?? "";
         room.Changed += () => Dispatcher.UIThread.Post(QueueLiveRefresh);
         // what the projector shows now, the phones show from the start
@@ -71,6 +73,8 @@ public partial class MainWindow
         room.Dispose();
         _live = null;
         _liveHandoutDoc = 0;
+        // a QR code that leads nowhere any more does not stay on the projector
+        if (_projector is { ShowsQr: true } p) { p.Show("", ""); UpdateProjectorChip(); }
         BuildLiveUi();
         if (keep) StatusText.Text = L("Die Bibelstunde ist im Archiv festgehalten.");
     }
@@ -79,16 +83,19 @@ public partial class MainWindow
     void KeepLiveInArchive(LiveRoom room)
     {
         var questions = room.Questions.Select(q => "- " + q.Text + (q.Name.Length > 0 ? " (" + q.Name + ")" : "")).ToList();
-        if (room.Poll is { } poll)
-        {
-            var r = room.Results();
-            questions.Add("");
-            questions.Add(L("Umfrage: {0}", poll.Question));
-            questions.AddRange(poll.Options.Select((o, i) => $"  {o}: {(i < r.Length ? r[i] : 0)}"));
-        }
+        if (room.Poll is { } poll) LogLivePoll(poll, room.Results());
+        questions.AddRange(_livePollLog);
         var title = _liveHandoutDoc > 0 && _vault.GetDocuments().FirstOrDefault(d => d.Id == _liveHandoutDoc) is { } doc ? doc.Title
             : _livePassages.Count > 0 ? PassageLabel(_livePassages[0]) : L("Bibelstunde");
         _vault.AddStudy(DateOnly.FromDateTime(_liveStarted), title, _livePassages, "", string.Join("\n", questions).Trim());
+    }
+
+    /// <summary>A poll with its result, as it goes into the archive.</summary>
+    void LogLivePoll(LivePoll poll, int[] results)
+    {
+        _livePollLog.Add("");
+        _livePollLog.Add(L("Umfrage: {0}", poll.Question));
+        _livePollLog.AddRange(poll.Options.Select((o, i) => $"  {o}: {(i < results.Length ? results[i] : 0)}"));
     }
 
     /// <summary>The projector (or the "send" button) shows something: the phones show it too, and verses count for the archive.</summary>
@@ -145,13 +152,31 @@ public partial class MainWindow
         // the QR code: always whole, it shrinks with the panel and never gets cut off
         var addresses = LiveRoom.LocalAddresses();
         if (addresses.All(a => a.Address != _liveAddress)) _liveAddress = addresses.FirstOrDefault().Address ?? "";
-        var qr = new QrView { Size = 260, HorizontalAlignment = HorizontalAlignment.Center, Text = LiveUrl.Length > 0 ? LiveUrl : "http://127.0.0.1" };
-        var url = new SelectableTextBlock { Text = LiveUrl.Length > 0 ? LiveUrl : L("Kein Netzwerk"), FontFamily = new FontFamily("Consolas, Menlo, monospace"), HorizontalAlignment = HorizontalAlignment.Center, TextWrapping = TextWrapping.Wrap, TextAlignment = TextAlignment.Center };
+        if (LiveUrl.Length == 0)
+        {
+            // without a network there is no address: no code that leads nowhere
+            LivePanel.Children.Add(new TextBlock { Text = L("Dieser Computer ist gerade mit keinem Netzwerk verbunden. Verbinde ihn mit dem WLAN, in dem auch die Handys sind."), TextWrapping = TextWrapping.Wrap, Foreground = Brushes.IndianRed });
+            var again = new Button { Content = L("Erneut prüfen"), Classes = { "primary" } };
+            again.Click += (_, _) => BuildLiveUi();
+            var close = new Button { Content = L("Nur beenden") };
+            close.Click += (_, _) => StopLive(false);
+            LivePanel.Children.Add(new WrapPanel { ItemSpacing = 6, LineSpacing = 6, Children = { again, close } });
+            return;
+        }
+        var qr = new QrView { Size = 260, HorizontalAlignment = HorizontalAlignment.Center, Text = LiveUrl };
+        var url = new SelectableTextBlock { Text = LiveUrl, FontFamily = new FontFamily("Consolas, Menlo, monospace"), HorizontalAlignment = HorizontalAlignment.Center, TextWrapping = TextWrapping.Wrap, TextAlignment = TextAlignment.Center };
         var qrCard = new StackPanel { Spacing = 8, Children = { new Border { Background = Brushes.White, CornerRadius = new(10), Padding = new(8), HorizontalAlignment = HorizontalAlignment.Center, Child = qr }, url } };
         if (addresses.Count > 1)
         {
             var nets = new ComboBox { HorizontalAlignment = HorizontalAlignment.Stretch, ItemsSource = addresses.Select(a => $"{a.Address}  ({a.Network})").ToList(), SelectedIndex = Math.Max(0, addresses.FindIndex(a => a.Address == _liveAddress)) };
-            nets.SelectionChanged += (_, _) => { if (nets.SelectedIndex >= 0) { _liveAddress = addresses[nets.SelectedIndex].Address; BuildLiveUi(); } };
+            nets.SelectionChanged += (_, _) =>
+            {
+                if (nets.SelectedIndex < 0 || addresses[nets.SelectedIndex].Address == _liveAddress) return;
+                _liveAddress = addresses[nets.SelectedIndex].Address;
+                // the code on the projector follows, otherwise it would lead to the old address
+                if (_projector is { ShowsQr: true } shown) shown.ShowQr(LiveUrl, L("Mit dem Handy scannen und mitlesen"));
+                Dispatcher.UIThread.Post(BuildLiveUi);
+            };
             qrCard.Children.Add(new TextBlock { Text = L("Netzwerk (das WLAN der Handys):"), Classes = { "caption" } });
             qrCard.Children.Add(nets);
         }
@@ -190,12 +215,21 @@ public partial class MainWindow
         var share = new Button { Content = room.HasHandout ? L("Erneut senden") : L("An die Handys senden"), Classes = { "primary" } };
         share.Click += async (_, _) =>
         {
-            if (docBox.SelectedIndex < 0) return;
+            if (docBox.SelectedIndex < 0) { StatusText.Text = L("Wähle zuerst ein Dokument."); return; }
             var d = docs[docBox.SelectedIndex];
-            var html = await HandoutHtmlAsync(d.Title, d.Body, string.Join(", ", d.Tags), d.Id, LinkedDocuments(d.Body, d.Id), false);
-            room.SetHandout(html.Replace("<div class=\"noprint bar\">", "<div class=\"noprint bar\" style=\"display:none\">"));
-            _liveHandoutDoc = d.Id;
-            StatusText.Text = L("Das Handout „{0}“ ist auf den Handys.", d.Title);
+            share.IsEnabled = false;
+            try
+            {
+                var html = await HandoutHtmlAsync(d.Title, d.Body, string.Join(", ", d.Tags), d.Id, LinkedDocuments(d.Body, d.Id), false);
+                if (_live != room) return;   // ended meanwhile
+                room.SetHandout(html.Replace("<div class=\"noprint bar\">", "<div class=\"noprint bar\" style=\"display:none\">"));
+                _liveHandoutDoc = d.Id;
+                StatusText.Text = L("Das Handout „{0}“ ist auf den Handys.", d.Title.Length > 0 ? d.Title : L("Ohne Titel"));
+            }
+            catch (Exception ex) when (ex is IOException or InvalidOperationException or HttpRequestException or Microsoft.Data.Sqlite.SqliteException)
+            {
+                StatusText.Text = L("Das Handout lässt sich nicht senden: {0}", ex.Message);
+            }
             BuildLiveUi();
         };
         var unshare = new Button { Content = L("Zurückziehen"), IsVisible = room.HasHandout };
@@ -243,21 +277,28 @@ public partial class MainWindow
             question.TextChanged += (_, _) => _livePollDraft.Question = question.Text ?? "";
             options.TextChanged += (_, _) => _livePollDraft.Options = options.Text ?? "";
             var presets = new WrapPanel { ItemSpacing = 6, LineSpacing = 6 };
-            foreach (var (name, opts) in new[]
+            // the verses are taken when the chip is clicked: the passage in the reader may have changed since this was built
+            foreach (var (name, opts) in new (string, Func<string>)[]
             {
-                (L("Ja / Nein"), L("Ja") + "\n" + L("Nein") + "\n" + L("Weiß nicht")),
-                (L("Skala 1–5"), "1\n2\n3\n4\n5"),
-                (L("Verse des Abschnitts"), _curChapterData is null ? "" : string.Join("\n", (_selVerses.Count > 1 ? _selVerses.OrderBy(v => v) : Enumerable.Range(1, Math.Min(8, _curChapterData.Verses.Count))).Take(8).Select(v => Label(new VerseRef(_curBook, _curChapter, v))))),
+                (L("Ja / Nein"), () => L("Ja") + "\n" + L("Nein") + "\n" + L("Weiß nicht")),
+                (L("Skala 1–5"), () => "1\n2\n3\n4\n5"),
+                (L("Verse des Abschnitts"), () => _curChapterData is null ? "" : string.Join("\n", (_selVerses.Count > 1 ? _selVerses.OrderBy(v => v) : Enumerable.Range(1, Math.Min(LiveRoom.MaxOptions, _curChapterData.Verses.Count))).Take(LiveRoom.MaxOptions).Select(v => Label(new VerseRef(_curBook, _curChapter, v))))),
             })
             {
-                var b = FilterChip(name, false, null, () => { _livePollDraft.Options = opts; options.Text = opts; });
+                var b = FilterChip(name, false, null, () =>
+                {
+                    var o = opts();
+                    if (o.Length == 0) { StatusText.Text = L("Öffne zuerst eine Bibelstelle."); return; }
+                    _livePollDraft.Options = o; options.Text = o;
+                });
                 presets.Children.Add(b);
             }
             var go = new Button { Content = L("Umfrage starten"), Classes = { "primary" }, HorizontalAlignment = HorizontalAlignment.Left };
             go.Click += (_, _) =>
             {
-                var opts = (options.Text ?? "").Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).ToList();
-                if ((question.Text ?? "").Trim().Length == 0 || opts.Count < 2) { StatusText.Text = L("Eine Umfrage braucht eine Frage und mindestens zwei Antworten."); return; }
+                var opts = (options.Text ?? "").Split(['\n', '\r'], StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).Distinct().ToList();
+                if ((question.Text ?? "").Trim().Length == 0 || opts.Count < 2) { StatusText.Text = L("Eine Umfrage braucht eine Frage und mindestens zwei verschiedene Antworten."); return; }
+                if (opts.Count > LiveRoom.MaxOptions) { StatusText.Text = L("Eine Umfrage hat höchstens {0} Antworten.", LiveRoom.MaxOptions); return; }
                 room.StartPoll(question.Text!, opts);
                 _livePollDraft = new();
                 FillLiveDynamic();
@@ -293,7 +334,7 @@ public partial class MainWindow
                 ProjectText(poll.Question, string.Join("\n", poll.Options.Select((o, i) => $"{o}   {r[i]}")));
             };
             var end = new Button { Content = L("Umfrage beenden") };
-            end.Click += (_, _) => { room.EndPoll(); FillLiveDynamic(); };
+            end.Click += (_, _) => { LogLivePoll(poll, room.Results()); room.EndPoll(); FillLiveDynamic(); };
             host.Children.Add(new WrapPanel { ItemSpacing = 6, LineSpacing = 6, Children = { show, beam, end } });
         }
     }

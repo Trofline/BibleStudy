@@ -45,7 +45,7 @@ public class BibleStudyGroupTests : IDisposable
         room.SetHandout("<html>handout</html>");
         using var state = JsonDocument.Parse(Body(room.Handle("GET", $"/{room.Code}/state?voter=x", "", "a")));
         Assert.Equal("Joh 3,16 · LUT", state.RootElement.GetProperty("title").GetString());
-        Assert.True(state.RootElement.GetProperty("handout").GetBoolean());
+        Assert.True(state.RootElement.GetProperty("handout").GetInt32() > 0);
         Assert.Equal("<html>handout</html>", Body(room.Handle("GET", $"/{room.Code}/handout", "", "a")));
     }
 
@@ -309,5 +309,69 @@ public class BibleStudyGroupTests : IDisposable
         Assert.Equal("Grüße\nzwei", EswordNotes.RtfToText(@"{\rtf1\ansi Gr\'fc\u223?e\par zwei}"));
         Assert.Equal("a{b}", EswordNotes.RtfToText(@"{\rtf1 a\{b\}}"));
         Assert.Equal("x", EswordNotes.RtfToText(@"{\rtf1{\*\generator Riched20;}x}"));
+    }
+
+    // ---- found while checking 1.9.0 ------------------------------------------------------------------------------------------
+
+    [Fact]
+    public void A_new_handout_changes_what_the_phones_see_so_that_they_load_it_again()
+    {
+        var room = Room();
+        int Handout() => JsonDocument.Parse(room.StateJson(null)).RootElement.GetProperty("handout").GetInt32();
+        Assert.Equal(0, Handout());
+        room.SetHandout("<p>one</p>");
+        var first = Handout();
+        room.SetHandout("<p>two</p>");
+        Assert.True(Handout() > first);   // the same "true" as before would leave the old handout on the phones
+        room.SetHandout(null);
+        Assert.Equal(0, Handout());
+    }
+
+    [Fact]
+    public void A_poll_after_an_ended_one_gets_a_new_number()
+    {
+        var room = Room();
+        var a = room.StartPoll("Q1", ["x", "y"]);
+        Assert.True(room.Vote(a.Id, 0, "phone"));
+        room.EndPoll();
+        var b = room.StartPoll("Q2", ["x", "y"]);
+        Assert.NotEqual(a.Id, b.Id);                 // otherwise a phone would think it had seen the new poll already
+        Assert.False(room.Vote(a.Id, 1, "phone"));   // a vote for the old poll does not count for the new one
+        Assert.True(room.StartPoll("Q3", Enumerable.Range(1, 20).Select(i => i.ToString())).Options.Count <= LiveRoom.MaxOptions);
+    }
+
+    [Fact]
+    public void Every_place_of_the_synopsis_lies_in_its_gospel()
+    {
+        foreach (var s in Synopsis.All)
+            foreach (var (book, ranges) in s.Places)
+                foreach (var r in ranges)
+                {
+                    var where = $"{s.Number} {s.Titles[0]} {book} {r}";
+                    Assert.True(r.Chapter >= 1 && r.ToChapter <= AudioBible.Chapters(book), where);
+                    Assert.True(r.ToChapter > r.Chapter || r.To >= r.From, where);
+                    Assert.True(r.From >= 1 && r.To >= 1 && r.From <= 80 && r.To <= 80, where);
+                }
+        Assert.All(Synopsis.All, s => Assert.All(s.Titles, t => Assert.False(string.IsNullOrWhiteSpace(t))));
+    }
+
+    [Fact]
+    public void An_esword_row_with_a_number_as_text_comes_in_and_a_broken_row_is_left_out()
+    {
+        var path = Path.Combine(_dir, "mixed.cmtx");
+        using (var con = new SqliteConnection($"Data Source={path};Pooling=False"))
+        {
+            con.Open();
+            using var c = con.CreateCommand();
+            c.CommandText = "CREATE TABLE VerseCommentary(Book, ChapterBegin, VerseBegin, ChapterEnd, VerseEnd, Comments TEXT);" +
+                            "INSERT INTO VerseCommentary VALUES('43','3','16','3','16','as text');" +
+                            "INSERT INTO VerseCommentary VALUES('x',3,16,3,16,'broken');" +
+                            "INSERT INTO VerseCommentary VALUES(43,3,17,3,18,'a range');";
+            c.ExecuteNonQuery();
+        }
+        var read = EswordNotes.Read(path);
+        Assert.Equal(2, read.Notes.Count);
+        Assert.Contains(read.Notes, n => n.Ref == new VerseRef("JHN", 3, 16) && n.Text == "as text");
+        Assert.Contains(read.Notes, n => n.Ref == new VerseRef("JHN", 3, 17) && n.EndVerse == 18);
     }
 }
