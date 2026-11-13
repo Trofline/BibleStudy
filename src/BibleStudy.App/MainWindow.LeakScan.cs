@@ -27,7 +27,11 @@ public partial class MainWindow
             if (string.IsNullOrWhiteSpace(s) || s.Length < 3 || !GermanWords.IsMatch(s)) return;
             found.TryAdd(s.Length > 160 ? s[..160] + "…" : s, where);
         }
+#if ANDROID
+        IEnumerable<AppWindow> windows = [this];
+#else
         var windows = (Application.Current?.ApplicationLifetime as IClassicDesktopStyleApplicationLifetime)?.Windows ?? [this];
+#endif
         foreach (var w in windows)
         {
             var where = w.Title ?? w.GetType().Name;

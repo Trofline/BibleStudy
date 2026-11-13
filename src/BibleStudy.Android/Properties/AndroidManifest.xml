@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+  <!-- Bibles, commentaries and updates are loaded from the internet; the live Bible study serves a page in the Wi-Fi -->
+  <uses-permission android:name="android.permission.INTERNET" />
+  <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+  <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
+  <application android:allowBackup="true" android:supportsRtl="true" android:usesCleartextTraffic="true" android:label="BibleStudy" android:enableOnBackInvokedCallback="true">
+    <!-- exports (PDF, HTML, pictures) are handed to other apps through this -->
+    <provider android:name="androidx.core.content.FileProvider" android:authorities="de.trofline.biblestudy.files" android:exported="false" android:grantUriPermissions="true">
+      <meta-data android:name="android.support.FILE_PROVIDER_PATHS" android:resource="@xml/file_paths" />
+    </provider>
+  </application>
+  <queries>
+    <intent><action android:name="android.intent.action.TTS_SERVICE" /></intent>
+    <intent><action android:name="android.intent.action.VIEW" /><data android:scheme="https" /></intent>
+  </queries>
+</manifest>

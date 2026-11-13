@@ -1,3 +1,4 @@
+#if !ANDROID
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -171,3 +172,4 @@ sealed class AudioPlayer : IDisposable
 
     public void Dispose() => Stop();
 }
+#endif

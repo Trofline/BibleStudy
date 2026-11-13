@@ -124,8 +124,11 @@ public partial class MainWindow
 
     Border MakeVerseBox(Control content, int n, bool foreign = false)
     {
+        // the whole verse can be clicked and touched, also between its lines (text alone only counts where its letters are; a finger often lands between them)
+        if (content is Panel inner && inner.Background is null) inner.Background = Brushes.Transparent;
         var box = new Border { Child = content, Padding = new(10, 3), CornerRadius = new(8), BorderThickness = new(3, 0, 0, 0), BorderBrush = Brushes.Transparent, Classes = { "verse" } };
         box.AddHandler(PointerPressedEvent, (object? _, PointerPressedEventArgs e) => OnVersePressed(n, e, foreign), RoutingStrategies.Tunnel, handledEventsToo: true);
+        if (!foreign) box.AddHandler(PointerPressedEvent, (object? _, PointerPressedEventArgs e) => StartLongPress(n, box, e), RoutingStrategies.Tunnel, handledEventsToo: true);
         return box;
     }
 

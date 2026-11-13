@@ -33,7 +33,8 @@ public partial class MainWindow
             Title = L("Vaults exportieren"), SuggestedFileName = $"BibleStudy-Notizen-{DateTime.Now:yyyyMMdd}.zip",
             FileTypeChoices = [new FilePickerFileType("ZIP-Archiv") { Patterns = ["*.zip"] }],
         });
-        if (file?.TryGetLocalPath() is not { } path) return;
+        await using var target = await file.SaveTargetAsync();
+        if (target?.Path is not { } path) return;
         WriteVaultsZip(path, choice.Vaults.Select(n => (n, n)).ToList(), false, choice.Bibles);
     }
 

@@ -32,7 +32,7 @@ public sealed record ExtraColumn(ComboBox Lang, ComboBox Trans, Control Root, Bu
     public (string Book, int Chapter)? Own { get; set; }
 }
 
-public partial class MainWindow : Window
+public partial class MainWindow : AppWindow
 {
     const int MaxExtras = 3;
     const int ConcordanceLimit = 3000;
@@ -302,7 +302,7 @@ public partial class MainWindow : Window
         Home.IsVisible = true; ReaderHost.IsVisible = false; GraphPane.IsVisible = false; MapPane.IsVisible = false; TimelinePane.IsVisible = false; FamilyPane.IsVisible = false; KnowledgePane.IsVisible = false;
     }
 
-    void ShowReader() { if (_activeWork is not null) ShowWork(null); EnsureReaderPane(); UpdateReadBar(); Home.IsVisible = false; GraphPane.IsVisible = false; MapPane.IsVisible = false; TimelinePane.IsVisible = false; FamilyPane.IsVisible = false; KnowledgePane.IsVisible = false; ReaderHost.IsVisible = true; OnReaderShown(); }
+    void ShowReader() { ClosePanelOnPhone(); if (_activeWork is not null) ShowWork(null); EnsureReaderPane(); UpdateReadBar(); Home.IsVisible = false; GraphPane.IsVisible = false; MapPane.IsVisible = false; TimelinePane.IsVisible = false; FamilyPane.IsVisible = false; KnowledgePane.IsVisible = false; ReaderHost.IsVisible = true; OnReaderShown(); }
 
     async Task GoToAsync(string bookId, int chapter, int? verse = null)
     {

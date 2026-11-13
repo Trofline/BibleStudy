@@ -102,7 +102,8 @@ public partial class MainWindow
                 Title = L("Gast-Arbeit sichern?"), SuggestedFileName = $"BibleStudy-Gast-{DateTime.Now:yyyyMMdd-HHmm}.zip",
                 FileTypeChoices = [new FilePickerFileType("ZIP-Archiv") { Patterns = ["*.zip"] }],
             });
-            if (file?.TryGetLocalPath() is not { } path) return;   // cancelled: nothing is lost, the program stays open
+            await using var target = await file.SaveTargetAsync();
+        if (target?.Path is not { } path) return;   // cancelled: nothing is lost, the program stays open
             SaveGuestWorkTo(path, changed);
             if (!File.Exists(path)) return;   // the message in the settings says why
         }

@@ -51,7 +51,7 @@ public partial class MainWindow
         _matBuilt = true;
 
         // left: the folder and its files
-        var pick = new Button { Classes = { "primary" }, Content = L("Ordner wählen …"), HorizontalAlignment = HorizontalAlignment.Stretch, HorizontalContentAlignment = HorizontalAlignment.Center };
+        var pick = new Button { Classes = { "primary" }, Content = OperatingSystem.IsAndroid() ? L("Dateien hinzufügen …") : L("Ordner wählen …"), HorizontalAlignment = HorizontalAlignment.Stretch, HorizontalContentAlignment = HorizontalAlignment.Center };
         pick.Click += async (_, _) => await PickMaterialsFolderAsync();
         var refresh = new Button { Classes = { "tool" }, Width = 32, Height = 32, Content = new Icon { Data = Geometry.Parse("M21 12a9 9 0 1 1-3-6.7L21 8 M21 3v5h-5"), IconSize = 16 } };
         ToolTip.SetTip(refresh, L("Ordner neu einlesen"));
@@ -128,11 +128,36 @@ public partial class MainWindow
 
     async Task PickMaterialsFolderAsync()
     {
+        if (OperatingSystem.IsAndroid()) { await AddMaterialFilesAsync(); return; }
         var start = Directory.Exists(_settings.MaterialsFolder) ? await StorageProvider.TryGetFolderFromPathAsync(_settings.MaterialsFolder) : null;
         var folders = await StorageProvider.OpenFolderPickerAsync(new FolderPickerOpenOptions { Title = L("Ordner mit den Materialien wählen"), SuggestedStartLocation = start });
-        if (folders.Count == 0 || folders[0].TryGetLocalPath() is not { } p) return;
+        if (folders.Count == 0) return;
+        if (folders[0].LocalPath() is not { } p) { StatusText.Text = StorageFiles.NoFolderHere; return; }
         _settings.MaterialsFolder = p; SaveSettings();
         RefreshMaterialsTree();
+    }
+
+    /// <summary>
+    /// Android: a folder of another app has no path the program could read, so the papers are chosen as files (several at once) and copied
+    /// into the materials folder of the app; they stay there, also offline.
+    /// </summary>
+    async Task AddMaterialFilesAsync()
+    {
+        var files = await StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions { Title = L("Materialien hinzufügen"), AllowMultiple = true });
+        if (files.Count == 0) return;
+        var dir = Path.Combine(_root, "materials");
+        Directory.CreateDirectory(dir);
+        var added = 0;
+        foreach (var f in files)
+        {
+            if (await f.LocalPathAsync() is not { } copy) continue;
+            var target = Path.Combine(dir, Path.GetFileName(copy));
+            try { File.Copy(copy, target, overwrite: true); added++; }
+            catch (IOException ex) { ErrorLog.Write(ex); }
+        }
+        _settings.MaterialsFolder = dir; SaveSettings();
+        RefreshMaterialsTree();
+        StatusText.Text = L("{0} Dateien zu den Materialien hinzugefügt.", added);
     }
 
     /// <summary>Reads the folder again and shows its files as a tree (folders first, then files, each sorted by name).</summary>
@@ -629,7 +654,7 @@ public partial class MainWindow
 
     void OpenExternally(string path)
     {
-        try { Process.Start(new ProcessStartInfo(path) { UseShellExecute = true }); }
+        try { Shell.Open(path); }
         catch (Exception ex) { StatusText.Text = L("Konnte nicht geöffnet werden: {0}", ex.Message); }
     }
 

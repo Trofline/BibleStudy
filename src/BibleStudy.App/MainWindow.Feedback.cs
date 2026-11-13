@@ -83,7 +83,7 @@ public partial class MainWindow
 
     static void OpenUrl(string url)
     {
-        try { Process.Start(new ProcessStartInfo(url) { UseShellExecute = true }); } catch { /* no browser */ }
+        try { Shell.Open(url); } catch { /* no browser */ }
     }
 
     static string? StartMenuLink() => OperatingSystem.IsWindows() ? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Programs), "BibleStudy.lnk") : null;

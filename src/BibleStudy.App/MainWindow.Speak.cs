@@ -109,7 +109,7 @@ public partial class MainWindow
 
     async Task ToggleSpeakAsync()
     {
-        if (!OperatingSystem.IsWindows()) { StatusText.Text = L("Vorlesen ist derzeit nur unter Windows verfügbar."); SpeakBtn.IsChecked = false; return; }
+        if (!OperatingSystem.IsWindows() && !OperatingSystem.IsAndroid()) { StatusText.Text = L("Vorlesen ist derzeit nur unter Windows verfügbar."); SpeakBtn.IsChecked = false; return; }
         if (_speechMode) { StopSpeak(); return; }
         if (_curChapterData is null || TranslationBox.SelectedItem is not TranslationInfo t) { SpeakBtn.IsChecked = false; return; }
         var verses = _selected is int v ? _curChapterData.Verses.Where(x => x.Number >= v) : _curChapterData.Verses;

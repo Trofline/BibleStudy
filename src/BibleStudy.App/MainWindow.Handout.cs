@@ -265,7 +265,7 @@ public partial class MainWindow
         var win = new Window { Title = L("Exportieren"), Width = 780, SizeToContent = SizeToContent.Height, Background = Res("BsSurface"), Icon = Icon, WindowStartupLocation = WindowStartupLocation.CenterOwner, CanResize = false };
 
         // ---- the look of the sheet (print and HTML)
-        var looks = new UniformGrid { Columns = 4, Margin = new(0, 0, 0, 6) };
+        var looks = new UniformGrid { Columns = IsPhone ? 2 : 4, Margin = new(0, 0, 0, 6) };
         var cards = new List<(string Key, Border Card)>();
         void Mark() { foreach (var (k, c) in cards) { c.BorderThickness = new(k == s.HandoutStyle ? 2.5 : 1); c.BorderBrush = k == s.HandoutStyle ? Res("BsAccent") : Res("BsBorder"); } }
         foreach (var (key, name, about) in HandoutLooks())

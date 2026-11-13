@@ -17,6 +17,7 @@ public partial class App : Application
     public override void OnFrameworkInitializationCompleted()
     {
         ErrorLog.Install();
+#if !ANDROID
         Window.WindowOpenedEvent.AddClassHandler<Window>((w, _) => KeepOnScreen(w));
         // every submenu shows the same "›" (the theme's own arrow is hidden in App.axaml, it was cut off at the edge)
         Control.LoadedEvent.AddClassHandler<MenuItem>((m, _) => { if (m.ItemCount > 0 && m.Header is string s) m.Header = MainWindow.SubHeader(s); });
@@ -74,10 +75,53 @@ public partial class App : Application
                 }
             }
         }
+#endif
 
+#if ANDROID
+        if (ApplicationLifetime is ISingleViewApplicationLifetime single) StartAndroid(single);
+#endif
         base.OnFrameworkInitializationCompleted();
     }
 
+#if ANDROID
+    static MainWindow? _main;
+
+    /// <summary>
+    /// Android: one view, no windows. The terms come first and alone, as on a desktop; then the program. The view of the activity is
+    /// set once (Android does not take a second one well); what it shows is changed inside it.
+    /// </summary>
+    static void StartAndroid(ISingleViewApplicationLifetime single)
+    {
+        var host = new ContentControl();
+        single.MainView = host;
+        var path = Path.Combine(AppPaths.Root, "settings.json");
+        AppSettings st;
+        try { st = AppSettings.Load(path); } catch { st = new(); }
+        try { Loc.Use(st.Language); } catch { Loc.Use(null); }
+        if (st.TermsAccepted.StartsWith(TermsWindow.Version + "|", StringComparison.Ordinal)) { StartMainAndroid(host); return; }
+        var terms = new TermsWindow { IsRootView = true };
+        terms.Closed += (_, _) =>
+        {
+            if (!terms.Accepted) { Android.OS.Process.KillProcess(Android.OS.Process.MyPid()); return; }
+            st.TermsAccepted = $"{TermsWindow.Version}|{DateTime.Now:yyyy-MM-dd}";
+            try { st.Save(path); } catch { /* asked again next time */ }
+            StartMainAndroid(host);
+        };
+        host.Content = terms;
+    }
+
+    /// <summary>"Starting …" at once, the program right after: built inside a tap or before the first picture, Android would call the app frozen.</summary>
+    static void StartMainAndroid(ContentControl host)
+    {
+        host.Content = new TextBlock { Text = L("Starte …"), HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center, VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center };
+        Avalonia.Threading.DispatcherTimer.RunOnce(() => host.Content = _main = new MainWindow(), TimeSpan.FromMilliseconds(50));
+    }
+
+    /// <summary>The activity stops (the app goes to the background): save what would be saved when the window closes.</summary>
+    public static void SaveForBackground() => _main?.SaveForBackground();
+#endif
+
+#if !ANDROID
     /// <summary>A window made for a big screen must not reach beyond a small one: the other windows (not the main window, which has its own rules) never grow past the usable area and are moved back inside it.</summary>
     static void KeepOnScreen(Window w)
     {
@@ -119,4 +163,5 @@ public partial class App : Application
             DeltaFinish.Confirm();
         }, Avalonia.Threading.DispatcherPriority.Background);
     }
+#endif
 }

@@ -31,7 +31,8 @@ public partial class MainWindow
     async Task ExportObsidianAsync()
     {
         var picked = await StorageProvider.OpenFolderPickerAsync(new FolderPickerOpenOptions { Title = L("Ordner für den Obsidian-Export wählen"), AllowMultiple = false });
-        if (picked.Count == 0 || picked[0].TryGetLocalPath() is not { } parent) return;
+        if (picked.Count == 0) return;
+        if (picked[0].LocalPath() is not { } parent) { StatusText.Text = StorageFiles.NoFolderHere; return; }
         // a new folder every time: files of an older export (with other names) must not mix with this one
         var root = Path.Combine(parent, SafeFileName($"BibleStudy – {_vault.Name}"));
         if (Directory.Exists(root)) root += " " + DateTime.Now.ToString("yyyy-MM-dd HH-mm-ss");
@@ -43,7 +44,7 @@ public partial class MainWindow
             var done = L("{0} Dateien geschrieben nach {1}. In Obsidian: „Ordner als Vault öffnen“.", count, root);
             BackupInfo.Text = StatusText.Text = done;
             if (_exBuilt) ExNote(done, false);
-            try { Process.Start(new ProcessStartInfo(root) { UseShellExecute = true }); } catch { /* the path is in the status line */ }
+            try { Shell.Open(root); } catch { /* the path is in the status line */ }
         }
         catch (Exception ex)
         {

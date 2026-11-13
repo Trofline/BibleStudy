@@ -39,6 +39,7 @@ public partial class MainWindow
         InitTour();
         InitPatchNotes();
         InitTopBar();
+        InitPhone();
         InitReadBarFit();
         InitReadingAids();
         InitCommentarySearch();
@@ -172,14 +173,14 @@ public partial class MainWindow
         if (!manual && (_askedUpdate == info.Version || !IsVisible)) return;
         _askedUpdate = info.Version;
 
-        var plan = await PlanQuickUpdateAsync(info);
+        var plan = OperatingSystem.IsAndroid() ? null : await PlanQuickUpdateAsync(info);   // Android: the new app comes from the download page
         var canInstall = plan is not null || (OperatingSystem.IsWindows() && (AppPaths.IsInstalled || AppPaths.IsPortable));   // the full package installs itself on Windows only; elsewhere the download page opens
         if (!canInstall)
         {
             var open = await AskAsync(L("Neue Version {0}", info.Version), L("BibleStudy {0} ist erschienen (du hast {1}). Auf diesem System lädst du das neue Paket selbst herunter. Soll die Download-Seite geöffnet werden?", info.Version, AppPaths.Version), L("Seite öffnen"), L("Später"));
             // a quick release has no packages: the last full release has them
             var downloads = info.DownloadUrl.Length > 0 ? info.PageUrl : $"https://github.com/{Updater.Repo}/releases/latest";
-            if (open == 0) { try { Process.Start(new ProcessStartInfo(downloads) { UseShellExecute = true }); } catch { /* no browser */ } }
+            if (open == 0) { try { Shell.Open(downloads); } catch { /* no browser */ } }
             return;
         }
         var question = L("BibleStudy {0} ist erschienen (du hast {1}). Möchtest du es jetzt installieren?\n\nVorher wird eine Sicherung deiner Daten angelegt, danach startet das Programm neu. Ohne deine Zustimmung wird nichts installiert.", info.Version, AppPaths.Version);

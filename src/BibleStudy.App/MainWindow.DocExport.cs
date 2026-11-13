@@ -62,7 +62,8 @@ public partial class MainWindow
             Title = L("Dokument als HTML speichern"), SuggestedFileName = SafeName(title, L("Dokument")) + ".html", DefaultExtension = "html",
             FileTypeChoices = [new FilePickerFileType("HTML") { Patterns = ["*.html"] }],
         });
-        if (file?.TryGetLocalPath() is not { } path) return;
+        await using var target = await file.SaveTargetAsync();
+        if (target?.Path is not { } path) return;
         var html = await HandoutHtmlAsync(title, body, tags, id, linked, false);   // the same designed sheet as for printing, with its links
         try
         {
@@ -138,7 +139,8 @@ public partial class MainWindow
         var (title, body, tags, id, linked) = CurrentDocumentForExport();
         if (title.Length == 0 && body.Trim().Length == 0) { DocInfo.Text = L("Nichts zu exportieren."); return; }
         var folders = await StorageProvider.OpenFolderPickerAsync(new FolderPickerOpenOptions { Title = L("Ordner für den Markdown-Export wählen") });
-        if (folders.Count == 0 || folders[0].TryGetLocalPath() is not { } parent) return;
+        if (folders.Count == 0) return;
+        if (folders[0].LocalPath() is not { } parent) { StatusText.Text = StorageFiles.NoFolderHere; return; }
         try
         {
             // a folder of its own, so the files of the linked documents never land between other files

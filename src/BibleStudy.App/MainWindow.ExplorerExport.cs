@@ -94,7 +94,7 @@ public partial class MainWindow
             try
             {
                 if (OperatingSystem.IsWindows()) Process.Start("explorer.exe", "/select,\"" + path + "\"");
-                else Process.Start(new ProcessStartInfo(ExportFolder) { UseShellExecute = true });
+                else Shell.Open(ExportFolder);
             }
             catch { /* the path is in the status line */ }
         }

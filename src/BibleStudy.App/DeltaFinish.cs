@@ -116,7 +116,9 @@ static class DeltaFinish
         {
             foreach (var part in new[] { typeof(DeltaFinish).Assembly, typeof(AppPaths).Assembly })
                 foreach (var name in part.GetReferencedAssemblies()) System.Reflection.Assembly.Load(name);
+#if !ANDROID
             _ = Program.BuildAvaloniaApp();
+#endif
             Confirm(trialOnly: true);
             return 0;
         }

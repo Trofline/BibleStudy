@@ -16,7 +16,7 @@ public partial class MainWindow
 
     void ShowNewKeysTip()
     {
-        if (_settings.TipShown == KeysTipId || _touring) return;
+        if (_settings.TipShown == KeysTipId || _touring || OperatingSystem.IsAndroid()) return;   // a phone has no keyboard shortcuts
         if (!IsVisible || OwnedWindows.Count > 0) { DispatcherTimer.RunOnce(ShowNewKeysTip, TimeSpan.FromSeconds(5)); return; }
         _settings.TipShown = KeysTipId; SaveSettings();
 

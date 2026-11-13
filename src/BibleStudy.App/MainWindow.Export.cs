@@ -48,7 +48,7 @@ public partial class MainWindow
         var path = Path.Combine(ExportFolder, fileName);
         File.WriteAllText(path, html, new UTF8Encoding(false));
         StatusText.Text = statusPrefix + path;
-        try { Process.Start(new ProcessStartInfo(path) { UseShellExecute = true }); } catch { /* no default browser: the path is in the status line */ }
+        try { Shell.Open(path); } catch { /* no default browser: the path is in the status line */ }
     }
 
     /// <summary>The little Markdown the editor uses: headings, quotes, lists, bold, italic; [[links]] become plain titles.</summary>

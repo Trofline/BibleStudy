@@ -68,6 +68,7 @@ public partial class MainWindow
         MaxBtn.Click += (_, _) => ToggleMaximize();
         CloseBtn.Click += (_, _) => Close();
 
+#if !ANDROID
         // window position and start mode
         if ((_settings.RememberWindow || _resuming) && _settings.WindowBounds is { } b && Screens.All.Any(s => s.WorkingArea.Contains(new PixelPoint(b.X + 40, b.Y + 20))))
         {
@@ -84,6 +85,7 @@ public partial class MainWindow
             Width = Math.Min(Width, room.Width); Height = Math.Min(Height, room.Height);
         }
         if (_settings.StartMode == "Maximized" && !_resuming) WindowState = WindowState.Maximized;
+#endif
         var startupDone = false;
         Opened += (_, _) =>
         {
@@ -163,6 +165,16 @@ public partial class MainWindow
         CloseAllDetached();
         SaveSettings();
         _tray?.Dispose();
+    }
+
+    /// <summary>
+    /// On Android the app is not closed but sent to the background, and Android may end it there without asking: what is typed and
+    /// where the reader stands is saved every time, as when the window closes on a desktop.
+    /// </summary>
+    public void SaveForBackground()
+    {
+        try { AutoSaveDocument(); SaveNoteDraft(); } catch (Exception ex) { ErrorLog.Write(ex); }
+        try { _settings.LastLayout = CaptureLayout(); SaveSettings(); } catch (Exception ex) { ErrorLog.Write(ex); }
     }
 
     // ---- tray ---------------------------------------------------------------------------------------------------------

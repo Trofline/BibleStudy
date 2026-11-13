@@ -38,6 +38,6 @@ public partial class MainWindow
         var path = Path.Combine(ExportFolder, $"{name}.png");
         bmp.Save(path);
         StatusText.Text = L("Bild gespeichert: {0}", path);
-        try { Process.Start(new ProcessStartInfo(path) { UseShellExecute = true }); } catch { /* no viewer: the path is in the status line */ }
+        try { Shell.Open(path); } catch { /* no viewer: the path is in the status line */ }
     }
 }

@@ -83,7 +83,7 @@ public partial class MainWindow
         _exUpBtn.Click += (_, _) => { if (_exInTrash) ExNavigate(_exFolder); else if (_exFolder is long f) ExNavigate(FolderById(f)?.ParentId); };
         var newFolder = new Button { Content = L("＋ Neuer Ordner"), Classes = { "primary" }, Margin = new(8, 0, 0, 0), VerticalAlignment = VerticalAlignment.Center };
         newFolder.Click += (_, _) => AskFolderName(newFolder, L("Neuer Ordner"), "", n => { _vault.AddFolder(n); var made = _vault.GetFolders().Where(f => f.Name == n.Trim() && f.ParentId is null).MaxBy(f => f.Id); if (made is not null && _exFolder is long p) _vault.SetFolderParent(made.Id, p); AfterExplorerChange(); });
-        _exSearch = new TextBox { PlaceholderText = L("In diesem Ordner suchen …"), Width = 220, Margin = new(8, 0, 0, 0), VerticalAlignment = VerticalAlignment.Center };
+        _exSearch = new TextBox { PlaceholderText = L("In diesem Ordner suchen …"), Width = IsPhone ? 120 : 220, Margin = new(8, 0, 0, 0), VerticalAlignment = VerticalAlignment.Center };
         _exSearch.TextChanged += (_, _) => FillExplorerList();
         _exPath = new StackPanel { Orientation = Orientation.Horizontal, VerticalAlignment = VerticalAlignment.Center, Spacing = 2 };
         var pathBox = new Border
@@ -105,7 +105,7 @@ public partial class MainWindow
         treeBox.Bind(Border.BackgroundProperty, this.GetResourceObservable("BsSurface"));
         treeBox.Bind(Border.BorderBrushProperty, this.GetResourceObservable("BsBorder"));
 
-        var head = _exHead = new Grid { ColumnDefinitions = new("28,*,140,110"), Margin = new(8, 6, 12, 4) };
+        var head = _exHead = new Grid { ColumnDefinitions = new(ExColumns), Margin = new(8, 6, 12, 4) };
         _exList = new StackPanel { Margin = new(6, 0, 6, 12) };
         _exEmpty = new TextBlock { Classes = { "caption" }, TextWrapping = TextWrapping.Wrap, Margin = new(14, 10), IsVisible = false };
         var listScroll = new ScrollViewer { Content = new StackPanel { Children = { _exList, _exEmpty } }, Background = Brushes.Transparent };
@@ -138,7 +138,7 @@ public partial class MainWindow
         listScroll.PointerPressed += (_, e) => { if (e.Source == listScroll || e.Source is StackPanel) { _exSel.Clear(); var trash = _trSel.Count > 0; _trSel.Clear(); if (trash) FillExplorerList(); else ExShowSelection(); } };
 
         var split = new GridSplitter { Width = 8, Background = Brushes.Transparent, ResizeDirection = GridResizeDirection.Columns };
-        var body = new Grid { ColumnDefinitions = new("240,8,*"), Margin = new(14, 0, 14, 0) };
+        var body = _exBody = new Grid { ColumnDefinitions = new(IsPhone ? "0,0,*" : "240,8,*"), Margin = new(14, 0, 14, 0) };
         Grid.SetColumn(split, 1); Grid.SetColumn(listBox, 2);
         body.Children.Add(treeBox); body.Children.Add(split); body.Children.Add(listBox);
 
@@ -544,10 +544,26 @@ public partial class MainWindow
     }
 
 
+    Grid? _exBody;
+
+    /// <summary>The columns of the list: on a phone only the name (the folder tree goes away too, the path above leads through the folders).</summary>
+    string ExColumns => IsPhone ? "28,*,0,0" : "28,*,140,110";
+
+    /// <summary>The explorer follows a turn of the phone (or a tablet held the other way).</summary>
+    void FitExplorerToScreen()
+    {
+        if (_exBody is null || _exHead is null || _exSearch is null) return;
+        _exBody.ColumnDefinitions = new(IsPhone ? "0,0,*" : "240,8,*");
+        _exHead.ColumnDefinitions = new(ExColumns);
+        _exSearch.Width = IsPhone ? 120 : 220;
+        _exBody.Margin = IsPhone ? new(6, 0, 6, 0) : new(14, 0, 14, 0);
+        FillExplorerList();
+    }
+
     Control ListRow(ExItem item, List<ExItem> all)
     {
 
-        var grid = new Grid { ColumnDefinitions = new("28,*,140,110") };
+        var grid = new Grid { ColumnDefinitions = new(ExColumns) };
         Control lead = item.Kind switch
         {
             ExKind.Folder => new Icon { Data = Geometry.Parse(FolderIcon), IconSize = 16 },

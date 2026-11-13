@@ -192,7 +192,8 @@ public partial class MainWindow
                 Title = L("Als CSV speichern"), SuggestedFileName = $"{L("Wort-Rechner")}-{includeBox.Text?.Trim()}.csv".Replace(' ', '_'),
                 FileTypeChoices = [new FilePickerFileType("CSV") { Patterns = ["*.csv"] }],
             });
-            if (file?.TryGetLocalPath() is not { } path) return;
+            await using var target = await file.SaveTargetAsync();
+        if (target?.Path is not { } path) return;
             try { await File.WriteAllTextAsync(path, CalcCsv(table), new UTF8Encoding(true)); info.Text = L("Gespeichert: {0}", path); }
             catch (Exception ex) { info.Text = L("Speichern fehlgeschlagen: ") + ex.Message; }
         };

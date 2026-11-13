@@ -27,7 +27,8 @@ public static class AppPaths
     {
         get
         {
-            var v = Assembly.GetEntryAssembly()?.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion ?? "0.0.0";
+            var app = Assembly.GetEntryAssembly() ?? AppDomain.CurrentDomain.GetAssemblies().FirstOrDefault(a => a.GetName().Name == "BibleStudy.App");
+            var v = app?.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion ?? "0.0.0";
             var plus = v.IndexOf('+');
             return plus >= 0 ? v[..plus] : v;
         }

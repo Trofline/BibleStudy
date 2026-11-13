@@ -37,7 +37,9 @@ sealed class SplashWindow : Window
         Width = 440; Height = 360; CanResize = false; ShowInTaskbar = false; Topmost = true;
         WindowDecorations = WindowDecorations.None;
         WindowStartupLocation = WindowStartupLocation.CenterScreen;
+#if !ANDROID
         TransparencyLevelHint = [WindowTransparencyLevel.Transparent];
+#endif
         Background = Brushes.Transparent;
         Transitions = [new DoubleTransition { Property = OpacityProperty, Duration = TimeSpan.FromMilliseconds(160), Easing = new CubicEaseOut() }];
 

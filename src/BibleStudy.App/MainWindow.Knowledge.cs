@@ -185,7 +185,7 @@ public partial class MainWindow
         var files = await StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions { Title = L("Datei verknüpfen"), AllowMultiple = true });
         foreach (var file in files)
         {
-            if (file.TryGetLocalPath() is not { } path) continue;
+            if (await file.LocalPathAsync() is not { } path) continue;
             var body = "";
             var ext = System.IO.Path.GetExtension(path).ToLowerInvariant();
             if (ext is ".txt" or ".md" or ".markdown" && new FileInfo(path).Length < 2_000_000) body = await File.ReadAllTextAsync(path); // text files become searchable
@@ -211,7 +211,7 @@ public partial class MainWindow
         if (RunnableExtensions.Contains(System.IO.Path.GetExtension(path))
             && await AskAsync(L("Programm starten?"), L("Die verknüpfte Datei ist ein Programm oder Skript:\n{0}\n\nStarte sie nur, wenn du sie selbst verknüpft hast und ihr vertraust.", path), L("Abbrechen"), L("Starten")) != 1)
             return;
-        try { Process.Start(new ProcessStartInfo(path) { UseShellExecute = true }); }
+        try { Shell.Open(path); }
         catch (Exception ex) { DocPathText.Text = L("Öffnen nicht möglich: ") + ex.Message; }
     }
 

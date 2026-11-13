@@ -31,7 +31,8 @@ public partial class MainWindow
         BackupFolderBtn.Click += async (_, _) =>
         {
             var folders = await StorageProvider.OpenFolderPickerAsync(new FolderPickerOpenOptions { Title = L("Sicherungsordner wählen …") });
-            if (folders.Count == 0 || folders[0].TryGetLocalPath() is not { } p) return;
+            if (folders.Count == 0) return;
+        if (folders[0].LocalPath() is not { } p) { StatusText.Text = StorageFiles.NoFolderHere; return; }
             _settings.BackupFolder = p; SaveSettings(); ShowBackupState();
         };
         BackupSyncBtn.Click += (_, _) => ShowSyncthingMenu();

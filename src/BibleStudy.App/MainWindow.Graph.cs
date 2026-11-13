@@ -107,7 +107,7 @@ public partial class MainWindow
     void SetPanelOpen(bool open)
     {
         var opening = open && !SidePanel.IsVisible;
-        SidePanel.IsVisible = SideSplitter.IsVisible = open;
+        SidePanel.IsVisible = open; SideSplitter.IsVisible = open && !IsPhone;
         if (opening) AnimateIn(SidePanel, 48, 0);
         if (opening && _notesStale && SideTabs.SelectedIndex == 2) RefreshNotesTree();
         PanelBtn.IsChecked = open;

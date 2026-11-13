@@ -28,7 +28,7 @@ public partial class MainWindow
             var path = Path.Combine(ExportFolder, _lastImportReportName);
             File.WriteAllText(path, _lastImportReport, new System.Text.UTF8Encoding(false));
             ImportBibleInfo.Text = L("Prüfbericht gespeichert: {0}. Gib ihn zusammen mit der Quelldatei an eine KI und lade die korrigierte USFM-Datei wieder hier hinein.", path);
-            if (!NoShell) try { System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(ExportFolder) { UseShellExecute = true }); } catch { }
+            if (!NoShell) try { Shell.Open(ExportFolder); } catch { }
         };
         _ = RefreshLocalBibleBoxAsync();
     }
@@ -48,7 +48,7 @@ public partial class MainWindow
             Title = L("Bibeldatei wählen"), AllowMultiple = false,
             FileTypeFilter = [new FilePickerFileType(L("Bibeldateien")) { Patterns = ["*.bblx", "*.mybible", "*.xml", "*.osis", "*.usx", "*.usfm", "*.sfm", "*.zip", "*.md", "*.markdown", "*.txt", "*.csv", "*.tsv", "*.json", "*.html", "*.htm", "*.xhtml", "*.epub", "*.docx", "*.odt", "*.rtf", "*.fb2", "*.pdf"] }],
         });
-        if (files.Count == 0 || files[0].TryGetLocalPath() is not { } path) return;
+        if (files.Count == 0 || await files[0].LocalPathAsync() is not { } path) return;
         await ImportBibleCoreAsync(path, string.IsNullOrWhiteSpace(ImportLangBox.Text) ? BibleStudy.Core.Loc.Code : ImportLangBox.Text.Trim(), ConfirmReplaceAsync);
     }
 

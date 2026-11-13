@@ -1,35 +1,79 @@
 <Project Sdk="Microsoft.NET.Sdk">
-  <!-- BibleStudy for Android: read translations, mark verses in colors, mark chapters as read. Same vault file as the desktop program. -->
+  <!--
+    BibleStudy for Android: the whole program, built from the same sources as the desktop program (src/BibleStudy.App).
+    Its main window becomes the one view of the app; what only a desktop has (tray, second screen, installer, MCP server,
+    Windows speech) is left out there with #if ANDROID.
+  -->
   <PropertyGroup>
     <TargetFramework>net10.0-android</TargetFramework>
-    <SupportedOSPlatformVersion>24</SupportedOSPlatformVersion>
+    <SupportedOSPlatformVersion>26</SupportedOSPlatformVersion>
     <OutputType>Exe</OutputType>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
+    <RootNamespace>BibleStudy.App</RootNamespace>
+    <AssemblyName>BibleStudy.App</AssemblyName>
     <ApplicationId>de.trofline.biblestudy</ApplicationId>
-    <ApplicationVersion>1</ApplicationVersion>
-    <ApplicationDisplayVersion>1.6.0</ApplicationDisplayVersion>
-    <Version>1.6.0</Version>
+    <ApplicationVersion>20</ApplicationVersion>
+    <ApplicationDisplayVersion>1.9.1-beta</ApplicationDisplayVersion>
+    <Version>1.9.1</Version>
+    <ApplicationTitle>BibleStudy</ApplicationTitle>
     <AndroidPackageFormat>apk</AndroidPackageFormat>
+    <!-- Release: the whole program compiled ahead of time; a phone starts it much faster than with the JIT -->
+    <RunAOTCompilation Condition="'$(Configuration)' == 'Release'">true</RunAOTCompilation>
     <AndroidEnableProfiledAot>false</AndroidEnableProfiledAot>
+    <!-- the APK always carries the whole program, also in Debug (installed with adb, not through an IDE) -->
+    <EmbedAssembliesIntoApk>true</EmbedAssembliesIntoApk>
     <RuntimeIdentifiers>android-arm64;android-x64</RuntimeIdentifiers>
     <Product>BibleStudy</Product>
-    <!-- the Android implicit usings (Button, Application …) collide with the Avalonia names -->
     <Authors>Trofline</Authors>
+    <!-- the shared sources warn about many things the desktop build already reports -->
+    <NoWarn>$(NoWarn);CA1416;CA1422;CS0618;CS0067;CS0169;CS0414;CS0649</NoWarn>
   </PropertyGroup>
+
+  <!-- Release: signed with the key of the app, which stays on this computer (never in the repository); the same key for every version,
+       so that a new APK installs over the old one -->
+  <PropertyGroup>
+    <BsKeyDir>$([System.IO.Path]::Combine($(USERPROFILE), '.biblestudy-android'))</BsKeyDir>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)' == 'Release' and Exists('$(BsKeyDir)\biblestudy.keystore')">
+    <AndroidKeyStore>true</AndroidKeyStore>
+    <AndroidSigningKeyStore>$(BsKeyDir)\biblestudy.keystore</AndroidSigningKeyStore>
+    <AndroidSigningKeyAlias>biblestudy</AndroidSigningKeyAlias>
+    <AndroidSigningStorePass>file:$(BsKeyDir)\password.txt</AndroidSigningStorePass>
+    <AndroidSigningKeyPass>file:$(BsKeyDir)\keypass.txt</AndroidSigningKeyPass>   <!-- apksigner reads one password per file -->
+    <!-- the compiled code is enough, the IL beside it would only make the APK bigger -->
+    <AndroidStripILAfterAOT>true</AndroidStripILAfterAOT>
+  </PropertyGroup>
+
   <ItemGroup>
     <PackageReference Include="Avalonia.Android" Version="12.1.4" />
+    <PackageReference Include="Avalonia.Controls.ColorPicker" Version="12.1.4" />
     <PackageReference Include="Avalonia.Themes.Fluent" Version="12.1.4" />
     <PackageReference Include="Avalonia.Fonts.Inter" Version="12.1.4" />
+    <PackageReference Include="PDFtoImage" Version="5.2.0" />
+    <PackageReference Include="QRCoder" Version="1.6.0" />
     <ProjectReference Include="..\BibleStudy.Core\BibleStudy.Core.csproj" />
   </ItemGroup>
+
+  <!-- the program itself, shared with the desktop -->
+  <ItemGroup>
+    <Compile Include="..\BibleStudy.App\**\*.cs" Exclude="..\BibleStudy.App\bin\**;..\BibleStudy.App\obj\**;..\BibleStudy.App\Program.cs;..\BibleStudy.App\UninstallWindow.cs" LinkBase="App" />
+    <AvaloniaXaml Include="..\BibleStudy.App\**\*.axaml" Exclude="..\BibleStudy.App\bin\**;..\BibleStudy.App\obj\**" LinkBase="App" />
+    <AvaloniaResource Include="..\BibleStudy.App\Assets\**" Link="Assets\%(RecursiveDir)%(Filename)%(Extension)" />
+    <EmbeddedResource Include="../../docs/handbuch/*.md" LogicalName="Handbuch/%(Filename)%(Extension)" />
+    <EmbeddedResource Include="../../docs/handbook/*.md" LogicalName="Handbook/%(Filename)%(Extension)" />
+  </ItemGroup>
+
   <ItemGroup>
     <Using Include="BibleStudy.Core.Loc" Static="true" />
+    <Using Include="BibleStudy.Core.Loc" Alias="Loc" />
+    <!-- the Android implicit usings (Button, Application …) collide with the Avalonia names -->
     <Using Remove="Android.App" />
     <Using Remove="Android.Widget" />
     <Using Remove="Android.OS" />
     <Using Remove="Android.Views" />
     <Using Remove="Android.Content" />
     <Using Remove="Android.Runtime" />
+    <Using Remove="Android.Graphics" />
   </ItemGroup>
 </Project>

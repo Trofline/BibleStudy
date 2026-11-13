@@ -197,7 +197,7 @@ public partial class MainWindow
             fly.ShowAt(stop);
         };
         LivePanel.Children.Add(new WrapPanel { ItemSpacing = 6, LineSpacing = 6, Children = { toProjector, copy, stop } });
-        LivePanel.Children.Add(new TextBlock { Text = L("Fragt Windows beim Start, ob das Programm im Netzwerk erreichbar sein darf, wähle „Zulassen“ für private Netzwerke. Öffnet sich die Seite am Handy nicht, ist es oft ein Gäste-WLAN, das Geräte voneinander trennt."), Classes = { "caption" }, TextWrapping = TextWrapping.Wrap });
+        LivePanel.Children.Add(new TextBlock { Text = OperatingSystem.IsAndroid() ? L("Lass die App dabei geöffnet: Im Hintergrund kann Android sie anhalten. Öffnet sich die Seite am Handy nicht, ist es oft ein Gäste-WLAN, das Geräte voneinander trennt.") : L("Fragt Windows beim Start, ob das Programm im Netzwerk erreichbar sein darf, wähle „Zulassen“ für private Netzwerke. Öffnet sich die Seite am Handy nicht, ist es oft ein Gäste-WLAN, das Geräte voneinander trennt."), Classes = { "caption" }, TextWrapping = TextWrapping.Wrap });
 
         // what the phones show
         LivePanel.Children.Add(Eyebrow(L("Auf den Handys")));

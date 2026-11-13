@@ -263,6 +263,6 @@ public partial class MainWindow
         var path = Path.Combine(dir, name + ".html");
         File.WriteAllText(path, sb.ToString(), new UTF8Encoding(false));
         StatusText.Text = L("Handout gespeichert: {0}", path);
-        try { Process.Start(new ProcessStartInfo(path) { UseShellExecute = true }); } catch { /* no default browser: the path is in the status line */ }
+        try { Shell.Open(path); } catch { /* no default browser: the path is in the status line */ }
     }
 }
