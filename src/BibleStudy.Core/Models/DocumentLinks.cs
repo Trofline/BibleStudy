@@ -118,9 +118,8 @@ public static partial class DocumentLinks
     public static IReadOnlyList<VerseRef> VerseRefs(string body)
     {
         var result = new List<VerseRef>();
-        foreach (Match m in Verse().Matches(body))
+        foreach (var (m, _, book) in Found(body))
         {
-            if (!TryBook(m, out var book)) continue;
             var r = new VerseRef(book, int.Parse(m.Groups["c"].Value), int.Parse(m.Groups["v"].Value));
             if (!result.Contains(r)) result.Add(r);
         }
@@ -131,9 +130,8 @@ public static partial class DocumentLinks
     public static IReadOnlyList<(VerseRef First, int EndVerse)> VerseRanges(string body)
     {
         var result = new List<(VerseRef, int)>();
-        foreach (Match m in Verse().Matches(body))
+        foreach (var (m, _, book) in Found(body))
         {
-            if (!TryBook(m, out var book)) continue;
             var first = new VerseRef(book, int.Parse(m.Groups["c"].Value), int.Parse(m.Groups["v"].Value));
             result.Add((first, m.Groups["e"].Success ? Math.Max(first.Verse, int.Parse(m.Groups["e"].Value)) : first.Verse));
         }
@@ -144,25 +142,42 @@ public static partial class DocumentLinks
     public static IReadOnlyList<(int Index, int Length, VerseRef Ref)> VerseSpans(string text)
     {
         var result = new List<(int, int, VerseRef)>();
-        foreach (Match m in Verse().Matches(text))
-            if (TryBook(m, out var book))
-                result.Add((m.Index, m.Length, new VerseRef(book, int.Parse(m.Groups["c"].Value), int.Parse(m.Groups["v"].Value))));
+        foreach (var (m, lead, book) in Found(text))
+            result.Add((m.Index + lead, m.Length - lead, new VerseRef(book, int.Parse(m.Groups["c"].Value), int.Parse(m.Groups["v"].Value))));
         return result;
+    }
+
+    /// <summary>
+    /// The references in a text with their book. A number in front that does not belong to the book ("Seite 4 Joh 3,16") is left out:
+    /// Lead is how many characters of the match stand before the reference.
+    /// </summary>
+    static IEnumerable<(Match Match, int Lead, string Book)> Found(string text)
+    {
+        foreach (Match m in Verse().Matches(text))
+        {
+            if (TryBook(m, out var book)) yield return (m, 0, book);
+            else if (Regex.Match(m.Groups["b"].Value, @"^[1-5]\s?\.?\s?") is { Success: true, Length: > 0 } lead && TryName(m.Groups["b"].Value[lead.Length..], out book))
+                yield return (m, lead.Length, book);
+        }
     }
 
     /// <summary>
     /// The book of a reference found in running text. Short names that are everyday words as well ("mal 3,5", "hab 3,5", "am 2,4")
     /// count only when written with a capital letter, as a book name is.
     /// </summary>
-    static bool TryBook(Match m, out string book)
+    static bool TryBook(Match m, out string book) => TryName(m.Groups["b"].Value, out book);
+
+    static bool TryName(string raw, out string book)
     {
-        var name = m.Groups["b"].Value.Trim();
+        var name = raw.Trim();
+        book = "";
+        if (name.Length == 0) return false;
         book = Names.Value.TryGetValue(Normalize(name), out var id) ? id : "";
         if (book == "") return false;
         return !(char.IsLower(name[0]) && EverydayWords.Contains(Normalize(name)));
     }
 
-    static readonly HashSet<string> EverydayWords = ["mal", "hab", "am", "ex", "job", "mark"];
+    static readonly HashSet<string> EverydayWords = ["mal", "hab", "am", "ex", "job", "mark", "mi", "hi"];
 
     /// <summary>USFM id for a book name or abbreviation (German or English), or null.</summary>
     public static string? BookId(string name) => Names.Value.TryGetValue(Normalize(name), out var id) ? id : null;
@@ -192,6 +207,7 @@ public static partial class DocumentLinks
             ("Mt", "MAT"), ("Matt", "MAT"), ("Mk", "MRK"), ("Mar", "MRK"), ("Lk", "LUK"), ("Joh", "JHN"), ("Jn", "JHN"), ("Apg", "ACT"), ("Röm", "ROM"), ("Rom", "ROM"), ("1Kor", "1CO"), ("2Kor", "2CO"),
             ("Gal", "GAL"), ("Eph", "EPH"), ("Phil", "PHP"), ("Kol", "COL"), ("1Thess", "1TH"), ("2Thess", "2TH"), ("1Tim", "1TI"), ("2Tim", "2TI"), ("Tit", "TIT"), ("Heb", "HEB"),
             ("Jak", "JAS"), ("1Petr", "1PE"), ("2Petr", "2PE"), ("1Joh", "1JN"), ("2Joh", "2JN"), ("3Joh", "3JN"), ("Offb", "REV"), ("Apk", "REV"), ("Rev", "REV"),
+            ("Hebr", "HEB"), ("Koh", "ECC"), ("Hi", "JOB"), ("Esr", "EZR"), ("Obd", "OBA"), ("Zef", "ZEP"), ("Am", "AMO"), ("Mi", "MIC"),   // more of the usual German short forms (Loccum list)
         }) map.TryAdd(Normalize(alt), id);
         return map;
     }
@@ -199,6 +215,7 @@ public static partial class DocumentLinks
     [GeneratedRegex(@"\[\[(?:#(?<id>\d+):)?(?<t>[^\]|#]*)(?:[|#](?<a>[^\]]*))?\]\]")] private static partial Regex Wiki();
     [GeneratedRegex("<!--.*?-->", RegexOptions.Singleline)] private static partial Regex Comment();
 
-    [GeneratedRegex(@"(?<![\p{L}\d])(?<b>(?:[1-3]\s?\.?\s?)?\p{L}{1,20}\.?)\s*(?<c>\d{1,3})\s*[,:]\s*(?<v>\d{1,3})(?:\s*[-–]\s*(?<e>\d{1,3}))?")]
+    // a number before the book name goes up to 5: "4. Mose" and "5. Mose" are books of their own
+    [GeneratedRegex(@"(?<![\p{L}\d])(?<b>(?:[1-5]\s?\.?\s?)?\p{L}{1,20}\.?)\s*(?<c>\d{1,3})\s*[,:]\s*(?<v>\d{1,3})(?:\s*[-–]\s*(?<e>\d{1,3}))?")]
     private static partial Regex Verse();
 }

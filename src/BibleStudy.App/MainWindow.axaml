@@ -237,11 +237,14 @@
         <Border x:Name="StatusBar" DockPanel.Dock="Bottom" Padding="16,6" Height="32" Background="{DynamicResource BsSurface}"
                 BorderBrush="{DynamicResource BsBorder}" BorderThickness="0,1,0,0">
             <Border.Transitions><Transitions><DoubleTransition Property="Opacity" Duration="0:0:0.15" /></Transitions></Border.Transitions>
-            <Grid ColumnDefinitions="*,Auto,Auto,Auto,Auto">
-                <Button x:Name="TimerChip" Grid.Column="3" Classes="ghost" Padding="8,0" MinHeight="0" Height="22" Margin="4,0,0,0" IsVisible="False" ToolTip.Tip="Laufender Timer. Klicken: anhalten, fortsetzen oder beenden.">
+            <Grid ColumnDefinitions="*,Auto,Auto,Auto,Auto,Auto">
+                <Button x:Name="ProjectorChip" Grid.Column="3" Classes="ghost" Padding="8,0" MinHeight="0" Height="22" Margin="4,0,0,0" IsVisible="False" ToolTip.Tip="Die Beamer-Ansicht ist offen. Klicken: weiter, zurück, schwarz oder beenden.">
+                    <TextBlock x:Name="ProjectorChipText" Classes="caption" FontWeight="SemiBold" VerticalAlignment="Center" />
+                </Button>
+                <Button x:Name="TimerChip" Grid.Column="4" Classes="ghost" Padding="8,0" MinHeight="0" Height="22" Margin="4,0,0,0" IsVisible="False" ToolTip.Tip="Laufender Timer. Klicken: anhalten, fortsetzen oder beenden.">
                     <TextBlock x:Name="TimerChipText" Classes="caption" FontWeight="SemiBold" VerticalAlignment="Center" />
                 </Button>
-                <Button x:Name="ClockChip" Grid.Column="4" Classes="ghost" Padding="8,0" MinHeight="0" Height="22" Margin="4,0,0,0" ToolTip.Tip="Uhrzeit. Klicken: Timer stellen.">
+                <Button x:Name="ClockChip" Grid.Column="5" Classes="ghost" Padding="8,0" MinHeight="0" Height="22" Margin="4,0,0,0" ToolTip.Tip="Uhrzeit. Klicken: Timer stellen.">
                     <TextBlock x:Name="ClockText" Classes="caption" FontWeight="SemiBold" VerticalAlignment="Center" />
                 </Button>
                 <TextBlock x:Name="StatusText" Classes="caption" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" ToolTip.Tip="{Binding #StatusText.Text}" />
@@ -1011,8 +1014,14 @@
                             <TextBlock TextWrapping="Wrap" Text="Der Knopf mit dem geteilten Rechteck oben schaltet sie ein: bis zu vier Bereiche nebeneinander, zum Beispiel links die Bibel und rechts ein Dokument oder die Materialien. Einen Reiter auf die Mitte eines Bereichs ziehen ersetzt ihn, auf seinen Rand legt ihn als neuen Bereich daneben, aus dem Fenster heraus macht ein eigenes Fenster daraus. Die Linien zwischen den Bereichen lassen sich ziehen. Auch „Lesen“ lässt sich so verschieben. Alles bleibt beim nächsten Start erhalten." />
                             <TextBlock FontWeight="SemiBold" Text="Materialien" />
                             <TextBlock TextWrapping="Wrap" Text="Der Reiter „Materialien“ zeigt die Unterlagen einer Bibelstunde im Programm, ohne Word zu öffnen: Ordner wählen (auf Wunsch mit Unterordnern), Datei anklicken. Word (auch das alte .doc), PDF (als Seitenbilder oder als Text), PowerPoint, OpenDocument, RTF, Text, Markdown, Webseiten und Bilder öffnen sich hier. Ein Inhaltsverzeichnis in der Datei ist anklickbar, der Knopf „Inhalt“ zeigt es als Liste mit Suche. Tab und Umschalt+Tab wechseln zwischen den geöffneten Dateien. Neue oder geänderte Dateien erscheinen von selbst; die Knöpfe über dem Baum klappen alle Ordner auf oder zu." />
+                            <TextBlock TextWrapping="Wrap" Text="In den Materialien: Das Suchfeld über dem Baum durchsucht alle Dateien, Strg+F sucht in der offenen Datei (Enter springt weiter). Bibelstellen im Text sind Links; ruht die Maus darauf, steht der Vers daneben. Text auswählen und rechts klicken markiert ihn in einer Farbe, auf Wunsch mit Notiz; die Datei selbst bleibt dabei unverändert. Jede Datei öffnet sich dort, wo du zuletzt gelesen hast. In der Vers-Übersicht zeigt „In deinen Materialien“, wo ein Vers in deinen Unterlagen vorkommt." />
+                            <TextBlock FontWeight="SemiBold" Text="Beamer" />
+                            <TextBlock TextWrapping="Wrap" Text="Rechtsklick auf einen Vers → „Mehr mit diesem Vers“ → „Auf dem Beamer zeigen“ (oder Strg+K, „Beamer“) zeigt die gewählten Verse groß auf einem zweiten Bildschirm; aus den Materialien geht das mit ausgewähltem Text oder einem Absatz. Im Beamer-Fenster gehen die Pfeiltasten weiter und zurück, B macht schwarz, F11 schaltet Vollbild, Esc schließt. Unten in der Leiste steht, was gezeigt wird." />
+                            <TextBlock FontWeight="SemiBold" Text="Handout drucken" />
+                            <TextBlock TextWrapping="Wrap" Text="Bei einem Dokument: Exportieren → Drucken / PDF. Du wählst eines von acht Designs (z. B. Klassisch, Elegant, Zeitung oder Großdruck), den Namen der Gruppe, die Schriftgröße und was aufs Blatt kommt: die Bibelstellen als Anhang mit Nummern im Text, hervorgehobene Fragen und Platz für Notizen. Das Blatt öffnet sich im Browser; dort druckst du es oder speicherst es als PDF. Im selben Fenster lassen sich HTML-Datei und Markdown wählen, Markdown mit Vorschau des Textes." />
                             <TextBlock FontWeight="SemiBold" Text="Uhr und Timer" />
                             <TextBlock TextWrapping="Wrap" Text="Unten rechts steht die Uhrzeit. Ein Klick darauf stellt einen Timer (5 bis 90 Minuten oder eine eigene Zeit); die Restzeit steht daneben. Ist er abgelaufen, kommt das Fenster nach vorn. Oben schaltet der Marker-Knopf die Markierungen aller Vaults ein und aus." />
+                            <TextBlock TextWrapping="Wrap" Text="Unter „Ablauf“ schreibst du die Teile einer Bibelstunde mit ihrer Zeit (Lied, Gebet, Bibelarbeit …). „Ablauf starten“ lässt sie nacheinander laufen: Neben der Uhr steht, welcher Teil dran ist und wie lange noch; ist ein Teil um, beginnt der nächste mit einem kurzen Ton. „Nächster Teil“ springt weiter." />
                             <TextBlock FontWeight="SemiBold" Text="Parallel" />
                             <TextBlock TextWrapping="Wrap" Text="Zeigt bis zu drei weitere Übersetzungen versgenau nebeneinander, jede Spalte in eigener Farbe mit Kopfzeile. „Synchron scrollen“ lässt alle Spalten zusammen laufen; ausgeschaltet scrollt jede für sich." />
                             <TextBlock TextWrapping="Wrap" Text="Mit dem Symbol neben „Synchron scrollen“ wählst du, welche Spalten zusammen laufen (z. B. nur die zweite und vierte); die übrigen scrollen für sich." />

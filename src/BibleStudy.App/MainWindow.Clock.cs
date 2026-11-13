@@ -40,9 +40,9 @@ public partial class MainWindow
         {
             var left = end - DateTime.Now;
             if (left <= TimeSpan.Zero) { TimerDone(); return; }
-            TimerChipText.Text = "⏱ " + TimerText(left);
+            TimerChipText.Text = "⏱ " + ProgramPrefix() + TimerText(left);
         }
-        else if (_timerPaused is { } p) TimerChipText.Text = "⏸ " + TimerText(p);
+        else if (_timerPaused is { } p) TimerChipText.Text = "⏸ " + ProgramPrefix() + TimerText(p);
         TimerChip.IsVisible = _timerEnd is not null || _timerPaused is not null;
     }
 
@@ -53,11 +53,13 @@ public partial class MainWindow
         return s >= 3600 ? $"{s / 3600}:{s / 60 % 60:00}:{s % 60:00}" : $"{s / 60}:{s % 60:00}";
     }
 
-    void StartTimer(TimeSpan length)
+    void StartTimer(TimeSpan length, bool ownTime = true)
     {
         if (length <= TimeSpan.Zero) return;
+        if (ownTime) _program = null;   // a time of its own ends a running program
         _timerLength = length; _timerPaused = null;
         _timerEnd = DateTime.Now + length;
+        if (!ownTime) { TickClock(); return; }
         _settings.TimerMinutes = Math.Max(1, (int)Math.Round(length.TotalMinutes)); SaveSettings();
         StatusText.Text = L("Timer gestellt: {0} min, endet um {1}.", (int)Math.Round(length.TotalMinutes), _timerEnd.Value.ToString("t", Loc.Culture));
         TickClock();
@@ -70,10 +72,11 @@ public partial class MainWindow
         TickClock();
     }
 
-    void StopTimer() { _timerEnd = null; _timerPaused = null; TickClock(); }
+    void StopTimer() { _timerEnd = null; _timerPaused = null; _program = null; TickClock(); }
 
     void TimerDone()
     {
+        if (_program is not null) { NextProgramStep(true); return; }
         var length = _timerLength;
         _timerEnd = null; _timerPaused = null;
         TickClock();
@@ -88,7 +91,7 @@ public partial class MainWindow
     void ShowTimerFlyout(Control anchor)
     {
         var flyout = new Flyout { Placement = PlacementMode.TopEdgeAlignedRight };
-        var panel = new StackPanel { Spacing = 8, Width = 270 };
+        var panel = new StackPanel { Spacing = 8, Width = 390 };
         panel.Children.Add(new TextBlock { Text = L("TIMER"), Classes = { "eyebrow" } });
         if (_timerEnd is not null || _timerPaused is not null)
         {
@@ -117,7 +120,9 @@ public partial class MainWindow
         start.Click += (_, _) => { StartTimer(TimeSpan.FromMinutes((double)(box.Value ?? 10))); flyout.Hide(); };
         box.KeyDown += (_, e) => { if (e.Key == Avalonia.Input.Key.Enter) { e.Handled = true; StartTimer(TimeSpan.FromMinutes((double)(box.Value ?? 10))); flyout.Hide(); } };
         panel.Children.Add(new StackPanel { Orientation = Orientation.Horizontal, Spacing = 8, Children = { box, new TextBlock { Text = L("Minuten"), VerticalAlignment = VerticalAlignment.Center }, start } });
-        flyout.Content = panel;
+        panel.Children.Add(new Separator());
+        AddProgramSection(panel, flyout);
+        flyout.Content = new ScrollViewer { MaxHeight = 640, Content = panel };
         flyout.ShowAt(anchor);
     }
 }

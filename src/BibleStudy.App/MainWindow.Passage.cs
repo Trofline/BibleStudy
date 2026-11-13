@@ -51,6 +51,12 @@ public partial class MainWindow
 
         // the rest in two groups
         menu.Items.Add(Group(L("Mehr mit diesem Vers"),
+            Make(L("Auf dem Beamer zeigen"), () =>
+            {
+                // the chosen verses when this one is among them, else this verse
+                var chosen = _selVerses.Contains(verse) ? _selVerses.OrderBy(v => v).ToList() : [verse];
+                _ = ProjectVersesAsync(new VerseRef(_curBook, _curChapter, chosen[0]), chosen[^1]);
+            }),
             Make(L("Als Bild exportieren"), ExportVerseImage),
             Make(L("Zum Auswendiglernen"), () => { Memory.Add(MemoryKey(r), DateTime.Now); StatusText.Text = L("{0} zum Auswendiglernen hinzugefügt.", Label(r)); }),
             Make(L("Zur Leseliste"), () => AddToQueue([r])),
@@ -169,6 +175,15 @@ public partial class MainWindow
             comment.Children.Add(Muted(L("Lade …")));
             GuidePanel.Children.Add(comment);
             _ = FillGuideCommentaryAsync(r, version, comment);
+        }
+        // where the verse stands in the papers of the Bible study (the materials folder)
+        if (_settings.MaterialsFolder.Length > 0 && Directory.Exists(_settings.MaterialsFolder))
+        {
+            GuidePanel.Children.Add(Eyebrow(L("In deinen Materialien")));
+            var found = new StackPanel { Spacing = 2 };
+            found.Children.Add(Muted(L("Wird gesucht …")));
+            GuidePanel.Children.Add(found);
+            _ = FillGuideMaterialsAsync(r, version, found);
         }
         // other translations
         GuidePanel.Children.Add(Eyebrow(L("Übersetzungen im Vergleich")));

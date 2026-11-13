@@ -123,11 +123,11 @@ public partial class MainWindow
         var more = new MenuFlyout();
         var export = new MenuFlyout();
         var print = new MenuItem { Header = L("Drucken / PDF") };
-        print.Click += async (_, _) => await PrintDocumentAsync();
+        print.Click += async (_, _) => await ShowHandoutDialogAsync();
         var asHtml = new MenuItem { Header = L("Als HTML-Datei speichern …") };
-        asHtml.Click += async (_, _) => await SaveDocumentAsHtmlAsync();
+        asHtml.Click += async (_, _) => await ShowExportDialogAsync(ExportFormat.Html);
         var asMd = new MenuItem { Header = L("Als Markdown speichern …") };
-        asMd.Click += async (_, _) => await SaveDocumentAsMarkdownAsync();
+        asMd.Click += async (_, _) => await ShowExportDialogAsync(ExportFormat.Markdown);
         export.Items.Add(print); export.Items.Add(asHtml); export.Items.Add(asMd);
         DocExportBtn.Flyout = export;
         _miOpenFile.Header = L("Datei öffnen"); _miOpenFile.Click += (_, _) => OpenLinkedFile();

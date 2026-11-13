@@ -94,3 +94,14 @@ Die Spaltenfarben der Parallel-Ansicht haben kein Tastenkürzel; sie liegen am F
 | Leertaste | Farben für die gewählten Verse zeigen |
 | In den Farben: Pfeiltasten, Enter, Esc | Farbe wählen, übernehmen, schließen |
 | Tab / Umschalt+Tab (Materialien) | Nächste / vorige geöffnete Datei |
+| Strg+F (Materialien) | In der geöffneten Datei suchen; Enter / Umschalt+Enter: nächste / vorige Stelle |
+
+## 14.6 Beamer-Fenster
+
+| Taste | Wirkung |
+|---|---|
+| → / ↓ / Leertaste / Bild ab | Weiter |
+| ← / ↑ / Bild auf | Zurück |
+| B | Schwarz schalten und wieder zeigen |
+| F11 oder Doppelklick | Vollbild an/aus |
+| Esc | Beamer-Ansicht schließen |

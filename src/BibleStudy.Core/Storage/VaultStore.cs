@@ -43,6 +43,15 @@ public sealed record Mark(long Id, string TranslationId, VerseRef Ref, int Start
 public sealed record Heading(long Id, VerseRef Ref, string Text, int Level);
 
 /// <summary>
+/// A mark or note in a file of the materials. The file itself is never changed: the mark is kept here, with the marked words, so it is found
+/// again when the file changes (Path is where the file was; files that were moved are found by their name).
+/// </summary>
+public sealed record MaterialMark(long Id, string Path, int Block, int Start, string Text, string Color, string Note, DateTime Created)
+{
+    public string FileName => System.IO.Path.GetFileName(Path);
+}
+
+/// <summary>
 /// Personal data of one vault: reading progress, notes, highlights (with colors, tags, folders), queue and to-dos.
 /// Every vault is one SQLite file, so a vault can be copied, backed up or shared as a single file.
 /// </summary>
@@ -93,6 +102,7 @@ public sealed partial class VaultStore : SqliteDb
         InitTrash();
         Exec("CREATE TABLE IF NOT EXISTS mark_places(mark_id INT, translation TEXT, verse INT, start_off INT, end_off INT, PRIMARY KEY(mark_id, translation, verse))");   // a place corrected by hand
         Exec("CREATE TABLE IF NOT EXISTS doc_seq(high INTEGER NOT NULL)");
+        Exec("CREATE TABLE IF NOT EXISTS material_marks(id INTEGER PRIMARY KEY, path TEXT NOT NULL, name TEXT NOT NULL, block INT, start_off INT, text TEXT NOT NULL, color TEXT, note TEXT, created TEXT)");
         // links from older versions lead by title: they get the number of their document
         try
         {
@@ -386,6 +396,47 @@ public sealed partial class VaultStore : SqliteDb
         Exec("UPDATE headings SET text=$x, level=$l WHERE id=$i", c => { c.Parameters.AddWithValue("$x", text.Trim()); c.Parameters.AddWithValue("$l", Math.Clamp(level, 1, 3)); c.Parameters.AddWithValue("$i", id); });
 
     public void DeleteHeading(long id) => Exec("DELETE FROM headings WHERE id=$i", c => c.Parameters.AddWithValue("$i", id));
+
+    // ---- marks and notes in the materials ------------------------------------------------------------------------------
+
+    /// <summary>The marks of a file: those made at this path, or, when there are none, those of a file with the same name (it was moved).</summary>
+    public List<MaterialMark> GetMaterialMarks(string path)
+    {
+        var all = Query("SELECT id,path,block,start_off,text,color,note,created FROM material_marks WHERE name=$n COLLATE NOCASE ORDER BY block,start_off",
+            c => c.Parameters.AddWithValue("$n", System.IO.Path.GetFileName(path)), ReadMaterialMark);
+        var here = all.Where(m => string.Equals(m.Path, path, StringComparison.OrdinalIgnoreCase)).ToList();
+        return here.Count > 0 ? here : all.Where(m => !File.Exists(m.Path)).ToList();
+    }
+
+    public List<MaterialMark> GetAllMaterialMarks() =>
+        Query("SELECT id,path,block,start_off,text,color,note,created FROM material_marks ORDER BY path,block,start_off", _ => { }, ReadMaterialMark);
+
+    static MaterialMark ReadMaterialMark(Microsoft.Data.Sqlite.SqliteDataReader r) =>
+        new(r.GetInt64(0), r.GetString(1), r.IsDBNull(2) ? 0 : r.GetInt32(2), r.IsDBNull(3) ? 0 : r.GetInt32(3), r.GetString(4),
+            r.IsDBNull(5) ? "" : r.GetString(5), r.IsDBNull(6) ? "" : r.GetString(6), DateTime.TryParse(r.IsDBNull(7) ? "" : r.GetString(7), null, System.Globalization.DateTimeStyles.RoundtripKind, out var t) ? t : DateTime.MinValue);
+
+    public long AddMaterialMark(string path, int block, int start, string text, string color, string note = "")
+    {
+        using var con = Open(); using var cmd = con.CreateCommand();
+        cmd.CommandText = "INSERT INTO material_marks(path,name,block,start_off,text,color,note,created) VALUES($p,$n,$b,$s,$x,$c,$o,$t); SELECT last_insert_rowid()";
+        cmd.Parameters.AddWithValue("$p", path); cmd.Parameters.AddWithValue("$n", System.IO.Path.GetFileName(path));
+        cmd.Parameters.AddWithValue("$b", block); cmd.Parameters.AddWithValue("$s", start); cmd.Parameters.AddWithValue("$x", text);
+        cmd.Parameters.AddWithValue("$c", color); cmd.Parameters.AddWithValue("$o", note); cmd.Parameters.AddWithValue("$t", DateTime.UtcNow.ToString("o"));
+        return (long)cmd.ExecuteScalar()!;
+    }
+
+    /// <summary>A mark was found at another place (the file changed or moved): it is kept there from now on.</summary>
+    public void MoveMaterialMark(long id, string path, int block, int start) =>
+        Exec("UPDATE material_marks SET path=$p, name=$n, block=$b, start_off=$s WHERE id=$i", c =>
+        {
+            c.Parameters.AddWithValue("$p", path); c.Parameters.AddWithValue("$n", System.IO.Path.GetFileName(path));
+            c.Parameters.AddWithValue("$b", block); c.Parameters.AddWithValue("$s", start); c.Parameters.AddWithValue("$i", id);
+        });
+
+    public void UpdateMaterialMark(long id, string color, string note) =>
+        Exec("UPDATE material_marks SET color=$c, note=$o WHERE id=$i", c => { c.Parameters.AddWithValue("$c", color); c.Parameters.AddWithValue("$o", note); c.Parameters.AddWithValue("$i", id); });
+
+    public void DeleteMaterialMark(long id) => Exec("DELETE FROM material_marks WHERE id=$i", c => c.Parameters.AddWithValue("$i", id));
 
     public List<(string Tag, int Count)> GetTags() =>
         Query("SELECT tag, COUNT(*) FROM mark_tags GROUP BY tag ORDER BY tag COLLATE NOCASE", _ => { }, r => (r.GetString(0), r.GetInt32(1)));

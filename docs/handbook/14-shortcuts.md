@@ -94,3 +94,14 @@ The column colors of the Parallel view have no keyboard shortcut; they're found 
 | Space | Show the colors for the chosen verses |
 | In the colors: arrow keys, Enter, Esc | Pick a color, apply it, close |
 | Tab / Shift+Tab (Materials) | Next / previous open file |
+| Ctrl+F (materials) | Search the open file; Enter / Shift+Enter: next / previous place |
+
+## 14.6 Projector window
+
+| Key | Effect |
+|---|---|
+| → / ↓ / Space / Page down | Next |
+| ← / ↑ / Page up | Back |
+| B | Black screen and back |
+| F11 or double click | Full screen on/off |
+| Esc | Close the projector view |

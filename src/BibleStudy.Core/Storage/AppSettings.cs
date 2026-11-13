@@ -5,6 +5,20 @@ namespace BibleStudy.Core.Storage;
 /// <summary>Position and size of a detached panel window (Tab = index of the side panel tab).</summary>
 public sealed record WindowBounds(int X, int Y, int W, int H, bool Maximized) { public string Key { get; set; } = ""; }
 
+/// <summary>Where a file of the materials was last read: the scroll position, and for a PDF shown as pages the page at the top.</summary>
+public sealed class MaterialSpot
+{
+    public double Offset { get; set; }
+    public int Page { get; set; }
+}
+
+/// <summary>A part of the program of a Bible study (song, prayer, Bible study …) with its time, for the timer.</summary>
+public sealed class TimerStep
+{
+    public string Name { get; set; } = "";
+    public int Minutes { get; set; } = 5;
+}
+
 /// <summary>A category for documents (stored on the document as the tag "kat:Name"). Color is an index into the program's palette.</summary>
 public sealed class DocCategory
 {
@@ -68,6 +82,21 @@ public sealed class AppSettings
     public bool ShowClock { get; set; } = true;
     /// <summary>The length of the timer chosen last, in minutes.</summary>
     public int TimerMinutes { get; set; } = 10;
+    /// <summary>The parts of a Bible study for the timer, one after the other; empty until the user writes them.</summary>
+    public List<TimerStep> TimerProgram { get; set; } = [];
+    /// <summary>The look of a printed document (handout): "classic", "modern" or "plain" (saves ink).</summary>
+    public string HandoutStyle { get; set; } = "classic";
+    public int HandoutFontSize { get; set; } = 1;          // 0 small, 1 normal, 2 large
+    public bool HandoutNumbers { get; set; } = true;       // small numbers at the Bible references, to find them in the appendix
+    public bool HandoutAppendix { get; set; } = true;      // the verses at the end
+    public bool HandoutTwoColumns { get; set; } = true;    // the verses at the end in two columns
+    public bool HandoutQuestions { get; set; } = true;     // questions set apart in a box
+    public int HandoutNoteLines { get; set; }              // lined space for notes at the end (0 = none)
+    public string HandoutGroup { get; set; } = "";         // the church or group, in the head of the page
+    /// <summary>Markdown export: the verses in a file of their own ("file"), as quotes under the text ("inline") or not at all ("none").</summary>
+    public string MarkdownVerses { get; set; } = "file";
+    public bool MarkdownLinked { get; set; } = true;       // the linked documents as files of their own
+    public bool MarkdownFrontMatter { get; set; }          // a YAML head with title, date and tags (as Obsidian reads it)
     /// <summary>Split view: the work area shows up to four areas side by side (the Bible text and tabs), each as wide as the user drags it.</summary>
     public bool SplitView { get; set; }
     /// <summary>The areas of the split view from left to right: "reader" for the Bible text, otherwise the key of a tab (like "group:Dokumente").</summary>
@@ -86,6 +115,8 @@ public sealed class AppSettings
     public List<string> MaterialsCollapsed { get; set; } = [];
     /// <summary>The folder list of the materials is hidden, so the file has the whole width.</summary>
     public bool MaterialsTreeHidden { get; set; }
+    /// <summary>Where each file of the materials was last read (by its path), so it opens there again.</summary>
+    public Dictionary<string, MaterialSpot> MaterialsSpots { get; set; } = new(StringComparer.OrdinalIgnoreCase);
     public bool SelectWholeWords { get; set; } = true;   // a selection always starts and ends at word borders
     public List<string> CustomSubColors { get; set; } = [];   // own colors for sub-marks, chosen with the "+" in the settings
     /// <summary>Which headings show in the text: All, Smart (my own, the translation's only where I have none), Mine, Translation, None.</summary>
