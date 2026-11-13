@@ -80,16 +80,23 @@ public partial class MainWindow
         MaterialMark? MarkAt(int? pos) => pos is int p ? marks.LastOrDefault(m => p >= m.Start && p < m.End).Mark : null;
 
         // resting on a Bible reference shows the verse; on a mark with a note, the note
+        // the tip opens only once its content is complete: a popup sizes itself when it opens and does not grow afterwards
         object? hoverKey = null;
-        void Hover(object? key, Func<Control>? make)
+        void Hover(object? key, Func<Task<Control>>? make)
         {
             if (Equals(key, hoverKey)) return;
             hoverKey = key;
             ToolTip.SetIsOpen(tb, false);
             ToolTip.SetTip(tb, null);
             if (key is null || make is null) return;
-            ToolTip.SetTip(tb, make());
-            ToolTip.SetIsOpen(tb, true);
+            _ = Open();
+            async Task Open()
+            {
+                var content = await make();
+                if (!Equals(key, hoverKey)) return;
+                ToolTip.SetTip(tb, new ToolTip { Content = content, MaxWidth = 500 });
+                ToolTip.SetIsOpen(tb, true);
+            }
         }
         tb.PointerMoved += (_, e) =>
         {
@@ -97,7 +104,7 @@ public partial class MainWindow
             var link = LinkAt(pos);
             tb.Cursor = link is null ? null : new Cursor(StandardCursorType.Hand);
             if (link is { } l) Hover(("link", l.Start), () => VersePreview(l.Ref, l.To));
-            else if (MarkAt(pos) is { Note.Length: > 0 } m) Hover(("mark", m.Id), () => new TextBlock { Text = m.Note, TextWrapping = TextWrapping.Wrap, MaxWidth = 380 });
+            else if (MarkAt(pos) is { Note.Length: > 0 } m) Hover(("mark", m.Id), () => Task.FromResult<Control>(new TextBlock { Text = m.Note, TextWrapping = TextWrapping.Wrap, MaxWidth = 380 }));
             else Hover(null, null);
         };
         tb.PointerExited += (_, _) => Hover(null, null);
@@ -169,24 +176,22 @@ public partial class MainWindow
     }
 
     /// <summary>The verse of a reference in the translation read now, for resting the pointer on it.</summary>
-    Control VersePreview(VerseRef r, int end)
+    async Task<Control> VersePreview(VerseRef r, int end)
     {
-        var head = new TextBlock { Text = Label(r) + (end > r.Verse ? "–" + end : ""), FontWeight = FontWeight.SemiBold };
-        var text = new TextBlock { Text = "…", TextWrapping = TextWrapping.Wrap, MaxWidth = 420, FontFamily = ScriptureFont, FontSize = 15, LineHeight = 22 };
         var translation = CurrentTranslationId;
-        _ = Task.Run(async () =>
+        string s;
+        try
         {
-            try
-            {
-                var ch = await _provider.GetChapterAsync(translation, r.Book, r.Chapter);
-                var verses = ch.Verses.Where(v => v.Number >= r.Verse && v.Number <= Math.Max(r.Verse, end)).ToList();
-                var s = verses.Count == 1 ? verses[0].Text : string.Join(" ", verses.Select(v => v.Number + " " + v.Text));
-                if (s.Length > 700) s = s[..700].TrimEnd() + " …";
-                Dispatcher.UIThread.Post(() => text.Text = s.Length > 0 ? s : L("Diesen Vers gibt es in der gewählten Übersetzung nicht."));
-            }
-            catch (Exception ex) { Dispatcher.UIThread.Post(() => text.Text = ex.Message); }
-        });
-        return new StackPanel { Spacing = 4, MaxWidth = 440, Children = { head, text, new TextBlock { Text = L("Klicken öffnet die Stelle."), Classes = { "caption" } } } };
+            var ch = await Task.Run(() => _provider.GetChapterAsync(translation, r.Book, r.Chapter));
+            var verses = ch.Verses.Where(v => v.Number >= r.Verse && v.Number <= Math.Max(r.Verse, end)).ToList();
+            s = verses.Count == 1 ? verses[0].Text : string.Join(" ", verses.Select(v => v.Number + " " + v.Text));
+            if (s.Length > 700) s = s[..700].TrimEnd() + " …";
+            if (s.Length == 0) s = L("Diesen Vers gibt es in der gewählten Übersetzung nicht.");
+        }
+        catch (Exception ex) { s = ex.Message; }
+        var head = new TextBlock { Text = Label(r) + (end > r.Verse ? "–" + end : ""), FontWeight = FontWeight.SemiBold };
+        var text = new TextBlock { Text = s, TextWrapping = TextWrapping.Wrap, FontFamily = ScriptureFont, FontSize = 15, LineHeight = 22 };
+        return new StackPanel { Spacing = 4, Width = 440, Children = { head, text, new TextBlock { Text = L("Klicken öffnet die Stelle."), Classes = { "caption" }, TextWrapping = TextWrapping.Wrap } } };
     }
 
     void AddMaterialMark(string path, int textNo, int start, string text, string color, string? note, Control anchor)
