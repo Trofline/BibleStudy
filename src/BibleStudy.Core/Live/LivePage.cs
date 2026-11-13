@@ -79,7 +79,7 @@ const base=location.pathname.replace(/\/$/,'');
 let voter;try{voter=localStorage.getItem('bs-voter')}catch(e){}
 if(!voter){voter=Math.random().toString(36).slice(2)+Date.now().toString(36);try{localStorage.setItem('bs-voter',voter)}catch(e){}}
 try{document.getElementById('name').value=localStorage.getItem('bs-name')||''}catch(e){}
-let tab='now',last='',lastHandout=false,seenPoll=0;
+let tab='now',last='',lastHandout=0,seenPoll=0;
 function show(s){tab=s;document.querySelectorAll('section').forEach(x=>x.classList.toggle('on',x.id==='s-'+s));
 document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('on',b.dataset.s===s));
 if(s==='poll')document.getElementById('dp').classList.remove('on');if(s==='handout')document.getElementById('dh').classList.remove('on');scrollTo(0,0)}
@@ -89,7 +89,7 @@ function render(st){
 const now=document.getElementById('now');now.replaceChildren();
 if(st.title||st.text){if(st.title)now.append(el('p','ref',st.title));now.append(el('div','verse',st.text))}else now.append(el('p','muted',T.waiting));
 if(st.handout!==lastHandout){lastHandout=st.handout;const h=document.getElementById('handout');h.replaceChildren();
-if(st.handout){const f=document.createElement('iframe');f.src=base+'/handout';f.title=T.handout;h.append(f);if(tab!=='handout')document.getElementById('dh').classList.add('on')}else h.append(el('p','muted',T.noHandout))}
+if(st.handout){const f=document.createElement('iframe');f.src=base+'/handout?v='+st.handout;f.title=T.handout;h.append(f);if(tab!=='handout')document.getElementById('dh').classList.add('on')}else h.append(el('p','muted',T.noHandout))}
 const p=document.getElementById('poll');p.replaceChildren();
 if(!st.poll){p.append(el('p','muted',T.noPoll));return}
 if(st.poll.id!==seenPoll){seenPoll=st.poll.id;if(tab!=='poll')document.getElementById('dp').classList.add('on')}
@@ -99,10 +99,11 @@ st.poll.options.forEach((o,i)=>{const b=el('button','opt'+(st.poll.voted===i?' m
 if(st.poll.results){const f=el('i','fill');f.style.width=(total?Math.round(100*st.poll.results[i]/total):0)+'%';b.append(f);b.append(el('span','n',String(st.poll.results[i])))}
 b.append(el('span',null,o));b.onclick=()=>vote(st.poll.id,i);card.append(b)});
 card.append(el('p','msg muted',st.poll.voted!=null?T.voted:T.vote));p.append(card)}
-async function tick(){try{const r=await fetch(base+'/state?voter='+encodeURIComponent(voter),{cache:'no-store'});
+async function load(){try{const r=await fetch(base+'/state?voter='+encodeURIComponent(voter),{cache:'no-store'});
 if(!r.ok)throw 0;const s=await r.text();document.getElementById('off').style.display='none';if(s!==last){last=s;render(JSON.parse(s))}}
-catch(e){document.getElementById('off').style.display='block'}setTimeout(tick,1500)}
-async function vote(poll,option){try{await fetch(base+'/vote',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({poll,option,voter})})}catch(e){}last='';}
+catch(e){document.getElementById('off').style.display='block'}}
+async function tick(){await load();setTimeout(tick,1500)}
+async function vote(poll,option){try{await fetch(base+'/vote',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({poll,option,voter})})}catch(e){}await load()}
 document.getElementById('send').onclick=async()=>{const q=document.getElementById('q'),n=document.getElementById('name'),m=document.getElementById('askmsg');
 if(!q.value.trim())return;try{localStorage.setItem('bs-name',n.value)}catch(e){}
 try{const r=await fetch(base+'/ask',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text:q.value,name:n.value})});

@@ -16,8 +16,18 @@ public partial class MainWindow
     bool _fathersOnlyEarly = true;
     bool _fathersLoading;
     int _fathersGeneration;
+    ProgressBar? _fathersProgress;   // the bar and line shown now: the download reports into them, also after the tab was built anew
+    TextBlock? _fathersInfo;
+    (long Done, long? Total) _fathersLast;
 
     ChurchFathers Fathers => _fathers ??= new ChurchFathers(_http, Path.Combine(_root, "cache"));
+
+    void ShowFathersProgress((long Done, long? Total) p)
+    {
+        _fathersLast = p;
+        if (_fathersProgress is { } bar && p.Total is > 0) { bar.IsIndeterminate = false; bar.Value = 100.0 * p.Done / p.Total.Value; }
+        if (_fathersInfo is { } info) info.Text = L("Lade … {0} MB", p.Done / 1_000_000);
+    }
 
     async Task ShowFathersAsync()
     {
@@ -30,24 +40,24 @@ public partial class MainWindow
             FathersPanel.Children.Add(new TextBlock { Text = L("Die Sammlung „Historical Christian Faith“ ist gemeinfrei und auf Englisch. Sie wird einmal geladen (etwa 180 MB) und liegt danach auf deinem Rechner, auch offline."), Classes = { "caption" }, TextWrapping = TextWrapping.Wrap });
             var progress = new ProgressBar { Minimum = 0, Maximum = 100, IsVisible = _fathersLoading, IsIndeterminate = true };
             var info = new TextBlock { Classes = { "caption" }, TextWrapping = TextWrapping.Wrap };
+            _fathersProgress = progress; _fathersInfo = info;
+            if (_fathersLoading) ShowFathersProgress(_fathersLast);
             var load = new Button { Content = L("Sammlung laden (etwa 180 MB)"), Classes = { "primary" }, HorizontalAlignment = HorizontalAlignment.Left, IsEnabled = !_fathersLoading };
             load.Click += async (_, _) =>
             {
-                _fathersLoading = true; load.IsEnabled = false; progress.IsVisible = true;
+                if (_fathersLoading) return;
+                _fathersLoading = true; load.IsEnabled = false; progress.IsVisible = true; _fathersLast = (0, null);
                 try
                 {
-                    await Fathers.LoadAsync(new Progress<(long Done, long? Total)>(p =>
-                    {
-                        if (p.Total is > 0) { progress.IsIndeterminate = false; progress.Value = 100.0 * p.Done / p.Total.Value; }
-                        info.Text = L("Lade … {0} MB", p.Done / 1_000_000);
-                    }));
+                    await Fathers.LoadAsync(new Progress<(long Done, long? Total)>(ShowFathersProgress));
                     _fathersLoading = false;
                     await ShowFathersAsync();
                 }
                 catch (Exception ex) when (ex is HttpRequestException or IOException or InvalidDataException or TaskCanceledException or UnauthorizedAccessException)
                 {
-                    _fathersLoading = false; load.IsEnabled = true; progress.IsVisible = false;
-                    info.Text = L("Laden nicht möglich: {0}", ex.Message);
+                    _fathersLoading = false;
+                    await ShowFathersAsync();   // the button again, in the panel shown now
+                    if (_fathersInfo is { } i) i.Text = L("Laden nicht möglich: {0}", ex.Message);
                 }
             };
             FathersPanel.Children.Add(load);

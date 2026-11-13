@@ -17,6 +17,7 @@ public partial class MainWindow
     const int SynopsisTab = 34;
     int _synopsisSection = -1;
     bool _synopsisDiff = true;
+    int _synopsisGeneration;   // a newer call (another section, the checkbox) wins; an older one that finishes later adds nothing
 
     [GeneratedRegex(@"\p{L}[\p{L}\p{M}'’]*|[^\p{L}]+")]
     private static partial Regex SynopsisTokens();
@@ -32,6 +33,7 @@ public partial class MainWindow
 
     async Task ShowSynopsisAsync()
     {
+        var generation = ++_synopsisGeneration;
         var all = Synopsis.All;
         // the passage open in the reader decides, as long as no other section was chosen
         if (_synopsisSection < 0 && Synopsis.Gospels.Contains(_curBook))
@@ -83,7 +85,7 @@ public partial class MainWindow
             catch (Exception ex) { verses.Add((0, 0, L("Nicht geladen: {0}", ex.Message))); }
             columns.Add((g, ranges, verses));
         }
-        if (_synopsisSection != section.Number - 1) return;   // another section was chosen meanwhile
+        if (generation != _synopsisGeneration) return;   // another section was chosen meanwhile
 
         var own = _synopsisDiff && columns.Count > 1 ? Synopsis.OwnWords(columns.Select(c => string.Join(" ", c.Verses.Select(v => v.Text))).ToList()) : null;
         var accent = Res("BsAccent");

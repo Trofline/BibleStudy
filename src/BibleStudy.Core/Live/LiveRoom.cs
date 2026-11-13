@@ -24,6 +24,8 @@ public sealed record LivePoll(int Id, string Question, IReadOnlyList<string> Opt
 public sealed class LiveRoom : IDisposable
 {
     const int MaxBody = 4096, MaxQuestions = 300, MaxQuestionLength = 500, MaxNameLength = 40;
+    /// <summary>The most choices a poll can have (more do not fit a phone well).</summary>
+    public const int MaxOptions = 8;
     static readonly JsonSerializerOptions Json = new() { PropertyNamingPolicy = JsonNamingPolicy.CamelCase, DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull };
 
     readonly object _gate = new();
@@ -34,6 +36,7 @@ public sealed class LiveRoom : IDisposable
     string _title = "", _text = "";
     string? _handout;
     long _version = 1;
+    int _handoutVersion, _pollCount;   // both only count up, so that a phone notices a new handout and a new poll
     LivePoll? _poll;
     readonly Dictionary<string, int> _votes = [];   // voter → option of the current poll
     readonly List<LiveQuestion> _questions = [];
@@ -130,15 +133,15 @@ public sealed class LiveRoom : IDisposable
     }
 
     /// <summary>The handout as a whole web page, or null for none.</summary>
-    public void SetHandout(string? html) { lock (_gate) { _handout = html; _version++; } }
+    public void SetHandout(string? html) { lock (_gate) { _handout = html; _handoutVersion++; _version++; } }
     public bool HasHandout { get { lock (_gate) return _handout is not null; } }
 
     public LivePoll StartPoll(string question, IEnumerable<string> options)
     {
         lock (_gate)
         {
-            var opts = options.Select(o => o.Trim()).Where(o => o.Length > 0).Distinct().Take(8).ToList();
-            _poll = new LivePoll((_poll?.Id ?? 0) + 1, question.Trim(), opts);
+            var opts = options.Select(o => o.Trim()).Where(o => o.Length > 0).Distinct().Take(MaxOptions).ToList();
+            _poll = new LivePoll(++_pollCount, question.Trim(), opts);
             _votes.Clear(); _version++;
             return _poll;
         }
@@ -170,7 +173,7 @@ public sealed class LiveRoom : IDisposable
 
     // ---- what the phones ask for ------------------------------------------------------------------------------------------
 
-    /// <summary>The state for a phone: what is shown, the poll (with the results once the leader shows them) and whether there is a handout.</summary>
+    /// <summary>The state for a phone: what is shown, the poll (with the results once the leader shows them) and the handout (0 for none, otherwise a number that changes with each new one).</summary>
     public string StateJson(string? voter)
     {
         lock (_gate)
@@ -181,7 +184,7 @@ public sealed class LiveRoom : IDisposable
                 results = p.ShowResults ? Results() : null,
                 voted = voter is not null && _votes.TryGetValue(voter, out var v) ? v : (int?)null,
             } : null;
-            return JsonSerializer.Serialize(new { v = _version, title = _title, text = _text, handout = _handout is not null, poll }, Json);
+            return JsonSerializer.Serialize(new { v = _version, title = _title, text = _text, handout = _handout is null ? 0 : _handoutVersion, poll }, Json);
         }
     }
 
