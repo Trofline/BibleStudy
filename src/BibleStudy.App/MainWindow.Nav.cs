@@ -62,6 +62,7 @@ public partial class MainWindow
         new(K("Bücher"), "M4 19.5A2.5 2.5 0 0 1 6.5 17H20 M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z",
         [
             ..CommentaryTabs(),
+            new(FathersTab, K("Kirchenväter"), L("Was die Kirchenväter und Ausleger der Kirchengeschichte zum angeklickten Vers geschrieben haben (gemeinfreie Sammlung).")),
             new(LexiconTab, K("Lexikon"), L("Bibellexikon zu Personen und Orten (Easton's Bible Dictionary über Theographic). Oben stehen die Namen des aktuellen Kapitels.")),
         ], Windowed: true),
         new(K("Notizen"), "M12 20h9 M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z",
@@ -84,6 +85,8 @@ public partial class MainWindow
         new(K("Material"), "M2 7a2 2 0 0 1 2-2h5l2 2h9a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2z M8 13h8 M8 16h5",
         [
             new(MaterialsTab, K("Materialien"), L("Die Unterlagen einer Bibelstunde: wähle einen Ordner, klicke eine Datei an, und sie öffnet sich hier. Tab wechselt zwischen den geöffneten Dateien.")),
+            new(LiveTab, K("Live"), L("Die Bibelstunde auf den Handys: QR-Code scannen, mitlesen, Handout ansehen, Fragen schicken und abstimmen. Ohne App, im selben WLAN.")),
+            new(ArchiveTab, K("Archiv"), L("Welche Stelle wann in der Bibelstunde dran war, mit Notizen und den Fragen des Abends.")),
         ], Windowed: true),
         new(K("Predigt"), "M4 21h16 M6 21V8l6-5 6 5v13 M12 3v5 M10 21v-5h4v5",
         [
@@ -111,6 +114,7 @@ public partial class MainWindow
             new(PericopeTab, K("Perikope"), L("Ein Abschnitt in Bildern: Wortarten, Verbformen, Schlüsselwörter und wo sie vorkommen, Rhythmus der Verse, Satzbau und Verbindungen der Sätze.")),
             new(SentenceTab, K("Satzdiagramm"), L("Der Satz des angeklickten Verses als klassisches Satzdiagramm: Subjekt, Verb, Objekt auf der Linie, alles andere darunter. Aus den Syntaxdaten des griechischen und hebräischen Textes.")),
             new(AnalysisTab, K("Analyse"), L("Werkzeuge zum besseren Verstehen: Schlüsselwörter, einmalige Wörter, verwandte Wörter und wo ein Wort in der Bibel vorkommt.")),
+            new(SynopsisTab, K("Synopse"), L("Die Evangelien nebeneinander: dieselbe Begebenheit bei Matthäus, Markus, Lukas und Johannes, Unterschiede farbig.")),
         ], Windowed: true),
         new(K("Lernen"), "M5 8l6 6 M4 14l6-6 2-3 M2 5h12 M7 2h1 M22 22l-5-10-5 10 M14 18h6",
         [

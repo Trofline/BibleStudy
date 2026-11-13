@@ -130,3 +130,42 @@ New, renamed or deleted files in the folder appear by themselves; an open file t
 **Reading position:** every file opens where you last read it, also after a restart.
 
 **In the verse overview:** when you click a verse in the Bible text, the overview shows under **"In your materials"** which files mention it (also inside a passage like "Rom 8:26-30"), each with a piece of text. A click opens the file at that place.
+
+## 6.12 Live Bible study on the phones
+
+The **Live** tab (in the "Material" rail) brings the Bible study onto the participants' phones, **without an app, an account or the internet**. The program itself becomes a small web page in your Wi-Fi; the phones only have to be in the same Wi-Fi as your computer.
+
+1. **Start live Bible study.** A QR code appears with the address below it (e.g. `http://192.168.1.20:49400/ab3k9x`). If Windows asks whether the program may be reached in the network, choose **Allow** for private networks.
+2. The participants scan the code with the camera and tap the link. **QR code to the projector** shows it large on the second screen; it always fits the screen as a whole.
+3. On the phone there are four parts:
+   - **Now:** what the projector shows (verses or pieces of the materials), large and calm. Without a projector you send the chosen verses with **Chosen verses to the phones**.
+   - **Handout:** choose a document and **Send to the phones**; it appears in the same look as printed.
+   - **Question:** participants quietly send you a question; the name is optional. Only you see the questions; **To the projector**, **✓ Discussed** or **Delete**.
+   - **Poll:** type a question and answers (or **Yes / No**, **Scale 1–5**, **Verses of the passage**) and **Start poll**. Every phone has one vote and can change it. You see the result at once; the phones and the projector only when you show it.
+
+**End …** asks whether the Bible study should go into the **archive**: with the passages shown, the questions and the result of the poll.
+
+**Safety:** the address holds a random code; without it nobody gets in. Nothing leaves your network, and after ending, the room is gone. If the page does not open on the phone, it is often a guest Wi-Fi that keeps devices apart; then a hotspot from the leader's phone, which the computer and the participants join, helps.
+
+## 6.13 Archive of Bible studies
+
+The **Archive** tab keeps which passage was read when: date, title, passages (e.g. `John 10:1-18; Ps 23`), notes and the questions of the evening. The passages can be clicked, and above you search the whole archive. Above a chapter that was already read in a Bible study, the reader shows **"In the Bible study on …"**; a click opens the archive. The archive belongs to the vault and is backed up with it.
+
+## 6.14 Discussion questions by method
+
+Under **Documents → New → Discussion questions by method** you create a document for the verses clicked, with the Bible text and ready questions:
+
+| Method | Idea |
+|---|---|
+| Observe – Interpret – Apply | the classic inductive method |
+| Discovery Bible Study (DBS) | thanks and worries, retell, what we learn about God and people, what I will do, whom I tell |
+| Swedish method | 💡 what makes sense, ? what I do not understand, → what touches me |
+| SOAP | Scripture, Observation, Application, Prayer |
+| Discover the story | for stories and parables |
+| Lectio Divina | read, reflect, pray, rest |
+
+The questions stand under "Questions for discussion"; in the **handout** they become a numbered box of their own.
+
+## 6.15 Taking over notes from e-Sword
+
+Under **Settings → Backup and sharing → Import notes from e-Sword …** you choose your e-Sword files (`.notx`, `.cmtx`, `.topx`) or MySword commentaries (`.mybible`). Notes on verses become notes in the active vault (if one is already there, the new one goes below it); topics and notes on whole books or chapters become documents with the tag "e-Sword". Formatting (RTF, HTML) becomes plain text. Importing the same file a second time creates nothing twice. Notes from Logos can be exported there as a Word file and then opened in the **Materials** tab.

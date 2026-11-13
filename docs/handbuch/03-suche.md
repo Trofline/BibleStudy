@@ -19,6 +19,12 @@ Die Suche ist das mächtigste Werkzeug im Programm. Du findest sie in der Leiste
 | `Herr DANN3 Gott` | Gott steht **nach** Herr, höchstens 3 Wörter dahinter |
 | `L=gehen` | alle Formen der **Grundform** (ging, gingen, gegangen) |
 | `L~haus` | Grundform, Groß-/Kleinschreibung egal |
+| `M?nn` | `?` steht für **genau einen** Buchstaben (Mann, Männ …) |
+| `"Engel * Herrn"` | in einer Wendung steht `*` für genau ein beliebiges Wort |
+| `~Gnaden` | **unscharf**: auch ähnliche Schreibweisen (ein Buchstabe mehr, weniger oder anders) |
+| `Gnade in:"Mt 5-7"` | nur in dieser Stelle oder diesem Buch suchen (`in:Joh`, `in:"Röm 1-8; Gal"`) |
+
+**Operatoren wie in Logos** (groß geschrieben): `A BEFORE B` und `A AFTER B` (Reihenfolge, auch mit Abstand: `BEFORE 5 WORDS`), `A NEAR B` (etwa 8 Wörter), `A WITHIN 3 WORDS B`, `A WITHIN 2 VERSES B`, `A WITHIN 1 CHAPTER B`, `A WITHIN 1 SENTENCE B` (im selben Satz, auch über Versgrenzen) und mit NOT davor das Gegenteil (`Gnade NOT WITHIN 3 WORDS Wahrheit`). `AND`, `OR`, `NOT` gehen wie Leerzeichen, `/` und `-`.
 
 **Wortabstand:** `NAH` und `DANN` brauchen immer eine Zahl (`NAH1` bis `NAH999`); ein Wort daneben zählt als Abstand 1. Beide Seiten dürfen Wendungen, Gruppen, Grundformen oder Strong-Nummern sein, zum Beispiel `"Reich Gottes" NAH10 (Gleichnis / Senfkorn)`. Englisch geht auch: `NEAR5`, `THEN3`. Ohne Zahl bleibt „dann“ ein ganz gewöhnliches Suchwort.
 
@@ -89,7 +95,15 @@ Daraus wird die Suche zusammengesetzt und steht danach im Suchfeld. So lernst du
 
 ## 3.9 Mit den Treffern arbeiten
 
-Unter der Trefferliste:
+Über den Treffern wählst du, **wie** sie angezeigt werden:
+
+- **Verse:** die Trefferliste.
+- **Ausgerichtet:** jedes gefundene Wort untereinander, mit dem Text links und rechts davon (wie eine Konkordanz).
+- **Raster:** Bücher gegen Übersetzungen, die Zahl der Treffer je Feld; je dunkler, desto mehr.
+- **Vergleich:** jeder Treffer gleich in mehreren Übersetzungen untereinander. Welche, wählst du mit **Übersetzungen ▾**.
+- **Analyse:** Verteilung über die Bibel, die gefundenen Wortformen und die Kapitel mit den meisten Treffern.
+
+Unter **Treffer ▾**:
 
 - **Treffer als Dokument:** legt die Verse als Dokument ab.
 - **Treffer als Tabelle (CSV):** exportiert sie für Tabellenprogramme.
@@ -109,13 +123,36 @@ Die Zahlen gelten für die gerade gewählte Übersetzung. Für Hapax im Sinne de
 
 ## 3.10 Grammatiksuche und Satzrollen
 
-Im Neuen Testament gibt es die **Grammatiksuche** (unter *Vers → Analyse*), zum Beispiel alle Aorist-Passiv-Partizipien. Die **Satzrollen-Suche** findet griechische Sätze nach Rollen, etwa Subjekt Jesus und Objekt Petrus (siehe [Kapitel 4](04-grundtext-wortstudie.md)).
+Die **Grammatiksuche** (unter *Vers → Analyse*) gibt es für das griechische Neue und das hebräische Alte Testament, zum Beispiel alle Aorist-Passiv-Partizipien oder alle Piel-Formen. Die **Satzrollen-Suche** findet Sätze nach Rollen, etwa Subjekt Jesus und Objekt Petrus, ebenfalls in beiden Testamenten (siehe [Kapitel 4](04-grundtext-wortstudie.md)).
 
-## 3.11 Strg+K findet noch mehr
+Die Grammatik geht auch direkt im Suchfeld und lässt sich mit Wörtern verbinden: `Gram:"verb aorist passive" Gnade`, `Gram:"noun genitive G26"`, hebräisch `Gram:"piel qatal"`. Die griechischen oder hebräischen Wörter stehen dann unter jedem Treffer.
+
+## 3.11 Suche nach Bedeutung im Grundtext
+
+Diese Suchen arbeiten mit den Daten von MACULA (Clear Bible, frei lizenziert) und lassen sich wie `Person:` mit gewöhnlichen Wörtern verbinden. Die Daten werden beim ersten Mal einmalig geladen.
+
+| Du schreibst | Gefunden wird |
+|---|---|
+| `Sinn:G863` | jedes Wort mit **derselben Bedeutung**: zu ἀφίημι (vergeben) auch ἄφεσις, χαρίζομαι, ἱλασμός … Grundlage sind die Bedeutungsfelder nach Louw-Nida (Griechisch) und SDBH (Hebräisch) |
+| `Sinn:H2617` | zu chesed (Gnade, Treue) auch emet, emunah, chasid … |
+| `Sinn:forgive` | ein englisches Wort wählt die Bedeutung selbst; ein deutsches geht über die Strong-Nummern der gewählten Übersetzung |
+| `Sinn:G863=forgive` | hat ein Wort **mehrere Bedeutungen**, nennt das Programm sie (lassen, vergeben, erlauben) und nimmt die markierte; mit `=` wählst du eine andere |
+| `Meint:Jesus` | wo Jesus **genannt oder gemeint** ist: auch „er“, „ihn“, „sein“ und Verben, deren Subjekt er ist, ohne dass sein Name dasteht. `Meint:G4074 weinte` (G4074 = Petrus) findet auch „und er weinte bitterlich“. Namen gehen als Strong-Nummer, englisch (`Meint:Peter`) oder deutsch, wenn die gewählte Übersetzung Strong-Nummern hat |
+| `LXX:G26` | welche **hebräischen Wörter** das griechische Alte Testament (Septuaginta) mit ἀγάπη übersetzt |
+| `LXX:H2617` | umgekehrt: wo chesed steht und mit welchem griechischen Wort die Septuaginta es jeweils übersetzt (über der Liste die Zählung) |
+| `Kongruenz:"adjective ~ noun G26"` | zwei Wörter nah beieinander (bis 4 Wörter), die in **Fall, Zahl und Geschlecht übereinstimmen**, etwa ein Adjektiv und sein Nomen; Hebräisch in Zahl und Geschlecht |
+| `Ereignis:Baptism` | die Stellen eines **Ereignisses** der Zeitleiste; die Ereignisse haben englische Namen (Baptism, Exodus, Crucifixion …) |
+| `Wurzel:H6` | alle Wörter einer **hebräischen Wurzel** nach dem BDB-Lexikon: zu אבד (verloren gehen) auch „Verderben“, „Verlorenes“, „Untergang“. Geht auch mit der Grundform oder einem englischen Wort (`Wurzel:perish`) |
+
+Englische Schreibweisen gehen auch: `Sense:`, `Refers:`, `Agree:`, `Event:`, `Root:`. Über den Treffern steht, welche Wörter zum Bedeutungsfeld gehören oder wie oft jemand genannt und gemeint ist.
+
+**Gut zu wissen:** Bedeutungsfelder sind eine Einordnung von Fachleuten, keine Offenbarung. Im Hebräischen haben viele Verben noch kein Feld, und manchmal ist ein Feld weiter, als man denkt (zu „Hirte“ gehört dort auch „weiden“ und „essen“). Prüfe die Treffer.
+
+## 3.12 Strg+K findet noch mehr
 
 Das Feld *Gehe zu …* sucht zusätzlich Bibelstellen, Bücher, Befehle, Dokumente, Notizen, Gebete, Strong-Nummern sowie Personen und Orte (Treffer öffnet das Lexikon). Was nicht passt, startet die Textsuche.
 
-## 3.12 Die Reihenfolge, in der du suchen solltest
+## 3.13 Die Reihenfolge, in der du suchen solltest
 
 1. Mit einem einzelnen Wort anfangen und die Trefferzahl ansehen.
 2. Zu viele Treffer? Ein zweites Wort, einen Bereich oder „Ganzes Wort“ hinzufügen.

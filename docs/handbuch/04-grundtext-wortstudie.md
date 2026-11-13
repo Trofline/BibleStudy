@@ -170,3 +170,22 @@ Der Reiter **Perikope** (Gruppe *Studium*) zeigt einen Abschnitt in Bildern. Wä
 - **Verbindungen:** wie die Sätze verbunden sind (Addition, Begründung, Gegensatz, Zweck, Bedingung …), nach den verbindenden Wörtern geordnet.
 
 **Als Bild speichern** legt die ganze Auswertung als Bild ab. Alles wird auf deinem Computer aus den Grundtextdaten berechnet (nur für Bücher mit Syntaxdaten, also das Alte Testament und das Neue Testament). Die Zuordnung der Bindewörter zu einer Beziehung ist eine Faustregel (ein „καί“ zählt als Addition, ein „γάρ“ als Begründung).
+
+## 4.16 Synopse der Evangelien
+
+Der Reiter **Synopse** (in der Leiste „Studium“) zeigt eine Begebenheit so, wie Matthäus, Markus, Lukas und Johannes sie erzählen, **nebeneinander** in der gewählten Übersetzung. Liest du gerade in einem Evangelium, öffnet sie sich beim angeklickten Vers; sonst wählst du aus der Liste (über 110 Abschnitte von der Geburt bis zur Himmelfahrt) oder blätterst mit ‹ und ›.
+
+**Eigenes eines Evangeliums farbig** hebt die Wörter hervor, die nur dieses Evangelium an der Stelle hat. So siehst du auf einen Blick, was jeder Evangelist anders oder zusätzlich erzählt. Verglichen wird in der gewählten Übersetzung; kurze Wörter (und, der, er …) bleiben ohne Farbe. Ein Klick auf die Überschrift einer Spalte öffnet die Stelle im Lesen-Tab.
+
+Die Zuordnung der Parallelen ist für dieses Programm zusammengestellt und folgt der üblichen Einteilung in Abschnitte.
+
+## 4.17 Kirchenväter
+
+Der Reiter **Kirchenväter** (in der Leiste „Bücher“) zeigt, was Augustinus, Johannes Chrysostomus, Hieronymus, Origenes und viele andere zum **angeklickten Vers** geschrieben haben, die ältesten zuerst. Er folgt dem Vers, den du anklickst.
+
+- Die Sammlung („Historical Christian Faith“, gemeinfrei, auf Englisch) wird **einmal geladen** (etwa 180 MB) und liegt danach auf deinem Rechner, auch offline. **Sammlung vom Rechner löschen** gibt den Platz wieder frei.
+- **Nur Kirchenväter (bis zum Jahr 750)** ist voreingestellt. Ohne den Haken kommen spätere Ausleger dazu (Thomas von Aquin, Reformatoren …).
+- Lange Auszüge sind gekürzt; **Ganzer Text** zeigt alles. **Quelle** öffnet das Werk, aus dem der Auszug stammt.
+- Steht über einem Auszug „zu 3,14–17“, gilt er für einen Abschnitt, zu dem dein Vers gehört.
+
+Einige Auszüge späterer Autoren nimmt die Sammlung nach eigener Angabe unter „Fair Use“ auf; prüfe bei einer Veröffentlichung die Quelle.

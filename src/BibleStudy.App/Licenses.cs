@@ -15,7 +15,9 @@ static class Licenses
         (L("Kommentare (Matthew Henry, JFB, Keil-Delitzsch, Calvin, Tyndale u. a.)"), L("Kommentare"), L("je Kommentar angezeigt; meist gemeinfrei, Tyndale CC BY-SA 4.0")),
         ("OpenThesaurus", L("Deutsche Synonyme"), L("CC BY-SA 4.0 / LGPL")),
         ("SIPSorcery (WebRTC)", L("Direktverbindung beim gemeinsamen Studium"), "BSD-3-Clause"),
+        (L("Historical Christian Faith – Commentaries Database"), L("Kirchenväter"), L("Gemeinfrei (einige Auszüge laut Quelle unter Fair Use)")),
         (L("Natural Earth"), L("Weltkarte"), L("Gemeinfrei")),
+        ("QRCoder", L("QR-Code für die Handys"), "MIT"),
         (L("Avalonia UI, Microsoft.Data.Sqlite, ModelContextProtocol"), L("Programmbibliotheken"), L("MIT / Apache-2.0")),
         (L("Inter, Crimson Text"), L("Schriften"), L("SIL Open Font License 1.1")),
     ];

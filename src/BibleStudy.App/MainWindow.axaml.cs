@@ -85,6 +85,7 @@ public partial class MainWindow : Window
         _provider = new CompositeProvider(_hello, _local, _pluginProvider) { Overlay = _overlay };
         Closed += (_, _) => { try { EndQueueRun(); DeleteGuestVaults(_root); RemoveGuestBibles(); } catch (Exception ex) { ErrorLog.Write(ex); } };
         Closed += (_, _) => { try { _overlay.CommitAll(); } catch (Exception ex) when (ex is IOException or UnauthorizedAccessException) { ErrorLog.Write(ex); } };
+        Closed += (_, _) => { _live?.Dispose(); _live = null; };
         _strongs = new StrongsDictionary(http, Path.Combine(_root, "cache"));
         _step = new StepLexicon(http, Path.Combine(_root, "cache"));
         _syntax = new SyntaxProvider(http, Path.Combine(_root, "cache"));
@@ -215,6 +216,7 @@ public partial class MainWindow : Window
         InitLanguage();
         InitLibrary();
         ObsidianBtn.Click += async (_, _) => await ExportObsidianAsync();
+        EswordImportBtn.Click += async (_, _) => await ImportEswordNotesAsync();
         SideTabs.SelectionChanged += (_, e) =>
         {
             if (e.Source == SideTabs && SideTabs.SelectedIndex == GuideTab) _ = ShowGuideAsync(_selected is int v ? new VerseRef(_curBook, _curChapter, v) : default);
@@ -512,6 +514,7 @@ public partial class MainWindow : Window
             numeral.Bind(TextBlock.ForegroundProperty, this.GetResourceObservable("BsAccent"));
             if (_settings.ChapterHeading && !_independent) ReaderPanel.Children.Add(kicker);
             ReaderPanel.Children.Add(numeral);
+            if (StudiedHint(_curBook, _curChapter) is { } studied) ReaderPanel.Children.Add(studied);
             if (cols.Count > 1 && !_independent) BuildStickyHeader(cols);
             var notes = cols.Select(c => c.C?.Footnotes?.OrderBy(f => f.NoteId).Select((f, i) => (f.NoteId, Letter: NoteLetter(i), f.Text))
                 .ToDictionary(x => x.NoteId, x => (x.Letter, x.Text))).ToList();

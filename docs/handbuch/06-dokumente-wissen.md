@@ -130,3 +130,42 @@ Neue, umbenannte oder gelöschte Dateien im Ordner erscheinen von selbst; eine g
 **Leseposition:** Jede Datei öffnet sich dort, wo du zuletzt gelesen hast, auch nach einem Neustart.
 
 **In der Vers-Übersicht:** Klickst du im Bibeltext einen Vers an, zeigt die Übersicht unter **„In deinen Materialien“**, in welchen Dateien er vorkommt (auch innerhalb eines Abschnitts wie „Röm 8,26-30“), jeweils mit einem Stück Text. Ein Klick öffnet die Datei an dieser Stelle.
+
+## 6.12 Bibelstunde live auf den Handys
+
+Der Reiter **Live** (in der Leiste „Material“) bringt die Bibelstunde auf die Handys der Teilnehmer, **ohne App, ohne Konto und ohne Internet**. Das Programm wird selbst zu einer kleinen Webseite in eurem WLAN; die Handys müssen nur im selben WLAN sein wie dein Computer.
+
+1. **Bibelstunde live starten.** Es erscheint ein QR-Code mit der Adresse darunter (z. B. `http://192.168.1.20:49400/ab3k9x`). Fragt Windows, ob das Programm im Netzwerk erreichbar sein darf, wähle **Zulassen** für private Netzwerke.
+2. Die Teilnehmer scannen den Code mit der Kamera und tippen den Link an. **QR-Code auf den Beamer** zeigt ihn groß auf dem zweiten Bildschirm; er passt sich immer ganz dem Bildschirm an.
+3. Auf dem Handy gibt es vier Bereiche:
+   - **Jetzt:** was der Beamer gerade zeigt (Verse oder Abschnitte der Materialien), groß und ruhig. Ohne Beamer schickst du die gewählten Verse mit **Gewählte Verse an die Handys**.
+   - **Handout:** wähle ein Dokument und **An die Handys senden**; es erscheint im selben Design wie gedruckt.
+   - **Frage:** Teilnehmer schicken dir still eine Frage, der Name ist freiwillig. Die Fragen stehen nur bei dir; **Auf den Beamer**, **✓ Besprochen** oder **Löschen**.
+   - **Umfrage:** Frage und Antworten eintippen (oder **Ja / Nein**, **Skala 1–5**, **Verse des Abschnitts**) und **Umfrage starten**. Jedes Handy hat eine Stimme und kann sie ändern. Das Ergebnis siehst du sofort; auf den Handys und dem Beamer erst, wenn du es zeigst.
+
+**Beenden …** fragt, ob die Bibelstunde ins **Archiv** soll: mit den gezeigten Bibelstellen, den Fragen und dem Ergebnis der Umfrage.
+
+**Sicherheit:** Die Adresse enthält einen zufälligen Code, ohne ihn kommt niemand hinein. Nichts verlässt euer Netzwerk, und nach dem Beenden ist der Raum weg. Öffnet sich die Seite am Handy nicht, ist es oft ein Gäste-WLAN, das die Geräte voneinander trennt; dann hilft ein Hotspot vom Handy des Leiters, mit dem sich Computer und Teilnehmer verbinden.
+
+## 6.13 Archiv der Bibelstunden
+
+Der Reiter **Archiv** hält fest, welche Stelle wann dran war: Datum, Titel, Bibelstellen (z. B. `Joh 10,1-18; Ps 23`), Notizen und die Fragen des Abends. Die Stellen sind anklickbar, oben suchst du im ganzen Archiv. Über einem Kapitel, das schon in einer Bibelstunde dran war, steht im Lesefenster **„In der Bibelstunde am …“**; ein Klick öffnet das Archiv. Das Archiv gehört zum Vault und wird mit ihm gesichert.
+
+## 6.14 Gesprächsfragen nach Methode
+
+Unter **Dokumente → Neu → Gesprächsfragen nach Methode** legst du für die angeklickten Verse ein Dokument mit dem Bibeltext und fertigen Fragen an:
+
+| Methode | Gedanke |
+|---|---|
+| Beobachten – Deuten – Anwenden | die klassische induktive Methode |
+| Entdeckerbibelstudium (DBS) | Dank und Sorgen, nacherzählen, was lernen wir über Gott und Menschen, was tue ich, wem erzähle ich es |
+| Schwedische Methode | 💡 was leuchtet ein, ? was verstehe ich nicht, → was trifft mich |
+| SOAP | Schrift, Beobachtung, Anwendung, Gebet |
+| Erzählung entdecken | für Erzählungen und Gleichnisse |
+| Lectio Divina | lesen, nachdenken, beten, ruhen |
+
+Die Fragen stehen unter „Fragen zum Gespräch“; im **Handout** werden sie zu einem eigenen, nummerierten Kasten.
+
+## 6.15 Notizen aus e-Sword übernehmen
+
+Unter **Einstellungen → Sicherung und Austausch → Notizen aus e-Sword importieren …** wählst du deine e-Sword-Dateien (`.notx`, `.cmtx`, `.topx`) oder MySword-Kommentare (`.mybible`). Notizen zu Versen werden Notizen im aktiven Vault (steht dort schon eine, kommt die neue darunter), Themen und Notizen zu ganzen Büchern oder Kapiteln werden Dokumente mit dem Tag „e-Sword“. Formatierungen (RTF, HTML) werden zu einfachem Text. Ein zweiter Import derselben Datei legt nichts doppelt an. Notizen aus Logos lassen sich dort als Word-Datei exportieren und dann im Reiter **Materialien** öffnen.
