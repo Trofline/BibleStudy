@@ -192,7 +192,7 @@ public partial class MainWindow
             var path = Path.Combine(AppPaths.Root, HandbookGerman ? "Handbuch.md" : "Handbook.md");
             Directory.CreateDirectory(AppPaths.Root);
             File.WriteAllText(path, sb.ToString(), new UTF8Encoding(true));
-            Process.Start(new ProcessStartInfo(path) { UseShellExecute = true });
+            Shell.Open(path);
         }
         catch (Exception ex) { StatusText.Text = L("Handbuch konnte nicht geöffnet werden: {0}", ex.Message); }
     }

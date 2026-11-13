@@ -1,10 +1,10 @@
-<Window xmlns="https://github.com/avaloniaui"
+<local:AppWindow xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:local="clr-namespace:BibleStudy.App"
         x:Class="BibleStudy.App.MainWindow"
         Title="BibleStudy" Width="1280" Height="800" MinWidth="850" MinHeight="400"
         Background="{DynamicResource BsBackground}" Foreground="{DynamicResource BsText}" WindowDecorations="BorderOnly">
-    <Window.Resources>
+    <local:AppWindow.Resources>
         <DataTemplate x:Key="EntryTpl" x:DataType="local:Entry">
             <StackPanel Spacing="2">
                 <StackPanel Orientation="Horizontal" Spacing="8">
@@ -14,7 +14,7 @@
                 <local:MarkedBlock Marked="{Binding Body}" IsVisible="{Binding HasBody}" TextWrapping="Wrap" Opacity="0.9" />
             </StackPanel>
         </DataTemplate>
-    </Window.Resources>
+    </local:AppWindow.Resources>
 
     <DockPanel>
         <!-- Top bar: where am I (navigation) -->
@@ -1190,4 +1190,4 @@
         <Border x:Name="SplitDropZone" IsVisible="False" IsHitTestVisible="False" BorderThickness="3" CornerRadius="6" ZIndex="80" HorizontalAlignment="Left" />
         </Grid>
     </DockPanel>
-</Window>
+</local:AppWindow>

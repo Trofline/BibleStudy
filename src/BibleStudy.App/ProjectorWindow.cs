@@ -96,6 +96,10 @@ public sealed class ProjectorWindow : Window
     /// <summary>Opens on the other screen in full screen when there is one; with only one screen as a window that can be dragged to the projector.</summary>
     public void OpenBeside(Window owner)
     {
+#if ANDROID
+        Show(owner);
+        return;
+#else
         var mine = owner.Screens.ScreenFromWindow(owner);
         var other = owner.Screens.All.FirstOrDefault(s => mine is null || !s.Bounds.Equals(mine.Bounds));
         if (other is not null)
@@ -110,5 +114,6 @@ public sealed class ProjectorWindow : Window
             WindowStartupLocation = WindowStartupLocation.CenterScreen;
             Show();
         }
+#endif
     }
 }

@@ -66,7 +66,7 @@ public partial class MainWindow
     async Task<string?> AskForFileAsync(LocalBibleStore.Outdated o)
     {
         var files = await StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions { Title = L("Datei für „{0}“ wählen (Abbrechen: diese Bibel überspringen)", o.Name), AllowMultiple = false });
-        return files.Count > 0 ? files[0].TryGetLocalPath() : null;
+        return files.Count > 0 ? await files[0].LocalPathAsync() : null;
     }
 
     /// <summary>After a Bible was read again: marks in it keep their words, also where the text moved (a letter more or less before them).</summary>

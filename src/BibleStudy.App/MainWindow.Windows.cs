@@ -200,6 +200,7 @@ public partial class MainWindow
         foreach (var w in _windows.Values.Where(w => w.Win is null && w.Panel.Parent == WorkHost)) w.Panel.IsVisible = w.Key == key;
         if (key is not null && key != before && _windows.TryGetValue(key, out var fresh)) AnimateIn(fresh.Panel);
         WorkHost.IsVisible = key is not null;
+        if (key is not null) ClosePanelOnPhone();
         UpdateReadBar();
         RebuildTabStrip();
         if (key is not null && _windows.TryGetValue(key, out var shown)) TabShown(shown.Current);
@@ -437,7 +438,11 @@ public partial class MainWindow
     void OpenWindowFor(Detached d, PixelPoint? at)
     {
         // a place on a screen that is no longer connected would open the window where nobody can see it
+#if ANDROID
+        WindowBounds? saved = null;
+#else
         var saved = _settings.Windows.TryGetValue(WindowStateKey(d.Key), out var s) && s.W > 0 && Screens.All.Any(sc => sc.WorkingArea.Contains(new PixelPoint(s.X + 40, s.Y + 20))) ? s : null;
+#endif
         var win = new Window
         {
             Title = L("BibleStudy – {0}", L(d.Title)), Width = saved?.W ?? (d.Items.Count > 1 ? 640 : 520), Height = saved?.H ?? 800, MinWidth = 320, MinHeight = 240,
@@ -601,6 +606,9 @@ public partial class MainWindow
     /// <summary>Bible text on the left, commentary and notes tiled on the right – each in its own window on the same screen.</summary>
     LayoutPreset DashboardLayout()
     {
+#if ANDROID
+        return new() { SideOpen = false };
+#else
         var screen = Screens.ScreenFromWindow(this) ?? Screens.Primary;
         if (screen is null) return new() { SideOpen = false };
         var wa = screen.WorkingArea;
@@ -615,17 +623,22 @@ public partial class MainWindow
                 new(wa.X + left, wa.Y + half, (int)(right / s), (int)(half / s) - 28, false) { Key = "tab:2" },
             ],
         };
+#endif
     }
 
     /// <summary>The main window takes the left part of the screen so that the dashboard windows fit beside it.</summary>
     void PlaceMainForDashboard()
     {
+#if ANDROID
+        return;
+#else
         var screen = Screens.ScreenFromWindow(this) ?? Screens.Primary;
         if (screen is null) return;
         var wa = screen.WorkingArea;
         WindowState = WindowState.Normal;
         Position = wa.Position;
         Width = wa.Width * 0.58 / screen.Scaling; Height = wa.Height / screen.Scaling;
+#endif
     }
 
     LayoutPreset? FindLayout(string name) => _settings.Layouts.GetValueOrDefault(name) ?? BuiltIn(name);

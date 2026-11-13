@@ -22,10 +22,15 @@ public partial class MainWindow
         p.Step += dir => _ = StepProjectorAsync(dir);
         p.Closed += (_, _) => { _projector = null; _projectVerses = null; UpdateProjectorChip(); };
         _projector = p;
+#if ANDROID
+        p.Show(this);
+        StatusText.Text = L("Die Beamer-Ansicht füllt den Bildschirm. Mit HDMI oder Bildschirmübertragung erscheint sie auf dem Beamer. Wischen oder Pfeile: weiter und zurück.");
+#else
         p.OpenBeside(this);
         StatusText.Text = Screens.All.Count > 1
             ? L("Die Beamer-Ansicht ist auf dem zweiten Bildschirm. Pfeiltasten: weiter und zurück, B: schwarz, Esc: beenden.")
             : L("Die Beamer-Ansicht ist ein eigenes Fenster: zum Beamer ziehen, F11 macht es bildschirmfüllend.");
+#endif
         return p;
     }
 

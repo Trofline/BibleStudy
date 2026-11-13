@@ -98,25 +98,36 @@ public sealed class LiveRoom : IDisposable
         {
             foreach (var nic in NetworkInterface.GetAllNetworkInterfaces())
             {
-                if (nic.OperationalStatus != OperationalStatus.Up || nic.NetworkInterfaceType is NetworkInterfaceType.Loopback or NetworkInterfaceType.Tunnel) continue;
+                if (Safe(() => nic.OperationalStatus) is { } status && status != OperationalStatus.Up) continue;
+                if (Safe(() => nic.NetworkInterfaceType) is NetworkInterfaceType.Loopback or NetworkInterfaceType.Tunnel || nic.Name == "lo") continue;
                 var props = nic.GetIPProperties();
-                var gateway = props.GatewayAddresses.Any(g => g.Address.AddressFamily == AddressFamily.InterNetwork && !g.Address.Equals(IPAddress.Any));
+                bool gateway;
+                // Android does not tell the gateways: the Wi-Fi (wlan0) counts as the network with a router
+                try { gateway = props.GatewayAddresses.Any(g => g.Address.AddressFamily == AddressFamily.InterNetwork && !g.Address.Equals(IPAddress.Any)); }
+                catch (PlatformNotSupportedException) { gateway = nic.Name.StartsWith("wlan", StringComparison.OrdinalIgnoreCase) || nic.Name.StartsWith("eth", StringComparison.OrdinalIgnoreCase); }
                 foreach (var a in props.UnicastAddresses)
                 {
                     if (a.Address.AddressFamily != AddressFamily.InterNetwork || IPAddress.IsLoopback(a.Address)) continue;
                     var b = a.Address.GetAddressBytes();
                     if (b[0] == 169 && b[1] == 254) continue;   // no address from a router
                     var isPrivate = b[0] == 10 || (b[0] == 172 && b[1] is >= 16 and <= 31) || (b[0] == 192 && b[1] == 168);
-                    var virtualNic = nic.Description.Contains("Virtual", StringComparison.OrdinalIgnoreCase) || nic.Description.Contains("VPN", StringComparison.OrdinalIgnoreCase)
-                        || nic.Name.Contains("vEthernet", StringComparison.OrdinalIgnoreCase);
-                    var rank = (gateway ? 0 : 4) + (isPrivate ? 0 : 2) + (virtualNic ? 8 : 0) + (nic.NetworkInterfaceType == NetworkInterfaceType.Wireless80211 ? 0 : 1);
+                    var description = Safe(() => nic.Description) ?? "";
+                    var virtualNic = description.Contains("Virtual", StringComparison.OrdinalIgnoreCase) || description.Contains("VPN", StringComparison.OrdinalIgnoreCase)
+                        || nic.Name.Contains("vEthernet", StringComparison.OrdinalIgnoreCase) || nic.Name.StartsWith("tun", StringComparison.OrdinalIgnoreCase)
+                        || nic.Name.StartsWith("rmnet", StringComparison.OrdinalIgnoreCase);   // Android: rmnet is the mobile data, not the Wi-Fi of the group
+                    var wireless = Safe(() => nic.NetworkInterfaceType == NetworkInterfaceType.Wireless80211) ?? nic.Name.StartsWith("wlan", StringComparison.OrdinalIgnoreCase);
+                    var rank = (gateway ? 0 : 4) + (isPrivate ? 0 : 2) + (virtualNic ? 8 : 0) + (wireless ? 0 : 1);
                     found.Add((a.Address.ToString(), nic.Name, rank));
                 }
             }
         }
-        catch (NetworkInformationException) { }
+        catch (Exception ex) when (ex is NetworkInformationException or PlatformNotSupportedException) { }
         return found.OrderBy(f => f.Item3).Select(f => (f.Item1, f.Item2)).Distinct().ToList();
     }
+
+    /// <summary>What a system does not tell (Android leaves out some of the network details) is null.</summary>
+    static T? Safe<T>(Func<T> get) where T : struct { try { return get(); } catch (PlatformNotSupportedException) { return null; } }
+    static string? Safe(Func<string> get) { try { return get(); } catch (PlatformNotSupportedException) { return null; } }
 
     public string UrlFor(string address) => $"http://{address}:{Port}/{Code}";
 

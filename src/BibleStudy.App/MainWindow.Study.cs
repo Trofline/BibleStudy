@@ -196,7 +196,8 @@ public partial class MainWindow
             Title = L("Vault exportieren"), SuggestedFileName = $"BibleStudy-{_vault.Name}-{DateTime.Now:yyyyMMdd}.zip",
             FileTypeChoices = [new FilePickerFileType("ZIP-Archiv") { Patterns = ["*.zip"] }],
         });
-        if (file?.TryGetLocalPath() is not { } path) return;
+        await using var target = await file.SaveTargetAsync();
+        if (target?.Path is not { } path) return;
         ExportToPath(path);
     }
 
@@ -232,7 +233,7 @@ public partial class MainWindow
         {
             Title = guest ? L("Vault als Gast importieren") : L("Vault importieren"), AllowMultiple = false, FileTypeFilter = [new FilePickerFileType("ZIP-Archiv") { Patterns = ["*.zip"] }],
         });
-        if (files.Count == 0 || files[0].TryGetLocalPath() is not { } path) return;
+        if (files.Count == 0 || await files[0].LocalPathAsync() is not { } path) return;
         (string Text, bool IsGuestWork, bool SameName) look;
         try { look = ImportPreview(path); }
         catch (Exception ex) { BackupInfo.Text = L("Import fehlgeschlagen: ") + ex.Message; return; }

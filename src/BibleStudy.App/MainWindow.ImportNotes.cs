@@ -16,7 +16,7 @@ public partial class MainWindow
             Title = L("Notizen aus e-Sword oder MySword importieren"), AllowMultiple = true,
             FileTypeFilter = [new FilePickerFileType(L("e-Sword-Notizen und -Kommentare")) { Patterns = ["*.notx", "*.cmtx", "*.topx", "*.mybible"] }],
         });
-        var paths = files.Select(f => f.TryGetLocalPath()).OfType<string>().ToList();
+        var paths = await files.LocalPathsAsync();
         if (paths.Count == 0) return;
         int notes = 0, docs = 0;
         var failed = new List<string>();

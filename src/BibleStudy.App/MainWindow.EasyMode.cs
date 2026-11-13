@@ -24,7 +24,7 @@ public partial class MainWindow
         var wide = Bounds.Width;
         ReadQuick.IsVisible = !_settings.EasyMode && !CompactLook && wide >= 1600;
         ReadQuickMore.IsVisible = wide >= 1800;
-        SidePanel.MaxWidth = Math.Max(300, wide - 460);   // a narrow window keeps room for the text: the panel gives way
+        if (!IsPhone) SidePanel.MaxWidth = Math.Max(300, wide - 460);   // a narrow window keeps room for the text: the panel gives way
         // below about 1000 wide the open panel took half of the window: it folds away by itself and comes back when there is room again
         // (the choice saved in the settings stays the user's)
         if (wide > 0 && wide < 1000 && SidePanel.IsVisible && !_panelFolded) { _panelFolded = true; var keep = _settings.SideOpen; SetPanelOpen(false); _settings.SideOpen = keep; SaveSettings(); }

@@ -42,7 +42,7 @@ public partial class MainWindow
             Remeasure(TopGrid);
             foreach (var child in TopGrid.Children)
             {
-                if (child == QuickJumpHost) continue;
+                if (child == QuickJumpHost || Grid.GetRow(child) > 0) continue;   // on a phone the pickers have a row of their own
                 child.Measure(Size.Infinity);
                 sum += child.DesiredSize.Width + child.Margin.Left + child.Margin.Right;
             }
@@ -52,6 +52,13 @@ public partial class MainWindow
         if (Room() < QuickJumpWish) AppTitleText.IsVisible = false;
         if (Room() < QuickJumpWish) VaultTopText.IsVisible = false;
         RunSpill(TopMoreBtn, _topSpill, _topHidden, () => Room() >= QuickJumpWish);
+        // a phone: the row with the pickers is as wide as the screen; the language (seldom changed) goes behind "…"
+        if (IsPhone && LangBtn.IsVisible && _topSpill.FirstOrDefault(s => s.Item == LangBtn) is { } lang)
+        {
+            LangBtn.IsVisible = false; if (lang.With is not null) lang.With.IsVisible = false;
+            _topHidden.Add(lang);
+            TopMoreBtn.IsVisible = true;
+        }
         QuickJumpPill.Width = Math.Clamp(Room(), QuickJumpMin, QuickJumpMax);
         // in a field this narrow the hint would only show its first letters
         _jumpHint ??= QuickJumpBox.PlaceholderText;

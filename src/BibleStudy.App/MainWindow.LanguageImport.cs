@@ -29,7 +29,7 @@ public partial class MainWindow
             await File.WriteAllTextAsync(Path.Combine(dir, Loc.Code + "-fehlend.json"), LanguageFiles.MissingTemplate(Loc.Code, name), utf8);
             await File.WriteAllTextAsync(Path.Combine(dir, "ki-anweisung.txt"), LanguageFiles.Instruction(name), utf8);
             LangImportInfo.Text = L("Fehlende Texte gespeichert in: {0}\nNach der Übersetzung als {1}.json speichern und importieren; sie werden zu den vorhandenen hinzugefügt.", dir, Loc.Code);
-            try { Process.Start(new ProcessStartInfo(dir) { UseShellExecute = true }); } catch { /* the folder is named above */ }
+            try { Shell.Open(dir); } catch { /* the folder is named above */ }
         }
         catch (Exception ex) { LangImportInfo.Text = L("Fehler: ") + ex.Message; }
     }
@@ -44,7 +44,7 @@ public partial class MainWindow
             await File.WriteAllTextAsync(Path.Combine(dir, "sprache-vorlage.json"), LanguageFiles.Template(), utf8);
             await File.WriteAllTextAsync(Path.Combine(dir, "ki-anweisung.txt"), LanguageFiles.Instruction("<language / Sprache>"), utf8);
             LangImportInfo.Text = L("Vorlage und Anweisung gespeichert in: {0}\nGib beide Dateien einer KI (z. B. Claude), speichere ihre Antwort als Datei mit dem Sprachkürzel, z. B. it.json, und importiere sie hier.", dir);
-            try { Process.Start(new ProcessStartInfo(dir) { UseShellExecute = true }); } catch { /* the folder is named above */ }
+            try { Shell.Open(dir); } catch { /* the folder is named above */ }
         }
         catch (Exception ex) { LangImportInfo.Text = L("Fehler: ") + ex.Message; }
     }
@@ -56,7 +56,7 @@ public partial class MainWindow
             Title = L("Sprachdatei wählen"), AllowMultiple = false,
             FileTypeFilter = [new FilePickerFileType(L("Sprachdateien")) { Patterns = ["*.json"] }],
         });
-        if (files.Count == 0 || files[0].TryGetLocalPath() is not { } path) return;
+        if (files.Count == 0 || await files[0].LocalPathAsync() is not { } path) return;
         try
         {
             var code = LanguageFiles.CodeFrom(path) ?? throw new FormatException(L("Der Dateiname muss das Sprachkürzel sein, z. B. it.json oder pt-br.json."));

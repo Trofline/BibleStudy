@@ -14,6 +14,7 @@ public partial class MainWindow
 
     void StartControl()
     {
+        if (OperatingSystem.IsAndroid()) return;   // the AI tools on the computer (Claude Code, MCP) talk to it; a phone has none
         _control = new ControlServer(RunToolAsync, Path.Combine(_root, "control.json"));
         if (!_control.Start()) StatusText.Text = L("Die KI-Schnittstelle konnte nicht gestartet werden (kein freier lokaler Port).");
         Closed += (_, _) => _control?.Dispose();

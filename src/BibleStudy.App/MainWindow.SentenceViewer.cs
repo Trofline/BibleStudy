@@ -198,7 +198,7 @@ public partial class MainWindow
                 var path = System.IO.Path.Combine(ExportFolder, name + ".svg");
                 File.WriteAllText(path, svg, new System.Text.UTF8Encoding(false));
                 _w.StatusText.Text = L("Bild gespeichert: {0}", path);
-                try { System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(path) { UseShellExecute = true }); } catch { /* the path is in the status line */ }
+                try { Shell.Open(path); } catch { /* the path is in the status line */ }
             }
             catch (Exception ex) { _w.StatusText.Text = L("Fehler: ") + ex.Message; }
         }
