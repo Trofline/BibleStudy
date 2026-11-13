@@ -927,6 +927,7 @@
                                     <Button x:Name="MergeUndoBtn" Content="Einmischen rückgängig" IsVisible="False" Margin="0,0,6,6" ToolTip.Tip="Stellt die Vaults so wieder her, wie sie direkt vor dem letzten Einmischen waren" />
                                     <Button x:Name="GuestImportBtn" Content="Als Gast importieren …" Margin="0,0,6,6" ToolTip.Tip="Öffnet die ZIP eines anderen Computers nur für diese Sitzung: Beim Schließen des Programms ist alles wieder weg, deine eigenen Vaults und Einstellungen bleiben unberührt" />
                                     <Button x:Name="ObsidianBtn" Content="Als Obsidian-Vault exportieren …" ToolTip.Tip="Schreibt den ganzen Vault als Markdown-Ordner: deine Ordner als Ordner, jede Notiz und jedes Dokument als eigene Datei, Bibelstellen als Links. Obsidian und andere Notiz-Programme öffnen ihn direkt." />
+                                    <Button x:Name="EswordImportBtn" Content="Notizen aus e-Sword importieren …" Margin="0,0,6,6" ToolTip.Tip="Übernimmt deine Notizen und eigenen Kommentare aus e-Sword oder MySword (.notx, .cmtx, .topx, .mybible): Notizen zu Versen werden Notizen, Themen werden Dokumente." />
                                     <Button x:Name="LicensesBtn" Content="Quellen und Lizenzen …" ToolTip.Tip="Woher alle Texte und Daten stammen und unter welcher Lizenz sie stehen" />
                                 </WrapPanel>
                                 <TextBlock x:Name="BackupInfo" Classes="caption" TextWrapping="Wrap" />
@@ -1149,6 +1150,18 @@
                 </TabItem>
                 <TabItem Header="Materialien">
                     <Panel x:Name="MaterialsHost" />
+                </TabItem>
+                <TabItem Header="Live">
+                    <ScrollViewer><StackPanel x:Name="LivePanel" Spacing="8" Margin="16,10,12,16" /></ScrollViewer>
+                </TabItem>
+                <TabItem Header="Archiv">
+                    <ScrollViewer><StackPanel x:Name="ArchivePanel" Spacing="8" Margin="16,10,12,16" /></ScrollViewer>
+                </TabItem>
+                <TabItem Header="Synopse">
+                    <ScrollViewer><StackPanel x:Name="SynopsisPanel" Spacing="8" Margin="16,10,12,16" /></ScrollViewer>
+                </TabItem>
+                <TabItem Header="Kirchenväter">
+                    <ScrollViewer><StackPanel x:Name="FathersPanel" Spacing="8" Margin="16,10,12,16" /></ScrollViewer>
                 </TabItem>
             </TabControl>
             </DockPanel>

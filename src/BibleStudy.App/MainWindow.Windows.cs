@@ -83,6 +83,10 @@ public partial class MainWindow
         else if (index == HandbookTab) BuildHandbookUi();
         else if (index == ExplorerTab) { BuildExplorer(); RefreshExplorer(); ExplorerHost.Focus(); }
         else if (index == MaterialsTab) BuildMaterials();
+        else if (index == LiveTab) BuildLiveUi();
+        else if (index == ArchiveTab) BuildArchiveUi();
+        else if (index == SynopsisTab) _ = ShowSynopsisAsync();
+        else if (index == FathersTab) _ = ShowFathersAsync();
         else if (index == GrundtextTab && _selected is int gv) _ = ShowGrundtextAsync(new VerseRef(_curBook, _curChapter, gv));
         else if (index == CollabTab && CollabPanel.Children.Count == 0) BuildCollabUi();
         else if (index == AnalysisTab) BuildAnalysisUi();

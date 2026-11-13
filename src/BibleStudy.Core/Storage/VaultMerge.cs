@@ -42,7 +42,7 @@ public sealed partial class VaultStore
             marks.Where(m => !m.WholeVerse && m.TranslationId != Mark.AnyTranslation).Select(m => m.TranslationId).Distinct().Order().ToList());
     }
 
-    static readonly string[] ContentTables = ["notes", "read_chapters", "folders", "marks", "mark_tags", "mark_places", "queue", "documents", "doc_tags", "todos", "my_xrefs", "hidden_xrefs", "bookmarks", "prayers", "headings"];
+    static readonly string[] ContentTables = ["notes", "read_chapters", "folders", "marks", "mark_tags", "mark_places", "queue", "documents", "doc_tags", "todos", "my_xrefs", "hidden_xrefs", "bookmarks", "prayers", "headings", "studies"];
 
     /// <summary>A fingerprint of what the user wrote in this vault. Reading (the last position) and the time stamps of a save without a change do not count.</summary>
     public string Fingerprint()
@@ -187,6 +187,17 @@ public sealed partial class VaultStore
                 })
                 {
                     using var cmd = con.CreateCommand(); cmd.CommandText = sql; others += cmd.ExecuteNonQuery();
+                }
+                // the archive of the Bible studies (vaults from before 1.9 have none)
+                using (var has = con.CreateCommand())
+                {
+                    has.CommandText = "SELECT 1 FROM g.sqlite_master WHERE type='table' AND name='studies'";
+                    if (has.ExecuteScalar() is not null)
+                    {
+                        using var cmd = con.CreateCommand();
+                        cmd.CommandText = "INSERT INTO main.studies(day,title,passages,notes,questions,created) SELECT day,title,passages,notes,questions,created FROM g.studies o WHERE NOT EXISTS(SELECT 1 FROM main.studies m WHERE m.day IS o.day AND m.title IS o.title)";
+                        others += cmd.ExecuteNonQuery();
+                    }
                 }
 
                 // to-dos: a sub-task goes under the same task here; ticking off counts, an open one does not untick

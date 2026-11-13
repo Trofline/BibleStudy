@@ -114,9 +114,17 @@ public partial class MainWindow
             item.Click += (_, _) => NewDocumentFromTemplate(t);
             templates.Items.Add(item);
         }
+        var methods = new MenuItem { Header = L("Gesprächsfragen nach Methode") };
+        foreach (var t in GroupMethods)
+        {
+            var item = new MenuItem { Header = t.Title };
+            if (t.About is { } about) ToolTip.SetTip(item, about);
+            item.Click += (_, _) => NewDocumentFromTemplate(t);
+            methods.Items.Add(item);
+        }
         var file = new MenuItem { Header = L("Datei verknüpfen …") };
         file.Click += async (_, _) => await LinkFileAsync();
-        menu.Items.Add(blank); menu.Items.Add(fromVerse); menu.Items.Add(templates); menu.Items.Add(new Separator()); menu.Items.Add(file);
+        menu.Items.Add(blank); menu.Items.Add(fromVerse); menu.Items.Add(templates); menu.Items.Add(methods); menu.Items.Add(new Separator()); menu.Items.Add(file);
         DocNewBtn.Flyout = menu;
 
         // "more" in the editor

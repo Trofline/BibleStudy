@@ -170,3 +170,22 @@ The **Pericope** tab (group *Study*) shows a passage in pictures. Choose **From 
 - **Links:** how the sentences are joined (addition, reason, contrast, purpose, condition …), ordered by the connecting words.
 
 **Save as picture** saves the whole analysis as a picture. Everything is worked out on your computer from the original-text data (only for books with syntax data, so the Old and the New Testament). Sorting a connecting word into a relation is a rule of thumb (a "καί" counts as addition, a "γάρ" as reason).
+
+## 4.16 Synopsis of the gospels
+
+The **Synopsis** tab (in the "Study" rail) shows an event as Matthew, Mark, Luke and John tell it, **side by side** in the chosen translation. If you are reading a gospel, it opens at the verse clicked; otherwise you choose from the list (more than 110 sections from the birth to the ascension) or turn the pages with ‹ and ›.
+
+**Colour what is only in one gospel** highlights the words that only this gospel has at that place. So you see at a glance what each evangelist tells differently or in addition. The comparison is made in the chosen translation; short words (and, the, he …) stay without colour. A click on the heading of a column opens the passage in the Read tab.
+
+The list of parallels was compiled for this program and follows the usual division into sections.
+
+## 4.17 Church fathers
+
+The **Church fathers** tab (in the "Books" rail) shows what Augustine, John Chrysostom, Jerome, Origen and many others wrote on the **verse clicked**, the oldest first. It follows the verse you click.
+
+- The collection ("Historical Christian Faith", public domain, in English) is **loaded once** (about 180 MB) and then stays on your computer, offline too. **Delete the collection from the computer** frees the space again.
+- **Church fathers only (up to the year 750)** is on by default. Without the tick, later interpreters are added (Thomas Aquinas, the Reformers …).
+- Long excerpts are shortened; **Whole text** shows everything. **Source** opens the work the excerpt comes from.
+- If an excerpt says "on 3,14–17", it is about a passage your verse belongs to.
+
+By its own account, the collection includes some excerpts of later authors under "fair use"; check the source before you publish anything.

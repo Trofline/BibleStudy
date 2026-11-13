@@ -1,0 +1,122 @@
+# Gospel parallels, compiled for BibleStudy (MIT). Columns: German|English|Spanish|French|Russian|Matthew|Mark|Luke|John
+# A reference is chapter:verse-verse or chapter:verse-chapter:verse; several are separated by ";".
+Prolog: Das Wort wurde Fleisch|Prologue: the Word became flesh|Prólogo: el Verbo se hizo carne|Prologue : la Parole devenue chair|Пролог: Слово стало плотью||||1:1-18
+Stammbaum Jesu|The genealogy of Jesus|La genealogía de Jesús|La généalogie de Jésus|Родословие Иисуса|1:1-17||3:23-38|
+Ankündigung der Geburt Jesu|The birth of Jesus foretold|Anuncio del nacimiento de Jesús|L'annonce de la naissance de Jésus|Благовещение|1:18-25||1:26-38|
+Geburt Jesu und die Hirten|The birth of Jesus and the shepherds|Nacimiento de Jesús y los pastores|La naissance de Jésus et les bergers|Рождество и пастухи|||2:1-20|
+Die Weisen aus dem Morgenland|The visit of the Magi|La visita de los magos|La visite des mages|Поклонение волхвов|2:1-12|||
+Darstellung im Tempel|The presentation in the temple|La presentación en el templo|La présentation au temple|Сретение|||2:21-38|
+Flucht nach Ägypten und Rückkehr|Flight to Egypt and return|Huida a Egipto y regreso|La fuite en Égypte et le retour|Бегство в Египет и возвращение|2:13-23||2:39-40|
+Der zwölfjährige Jesus im Tempel|The boy Jesus in the temple|Jesús a los doce años en el templo|Jésus à douze ans au temple|Двенадцатилетний Иисус в храме|||2:41-52|
+Johannes der Täufer|John the Baptist|Juan el Bautista|Jean le Baptiste|Иоанн Креститель|3:1-12|1:1-8|3:1-18|1:19-28
+Taufe Jesu|The baptism of Jesus|El bautismo de Jesús|Le baptême de Jésus|Крещение Иисуса|3:13-17|1:9-11|3:21-22|1:29-34
+Versuchung Jesu|The temptation of Jesus|La tentación de Jesús|La tentation de Jésus|Искушение Иисуса|4:1-11|1:12-13|4:1-13|
+Die ersten Jünger|The first disciples|Los primeros discípulos|Les premiers disciples|Первые ученики|4:18-22|1:16-20|5:1-11|1:35-51
+Hochzeit zu Kana|The wedding at Cana|Las bodas de Caná|Les noces de Cana|Брак в Кане||||2:1-12
+Tempelreinigung|The cleansing of the temple|La purificación del templo|Les vendeurs chassés du temple|Очищение храма|21:12-17|11:15-19|19:45-48|2:13-22
+Nikodemus|Nicodemus|Nicodemo|Nicodème|Никодим||||3:1-21
+Die Frau am Jakobsbrunnen|The woman at the well|La samaritana|La Samaritaine|Самарянка у колодца||||4:1-42
+Beginn des Wirkens in Galiläa|Beginning of the ministry in Galilee|Comienzo del ministerio en Galilea|Début du ministère en Galilée|Начало служения в Галилее|4:12-17|1:14-15|4:14-15|4:43-45
+Jesus in Nazareth abgelehnt|Rejection at Nazareth|Rechazo en Nazaret|Jésus rejeté à Nazareth|Отвержение в Назарете|13:53-58|6:1-6|4:16-30|
+Ein Besessener in Kapernaum|A demon cast out in Capernaum|Un endemoniado en Capernaúm|Un démoniaque à Capharnaüm|Бесноватый в Капернауме||1:21-28|4:31-37|
+Die Schwiegermutter des Petrus|Peter's mother-in-law healed|La suegra de Pedro|La belle-mère de Pierre|Тёща Петра|8:14-17|1:29-34|4:38-41|
+Heilung eines Aussätzigen|A leper healed|Sanación de un leproso|Guérison d'un lépreux|Исцеление прокажённого|8:1-4|1:40-45|5:12-16|
+Heilung eines Gelähmten|A paralytic healed|Sanación de un paralítico|Guérison d'un paralysé|Исцеление расслабленного|9:1-8|2:1-12|5:17-26|
+Berufung des Levi (Matthäus)|The call of Levi (Matthew)|El llamamiento de Leví (Mateo)|L'appel de Lévi (Matthieu)|Призвание Левия (Матфея)|9:9-13|2:13-17|5:27-32|
+Die Frage nach dem Fasten|The question about fasting|La pregunta sobre el ayuno|La question du jeûne|Вопрос о посте|9:14-17|2:18-22|5:33-39|
+Ährenraufen am Sabbat|Plucking grain on the Sabbath|Las espigas en sábado|Les épis arrachés le sabbat|Срывание колосьев в субботу|12:1-8|2:23-28|6:1-5|
+Die verdorrte Hand|The man with the withered hand|El hombre de la mano seca|L'homme à la main sèche|Сухорукий|12:9-14|3:1-6|6:6-11|
+Wahl der Zwölf|The twelve chosen|Elección de los doce|Le choix des Douze|Избрание двенадцати|10:1-4|3:13-19|6:12-16|
+Die Seligpreisungen|The Beatitudes|Las bienaventuranzas|Les Béatitudes|Заповеди блаженства|5:1-12||6:20-23|
+Salz und Licht|Salt and light|Sal y luz|Le sel et la lumière|Соль и свет|5:13-16|9:50;4:21|14:34-35;8:16|
+Feindesliebe|Love your enemies|Amad a vuestros enemigos|Aimez vos ennemis|Любовь к врагам|5:38-48||6:27-36|
+Das Vaterunser|The Lord's Prayer|El Padrenuestro|Le Notre Père|Молитва Господня|6:9-13||11:1-4|
+Schätze im Himmel und Sorgen|Treasures in heaven and worry|Tesoros en el cielo y el afán|Trésors dans le ciel et inquiétude|Сокровища на небе и заботы|6:19-34||12:22-34|
+Richtet nicht|Do not judge|No juzguéis|Ne jugez pas|Не судите|7:1-5||6:37-42|
+Bitten, suchen, anklopfen|Ask, seek, knock|Pedid, buscad, llamad|Demandez, cherchez, frappez|Просите, ищите, стучите|7:7-11||11:9-13|
+Das Haus auf dem Fels|The house on the rock|La casa sobre la roca|La maison sur le roc|Дом на камне|7:24-27||6:47-49|
+Der Hauptmann von Kapernaum|The centurion's servant|El siervo del centurión|Le serviteur du centurion|Слуга сотника|8:5-13||7:1-10|4:46-54
+Der Jüngling zu Nain|The widow's son at Nain|El hijo de la viuda de Naín|Le fils de la veuve de Naïn|Сын вдовы из Наина|||7:11-17|
+Die Anfrage des Täufers|John's question from prison|La pregunta del Bautista|La question de Jean-Baptiste|Вопрос Иоанна из темницы|11:2-19||7:18-35|
+Die Salbung durch die Sünderin|A sinful woman anoints Jesus|La pecadora unge a Jesús|La pécheresse pardonnée|Грешница помазывает Иисуса|||7:36-50|
+Jesus und Beelzebul|Jesus and Beelzebul|Jesús y Beelzebú|Jésus et Béelzébul|Иисус и веельзевул|12:22-30|3:20-27|11:14-23|
+Die wahren Verwandten Jesu|Jesus' true family|La verdadera familia de Jesús|La vraie famille de Jésus|Истинные родственники Иисуса|12:46-50|3:31-35|8:19-21|
+Gleichnis vom Sämann|The parable of the sower|La parábola del sembrador|La parabole du semeur|Притча о сеятеле|13:1-23|4:1-20|8:4-15|
+Gleichnis vom Senfkorn|The mustard seed|El grano de mostaza|La graine de moutarde|Горчичное зерно|13:31-32|4:30-32|13:18-19|
+Gleichnis vom Sauerteig|The leaven|La levadura|Le levain|Закваска|13:33||13:20-21|
+Unkraut unter dem Weizen|The weeds among the wheat|La cizaña|L'ivraie|Плевелы|13:24-30|||
+Schatz im Acker und Perle|Hidden treasure and the pearl|El tesoro escondido y la perla|Le trésor et la perle|Сокровище и жемчужина|13:44-46|||
+Die Stillung des Sturms|Calming the storm|Jesús calma la tempestad|La tempête apaisée|Укрощение бури|8:23-27|4:35-41|8:22-25|
+Der Besessene von Gerasa|The Gerasene demoniac|El endemoniado gadareno|Le démoniaque gérasénien|Гадаринский бесноватый|8:28-34|5:1-20|8:26-39|
+Die Tochter des Jaïrus und die kranke Frau|Jairus' daughter and the sick woman|La hija de Jairo y la mujer enferma|La fille de Jaïre et la femme malade|Дочь Иаира и кровоточивая|9:18-26|5:21-43|8:40-56|
+Aussendung der Zwölf|The mission of the Twelve|Misión de los doce|L'envoi des Douze|Посланничество двенадцати|10:5-15|6:7-13|9:1-6|
+Der Tod Johannes des Täufers|The death of John the Baptist|Muerte de Juan el Bautista|La mort de Jean-Baptiste|Смерть Иоанна Крестителя|14:1-12|6:14-29|9:7-9|
+Speisung der Fünftausend|Feeding the five thousand|Alimentación de los cinco mil|La multiplication des pains pour cinq mille|Насыщение пяти тысяч|14:13-21|6:30-44|9:10-17|6:1-15
+Jesus geht auf dem Wasser|Jesus walks on the water|Jesús camina sobre el agua|Jésus marche sur l'eau|Хождение по водам|14:22-33|6:45-52||6:16-21
+Das Brot des Lebens|The bread of life|El pan de vida|Le pain de vie|Хлеб жизни||||6:22-59
+Rein und unrein|Clean and unclean|Lo puro y lo impuro|Le pur et l'impur|Чистое и нечистое|15:1-20|7:1-23||
+Die kanaanäische Frau|The Canaanite woman|La mujer cananea|La Cananéenne|Хананеянка|15:21-28|7:24-30||
+Speisung der Viertausend|Feeding the four thousand|Alimentación de los cuatro mil|La multiplication des pains pour quatre mille|Насыщение четырёх тысяч|15:32-39|8:1-10||
+Das Bekenntnis des Petrus|Peter's confession|La confesión de Pedro|La confession de Pierre|Исповедание Петра|16:13-20|8:27-30|9:18-21|6:66-69
+Erste Leidensankündigung|First prediction of the Passion|Primer anuncio de la Pasión|Première annonce de la Passion|Первое предсказание о страданиях|16:21-28|8:31-9:1|9:22-27|
+Die Verklärung|The Transfiguration|La transfiguración|La Transfiguration|Преображение|17:1-13|9:2-13|9:28-36|
+Der besessene Junge|The boy with a demon|El muchacho endemoniado|L'enfant épileptique|Бесноватый отрок|17:14-21|9:14-29|9:37-43|
+Wer ist der Größte?|Who is the greatest?|¿Quién es el mayor?|Qui est le plus grand ?|Кто больше?|18:1-5|9:33-37|9:46-48|
+Das verlorene Schaf|The lost sheep|La oveja perdida|La brebis perdue|Потерянная овца|18:12-14||15:3-7|
+Der unbarmherzige Knecht|The unforgiving servant|El siervo despiadado|Le serviteur impitoyable|Немилосердный должник|18:21-35|||
+Der barmherzige Samariter|The good Samaritan|El buen samaritano|Le bon Samaritain|Милосердный самарянин|||10:25-37|
+Maria und Marta|Mary and Martha|Marta y María|Marthe et Marie|Марфа и Мария|||10:38-42|
+Der reiche Kornbauer|The rich fool|El rico insensato|Le riche insensé|Безумный богач|||12:13-21|
+Das große Gastmahl|The great banquet|El gran banquete|Le grand festin|Большой ужин|22:1-14||14:15-24|
+Der verlorene Sohn|The prodigal son|El hijo pródigo|Le fils prodigue|Блудный сын|||15:11-32|
+Der reiche Mann und der arme Lazarus|The rich man and Lazarus|El rico y Lázaro|Le riche et Lazare|Богач и Лазарь|||16:19-31|
+Die zehn Aussätzigen|The ten lepers|Los diez leprosos|Les dix lépreux|Десять прокажённых|||17:11-19|
+Pharisäer und Zöllner|The Pharisee and the tax collector|El fariseo y el publicano|Le pharisien et le publicain|Мытарь и фарисей|||18:9-14|
+Der gute Hirte|The good shepherd|El buen pastor|Le bon berger|Добрый пастырь||||10:1-18
+Heilung des Blindgeborenen|The man born blind|El ciego de nacimiento|L'aveugle-né|Исцеление слепорождённого||||9:1-41
+Die Auferweckung des Lazarus|The raising of Lazarus|La resurrección de Lázaro|La résurrection de Lazare|Воскрешение Лазаря||||11:1-44
+Ehe und Scheidung|Marriage and divorce|Matrimonio y divorcio|Mariage et divorce|О браке и разводе|19:1-12|10:1-12|16:18|
+Jesus segnet die Kinder|Jesus blesses the children|Jesús bendice a los niños|Jésus bénit les enfants|Благословение детей|19:13-15|10:13-16|18:15-17|
+Der reiche junge Mann|The rich young man|El joven rico|Le jeune homme riche|Богатый юноша|19:16-30|10:17-31|18:18-30|
+Die Arbeiter im Weinberg|The workers in the vineyard|Los obreros de la viña|Les ouvriers de la vigne|Работники в винограднике|20:1-16|||
+Dritte Leidensankündigung|Third prediction of the Passion|Tercer anuncio de la Pasión|Troisième annonce de la Passion|Третье предсказание о страданиях|20:17-19|10:32-34|18:31-34|
+Die Bitte der Zebedäussöhne|The request of James and John|La petición de Santiago y Juan|La demande de Jacques et Jean|Просьба сыновей Зеведеевых|20:20-28|10:35-45|22:24-27|
+Der Blinde bei Jericho|The blind man near Jericho|El ciego de Jericó|L'aveugle de Jéricho|Слепой у Иерихона|20:29-34|10:46-52|18:35-43|
+Zachäus|Zacchaeus|Zaqueo|Zachée|Закхей|||19:1-10|
+Die Salbung in Betanien|The anointing at Bethany|La unción en Betania|L'onction à Béthanie|Помазание в Вифании|26:6-13|14:3-9||12:1-8
+Einzug in Jerusalem|The entry into Jerusalem|La entrada en Jerusalén|L'entrée à Jérusalem|Вход в Иерусалим|21:1-11|11:1-11|19:28-40|12:12-19
+Der verfluchte Feigenbaum|The cursed fig tree|La higuera maldita|Le figuier maudit|Проклятие смоковницы|21:18-22|11:12-14;11:20-25||
+Die Frage nach der Vollmacht|The question about authority|La pregunta sobre la autoridad|La question de l'autorité|Вопрос о власти|21:23-27|11:27-33|20:1-8|
+Die bösen Weingärtner|The wicked tenants|Los labradores malvados|Les vignerons meurtriers|Злые виноградари|21:33-46|12:1-12|20:9-19|
+Die Steuerfrage|Paying taxes to Caesar|El tributo al César|L'impôt dû à César|Подать кесарю|22:15-22|12:13-17|20:20-26|
+Die Frage nach der Auferstehung|The question about the resurrection|La pregunta sobre la resurrección|La question sur la résurrection|Вопрос о воскресении|22:23-33|12:18-27|20:27-40|
+Das höchste Gebot|The greatest commandment|El mandamiento más importante|Le plus grand commandement|Наибольшая заповедь|22:34-40|12:28-34|10:25-28|
+Das Opfer der Witwe|The widow's offering|La ofrenda de la viuda|L'offrande de la veuve|Лепта вдовы||12:41-44|21:1-4|
+Die Rede von der Endzeit|The discourse on the end times|El discurso sobre el fin|Le discours sur la fin des temps|Речь о последних временах|24:1-36|13:1-37|21:5-36|
+Die zehn Jungfrauen|The ten virgins|Las diez vírgenes|Les dix vierges|Десять дев|25:1-13|||
+Die anvertrauten Talente|The talents|Los talentos|Les talents|Притча о талантах|25:14-30||19:11-27|
+Das Weltgericht|The judgment of the nations|El juicio final|Le jugement dernier|Страшный суд|25:31-46|||
+Der Verrat des Judas|Judas agrees to betray Jesus|La traición de Judas|La trahison de Judas|Предательство Иуды|26:14-16|14:10-11|22:3-6|
+Die Fußwaschung|The washing of the feet|El lavatorio de los pies|Le lavement des pieds|Омовение ног||||13:1-20
+Das Abendmahl|The Last Supper|La Última Cena|La Cène|Тайная вечеря|26:26-29|14:22-25|22:14-20|
+Ankündigung der Verleugnung|Peter's denial foretold|Anuncio de la negación de Pedro|Le reniement de Pierre annoncé|Предсказание отречения Петра|26:31-35|14:27-31|22:31-34|13:36-38
+Die Abschiedsreden|The farewell discourses|Los discursos de despedida|Les discours d'adieu|Прощальные беседы||||14:1-16:33
+Das hohepriesterliche Gebet|The high priestly prayer|La oración sacerdotal|La prière sacerdotale|Первосвященническая молитва||||17:1-26
+Gethsemane|Gethsemane|Getsemaní|Gethsémani|Гефсимания|26:36-46|14:32-42|22:39-46|
+Die Gefangennahme|The arrest of Jesus|El arresto de Jesús|L'arrestation de Jésus|Взятие под стражу|26:47-56|14:43-52|22:47-53|18:1-11
+Jesus vor dem Hohen Rat|Jesus before the council|Jesús ante el Sanedrín|Jésus devant le sanhédrin|Иисус перед синедрионом|26:57-68|14:53-65|22:54-55;22:63-71|18:12-14;18:19-24
+Die Verleugnung des Petrus|Peter's denial|La negación de Pedro|Le reniement de Pierre|Отречение Петра|26:69-75|14:66-72|22:56-62|18:15-18;18:25-27
+Der Tod des Judas|The death of Judas|La muerte de Judas|La mort de Judas|Смерть Иуды|27:3-10|||
+Jesus vor Pilatus|Jesus before Pilate|Jesús ante Pilato|Jésus devant Pilate|Иисус перед Пилатом|27:11-26|15:1-15|23:1-25|18:28-19:16
+Die Verspottung durch die Soldaten|The soldiers mock Jesus|Los soldados se burlan de Jesús|Les soldats se moquent de Jésus|Поругание воинами|27:27-31|15:16-20||19:2-3
+Die Kreuzigung|The crucifixion|La crucifixión|La crucifixion|Распятие|27:32-44|15:21-32|23:26-43|19:17-27
+Der Tod Jesu|The death of Jesus|La muerte de Jesús|La mort de Jésus|Смерть Иисуса|27:45-56|15:33-41|23:44-49|19:28-37
+Die Grablegung|The burial of Jesus|La sepultura de Jesús|La mise au tombeau|Погребение|27:57-61|15:42-47|23:50-56|19:38-42
+Das leere Grab|The empty tomb|El sepulcro vacío|Le tombeau vide|Пустая гробница|28:1-10|16:1-8|24:1-12|20:1-10
+Jesus und Maria Magdalena|Jesus appears to Mary Magdalene|Jesús se aparece a María Magdalena|Jésus apparaît à Marie de Magdala|Явление Марии Магдалине||16:9-11||20:11-18
+Die Emmausjünger|On the road to Emmaus|Los discípulos de Emaús|Les disciples d'Emmaüs|Путь в Эммаус||16:12-13|24:13-35|
+Jesus erscheint den Jüngern|Jesus appears to the disciples|Jesús se aparece a los discípulos|Jésus apparaît aux disciples|Явление ученикам||16:14|24:36-49|20:19-23
+Thomas|Thomas|Tomás|Thomas|Фома||||20:24-29
+Am See von Tiberias|By the Sea of Tiberias|Junto al mar de Tiberíades|Au bord du lac de Tibériade|У моря Тивериадского||||21:1-25
+Der Missionsbefehl|The Great Commission|La gran comisión|La grande mission|Великое поручение|28:16-20|16:15-18||
+Die Himmelfahrt|The ascension|La ascensión|L'ascension|Вознесение||16:19-20|24:50-53|

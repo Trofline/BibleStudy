@@ -50,12 +50,36 @@ public sealed class ProjectorWindow : Window
     }
 
     public string ShownTitle => _title.Text ?? "";
+    public string ShownText => _text.Text ?? "";
+    public bool ShowsQr => Content != _content;
 
     public void Show(string title, string text)
     {
         _title.Text = title;
         _title.IsVisible = title.Length > 0;
         _text.Text = text;
+        Content = _content;
+        if (IsBlack) ToggleBlack();
+    }
+
+    /// <summary>
+    /// The QR code that takes the phones into the Bible study, with the address below it for whoever types it in. The whole of it is
+    /// scaled to the screen, so that no part of the code is ever cut off; <see cref="Show"/> goes back to the text.
+    /// </summary>
+    public void ShowQr(string url, string caption)
+    {
+        var qr = new QrView { Size = 720, Width = 720, Height = 720, Text = url };
+        var page = new StackPanel
+        {
+            Spacing = 28, Margin = new(60), HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Center,
+            Children =
+            {
+                new TextBlock { Text = caption, FontSize = 44, TextAlignment = TextAlignment.Center, HorizontalAlignment = HorizontalAlignment.Center, Foreground = _title.Foreground, FontFamily = _title.FontFamily, TextWrapping = TextWrapping.Wrap, MaxWidth = 1400 },
+                new Border { Background = Brushes.White, CornerRadius = new(18), Padding = new(16), HorizontalAlignment = HorizontalAlignment.Center, Child = qr },
+                new TextBlock { Text = url, FontSize = 34, TextAlignment = TextAlignment.Center, HorizontalAlignment = HorizontalAlignment.Center, Foreground = _text.Foreground },
+            },
+        };
+        Content = new Viewbox { Stretch = Stretch.Uniform, StretchDirection = StretchDirection.DownOnly, Margin = new(30), Child = page };
         if (IsBlack) ToggleBlack();
     }
 
@@ -63,6 +87,7 @@ public sealed class ProjectorWindow : Window
     public void ToggleBlack()
     {
         IsBlack = !IsBlack;
+        if (Content is Control c) c.IsVisible = !IsBlack;
         _content.IsVisible = !IsBlack;
     }
 

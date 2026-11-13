@@ -105,6 +105,7 @@ Open plugin folder, **Reload**, allow plugins, guide for authors (see [Chapter 1
 - **Export …** writes the active vault (highlights, folders, tags, notes, documents, reading list, to-dos, reading progress) and your settings as a ZIP. **Import …** creates a new vault from it.
 - **Import as guest …** opens the ZIP for this session only, for example on someone else's computer: the guest vault is not backed up, not opened at the next start and disappears when the program closes. Existing vaults and settings stay untouched.
 - **Export as Obsidian vault …** (see [Chapter 6](06-documents-knowledge.md)).
+- **Import notes from e-Sword …** takes over notes and own commentaries from e-Sword or MySword (see [Chapter 6.15](06-documents-knowledge.md)).
 - **Automatic backup** of all data (ZIP): Off, Daily, Weekly, Monthly; **Choose backup folder …**; **Back up now**.
 - **Use a Syncthing folder …:** To share between several devices, you put the backups in a Syncthing folder. **Never sync the live data folder itself**; that can corrupt files.
 

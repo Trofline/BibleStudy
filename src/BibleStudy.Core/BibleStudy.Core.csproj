@@ -19,6 +19,8 @@
     <EmbeddedResource Include="Lang\*.json" LogicalName="lang/%(Filename)%(Extension)" />
     <!-- copy of the translation list with licenses: used when the server fails (new installations) -->
     <EmbeddedResource Include="Data\available_translations.json" LogicalName="data/available_translations.json" />
+    <!-- the gospel parallels for the synopsis -->
+    <EmbeddedResource Include="Data\synopsis.txt" LogicalName="data/synopsis.txt" />
   </ItemGroup>
 
 </Project>

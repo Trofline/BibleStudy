@@ -11,8 +11,14 @@ public sealed record SyntaxWord(string Text, string Lemma, string Strong, string
 public sealed record SyntaxLine(int Depth, string Kind, string? Role, string Text, string Gloss);
 
 /// <summary>One word of the Greek New Testament with the grammar fields that can be searched.</summary>
+/// <param name="Id">The word's own id in MACULA (without the leading letter), which <paramref name="Refers"/> and <paramref name="Subject"/> point to.</param>
+/// <param name="Domains">Meaning fields, separated by spaces: Louw-Nida domain and subdomain for Greek ("033006"), SDBH lexical domains for Hebrew ("002001002008").</param>
+/// <param name="Refers">For a pronoun: the id of the word it stands for ("he" → Jesus).</param>
+/// <param name="Subject">For a verb: the id of the word that is its subject, also when the subject is not written out.</param>
+/// <param name="Lxx">Hebrew only: the Strong number of the Greek word the Septuagint uses for it (G26).</param>
 public sealed record GrammarWord(string Book, int Chapter, int Verse, string Text, string Lemma, string Strong, string Gloss, string Class,
-    string? Tense, string? Voice, string? Mood, string? Person, string? Number, string? Gender, string? Case, string? Role = null, int Clause = 0);
+    string? Tense, string? Voice, string? Mood, string? Person, string? Number, string? Gender, string? Case, string? Role = null, int Clause = 0,
+    string? Id = null, string? Domains = null, string? Refers = null, string? Subject = null, string? Lxx = null);
 
 /// <summary>Which grammar a word must have; empty fields do not matter.</summary>
 public sealed record GrammarQuery(string? Class = null, string? Tense = null, string? Voice = null, string? Mood = null, string? Person = null,
@@ -122,9 +128,23 @@ public sealed class SyntaxProvider(HttpClient http, string cacheDir)
                 hebrew ? null : (string?)w.Attribute("mood"),
                 (string?)w.Attribute("person"), (string?)w.Attribute("number"), (string?)w.Attribute("gender"),
                 hebrew ? (string?)w.Attribute("state") : (string?)w.Attribute("case"),
-                RoleOf(w), ClauseOf(w, clauseIds)));
+                RoleOf(w), ClauseOf(w, clauseIds),
+                IdOf((string?)w.Attribute(XNamespace.Xml + "id")),
+                Blank(hebrew ? (string?)w.Attribute("lexdomain") : (string?)w.Attribute("domain")),
+                IdOf((string?)w.Attribute("referent") ?? (string?)w.Attribute("participantref")),
+                IdOf((string?)w.Attribute("subjref")),
+                hebrew && (string?)w.Attribute("greekstrong") is { Length: > 0 } gs && int.TryParse(gs, out var gn) ? "G" + gn : null));
         }
         return result;
+    }
+
+    static string? Blank(string? s) => string.IsNullOrWhiteSpace(s) ? null : s.Trim();
+
+    /// <summary>Ids as the references write them: "n43001001017" and "o010010010012" lose their letter, "010010050021" stays. Several ids ("they"): separated by spaces.</summary>
+    static string? IdOf(string? s)
+    {
+        if (string.IsNullOrWhiteSpace(s)) return null;
+        return string.Join(' ', s.Split(' ', StringSplitOptions.RemoveEmptyEntries).Select(x => char.IsLetter(x[0]) ? x[1..] : x));
     }
 
     /// <summary>The words of one chapter with their grammar (Greek: the book file is read, Hebrew: the chapter file); empty when there is no data for the book.</summary>

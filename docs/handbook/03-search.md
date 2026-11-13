@@ -19,6 +19,12 @@ Search is the most powerful tool in the program. You'll find it in the bar under
 | `Lord DANN3 God` | God comes **after** Lord, at most 3 words behind it |
 | `L=go` | all forms of the **base form** (went, goes, gone) |
 | `L~house` | base form, capitalization doesn't matter |
+| `m?n` | `?` stands for **exactly one** letter (man, men …) |
+| `"angel * Lord"` | inside a phrase `*` stands for exactly one word |
+| `~graces` | **fuzzy**: similar spellings too (one letter more, less or different) |
+| `grace in:"Mt 5-7"` | search only in this passage or book (`in:John`, `in:"Rom 1-8; Gal"`) |
+
+**Operators as in Logos** (in capitals): `A BEFORE B` and `A AFTER B` (order, also with a distance: `BEFORE 5 WORDS`), `A NEAR B` (about 8 words), `A WITHIN 3 WORDS B`, `A WITHIN 2 VERSES B`, `A WITHIN 1 CHAPTER B`, `A WITHIN 1 SENTENCE B` (in the same sentence, also across verses), and with NOT in front the opposite (`grace NOT WITHIN 3 WORDS truth`). `AND`, `OR`, `NOT` work like a space, `/` and `-`.
 
 **Word distance:** `NAH` and `DANN` always need a number (`NAH1` to `NAH999`); a word next to it counts as distance 1. Both sides may be phrases, groups, base forms or Strong's numbers, for example `"kingdom of God" NAH10 (parable / mustard seed)`. English works too: `NEAR5`, `THEN3`. Without a number, "then" remains an ordinary search word.
 
@@ -89,7 +95,15 @@ The search is assembled from this and then appears in the search field. That way
 
 ## 3.9 Working with the Hits
 
-Below the hit list:
+Above the hits you choose **how** they are shown:
+
+- **Verses:** the list of hits.
+- **Aligned:** every found word under each other, with the text to its left and right (like a concordance).
+- **Grid:** books against translations, the number of hits in each cell; the darker, the more.
+- **Comparison:** every hit in several translations under each other. Which ones, you choose with **Translations ▾**.
+- **Analysis:** spread over the Bible, the word forms found and the chapters with the most hits.
+
+Under **Hits ▾**:
 
 - **Hits as document:** saves the verses as a Document.
 - **Hits as table (CSV):** exports them for spreadsheet programs.
@@ -109,13 +123,36 @@ The numbers apply to the translation currently selected. For hapax legomena in t
 
 ## 3.10 Grammar Search and Clause Roles
 
-In the New Testament there is the **Grammar search** (under *Verse → Analysis*), for example all aorist passive participles. The **Clause role search** finds Greek clauses by role, such as subject Jesus and object Peter (see [Chapter 4](04-original-text-word-study.md)).
+The **Grammar search** (under *Verse → Analysis*) covers the Greek New Testament and the Hebrew Old Testament, for example all aorist passive participles or all piel forms. The **Clause role search** finds clauses by role, such as subject Jesus and object Peter, in both testaments too (see [Chapter 4](04-original-text-word-study.md)).
 
-## 3.11 Ctrl+K Finds Even More
+Grammar also works right in the search field and combines with words: `Gram:"verb aorist passive" grace`, `Gram:"noun genitive G26"`, Hebrew `Gram:"piel qatal"`. The Greek or Hebrew words then stand below each hit.
+
+## 3.11 Searching by Meaning in the Original Text
+
+These searches use the MACULA data (Clear Bible, freely licensed) and combine with ordinary words like `Person:`. The data is loaded once the first time.
+
+| You type | What is found |
+|---|---|
+| `Sense:G863` | every word with **the same meaning**: for ἀφίημι (forgive) also ἄφεσις, χαρίζομαι, ἱλασμός … based on the meaning fields of Louw-Nida (Greek) and SDBH (Hebrew) |
+| `Sense:H2617` | for chesed (steadfast love) also emet, emunah, chasid … |
+| `Sense:forgive` | an English word chooses the meaning by itself; a word in another language goes through the Strong's numbers of the chosen translation |
+| `Sense:G863=forgive` | when a word has **several meanings**, the program names them (leave, forgive, allow) and takes the marked one; with `=` you choose another |
+| `Refers:Jesus` | where Jesus is **named or meant**: also "he", "him", "his" and verbs whose subject he is, without his name being written. `Refers:Peter wept` also finds "and he wept bitterly" |
+| `LXX:G26` | which **Hebrew words** the Greek Old Testament (Septuagint) renders with ἀγάπη |
+| `LXX:H2617` | the other way round: where chesed stands and which Greek word the Septuagint uses for it each time (the count above the list) |
+| `Agree:"adjective ~ noun G26"` | two words close together (up to 4 words) that **agree in case, number and gender**, such as an adjective and its noun; Hebrew in number and gender |
+| `Event:Baptism` | the passages of an **event** of the timeline (Baptism, Exodus, Crucifixion …) |
+| `Root:H6` | every word of a **Hebrew root** after the BDB lexicon: for אבד (perish) also "destruction", "a lost thing", "ruin". Works with the base form or an English word too (`Root:perish`) |
+
+The German spellings work too: `Sinn:`, `Meint:`, `Kongruenz:`, `Ereignis:`, `Wurzel:`. Above the hits you see which words belong to the meaning field, or how often someone is named and meant.
+
+**Good to know:** meaning fields are a classification by scholars, not revelation. In Hebrew many verbs have no field yet, and sometimes a field is wider than one expects (for "shepherd" it also holds "graze" and "eat"). Check the hits.
+
+## 3.12 Ctrl+K Finds Even More
 
 The *Go to …* field also searches Bible passages, books, commands, documents, notes, prayers, Strong's numbers, as well as people and places (a hit opens the Dictionary). Anything that doesn't match starts the text search.
 
-## 3.12 The Order in Which You Should Search
+## 3.13 The Order in Which You Should Search
 
 1. Start with a single word and look at the number of hits.
 2. Too many hits? Add a second word, a range or "Whole word".

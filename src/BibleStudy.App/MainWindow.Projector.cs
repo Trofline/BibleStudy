@@ -38,18 +38,25 @@ public partial class MainWindow
         if (translation.Length == 0) return;
         try
         {
-            var ch = await _provider.GetChapterAsync(translation, first.Book, first.Chapter);
-            end = Math.Max(end, first.Verse);
-            var verses = ch.Verses.Where(v => v.Number >= first.Verse && v.Number <= end).ToList();
-            if (verses.Count == 0) return;
-            var text = verses.Count == 1 ? verses[0].Text : string.Join("  ", verses.Select(v => Superscript(v.Number) + " " + v.Text));
-            var short_ = (TranslationBox.Items.OfType<TranslationInfo>().FirstOrDefault(t => t.Id == translation)?.ShortName) is { Length: > 0 } s ? s : translation.ToUpperInvariant();
-            var title = Label(first) + (end > first.Verse ? "–" + end : "") + "  ·  " + short_;
-            _projectVerses = (first, end, translation);
-            Projector().Show(title, text);
+            if (await VersesToShowAsync(first, end, translation) is not { } shown) return;
+            _projectVerses = (first, Math.Max(end, first.Verse), translation);
+            Projector().Show(shown.Title, shown.Text);
+            LiveMirror(shown.Title, shown.Text, new(first.Book, first.Chapter, first.Verse, Math.Max(end, first.Verse)));
             UpdateProjectorChip();
         }
         catch (Exception ex) { StatusText.Text = L("Der Vers lässt sich nicht zeigen: {0}", ex.Message); }
+    }
+
+    /// <summary>The verses (first to end) as the projector and the phones show them: a title with reference and translation, and the text.</summary>
+    async Task<(string Title, string Text)?> VersesToShowAsync(VerseRef first, int end, string translation)
+    {
+        var ch = await _provider.GetChapterAsync(translation, first.Book, first.Chapter);
+        end = Math.Max(end, first.Verse);
+        var verses = ch.Verses.Where(v => v.Number >= first.Verse && v.Number <= end).ToList();
+        if (verses.Count == 0) return null;
+        var text = verses.Count == 1 ? verses[0].Text : string.Join("  ", verses.Select(v => Superscript(v.Number) + " " + v.Text));
+        var short_ = (TranslationBox.Items.OfType<TranslationInfo>().FirstOrDefault(t => t.Id == translation)?.ShortName) is { Length: > 0 } s ? s : translation.ToUpperInvariant();
+        return (Label(first) + (end > first.Verse ? "–" + end : "") + "  ·  " + short_, text);
     }
 
     static string Superscript(int n) => string.Concat(n.ToString().Select(c => "⁰¹²³⁴⁵⁶⁷⁸⁹"[c - '0']));
@@ -61,6 +68,7 @@ public partial class MainWindow
         if (text.Length == 0) return;
         _projectVerses = null;
         Projector().Show(title, text);
+        LiveMirror(title, text, null);
         UpdateProjectorChip();
     }
 

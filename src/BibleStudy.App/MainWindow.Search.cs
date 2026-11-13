@@ -60,6 +60,11 @@ public partial class MainWindow
         (L("Person in der Bibel"), w => "Person:\"" + string.Join(" ", w) + "\""),
         (L("Ort in der Bibel"), w => "Ort:\"" + string.Join(" ", w) + "\""),
         (L("Bezug zu einer Bibelstelle (AT↔NT)"), w => "Bezug:\"" + string.Join(" ", w) + "\""),
+        (L("gleiche Bedeutung wie …"), w => "Sinn:\"" + string.Join(" ", w) + "\""),
+        (L("genannt oder gemeint …"), w => "Meint:\"" + string.Join(" ", w) + "\""),
+        (L("Septuaginta zu …"), w => "LXX:" + string.Join(" ", w)),
+        (L("Ereignis …"), w => "Ereignis:\"" + string.Join(" ", w) + "\""),
+        (L("hebräische Wurzel von …"), w => "Wurzel:" + string.Join(" ", w)),
     ];
     readonly List<(ComboBox Kind, TextBox Text)> _builderRows = [];
 
@@ -91,6 +96,12 @@ public partial class MainWindow
         (L("Person:Abraham"), L("Person: alle Verse, in denen sie erwähnt wird (auch unter anderen Namen); mit Wörtern kombinierbar: Person:Abraham Verheißung")),
         (L("Ort:Jerusalem"), L("Ort: alle Verse, in denen er erwähnt wird")),
         (L("Bezug:\"Jer 31\""), L("Altes Testament: welche Neutestament-Verse darauf verweisen. Neues Testament (Bezug:\"Hebr 10\"): auf welche AT-Verse es verweist (Querverweise, nicht nur Zitate)")),
+        (L("Sinn:vergeben"), L("Bedeutung: alle Wörter des Grundtexts mit derselben Bedeutung (Bedeutungsfelder nach Louw-Nida und SDBH), auch Sinn:G863 oder Sinn:forgive")),
+        (L("Meint:Jesus"), L("Wo Jesus genannt oder gemeint ist: auch „er“, „ihn“ und Verben, deren Subjekt er ist, ohne dass sein Name dasteht")),
+        (L("LXX:G26"), L("Septuaginta: welche hebräischen Wörter das griechische AT mit G26 (agapē) übersetzt; LXX:H2617 zeigt umgekehrt, womit es ein hebräisches Wort übersetzt")),
+        (L("Kongruenz:\"adjective ~ noun G26\""), L("Übereinstimmung: zwei Wörter nah beieinander mit gleichem Fall, gleicher Zahl und gleichem Geschlecht")),
+        (L("Ereignis:Baptism"), L("Die Stellen eines Ereignisses der Zeitleiste (englische Namen), mit Wörtern kombinierbar")),
+        (L("Wurzel:H6"), L("Hebräische Wurzel: alle Wörter derselben Wortfamilie nach dem BDB-Lexikon, z. B. zu אבד (verloren gehen) auch Verderben und Untergang")),
         ("G3056", L("Strong-Nummer (mehrere: alle müssen vorkommen)")),
         (L("H8392=Arche"), L("Strong-Nummer, übersetzt mit einem bestimmten Wort")),
         (L("Joh 3,16"), L("Bibelstelle aufschlagen")),
@@ -263,6 +274,7 @@ public partial class MainWindow
 
             // 2b. Person:… / Ort:… / Bezug:"…": what a text is about; the rest of the query is an ordinary search within those verses
             _hitNotes.Clear();
+            _searchExtra = "";
             var query = text;
             HashSet<VerseRef>? entityFilter = null;
             Dictionary<VerseRef, int>? entityBest = null;
@@ -288,6 +300,19 @@ public partial class MainWindow
                 if (entityFilter is null) entityFilter = gram.Verses; else entityFilter.IntersectWith(gram.Verses);
                 query = gram.Rest;
                 foreach (var (k, v) in gram.Notes) _hitNotes[k] = _hitNotes.TryGetValue(k, out var old) ? old + "\n" + v : v;
+            }
+
+            // 2d. Sinn:, Meint:, LXX:, Kongruenz:, Ereignis: (meaning, persons meant, Septuagint, agreement, events)
+            if (await ResolveOriginalFiltersAsync(query, t) is { } meaning)
+            {
+                if (meaning.Failed || meaning.Verses.Count == 0)
+                {
+                    if (!meaning.Failed) SearchInfo.Text = L("Keine Treffer in {0}.", t.ShortName);
+                    SearchList.ItemsSource = null; _hits = []; return;
+                }
+                if (entityFilter is null) entityFilter = meaning.Verses; else entityFilter.IntersectWith(meaning.Verses);
+                query = meaning.Rest;
+                foreach (var (k, v) in meaning.Notes) _hitNotes[k] = _hitNotes.TryGetValue(k, out var old) ? old + "\n" + v : v;
             }
             query = ScopeFilter.Extract(query, out var ranges, out var scopeError);
             if (scopeError is not null) { SearchInfo.Text = scopeError; SearchList.ItemsSource = null; _hits = []; return; }
@@ -345,6 +370,7 @@ public partial class MainWindow
         SearchInfo.Text = _hits.Count == 0 ? L("Keine Treffer in {0}.", t.ShortName)
             : words == 0 ? L("{0} Verse in {1}{2}", list.Count, t.ShortName, (list.Count > ShownHits ? L(" (erste {0} angezeigt)", ShownHits) : ""))
             : L("{0} Verse · {1} Fundstellen in {2}{3}", list.Count, words, t.ShortName, (list.Count > ShownHits ? L(" (erste {0} angezeigt)", ShownHits) : ""));
+        if (_hits.Count > 0 && _searchExtra.Length > 0) SearchInfo.Text += "\n" + _searchExtra;
         SearchQueueBtn.IsVisible = list.Count > 0; UpdateHitActions(list.Count > 0);
 
         // hits per book, in Bible order; click narrows the list to that book, click again shows all
