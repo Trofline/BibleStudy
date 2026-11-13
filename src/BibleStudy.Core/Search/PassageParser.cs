@@ -45,6 +45,6 @@ public static partial class PassageParser
         return result;
     }
 
-    [GeneratedRegex(@"^(?<b>(?:[1-3]\s?\.?\s?)?\p{L}{1,20}\.?)?\s*(?<c>\d{1,3})(?:\s*[,:]\s*(?<v1>\d{1,3})(?:\s*[-–]\s*(?:(?<c2>\d{1,3})\s*[,:]\s*)?(?<v2>\d{1,3}))?|\s*[-–]\s*(?<cend>\d{1,3}))?$")]
+    [GeneratedRegex(@"^(?<b>(?:[1-5]\s?\.?\s?)?\p{L}{1,20}\.?)?\s*(?<c>\d{1,3})(?:\s*[,:]\s*(?<v1>\d{1,3})(?:\s*[-–]\s*(?:(?<c2>\d{1,3})\s*[,:]\s*)?(?<v2>\d{1,3}))?|\s*[-–]\s*(?<cend>\d{1,3}))?$")]
     private static partial Regex Segment();
 }

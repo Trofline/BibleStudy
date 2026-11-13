@@ -143,3 +143,12 @@ The button with the split rectangle at the top right turns on the **split view**
 - The **lines** between the areas can be dragged. The **✕** in the head of an area closes the area; the tab stays open at the top.
 - Turning it on folds the side panel away so the areas have room (**Ctrl+B** brings it back).
 - Whether the split view is on, its areas and their widths are kept for the next start.
+
+## 2.13 Projector view
+
+For a Bible study with a projector or TV: **right-click a verse → "More with this verse" → "Show on the projector"** (or **Ctrl+K** → "Projector"). The chosen verses appear large and calm, light on dark, on the second screen; the program itself stays on your screen as it is. With only one screen, a window of its own opens that you drag to the projector (**F11** makes it full screen). Long passages get smaller so that all of it fits.
+
+- **Arrow keys, space, Page up/down:** on and back (with several verses, by as many verses as are shown).
+- **B:** black screen and back. **Esc:** close.
+- The bar at the bottom shows **"Projector: …"** with what is shown; a click on it offers next, back, black, full screen and close.
+- From the **materials** (chapter 6.11), a right-click shows selected text, a whole paragraph or a Bible reference on the projector.

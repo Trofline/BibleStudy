@@ -105,6 +105,10 @@ public partial class MainWindow
         if (CommentariesOn) yield return C(L("Kommentare"), () => { OpenCommentary(_selected is int v ? new VerseRef(_curBook, _curChapter, v) : null); return Task.CompletedTask; });
         yield return C(L("Geteilte Ansicht an/aus"), () => { SplitTopBtn.IsChecked = SplitTopBtn.IsChecked != true; return Task.CompletedTask; });
         yield return C(L("Timer stellen"), () => { ShowTimerFlyout(ClockChip.IsVisible ? ClockChip : StatusBar); return Task.CompletedTask; });
+        yield return _projector is null
+            ? C(L("Beamer: gewählte Verse zeigen"), ProjectChosenVersesAsync)
+            : C(L("Beamer-Ansicht schließen"), () => { CloseProjector(); return Task.CompletedTask; });
+        yield return C(L("In allen Materialien suchen"), () => { Work("Material", MaterialsTab); Dispatcher.UIThread.Post(() => _matSearchBox?.Focus(), DispatcherPriority.Background); return Task.CompletedTask; });
         yield return C(L("Satzdiagramm"), () => Side(SentenceTab));
         yield return C(L("Perikopen-Analyse"), () => Side(PericopeTab));
         yield return C(L("Chiasmus-Finder"), ShowChiasmFinderAsync);

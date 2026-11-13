@@ -31,6 +31,29 @@ Enter in einer Liste führt sie fort. Jedes Dokument hat eine feste Nummer, und 
 
 Der Knopf **Exportieren** bietet **Drucken / PDF**, **Als HTML-Datei speichern …** und **Als Markdown speichern …**. Alles, worauf das Dokument verweist, kommt mit, damit die Links in der Datei funktionieren: verlinkte Dokumente (auch deren Links) und der Text der erwähnten Verse. Im Druck und in der HTML-Datei sind das weitere Abschnitte, zu denen die Links springen; beim Markdown-Export eigene Dateien in einem Ordner, auf die die Links zeigen, die Verse in „Bibelstellen.md“.
 
+**Das Fenster „Exportieren“:** Jeder der drei Punkte unter **Exportieren** öffnet dasselbe Fenster. Oben wählst du das Format: **Drucken / PDF**, **HTML-Datei** oder **Markdown**.
+
+**Als Handout drucken (und als HTML-Datei):** Du wählst eines von acht Designs. Sie unterscheiden sich nicht nur in der Farbe, sondern auch im Aufbau:
+- **Klassisch:** Serifenschrift und Gold, Kopf in der Mitte mit Zierlinie
+- **Modern:** klar und luftig, Farbbalken am Kopf und an den Kärtchen
+- **Schlicht:** spart Tinte, ganz ohne Farbflächen
+- **Elegant:** Weinrot, Überschriften in Kapitälchen, große Initiale am Anfang, doppelte Linien
+- **Gemeindebrief:** farbiger Kopf über die ganze Breite, runde Formen, Überschriften als Schildchen
+- **Zeitung:** große Schlagzeile zwischen dicken Linien, der Text in zwei Spalten wie ein Artikel
+- **Großdruck:** große, klare Schrift mit viel Zeilenabstand, alles einspaltig, gut für ältere Augen
+- **Natur:** Grüntöne, ein Blatt vor jeder Überschrift
+
+Dazu kommen:
+- der Name der Gemeinde oder Gruppe für den Kopf und die Schriftgröße,
+- die Bibelstellen als Anhang in Kästen, auf Wunsch zweispaltig,
+- kleine Nummern an den Stellen im Text, damit man sie auf Papier im Anhang sofort findet,
+- hervorgehobene Fragen: Ein Abschnitt „Fragen“ (z. B. „Fragen zum Gespräch“) wird ein Kasten mit nummerierten Fragen, einzelne Zeilen mit „?“ werden markiert,
+- linierter Platz für Notizen am Ende.
+
+Das Blatt hat A4-Seiten mit Seitenzahlen und keine einzelnen Zeilen allein am Seitenrand. **Vorschau** zeigt es im Browser, **Drucken / PDF …** öffnet gleich den Druckdialog; dort „Als PDF speichern“ wählen und „Kopf- und Fußzeilen“ ausschalten. Die HTML-Datei bekommt dasselbe Aussehen; auch dafür zeigt **Vorschau** das Blatt vorher im Browser. Deine Wahl bleibt gespeichert.
+
+**Markdown:** Hier wählst du, wie die Bibelstellen mitkommen: als **eigene Datei mit Links** (wie bisher), **als Zitat unter dem Text** (alles in einer Datei, jeder Vers direkt unter dem Absatz, der ihn nennt) oder **gar nicht**. Außerdem: ob verlinkte Dokumente als eigene Dateien mitkommen und ob jede Datei einen **Kopf mit Titel, Datum und Schlagworten** bekommt (YAML, wie Obsidian ihn liest). Die **Vorschau** zeigt den Text der Hauptdatei und welche Dateien im Ordner entstehen, noch bevor du speicherst.
+
 ## 6.3 Verknüpfen: Verse und [[Links]]
 
 - Schreibst du eine Bibelstelle wie „Joh 3,16“, wird sie zu einem Link, der zur Stelle springt.
@@ -97,3 +120,13 @@ Neue, umbenannte oder gelöschte Dateien im Ordner erscheinen von selbst; eine g
 **Ordner auf- und zuklappen:** Die zwei Knöpfe über dem Baum klappen alle Ordner auf oder zu. Welche Ordner offen sind, merkt sich das Programm für den nächsten Start.
 
 **Bibelstellen:** Die ersten Stellen aus der Datei stehen als Knöpfe über dem Text; „Alle … Bibelstellen“ zeigt die ganze Liste.
+
+**Suchen:** Das Feld **„In allen Materialien suchen …“** über dem Baum durchsucht alle Dateien des Ordners (Groß- und Kleinschreibung und Umlaute sind egal: „holle“ findet auch „Hölle“). Die Treffer stehen nach Dateien geordnet mit einem Stück Text; ein Klick öffnet die Datei an genau dieser Stelle. **Strg+F** sucht in der geöffneten Datei: Enter springt zur nächsten Stelle, Umschalt+Enter zur vorigen, Esc schließt die Leiste. Bei einem PDF in Seitenbildern wechselt Strg+F zum Text, damit die Wörter markiert werden können.
+
+**Vorschau:** Ruht die Maus auf einer Bibelstelle im Text, erscheint der Vers in der gewählten Übersetzung, ohne dass du springen musst.
+
+**Markieren und Notizen:** Text auswählen und **rechts klicken** → „Markieren“ (eine Farbe) oder „Markieren mit Notiz …“. Die Notiz steht dann unter dem Absatz; ein Klick darauf ändert sie. Ein Rechtsklick auf eine Markierung bietet Notiz, Farbe und Entfernen. **Die Datei selbst bleibt unverändert:** Markierungen und Notizen liegen im Vault (und damit auch in den Sicherungen) zusammen mit den markierten Wörtern. Ändert sich die Datei oder wird sie verschoben, findet das Programm die Wörter wieder. Der Knopf **„Meine Markierungen“** über der Datei listet alle Markierungen der Datei zum Hinspringen.
+
+**Leseposition:** Jede Datei öffnet sich dort, wo du zuletzt gelesen hast, auch nach einem Neustart.
+
+**In der Vers-Übersicht:** Klickst du im Bibeltext einen Vers an, zeigt die Übersicht unter **„In deinen Materialien“**, in welchen Dateien er vorkommt (auch innerhalb eines Abschnitts wie „Röm 8,26-30“), jeweils mit einem Stück Text. Ein Klick öffnet die Datei an dieser Stelle.

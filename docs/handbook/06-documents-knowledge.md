@@ -31,6 +31,29 @@ Enter in a list continues it. Every document has a fixed number, and a link lead
 
 The **Export** button offers **Print / PDF**, **Save as HTML file …** and **Save as Markdown …**. Everything the document refers to comes along, so that its links work in the file: linked documents (and their links) and the text of the verses it mentions. In print and the HTML file these are further sections the links jump to; in the Markdown export, separate files in a folder that the links point to, with the verses in "Bible passages.md".
 
+**The "Export" window:** each of the three entries under **Export** opens the same window. At the top you choose the format: **Print / PDF**, **HTML file** or **Markdown**.
+
+**Print as a handout (and as an HTML file):** you choose one of eight looks. They differ not only in color but also in their build:
+- **Classic:** serif type and gold, a centered head with an ornament line
+- **Modern:** clear and airy, color bars at the head and the cards
+- **Plain:** saves ink, no colored areas at all
+- **Elegant:** wine red, headings in small capitals, a large initial at the start, double rules
+- **Church newsletter:** a colored head across the page, round shapes, headings as little labels
+- **Newspaper:** a big headline between thick rules, the text in two columns like an article
+- **Large print:** large, clear type with wide line spacing, all in one column, good for older eyes
+- **Nature:** shades of green, a leaf before every heading
+
+Also:
+- the name of the church or group for the head, and the font size,
+- the Bible references as an appendix in boxes, in two columns if you like,
+- small numbers at the references in the text, so they are found in the appendix at once on paper,
+- questions set apart: a section "Questions" becomes a box with numbered questions, single lines with "?" are marked,
+- lined space for notes at the end.
+
+The sheet has A4 pages with page numbers and no lonely lines at a page edge. **Preview** shows it in the browser, **Print / PDF …** opens the print dialog at once; there choose "Save as PDF" and turn off "Headers and footers". The HTML file gets the same look; for it too, **Preview** shows the sheet in the browser first. Your choice is kept.
+
+**Markdown:** here you choose how the Bible references come along: as **a file of their own, with links** (as before), **as a quote under the text** (all in one file, each verse right under the paragraph that names it) or **not at all**. Also whether linked documents come along as files of their own, and whether every file gets a **head with title, date and tags** (YAML, as Obsidian reads it). The **preview** shows the text of the main file and which files will be made in the folder, before you save.
+
 ## 6.3 Linking: Verses and [[Links]]
 
 - If you write a Bible passage like "John 3:16", it becomes a link that jumps to the passage.
@@ -97,3 +120,13 @@ New, renamed or deleted files in the folder appear by themselves; an open file t
 **Opening and closing folders:** the two buttons above the tree open or close all folders. Which folders are open is kept for the next start.
 
 **Bible references:** the first references in the file stand as buttons above the text; "All … Bible references" shows the whole list.
+
+**Searching:** the field **"Search all materials …"** above the tree searches every file of the folder (case and accents do not matter: "holle" also finds "Hölle"). The hits are listed by file with a piece of text; a click opens the file at exactly that place. **Ctrl+F** searches the open file: Enter goes to the next place, Shift+Enter to the previous one, Esc closes the bar. For a PDF shown as page images, Ctrl+F switches to its text so the words can be marked.
+
+**Preview:** resting the mouse on a Bible reference in the text shows the verse in the chosen translation, without jumping there.
+
+**Marks and notes:** select text and **right-click** → "Mark" (a color) or "Mark with a note …". The note then stands below the paragraph; a click on it changes it. A right-click on a mark offers note, color and remove. **The file itself stays unchanged:** marks and notes are kept in the vault (and so in the backups) together with the marked words. If the file changes or is moved, the program finds the words again. The button **"My marks"** above the file lists all marks of the file to jump to.
+
+**Reading position:** every file opens where you last read it, also after a restart.
+
+**In the verse overview:** when you click a verse in the Bible text, the overview shows under **"In your materials"** which files mention it (also inside a passage like "Rom 8:26-30"), each with a piece of text. A click opens the file at that place.

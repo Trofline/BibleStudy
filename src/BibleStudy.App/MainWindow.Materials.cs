@@ -71,9 +71,9 @@ public partial class MainWindow
         var head = new DockPanel { Margin = new(0, 6, 0, 0) };
         DockPanel.SetDock(collapseAll, Dock.Right); DockPanel.SetDock(expandAll, Dock.Right);
         DockPanel.SetDock(refresh, Dock.Right); head.Children.Add(refresh); head.Children.Add(collapseAll); head.Children.Add(expandAll); head.Children.Add(_matFolderText);
-        var top = new StackPanel { Spacing = 6, Children = { new TextBlock { Text = L("MATERIALIEN"), Classes = { "eyebrow" } }, pick, head, _matSubCheck } };
+        var top = new StackPanel { Spacing = 6, Children = { new TextBlock { Text = L("MATERIALIEN"), Classes = { "eyebrow" } }, pick, head, _matSubCheck, BuildMaterialSearch() } };
         var left = new DockPanel { Margin = new(14, 12, 8, 12) };
-        DockPanel.SetDock(top, Dock.Top); left.Children.Add(top); left.Children.Add(_matTree);
+        DockPanel.SetDock(top, Dock.Top); left.Children.Add(top); left.Children.Add(new Panel { Children = { _matTree, _matResultsScroll } });
 
         // right: the open files as small tabs, and the file
         // the open files wrap into rows: in a scroll area its bar lay over the tabs and covered them
@@ -88,11 +88,12 @@ public partial class MainWindow
         _matViewer.Bind(Border.BackgroundProperty, this.GetResourceObservable("BsBackground"));
         _matViewer.Bind(Border.BorderBrushProperty, this.GetResourceObservable("BsBorder"));
         _matViewer.PointerPressed += (_, _) => _matViewer.Focus();
+        _matScroll.ScrollChanged += (_, _) => MaterialScrolled();
         // the folder list can be hidden, so the file gets the whole width (in the split view above all); the button stays beside the tabs
         var treeBtn = new Button { Classes = { "tool" }, Width = 32, Height = 32, Margin = new(0, 0, 6, 4), VerticalAlignment = VerticalAlignment.Top, Content = new Icon { Data = Geometry.Parse("M4 4h16v16H4z M10 4v16"), IconSize = 16 } };
         var stripRow = new DockPanel { Children = { treeBtn, stripScroll } };
         DockPanel.SetDock(treeBtn, Dock.Left);
-        var rightTop = new StackPanel { Children = { stripRow, _matActions, _matRefs, _matInfo } };
+        var rightTop = new StackPanel { Children = { stripRow, _matActions, _matRefs, _matInfo, BuildFindBar() } };
         var right = new DockPanel { Margin = new(8, 12, 14, 12) };
         DockPanel.SetDock(rightTop, Dock.Top); right.Children.Add(rightTop); right.Children.Add(_matViewer);
 
@@ -232,6 +233,7 @@ public partial class MainWindow
     {
         if (!MaterialReader.CanShow(path)) { OpenExternally(path); return; }
         if (!_settings.MaterialsOpen.Contains(path, StringComparer.OrdinalIgnoreCase)) { _settings.MaterialsOpen.Add(path); SaveSettings(); }
+        if (!string.Equals(_matCurrent, path, StringComparison.OrdinalIgnoreCase)) KeepMaterialSpot(null, EventArgs.Empty);   // the place in the file left
         _matCurrent = path;
         RebuildMaterialStrip();
         _ = ShowMaterialAsync(path);
@@ -297,6 +299,8 @@ public partial class MainWindow
     async Task ShowMaterialAsync(string path)
     {
         var version = ++_matShowVersion;   // a newer call (another file, the folder changed) wins; this one stops at its next step
+        _matSpotReady = null;   // the scroll place is not kept while the file is loaded
+        if (_matFindBar.IsVisible && _matPending is null) _matFindBar.IsVisible = false;
         _matActions.Children.Clear(); _matRefs.Children.Clear();
         _matInfo.Text = L("Wird geladen …");
         MaterialDoc doc;
@@ -354,6 +358,9 @@ public partial class MainWindow
         _matView.Children.Clear();
         _matScroll.Offset = default;
         _matBlocks.Clear(); _pdfPageMarks.Clear(); _pdfNextPage = 0; _pdfMore = null;
+        _matSelected = null;
+        LoadMaterialMarks(path, doc);
+        UpdateMarksButton(path);
         // the table of contents: the lines of the document's own, otherwise its headings; for a PDF its outline
         var outline = isPdf ? await Task.Run(() => MaterialReader.PdfOutline(path)) : [];
         if (version != _matShowVersion) return;
@@ -365,11 +372,19 @@ public partial class MainWindow
             toc.Click += (_, _) => ShowContentsFlyout(toc, contents, path, version);
             _matActions.Children.Insert(1, toc);
         }
-        if (isPdf && !_matPdfText) { await ShowPdfPagesAsync(path, 0, version); return; }
-        foreach (var b in doc.Blocks) { var c = BlockControl(b, path, version); _matBlocks.Add((b, c)); _matView.Children.Add(c); }
+        if (isPdf && !_matPdfText) { await ShowPdfPagesAsync(path, 0, version); MaterialArrived(path, version); return; }
+        var textNo = 0;
+        foreach (var b in doc.Blocks)
+        {
+            var n = b.Kind == BlockKind.Image ? -1 : textNo++;   // pictures are not counted: a place found in the text alone fits here too
+            var c = BlockControl(b, path, version, n);
+            _matBlocks.Add((b, c, n, TextOf(c)));
+            _matView.Children.Add(c);
+        }
+        MaterialArrived(path, version);
     }
 
-    readonly List<(Block Block, Control Control)> _matBlocks = [];
+    readonly List<(Block Block, Control Control, int TextNo, SelectableTextBlock? Text)> _matBlocks = [];
     readonly Dictionary<int, Control> _pdfPageMarks = [];
     int _pdfNextPage, _pdfCount;
     Button? _pdfMore;
@@ -572,7 +587,7 @@ public partial class MainWindow
         await GoToRangeAsync(r, end);
     }
 
-    Control BlockControl(Block b, string path, int version)
+    Control BlockControl(Block b, string path, int version, int textNo)
     {
         if (b.Kind == BlockKind.TocEntry)
         {
@@ -594,49 +609,9 @@ public partial class MainWindow
         if (b.Kind == BlockKind.Page)
             return new Border { BorderThickness = new(0, 1, 0, 0), Margin = new(0, 18, 0, 2), Padding = new(0, 6, 0, 0), BorderBrush = Res("BsBorder"), Child = new TextBlock { Text = b.Text, Classes = { "eyebrow" } } };
         var tb = new SelectableTextBlock { TextWrapping = TextWrapping.Wrap, LineHeight = double.NaN };
-        // Bible references in the text are colored and react to a click: the passage opens in the reader
-        var whole = string.Concat(b.Spans.Select(s => s.Text));
-        var links = DocumentLinks.VerseSpans(whole).Select(v =>
-        {
-            var end = DocumentLinks.VerseRanges(whole.Substring(v.Index, v.Length)).FirstOrDefault().EndVerse;
-            return (Start: v.Index, End: v.Index + v.Length, v.Ref, To: end);
-        }).ToList();
-        var at = 0;
-        foreach (var s in b.Spans)
-        {
-            var weight = s.Bold ? FontWeight.SemiBold : FontWeight.Normal;
-            var style = s.Italic ? FontStyle.Italic : FontStyle.Normal;
-            var pos = 0;
-            while (pos < s.Text.Length)
-            {
-                var abs = at + pos;
-                var link = links.FirstOrDefault(l => abs >= l.Start && abs < l.End);
-                var stop = link.End > 0 ? Math.Min(s.Text.Length, link.End - at)
-                    : Math.Min(s.Text.Length, links.Where(l => l.Start > abs).Select(l => l.Start - at).DefaultIfEmpty(s.Text.Length).Min());
-                var run = new Run(s.Text[pos..stop]) { FontWeight = weight, FontStyle = style };
-                if (link.End > 0) { run.Foreground = Res("BsAccent"); run.TextDecorations = TextDecorations.Underline; }
-                tb.Inlines!.Add(run);
-                pos = stop;
-            }
-            at += s.Text.Length;
-        }
-        if (links.Count > 0)
-        {
-            (int Start, int End, VerseRef Ref, int To)? LinkAt(PointerEventArgs e)
-            {
-                var pt = e.GetPosition(tb);
-                if (pt.X < 0 || pt.Y < 0 || pt.Y > tb.TextLayout.Height) return null;
-                var hit = tb.TextLayout.HitTestPoint(pt);
-                foreach (var l in links) if (hit.TextPosition >= l.Start && hit.TextPosition < l.End) return l;
-                return null;
-            }
-            tb.PointerMoved += (_, e) => tb.Cursor = LinkAt(e) is null ? null : new Cursor(StandardCursorType.Hand);
-            tb.AddHandler(PointerReleasedEvent, (object? _, PointerReleasedEventArgs e) =>
-            {
-                if (e.InitialPressMouseButton != MouseButton.Left || !string.IsNullOrEmpty(tb.SelectedText)) return;   // dragging to select text is not a click
-                if (LinkAt(e) is { } l) _ = OpenMaterialRefAsync(l.Ref, l.To);
-            }, Avalonia.Interactivity.RoutingStrategies.Bubble, handledEventsToo: true);
-        }
+        // the text with links on Bible references, marks and the right-click menu
+        FillMaterialText(tb, b, textNo, path);
+        Control result = tb;
         switch (b.Kind)
         {
             case BlockKind.Heading1: tb.FontSize = 24; tb.FontWeight = FontWeight.SemiBold; tb.Margin = new(0, 14, 0, 2); break;
@@ -644,11 +619,12 @@ public partial class MainWindow
             case BlockKind.Heading3: tb.FontSize = 17; tb.FontWeight = FontWeight.SemiBold; tb.Margin = new(0, 6, 0, 0); break;
             case BlockKind.ListItem:
                 tb.FontSize = 16;
-                return new DockPanel { Margin = new(10, 0, 0, 0), Children = { new TextBlock { Text = "•", FontSize = 16, Width = 18, [DockPanel.DockProperty] = Dock.Left }, tb } };
+                result = new DockPanel { Margin = new(10, 0, 0, 0), Children = { new TextBlock { Text = "•", FontSize = 16, Width = 18, [DockPanel.DockProperty] = Dock.Left }, tb } };
+                break;
             case BlockKind.TableRow: tb.FontSize = 15; tb.Opacity = 0.95; break;
             default: tb.FontSize = 16; tb.LineHeight = 26; break;
         }
-        return tb;
+        return WithMaterialNotes(result, textNo);
     }
 
     void OpenExternally(string path)
@@ -660,6 +636,14 @@ public partial class MainWindow
     /// <summary>Tab and Shift+Tab switch between the open files while the materials are seen and no text field has the focus.</summary>
     void OnMaterialsKey(object? sender, KeyEventArgs e)
     {
+        // Ctrl+F while a file is seen: find in it (elsewhere Ctrl+F keeps its old meaning)
+        if (!e.Handled && e.Key == Key.F && e.KeyModifiers == KeyModifiers.Control && _matBuilt && _matCurrent is not null
+            && MaterialsHost.IsEffectivelyVisible && TabActive(MaterialsTab) && !(FocusedControl() is Visual fv && fv.GetVisualAncestors().Contains(SidePanel)))
+        {
+            e.Handled = true;
+            OpenFindBar(_matSelected?.SelectedText is { Length: > 0 and < 60 } sel ? sel : null);
+            return;
+        }
         if (e.Handled || e.Key != Key.Tab || e.KeyModifiers is not (KeyModifiers.None or KeyModifiers.Shift) || !_matBuilt) return;
         if (!MaterialsHost.IsEffectivelyVisible || !TabActive(MaterialsTab) || _settings.MaterialsOpen.Count < 1) return;
         var focused = FocusedControl();

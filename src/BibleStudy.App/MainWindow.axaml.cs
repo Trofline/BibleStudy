@@ -201,6 +201,7 @@ public partial class MainWindow : Window
         InitWindows();
         InitShell();
         InitClock();
+        InitProjector();
         InitTaskbar();
         InitSplit();
         InitMaterials();

@@ -143,3 +143,12 @@ Der Knopf mit dem geteilten Rechteck oben rechts schaltet die **geteilte Ansicht
 - Die **Linien** zwischen den Bereichen lassen sich ziehen. Das **✕** im Kopf eines Bereichs schließt den Bereich; der Reiter bleibt oben offen.
 - Beim Einschalten klappt die Seitenleiste ein, damit die Bereiche Platz haben (**Strg+B** holt sie zurück).
 - Ob die geteilte Ansicht an ist, welche Bereiche es gibt und wie breit sie sind, bleibt beim nächsten Start erhalten.
+
+## 2.13 Beamer-Ansicht
+
+Für eine Bibelstunde mit Beamer oder Fernseher: **Rechtsklick auf einen Vers → „Mehr mit diesem Vers“ → „Auf dem Beamer zeigen“** (oder **Strg+K** → „Beamer“). Die gewählten Verse erscheinen groß und ruhig, hell auf dunklem Grund, auf dem zweiten Bildschirm; das Programm selbst bleibt auf deinem Bildschirm, wie es ist. Ist nur ein Bildschirm da, öffnet sich ein eigenes Fenster, das du zum Beamer ziehst (**F11** macht es bildschirmfüllend). Lange Abschnitte werden kleiner, damit alles passt.
+
+- **Pfeiltasten, Leertaste, Bild auf/ab:** weiter und zurück (bei mehreren Versen um so viele Verse, wie gerade zu sehen sind).
+- **B:** schwarz schalten und wieder zeigen. **Esc:** schließen.
+- Unten in der Leiste steht **„Beamer: …“** mit dem, was gerade gezeigt wird; ein Klick darauf bietet Weiter, Zurück, Schwarz, Vollbild und Schließen.
+- Aus den **Materialien** (Kapitel 6.11) zeigt ein Rechtsklick ausgewählten Text, einen ganzen Absatz oder eine Bibelstelle auf dem Beamer.
