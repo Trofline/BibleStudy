@@ -1,23 +1,35 @@
-{
-  "name": "BibleStudy",
-  "identifier": "de.trofline.biblestudy.source",
-  "subtitle": "Bible study for the iPhone",
-  "description": "BibleStudy for the iPhone: read, search, mark, take notes and prepare Bible studies. Free, open source. Installed with SideStore.",
-  "iconURL": "https://trofline.github.io/BibleStudy/img/app.png",
-  "website": "https://trofline.github.io/BibleStudy/",
-  "tintColor": "#3b5bdb",
-  "apps": [
-    {
-      "name": "BibleStudy",
-      "bundleIdentifier": "de.trofline.biblestudy",
-      "developerName": "Trofline",
-      "subtitle": "Bible study for the iPhone",
-      "localizedDescription": "Read the Bible in several translations, search it, mark words, take notes, write documents and prepare Bible studies. Your data stays on your phone. Beta: the iPhone version is new, please report what does not work.",
-      "iconURL": "https://trofline.github.io/BibleStudy/img/app.png",
-      "tintColor": "#3b5bdb",
-      "category": "other",
-      "versions": []
-    }
-  ],
-  "news": []
+﻿{
+    "name":  "BibleStudy",
+    "identifier":  "de.trofline.biblestudy.source",
+    "subtitle":  "Bible study for the iPhone",
+    "description":  "BibleStudy for the iPhone: read, search, mark, take notes and prepare Bible studies. Free, open source. Installed with SideStore.",
+    "iconURL":  "https://trofline.github.io/BibleStudy/img/app.png",
+    "website":  "https://trofline.github.io/BibleStudy/",
+    "tintColor":  "#3b5bdb",
+    "apps":  [
+                 {
+                     "name":  "BibleStudy",
+                     "bundleIdentifier":  "de.trofline.biblestudy",
+                     "developerName":  "Trofline",
+                     "subtitle":  "Bible study for the iPhone",
+                     "localizedDescription":  "Read the Bible in several translations, search it, mark words, take notes, write documents and prepare Bible studies. Your data stays on your phone. Beta: the iPhone version is new, please report what does not work.",
+                     "iconURL":  "https://trofline.github.io/BibleStudy/img/app.png",
+                     "tintColor":  "#3b5bdb",
+                     "category":  "other",
+                     "versions":  [
+                                      {
+                                          "version":  "1.9.2",
+                                          "buildVersion":  "1.9.2",
+                                          "date":  "2026-11-15",
+                                          "localizedDescription":  "**Beta, iPhone (SideStore).** Install with SideStore, no paid Apple account needed. Step by step: https://github.com/Trofline/BibleStudy#on-the-phone\n\nAdd this source in SideStore: `https://trofline.github.io/BibleStudy/sidestore.json`\n\nFirst iPhone version: please report what does not work. Same features as the Android beta, including syncing with your PC.",
+                                          "downloadURL":  "https://github.com/Trofline/BibleStudy/releases/download/ios-beta-1.9.2/BibleStudy-iOS-1.9.2.ipa",
+                                          "size":  59249325,
+                                          "minOSVersion":  "15.0"
+                                      }
+                                  ]
+                 }
+             ],
+    "news":  [
+
+             ]
 }
