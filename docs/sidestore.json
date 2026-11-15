@@ -18,6 +18,15 @@
                      "category":  "other",
                      "versions":  [
                                       {
+                                          "version":  "1.9.5",
+                                          "buildVersion":  "1.9.5",
+                                          "date":  "2026-11-15",
+                                          "localizedDescription":  "**Beta.** Update through SideStore (source: `https://trofline.github.io/BibleStudy/sidestore.json`). The IPA is attached when its build is done.\n\nFixes\n- The options in the side panel (search scope, word match, more options) no longer lie on top of each other.",
+                                          "downloadURL":  "https://github.com/Trofline/BibleStudy/releases/download/ios-beta-1.9.5/BibleStudy-iOS-1.9.5.ipa",
+                                          "size":  59320613,
+                                          "minOSVersion":  "15.0"
+                                      },
+                                      {
                                           "version":  "1.9.4",
                                           "buildVersion":  "1.9.4",
                                           "date":  "2026-11-15",
