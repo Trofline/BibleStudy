@@ -34,7 +34,7 @@
   "Im selben Netzwerk automatisch abgleichen": "Автоматически синхронизировать в одной сети",
   "Name dieses Geräts": "Имя этого устройства",
   "Abgleich einrichten": "Настроить синхронизацию",
-  "Jetzt abgleichen": "Синхронизировать сейчас",
+  "Jetzt synchronisieren": "Синхронизировать сейчас",
   "Abgleich beenden": "Остановить синхронизацию",
   "Code von einem anderen Gerät": "Код с другого устройства",
   "ABCD-EFGH-IJKL-MNOP-QRST-UV": "ABCD-EFGH-IJKL-MNOP-QRST-UV",
@@ -3123,5 +3123,11 @@
   "Suche jetzt das andere Gerät … Lass die App dort offen; sobald ihr euch erreicht, kommt hier eine Meldung.": "Ищем другое устройство … Оставьте там приложение открытым; как только устройства найдут друг друга, здесь появится сообщение.",
   "Seit {0} Tagen kein Abgleich": "Нет синхронизации уже {0} дн.",
   "Öffne BibleStudy kurz auf {0} (im selben WLAN), dann gleicht ihr euch ab. Bis dahin geht nichts verloren.": "Ненадолго откройте BibleStudy на устройстве «{0}» (в той же сети Wi-Fi), и устройства синхронизируются. До тех пор ничего не потеряется.",
-  "dem anderen Gerät": "другое устройство"
+  "dem anderen Gerät": "другое устройство",
+  "Synchronisieren": "Синхронизировать",
+  "Synchronisiere …": "Синхронизация …",
+  "Kein Gerät erreicht": "Устройства не найдены",
+  "Nicht erreicht": "Нет связи",
+  "Synchronisiert": "Синхронизировано",
+  "Jetzt mit deinen anderen Geräten synchronisieren (läuft sonst von selbst alle 20 Sekunden und nach jeder Änderung).": "Синхронизировать с другими устройствами сейчас (иначе это происходит само каждые 20 секунд и после каждого изменения)."
 }

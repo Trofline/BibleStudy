@@ -27,6 +27,8 @@ public sealed class LanSync : IDisposable
     public const int DiscoveryPort = 47821;
     /// <summary>The port of the direct connection (another one when it is taken). It is in the pairing address, so that a device that cannot hear the call-out (an iPhone may not receive broadcasts) still finds the other.</summary>
     public const int DataPort = 47822;
+    /// <summary>How often the devices in reach are asked even without a change here.</summary>
+    public static TimeSpan PollEvery = TimeSpan.FromSeconds(20);
     const byte MsgList = 1, MsgGet = 2, MsgData = 3, MsgPut = 4, MsgOk = 5, MsgNone = 6;
     const int MaxFrame = 512 * 1024 * 1024;
 
@@ -36,6 +38,8 @@ public sealed class LanSync : IDisposable
     readonly string _tmp;
     readonly ConcurrentDictionary<string, SyncPeer> _peers = new();
     readonly ConcurrentDictionary<string, DateTime> _tried = new();
+    /// <summary>Devices and addresses whose last comparison failed, and when (the regular look leaves them out for two minutes).</summary>
+    readonly ConcurrentDictionary<string, DateTime> _failed = new();
     readonly SemaphoreSlim _mergeGate = new(1, 1);
     CancellationTokenSource? _cts;
     TcpListener? _tcp;
@@ -179,14 +183,19 @@ public sealed class LanSync : IDisposable
     async Task WatchLoop(CancellationToken ct)
     {
         ReadStamps();
+        var lastRound = DateTime.UtcNow;
         while (!ct.IsCancellationRequested)
         {
             try { await Task.Delay(TimeSpan.FromSeconds(2), ct); } catch (OperationCanceledException) { return; }
             if (!_cfg.Auto) continue;
             if (ReadStamps()) Interlocked.CompareExchange(ref _changedAt, DateTime.UtcNow.Ticks, 0);
             var since = Interlocked.Read(ref _changedAt);
-            if (since == 0 || DateTime.UtcNow - new DateTime(since, DateTimeKind.Utc) < TimeSpan.FromSeconds(3)) continue;
-            await SyncKnownAsync();
+            var settled = since != 0 && DateTime.UtcNow - new DateTime(since, DateTimeKind.Utc) >= TimeSpan.FromSeconds(3);
+            // besides after a change here: a short look every 20 seconds (only sends what differs), so a change over there
+            // that could not be sent at once (the other app was closed, the line broke) still arrives soon
+            if (!settled && DateTime.UtcNow - lastRound < PollEvery) continue;
+            lastRound = DateTime.UtcNow;
+            await SyncKnownAsync(poll: !settled);
         }
     }
 
@@ -209,18 +218,22 @@ public sealed class LanSync : IDisposable
     }
 
     /// <summary>Compares at once with every device that was seen or whose address is known (one round at a time). The program calls it before it closes too.</summary>
-    public async Task SyncKnownAsync()
+    public Task SyncKnownAsync() => SyncKnownAsync(false);
+
+    /// <param name="poll">the regular look: devices that failed in the last two minutes are left out (a closed iPhone is not asked every 20 seconds)</param>
+    async Task SyncKnownAsync(bool poll)
     {
         if (Interlocked.Exchange(ref _running, 1) == 1) return;
         try
         {
             Interlocked.Exchange(ref _changedAt, 0);
             var peers = Peers.ToList();
-            foreach (var p in peers) { _tried[p.Id] = DateTime.UtcNow; await SyncWithAsync(p); }
+            bool Resting(string id) => poll && _failed.TryGetValue(id, out var at) && DateTime.UtcNow - at < TimeSpan.FromMinutes(2);
+            foreach (var p in peers) { if (Resting(p.Id)) continue; _tried[p.Id] = DateTime.UtcNow; await SyncWithAsync(p); }
             foreach (var h in _cfg.HostList())
             {
                 var at = h.LastIndexOf(':');
-                if (at < 0 || !IPAddress.TryParse(h[..at], out var ip) || !int.TryParse(h[(at + 1)..], out var port) || peers.Any(p => p.Address.Equals(ip))) continue;
+                if (at < 0 || !IPAddress.TryParse(h[..at], out var ip) || !int.TryParse(h[(at + 1)..], out var port) || peers.Any(p => p.Address.Equals(ip)) || Resting("host:" + h)) continue;
                 _tried["host:" + h] = DateTime.UtcNow;
                 await SyncWithAsync(new SyncPeer("host:" + h, h, ip, port, DateTime.UtcNow));
             }
@@ -346,7 +359,16 @@ public sealed class LanSync : IDisposable
         Announce();
         try { await Task.Delay(1500); } catch (OperationCanceledException) { }
         var list = new List<SyncReport>();
-        foreach (var p in Peers) { _tried[p.Id] = DateTime.UtcNow; list.Add(await SyncWithAsync(p)); }
+        var peers = Peers.ToList();
+        foreach (var p in peers) { _tried[p.Id] = DateTime.UtcNow; list.Add(await SyncWithAsync(p)); }
+        // also the remembered addresses: an iPhone never answers the call-out, it is only reached there
+        foreach (var h in _cfg.HostList())
+        {
+            var at = h.LastIndexOf(':');
+            if (at < 0 || !IPAddress.TryParse(h[..at], out var ip) || !int.TryParse(h[(at + 1)..], out var port) || peers.Any(p => p.Address.Equals(ip))) continue;
+            _tried["host:" + h] = DateTime.UtcNow;
+            list.Add(await SyncWithAsync(new SyncPeer("host:" + h, h, ip, port, DateTime.UtcNow)));
+        }
         return list;
     }
 
@@ -434,6 +456,7 @@ public sealed class LanSync : IDisposable
         {
             report = new SyncReport(peer.Name, changed, sent, ex is CryptographicException ? "code" : ex.Message);
         }
+        if (report.Error is null) _failed.TryRemove(peer.Id, out _); else _failed[peer.Id] = DateTime.UtcNow;
         Finished?.Invoke(report);
         return report;
     }

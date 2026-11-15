@@ -34,7 +34,7 @@
   "Im selben Netzwerk automatisch abgleichen": "Sync automatically in the same network",
   "Name dieses Geräts": "Name of this device",
   "Abgleich einrichten": "Set up syncing",
-  "Jetzt abgleichen": "Sync now",
+  "Jetzt synchronisieren": "Sync now",
   "Abgleich beenden": "Stop syncing",
   "Code von einem anderen Gerät": "Code from another device",
   "ABCD-EFGH-IJKL-MNOP-QRST-UV": "ABCD-EFGH-IJKL-MNOP-QRST-UV",
@@ -3123,5 +3123,11 @@
   "Suche jetzt das andere Gerät … Lass die App dort offen; sobald ihr euch erreicht, kommt hier eine Meldung.": "Now looking for the other device … Keep the app open there; a message appears here as soon as you reach each other.",
   "Seit {0} Tagen kein Abgleich": "No sync for {0} days",
   "Öffne BibleStudy kurz auf {0} (im selben WLAN), dann gleicht ihr euch ab. Bis dahin geht nichts verloren.": "Open BibleStudy on {0} for a moment (in the same Wi-Fi) and your devices sync. Nothing gets lost until then.",
-  "dem anderen Gerät": "the other device"
+  "dem anderen Gerät": "the other device",
+  "Synchronisieren": "Sync",
+  "Synchronisiere …": "Syncing …",
+  "Kein Gerät erreicht": "No device reached",
+  "Nicht erreicht": "Not reached",
+  "Synchronisiert": "Synced",
+  "Jetzt mit deinen anderen Geräten synchronisieren (läuft sonst von selbst alle 20 Sekunden und nach jeder Änderung).": "Sync with your other devices now (otherwise it runs by itself every 20 seconds and after every change)."
 }

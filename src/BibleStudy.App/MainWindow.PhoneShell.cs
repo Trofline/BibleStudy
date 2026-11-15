@@ -298,11 +298,17 @@ public partial class MainWindow
         {
             SheetTile(L("Schriftgröße"), Geo("M4 7V4h16v3 M9 20h6 M12 4v16"), () => Dispatcher.UIThread.Post(ShowFontBar, DispatcherPriority.Background)),
         };
-        ShowSheet(L("Werkzeuge"),
+        var parts = new List<Control>
+        {
             Heading(L("Dieses Kapitel")), Grid3(tools.Select(c => TileFor(c))),
             Heading(L("Ansicht")), Grid3(views.Select(c => TileFor(c)).Concat(size)),
             Heading(L("Markieren")), Grid3(mark.Select(c => TileFor(c))),
-            Heading(L("Anhören")), Grid3(listen.Select(c => TileFor(c))));
+            Heading(L("Anhören")), Grid3(listen.Select(c => TileFor(c))),
+        };
+        // the device sync, when it is set up: at hand instead of deep in the settings
+        if (_syncCfg.Key is not null)
+            parts.InsertRange(0, [Grid3([SheetTile(L("Synchronisieren"), Geo("M21 12a9 9 0 0 1-15.5 6.2 M3 12a9 9 0 0 1 15.5-6.2 M18 2v4h-4 M6 22v-4h4"), () => { ShowSheet(null); _ = SyncNowAsync(); })])]);
+        ShowSheet(L("Werkzeuge"), [.. parts]);
     }
 
     /// <summary>The areas of the program and what the top bar of the desktop holds.</summary>

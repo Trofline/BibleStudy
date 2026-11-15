@@ -34,7 +34,7 @@
   "Im selben Netzwerk automatisch abgleichen": "Sincronizar automáticamente en la misma red",
   "Name dieses Geräts": "Nombre de este dispositivo",
   "Abgleich einrichten": "Configurar sincronización",
-  "Jetzt abgleichen": "Sincronizar ahora",
+  "Jetzt synchronisieren": "Sincronizar ahora",
   "Abgleich beenden": "Detener sincronización",
   "Code von einem anderen Gerät": "Código de otro dispositivo",
   "ABCD-EFGH-IJKL-MNOP-QRST-UV": "ABCD-EFGH-IJKL-MNOP-QRST-UV",
@@ -3123,5 +3123,11 @@
   "Suche jetzt das andere Gerät … Lass die App dort offen; sobald ihr euch erreicht, kommt hier eine Meldung.": "Buscando ahora el otro dispositivo … Deja la app abierta allí; en cuanto os encontréis aparecerá un aviso aquí.",
   "Seit {0} Tagen kein Abgleich": "Sin sincronizar desde hace {0} días",
   "Öffne BibleStudy kurz auf {0} (im selben WLAN), dann gleicht ihr euch ab. Bis dahin geht nichts verloren.": "Abre BibleStudy un momento en {0} (en la misma red wifi) y os sincronizáis. Hasta entonces no se pierde nada.",
-  "dem anderen Gerät": "el otro dispositivo"
+  "dem anderen Gerät": "el otro dispositivo",
+  "Synchronisieren": "Sincronizar",
+  "Synchronisiere …": "Sincronizando …",
+  "Kein Gerät erreicht": "Ningún dispositivo alcanzado",
+  "Nicht erreicht": "No alcanzado",
+  "Synchronisiert": "Sincronizado",
+  "Jetzt mit deinen anderen Geräten synchronisieren (läuft sonst von selbst alle 20 Sekunden und nach jeder Änderung).": "Sincronizar ahora con tus otros dispositivos (si no, se hace solo cada 20 segundos y tras cada cambio)."
 }

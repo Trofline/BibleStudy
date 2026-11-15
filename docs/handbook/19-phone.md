@@ -38,9 +38,9 @@ Settings → **Sync devices**: your vaults are kept in step between your own dev
 2. On the second device open BibleStudy once, then scan the QR code with the **camera app** (BibleStudy opens and pairs). Or click **Copy code** on the PC, send the link to the phone and paste it under **Code from another device**.
 3. As soon as the devices reach each other, a green notice **"Connected to …"** appears. From then on you never pair again.
 
-**How it runs afterwards:** when both apps are open on the **same Wi-Fi** they sync by themselves: at start, when the app comes to the front again, and a few seconds after every change. The PC sends its last changes when it closes. **Sync now** starts it at once.
+**How it runs afterwards:** when both apps are open on the **same Wi-Fi** they sync by themselves: at start, when the app comes to the front again, a few seconds after every change and otherwise every 20 seconds. The PC sends its last changes when it closes. To sync at once use **Sync**: on the PC at the bottom next to the version number, on the phone at the top of the **Tools** menu.
 
-**Nothing gets lost:** if you marked on both devices apart, both have all the marks afterwards. If something changed on one side only, that side wins. If the same note was changed differently on both, both versions are kept. Deletions travel along, into the trash on the other device. A new or empty device never deletes anything. Settings and materials are not synced yet.
+**Nothing gets lost:** if you marked on both devices apart, both have all the marks afterwards. If something changed on one side only, that side wins. If the same note was changed differently on both, both versions are kept. Deletions travel along, into the trash on the other device. A new or empty device never deletes anything. Synced are marks, notes, documents, bookmarks, tasks and the reading progress; settings, your own translations and materials not yet.
 
 **iPhone:** iOS does not let apps work in the background, so the iPhone syncs only **while BibleStudy is open**. Until then the changes simply wait on both sides. After 3 days without a sync the app reminds you. The automation below is the easiest way.
 

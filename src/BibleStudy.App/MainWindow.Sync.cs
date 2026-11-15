@@ -27,8 +27,25 @@ public partial class MainWindow
                 var home = Path.Combine(root, "vaults", name);
                 if (File.Exists(Path.Combine(home, "vault.db"))) w.StoreOf(name).MergeFrom(snapshotPath, L("Abgleich"), basePath);
                 else { Directory.CreateDirectory(home); File.Copy(snapshotPath, Path.Combine(home, "vault.db")); }
-                w._readStore.MergeFrom(snapshotPath);
+                if (!w.IsGuestVault(name)) w._readStore.MergeFrom(snapshotPath, basePath);
             });
+        }
+
+        // the reading progress is one list for all vaults (read.db): it travels inside each vault's copy, and a chapter marked read is a change to send
+        public override void Snapshot(string name, string path)
+        {
+            base.Snapshot(name, path);
+            if (!w.IsGuestVault(name)) w._readStore.CopyInto(path);
+        }
+
+        public override string Fingerprint(string name) => base.Fingerprint(name) + (w.IsGuestVault(name) ? "" : "|read:" + w._readStore.Fingerprint());
+
+        public override DateTime Stamp(string name)
+        {
+            var own = base.Stamp(name);
+            if (w.IsGuestVault(name)) return own;
+            var read = WriteTime(Path.Combine(root, "read.db"));
+            return read > own ? read : own;
         }
     }
 
@@ -59,6 +76,7 @@ public partial class MainWindow
             ShowSyncState();
         };
         SyncNowBtn.Click += async (_, _) => await SyncNowAsync();
+        SyncChip.Click += async (_, _) => await SyncNowAsync();
         SyncOffBtn.Click += (_, _) =>
         {
             _lan?.Stop(); _lan = null;
@@ -151,6 +169,7 @@ public partial class MainWindow
         SyncPairPanel.IsVisible = has;
         SyncSetupBtn.IsVisible = !has;
         SyncNowBtn.IsVisible = has; SyncOffBtn.IsVisible = has; SyncAutoCheck.IsVisible = has;
+        SyncChip.IsVisible = has;
         if (has)
         {
             SyncQrHost.Content = new QrView { Size = 200, Text = SyncCode.ToUrl(_syncCfg.Key!, LanSync.LocalAddresses().Select(a => a + ":" + (_lan?.Port is > 0 and var p ? p : LanSync.DataPort))) };
@@ -168,14 +187,25 @@ public partial class MainWindow
     {
         if (_lan is null) StartSync();
         if (_lan is null) return;
-        SyncNowBtn.IsEnabled = false;
+        SyncNowBtn.IsEnabled = false; SyncChip.IsEnabled = false;
         SyncStatus.Text = L("Suche andere Geräte im Netzwerk …");
+        SyncChipText.Text = L("Synchronisiere …");
         try
         {
             var reports = await _lan.SyncAllNowAsync();
-            if (reports.Count == 0) SyncStatus.Text = L("Kein anderes Gerät gefunden. Beide Geräte müssen im selben WLAN sein, den Abgleich eingeschaltet und denselben Code haben.");
+            string done;
+            if (reports.Count == 0)
+            {
+                SyncStatus.Text = L("Kein anderes Gerät gefunden. Beide Geräte müssen im selben WLAN sein, den Abgleich eingeschaltet und denselben Code haben.");
+                done = L("Kein Gerät erreicht");
+                StatusText.Text = SyncStatus.Text;
+            }
+            else if (reports.All(r => r.Error is not null)) { done = L("Nicht erreicht"); StatusText.Text = SyncStatus.Text; }
+            else done = "✓ " + L("Synchronisiert");
+            SyncChipText.Text = done;
+            DispatcherTimer.RunOnce(() => SyncChipText.Text = L("Synchronisieren"), TimeSpan.FromSeconds(4));
         }
-        finally { SyncNowBtn.IsEnabled = true; }
+        finally { SyncNowBtn.IsEnabled = true; SyncChip.IsEnabled = true; }
     }
 
     void ShowSyncResult(SyncReport r)

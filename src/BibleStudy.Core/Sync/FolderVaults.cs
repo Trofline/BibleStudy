@@ -32,12 +32,15 @@ public class FolderVaults(string root, Func<string, bool>? skip = null, string c
             .Where(n => MarkLogic.IsValidVaultName(n) && File.Exists(PathOf(n)) && skip?.Invoke(n) != true).Order(StringComparer.OrdinalIgnoreCase)];
     }
 
-    public string Fingerprint(string name) => new VaultStore(PathOf(name), name).Fingerprint();
+    public virtual string Fingerprint(string name) => new VaultStore(PathOf(name), name).Fingerprint();
 
-    public DateTime Stamp(string name) =>
-        new[] { "", "-wal", "-journal" }.Select(s => PathOf(name) + s).Where(File.Exists).Select(File.GetLastWriteTimeUtc).DefaultIfEmpty(DateTime.MinValue).Max();
+    public virtual DateTime Stamp(string name) => WriteTime(PathOf(name));
 
-    public void Snapshot(string name, string path)
+    /// <summary>When an SQLite file was last written (also its journal files).</summary>
+    protected static DateTime WriteTime(string db) =>
+        new[] { "", "-wal", "-journal" }.Select(s => db + s).Where(File.Exists).Select(File.GetLastWriteTimeUtc).DefaultIfEmpty(DateTime.MinValue).Max();
+
+    public virtual void Snapshot(string name, string path)
     {
         if (File.Exists(path)) File.Delete(path);
         new VaultStore(PathOf(name), name).BackupTo(path);
