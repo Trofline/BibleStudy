@@ -1,3 +1,4 @@
+using Avalonia.Input.Platform;
 using Avalonia.Controls;
 using Avalonia.Threading;
 using BibleStudy.Core;
@@ -66,6 +67,13 @@ public partial class MainWindow
             ShowSyncState();
         };
         SyncJoinBtn.Click += (_, _) => { JoinWithCode(SyncCodeBox.Text ?? ""); };
+        // the whole pairing link, not only the code: it carries the address of this device, which an iPhone needs (it often does not hear the call-out)
+        SyncCopyBtn.Click += async (_, _) =>
+        {
+            if (_syncCfg.Key is null || TopLevel.GetTopLevel(this)?.Clipboard is not { } clipboard) return;
+            await clipboard.SetTextAsync(SyncCode.ToUrl(_syncCfg.Key, LanSync.LocalAddresses().Select(a => a + ":" + (_lan?.Port is > 0 and var p ? p : LanSync.DataPort))));
+            SyncStatus.Text = L("Kopplungs-Link kopiert. Auf dem anderen Gerät ins Feld „Code von einem anderen Gerät“ einfügen.");
+        };
         ShowSyncState();
         if (_syncCfg.Key is not null) DispatcherTimer.RunOnce(StartSync, TimeSpan.FromSeconds(8));   // the reader comes first
 #if MOBILE

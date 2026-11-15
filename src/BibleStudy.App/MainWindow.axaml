@@ -951,12 +951,13 @@
 
                             <Border Classes="card"><StackPanel Spacing="8">
                                 <TextBlock Classes="eyebrow" Text="GERÄTE ABGLEICHEN" />
-                                <TextBlock Classes="caption" TextWrapping="Wrap" Text="Gleicht deine Vaults zwischen deinen eigenen Geräten ab (PC und Handy), ohne Konto und ohne Server: Geräte im selben WLAN finden sich von selbst und tauschen Markierungen, Notizen und Dokumente aus. Bei Unterschieden bleibt beides erhalten." />
+                                <TextBlock Classes="caption" TextWrapping="Wrap" Text="Gleicht deine Vaults zwischen deinen eigenen Geräten ab (PC und Handy), ohne Konto und ohne Server: Geräte im selben WLAN finden sich von selbst, und eine Änderung ist nach wenigen Sekunden auf dem anderen. Wer etwas geändert hat, gewinnt; haben beide denselben Eintrag geändert, bleibt beides erhalten." />
                                 <TextBlock x:Name="SyncStatus" TextWrapping="Wrap" />
                                 <StackPanel x:Name="SyncPairPanel" Spacing="6" IsVisible="False">
                                     <TextBlock Classes="caption" TextWrapping="Wrap" Text="Auf dem anderen Gerät: den QR-Code mit der Kamera scannen oder den Code dort eintippen." />
                                     <ContentControl x:Name="SyncQrHost" HorizontalAlignment="Left" />
-                                    <TextBlock x:Name="SyncCodeText" FontWeight="SemiBold" TextWrapping="Wrap" />
+                                    <SelectableTextBlock x:Name="SyncCodeText" FontWeight="SemiBold" TextWrapping="Wrap" />
+                                    <Button x:Name="SyncCopyBtn" Content="Code kopieren" HorizontalAlignment="Left" ToolTip.Tip="Kopiert den Kopplungs-Link (mit der Adresse dieses Geräts): auf dem anderen Gerät ins Feld unten einfügen" />
                                 </StackPanel>
                                 <CheckBox x:Name="SyncAutoCheck" Content="Im selben Netzwerk automatisch abgleichen" />
                                 <TextBox x:Name="SyncNameBox" PlaceholderText="Name dieses Geräts" />
@@ -968,7 +969,7 @@
                                 <TextBlock Text="Code von einem anderen Gerät" FontWeight="SemiBold" Margin="0,6,0,0" />
                                 <TextBox x:Name="SyncCodeBox" PlaceholderText="ABCD-EFGH-IJKL-MNOP-QRST-UV" />
                                 <Button x:Name="SyncJoinBtn" Content="Mit Code koppeln" HorizontalAlignment="Left" />
-                                <TextBlock Classes="caption" TextWrapping="Wrap" Text="Gelöschtes wird nicht mit abgeglichen, es bleibt auf dem anderen Gerät. Beide Geräte müssen im selben WLAN sein. Die Windows-Firewall fragt beim ersten Mal nach: nur „Private Netzwerke“ erlauben." />
+                                <TextBlock Classes="caption" TextWrapping="Wrap" Text="Gelöschtes kommt auch auf dem anderen Gerät in den Papierkorb; ein neues oder leeres Gerät löscht nie etwas. Beide Geräte müssen im selben WLAN sein. Die Windows-Firewall fragt beim ersten Mal nach: nur „Private Netzwerke“ erlauben." />
                             </StackPanel></Border>
 
                             <Border Classes="card"><StackPanel Spacing="8">

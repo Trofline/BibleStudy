@@ -12,11 +12,31 @@ public partial class App : Application
     public override void Initialize()
     {
         AvaloniaXamlLoader.Load(this);
+        ListenForLinks();
+    }
+
+    bool _listening;
+
+    /// <summary>
+    /// iPhone: a pairing QR code opened from the camera app reaches the app as an activation of its scene, not through the app delegate
+    /// (Avalonia 12 runs the app in a scene): the link is taken from there. As early as possible, so the link that started the app is not missed.
+    /// </summary>
+    void ListenForLinks()
+    {
+#if IOS
+        if (_listening || this.TryGetFeature<Avalonia.Controls.ApplicationLifetimes.IActivatableLifetime>() is not { } life) return;
+        _listening = true;
+        life.Activated += (_, e) =>
+        {
+            if (e is Avalonia.Controls.ApplicationLifetimes.ProtocolActivatedEventArgs { Uri: { } uri } && uri.Scheme == "biblestudy-sync") OfferPairLink(uri.OriginalString);
+        };
+#endif
     }
 
     public override void OnFrameworkInitializationCompleted()
     {
         ErrorLog.Install();
+        ListenForLinks();
 #if !MOBILE
         Window.WindowOpenedEvent.AddClassHandler<Window>((w, _) => KeepOnScreen(w));
         // every submenu shows the same "›" (the theme's own arrow is hidden in App.axaml, it was cut off at the edge)

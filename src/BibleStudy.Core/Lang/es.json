@@ -30,7 +30,6 @@
   "Abgleich mit {0} unterbrochen: {1}": "Sincronización con {0} interrumpida: {1}",
   "Abgeglichen mit {0}: Neues übernommen.": "Sincronizado con {0}: se incorporaron novedades.",
   "GERÄTE ABGLEICHEN": "SINCRONIZAR DISPOSITIVOS",
-  "Gleicht deine Vaults zwischen deinen eigenen Geräten ab (PC und Handy), ohne Konto und ohne Server: Geräte im selben WLAN finden sich von selbst und tauschen Markierungen, Notizen und Dokumente aus. Bei Unterschieden bleibt beides erhalten.": "Sincroniza tus vaults entre tus propios dispositivos (PC y móvil), sin cuenta y sin servidor: los dispositivos en la misma Wi-Fi se encuentran solos e intercambian marcas, notas y documentos. Si difieren, se conservan ambas versiones.",
   "Auf dem anderen Gerät: den QR-Code mit der Kamera scannen oder den Code dort eintippen.": "En el otro dispositivo: escanea el código QR con la cámara o escribe allí el código.",
   "Im selben Netzwerk automatisch abgleichen": "Sincronizar automáticamente en la misma red",
   "Name dieses Geräts": "Nombre de este dispositivo",
@@ -40,7 +39,6 @@
   "Code von einem anderen Gerät": "Código de otro dispositivo",
   "ABCD-EFGH-IJKL-MNOP-QRST-UV": "ABCD-EFGH-IJKL-MNOP-QRST-UV",
   "Mit Code koppeln": "Vincular con código",
-  "Gelöschtes wird nicht mit abgeglichen, es bleibt auf dem anderen Gerät. Beide Geräte müssen im selben WLAN sein. Die Windows-Firewall fragt beim ersten Mal nach: nur „Private Netzwerke“ erlauben.": "Lo borrado no se sincroniza, permanece en el otro dispositivo. Ambos deben estar en la misma Wi-Fi. El Firewall de Windows pregunta la primera vez: permite solo «Redes privadas».",
   "Geteilte Ansicht an.": "Vista dividida activada.",
   "Claude Code und Ollama gibt es nur am PC. Auf dem Handy ist die KI noch nicht verfügbar.": "Claude Code y Ollama solo existen en un PC. La IA aún no está disponible en el móvil.",
   "Dateien hinzufügen …": "Añadir archivos …",
@@ -3114,5 +3112,9 @@
   "Kommentar zu diesem Vers": "Comentario sobre este versículo",
   "Kommentare öffnen": "Abrir comentarios",
   "Kommentare sind an. Du findest sie in der Leiste unter „Bücher“, in der Vers-Übersicht und mit Rechtsklick auf einen Vers.": "Los comentarios están activados. Los encuentras en la barra en «Libros», en el resumen del versículo y con clic derecho en un versículo.",
-  "Kommentare sind aus.": "Los comentarios están desactivados."
+  "Kommentare sind aus.": "Los comentarios están desactivados.",
+  "Gleicht deine Vaults zwischen deinen eigenen Geräten ab (PC und Handy), ohne Konto und ohne Server: Geräte im selben WLAN finden sich von selbst, und eine Änderung ist nach wenigen Sekunden auf dem anderen. Wer etwas geändert hat, gewinnt; haben beide denselben Eintrag geändert, bleibt beides erhalten.": "Sincroniza tus vaults entre tus propios dispositivos (PC y móvil), sin cuenta y sin servidor: los dispositivos en la misma wifi se encuentran solos y un cambio llega al otro en pocos segundos. Gana el lado que cambió algo; si ambos cambiaron la misma entrada, se conservan las dos.",
+  "Gelöschtes kommt auch auf dem anderen Gerät in den Papierkorb; ein neues oder leeres Gerät löscht nie etwas. Beide Geräte müssen im selben WLAN sein. Die Windows-Firewall fragt beim ersten Mal nach: nur „Private Netzwerke“ erlauben.": "Lo que borras va también a la papelera del otro dispositivo; un dispositivo nuevo o vacío nunca borra nada. Ambos dispositivos deben estar en la misma wifi. El cortafuegos de Windows pregunta la primera vez: permite solo «Redes privadas».",
+  "Kopiert den Kopplungs-Link (mit der Adresse dieses Geräts): auf dem anderen Gerät ins Feld unten einfügen": "Copia el enlace de emparejamiento (con la dirección de este dispositivo): pégalo en el campo de abajo en el otro dispositivo",
+  "Kopplungs-Link kopiert. Auf dem anderen Gerät ins Feld „Code von einem anderen Gerät“ einfügen.": "Enlace de emparejamiento copiado. Pégalo en el otro dispositivo en el campo «Código de otro dispositivo»."
 }

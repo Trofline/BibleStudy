@@ -125,6 +125,7 @@ public partial class MainWindow
             foreach (var b in pills.Children.OfType<Button>()) b.Classes.Set("active", (int)b.Tag! == index);
             hint.Text = group?.Tabs.FirstOrDefault(t => t.Index == index)?.Hint ?? "";
             TabShown(index);
+            if (d.Win is null && _activeWork == key) SideForSettings();
         }
         if (items.Count > 1)
             foreach (var t in group!.Tabs.Where(t => indices.Contains(t.Index)))
@@ -201,6 +202,7 @@ public partial class MainWindow
         if (key is not null && key != before && _windows.TryGetValue(key, out var fresh)) AnimateIn(fresh.Panel);
         WorkHost.IsVisible = key is not null;
         if (key is not null) ClosePanelOnPhone();
+        SideForSettings();
         UpdateReadBar();
         RebuildTabStrip();
         if (key is not null && _windows.TryGetValue(key, out var shown)) TabShown(shown.Current);
@@ -751,5 +753,31 @@ public partial class MainWindow
         LayoutBox.ItemsSource = items;
         var want = select ?? _settings.ActiveLayout ?? names.First();
         LayoutBox.SelectedItem = items.FirstOrDefault(i => (string?)i.Tag == want) ?? items.First();
+    }
+}
+
+public partial class MainWindow
+{
+    bool _sideHiddenForSettings;
+
+    /// <summary>
+    /// The settings fill the main area: the side panel goes away while they are shown and comes back with the text (only when it was open before).
+    /// What the person chose for the panel (open or closed) stays saved as it was.
+    /// </summary>
+    void SideForSettings()
+    {
+        if (_phone || _settings.SplitView) return;
+        var settings = _activeWork is { } k && _windows.TryGetValue(k, out var w) && w.Win is null && w.Current == SettingsTab;
+        if (settings && SidePanel.IsVisible)
+        {
+            _sideHiddenForSettings = true;
+            SetPanelOpen(false);
+            _settings.SideOpen = true; SaveSettings();
+        }
+        else if (!settings && _sideHiddenForSettings)
+        {
+            _sideHiddenForSettings = false;
+            if (!SidePanel.IsVisible) SetPanelOpen(true);
+        }
     }
 }

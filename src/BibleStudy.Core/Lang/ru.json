@@ -30,7 +30,6 @@
   "Abgleich mit {0} unterbrochen: {1}": "Синхронизация с {0} прервана: {1}",
   "Abgeglichen mit {0}: Neues übernommen.": "Синхронизировано с {0}: получены новые данные.",
   "GERÄTE ABGLEICHEN": "СИНХРОНИЗАЦИЯ УСТРОЙСТВ",
-  "Gleicht deine Vaults zwischen deinen eigenen Geräten ab (PC und Handy), ohne Konto und ohne Server: Geräte im selben WLAN finden sich von selbst und tauschen Markierungen, Notizen und Dokumente aus. Bei Unterschieden bleibt beides erhalten.": "Синхронизирует ваши vault между вашими устройствами (ПК и телефон) без учётной записи и сервера: устройства в одной сети Wi-Fi находят друг друга сами и обмениваются пометками, заметками и документами. При различиях сохраняются обе версии.",
   "Auf dem anderen Gerät: den QR-Code mit der Kamera scannen oder den Code dort eintippen.": "На другом устройстве: отсканируйте QR-код камерой или введите код там.",
   "Im selben Netzwerk automatisch abgleichen": "Автоматически синхронизировать в одной сети",
   "Name dieses Geräts": "Имя этого устройства",
@@ -40,7 +39,6 @@
   "Code von einem anderen Gerät": "Код с другого устройства",
   "ABCD-EFGH-IJKL-MNOP-QRST-UV": "ABCD-EFGH-IJKL-MNOP-QRST-UV",
   "Mit Code koppeln": "Связать по коду",
-  "Gelöschtes wird nicht mit abgeglichen, es bleibt auf dem anderen Gerät. Beide Geräte müssen im selben WLAN sein. Die Windows-Firewall fragt beim ersten Mal nach: nur „Private Netzwerke“ erlauben.": "Удалённое не синхронизируется и остаётся на другом устройстве. Оба устройства должны быть в одной сети Wi-Fi. Брандмауэр Windows спросит при первом запуске: разрешите только «Частные сети».",
   "Geteilte Ansicht an.": "Разделённый вид включён.",
   "Claude Code und Ollama gibt es nur am PC. Auf dem Handy ist die KI noch nicht verfügbar.": "Claude Code и Ollama есть только на ПК. На телефоне ИИ пока недоступен.",
   "Dateien hinzufügen …": "Добавить файлы …",
@@ -3114,5 +3112,9 @@
   "Kommentar zu diesem Vers": "Комментарий к этому стиху",
   "Kommentare öffnen": "Открыть комментарии",
   "Kommentare sind an. Du findest sie in der Leiste unter „Bücher“, in der Vers-Übersicht und mit Rechtsklick auf einen Vers.": "Комментарии включены. Они есть на панели в «Книги», в обзоре стиха и по правому щелчку на стихе.",
-  "Kommentare sind aus.": "Комментарии выключены."
+  "Kommentare sind aus.": "Комментарии выключены.",
+  "Gleicht deine Vaults zwischen deinen eigenen Geräten ab (PC und Handy), ohne Konto und ohne Server: Geräte im selben WLAN finden sich von selbst, und eine Änderung ist nach wenigen Sekunden auf dem anderen. Wer etwas geändert hat, gewinnt; haben beide denselben Eintrag geändert, bleibt beides erhalten.": "Синхронизирует твои хранилища между твоими устройствами (ПК и телефон) без аккаунта и без сервера: устройства в одной сети Wi-Fi находят друг друга сами, и изменение за несколько секунд появляется на другом. Побеждает сторона, которая что-то изменила; если обе изменили одну и ту же запись, сохраняются обе.",
+  "Gelöschtes kommt auch auf dem anderen Gerät in den Papierkorb; ein neues oder leeres Gerät löscht nie etwas. Beide Geräte müssen im selben WLAN sein. Die Windows-Firewall fragt beim ersten Mal nach: nur „Private Netzwerke“ erlauben.": "Удалённое попадает в корзину и на другом устройстве; новое или пустое устройство никогда ничего не удаляет. Оба устройства должны быть в одной сети Wi-Fi. Брандмауэр Windows спросит в первый раз: разреши только «Частные сети».",
+  "Kopiert den Kopplungs-Link (mit der Adresse dieses Geräts): auf dem anderen Gerät ins Feld unten einfügen": "Копирует ссылку для связывания (с адресом этого устройства): вставь её в поле ниже на другом устройстве",
+  "Kopplungs-Link kopiert. Auf dem anderen Gerät ins Feld „Code von einem anderen Gerät“ einfügen.": "Ссылка для связывания скопирована. Вставь её на другом устройстве в поле «Код с другого устройства»."
 }

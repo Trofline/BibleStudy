@@ -30,7 +30,6 @@
   "Abgleich mit {0} unterbrochen: {1}": "Sync with {0} was interrupted: {1}",
   "Abgeglichen mit {0}: Neues übernommen.": "Synced with {0}: new items taken over.",
   "GERÄTE ABGLEICHEN": "SYNC DEVICES",
-  "Gleicht deine Vaults zwischen deinen eigenen Geräten ab (PC und Handy), ohne Konto und ohne Server: Geräte im selben WLAN finden sich von selbst und tauschen Markierungen, Notizen und Dokumente aus. Bei Unterschieden bleibt beides erhalten.": "Syncs your vaults between your own devices (PC and phone), with no account and no server: devices on the same Wi-Fi find each other by themselves and exchange marks, notes and documents. Where they differ, both versions are kept.",
   "Auf dem anderen Gerät: den QR-Code mit der Kamera scannen oder den Code dort eintippen.": "On the other device: scan the QR code with the camera or type the code there.",
   "Im selben Netzwerk automatisch abgleichen": "Sync automatically in the same network",
   "Name dieses Geräts": "Name of this device",
@@ -40,7 +39,6 @@
   "Code von einem anderen Gerät": "Code from another device",
   "ABCD-EFGH-IJKL-MNOP-QRST-UV": "ABCD-EFGH-IJKL-MNOP-QRST-UV",
   "Mit Code koppeln": "Pair with code",
-  "Gelöschtes wird nicht mit abgeglichen, es bleibt auf dem anderen Gerät. Beide Geräte müssen im selben WLAN sein. Die Windows-Firewall fragt beim ersten Mal nach: nur „Private Netzwerke“ erlauben.": "Deleted items are not synced; they stay on the other device. Both devices must be on the same Wi-Fi. Windows Firewall asks the first time: allow “Private networks” only.",
   "Geteilte Ansicht an.": "Split view on.",
   "Claude Code und Ollama gibt es nur am PC. Auf dem Handy ist die KI noch nicht verfügbar.": "Claude Code and Ollama only exist on a PC. The AI is not available on the phone yet.",
   "Dateien hinzufügen …": "Add files …",
@@ -3114,5 +3112,9 @@
   "Kommentar zu diesem Vers": "Commentary on this verse",
   "Kommentare öffnen": "Open commentaries",
   "Kommentare sind an. Du findest sie in der Leiste unter „Bücher“, in der Vers-Übersicht und mit Rechtsklick auf einen Vers.": "Commentaries are on. You find them in the bar under “Books”, in the verse overview and with a right-click on a verse.",
-  "Kommentare sind aus.": "Commentaries are off."
+  "Kommentare sind aus.": "Commentaries are off.",
+  "Gleicht deine Vaults zwischen deinen eigenen Geräten ab (PC und Handy), ohne Konto und ohne Server: Geräte im selben WLAN finden sich von selbst, und eine Änderung ist nach wenigen Sekunden auf dem anderen. Wer etwas geändert hat, gewinnt; haben beide denselben Eintrag geändert, bleibt beides erhalten.": "Syncs your vaults between your own devices (PC and phone), without an account and without a server: devices in the same Wi-Fi find each other, and a change reaches the other one within seconds. The side that changed something wins; if both changed the same entry, both are kept.",
+  "Gelöschtes kommt auch auf dem anderen Gerät in den Papierkorb; ein neues oder leeres Gerät löscht nie etwas. Beide Geräte müssen im selben WLAN sein. Die Windows-Firewall fragt beim ersten Mal nach: nur „Private Netzwerke“ erlauben.": "What you delete goes into the trash on the other device too; a new or empty device never deletes anything. Both devices must be in the same Wi-Fi. The Windows firewall asks the first time: allow only \"Private networks\".",
+  "Kopiert den Kopplungs-Link (mit der Adresse dieses Geräts): auf dem anderen Gerät ins Feld unten einfügen": "Copies the pairing link (with the address of this device): paste it into the field below on the other device",
+  "Kopplungs-Link kopiert. Auf dem anderen Gerät ins Feld „Code von einem anderen Gerät“ einfügen.": "Pairing link copied. Paste it on the other device into the field \"Code from another device\"."
 }

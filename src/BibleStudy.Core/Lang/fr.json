@@ -30,7 +30,6 @@
   "Abgleich mit {0} unterbrochen: {1}": "Synchronisation avec {0} interrompue : {1}",
   "Abgeglichen mit {0}: Neues übernommen.": "Synchronisé avec {0} : nouveautés reprises.",
   "GERÄTE ABGLEICHEN": "SYNCHRONISER LES APPAREILS",
-  "Gleicht deine Vaults zwischen deinen eigenen Geräten ab (PC und Handy), ohne Konto und ohne Server: Geräte im selben WLAN finden sich von selbst und tauschen Markierungen, Notizen und Dokumente aus. Bei Unterschieden bleibt beides erhalten.": "Synchronise vos vaults entre vos propres appareils (PC et téléphone), sans compte ni serveur : les appareils sur le même Wi-Fi se trouvent seuls et échangent marques, notes et documents. En cas de différence, les deux versions sont conservées.",
   "Auf dem anderen Gerät: den QR-Code mit der Kamera scannen oder den Code dort eintippen.": "Sur l'autre appareil : scannez le code QR avec la caméra ou saisissez le code.",
   "Im selben Netzwerk automatisch abgleichen": "Synchroniser automatiquement sur le même réseau",
   "Name dieses Geräts": "Nom de cet appareil",
@@ -40,7 +39,6 @@
   "Code von einem anderen Gerät": "Code d'un autre appareil",
   "ABCD-EFGH-IJKL-MNOP-QRST-UV": "ABCD-EFGH-IJKL-MNOP-QRST-UV",
   "Mit Code koppeln": "Associer avec le code",
-  "Gelöschtes wird nicht mit abgeglichen, es bleibt auf dem anderen Gerät. Beide Geräte müssen im selben WLAN sein. Die Windows-Firewall fragt beim ersten Mal nach: nur „Private Netzwerke“ erlauben.": "Ce qui est supprimé n'est pas synchronisé, il reste sur l'autre appareil. Les deux appareils doivent être sur le même Wi-Fi. Le pare-feu Windows demande la première fois : autorisez uniquement « Réseaux privés ».",
   "Geteilte Ansicht an.": "Affichage partagé activé.",
   "Claude Code und Ollama gibt es nur am PC. Auf dem Handy ist die KI noch nicht verfügbar.": "Claude Code et Ollama n’existent que sur PC. L’IA n’est pas encore disponible sur le téléphone.",
   "Dateien hinzufügen …": "Ajouter des fichiers …",
@@ -3114,5 +3112,9 @@
   "Kommentar zu diesem Vers": "Commentaire sur ce verset",
   "Kommentare öffnen": "Ouvrir les commentaires",
   "Kommentare sind an. Du findest sie in der Leiste unter „Bücher“, in der Vers-Übersicht und mit Rechtsklick auf einen Vers.": "Les commentaires sont activés. Vous les trouvez dans la barre sous « Livres », dans l'aperçu du verset et par clic droit sur un verset.",
-  "Kommentare sind aus.": "Les commentaires sont désactivés."
+  "Kommentare sind aus.": "Les commentaires sont désactivés.",
+  "Gleicht deine Vaults zwischen deinen eigenen Geräten ab (PC und Handy), ohne Konto und ohne Server: Geräte im selben WLAN finden sich von selbst, und eine Änderung ist nach wenigen Sekunden auf dem anderen. Wer etwas geändert hat, gewinnt; haben beide denselben Eintrag geändert, bleibt beides erhalten.": "Synchronise tes vaults entre tes propres appareils (PC et téléphone), sans compte et sans serveur : les appareils du même Wi-Fi se trouvent seuls, et une modification arrive sur l'autre en quelques secondes. Le côté qui a modifié l'emporte ; si les deux ont modifié la même entrée, les deux sont conservées.",
+  "Gelöschtes kommt auch auf dem anderen Gerät in den Papierkorb; ein neues oder leeres Gerät löscht nie etwas. Beide Geräte müssen im selben WLAN sein. Die Windows-Firewall fragt beim ersten Mal nach: nur „Private Netzwerke“ erlauben.": "Ce que tu supprimes va aussi dans la corbeille de l'autre appareil ; un appareil neuf ou vide ne supprime jamais rien. Les deux appareils doivent être sur le même Wi-Fi. Le pare-feu Windows demande la première fois : n'autorise que « Réseaux privés ».",
+  "Kopiert den Kopplungs-Link (mit der Adresse dieses Geräts): auf dem anderen Gerät ins Feld unten einfügen": "Copie le lien d'appairage (avec l'adresse de cet appareil) : colle-le dans le champ ci-dessous sur l'autre appareil",
+  "Kopplungs-Link kopiert. Auf dem anderen Gerät ins Feld „Code von einem anderen Gerät“ einfügen.": "Lien d'appairage copié. Colle-le sur l'autre appareil dans le champ « Code d'un autre appareil »."
 }
