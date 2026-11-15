@@ -1,8 +1,3 @@
-          ls -d /Applications/Xcode*
-          # .NET for iOS needs exactly the Xcode it was made for (26.5 for the iOS 26.5 workload used below)
-          WANT="${{ github.event.inputs.xcode }}"; WANT="${WANT:-26.5}"
-          APP=$(ls -d /Applications/Xcode_$WANT*.app 2>/dev/null | sort -V | tail -1)
-          [ -d "$APP" ] || APP=$(ls -d /Applications/Xcode_*.app 2>/dev/null | sort -V | tail -1)
 # Builds the iPhone app (an unsigned .ipa) for a release and attaches it to it.
 # There is no Apple developer account behind it: SideStore signs the app on the phone with the person's own (free) Apple ID.
 # It runs only when you start it by hand (Actions tab -> "iPhone app (IPA)" -> Run workflow, enter the tag of an existing release,
