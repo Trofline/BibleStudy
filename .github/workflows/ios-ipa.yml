@@ -37,8 +37,8 @@ jobs:
       - name: Choose Xcode
         run: |
           ls -d /Applications/Xcode*
-          # .NET for iOS needs the Xcode it was made for (26.5 for the iOS 26.5 workload installed below)
-          WANT="${{ github.event.inputs.xcode }}"; WANT="${WANT:-26.5}"
+          # .NET for iOS needs the Xcode it was made for (26.6 for the 26.5.10318 workload installed below)
+          WANT="${{ github.event.inputs.xcode }}"; WANT="${WANT:-26.6}"
           APP=$(ls -d /Applications/Xcode_$WANT*.app 2>/dev/null | sort -V | tail -1)
           [ -d "$APP" ] || APP=$(ls -d /Applications/Xcode_*.app 2>/dev/null | sort -V | tail -1)
           echo "Using $APP"
@@ -47,7 +47,7 @@ jobs:
 
       - name: Install the iOS workload
         run: |
-          # the newest workload wants the newest Xcode, which the runner does not have yet: a version made for Xcode 26.5
+          # the newest workload wants the newest Xcode, which the runner does not have yet: a version made for Xcode 26.6
           echo '{"microsoft.net.sdk.ios": "26.5.10318/10.0.100"}' > rollback.json
           dotnet workload install ios --from-rollback-file rollback.json
           dotnet workload list
