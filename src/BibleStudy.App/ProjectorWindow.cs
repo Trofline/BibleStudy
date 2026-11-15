@@ -96,7 +96,7 @@ public sealed class ProjectorWindow : Window
     /// <summary>Opens on the other screen in full screen when there is one; with only one screen as a window that can be dragged to the projector.</summary>
     public void OpenBeside(Window owner)
     {
-#if ANDROID
+#if MOBILE
         Show(owner);
         return;
 #else

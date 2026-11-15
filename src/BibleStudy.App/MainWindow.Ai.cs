@@ -178,6 +178,7 @@ public partial class MainWindow
         var chat = _chat;
         if (chat.Busy) { chat.Cts?.Cancel(); return; }
         var text = AiInput.Text?.Trim();
+        if (AppPlatform.IsMobile && !string.IsNullOrEmpty(text)) { AiStatus.Text = L("Claude Code und Ollama gibt es nur am PC. Auf dem Handy ist die KI noch nicht verfügbar."); return; }
         if (_settings.AiEngine == "ollama" && !string.IsNullOrEmpty(text)) { await AiSendOllamaAsync(chat, text); return; }
         if (string.IsNullOrEmpty(text)) return;
         var exe = ClaudeCli.FindExecutable();

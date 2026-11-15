@@ -281,7 +281,7 @@ public partial class MainWindow
         }
         save.Click += (_, _) => Save();
         cancel.Click += (_, _) => flyout.Hide();
-        box.KeyDown += (_, e) => { if (e.Key == Key.Enter && e.KeyModifiers.HasFlag(KeyModifiers.Control)) { e.Handled = true; Save(); } };
+        box.KeyDown += (_, e) => { if (e.Key == Key.Enter && e.KeyModifiers.HasFlag(Mods.Ctrl)) { e.Handled = true; Save(); } };
         flyout.Content = new StackPanel
         {
             Spacing = 8,

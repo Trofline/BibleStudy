@@ -50,7 +50,7 @@ public partial class MainWindow
             Canvas.SetLeft(dot, p.X - r); Canvas.SetTop(dot, p.Y - r);
             var name = ShortBook(b); var id = b.Id; var n = count;
             ToolTip.SetTip(dot, $"{b.CommonName}: {n}×");
-            dot.PointerPressed += (_, _) => { _concBook = id; ShowConcordance(t); _journey?.Close(); };
+            dot.OnPress((_, _) => { _concBook = id; ShowConcordance(t); _journey?.Close(); });
             var label = new TextBlock { Text = name, FontSize = 11, Opacity = 0 };
             label.Bind(TextBlock.ForegroundProperty, this.GetResourceObservable("BsText"));
             label.Measure(Size.Infinity);

@@ -110,7 +110,7 @@ public partial class MainWindow
         var scroller = new ScrollViewer { Content = zoomHost, HorizontalScrollBarVisibility = Avalonia.Controls.Primitives.ScrollBarVisibility.Auto, VerticalScrollBarVisibility = Avalonia.Controls.Primitives.ScrollBarVisibility.Auto };
         scroller.PointerWheelChanged += (_, e) =>
         {
-            if (!e.KeyModifiers.HasFlag(KeyModifiers.Control)) return;
+            if (!e.KeyModifiers.HasFlag(Mods.Ctrl)) return;
             var s = Math.Clamp(scale.ScaleX * (e.Delta.Y > 0 ? 1.1 : 1 / 1.1), 0.4, 3);
             scale.ScaleX = scale.ScaleY = s; e.Handled = true;
         };
@@ -168,7 +168,7 @@ public partial class MainWindow
         // wheel zooms around the mouse, dragging moves the picture
         host.PointerWheelChanged += (_, e) => { ZoomAt(e.GetPosition(host), e.Delta.Y > 0 ? 1.12 : 1 / 1.12); e.Handled = true; };
         Point? last = null;
-        host.PointerPressed += (_, e) => { if (e.GetCurrentPoint(host).Properties.IsLeftButtonPressed || e.GetCurrentPoint(host).Properties.IsMiddleButtonPressed) { last = e.GetPosition(host); e.Pointer.Capture(host); } };
+        host.OnPress((_, e) => { if (e.GetCurrentPoint(host).Properties.IsLeftButtonPressed || e.GetCurrentPoint(host).Properties.IsMiddleButtonPressed) { last = e.GetPosition(host); e.Pointer.Capture(host); } });
         host.PointerMoved += (_, e) => { if (last is { } l) { var p = e.GetPosition(host); ox += p.X - l.X; oy += p.Y - l.Y; last = p; Apply(); } };
         host.PointerReleased += (_, e) => { last = null; e.Pointer.Capture(null); };
         host.DoubleTapped += (_, _) => Fit();
@@ -259,7 +259,7 @@ public partial class MainWindow
             node.Bind(Border.BorderBrushProperty, this.GetResourceObservable("BsAccent"));
             node.Measure(Size.Infinity);
             Canvas.SetLeft(node, p.X - node.DesiredSize.Width / 2); Canvas.SetTop(node, p.Y - node.DesiredSize.Height / 2);
-            node.PointerPressed += async (_, _) => { _starWindow?.Close(); await GoToAsync(target.Book, target.Chapter, target.Verse); };
+            node.OnPress(async (_, _) => { _starWindow?.Close(); await GoToAsync(target.Book, target.Chapter, target.Verse); });
             canvas.Children.Add(node);
         }
         var center = new Border { Padding = new(16, 10), CornerRadius = new(20), Child = new TextBlock { Text = Label(r), FontWeight = FontWeight.Bold, FontSize = 15 } };

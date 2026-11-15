@@ -36,6 +36,7 @@ public partial class MainWindow
         if (DeltaUpdate.LastFailed(AppPaths.Root) is { } failedUpdate && failedUpdate.Version != AppPaths.Version && Updater.Parse(failedUpdate.Version) > Updater.Parse(AppPaths.Version))
             UpdateStatus.Text = L("Das Update auf {0} hat nicht geklappt, die bisherige Version läuft weiter: {1}", failedUpdate.Version, failedUpdate.Reason);
         InitBackup();
+        InitSync();
         InitTour();
         InitPatchNotes();
         InitTopBar();
@@ -173,10 +174,11 @@ public partial class MainWindow
         if (!manual && (_askedUpdate == info.Version || !IsVisible)) return;
         _askedUpdate = info.Version;
 
-        var plan = OperatingSystem.IsAndroid() ? null : await PlanQuickUpdateAsync(info);   // Android: the new app comes from the download page
+        var plan = AppPlatform.IsMobile ? null : await PlanQuickUpdateAsync(info);   // Android: the new app comes from the download page
         var canInstall = plan is not null || (OperatingSystem.IsWindows() && (AppPaths.IsInstalled || AppPaths.IsPortable));   // the full package installs itself on Windows only; elsewhere the download page opens
         if (!canInstall)
         {
+            if (OperatingSystem.IsIOS()) { UpdateStatus.Text = L("Neue Version {0} verfügbar. Auf dem iPhone kommt sie über SideStore: Öffne SideStore und aktualisiere BibleStudy dort.", info.Version); return; }
             var open = await AskAsync(L("Neue Version {0}", info.Version), L("BibleStudy {0} ist erschienen (du hast {1}). Auf diesem System lädst du das neue Paket selbst herunter. Soll die Download-Seite geöffnet werden?", info.Version, AppPaths.Version), L("Seite öffnen"), L("Später"));
             // a quick release has no packages: the last full release has them
             var downloads = info.DownloadUrl.Length > 0 ? info.PageUrl : $"https://github.com/{Updater.Repo}/releases/latest";
@@ -269,6 +271,7 @@ public partial class MainWindow
     /// <summary>Ends the program and starts it again a moment later (this one must have ended first: both use the same files); it opens on the settings page.</summary>
     void RestartProgram()
     {
+        if (AppPlatform.IsMobile) { Restart(); return; }   // a phone: the app is opened anew
         var exe = Environment.ProcessPath;
         if (exe is null || Path.GetFileNameWithoutExtension(exe).Equals("dotnet", StringComparison.OrdinalIgnoreCase)) { UpdateStatus.Text = L("Neustart nicht möglich: Das Programm wurde nicht über seine eigene Startdatei gestartet."); return; }
         try

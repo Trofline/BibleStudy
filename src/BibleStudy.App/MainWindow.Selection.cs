@@ -65,11 +65,11 @@ public partial class MainWindow
         {
             var (a, b) = (Math.Min(anchor, verse), Math.Max(anchor, verse));
             var numbers = _verseBoxes.Keys.Where(n => n >= a && n <= b).ToList();
-            if (!mods.HasFlag(KeyModifiers.Control)) _selVerses.Clear();
+            if (!mods.HasFlag(Mods.Ctrl)) _selVerses.Clear();
             foreach (var n in numbers) _selVerses.Add(n);
             FinishVerseChoice(verse);
         }
-        else if (mods.HasFlag(KeyModifiers.Control))
+        else if (mods.HasFlag(Mods.Ctrl))
         {
             if (_selVerses.Count == 0 && _selected is int current) _selVerses.Add(current);
             if (!_selVerses.Remove(verse)) { _selVerses.Add(verse); _anchorVerse = verse; }
@@ -379,7 +379,7 @@ public partial class MainWindow
     void OnSelKeyDown(object? sender, KeyEventArgs e)
     {
         if (e.Handled) return;
-        var ctrl = e.KeyModifiers.HasFlag(KeyModifiers.Control) && !e.KeyModifiers.HasFlag(KeyModifiers.Shift) && !e.KeyModifiers.HasFlag(KeyModifiers.Alt);
+        var ctrl = e.KeyModifiers.HasFlag(Mods.Ctrl) && !e.KeyModifiers.HasFlag(KeyModifiers.Shift) && !e.KeyModifiers.HasFlag(KeyModifiers.Alt);
         if (e.Key == Key.Escape && (_sel is not null || _selVerses.Count > 1) && !FocusInExplorer())
         {
             ClearTextSelection(true);
@@ -443,7 +443,7 @@ public partial class MainWindow
         var clear = new Border { Width = 24, Height = 24, CornerRadius = new(12), Margin = new(0, 0, 6, 6), BorderThickness = new(1), Cursor = new Cursor(StandardCursorType.Hand), Child = new TextBlock { Text = "✕", FontSize = 12, HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center, VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center } };
         clear.Bind(Border.BorderBrushProperty, this.GetResourceObservable("BsMuted"));
         ToolTip.SetTip(clear, L("Markierung entfernen"));
-        clear.PointerPressed += (_, _) => { HideSelectionPopup(); _ = RemoveMarksAsync(); };
+        clear.OnPress((_, _) => { HideSelectionPopup(); _ = RemoveMarksAsync(); });
         colors.Children.Add(clear);
         var choices = new List<(Control Item, Action Run)> { (clear, () => { HideSelectionPopup(); _ = RemoveMarksAsync(); }) };
         var current = wholeVerse is int cv && _wholeMarks.TryGetValue(cv, out var curHex) ? curHex : null;   // a verse that is marked already shows its color

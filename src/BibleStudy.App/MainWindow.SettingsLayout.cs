@@ -26,6 +26,8 @@ public partial class MainWindow
             var card = cards[i];
             var panel = (StackPanel)card.Child!;
             var title = (TextBlock)panel.Children[0];
+            // no keyboard and no windows to arrange on a phone: these two sections have nothing to offer there
+            if (AppPlatform.IsMobile && Avalonia.LogicalTree.LogicalExtensions.GetLogicalDescendants(panel).Any(d => d == KeysPanel || d == LayoutNameBox)) { card.IsVisible = false; continue; }
             panel.Children.RemoveAt(0);
             card.Child = null;   // the panel moves into a new container, so it must leave the card first
 
@@ -40,7 +42,7 @@ public partial class MainWindow
 
             void Set(bool open) { body.IsVisible = open; chevron.Text = open ? "▾" : "▸"; }
             Set(!FoldedSettings.Contains(i));
-            head.PointerPressed += (_, e) => { if (e.GetCurrentPoint(head).Properties.IsLeftButtonPressed) Set(!body.IsVisible); };
+            head.OnPress((_, e) => { if (e.GetCurrentPoint(head).Properties.IsLeftButtonPressed) Set(!body.IsVisible); });
 
             var name = title.Text ?? "";
             var jump = new Button { Content = name, Classes = { "ghost" }, FontSize = 11, HorizontalContentAlignment = HorizontalAlignment.Left, Padding = new(8, 4) };

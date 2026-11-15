@@ -114,7 +114,7 @@ public static class PericopeCharts
             if (click is not null)
             {
                 row.Cursor = new Cursor(StandardCursorType.Hand); row.Background = Brushes.Transparent;
-                row.PointerPressed += (_, e) => { if (e.GetCurrentPoint(row).Properties.IsLeftButtonPressed) click(); };
+                row.OnPress((_, e) => { if (e.GetCurrentPoint(row).Properties.IsLeftButtonPressed) click(); });
             }
             panel.Children.Add(row);
         }
@@ -162,7 +162,7 @@ public static class PericopeCharts
             {
                 var hit = new Border { Width = colW, Height = h + top + bottom, Background = Brushes.Transparent, Cursor = new Cursor(StandardCursorType.Hand) };
                 var v = r.Verse;
-                hit.PointerPressed += (_, e) => { if (e.GetCurrentPoint(hit).Properties.IsLeftButtonPressed) click(v); };
+                hit.OnPress((_, e) => { if (e.GetCurrentPoint(hit).Properties.IsLeftButtonPressed) click(v); });
                 Canvas.SetLeft(hit, i * colW); Canvas.SetTop(hit, 0);
                 canvas.Children.Add(hit);
             }

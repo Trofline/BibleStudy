@@ -45,12 +45,47 @@ static class Shell
             ErrorLog.Write(ex);
             return false;
         }
+#elif IOS
+        try
+        {
+            var app = UIKit.UIApplication.SharedApplication;
+            if (target.StartsWith("http://", StringComparison.OrdinalIgnoreCase) || target.StartsWith("https://", StringComparison.OrdinalIgnoreCase) || target.StartsWith("mailto:", StringComparison.OrdinalIgnoreCase))
+                return app.CanOpenUrl(new Foundation.NSUrl(target)) && app.OpenUrl(new Foundation.NSUrl(target));
+            if (Directory.Exists(target))
+            {
+                // a folder (the program shows where an export went): the file just written there is offered instead
+                var newest = new DirectoryInfo(target).GetFiles("*", SearchOption.AllDirectories).Where(f => f.LastWriteTimeUtc > DateTime.UtcNow.AddMinutes(-2)).OrderByDescending(f => f.LastWriteTime).FirstOrDefault();
+                return newest is not null && Open(newest.FullName);
+            }
+            if (!File.Exists(target)) return false;
+            // a file: the share sheet (view in another app, save to Files, send on)
+            var share = new UIKit.UIActivityViewController([Foundation.NSUrl.FromFilename(target)], null);
+            var top = TopViewController();
+            if (top is null) return false;
+            if (share.PopoverPresentationController is { } pop) { pop.SourceView = top.View; pop.SourceRect = new CoreGraphics.CGRect(top.View!.Bounds.Width / 2, top.View.Bounds.Height / 2, 1, 1); }   // on an iPad it is a popover
+            top.PresentViewController(share, true, null);
+            return true;
+        }
+        catch (Exception ex) when (ex is not OutOfMemoryException)
+        {
+            ErrorLog.Write(ex);
+            return false;
+        }
 #else
         try { using var _ = Process.Start(new ProcessStartInfo(target) { UseShellExecute = true }); return true; }
         catch (Exception ex) when (ex is System.ComponentModel.Win32Exception or InvalidOperationException or PlatformNotSupportedException or FileNotFoundException) { return false; }
 #endif
     }
 
-    /// <summary>On Android there is no window to show a folder in.</summary>
-    public static bool CanOpenFolders => !OperatingSystem.IsAndroid();
+#if IOS
+    static UIKit.UIViewController? TopViewController()
+    {
+        var top = UIKit.UIApplication.SharedApplication.ConnectedScenes.OfType<UIKit.UIWindowScene>().SelectMany(s => s.Windows).FirstOrDefault(w => w.IsKeyWindow)?.RootViewController;
+        while (top?.PresentedViewController is { } next) top = next;
+        return top;
+    }
+#endif
+
+    /// <summary>On a phone there is no window to show a folder in.</summary>
+    public static bool CanOpenFolders => !AppPlatform.IsMobile;
 }

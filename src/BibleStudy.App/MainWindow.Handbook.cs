@@ -31,6 +31,7 @@ public partial class MainWindow
     StackPanel? _hbContent;
     ScrollViewer? _hbScroll;
     ListBox? _hbToc;
+    ToggleButton? _hbToggle;
     TextBox? _hbSearch;
     bool _hbBuilt;
 
@@ -68,7 +69,11 @@ public partial class MainWindow
         _hbSearch.TextChanged += (_, _) => FillHandbookToc();
         _hbToc.SelectionChanged += (_, _) =>
         {
-            if (_hbToc.SelectedItem is ListBoxItem { Tag: ValueTuple<int, int, string> t }) ShowHandbookChapter(t.Item1, t.Item2, t.Item3);
+            if (_hbToc.SelectedItem is ListBoxItem { Tag: ValueTuple<int, int, string> t })
+            {
+                ShowHandbookChapter(t.Item1, t.Item2, t.Item3);
+                if (AppPlatform.IsMobile && _hbToggle is not null) _hbToggle.IsChecked = false;   // on a phone the list and the text do not fit side by side: the text comes after a choice
+            }
         };
         var tocPanel = new DockPanel { Margin = new(14, 0, 8, 0) };
         DockPanel.SetDock(_hbSearch, Dock.Top);
@@ -89,11 +94,22 @@ public partial class MainWindow
         var grid = new Grid { ColumnDefinitions = new("250,*") };
         grid.Children.Add(tocPanel);
         Grid.SetColumn(_hbScroll, 1); grid.Children.Add(_hbScroll);
-        toggle.IsCheckedChanged += (_, _) =>
+        _hbToggle = toggle;
+        var phone = AppPlatform.IsMobile;
+        void LayoutToc()
         {
-            tocPanel.IsVisible = toggle.IsChecked == true;
-            grid.ColumnDefinitions[0].Width = tocPanel.IsVisible ? new GridLength(250) : new GridLength(0);
-        };
+            var on = toggle.IsChecked == true;
+            tocPanel.IsVisible = on;
+            if (phone)
+            {
+                grid.ColumnDefinitions[0].Width = on ? GridLength.Star : new GridLength(0);
+                grid.ColumnDefinitions[1].Width = on ? new GridLength(0) : GridLength.Star;
+                _hbScroll.IsVisible = !on;
+            }
+            else grid.ColumnDefinitions[0].Width = on ? new GridLength(250) : new GridLength(0);
+        }
+        toggle.IsCheckedChanged += (_, _) => LayoutToc();
+        if (phone) toggle.IsChecked = false;
 
         var root = new DockPanel();
         DockPanel.SetDock(bar, Dock.Top);

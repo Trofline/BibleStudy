@@ -17,7 +17,7 @@ public partial class App : Application
     public override void OnFrameworkInitializationCompleted()
     {
         ErrorLog.Install();
-#if !ANDROID
+#if !MOBILE
         Window.WindowOpenedEvent.AddClassHandler<Window>((w, _) => KeepOnScreen(w));
         // every submenu shows the same "›" (the theme's own arrow is hidden in App.axaml, it was cut off at the edge)
         Control.LoadedEvent.AddClassHandler<MenuItem>((m, _) => { if (m.ItemCount > 0 && m.Header is string s) m.Header = MainWindow.SubHeader(s); });
@@ -77,51 +77,93 @@ public partial class App : Application
         }
 #endif
 
-#if ANDROID
-        if (ApplicationLifetime is ISingleViewApplicationLifetime single) StartAndroid(single);
+#if MOBILE
+        if (ApplicationLifetime is ISingleViewApplicationLifetime single) StartMobile(single);
 #endif
         base.OnFrameworkInitializationCompleted();
     }
 
-#if ANDROID
+#if MOBILE
     static MainWindow? _main;
 
     /// <summary>
-    /// Android: one view, no windows. The terms come first and alone, as on a desktop; then the program. The view of the activity is
+    /// Phone (Android, iPhone): one view, no windows. The terms come first and alone, as on a desktop; then the program. The view of the activity is
     /// set once (Android does not take a second one well); what it shows is changed inside it.
     /// </summary>
-    static void StartAndroid(ISingleViewApplicationLifetime single)
+    static void StartMobile(ISingleViewApplicationLifetime single)
     {
         var host = new ContentControl();
+        host.Bind(Avalonia.Controls.Primitives.TemplatedControl.BackgroundProperty, host.GetResourceObservable("BsBackground"));
+        host.AttachedToVisualTree += (_, _) => KeepInsideSafeArea(host);
         single.MainView = host;
         var path = Path.Combine(AppPaths.Root, "settings.json");
         AppSettings st;
         try { st = AppSettings.Load(path); } catch { st = new(); }
         try { Loc.Use(st.Language); } catch { Loc.Use(null); }
-        if (st.TermsAccepted.StartsWith(TermsWindow.Version + "|", StringComparison.Ordinal)) { StartMainAndroid(host); return; }
+        if (st.TermsAccepted.StartsWith(TermsWindow.Version + "|", StringComparison.Ordinal)) { StartMobileMain(host); return; }
         var terms = new TermsWindow { IsRootView = true };
         terms.Closed += (_, _) =>
         {
-            if (!terms.Accepted) { Android.OS.Process.KillProcess(Android.OS.Process.MyPid()); return; }
+            if (!terms.Accepted)
+            {
+#if ANDROID
+                Android.OS.Process.KillProcess(Android.OS.Process.MyPid());
+#else
+                Environment.Exit(0);   // (an iPhone app that does not agree has to be left by the person)
+#endif
+                return;
+            }
             st.TermsAccepted = $"{TermsWindow.Version}|{DateTime.Now:yyyy-MM-dd}";
             try { st.Save(path); } catch { /* asked again next time */ }
-            StartMainAndroid(host);
+            StartMobileMain(host);
         };
         host.Content = terms;
     }
 
+    /// <summary>
+    /// Newer Android versions draw an app under the status bar, the camera cut-out and the navigation bar. Everything is kept inside the free area:
+    /// otherwise the top bar hides below the status bar and the lowest buttons (the terms!) cannot be reached. The strip left over takes the color of the app.
+    /// </summary>
+    static void KeepInsideSafeArea(ContentControl host)
+    {
+        if (TopLevel.GetTopLevel(host)?.InsetsManager is not { } insets) return;
+        try { insets.DisplayEdgeToEdgePreference = true; } catch { /* the system decides */ }
+        void Apply()
+        {
+            // (the first report comes before the view has a size and is in screen pixels: wait for the real size, the value is then in device-independent pixels)
+            if (host.Bounds.Width < 10) return;
+            host.Padding = insets.SafeAreaPadding;
+            try { if (host.Background is Avalonia.Media.ISolidColorBrush b) insets.SystemBarColor = b.Color; } catch { /* old versions keep their bar */ }
+        }
+        insets.SafeAreaChanged += (_, _) => Apply();
+        host.PropertyChanged += (_, e) => { if (e.Property == Avalonia.Controls.Primitives.TemplatedControl.BackgroundProperty) Apply(); };
+        host.SizeChanged += (_, _) => Apply();   // after a turn too: the free area is another one
+        Apply();
+    }
+
     /// <summary>"Starting …" at once, the program right after: built inside a tap or before the first picture, Android would call the app frozen.</summary>
-    static void StartMainAndroid(ContentControl host)
+    static void StartMobileMain(ContentControl host)
     {
         host.Content = new TextBlock { Text = L("Starte …"), HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center, VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center };
         Avalonia.Threading.DispatcherTimer.RunOnce(() => host.Content = _main = new MainWindow(), TimeSpan.FromMilliseconds(50));
     }
 
+    static string? _pendingPair;
+
+    /// <summary>A pairing address (biblestudy-sync://pair?k=…) that the camera app or another app opened: taken over at once, or when the program is ready.</summary>
+    public static void OfferPairLink(string url)
+    {
+        _pendingPair = url;
+        Avalonia.Threading.Dispatcher.UIThread.Post(() => { if (_main is not null && TakePendingPair() is { } u) _main.JoinWithCode(u); });
+    }
+
+    public static string? TakePendingPair() { var u = _pendingPair; _pendingPair = null; return u; }
+
     /// <summary>The activity stops (the app goes to the background): save what would be saved when the window closes.</summary>
     public static void SaveForBackground() => _main?.SaveForBackground();
 #endif
 
-#if !ANDROID
+#if !MOBILE
     /// <summary>A window made for a big screen must not reach beyond a small one: the other windows (not the main window, which has its own rules) never grow past the usable area and are moved back inside it.</summary>
     static void KeepOnScreen(Window w)
     {

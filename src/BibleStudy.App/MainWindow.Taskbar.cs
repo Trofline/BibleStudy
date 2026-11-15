@@ -37,7 +37,7 @@ public partial class MainWindow
             // a maximized window takes the new size only when it is maximized again
             if (WindowState == WindowState.Maximized) { WindowState = WindowState.Normal; WindowState = WindowState.Maximized; }
         };
-#if !ANDROID
+#if !MOBILE
         if (OperatingSystem.IsWindows()) Win32Properties.AddWndProcHookCallback(this, TaskbarHook);
 #endif
     }

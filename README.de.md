@@ -23,6 +23,27 @@ verknüpfen, Predigten vorbereiten – alles offline nutzbar und ohne Konto.
   <a href="docs/img/original-text.png"><img src="docs/img/original-text.png" alt="Grundtext Wort für Wort mit Wörterbuch" height="300"></a>
 </p>
 
+## Bibelstunde halten
+
+Eine Bibelstunde vorbereiten und halten, alles in einem Programm: Deine Unterlagen öffnen sich direkt darin, die Bibelstelle steht daneben, das Handout kommt gestaltet heraus und die Verse gehen an den Beamer.
+
+<p align="center"><a href="docs/img/split-view.png"><img src="docs/img/split-view.png" alt="Geteilte Ansicht: links Johannes 10, rechts die Unterlagen mit anklickbaren Bibelstellen und einer Markierung mit Notiz" width="900"></a></p>
+
+- **Deine Materialien im Programm:** Word, PDF, PowerPoint, OpenDocument, Markdown und mehr öffnen sich im Tab *Materialien*. Bibelstellen darin sind anklickbar, mit der Maus darauf siehst du den Vers, und du kannst alle Dateien auf einmal durchsuchen.
+- **Markierungen und Notizen in deinen Unterlagen**, ohne dass die Dateien selbst verändert werden.
+- **Geteilte Ansicht:** die Bibel auf der einen Seite, deine Materialien oder Dokumente auf der anderen.
+- **Handouts in acht Designs:** jedes Dokument als gestaltetes Blatt drucken, mit den Versen als Anhang, hervorgehobenen Fragen und Platz für Notizen. Dazu Export als HTML und Markdown.
+- **Beamer-Ansicht:** Verse oder Abschnitte deiner Materialien groß und ruhig auf einem zweiten Bildschirm.
+- **Ablauf für den Timer:** Lied, Gebet, Bibelarbeit … jeder Teil mit seiner Zeit, ein kurzer Ton, wenn der nächste beginnt.
+
+<p align="center">
+  <a href="docs/img/materials.png"><img src="docs/img/materials.png" alt="Der Tab Materialien mit Vers-Vorschau" height="260"></a>
+  <a href="docs/img/handout-looks.png"><img src="docs/img/handout-looks.png" alt="Acht Designs für das Handout" height="260"></a>
+  <a href="docs/img/projector.png"><img src="docs/img/projector.png" alt="Ein Vers auf dem Beamer" height="260"></a>
+</p>
+
+<sub>Die Bilder zeigen die englische Oberfläche; das Programm gibt es auch auf Deutsch.</sub>
+
 ## Was kann es?
 
 - **Lesen und vergleichen:** viele freie Übersetzungen, Parallelspalten, Unterschiede zwischen Übersetzungen farbig markiert, dazu eine **Hörbibel** (gesprochene World English Bible, gemeinfrei, spielt Kapitel für Kapitel und läuft nach dem Laden auch offline)
@@ -32,7 +53,7 @@ verknüpfen, Predigten vorbereiten – alles offline nutzbar und ohne Konto.
 - **Eigenes Wissen:** Vaults (wie bei Obsidian) mit Markierungen (freie Textauswahl über Verse, Untermarkierungen, Farbwechsel mit einem Klick), Notizen, Dokumenten, Ordnern, Tags, Wiki-Links
 - **Planen:** Lesepläne mit Fortschritt, Leseliste, Aufgaben, **Gebetsliste**
 - **Predigt-Editor** mit Gliederung, Versen, Zeitplan und Handout-Export
-- **Morphologie und Syntax** des Urtextes (Griechisch und Hebräisch): Zeit, Fall, Person …, Syntax mit Subjekt, Verb, Objekt …
+- **Bibelstunde:** Materialordner (Word, PDF, PowerPoint …) mit anklickbaren Bibelstellen, Suche, Markierungen und Notizen; geteilte Ansicht; Handouts in acht Designs; Beamer-Ansicht; Uhr, Timer und Ablauf für den Abend
 - **Morphologie und Syntax** des Urtextes (Griechisch und Hebräisch): Zeit, Fall, Person …, Syntax mit Subjekt, Verb, Objekt …
 - **Analyse-Werkzeuge:** Schlüsselwörter und einmalige Wörter je Kapitel, verwandte Wörter, Verteilung eines Wortes über die Bibel
 - **Satzdiagramm und Perikopen-Analyse:** der Satz eines Verses als klassisches Satzdiagramm (Reed–Kellogg, Griechisch und Hebräisch, Export als PNG/SVG) und ein Abschnitt in Bildern: Wortarten, Verbformen, Schlüsselwörter und wo sie vorkommen, Rhythmus der Verse, Satzbau und Verbindungen
@@ -58,6 +79,25 @@ Lade unter [Releases](https://github.com/Trofline/BibleStudy/releases) eine der 
 **Deine Daten sind geschützt:** Installiert liegen sie in `%LOCALAPPDATA%\BibleStudy`, also getrennt vom Programm. Updates und
 Neuinstallationen berühren sie nicht, vor jedem Update wird zusätzlich eine Sicherung in `Dokumente\BibleStudy-Backup` angelegt.
 Beim Deinstallieren (und beim Entfernen der portablen Version) wirst du immer gefragt, ob deine Daten erhalten bleiben sollen.
+
+## Auf dem Handy
+
+**Android:** Lade `BibleStudy-Android-…apk` unter [Releases](https://github.com/Trofline/BibleStudy/releases) herunter (Beta) und öffne sie.
+
+**iPhone (Beta), kostenlos und ohne Mac:** Apple erlaubt nur dem App Store, Apps zu installieren. Deshalb wird BibleStudy mit [SideStore](https://sidestore.io) installiert, das die App mit deiner eigenen, kostenlosen Apple-ID signiert. Du brauchst **einmalig einen Windows-PC (oder Mac) mit Kabel**; danach erneuert das Handy die App von selbst. Zusammen etwa 10 Minuten.
+
+1. **SideStore aufs iPhone bringen (ca. 4 Min.).** Am PC *Apple-Geräte* (Microsoft Store) oder iTunes installieren, dann [iloader](https://github.com/nab138/iloader) öffnen, das iPhone per Kabel anschließen, mit der Apple-ID anmelden und SideStore installieren. iloader erzeugt auch die *Pairing-Datei*, die SideStore braucht.
+2. **Vertrauen und Entwicklermodus (ca. 2 Min.).** iPhone: Einstellungen → Allgemein → VPN und Geräteverwaltung → deiner Apple-ID vertrauen. Einstellungen → Datenschutz & Sicherheit → Entwicklermodus → ein (das iPhone startet neu).
+3. **Loopback-VPN installieren (ca. 1 Min.).** SideStore spricht über ein winziges VPN auf dem Handy selbst mit dem Handy. Es schickt keine Daten irgendwohin. Installiere **StosVPN** (oder *LocalDevVPN*) aus dem App Store und schalte es einmal ein.
+4. **BibleStudy hinzufügen (ca. 2 Min.).** SideStore öffnen, anmelden, dann auf dem iPhone [diesen Link](sidestore://source?url=https://trofline.github.io/BibleStudy/sidestore.json) antippen (oder Quellen → **+** → `https://trofline.github.io/BibleStudy/sidestore.json`). BibleStudy in der Liste öffnen und **Installieren** tippen.
+5. **Jeden Tag automatisch erneuern (ca. 2 Min.).** Eine kostenlose Apple-ID signiert eine App nur 7 Tage. Mit einer Automation musst du nie daran denken:
+   1. **Kurzbefehle → Kurzbefehle → +** und diese Aktionen in dieser Reihenfolge anlegen: das VPN von StosVPN **einschalten** (Aktion der VPN-App), **Alle Apps erneuern** (Aktion von SideStore), das VPN wieder **ausschalten**. Name: **BibleStudy erneuern**.
+   2. **Kurzbefehle → Automation → +** → **Tageszeit** (zum Beispiel 3:00, täglich) → **Sofort ausführen** → den Kurzbefehl wählen. „Beim Ausführen benachrichtigen“ kannst du ausschalten.
+   3. Lass das Handy nachts am Strom und mit WLAN, dann läuft es.
+
+Ist eine App trotzdem abgelaufen: SideStore öffnen und bei BibleStudy **Erneuern** tippen; deine Daten bleiben. Updates kommen über SideStore.
+
+**Ehrliche Grenzen:** Eine kostenlose Apple-ID erlaubt höchstens 3 selbst signierte Apps gleichzeitig (SideStore zählt mit). Nach langem Ausschalten oder einem großen iOS-Update kann einmal manuelles Erneuern nötig sein. Apple könnte die Methode irgendwann einschränken. Claude Code, Ollama und der MCP-Server gibt es nur am PC, die Live-Bibelstunde läuft nur bei geöffneter App. SideStore ändert sich ab und zu: sieht ein Schritt anders aus, gilt [docs.sidestore.io](https://docs.sidestore.io).
 
 ## Selbst bauen
 

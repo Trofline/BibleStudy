@@ -103,7 +103,7 @@ public partial class MainWindow
         Paint(false);
         box.PointerEntered += (_, _) => Paint(true);
         box.PointerExited += (_, _) => Paint(false);
-        box.PointerPressed += (_, e) => { if (e.GetCurrentPoint(box).Properties.IsLeftButtonPressed) ExOpenTrash(); };
+        box.OnPress((_, e) => { if (e.GetCurrentPoint(box).Properties.IsLeftButtonPressed) ExOpenTrash(); });
         box.ContextMenu = new ContextMenu { Items = { MenuAction(L("Papierkorb leeren …"), () => _ = EmptyTrashAsync(), count > 0) } };
         return box;
     }
@@ -164,7 +164,7 @@ public partial class MainWindow
             if (e.ClickCount == 2) { e.Handled = true; _ = RestoreTrashAsync([t.Id]); return; }
             if (e.KeyModifiers.HasFlag(KeyModifiers.Shift) && _trAnchor is long a && _trRows.FindIndex(r => r.Id == a) is var i and >= 0 && _trRows.FindIndex(r => r.Id == t.Id) is var j and >= 0)
             { _trSel.Clear(); _trSel.AddRange(_trRows.Skip(Math.Min(i, j)).Take(Math.Abs(i - j) + 1).Select(r => r.Id)); }
-            else if (e.KeyModifiers.HasFlag(KeyModifiers.Control)) { if (!_trSel.Remove(t.Id)) _trSel.Add(t.Id); _trAnchor = t.Id; }
+            else if (e.KeyModifiers.HasFlag(Mods.Ctrl)) { if (!_trSel.Remove(t.Id)) _trSel.Add(t.Id); _trAnchor = t.Id; }
             else { _trSel.Clear(); _trSel.Add(t.Id); _trAnchor = t.Id; }
             FillTrashList();
         };
@@ -184,7 +184,7 @@ public partial class MainWindow
     /// <summary>The keys in the trash: arrows choose, Enter brings back, Del throws away for good (after a question).</summary>
     bool TrashKeyDown(KeyEventArgs e)
     {
-        var ctrl = e.KeyModifiers.HasFlag(KeyModifiers.Control);
+        var ctrl = e.KeyModifiers.HasFlag(Mods.Ctrl);
         switch (e.Key)
         {
             case Key.Up or Key.Down or Key.Home or Key.End when _trRows.Count > 0:

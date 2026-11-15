@@ -505,7 +505,7 @@ public partial class MainWindow : AppWindow
             // a column with a passage of its own cannot run verse by verse next to the others: it gets its own scroller
             _colPassage = [null, .. extraCols.Select(e => e.Own is { } o ? $"{BookName(o.Book)} {o.Chapter}" : null)];
             _independent = cols.Count > 1 && (!_settings.ParallelSync || extraCols.Any(e => e.Own is not null));
-            _colBoxes.Clear(); _colScrolls.Clear(); _colIds.Clear(); _colForeign.Clear(); _mirrorExpect.Clear(); _indepGrid = null;
+            _colBoxes.Clear(); _colScrolls.Clear(); _colIds.Clear(); Avalonia.Threading.Dispatcher.UIThread.Post(UpdateOrientationLock, Avalonia.Threading.DispatcherPriority.Background); _colForeign.Clear(); _mirrorExpect.Clear(); _indepGrid = null;
             ParallelHeader.IsVisible = false;
             FitReader();
             var kicker = new TextBlock { Text = b.CommonName.ToUpperInvariant(), FontSize = 13, FontWeight = FontWeight.SemiBold, LetterSpacing = 3, Margin = new(8, 0, 0, 0) };
@@ -790,10 +790,19 @@ public partial class MainWindow : AppWindow
     /// <summary>The colour of a mark; a value that is no colour (an imported or hand-edited vault) must not stop the chapter from showing.</summary>
     static Color MarkColor(string hex) => Color.TryParse(hex, out var c) ? c : Color.Parse(PresetColors[0]);
 
+    bool _verseTapReplay;
+
     void OnVersePressed(int verse, PointerPressedEventArgs e, bool foreign = false)
     {
+        // a finger acts when it lifts, not when it lands: touching the text to scroll it must not select a verse
+        if (e.Pointer.Type == PointerType.Touch && !_verseTapReplay)
+        {
+            if (!foreign) e.Handled = true;   // the built-in text selection of the block must not start from a finger either
+            TouchTap.Defer(this, e, () => { _verseTapReplay = true; try { OnVersePressed(verse, e, foreign); } finally { _verseTapReplay = false; } });
+            return;
+        }
         var props = e.GetCurrentPoint(this).Properties;
-        var withKeys = e.KeyModifiers.HasFlag(KeyModifiers.Control) || e.KeyModifiers.HasFlag(KeyModifiers.Shift);
+        var withKeys = e.KeyModifiers.HasFlag(Mods.Ctrl) || e.KeyModifiers.HasFlag(KeyModifiers.Shift);
         if (!foreign)   // a column with another passage is only for reading and word study: its verse numbers are not those of the main text
         {
             // right click on text that is selected keeps the selection: the menu works on it
@@ -832,7 +841,7 @@ public partial class MainWindow : AppWindow
             else _ = ApplyColorAsync(QuickColor());
         }
         else if (span?.Note is not null && props.IsLeftButtonPressed && !withKeys) e.Handled = true;   // its little window stays open: no selection starts here
-        else if (!foreign && props.IsLeftButtonPressed && !withKeys) BeginTextSelection(e, tb, cell);
+        else if (!foreign && props.IsLeftButtonPressed && !withKeys && e.Pointer.Type != PointerType.Touch) BeginTextSelection(e, tb, cell);   // a finger selects whole verses (tap, long press); dragging over the text is scrolling
         else if (!foreign && props.IsLeftButtonPressed) e.Handled = true;   // Ctrl/Shift choose verses; the built-in selection must not start
     }
 
@@ -1001,6 +1010,11 @@ public partial class MainWindow : AppWindow
     /// <summary>A click into empty space (not on a verse, button or scroll bar) takes the selection away again.</summary>
     void OnReaderBackgroundPressed(object? sender, PointerPressedEventArgs e)
     {
+        if (e.Pointer.Type == PointerType.Touch && !_verseTapReplay)
+        {
+            TouchTap.Defer(this, e, () => { _verseTapReplay = true; try { OnReaderBackgroundPressed(sender, e); } finally { _verseTapReplay = false; } });
+            return;
+        }
         if (_selected is null || !e.GetCurrentPoint(ReaderScroll).Properties.IsLeftButtonPressed) return;
         var verseBoxes = _verseBoxes.Values.Concat(_colBoxes.SelectMany(d => d.Values)).ToHashSet();
         for (var v = e.Source as Avalonia.Visual; v is not null && !ReferenceEquals(v, ReaderScroll); v = v.GetVisualParent())   // Avalonia.VisualTree

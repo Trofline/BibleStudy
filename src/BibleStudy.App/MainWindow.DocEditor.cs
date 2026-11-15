@@ -68,7 +68,7 @@ public partial class MainWindow
 
     void OnDocKey(object? sender, KeyEventArgs e)
     {
-        var ctrl = e.KeyModifiers.HasFlag(KeyModifiers.Control);
+        var ctrl = e.KeyModifiers.HasFlag(Mods.Ctrl);
         if (ctrl && e.Key == Key.S) { e.Handled = true; SaveDocument(); return; }
         if (ctrl && e.Key == Key.E) { e.Handled = true; DocReadBtn.IsChecked = DocReadBtn.IsChecked != true; return; }
         if (DocTitleBox.IsFocused && e.Key == Key.Enter) { e.Handled = true; DocReadBtn.IsChecked = false; DocBodyBox.Focus(); DocBodyBox.CaretIndex = 0; return; }
@@ -85,7 +85,7 @@ public partial class MainWindow
     /// </summary>
     Action? DocEditorKey(KeyEventArgs e)
     {
-        var ctrl = e.KeyModifiers.HasFlag(KeyModifiers.Control); var shift = e.KeyModifiers.HasFlag(KeyModifiers.Shift);
+        var ctrl = e.KeyModifiers.HasFlag(Mods.Ctrl); var shift = e.KeyModifiers.HasFlag(KeyModifiers.Shift);
         if (!ctrl || e.KeyModifiers.HasFlag(KeyModifiers.Alt)) return null;
         if (!shift)
             return e.Key switch

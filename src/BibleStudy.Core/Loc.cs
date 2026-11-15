@@ -77,10 +77,42 @@ public static class Loc
 
     public static string L(string de)
     {
-        if (Code == "de" || de.Length == 0) return de;
-        if (_map.TryGetValue(de, out var t) && t.Length > 0) return t;
+        if (Code == "de" || de.Length == 0) return Adapt(de);
+        if (_map.TryGetValue(de, out var t) && t.Length > 0) return Adapt(t);
         lock (Missing) Missing.Add(de);
-        return de;
+        return Adapt(de);
+    }
+
+    static readonly bool Mobile = OperatingSystem.IsAndroid() || OperatingSystem.IsIOS();
+    static readonly bool Mac = OperatingSystem.IsMacOS();
+    static readonly System.Text.RegularExpressions.Regex KeyHint = new(@"\s*\([^()]*\b(?:Strg|Ctrl|Cmd)\+[^()]*\)", System.Text.RegularExpressions.RegexOptions.Compiled);
+    static readonly System.Text.RegularExpressions.Regex KeyTail = new(@"\s·\s(?:Strg|Ctrl|Cmd)\+.*$", System.Text.RegularExpressions.RegexOptions.Compiled);
+    static readonly Dictionary<string, string> Adapted = [];
+
+    /// <summary>
+    /// The texts are written for a PC. On a Mac the keys are the ones of a Mac (⌘ instead of Ctrl, ⌥ for Alt, ⇧ for Shift); on a phone, which has no
+    /// keyboard, a hint in brackets about a key is left out and "right click" becomes "long press".
+    /// </summary>
+    static string Adapt(string s)
+    {
+        if (!Mobile && !Mac) return s;
+        lock (Adapted)
+        {
+            if (Adapted.TryGetValue(s, out var done)) return done;
+            var r = s;
+            if (Mobile)
+            {
+                r = KeyHint.Replace(r, "");
+                r = KeyTail.Replace(r, "");
+                r = r.Replace("Rechtsklick", "langes Drücken").Replace("Rechtsklick", "langes Drücken").Replace("right-click", "long press").Replace("Right-click", "Long press").Replace("right click", "long press").Replace("Right click", "Long press");
+            }
+            else
+            {
+                r = r.Replace("Strg+Umschalt+", "⌘⇧").Replace("Ctrl+Shift+", "⌘⇧").Replace("Strg+Alt+", "⌘⌥").Replace("Ctrl+Alt+", "⌘⌥")
+                     .Replace("Strg+", "⌘").Replace("Ctrl+", "⌘").Replace("Strg-", "⌘-").Replace("Alt+", "⌥").Replace("Umschalt+", "⇧").Replace("Shift+", "⇧");
+            }
+            return Adapted[s] = r;
+        }
     }
 
     /// <summary>Marks a text that is translated later (at the place where it is shown): returns it unchanged, but the text is registered as a translation key.</summary>

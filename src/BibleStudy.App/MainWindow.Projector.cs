@@ -22,7 +22,7 @@ public partial class MainWindow
         p.Step += dir => _ = StepProjectorAsync(dir);
         p.Closed += (_, _) => { _projector = null; _projectVerses = null; UpdateProjectorChip(); };
         _projector = p;
-#if ANDROID
+#if MOBILE
         p.Show(this);
         StatusText.Text = L("Die Beamer-Ansicht füllt den Bildschirm. Mit HDMI oder Bildschirmübertragung erscheint sie auf dem Beamer. Wischen oder Pfeile: weiter und zurück.");
 #else

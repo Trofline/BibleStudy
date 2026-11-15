@@ -135,7 +135,7 @@ public partial class MainWindow
         free.Items.Add(new MenuItem());   // a menu without items does not open
         listScroll.ContextMenu = free;
         // a click on the free space takes the selection away
-        listScroll.PointerPressed += (_, e) => { if (e.Source == listScroll || e.Source is StackPanel) { _exSel.Clear(); var trash = _trSel.Count > 0; _trSel.Clear(); if (trash) FillExplorerList(); else ExShowSelection(); } };
+        listScroll.OnPress((_, e) => { if (e.Source == listScroll || e.Source is StackPanel) { _exSel.Clear(); var trash = _trSel.Count > 0; _trSel.Clear(); if (trash) FillExplorerList(); else ExShowSelection(); } });
 
         var split = new GridSplitter { Width = 8, Background = Brushes.Transparent, ResizeDirection = GridResizeDirection.Columns };
         var body = _exBody = new Grid { ColumnDefinitions = new(IsPhone ? "0,0,*" : "240,8,*"), Margin = new(14, 0, 14, 0) };
@@ -174,10 +174,10 @@ public partial class MainWindow
     {
         if (e.Source is TextBox || FocusManager?.GetFocusedElement() is TextBox) return;
         // a letter or digit: jump to the row that starts with it (also in the trash)
-        if (!e.KeyModifiers.HasFlag(KeyModifiers.Control) && !e.KeyModifiers.HasFlag(KeyModifiers.Alt) && e.KeySymbol is { Length: 1 } sym && char.IsLetterOrDigit(sym[0]))
+        if (!e.KeyModifiers.HasFlag(Mods.Ctrl) && !e.KeyModifiers.HasFlag(KeyModifiers.Alt) && e.KeySymbol is { Length: 1 } sym && char.IsLetterOrDigit(sym[0]))
         { ExTypeAhead(sym); e.Handled = true; return; }
         if (_exInTrash) { if (TrashKeyDown(e)) e.Handled = true; return; }
-        var ctrl = e.KeyModifiers.HasFlag(KeyModifiers.Control);
+        var ctrl = e.KeyModifiers.HasFlag(Mods.Ctrl);
         var shift = e.KeyModifiers.HasFlag(KeyModifiers.Shift);
         var alt = e.KeyModifiers.HasFlag(KeyModifiers.Alt);
         var handled = true;
@@ -820,7 +820,7 @@ public partial class MainWindow
             if (!props.IsLeftButtonPressed) return;
             ExplorerHost.Focusable = true; ExplorerHost.Focus();
             if (e.ClickCount == 2) { e.Handled = true; ExOpen(item); return; }
-            var ctrl = e.KeyModifiers.HasFlag(KeyModifiers.Control);
+            var ctrl = e.KeyModifiers.HasFlag(Mods.Ctrl);
             var chosen = _exSel.Any(s => s.Kind == item.Kind && s.Id == item.Id);
             var shiftKey = e.KeyModifiers.HasFlag(KeyModifiers.Shift);
             if (shiftKey && _exAnchor is { } from && _exRows.FindIndex(r => SameItem(r, from)) is var a and >= 0 && _exRows.FindIndex(r => SameItem(r, item)) is var b and >= 0)
@@ -856,7 +856,7 @@ public partial class MainWindow
             e.Pointer.Capture(null);
             Reset();
             if (wasDragging && target is not null) ExMove(items, target.Folder);
-            else if (!wasDragging && !e.KeyModifiers.HasFlag(KeyModifiers.Control) && !e.KeyModifiers.HasFlag(KeyModifiers.Shift) && _exSel.Count > 1) { _exSel.Clear(); _exSel.Add(item); ExShowSelection(); }
+            else if (!wasDragging && !e.KeyModifiers.HasFlag(Mods.Ctrl) && !e.KeyModifiers.HasFlag(KeyModifiers.Shift) && _exSel.Count > 1) { _exSel.Clear(); _exSel.Add(item); ExShowSelection(); }
         };
         row.PointerCaptureLost += (_, _) => { if (_exDrag is not null && !_exKeepCapture) Reset(); };
     }

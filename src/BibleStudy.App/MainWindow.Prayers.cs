@@ -37,7 +37,7 @@ public partial class MainWindow
             BuildPrayerUi();
         }
         add.Click += (_, _) => Commit();
-        box.KeyDown += (_, e) => { if (e.Key == Key.Enter && e.KeyModifiers.HasFlag(KeyModifiers.Control)) { e.Handled = true; Commit(); } };
+        box.KeyDown += (_, e) => { if (e.Key == Key.Enter && e.KeyModifiers.HasFlag(Mods.Ctrl)) { e.Handled = true; Commit(); } };
         PrayerPanel.Children.Add(box); PrayerPanel.Children.Add(withVerse); PrayerPanel.Children.Add(add);
 
         var all = _vault.GetPrayers();

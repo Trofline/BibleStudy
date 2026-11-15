@@ -66,7 +66,7 @@ public partial class MainWindow
         };
         if (key is null) return null;
         var m = e.KeyModifiers;
-        return (m.HasFlag(KeyModifiers.Control) ? "Ctrl+" : "") + (m.HasFlag(KeyModifiers.Alt) ? "Alt+" : "") + (m.HasFlag(KeyModifiers.Shift) ? "Shift+" : "") + key;
+        return (m.HasFlag(Mods.Ctrl) ? "Ctrl+" : "") + (m.HasFlag(KeyModifiers.Alt) ? "Alt+" : "") + (m.HasFlag(KeyModifiers.Shift) ? "Shift+" : "") + key;
     }
 
     readonly List<StackPanel> _keyPanels = [];

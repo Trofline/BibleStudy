@@ -60,7 +60,7 @@ public partial class MainWindow
             Grid.SetColumn(remove, 1); grid.Children.Add(remove);
             var card = new Border { Child = grid, Padding = new(12, 8), CornerRadius = new(10), BorderThickness = new(1), Margin = new(0, 6, 0, 0), Cursor = new Cursor(StandardCursorType.Hand), Classes = { "tile" } };
             card.Bind(Border.BorderBrushProperty, this.GetResourceObservable("BsBorder"));
-            card.PointerPressed += (_, e) => { if (e.GetCurrentPoint(card).Properties.IsLeftButtonPressed) _ = GoToAsync(bm.Ref.Book, bm.Ref.Chapter, bm.Ref.Verse); };
+            card.OnPress((_, e) => { if (e.GetCurrentPoint(card).Properties.IsLeftButtonPressed) _ = GoToAsync(bm.Ref.Book, bm.Ref.Chapter, bm.Ref.Verse); });
             BookmarkPanel.Children.Add(card);
         }
     }

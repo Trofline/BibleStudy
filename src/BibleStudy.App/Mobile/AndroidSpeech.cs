@@ -6,17 +6,6 @@ using Android.Speech.Tts;
 // the phone (TextToSpeech), so that MainWindow.Speak works unchanged.
 namespace System.Speech.Synthesis;
 
-public enum SynthesizerState { Ready, Speaking, Paused }
-public enum VoiceGender { NotSet, Male, Female, Neutral }
-public enum VoiceAge { NotSet, Child, Teen, Adult, Senior }
-
-public sealed class SpeakCompletedEventArgs : EventArgs { }
-
-public sealed class SpeakProgressEventArgs(int position) : EventArgs
-{
-    public int CharacterPosition { get; } = position;
-}
-
 public sealed class SpeechSynthesizer : IDisposable
 {
     readonly TextToSpeech _tts;

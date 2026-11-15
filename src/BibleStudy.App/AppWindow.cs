@@ -8,7 +8,7 @@ using Avalonia.Platform.Storage;
 
 namespace BibleStudy.App;
 
-#if ANDROID
+#if MOBILE
 /// <summary>
 /// On Android there are no windows: the main window is the one view of the app. This gives it the members of a window the program
 /// uses, so that the same code runs; what a phone has not (position, size, a title bar) does nothing there.
@@ -91,6 +91,14 @@ public class AppWindow : UserControl
             {
                 if (Pages?.CloseTop() == true || BackHandler?.Invoke() == true) args.Handled = true;
             };
+        // a text box takes the focus (and the keyboard comes up) only when the finger lifts on it: a swipe over it is a scroll
+        AddHandler(PointerPressedEvent, (object? _, PointerPressedEventArgs e) =>
+        {
+            if (e.Pointer.Type != PointerType.Touch || e.Source is not Visual source) return;
+            if (Avalonia.VisualTree.VisualExtensions.FindAncestorOfType<TextBox>(source, true) is not { IsReadOnly: false, IsFocused: false } box) return;
+            e.Handled = true;
+            TouchTap.Defer(this, e, () => box.Focus());
+        }, Avalonia.Interactivity.RoutingStrategies.Tunnel);
         Opened?.Invoke(this, EventArgs.Empty);
         Activated?.Invoke(this, EventArgs.Empty);
     }

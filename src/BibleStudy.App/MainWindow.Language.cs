@@ -34,6 +34,24 @@ public partial class MainWindow
 
     void Restart()
     {
+#if ANDROID
+        // a phone has no program file to start again: the app is opened anew and this process ends (so that a new language really applies)
+        try
+        {
+            SaveForBackground();
+            var ctx = Android.App.Application.Context;
+            var intent = new Android.Content.Intent(ctx, typeof(BibleStudy.Droid.RestartActivity));
+            intent.AddFlags(Android.Content.ActivityFlags.NewTask);
+            ctx.StartActivity(intent);
+            Avalonia.Threading.DispatcherTimer.RunOnce(() => Android.OS.Process.KillProcess(Android.OS.Process.MyPid()), TimeSpan.FromMilliseconds(300));
+        }
+        catch (Exception ex) when (ex is Java.Lang.Exception or InvalidOperationException) { ErrorLog.Write(ex); }
+        return;
+#elif IOS
+        // an iPhone does not let an app start itself again: the person closes it and opens it anew
+        StatusText.Text = L("Schließe die App und öffne sie neu (am unteren Rand nach oben wischen), damit die Änderung gilt.");
+        return;
+#endif
         try
         {
             var exe = Environment.ProcessPath;

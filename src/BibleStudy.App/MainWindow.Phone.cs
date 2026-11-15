@@ -1,6 +1,7 @@
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Layout;
+using Avalonia.Media;
 
 namespace BibleStudy.App;
 
@@ -20,19 +21,46 @@ public partial class MainWindow
 
     void InitPhone()
     {
-        if (!OperatingSystem.IsAndroid()) return;
+        if (!AppPlatform.IsMobile) return;
         // a phone has no window to minimize, maximize or close
         MinBtn.IsVisible = MaxBtn.IsVisible = CloseBtn.IsVisible = false;
+        WrapDocumentBar();
+        KeysTopBtn.IsVisible = LayoutTopBtn.IsVisible = false;   // no keyboard, no windows to arrange
+        // the list of sections beside the settings is longer than a low screen: it scrolls on its own
+        if (SettingsScroll.Parent is Grid sg && sg.Children.FirstOrDefault(c => Grid.GetColumn(c) == 1) is Control toc and not ScrollViewer)
+        {
+            sg.Children.Remove(toc);
+            var sv = new ScrollViewer { Content = toc, HorizontalScrollBarVisibility = Avalonia.Controls.Primitives.ScrollBarVisibility.Disabled };
+            Grid.SetColumn(sv, 1);
+            sg.Children.Add(sv);
+            // also in a narrow area of the split view the list would only take the room of the settings
+            sg.SizeChanged += (_, _) => sv.IsVisible = sg.Bounds.Width >= 520 && !_phone;
+        }
         SizeChanged += (_, _) => ApplyPhoneLayout();
-#if ANDROID
+#if MOBILE
         BackHandler = OnPhoneBack;
 #endif
         ApplyPhoneLayout();
     }
 
+
+    /// <summary>Rows of buttons that are made for a wide window (the editor of a document) wrap onto a second line instead of being cut off.</summary>
+    void WrapDocumentBar()
+    {
+        if (DocSaveBtn.Parent is not DockPanel dock || dock.Parent is not Grid grid) return;
+        var kids = dock.Children.ToList();
+        dock.Children.Clear();
+        var wrap = new WrapPanel { Margin = dock.Margin };
+        foreach (var k in Enumerable.Reverse(kids)) { k.Margin = new Thickness(0, 0, 6, 6); wrap.Children.Add(k); }
+        Grid.SetRow(wrap, Grid.GetRow(dock));
+        grid.Children.Remove(dock);
+        grid.Children.Add(wrap);
+    }
+
+
     void ApplyPhoneLayout()
     {
-        if (!OperatingSystem.IsAndroid() || Bounds.Width <= 0) return;
+        if (!AppPlatform.IsMobile || Bounds.Width <= 0) return;
         var phone = Bounds.Width < PhoneWidth;
         var pickers = (Control)BookBtn.Parent!.Parent!.Parent!;   // the row with the language, translation, book and chapter
         if (phone != _phone)
@@ -44,7 +72,7 @@ public partial class MainWindow
             Grid.SetColumnSpan(pickers, phone ? 6 : 1);
             pickers.Margin = phone ? new Thickness(0, 6, 0, 2) : default;
             pickers.HorizontalAlignment = phone ? HorizontalAlignment.Left : HorizontalAlignment.Stretch;
-            TopBar.Height = phone ? double.NaN : 60;
+            TopBar.Height = phone ? double.NaN : 60;   // (ApplyCompact sets it for every size)
             TopBar.Padding = phone ? new Thickness(6, 4, 6, 4) : new Thickness(16, 0, 0, 0);
             // the pickers as wide as their text: on a phone the fixed widths of the desktop do not fit side by side
             LangBtn.MinWidth = phone ? 0 : 84; TransBtn.MinWidth = phone ? 0 : 110; BookBtn.MinWidth = phone ? 0 : 100; ChapterBtn.MinWidth = phone ? 0 : 64;
@@ -58,7 +86,7 @@ public partial class MainWindow
             if (phone && TabBar.Child == TabStrip)
             {
                 TabBar.Child = null;
-                TabBar.Child = new ScrollViewer { Content = TabStrip, HorizontalScrollBarVisibility = Avalonia.Controls.Primitives.ScrollBarVisibility.Hidden, VerticalScrollBarVisibility = Avalonia.Controls.Primitives.ScrollBarVisibility.Disabled };
+                TabBar.Child = MakeTabScroller();
             }
             TabBar.Padding = phone ? new Thickness(6, 4, 6, 0) : new Thickness(16, 6, 16, 0);
             // the settings: the list of sections on the right takes half of a phone; the sections are folded and found by scrolling
@@ -75,13 +103,35 @@ public partial class MainWindow
             SidePanel.Width = Bounds.Width;
         }
         else SidePanel.Width = Math.Clamp(_settings.SideWidth, 300, 760);
+        ApplyCompact();
+        _matApplyTree?.Invoke();
         FitTopBar();
+        CapFixedWidths();
     }
+
+
+    readonly HashSet<Control> _capped = [];
+
+    /// <summary>
+    /// Controls with a fixed width of a desktop (a slider of 340, a box of 230) reach out of a phone screen: they are made no wider than the screen.
+    /// Only the ones that are too wide are touched, and they get their width back when the screen is wide again.
+    /// </summary>
+    void CapFixedWidths()
+    {
+        if (!AppPlatform.IsMobile || Bounds.Width <= 0) return;
+        var cap = _phone ? Math.Max(120, Bounds.Width - 64) : double.PositiveInfinity;
+        foreach (var c in _capped.ToList()) { c.MaxWidth = cap; if (double.IsInfinity(cap)) _capped.Remove(c); }
+        if (!_phone) return;
+        foreach (var c in Avalonia.LogicalTree.LogicalExtensions.GetLogicalDescendants(this).OfType<Control>())
+            if (!double.IsNaN(c.Width) && c.Width > cap && !_capped.Contains(c) && double.IsInfinity(c.MaxWidth)) { c.MaxWidth = cap; _capped.Add(c); }
+    }
+
 
     /// <summary>On a phone a passage or a tool opened from the side panel is shown at once: the panel lies over it and goes away.</summary>
     void ClosePanelOnPhone()
     {
         if (_phone && SidePanel.IsVisible) SetPanelOpen(false);
+        if (_phone) Avalonia.Threading.Dispatcher.UIThread.Post(CapFixedWidths, Avalonia.Threading.DispatcherPriority.Background);
     }
 
     /// <summary>The back key of the phone: first the side panel, then an open tool goes back to the text; at the text the app goes to the background.</summary>
@@ -128,5 +178,70 @@ public partial class MainWindow
             ShowVerseMenu(verse, box);
         };
         timer.Start();
+    }
+}
+
+public partial class MainWindow
+{
+    /// <summary>A phone held across: little height, so the bars take less room (see <see cref="ApplyCompact"/>).</summary>
+    bool _compact;
+    /// <summary>Tabs and the reading toolbar are folded away (a small handle above unfolds them): the text gets the room.</summary>
+    bool _barsFolded;
+    Button? _foldHandle;
+    Icon? _foldIcon;
+
+    void EnsureFoldHandle()
+    {
+        if (_foldHandle is not null || TabBar.Parent is not DockPanel dock) return;
+        _foldIcon = new Icon { Data = Geometry.Parse("M6 9l6 6 6-6"), IconSize = 14 };
+        _foldHandle = new Button { Height = 22, MinHeight = 0, Padding = new Thickness(0), HorizontalAlignment = HorizontalAlignment.Stretch, HorizontalContentAlignment = HorizontalAlignment.Center, BorderThickness = new Thickness(0), Content = _foldIcon, IsVisible = false };
+        _foldHandle.Bind(Button.BackgroundProperty, this.GetResourceObservable("BsSurface"));
+        _foldHandle.Click += (_, _) => { _barsFolded = !_barsFolded; ApplyFold(); };
+        DockPanel.SetDock(_foldHandle, Dock.Top);
+        dock.Children.Insert(dock.Children.IndexOf(TabBar), _foldHandle);
+    }
+
+    /// <summary>On a phone (also across) the tab row and the reading toolbar fold away; across, they start folded, the screen is only about 360 high.</summary>
+    void ApplyCompact()
+    {
+        var compact = Bounds.Height > 0 && Bounds.Height < 480;
+        EnsureFoldHandle();
+        if (compact != _compact) { _compact = compact; _barsFolded = compact; }
+        TopBar.Height = _phone ? double.NaN : compact ? 46 : 60;
+        ApplyFold();
+        UpdateOrientationLock();
+    }
+
+    void ApplyFold()
+    {
+        if (_foldHandle is null || _foldIcon is null) return;
+        _foldHandle.IsVisible = AppPlatform.IsMobile && !_settings.FocusMode && (_phone || _compact);
+        if (!_foldHandle.IsVisible) _barsFolded = false;
+        TabBar.IsVisible = !_barsFolded && !_settings.FocusMode;
+        ParallelBar.ClipToBounds = true;
+        ParallelBar.MaxHeight = _barsFolded ? 0 : double.PositiveInfinity;   // the row of the extra translations folds with the others
+        _foldIcon.Data = Geometry.Parse(_barsFolded ? "M6 9l6 6 6-6" : "M18 15l-6-6-6 6");
+        UpdateReadBar();
+    }
+
+    /// <summary>The tab row scrolls sideways; a small arrow at the right edge shows that there is more (it is not to be seen otherwise).</summary>
+    Control MakeTabScroller()
+    {
+        var scroll = new ScrollViewer { Content = TabStrip, HorizontalScrollBarVisibility = Avalonia.Controls.Primitives.ScrollBarVisibility.Hidden, VerticalScrollBarVisibility = Avalonia.Controls.Primitives.ScrollBarVisibility.Disabled };
+        var more = new Border { Width = 26, HorizontalAlignment = HorizontalAlignment.Right, IsHitTestVisible = false, IsVisible = false, Child = new Icon { Data = Geometry.Parse("M9 6l6 6-6 6"), IconSize = 16, HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Center } };
+        more.Bind(Border.BackgroundProperty, this.GetResourceObservable("BsSurface"));
+        void Update() => more.IsVisible = scroll.Extent.Width > scroll.Viewport.Width + 2 && scroll.Offset.X < scroll.Extent.Width - scroll.Viewport.Width - 2;
+        scroll.ScrollChanged += (_, _) => Update();
+        scroll.PropertyChanged += (_, e) => { if (e.Property == Visual.BoundsProperty) Update(); };
+        return new Grid { Children = { scroll, more } };
+    }
+
+    /// <summary>Two areas side by side need a wide screen: on a phone the split view and the parallel translations turn it across (the phone may go back by itself when they end).</summary>
+    void UpdateOrientationLock()
+    {
+#if ANDROID
+        var wide = Math.Min(Bounds.Width, Bounds.Height) >= 600;   // a tablet is wide enough in both positions
+        BibleStudy.Droid.MainActivity.Landscape(!wide && (_settings.SplitView || _colIds.Count > 1));
+#endif
     }
 }

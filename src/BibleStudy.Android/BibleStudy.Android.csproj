@@ -13,8 +13,8 @@
     <RootNamespace>BibleStudy.App</RootNamespace>
     <AssemblyName>BibleStudy.App</AssemblyName>
     <ApplicationId>de.trofline.biblestudy</ApplicationId>
-    <ApplicationVersion>20</ApplicationVersion>
-    <ApplicationDisplayVersion>1.9.1-beta</ApplicationDisplayVersion>
+    <ApplicationVersion>21</ApplicationVersion>
+    <ApplicationDisplayVersion>1.9.2-beta</ApplicationDisplayVersion>
     <Version>1.9.1</Version>
     <ApplicationTitle>BibleStudy</ApplicationTitle>
     <AndroidPackageFormat>apk</AndroidPackageFormat>
@@ -27,6 +27,7 @@
     <Product>BibleStudy</Product>
     <Authors>Trofline</Authors>
     <!-- the shared sources warn about many things the desktop build already reports -->
+    <DefineConstants>$(DefineConstants);MOBILE</DefineConstants>
     <NoWarn>$(NoWarn);CA1416;CA1422;CS0618;CS0067;CS0169;CS0414;CS0649</NoWarn>
   </PropertyGroup>
 

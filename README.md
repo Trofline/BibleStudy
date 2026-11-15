@@ -25,6 +25,25 @@ The guiding principle is **Scripture alone**: the Bible text comes first. Commen
   <a href="docs/img/original-text.png"><img src="docs/img/original-text.png" alt="Original text word by word with dictionary" height="300"></a>
 </p>
 
+## Lead a Bible study
+
+Prepare and hold a Bible study in one program: your own papers open right inside it, the passage stands beside them, the handout comes out designed, and the verses go up on the projector.
+
+<p align="center"><a href="docs/img/split-view.png"><img src="docs/img/split-view.png" alt="Split view: John 10 on the left, the study notes on the right with clickable Bible references and a mark with a note" width="900"></a></p>
+
+- **Your materials inside the program:** Word, PDF, PowerPoint, OpenDocument, Markdown and more open in the *Materials* tab. Bible references in them are clickable, resting the mouse on one shows the verse, and you can search all files at once.
+- **Marks and notes in your papers**, without changing the files themselves.
+- **Split view:** the Bible on one side, your materials or documents on the other.
+- **Handouts in eight looks:** print any document as a designed sheet, with the verses as an appendix, questions set apart and room for notes. HTML and Markdown export too.
+- **Projector view:** verses or parts of your materials large and calm on a second screen.
+- **A program for the timer:** song, prayer, Bible study … each part with its time, and a short tone when the next one begins.
+
+<p align="center">
+  <a href="docs/img/materials.png"><img src="docs/img/materials.png" alt="The materials tab with a verse preview" height="260"></a>
+  <a href="docs/img/handout-looks.png"><img src="docs/img/handout-looks.png" alt="Eight looks for the handout" height="260"></a>
+  <a href="docs/img/projector.png"><img src="docs/img/projector.png" alt="A verse on the projector" height="260"></a>
+</p>
+
 ## Features
 
 - **Read and compare:** many free translations, parallel columns (color-coded, optional synchronous scrolling), differences between translations highlighted, plus an **audio Bible** (spoken World English Bible, public domain, plays chapter after chapter and works offline once downloaded)
@@ -36,6 +55,7 @@ The guiding principle is **Scripture alone**: the Bible text comes first. Commen
 - **Your own knowledge:** vaults (like Obsidian) with highlights (free text selection across verses, sub-highlights, one-click color change), notes, documents, folders, **categories**, tags, wiki links, study templates and a knowledge graph
 - **Plan:** reading plans with progress, reading list, tasks, **prayer list**
 - **Sermon editor** with outline, verses, time plan, handout, slides and print/PDF export
+- **Bible study:** materials folder (Word, PDF, PowerPoint …) with clickable references, search, marks and notes; split view; handouts in eight looks; projector view; clock, timer and a program for the evening
 - **Tabs like in a file explorer**, layouts (including a dashboard), custom keyboard shortcuts, animations
 - **Multilingual:** English, German, Spanish, French and Russian (AI-made translations, corrections welcome; more languages can be added as a JSON file in the `lang` folder)
 - **Sentence diagram and pericope analysis:** the sentence of a verse drawn as a classical sentence diagram (Reed–Kellogg, Greek and Hebrew, PNG/SVG export), and a passage in pictures: word classes, verb forms, key words and where they occur, rhythm of the verses, sentence build and links
@@ -56,6 +76,25 @@ Download a file from [Releases](https://github.com/Trofline/BibleStudy/releases)
 
 **Your data is protected:** when installed, it lives in `%LOCALAPPDATA%\BibleStudy`, separate from the program. Updates and reinstalls never
 touch it, and a backup is made before every update. When you uninstall (or remove the portable version) you are always asked whether to keep your data.
+
+## On the phone
+
+**Android:** download `BibleStudy-Android-…apk` from [Releases](https://github.com/Trofline/BibleStudy/releases) (beta) and open it.
+
+**iPhone (beta), free and without a Mac:** Apple only lets the App Store install apps, so BibleStudy is installed with [SideStore](https://sidestore.io), which signs the app with your own free Apple ID. You need **a Windows PC (or Mac) with a cable once**; afterwards the phone renews the app by itself. About 10 minutes in total.
+
+1. **Put SideStore on the iPhone (about 4 min).** On the PC install *Apple Devices* (Microsoft Store) or iTunes, then open [iloader](https://github.com/nab138/iloader), connect the iPhone with the cable, sign in with your Apple ID and install SideStore. iloader also creates the *pairing file* that SideStore needs.
+2. **Trust and Developer Mode (about 2 min).** iPhone: Settings → General → VPN & Device Management → trust your Apple ID. Settings → Privacy & Security → Developer Mode → on (the iPhone restarts).
+3. **Install a loopback VPN (about 1 min).** SideStore talks to the phone itself through a tiny on-device VPN that sends no data anywhere. Install **StosVPN** (or *LocalDevVPN*) from the App Store and switch it on once.
+4. **Add BibleStudy (about 2 min).** Open SideStore, sign in, then tap [this link](sidestore://source?url=https://trofline.github.io/BibleStudy/sidestore.json) on the iPhone (or Sources → **+** → `https://trofline.github.io/BibleStudy/sidestore.json`). Open BibleStudy in the list and tap **Install**.
+5. **Renew by itself every day (about 2 min).** A free Apple ID signs an app for 7 days only. Make an automation so you never think about it:
+   1. Open **Shortcuts → Shortcuts → +** and add these actions in this order: *Connect to VPN / turn on* StosVPN (action of the VPN app), **Refresh All Apps** (SideStore's own action), then turn the VPN off again. Name it **Renew BibleStudy**.
+   2. **Shortcuts → Automation → +** → **Time of Day** (for example 3:00, daily) → **Run Immediately** → choose the shortcut. Turn off *Notify When Run* if you like.
+   3. Leave the phone charging at night with Wi-Fi on, that is when it runs.
+
+If an app has expired anyway: open SideStore and tap **Refresh** at BibleStudy; your data stays. Updates arrive through SideStore.
+
+**Honest limits:** a free Apple ID allows at most 3 self-signed apps at the same time (SideStore counts as one). After a long time switched off or a big iOS update a manual refresh can be needed once. Apple may restrict the method one day. Claude Code, Ollama and the MCP server exist only on the PC, and the live Bible study runs only while the app is open. SideStore changes now and then: if a step looks different, [docs.sidestore.io](https://docs.sidestore.io) is the reference.
 
 ## Build it yourself
 

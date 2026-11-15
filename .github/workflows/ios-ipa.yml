@@ -1,0 +1,69 @@
+# Builds the iPhone app (an unsigned .ipa) for a release and attaches it to it.
+# There is no Apple developer account behind it: SideStore signs the app on the phone with the person's own (free) Apple ID.
+# It runs only when you start it by hand (Actions tab -> "iPhone app (IPA)" -> Run workflow, enter the tag of an existing release,
+# e.g. ios-beta-1.9.2), never for pull requests, pushes or tags, so no foreign code is run with the repository's token. Like the other workflows here.
+name: iPhone app (IPA)
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Release tag the IPA is attached to (the program of this tag is built), e.g. ios-beta-1.9.2"
+        required: true
+      ref:
+        description: "Branch or tag to build (empty = the tag above). For trying a fix before the tag is moved."
+        required: false
+      xcode:
+        description: "Xcode to use, e.g. 26.0 (empty = the newest installed on the runner)"
+        required: false
+
+permissions:
+  contents: write   # needed only to attach the file to the release
+
+jobs:
+  ipa:
+    runs-on: macos-latest
+    env:
+      TAG: ${{ github.event.inputs.tag }}
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.inputs.ref || github.event.inputs.tag }}
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "10.0.x"
+
+      - name: Choose Xcode
+        run: |
+          WANT="${{ github.event.inputs.xcode }}"
+          if [ -n "$WANT" ]; then APP="/Applications/Xcode_$WANT.app"; else APP=$(ls -d /Applications/Xcode_*.app 2>/dev/null | sort -V | tail -1); fi
+          [ -d "$APP" ] || APP=/Applications/Xcode.app
+          echo "Using $APP"
+          sudo xcode-select -s "$APP/Contents/Developer"
+          xcodebuild -version
+
+      - name: Install the iOS workload
+        run: dotnet workload install ios
+
+      - name: Build the app (unsigned)
+        run: |
+          VERSION="${TAG##*-}"; VERSION="${VERSION#v}"
+          dotnet build src/BibleStudy.iOS/BibleStudy.iOS.csproj -c Release -r ios-arm64 \
+            -p:EnableCodeSigning=false -p:ApplicationDisplayVersion=$VERSION -p:Version=$VERSION
+          APP=$(find src/BibleStudy.iOS/bin/Release -name "*.app" -maxdepth 6 -type d | head -1)
+          echo "App folder: $APP"
+          test -n "$APP"
+
+      - name: Pack the IPA
+        run: |
+          VERSION="${TAG##*-}"; VERSION="${VERSION#v}"
+          APP=$(find src/BibleStudy.iOS/bin/Release -name "*.app" -maxdepth 6 -type d | head -1)
+          rm -rf ipa && mkdir -p ipa/Payload
+          cp -R "$APP" ipa/Payload/BibleStudy.app
+          (cd ipa && zip -qry "../BibleStudy-iOS-$VERSION.ipa" Payload)
+          shasum -a 256 "BibleStudy-iOS-$VERSION.ipa" | tee "BibleStudy-iOS-$VERSION.ipa.sha256"
+          ls -la BibleStudy-iOS-*.ipa
+
+      - name: Attach to the release
+        run: gh release upload "$TAG" BibleStudy-iOS-*.ipa BibleStudy-iOS-*.ipa.sha256 --clobber

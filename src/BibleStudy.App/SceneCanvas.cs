@@ -48,7 +48,7 @@ public static class SceneCanvas
                 if (click is not null && word.Strong.Length > 0)
                 {
                     tb.Cursor = new Cursor(StandardCursorType.Hand);
-                    tb.PointerPressed += (_, e) => { if (e.GetCurrentPoint(tb).Properties.IsLeftButtonPressed) click(word); };
+                    tb.OnPress((_, e) => { if (e.GetCurrentPoint(tb).Properties.IsLeftButtonPressed) click(word); });
                 }
             }
             canvas.Children.Add(tb);

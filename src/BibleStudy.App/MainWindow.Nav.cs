@@ -183,7 +183,7 @@ public partial class MainWindow
             ToolTip.SetTip(button, (g.Tabs.Length > 1 ? string.Join(" · ", g.Tabs.Select(t => L(t.Label))) : g.Tabs[0].Hint) + "\n" + L("Aus der Leiste ziehen: eigenes Fenster."));
             // drag a tab out of the side panel = its own window
             Avalonia.Point? dragFrom = null; var dragged = false;
-            button.AddHandler(PointerPressedEvent, (object? _, Avalonia.Input.PointerPressedEventArgs e) => { if (e.GetCurrentPoint(button).Properties.IsLeftButtonPressed) { dragFrom = e.GetPosition(this); dragged = false; } }, Avalonia.Interactivity.RoutingStrategies.Tunnel | Avalonia.Interactivity.RoutingStrategies.Bubble, true);
+            if (!AppPlatform.IsMobile) button.AddHandler(PointerPressedEvent, (object? _, Avalonia.Input.PointerPressedEventArgs e) => { if (e.GetCurrentPoint(button).Properties.IsLeftButtonPressed) { dragFrom = e.GetPosition(this); dragged = false; } }, Avalonia.Interactivity.RoutingStrategies.Tunnel | Avalonia.Interactivity.RoutingStrategies.Bubble, true);
             button.PointerReleased += (_, _) => dragFrom = null;
             button.PointerMoved += (_, e) =>
             {

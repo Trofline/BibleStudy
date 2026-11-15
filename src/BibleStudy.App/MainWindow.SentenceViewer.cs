@@ -163,7 +163,7 @@ public partial class MainWindow
             _scroll = new ScrollViewer { Content = zoomHost, HorizontalScrollBarVisibility = Avalonia.Controls.Primitives.ScrollBarVisibility.Auto, VerticalScrollBarVisibility = Avalonia.Controls.Primitives.ScrollBarVisibility.Auto, MinHeight = 140 };
             _scroll.PointerWheelChanged += (_, e) =>
             {
-                if (!e.KeyModifiers.HasFlag(KeyModifiers.Control)) return;
+                if (!e.KeyModifiers.HasFlag(Mods.Ctrl)) return;
                 Zoom(e.Delta.Y > 0 ? 1.1 : 1 / 1.1); e.Handled = true;
             };
             _stage.Child = _scroll;

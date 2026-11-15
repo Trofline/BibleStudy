@@ -79,7 +79,7 @@ public partial class MainWindow
                 };
                 if (hex.Length == 0) dot.Bind(Border.BackgroundProperty, this.GetResourceObservable("BsJesus")); else dot.Background = new SolidColorBrush(Color.Parse(hex));
                 var captured = hex;
-                dot.PointerPressed += (_, _) => { _settings.JesusColor = captured; BuildJesusColors(); Redraw(); };
+                dot.OnPress((_, _) => { _settings.JesusColor = captured; BuildJesusColors(); Redraw(); });
                 JesusColorPanel.Children.Add(dot);
             }
             var add = new Border
@@ -207,7 +207,7 @@ public partial class MainWindow
             Child = new TextBlock { Text = "+", HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center, VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center, FontSize = 16 },
         };
         ToolTip.SetTip(add, L("Eigene Akzentfarbe wählen"));
-        add.PointerPressed += (_, _) => ShowCustomAccent();
+        add.OnPress((_, _) => ShowCustomAccent());
         AccentPanel.Children.Add(add);
     }
 

@@ -160,7 +160,7 @@ sealed class ArcCanvas : Control
 
     void Apply(byte[] pixels, ArcRenderer.Layout layout, double vs, double ve)
     {
-        var bitmap = new WriteableBitmap(new PixelSize(layout.Width, layout.Height), new Vector(96 * layout.Scale, 96 * layout.Scale), PixelFormat.Bgra8888, AlphaFormat.Opaque);
+        var bitmap = new WriteableBitmap(new PixelSize(layout.Width, layout.Height), new Vector(96, 96), PixelFormat.Bgra8888, AlphaFormat.Opaque);   // 96 dpi: size and pixel size are the same, so that the whole picture is drawn also where the screen scales (a Mac, a phone) – with the dpi of the screen only a quarter of it showed
         using (var fb = bitmap.Lock())
             for (var y = 0; y < layout.Height; y++) Marshal.Copy(pixels, y * layout.Width * 4, fb.Address + y * fb.RowBytes, layout.Width * 4);
         _bmp?.Dispose();

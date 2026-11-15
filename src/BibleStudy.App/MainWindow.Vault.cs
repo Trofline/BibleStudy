@@ -224,7 +224,7 @@ public partial class MainWindow
         };
         b.Bind(Border.BorderBrushProperty, this.GetResourceObservable(selected ? "BsText" : "BsBorder"));
         ToolTip.SetTip(b, ColorName(hex) is { Length: > 0 } nm ? $"{nm}  ({hex})" : hex);
-        b.PointerPressed += (_, _) => pick(hex);
+        b.OnPress((_, _) => pick(hex));
         return b;
     }
 

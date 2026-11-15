@@ -218,7 +218,7 @@ public partial class MainWindow
         var chip = new Border { Child = label, Padding = new(9, 2), Margin = new(0, 0, 6, 4), CornerRadius = new(10), BorderThickness = new(1), Cursor = new Cursor(StandardCursorType.Hand) };
         chip.Bind(Border.BackgroundProperty, this.GetResourceObservable("BsSurface2"));
         chip.Bind(Border.BorderBrushProperty, this.GetResourceObservable("BsBorder"));
-        chip.PointerPressed += (_, e) => { if (e.GetCurrentPoint(chip).Properties.IsLeftButtonPressed) click(); };
+        chip.OnPress((_, e) => { if (e.GetCurrentPoint(chip).Properties.IsLeftButtonPressed) click(); });
         if (target is not null)
         {
             var tip = new TextBlock { Text = "…", TextWrapping = TextWrapping.Wrap, MaxWidth = 320 };

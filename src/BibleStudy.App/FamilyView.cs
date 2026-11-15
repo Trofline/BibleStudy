@@ -64,7 +64,7 @@ public sealed class FamilyView : UserControl
         DockPanel.SetDock(_hint, Dock.Top); root.Children.Add(_hint);
         DockPanel.SetDock(_source, Dock.Bottom); root.Children.Add(_source);
         _scroll = new ScrollViewer { HorizontalScrollBarVisibility = Avalonia.Controls.Primitives.ScrollBarVisibility.Auto, VerticalScrollBarVisibility = Avalonia.Controls.Primitives.ScrollBarVisibility.Auto, Content = new LayoutTransformControl { Child = _canvas, LayoutTransform = _scale } };
-        _scroll.PointerWheelChanged += (_, e) => { if (!e.KeyModifiers.HasFlag(KeyModifiers.Control)) return; Zoom(e.Delta.Y > 0 ? 1.1 : 1 / 1.1); e.Handled = true; };
+        _scroll.PointerWheelChanged += (_, e) => { if (!e.KeyModifiers.HasFlag(Mods.Ctrl)) return; Zoom(e.Delta.Y > 0 ? 1.1 : 1 / 1.1); e.Handled = true; };
         root.Children.Add(_scroll);
         Content = root;
     }

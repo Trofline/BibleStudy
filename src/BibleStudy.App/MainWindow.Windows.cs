@@ -231,7 +231,7 @@ public partial class MainWindow
         if (_activeWork is { } key && _windows.TryGetValue(key, out var d) && d.Win is null) Restore(d);
     }
 
-    void UpdateReadBar() => ReadBar.IsVisible = ReaderHost.IsVisible && (_settings.SplitView ? Panes.Contains(ReaderPane) : !WorkHost.IsVisible) && !_settings.FocusMode;
+    void UpdateReadBar() => ReadBar.IsVisible = !_barsFolded && ReaderHost.IsVisible && (_settings.SplitView ? Panes.Contains(ReaderPane) : !WorkHost.IsVisible) && !_settings.FocusMode;
 
     // ---- tab strip -------------------------------------------------------------------------------------------------------
 
@@ -279,7 +279,7 @@ public partial class MainWindow
         var b = new Button { Classes = { "wtab" }, Content = row };
         b.Classes.Set("active", active);
         ToolTip.SetTip(b, key is null ? L("Zurück zum Bibeltext") : windowed ? L("Liegt in einem eigenen Fenster – klicken holt es nach vorn") : L("Klicken wechselt hierher. Nach unten ziehen macht ein eigenes Fenster daraus."));
-        if (closable && key is not null)
+        if (closable && key is not null && !AppPlatform.IsMobile)
         {
             // the dot: Ctrl+Tab always switches between reading and this tab (no dot anywhere: the tab you were on last)
             var pinned = _settings.PinnedTab == key;
@@ -295,7 +295,7 @@ public partial class MainWindow
         }
         if (closable)
         {
-            var x = new Button { Classes = { "tool" }, Width = 22, Height = 22, Padding = new(0), Opacity = active ? 1 : 0, Content = new Icon { Data = Geometry.Parse("M18 6L6 18 M6 6l12 12"), IconSize = 12 } };
+            var x = new Button { Classes = { "tool" }, Width = 22, Height = 22, Padding = new(0), Opacity = active ? 1 : 0, IsVisible = active || !AppPlatform.IsMobile, Content = new Icon { Data = Geometry.Parse("M18 6L6 18 M6 6l12 12"), IconSize = 12 } };
             ToolTip.SetTip(x, L("Schließen"));
             if (!active) { b.PointerEntered += (_, _) => x.Opacity = 1; b.PointerExited += (_, _) => x.Opacity = 0; }
             x.Click += (_, e) => { e.Handled = true; if (key is not null && _windows.TryGetValue(key, out var d)) { if (d.Win is not null) d.Win.Close(); else Restore(d); } };
@@ -303,7 +303,7 @@ public partial class MainWindow
         }
 
         Point? from = null; var dragged = false;
-        b.AddHandler(PointerPressedEvent, (object? _, PointerPressedEventArgs e) => { if ((key is not null || _settings.SplitView) && e.GetCurrentPoint(b).Properties.IsLeftButtonPressed) { from = e.GetPosition(this); dragged = false; } }, RoutingStrategies.Tunnel | RoutingStrategies.Bubble, true);
+        if (!AppPlatform.IsMobile) b.AddHandler(PointerPressedEvent, (object? _, PointerPressedEventArgs e) => { if ((key is not null || _settings.SplitView) && e.GetCurrentPoint(b).Properties.IsLeftButtonPressed) { from = e.GetPosition(this); dragged = false; } }, RoutingStrategies.Tunnel | RoutingStrategies.Bubble, true);
         b.Tag = key;
         var reordered = false;
         var sideDrag = false;
@@ -438,7 +438,7 @@ public partial class MainWindow
     void OpenWindowFor(Detached d, PixelPoint? at)
     {
         // a place on a screen that is no longer connected would open the window where nobody can see it
-#if ANDROID
+#if MOBILE
         WindowBounds? saved = null;
 #else
         var saved = _settings.Windows.TryGetValue(WindowStateKey(d.Key), out var s) && s.W > 0 && Screens.All.Any(sc => sc.WorkingArea.Contains(new PixelPoint(s.X + 40, s.Y + 20))) ? s : null;
@@ -606,7 +606,7 @@ public partial class MainWindow
     /// <summary>Bible text on the left, commentary and notes tiled on the right – each in its own window on the same screen.</summary>
     LayoutPreset DashboardLayout()
     {
-#if ANDROID
+#if MOBILE
         return new() { SideOpen = false };
 #else
         var screen = Screens.ScreenFromWindow(this) ?? Screens.Primary;
@@ -629,7 +629,7 @@ public partial class MainWindow
     /// <summary>The main window takes the left part of the screen so that the dashboard windows fit beside it.</summary>
     void PlaceMainForDashboard()
     {
-#if ANDROID
+#if MOBILE
         return;
 #else
         var screen = Screens.ScreenFromWindow(this) ?? Screens.Primary;

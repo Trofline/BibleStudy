@@ -68,7 +68,7 @@ public partial class MainWindow
         MaxBtn.Click += (_, _) => ToggleMaximize();
         CloseBtn.Click += (_, _) => Close();
 
-#if !ANDROID
+#if !MOBILE
         // window position and start mode
         if ((_settings.RememberWindow || _resuming) && _settings.WindowBounds is { } b && Screens.All.Any(s => s.WorkingArea.Contains(new PixelPoint(b.X + 40, b.Y + 20))))
         {

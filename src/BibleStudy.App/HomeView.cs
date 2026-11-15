@@ -117,7 +117,8 @@ public sealed class HomeView : UserControl
         {
             var go = new Button { Classes = { "primary" }, VerticalAlignment = VerticalAlignment.Center, Content = L("Weiterlesen: {0}  →", r.Label) };
             go.Click += (_, _) => ChapterChosen?.Invoke(r.Book, r.Chapter);
-            DockPanel.SetDock(go, Dock.Right);
+            if (AppPlatform.IsMobile) { DockPanel.SetDock(go, Dock.Bottom); go.HorizontalAlignment = HorizontalAlignment.Left; go.Margin = new(0, 10, 0, 0); }   // no room beside the title on a phone
+            else DockPanel.SetDock(go, Dock.Right);
             hero.Children.Add(go);
         }
         hero.Children.Add(new StackPanel { Children = { Heading(L("Bibel"), 46, "BsAccent"), Caption(L("{0} von {1} Kapiteln gelesen · {2} %", read, total, (total == 0 ? 0 : 100 * read / total)), 13) } });
@@ -137,7 +138,7 @@ public sealed class HomeView : UserControl
                     Child = new StackPanel { Spacing = 3, Children = { kindText, titleText, detailText } } };
                 Themed(card, Border.BackgroundProperty, "BsSurface"); Themed(card, Border.BorderBrushProperty, "BsBorder");
                 var o = open;
-                card.PointerPressed += (_, e) => { if (e.GetCurrentPoint(card).Properties.IsLeftButtonPressed) o(); };
+                card.OnPress((_, e) => { if (e.GetCurrentPoint(card).Properties.IsLeftButtonPressed) o(); });
                 wrap.Children.Add(card);
             }
             panel.Children.Add(wrap);
@@ -208,7 +209,7 @@ public sealed class HomeView : UserControl
         if (done) tile.Background = new SolidColorBrush(color, 0.10);
         else Themed(tile, Border.BackgroundProperty, "BsSurface");
         ToolTip.SetTip(tile, L("{0} · {1}/{2} gelesen", b.CommonName, count, b.NumberOfChapters));
-        tile.PointerPressed += (_, e) => { if (e.GetCurrentPoint(tile).Properties.IsLeftButtonPressed) Show(_books, _read, b.Id); };
+        tile.OnPress((_, e) => { if (e.GetCurrentPoint(tile).Properties.IsLeftButtonPressed) Show(_books, _read, b.Id); });
         return tile;
     }
 
@@ -260,7 +261,7 @@ public sealed class HomeView : UserControl
             chip.PointerPressed += (_, e) =>
             {
                 var p = e.GetCurrentPoint(chip).Properties;
-                if (p.IsRightButtonPressed || e.KeyModifiers.HasFlag(KeyModifiers.Control)) ReadChanged?.Invoke(b.Id, [chapter], !_read.Contains((b.Id, chapter)));
+                if (p.IsRightButtonPressed || e.KeyModifiers.HasFlag(Mods.Ctrl)) ReadChanged?.Invoke(b.Id, [chapter], !_read.Contains((b.Id, chapter)));
                 else if (p.IsLeftButtonPressed) ChapterChosen?.Invoke(b.Id, chapter);
             };
             wrap.Children.Add(chip);

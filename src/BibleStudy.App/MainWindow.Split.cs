@@ -74,7 +74,7 @@ public partial class MainWindow
                 if ((open ?? _lastWorkTab) is { } key && _windows.TryGetValue(key, out var d) && d.Win is null) Panes.Add(key);
             }
             _focusPane = Panes[^1];
-            StatusText.Text = L("Geteilte Ansicht an: bis zu vier Bereiche nebeneinander. Einen Reiter auf die Mitte eines Bereichs ziehen ersetzt ihn, auf seinen Rand legt ihn daneben.");
+            StatusText.Text = AppPlatform.IsMobile ? L("Geteilte Ansicht an.") : L("Geteilte Ansicht an: bis zu vier Bereiche nebeneinander. Einen Reiter auf die Mitte eines Bereichs ziehen ersetzt ihn, auf seinen Rand legt ihn daneben.");
             // the areas need the width: the side panel folds away (Ctrl+B brings it back)
             if (SidePanel.IsVisible) { SetPanelOpen(false); StatusText.Text += " " + L("Die Seitenleiste ist eingeklappt (Strg+B holt sie zurück)."); }
         }
@@ -90,6 +90,7 @@ public partial class MainWindow
         SaveSettings();
         LayoutPanes();
         RebuildTabStrip();
+        UpdateOrientationLock();
     }
 
     /// <summary>Puts the text and the tabs where they belong: in the areas of the split view, or (without it) the text with the open tab over it.</summary>

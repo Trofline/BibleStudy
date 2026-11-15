@@ -51,7 +51,7 @@ public partial class MainWindow
         _matBuilt = true;
 
         // left: the folder and its files
-        var pick = new Button { Classes = { "primary" }, Content = OperatingSystem.IsAndroid() ? L("Dateien hinzufügen …") : L("Ordner wählen …"), HorizontalAlignment = HorizontalAlignment.Stretch, HorizontalContentAlignment = HorizontalAlignment.Center };
+        var pick = new Button { Classes = { "primary" }, Content = AppPlatform.IsMobile ? L("Dateien hinzufügen …") : L("Ordner wählen …"), HorizontalAlignment = HorizontalAlignment.Stretch, HorizontalContentAlignment = HorizontalAlignment.Center };
         pick.Click += async (_, _) => await PickMaterialsFolderAsync();
         var refresh = new Button { Classes = { "tool" }, Width = 32, Height = 32, Content = new Icon { Data = Geometry.Parse("M21 12a9 9 0 1 1-3-6.7L21 8 M21 3v5h-5"), IconSize = 16 } };
         ToolTip.SetTip(refresh, L("Ordner neu einlesen"));
@@ -115,7 +115,23 @@ public partial class MainWindow
             left.IsVisible = splitter.IsVisible = !hide;
             right.Margin = new(hide ? 14 : 8, 12, 14, 12);
             ToolTip.SetTip(treeBtn, hide ? L("Ordnerliste einblenden") : L("Ordnerliste ausblenden"));
+            // a phone shows the list or the file, one at a time (side by side they would be a few words wide each)
+            if (IsPhone)
+            {
+                grid.ColumnDefinitions[0].MinWidth = 0; grid.ColumnDefinitions[0].MaxWidth = double.PositiveInfinity; grid.ColumnDefinitions[2].MinWidth = 0;
+                col.Width = hide ? new GridLength(0) : GridLength.Star;
+                grid.ColumnDefinitions[2].Width = hide ? GridLength.Star : new GridLength(0);
+                right.IsVisible = hide; splitter.IsVisible = false;
+                right.Margin = new(8, 12, 8, 12);
+            }
+            else
+            {
+                grid.ColumnDefinitions[0].MaxWidth = 380; grid.ColumnDefinitions[2].MinWidth = 220;
+                grid.ColumnDefinitions[2].Width = new GridLength(5, GridUnitType.Star);
+                right.IsVisible = true;
+            }
         }
+        _matApplyTree = ApplyTree;
         treeBtn.Click += (_, _) => { _settings.MaterialsTreeHidden = !_settings.MaterialsTreeHidden; SaveSettings(); ApplyTree(); };
         ApplyTree();
 
@@ -126,9 +142,11 @@ public partial class MainWindow
         else ShowMaterialEmpty();
     }
 
+    Action? _matApplyTree;
+
     async Task PickMaterialsFolderAsync()
     {
-        if (OperatingSystem.IsAndroid()) { await AddMaterialFilesAsync(); return; }
+        if (AppPlatform.IsMobile) { await AddMaterialFilesAsync(); return; }
         var start = Directory.Exists(_settings.MaterialsFolder) ? await StorageProvider.TryGetFolderFromPathAsync(_settings.MaterialsFolder) : null;
         var folders = await StorageProvider.OpenFolderPickerAsync(new FolderPickerOpenOptions { Title = L("Ordner mit den Materialien wählen"), SuggestedStartLocation = start });
         if (folders.Count == 0) return;
@@ -260,6 +278,7 @@ public partial class MainWindow
         if (!_settings.MaterialsOpen.Contains(path, StringComparer.OrdinalIgnoreCase)) { _settings.MaterialsOpen.Add(path); SaveSettings(); }
         if (!string.Equals(_matCurrent, path, StringComparison.OrdinalIgnoreCase)) KeepMaterialSpot(null, EventArgs.Empty);   // the place in the file left
         _matCurrent = path;
+        if (IsPhone && !_settings.MaterialsTreeHidden) { _settings.MaterialsTreeHidden = true; _matApplyTree?.Invoke(); }   // a phone: the file takes the place of the list
         RebuildMaterialStrip();
         _ = ShowMaterialAsync(path);
     }
@@ -662,7 +681,7 @@ public partial class MainWindow
     void OnMaterialsKey(object? sender, KeyEventArgs e)
     {
         // Ctrl+F while a file is seen: find in it (elsewhere Ctrl+F keeps its old meaning)
-        if (!e.Handled && e.Key == Key.F && e.KeyModifiers == KeyModifiers.Control && _matBuilt && _matCurrent is not null
+        if (!e.Handled && e.Key == Key.F && e.KeyModifiers == Mods.Ctrl && _matBuilt && _matCurrent is not null
             && MaterialsHost.IsEffectivelyVisible && TabActive(MaterialsTab) && !(FocusedControl() is Visual fv && fv.GetVisualAncestors().Contains(SidePanel)))
         {
             e.Handled = true;

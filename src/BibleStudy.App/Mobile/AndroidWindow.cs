@@ -1,4 +1,4 @@
-#if ANDROID
+#if MOBILE
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
@@ -70,7 +70,7 @@ public class Window : ContentControl
     public Window()
     {
         // a window has a background of its own; as a page it must cover what is below it
-        Background = Brushes.White;
+        this.Bind(BackgroundProperty, this.GetResourceObservable("BsBackground"));
     }
 
     public void Show() => Open(null);
@@ -90,6 +90,7 @@ public class Window : ContentControl
         if (_page is not null) { AppWindow.Pages?.BringToFront(_page); return; }
         Owner = owner as Window;
         if (AppWindow.Pages is not { } pages) return;
+        WrapLongText(this);
         _page = Build();
         pages.Add(_page, this);
         Opened?.Invoke(this, EventArgs.Empty);
@@ -121,10 +122,10 @@ public class Window : ContentControl
         DockPanel.SetDock(barBorder, Dock.Top);
 
         // a window that fits its content: it scrolls instead of cutting off its buttons
-        Control body = this;
+        Control body = new FitWidthPanel { Child = this };
         var fits = SizeToContent is SizeToContent.Height or SizeToContent.WidthAndHeight;
         if (fits && Content is not ScrollViewer)
-            body = new ScrollViewer { Content = this, HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled, VerticalScrollBarVisibility = ScrollBarVisibility.Auto };
+            body = new ScrollViewer { Content = body, HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled, VerticalScrollBarVisibility = ScrollBarVisibility.Auto };
         var dock = new DockPanel { Children = { barBorder, body } };
 
         var card = new Border
@@ -138,6 +139,17 @@ public class Window : ContentControl
         return new Border { Background = new SolidColorBrush(Color.FromArgb(0x99, 0, 0, 0)), Child = card };
     }
 
+    /// <summary>A long label or heading that does not wrap would reach beyond a phone screen (or make the whole page shrink): it wraps.</summary>
+    static void WrapLongText(Control root)
+    {
+        foreach (var tb in Avalonia.LogicalTree.LogicalExtensions.GetLogicalDescendants(root).OfType<TextBlock>())
+        {
+            if (tb.TextWrapping != TextWrapping.NoWrap || tb.TextTrimming != TextTrimming.None || (tb.Text?.Length ?? 0) < 16) continue;
+            if (Avalonia.LogicalTree.LogicalExtensions.GetLogicalAncestors(tb).Any(a => a is Button or MenuItem or TabItem or ComboBoxItem or ListBoxItem)) continue;
+            tb.TextWrapping = TextWrapping.Wrap;
+        }
+    }
+
     public void Close() => Close(null);
 
     public void Close(object? result)
@@ -148,6 +160,7 @@ public class Window : ContentControl
         if (e.Cancel) return;
         if (_page is not null) AppWindow.Pages?.Remove(_page);
         if (_page is Border { Child: Border { Child: DockPanel dock } }) dock.Children.Clear();   // the window can be shown again
+        if (Parent is FitWidthPanel fit) fit.Child = null;
         if (Parent is ScrollViewer sv) sv.Content = null;
         _page = null;
         _result = result;
@@ -205,6 +218,39 @@ public sealed class PageLayer : Panel
         if (_open.Count == 0) return false;
         _open[^1].Window.Close();
         return true;
+    }
+}
+
+/// <summary>
+/// A dialog is made for a desktop: its parts have fixed widths of 400, 500 or 640. On a phone they would reach beyond the screen. When the content
+/// is wider than the space, it is shown smaller (at least half) instead of cut off; content that adapts to the width is left as it is.
+/// </summary>
+public sealed class FitWidthPanel : Decorator
+{
+    double _scale = 1;
+
+    protected override Size MeasureOverride(Size available)
+    {
+        if (Child is not { } child) return default;
+        _scale = 1;
+        child.Measure(new Size(available.Width, double.PositiveInfinity));
+        if (double.IsInfinity(available.Width) || child.DesiredSize.Width <= available.Width + 0.5)
+        {
+            child.Measure(available);
+            return new Size(Math.Min(child.DesiredSize.Width, available.Width), child.DesiredSize.Height);
+        }
+        _scale = Math.Max(0.5, available.Width / child.DesiredSize.Width);
+        child.Measure(new Size(available.Width / _scale, double.IsInfinity(available.Height) ? double.PositiveInfinity : available.Height / _scale));
+        return new Size(available.Width, child.DesiredSize.Height * _scale);
+    }
+
+    protected override Size ArrangeOverride(Size final)
+    {
+        if (Child is not { } child) return final;
+        child.RenderTransformOrigin = RelativePoint.TopLeft;
+        child.RenderTransform = _scale < 1 ? new ScaleTransform(_scale, _scale) : null;
+        child.Arrange(new Rect(0, 0, final.Width / _scale, final.Height / _scale));
+        return final;
     }
 }
 #endif

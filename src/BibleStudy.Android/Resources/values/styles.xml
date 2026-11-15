@@ -3,5 +3,7 @@
   <style name="MyTheme.NoActionBar" parent="Theme.AppCompat.NoActionBar">
     <item name="android:windowActionBar">false</item>
     <item name="android:windowNoTitle">true</item>
+    <!-- the app also draws behind the camera cut-out (sideways, in landscape); the app keeps its content out of it, the strip is not left white -->
+    <item name="android:windowLayoutInDisplayCutoutMode">shortEdges</item>
   </style>
 </resources>

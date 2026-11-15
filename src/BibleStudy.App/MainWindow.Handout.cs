@@ -276,7 +276,7 @@ public partial class MainWindow
                 CornerRadius = new(10), Padding = new(8), Margin = new(0, 0, 8, 8), Cursor = new Cursor(StandardCursorType.Hand),
                 Child = new StackPanel { Spacing = 4, Children = { HandoutSketch(k), new TextBlock { Text = name, FontWeight = FontWeight.SemiBold, HorizontalAlignment = HorizontalAlignment.Center }, new TextBlock { Text = about, Classes = { "caption" }, TextWrapping = TextWrapping.Wrap, TextAlignment = TextAlignment.Center } } },
             };
-            card.PointerPressed += (_, _) => { s.HandoutStyle = k; SaveSettings(); Mark(); };
+            card.OnPress((_, _) => { s.HandoutStyle = k; SaveSettings(); Mark(); });
             cards.Add((k, card));
             looks.Children.Add(card);
         }

@@ -162,6 +162,6 @@ public partial class MainWindow
         File.WriteAllText(path, sb.ToString(), new UTF8Encoding(true));   // with byte order mark: Excel then reads the umlauts correctly
         StatusText.Text = L("Gespeichert: {0}", path);
         if (OperatingSystem.IsWindows()) try { System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo("explorer.exe", $"/select,\"{path}\"") { UseShellExecute = true }); } catch { /* optional */ }
-        else if (OperatingSystem.IsAndroid()) Shell.Open(path);   // to look at it or send it on
+        else if (AppPlatform.IsMobile) Shell.Open(path);   // to look at it or send it on
     }
 }
