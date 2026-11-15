@@ -44,6 +44,15 @@ jobs:
           echo "Using $APP"
           sudo xcode-select -s "$APP/Contents/Developer"
           xcodebuild -version
+          # some Xcode copies on the runner lack the plain "MacOSX.sdk" name that the build tools ask for
+          SDKS="$APP/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs"
+          ls -la "$SDKS" || true
+          if [ ! -e "$SDKS/MacOSX.sdk" ]; then
+            NEW=$(ls -d "$SDKS"/MacOSX*.sdk 2>/dev/null | sort -V | tail -1)
+            [ -n "$NEW" ] && sudo ln -s "$NEW" "$SDKS/MacOSX.sdk"
+          fi
+          ls -d "$APP"/Contents/Developer/Platforms/*.platform
+          xcrun -find install_name_tool
 
       - name: Install the iOS workload
         run: |
