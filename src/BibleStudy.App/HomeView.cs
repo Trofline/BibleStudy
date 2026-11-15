@@ -262,6 +262,7 @@ public sealed class HomeView : UserControl
             var chapter = c;
             chip.PointerPressed += (_, e) =>
             {
+                if (e.Pointer.Type == PointerType.Touch) { TouchChip(e, b.Id, chapter); return; }   // a finger that scrolls must not open a chapter
                 var p = e.GetCurrentPoint(chip).Properties;
                 if (p.IsRightButtonPressed || e.KeyModifiers.HasFlag(Mods.Ctrl)) ReadChanged?.Invoke(b.Id, [chapter], !_read.Contains((b.Id, chapter)));
                 else if (p.IsLeftButtonPressed) ChapterChosen?.Invoke(b.Id, chapter);
@@ -269,5 +270,31 @@ public sealed class HomeView : UserControl
             wrap.Children.Add(chip);
         }
         panel.Children.Add(wrap);
+    }
+
+    /// <summary>A finger on a chapter: lifting without moving opens it, holding marks it read or unread (no right click on a phone), moving is a scroll.</summary>
+    void TouchChip(PointerPressedEventArgs e, string book, int chapter)
+    {
+        var start = e.GetPosition(this);
+        var pointer = e.Pointer;
+        var over = false;
+        var timer = new Avalonia.Threading.DispatcherTimer { Interval = TimeSpan.FromMilliseconds(550) };
+        void Stop() { timer.Stop(); RemoveHandler(PointerReleasedEvent, Up); RemoveHandler(PointerMovedEvent, Move); }
+        void Move(object? s, PointerEventArgs a)
+        {
+            if (a.Pointer != pointer) return;
+            var p = a.GetPosition(this);
+            if (Math.Abs(p.X - start.X) > 9 || Math.Abs(p.Y - start.Y) > 9) { over = true; Stop(); }
+        }
+        void Up(object? s, PointerReleasedEventArgs a)
+        {
+            if (a.Pointer != pointer) return;
+            Stop();
+            if (!over) ChapterChosen?.Invoke(book, chapter);
+        }
+        timer.Tick += (_, _) => { over = true; Stop(); ReadChanged?.Invoke(book, [chapter], !_read.Contains((book, chapter))); };
+        AddHandler(PointerReleasedEvent, Up, Avalonia.Interactivity.RoutingStrategies.Tunnel, handledEventsToo: true);
+        AddHandler(PointerMovedEvent, Move, Avalonia.Interactivity.RoutingStrategies.Tunnel, handledEventsToo: true);
+        timer.Start();
     }
 }

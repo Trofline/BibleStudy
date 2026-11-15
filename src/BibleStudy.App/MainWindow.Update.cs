@@ -162,6 +162,7 @@ public partial class MainWindow
     {
         if (_updating || !UpdateMayAsk(manual)) return;
         _updater ??= new Updater(_http);
+        Updater.ApkMode = OperatingSystem.IsAndroid();   // the phone follows its own releases
         UpdateStatus.Text = L("Suche nach Updates …");
         UpdateInfo? info;
         try { info = await _updater.CheckAsync(AppPaths.Version, AppPaths.IsPortable); }
@@ -175,7 +176,7 @@ public partial class MainWindow
         _askedUpdate = info.Version;
 
         var plan = AppPlatform.IsMobile ? null : await PlanQuickUpdateAsync(info);   // Android: the new app comes from the download page
-        var canInstall = plan is not null || (OperatingSystem.IsWindows() && (AppPaths.IsInstalled || AppPaths.IsPortable));   // the full package installs itself on Windows only; elsewhere the download page opens
+        var canInstall = plan is not null || (OperatingSystem.IsWindows() && (AppPaths.IsInstalled || AppPaths.IsPortable)) || (OperatingSystem.IsAndroid() && info.DownloadUrl.Length > 0);   // the full package installs itself on Windows only; elsewhere the download page opens
         if (!canInstall)
         {
             if (OperatingSystem.IsIOS()) { UpdateStatus.Text = L("Neue Version {0} verfügbar. Auf dem iPhone kommt sie über SideStore: Öffne SideStore und aktualisiere BibleStudy dort.", info.Version); return; }
@@ -218,6 +219,9 @@ public partial class MainWindow
 
     async Task InstallUpdateAsync(UpdateInfo info, DeltaPlan? plan = null, bool onClose = false)
     {
+#if ANDROID
+        if (info.AssetName.EndsWith(".apk", StringComparison.OrdinalIgnoreCase)) { await InstallApkAsync(info); return; }
+#endif
         _updating = true;
         try
         {

@@ -16,6 +16,9 @@ on:
       xcode:
         description: "Xcode to use, e.g. 26.0 (empty = the newest installed on the runner)"
         required: false
+      fast:
+        description: "true = test build: the program is interpreted instead of compiled ahead of time (much faster to build, a bit slower on the phone)"
+        required: false
 
 permissions:
   contents: write   # needed only to attach the file to the release
@@ -67,10 +70,13 @@ jobs:
           dotnet workload list
 
       - name: Build the app (unsigned)
+        env:
+          FASTIN: ${{ github.event.inputs.fast }}
         run: |
+          FAST=""; [ "$FASTIN" = "true" ] && FAST="-p:UseInterpreter=true -p:MtouchInterpreter=all"
           VERSION="${TAG##*-}"; VERSION="${VERSION#v}"
           dotnet build src/BibleStudy.iOS/BibleStudy.iOS.csproj -c Release -r ios-arm64 \
-            -p:EnableCodeSigning=false -p:ApplicationDisplayVersion=$VERSION -p:Version=$VERSION -v:n
+            -p:EnableCodeSigning=false -p:ApplicationDisplayVersion=$VERSION -p:Version=$VERSION $FAST -v:n
           APP=$(find src/BibleStudy.iOS/bin/Release -name "*.app" -maxdepth 6 -type d | head -1)
           echo "App folder: $APP"
           test -n "$APP"

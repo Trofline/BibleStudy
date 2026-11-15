@@ -14,9 +14,14 @@ public sealed class Updater(HttpClient http)
 {
     public const string Repo = "trofline/BibleStudy";
 
+    /// <summary>Set by the Android app: its updates are the APK of the "android-…" releases, not the installer of a PC.</summary>
+    public static bool ApkMode;
+
     public static Version? Parse(string v)
     {
-        v = v.Trim().TrimStart('v', 'V');
+        v = v.Trim();
+        if (v.StartsWith("android-", StringComparison.Ordinal) || v.StartsWith("ios-", StringComparison.Ordinal)) v = v[(v.LastIndexOf('-') + 1)..];   // "android-beta-1.9.2"
+        v = v.TrimStart('v', 'V');
         var dash = v.IndexOfAny(['-', '+']);
         if (dash >= 0) v = v[..dash];
         return Version.TryParse(v, out var parsed) ? parsed : null;
@@ -48,15 +53,17 @@ public sealed class Updater(HttpClient http)
         foreach (var r in doc.RootElement.EnumerateArray())
         {
             if (r.TryGetProperty("draft", out var draft) && draft.GetBoolean()) continue;
+            var tagName = r.GetProperty("tag_name").GetString() ?? "";
+            if (tagName.StartsWith("android-", StringComparison.Ordinal) != ApkMode || tagName.StartsWith("ios-", StringComparison.Ordinal)) continue;   // a phone follows the releases of its own kind
             if (Parse(r.GetProperty("tag_name").GetString() ?? "") is not { } v || v <= current || (bestVersion is not null && v <= bestVersion)) continue;
             var version = v.ToString();
             string? manifest = null;
             foreach (var a in r.GetProperty("assets").EnumerateArray())
                 if (a.GetProperty("name").GetString() == DeltaUpdate.ManifestAsset(rid, version)) manifest = a.GetProperty("browser_download_url").GetString();
-            if (r.TryGetProperty("prerelease", out var pre) && pre.GetBoolean() && manifest is null) continue;   // a real test version is not for everyone
+            if (r.TryGetProperty("prerelease", out var pre) && pre.GetBoolean() && manifest is null && !ApkMode) continue;   // a real test version is not for everyone
             var notes = r.TryGetProperty("body", out var b) ? b.GetString() ?? "" : "";
             var page = r.GetProperty("html_url").GetString() ?? "";
-            var package = PackageOf(r, version, notes, page, portable ? "Portable" : "Setup");
+            var package = PackageOf(r, version, notes, page, ApkMode ? ".apk" : portable ? "Portable" : "Setup");
             if (package is null && manifest is null) continue;
             best = (package ?? new UpdateInfo(version, notes, "", "", null, 0, page)) with { ManifestUrl = manifest };
             bestVersion = v;
@@ -131,6 +138,7 @@ public sealed class Updater(HttpClient http)
             // a pre-release is shown only as a quick release (it has lists of files); a real test version stays out
             if (r.TryGetProperty("prerelease", out var p) && p.GetBoolean() && !(r.TryGetProperty("assets", out var listed) && listed.ValueKind == JsonValueKind.Array && listed.EnumerateArray().Any(a => (a.GetProperty("name").GetString() ?? "").StartsWith("BibleStudy-Update-", StringComparison.Ordinal)))) continue;
             var tag = r.GetProperty("tag_name").GetString() ?? "";
+            if (tag.StartsWith("android-", StringComparison.Ordinal) || tag.StartsWith("ios-", StringComparison.Ordinal)) continue;   // the phone apps have their own releases
             if (Parse(tag) is not { } v) continue;
             DateTime? date = r.TryGetProperty("published_at", out var pa) && pa.GetString() is { } s && DateTime.TryParse(s, null, System.Globalization.DateTimeStyles.RoundtripKind, out var dt) ? dt.ToLocalTime() : null;
             var body = r.TryGetProperty("body", out var b) ? b.GetString() ?? "" : "";
