@@ -48,7 +48,7 @@ function New-UpdatePack([string]$folder, [string]$rid) {
     $prev = Join-Path $rel "previous-$rid"
     New-Item -ItemType Directory -Force $prev | Out-Null
     # the newest published release, a quick one too; without a list there (or without gh) every file goes into this pack
-    $newest = gh release list --repo trofline/BibleStudy --limit 1 --exclude-drafts --json tagName --jq '.[0].tagName' 2>$null
+    $newest = ((gh release list --repo trofline/BibleStudy --limit 40 --exclude-drafts --json tagName 2>$null | ConvertFrom-Json) | Where-Object { $_.tagName -like 'v*' } | Select-Object -First 1).tagName   # the phone releases carry no lists
     if ($newest) { gh release download $newest --repo trofline/BibleStudy --pattern "BibleStudy-Update-$rid-*.json" --dir $prev --clobber 2>$null }
     $base = Get-ChildItem $prev -File | Select-Object -First 1
     $packArgs = @($folder, $rid, $Version, $rel); if ($base) { $packArgs += $base.FullName }
