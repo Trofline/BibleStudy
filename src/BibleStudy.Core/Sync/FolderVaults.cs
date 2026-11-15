@@ -9,8 +9,14 @@ public interface ISyncVaults
     string Fingerprint(string name);
     /// <summary>A consistent copy of the vault in a new file.</summary>
     void Snapshot(string name, string path);
-    /// <summary>Brings what the copy holds into the vault (creates the vault when it does not exist yet). Nothing is deleted or overwritten.</summary>
-    Task MergeAsync(string name, string snapshotPath);
+    /// <summary>
+    /// Brings what the copy holds into the vault (creates the vault when it does not exist yet). <paramref name="basePath"/> is the state both had after their
+    /// last comparison (null = none yet): with it, changes and deletions of the other side are taken over (see <see cref="VaultStore.MergeFrom(string, string, string?)"/>);
+    /// without it nothing is deleted or overwritten. The copy may be changed.
+    /// </summary>
+    Task MergeAsync(string name, string snapshotPath, string? basePath);
+    /// <summary>When the vault was last written (for noticing a change at once; the default knows nothing).</summary>
+    DateTime Stamp(string name) => DateTime.MinValue;
 }
 
 /// <summary>The vaults in vaults/NAME/vault.db below a root folder. The program overrides <see cref="MergeAsync"/> to merge into the vault that is open.</summary>
@@ -28,16 +34,19 @@ public class FolderVaults(string root, Func<string, bool>? skip = null, string c
 
     public string Fingerprint(string name) => new VaultStore(PathOf(name), name).Fingerprint();
 
+    public DateTime Stamp(string name) =>
+        new[] { "", "-wal", "-journal" }.Select(s => PathOf(name) + s).Where(File.Exists).Select(File.GetLastWriteTimeUtc).DefaultIfEmpty(DateTime.MinValue).Max();
+
     public void Snapshot(string name, string path)
     {
         if (File.Exists(path)) File.Delete(path);
         new VaultStore(PathOf(name), name).BackupTo(path);
     }
 
-    public virtual Task MergeAsync(string name, string snapshotPath)
+    public virtual Task MergeAsync(string name, string snapshotPath, string? basePath)
     {
         var target = PathOf(name);
-        if (File.Exists(target)) new VaultStore(target, name).MergeFrom(snapshotPath, copySuffix);
+        if (File.Exists(target)) new VaultStore(target, name).MergeFrom(snapshotPath, copySuffix, basePath);
         else { Directory.CreateDirectory(Path.GetDirectoryName(target)!); File.Copy(snapshotPath, target); }
         return Task.CompletedTask;
     }

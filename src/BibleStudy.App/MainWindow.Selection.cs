@@ -36,6 +36,10 @@ public partial class MainWindow
         public int AnchorRaw;
         public Point Start, Last;
         public bool Moved;
+        /// <summary>Started by a long press of a finger on a word (see <c>TryStartWordDrag</c>): lifting without moving opens the verse menu for the word.</summary>
+        public bool TouchWord;
+        public int Verse;
+        public Border? Box;
         public List<CellRef> Cells = [];
         public ScrollViewer? Scroller;
         public DispatcherTimer? Timer;
@@ -199,6 +203,13 @@ public partial class MainWindow
         _drag = null;
         d.Timer?.Stop();
         try { ((IInputElement?)ReaderScroll).Focus(); } catch { /* no focus change needed */ }
+        if (d.TouchWord)
+        {
+            if (!finished) return;
+            if (d.Moved && _sel is { Parts.Count: > 0 }) OnSelectionMade();
+            else if (d.Box is { } box) ShowVerseMenu(d.Verse, box);   // the word stays selected: the menu works on it
+            return;
+        }
         if (finished && d.Moved && _sel is { Parts.Count: > 0 }) OnSelectionMade();
         else if (!d.Moved)
         {

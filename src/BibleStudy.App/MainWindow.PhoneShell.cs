@@ -165,9 +165,12 @@ public partial class MainWindow
 
     // ---- the sheet that comes up from below ----------------------------------------------------------------------------------
 
+    Border? _sheetScrim;
+    static readonly IBrush ScrimBrush = new SolidColorBrush(Color.FromArgb(110, 0, 0, 0));
+
     Grid BuildSheetLayer()
     {
-        var scrim = new Border { Background = new SolidColorBrush(Color.FromArgb(110, 0, 0, 0)) };
+        var scrim = _sheetScrim = new Border { Background = ScrimBrush };
         scrim.PointerPressed += (_, e) => { ShowSheet(null); e.Handled = true; };
         _sheetTitle = new TextBlock { FontSize = 17, FontWeight = FontWeight.SemiBold, VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(16, 0, 0, 0) };
         var close = IconButton("M18 6L6 18 M6 6l12 12", L("Schließen"), () => ShowSheet(null), 44);
@@ -199,6 +202,7 @@ public partial class MainWindow
         if (_sheetLayer is null || _sheetBody is null || _sheetBox is null) return;
         if (title is null) { _sheetLayer.IsVisible = false; _sheetBody.Children.Clear(); return; }
         _sheetTitle!.Text = title;
+        if (_sheetScrim is { } scrim) scrim.Background = ScrimBrush;
         _sheetBody.Children.Clear();
         foreach (var c in content) _sheetBody.Children.Add(c);
         _sheetBox.MaxHeight = Math.Max(260, Bounds.Height * 0.82);
@@ -237,9 +241,36 @@ public partial class MainWindow
     /// <summary>A tile for a button of the desktop bars: its symbol, its label and, when it is a switch, whether it is on.</summary>
     Button TileFor(Control source, string? label = null)
     {
-        var icon = source.GetLogicalDescendants().OfType<Icon>().FirstOrDefault()?.Data;
+        var icon = source.GetLogicalDescendants().OfType<Icon>().FirstOrDefault()?.Data ?? FallbackIcon(source);
         var on = source is ToggleButton { IsChecked: true };
+        label ??= source == QuickMarkBtn ? L("Schnellmarkieren") : source == ModeTopBtn ? L("Modus") + ": " + ModeTopText.Text : null;
         return SheetTile(label ?? SpillLabel(source), icon, () => { ShowSheet(null); Dispatcher.UIThread.Post(() => PressButton(source), DispatcherPriority.Background); }, on);
+    }
+
+    /// <summary>A symbol for the buttons of the desktop bars that show only a word or a colour dot.</summary>
+    Geometry FallbackIcon(Control source) => Geo(
+        source == QuickMarkBtn ? "M12 20h9 M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"
+        : source == ModeTopBtn ? "M4 21v-7 M4 10V3 M12 21v-9 M12 8V3 M20 21v-5 M20 12V3 M1 14h6 M9 8h6 M17 16h6"
+        : "M12 12m-3 0a3 3 0 1 0 6 0a3 3 0 1 0-6 0");
+
+    /// <summary>The font size as a small bar at the bottom: the text above stays in sight while it changes.</summary>
+    void ShowFontBar()
+    {
+        var value = new TextBlock { FontSize = 15, FontWeight = FontWeight.SemiBold, VerticalAlignment = VerticalAlignment.Center, HorizontalAlignment = HorizontalAlignment.Center };
+        void Show() => value.Text = $"{FontSlider.Value:0}";
+        Button Step(string text, double size, int by)
+        {
+            var b = new Button { Content = new TextBlock { Text = text, FontSize = size, FontWeight = FontWeight.SemiBold }, Width = 72, Height = 48, HorizontalContentAlignment = HorizontalAlignment.Center, VerticalContentAlignment = VerticalAlignment.Center };
+            b.Click += (_, _) => { FontSlider.Value = Math.Clamp(FontSlider.Value + by, FontSlider.Minimum, FontSlider.Maximum); Show(); };
+            return b;
+        }
+        var row = new Grid { ColumnDefinitions = new ColumnDefinitions("Auto,*,Auto"), Margin = new Thickness(4, 0, 4, 4) };
+        var minus = Step("A−", 14, -1); var plus = Step("A+", 20, 1);
+        Grid.SetColumn(value, 1); Grid.SetColumn(plus, 2);
+        row.Children.Add(minus); row.Children.Add(value); row.Children.Add(plus);
+        Show();
+        ShowSheet(L("Schriftgröße"), row);
+        if (_sheetScrim is { } s) s.Background = Brushes.Transparent;   // the reading text stays bright behind it
     }
 
     static Control Heading(string text) => new TextBlock { Text = text, Classes = { "eyebrow" }, Margin = new Thickness(6, 10, 0, 2) };
@@ -265,8 +296,7 @@ public partial class MainWindow
         Control[] mark = [MarkBtn, QuickMarkBtn, BookmarkBtn];
         var size = new Control[]
         {
-            SheetTile("A−", null, () => { FontMinusBtn.RaiseEvent(new RoutedEventArgs(Button.ClickEvent)); }),
-            SheetTile("A+", null, () => { FontPlusBtn.RaiseEvent(new RoutedEventArgs(Button.ClickEvent)); }),
+            SheetTile(L("Schriftgröße"), Geo("M4 7V4h16v3 M9 20h6 M12 4v16"), () => Dispatcher.UIThread.Post(ShowFontBar, DispatcherPriority.Background)),
         };
         ShowSheet(L("Werkzeuge"),
             Heading(L("Dieses Kapitel")), Grid3(tools.Select(c => TileFor(c))),

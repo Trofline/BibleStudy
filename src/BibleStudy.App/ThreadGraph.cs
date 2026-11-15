@@ -30,7 +30,9 @@ public sealed class ThreadGraph : Control
     }
 
     public const double GraphWidth = 360;
-    const double Gutter = 236, BarWidth = 8, Margin = 6;
+    const double BarWidth = 8, Margin = 6;
+    /// <summary>Where the threads end and the book bar begins; a narrow pane (a phone) keeps only a short place for the book names.</summary>
+    double Gutter => Math.Max(40, Bounds.Width - (Bounds.Width < 220 ? 40 : 124));
     static readonly IBrush Muted = new SolidColorBrush(Color.Parse("#9a9890"));
     static readonly IBrush Text = new SolidColorBrush(Color.Parse("#ecebe6"));
 
@@ -79,7 +81,7 @@ public sealed class ThreadGraph : Control
             }
     }
 
-    static Point Bezier(double y, double ty, double s)
+    Point Bezier(double y, double ty, double s)
     {
         var bend = Gutter * 0.55; double u = 1 - s;
         return new Point(3 * u * s * s * (Gutter - bend) + 3 * u * u * s * bend + s * s * s * (Gutter + 2), u * u * u * y + 3 * u * u * s * y + 3 * u * s * s * ty + s * s * s * ty);
@@ -90,8 +92,9 @@ public sealed class ThreadGraph : Control
         dc.DrawRectangle(Brushes.Transparent, null, new Rect(Bounds.Size));
         if (_graph?.Links is null)
         {
-            var hint = new FormattedText(L("Querverweis-Daten laden ▸"), CultureInfo.CurrentUICulture, FlowDirection.LeftToRight, Typeface.Default, 13, Text);
-            dc.DrawText(hint, new Point(24, 24));
+            var hint = new FormattedText(L("Querverweis-Daten laden ▸"), CultureInfo.CurrentUICulture, FlowDirection.LeftToRight, Typeface.Default, 13, Muted);
+            hint.MaxTextWidth = Math.Max(40, Bounds.Width - 12);
+            dc.DrawText(hint, new Point(Bounds.Width < 220 ? 6 : 24, 24));
             return;
         }
         if (_dirty || Math.Abs(_builtHeight - Bounds.Height) > 0.5) Build();

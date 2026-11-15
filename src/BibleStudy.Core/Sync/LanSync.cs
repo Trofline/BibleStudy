@@ -78,6 +78,7 @@ public sealed class LanSync : IDisposable
         _ = Task.Run(() => AcceptLoop(_tcp, ct));
         _ = Task.Run(() => AnnounceLoop(ct));
         _ = Task.Run(() => HostLoop(ct));
+        _ = Task.Run(() => WatchLoop(ct));
     }
 
     public void Stop()
@@ -164,6 +165,68 @@ public sealed class LanSync : IDisposable
         _ = Task.Run(() => SyncWithAsync(peer));
     }
 
+    // ---- at once after a change -------------------------------------------------------------------------------------------
+    readonly Dictionary<string, DateTime> _stamps = new(StringComparer.OrdinalIgnoreCase);
+    long _changedAt;   // ticks of the first change that is not sent yet (0 = none)
+    int _running;
+
+    /// <summary>Something was changed here (or the app came to the front): the devices that can be reached get it in a moment.</summary>
+    public void Nudge() => Interlocked.Exchange(ref _changedAt, DateTime.UtcNow.AddSeconds(-10).Ticks);
+
+    /// <summary>Looks every few seconds whether a vault was written; three seconds after the last change the devices in reach get it (not only every two minutes).</summary>
+    async Task WatchLoop(CancellationToken ct)
+    {
+        ReadStamps();
+        while (!ct.IsCancellationRequested)
+        {
+            try { await Task.Delay(TimeSpan.FromSeconds(2), ct); } catch (OperationCanceledException) { return; }
+            if (!_cfg.Auto) continue;
+            if (ReadStamps()) Interlocked.CompareExchange(ref _changedAt, DateTime.UtcNow.Ticks, 0);
+            var since = Interlocked.Read(ref _changedAt);
+            if (since == 0 || DateTime.UtcNow - new DateTime(since, DateTimeKind.Utc) < TimeSpan.FromSeconds(3)) continue;
+            await SyncKnownAsync();
+        }
+    }
+
+    /// <summary>True when a vault was written since the last look.</summary>
+    bool ReadStamps()
+    {
+        var changed = false;
+        lock (_stamps)
+        try
+        {
+            foreach (var n in _vaults.Names())
+            {
+                var s = _vaults.Stamp(n);
+                if (_stamps.TryGetValue(n, out var old) && old != s) changed = true;
+                _stamps[n] = s;
+            }
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException) { }
+        return changed;
+    }
+
+    /// <summary>Compares at once with every device that was seen or whose address is known (one round at a time). The program calls it before it closes too.</summary>
+    public async Task SyncKnownAsync()
+    {
+        if (Interlocked.Exchange(ref _running, 1) == 1) return;
+        try
+        {
+            Interlocked.Exchange(ref _changedAt, 0);
+            var peers = Peers.ToList();
+            foreach (var p in peers) { _tried[p.Id] = DateTime.UtcNow; await SyncWithAsync(p); }
+            foreach (var h in _cfg.HostList())
+            {
+                var at = h.LastIndexOf(':');
+                if (at < 0 || !IPAddress.TryParse(h[..at], out var ip) || !int.TryParse(h[(at + 1)..], out var port) || peers.Any(p => p.Address.Equals(ip))) continue;
+                _tried["host:" + h] = DateTime.UtcNow;
+                await SyncWithAsync(new SyncPeer("host:" + h, h, ip, port, DateTime.UtcNow));
+            }
+            ReadStamps();   // what the comparison itself wrote is no change to send
+        }
+        finally { Interlocked.Exchange(ref _running, 0); }
+    }
+
     /// <summary>Tries the addresses of devices that were seen or given before (the pairing address carries one): for a device that does not hear the call-out.</summary>
     async Task HostLoop(CancellationToken ct)
     {
@@ -225,11 +288,13 @@ public sealed class LanSync : IDisposable
             {
                 using var stream = c.GetStream();
                 using var ch = await Channel.Open(stream, _cfg.KeyBytes!, false, limit.Token);
+                var asker = "";
                 while (await ch.Receive(limit.Token) is { } msg)
                 {
                     switch (msg.Type)
                     {
                         case MsgList:
+                            if (ReadInfo(msg.Data) is { } asked) asker = asked.Id;
                             if (c.Client.RemoteEndPoint is IPEndPoint remote && ReadInfo(msg.Data) is { Port: > 0 } who) _cfg.RememberHost(remote.Address, who.Port, _cfgPath);   // so that it can be found again without the call-out
                             await ch.Send(MsgList, ListPayload(), limit.Token);
                             break;
@@ -249,7 +314,8 @@ public sealed class LanSync : IDisposable
                             try
                             {
                                 await File.WriteAllBytesAsync(file, msg.Data.AsMemory(4 + len).ToArray(), limit.Token);
-                                await MergeInto(name, file);
+                                await MergeInto(name, file, asker);
+                                if (asker.Length > 0) await Task.Run(() => SaveBase(asker, name), limit.Token);
                                 await ch.Send(MsgOk, Encoding.UTF8.GetBytes(await Task.Run(() => _vaults.Fingerprint(name), limit.Token)), limit.Token);
                             }
                             finally { TryDelete(file); }
@@ -258,7 +324,7 @@ public sealed class LanSync : IDisposable
                     }
                 }
             }
-            catch (Exception ex) when (ex is IOException or CryptographicException or OperationCanceledException or SocketException or InvalidDataException or ObjectDisposedException or ArgumentException)
+            catch (Exception ex) when (ex is IOException or CryptographicException or OperationCanceledException or SocketException or InvalidDataException or ObjectDisposedException or ArgumentException or UnauthorizedAccessException or Microsoft.Data.Sqlite.SqliteException)
             { /* a device with another code, or the line broke: nothing happens */ }
         }
     }
@@ -321,7 +387,7 @@ public sealed class LanSync : IDisposable
                         try
                         {
                             await File.WriteAllBytesAsync(file, data.Data, ct);
-                            if (await MergeInto(have ?? theirName, file)) changed++;
+                            if (await MergeInto(have ?? theirName, file, peer.Id)) changed++;
                         }
                         finally { TryDelete(file); }
                     }
@@ -345,7 +411,11 @@ public sealed class LanSync : IDisposable
                     }
                     finally { TryDelete(file); }
                 }
-                if (nowMine is not null) Remember(key, await Task.Run(() => _vaults.Fingerprint(nowMine), ct), theirNow);
+                if (nowMine is not null)
+                {
+                    Remember(key, await Task.Run(() => _vaults.Fingerprint(nowMine), ct), theirNow);
+                    if (peer.Id.Length > 0) await Task.Run(() => SaveBase(peer.Id, nowMine), ct);
+                }
             }
             _cfg.LastTime = DateTime.Now.ToString("yyyy-MM-dd HH:mm"); _cfg.LastPeer = peer.Name;
             _cfg.Save(_cfgPath);
@@ -366,6 +436,19 @@ public sealed class LanSync : IDisposable
         lock (_cfg.Done) _cfg.Done[key] = mine + "|" + theirs;
     }
 
+    /// <summary>The state of a vault after the last comparison with one device: the third copy that shows which side changed or deleted what.</summary>
+    string BasePath(string peerId, string vault) =>
+        Path.Combine(Path.GetDirectoryName(Path.GetFullPath(_cfgPath))!, "sync-base", string.Concat(peerId.Where(char.IsLetterOrDigit)), vault.ToLowerInvariant() + ".db");
+
+    void SaveBase(string peerId, string vault)
+    {
+        var path = BasePath(peerId, vault);
+        Directory.CreateDirectory(Path.GetDirectoryName(path)!);
+        var fresh = path + ".new";
+        _vaults.Snapshot(vault, fresh);
+        File.Move(fresh, path, true);
+    }
+
     string TempFile() => Path.Combine(_tmp, Guid.NewGuid().ToString("N") + ".db");
 
     static void TryDelete(string file)
@@ -374,13 +457,18 @@ public sealed class LanSync : IDisposable
     }
 
     /// <summary>Merges a copy into a vault, one merge at a time. True when the vault is different afterwards.</summary>
-    async Task<bool> MergeInto(string name, string file)
+    async Task<bool> MergeInto(string name, string file, string peerId)
     {
         await _mergeGate.WaitAsync();
         try
         {
             var before = _vaults.Names().Contains(name, StringComparer.OrdinalIgnoreCase) ? await Task.Run(() => _vaults.Fingerprint(name)) : "";
-            await _vaults.MergeAsync(name, file);
+            // a copy of the base: the merge opens it, and an open file could not be replaced afterwards
+            var basePath = peerId.Length > 0 ? BasePath(peerId, name) : null;
+            string? baseCopy = null;
+            if (basePath is not null && File.Exists(basePath)) { baseCopy = TempFile(); File.Copy(basePath, baseCopy); }
+            try { await _vaults.MergeAsync(name, file, baseCopy); }
+            finally { if (baseCopy is not null) TryDelete(baseCopy); }
             var after = await Task.Run(() => _vaults.Fingerprint(name));
             if (before == after) return false;
             VaultsChanged?.Invoke([name]);

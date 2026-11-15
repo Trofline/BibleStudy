@@ -19,12 +19,12 @@ public partial class MainWindow
     /// <summary>The vaults of this program for the comparison: what arrives is merged into the vault that is open, on the interface thread.</summary>
     sealed class AppVaults(MainWindow w, string root) : FolderVaults(root, n => w.IsGuestVault(n), L("Abgleich"))
     {
-        public override async Task MergeAsync(string name, string snapshotPath)
+        public override async Task MergeAsync(string name, string snapshotPath, string? basePath)
         {
             await Dispatcher.UIThread.InvokeAsync(() =>
             {
                 var home = Path.Combine(root, "vaults", name);
-                if (File.Exists(Path.Combine(home, "vault.db"))) w.StoreOf(name).MergeFrom(snapshotPath, L("Abgleich"));
+                if (File.Exists(Path.Combine(home, "vault.db"))) w.StoreOf(name).MergeFrom(snapshotPath, L("Abgleich"), basePath);
                 else { Directory.CreateDirectory(home); File.Copy(snapshotPath, Path.Combine(home, "vault.db")); }
                 w._readStore.MergeFrom(snapshotPath);
             });
@@ -105,6 +105,28 @@ public partial class MainWindow
             _lan = null;
             SyncStatus.Text = L("Der Abgleich konnte nicht starten: ") + ex.Message;
         }
+    }
+
+    /// <summary>Compares soon with the devices in reach (the app came to the front again).</summary>
+    internal void SyncSoon() { if (_lan is null) StartSync(); _lan?.Nudge(); }
+
+    bool _syncedAtClose;
+
+    /// <summary>
+    /// The program closes: what was written in the last seconds goes to the devices in reach first (eight seconds at the most), so the other device
+    /// is up to date without this one staying open. True when the closing has to wait for it.
+    /// </summary>
+    bool SyncBeforeClose()
+    {
+        if (_syncedAtClose || _lan is not { } lan || _syncCfg.Key is null) return false;
+        _syncedAtClose = true;
+        Dispatcher.UIThread.Post(async () =>
+        {
+            try { AutoSaveDocument(); SaveNoteDraft(); } catch (Exception ex) { ErrorLog.Write(ex); }
+            try { await Task.WhenAny(Task.Run(lan.SyncKnownAsync), Task.Delay(TimeSpan.FromSeconds(8))); } catch (Exception ex) { ErrorLog.Write(ex); }
+            Close();
+        });
+        return true;
     }
 
     void RestartSync() { _lan?.Stop(); _lan = null; StartSync(); }

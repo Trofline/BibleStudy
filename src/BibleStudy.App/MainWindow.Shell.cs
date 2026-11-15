@@ -152,6 +152,7 @@ public partial class MainWindow
             Hide();
             return;
         }
+        if (SyncBeforeClose()) { e.Cancel = true; Hide(); return; }
         // remember where and how the program was left (not the focus-mode state)
         var maximized = _preFocus is { } p ? p.State == WindowState.Maximized : WindowState == WindowState.Maximized;
         if (WindowState != WindowState.Minimized && !_settings.FocusMode && WindowState == WindowState.Normal)
@@ -175,6 +176,7 @@ public partial class MainWindow
     {
         try { AutoSaveDocument(); SaveNoteDraft(); } catch (Exception ex) { ErrorLog.Write(ex); }
         try { _settings.LastLayout = CaptureLayout(); SaveSettings(); } catch (Exception ex) { ErrorLog.Write(ex); }
+        if (_lan is { } lan) _ = Task.Run(lan.SyncKnownAsync);   // what was just written goes to the other device while the system still lets the app run
     }
 
     // ---- tray ---------------------------------------------------------------------------------------------------------

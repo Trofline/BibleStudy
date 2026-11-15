@@ -82,6 +82,43 @@ public class LanSyncTests : IDisposable
     }
 
     [Fact]
+    public async Task AfterTheFirstRound_ChangesReplaceAndDeletionsTravel()
+    {
+        var key = SyncCode.NewKey();
+        using var a = new Device(Path.Combine(_dir, "a"), key, "PC");
+        using var b = new Device(Path.Combine(_dir, "b"), key, "Handy");
+        a.Vault("Standard").SetNote(new VerseRef("Joh", 3, 16), "erste Fassung");
+        a.Vault("Standard").SetNote(new VerseRef("Ps", 23, 1), "bleibt nicht");
+        Assert.Null((await a.Sync.SyncWithAsync(b.AsPeer())).Error);
+
+        b.Vault("Standard").SetNote(new VerseRef("Joh", 3, 16), "zweite Fassung vom Handy");   // changed on the phone
+        a.Vault("Standard").SetNote(new VerseRef("Ps", 23, 1), "");                            // deleted on the PC
+        Assert.Null((await b.Sync.SyncWithAsync(a.AsPeer())).Error);
+
+        foreach (var d in new[] { a, b })
+        {
+            var notes = d.Vault("Standard").GetNotes();
+            Assert.Equal("zweite Fassung vom Handy", Assert.Single(notes).Text);
+        }
+    }
+
+    [Fact]
+    public async Task AChange_ReachesTheOtherDevice_WithinSeconds_WithoutAsking()
+    {
+        var key = SyncCode.NewKey();
+        using var a = new Device(Path.Combine(_dir, "a"), key, "PC");
+        using var b = new Device(Path.Combine(_dir, "b"), key, "Handy");
+        a.Vault("Standard").SetNote(new VerseRef("Joh", 3, 16), "erste");
+        Assert.Null((await a.Sync.SyncWithAsync(b.AsPeer())).Error);   // paired once: a knows where b is
+        a.Cfg.Auto = true;
+        await Task.Delay(2500);   // the watch has looked at the vaults once
+
+        a.Vault("Standard").SetNote(new VerseRef("Joh", 3, 16), "geändert am PC");
+        for (var i = 0; i < 120 && b.Vault("Standard").GetNotes().Single().Text != "geändert am PC"; i++) await Task.Delay(100);
+        Assert.Equal("geändert am PC", b.Vault("Standard").GetNotes().Single().Text);
+    }
+
+    [Fact]
     public async Task Devices_FindEachOtherByThemselves_AndSync()
     {
         var key = SyncCode.NewKey();

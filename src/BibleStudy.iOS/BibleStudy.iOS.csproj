@@ -14,9 +14,9 @@
     <RootNamespace>BibleStudy.App</RootNamespace>
     <AssemblyName>BibleStudy.App</AssemblyName>
     <ApplicationId>de.trofline.biblestudy</ApplicationId>
-    <ApplicationVersion>21</ApplicationVersion>
-    <ApplicationDisplayVersion>1.9.2</ApplicationDisplayVersion>
-    <Version>1.9.1</Version>
+    <ApplicationVersion>23</ApplicationVersion>
+    <ApplicationDisplayVersion>1.9.4</ApplicationDisplayVersion>
+    <Version>1.9.4</Version>
     <ApplicationTitle>BibleStudy</ApplicationTitle>
     <Product>BibleStudy</Product>
     <Authors>Trofline</Authors>
@@ -51,7 +51,8 @@
 
   <!-- the app icon as plain files (no asset catalog: its compiler needs a part of Xcode that is missing on the build machine) -->
   <ItemGroup>
-    <BundleResource Include="Icons/*.png" />
+    <!-- at the top of the app: iOS looks for CFBundleIconFiles only there -->
+    <BundleResource Include="Icons/*.png" LogicalName="%(Filename)%(Extension)" />
   </ItemGroup>
 
   <ItemGroup>

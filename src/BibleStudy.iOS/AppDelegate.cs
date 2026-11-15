@@ -18,6 +18,9 @@ public class AppDelegate : AvaloniaAppDelegate<BibleStudy.App.App>
     [Export("applicationDidEnterBackground:")]
     public void DidEnterBackground(UIApplication application) => BibleStudy.App.App.SaveForBackground();
 
+    [Export("applicationDidBecomeActive:")]
+    public void DidBecomeActive(UIApplication application) => BibleStudy.App.App.CameToFront();
+
     /// <summary>The address of a pairing QR code (biblestudy-sync://pair?k=…), opened from the camera app.</summary>
     [Export("application:openURL:options:")]
     public bool OpenUrl(UIApplication app, NSUrl url, NSDictionary options)

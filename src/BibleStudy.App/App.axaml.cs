@@ -161,6 +161,9 @@ public partial class App : Application
 
     /// <summary>The activity stops (the app goes to the background): save what would be saved when the window closes.</summary>
     public static void SaveForBackground() => _main?.SaveForBackground();
+
+    /// <summary>The app is in front again (after the home screen or another app).</summary>
+    public static void CameToFront() => Avalonia.Threading.Dispatcher.UIThread.Post(() => _main?.SyncSoon());
 #endif
 
 #if !MOBILE

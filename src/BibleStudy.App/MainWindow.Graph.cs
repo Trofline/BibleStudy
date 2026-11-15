@@ -63,7 +63,7 @@ public partial class MainWindow
             await SearchAsync();
         };
         // a narrow window must keep room for the text: the thread graph gives way (its labels shorten themselves)
-        ReaderHost.SizeChanged += (_, e) => ThreadPane.MaxWidth = Math.Clamp(e.NewSize.Width * 0.42, 290, ThreadGraph.GraphWidth);
+        ReaderHost.SizeChanged += (_, e) => ThreadPane.MaxWidth = _phone ? Math.Clamp(e.NewSize.Width * 0.3, 96, 140) : Math.Clamp(e.NewSize.Width * 0.42, 290, ThreadGraph.GraphWidth);
         ThreadPane.Picked += ShowRefsFlyout;
         ThreadPane.Jump += r => FollowXref(r.Target, r.EndVerse);
         ThreadPane.BuildRequested += async () => await BuildGraphAsync();
@@ -140,13 +140,14 @@ public partial class MainWindow
     void ShowRefsFlyout(string title, IReadOnlyList<CrossRef> refs, Point at)
     {
         var flyout = new Flyout { Placement = PlacementMode.Left };
-        var list = new WrapPanel { MaxWidth = 340 };
+        var room = _phone ? Math.Max(200, Bounds.Width - ThreadPane.Bounds.Width - 36) : 340;   // on a phone the list opens left of the narrow graph
+        var list = new WrapPanel { MaxWidth = room };
         foreach (var r in refs.OrderByDescending(x => x.Score).Take(40))
             list.Children.Add(Chip(Label(r.Target) + (r.EndVerse > r.Target.Verse ? "–" + r.EndVerse : ""),
                 () => { flyout.Hide(); FollowXref(r.Target, r.EndVerse); }, (TranslationBox.SelectedItem as TranslationInfo)?.Id ?? "", r));
         foreach (var (chip, r) in list.Children.OfType<Border>().Zip(refs.OrderByDescending(x => x.Score).Take(40)))
             chip.ContextMenu = new ContextMenu { ItemsSource = XrefOpenItems(r.Target, r.EndVerse).ToList() };
-        var head = new TextBlock { Text = title, FontWeight = FontWeight.SemiBold, TextWrapping = TextWrapping.Wrap, MaxWidth = 340, Margin = new(0, 0, 0, 8) };
+        var head = new TextBlock { Text = title, FontWeight = FontWeight.SemiBold, TextWrapping = TextWrapping.Wrap, MaxWidth = room, Margin = new(0, 0, 0, 8) };
         flyout.Content = new StackPanel { Children = { head, new ScrollViewer { MaxHeight = 320, Content = list } } };
         flyout.ShowAt(ThreadPane);
     }
@@ -199,7 +200,7 @@ public partial class MainWindow
         var mine = MyXrefsAt(verse);
         IReadOnlyList<CrossRef> refs = _xrefInText && _chapterRefs is not null && _chapterRefs.TryGetValue(verse, out var found) ? found : [];
         if (mine.Count == 0 && refs.Count == 0) return null;
-        var wrap = new WrapPanel { Margin = new(30, 0, 0, 6) };
+        var wrap = new WrapPanel { Margin = new(_phone ? 6 : 30, 0, 0, 6) };
         foreach (var x in mine) wrap.Children.Add(MyXrefChip(x, verse, translationId));   // your own come first and stand out
         foreach (var r in refs.Take(6))
         {

@@ -55,6 +55,13 @@ public class MainActivity : AvaloniaMainActivity
         BibleStudy.App.App.SaveForBackground();
         base.OnStop();
     }
+
+    /// <summary>The app is in front again: the paired devices are asked at once for what changed meanwhile.</summary>
+    protected override void OnResume()
+    {
+        base.OnResume();
+        BibleStudy.App.App.CameToFront();
+    }
 }
 
 /// <summary>

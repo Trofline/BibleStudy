@@ -177,10 +177,37 @@ public partial class MainWindow
         {
             Cancel();
             if (Math.Abs(ReaderScroll.Offset.Y - offset.Y) > 8) return;   // the page was scrolled
+            if (TryStartWordDrag(start, pointer, verse, box)) return;
             if (!_selVerses.Contains(verse)) SelectVerse(verse);
             ShowVerseMenu(verse, box);
         };
         timer.Start();
+    }
+
+    /// <summary>
+    /// A long press on a word selects it, as phones do; moving the finger on (without lifting) stretches the selection, lifting shows the colors.
+    /// Lifting at once opens the verse menu for the word. Scrolling never selects: this starts only after the finger rested.
+    /// </summary>
+    bool TryStartWordDrag(Point at, Avalonia.Input.IPointer pointer, int verse, Border box)
+    {
+        foreach (var cref in _cells)
+        {
+            if (cref.Data.Foreign || cref.Tb.Tag is not CellInfo info || !cref.Tb.IsEffectivelyVisible || this.TranslatePoint(at, cref.Tb) is not { } p || !new Rect(cref.Tb.Bounds.Size).Contains(p)) continue;
+            var t = info.RawText;
+            if (t.Length == 0) return false;
+            var i = Math.Clamp(RawAt(info, cref.Tb.TextLayout.HitTestPoint(p).TextPosition), 0, t.Length - 1);
+            if (!IsWordChar(t[i]) && i > 0 && IsWordChar(t[i - 1])) i--;
+            if (!IsWordChar(t[i])) return false;
+            int s = i, en = i + 1;
+            while (s > 0 && IsWordChar(t[s - 1])) s--;
+            while (en < t.Length && IsWordChar(t[en])) en++;
+            ClearTextSelection(true);
+            SetSelectionFrom(cref, s, cref, en, ColCells(cref));
+            _drag = new DragState { Anchor = cref, AnchorRaw = s, Start = at, Last = at, Cells = ColCells(cref), Scroller = ReaderScroll, TouchWord = true, Verse = verse, Box = box };
+            pointer.Capture(ReaderScroll);   // the finger now selects; the page does not scroll under it
+            return true;
+        }
+        return false;
     }
 }
 

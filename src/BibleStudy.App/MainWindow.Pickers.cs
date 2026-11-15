@@ -102,6 +102,14 @@ public partial class MainWindow
     /// <summary>A width made for a desktop, kept inside the screen of a phone (the grids wrap, so a narrower one only has fewer tiles in a row).</summary>
     double PW(double desktop) => _phone ? Math.Min(desktop, Math.Max(240, Bounds.Width - 56)) : desktop;
 
+    /// <summary>On a phone the filter field of a picker takes the focus (and brings up the keyboard) only when it is tapped, not when the picker opens.</summary>
+    void TapToType(TextBox box)
+    {
+        if (!_phone) return;
+        box.Focusable = false;
+        box.AddHandler(PointerReleasedEvent, (_, _) => { box.Focusable = true; box.Focus(); }, Avalonia.Interactivity.RoutingStrategies.Tunnel, handledEventsToo: true);
+    }
+
     Flyout NewPickerFlyout(Control content) => new() { Content = content, Placement = PlacementMode.BottomEdgeAlignedLeft };
 
     Button PickerTile(string text, bool selected, Action pick, double width, Color? underline = null, double height = 40, string? tip = null)
@@ -140,6 +148,7 @@ public partial class MainWindow
         Flyout? flyout = null;
         void Choose(BookInfo book) { flyout!.Hide(); Avalonia.Threading.Dispatcher.UIThread.Post(() => pick(book)); }
         var search = new TextBox { PlaceholderText = L("Tippen zum Filtern, z. B. „Joh“ + Enter"), Margin = new(0, 0, 0, 6) };
+        TapToType(search);
         var tiles = new StackPanel();
         List<BookInfo> shown = [];
         void Fill()
@@ -178,7 +187,7 @@ public partial class MainWindow
         }
         flyout = NewPickerFlyout(new ScrollViewer { Content = panel, MaxHeight = Math.Max(300, Bounds.Height - 130), HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled });
         flyout.ShowAt(anchor);
-        search.Focus();
+        if (!_phone) search.Focus();   // a phone would pop up its keyboard over the list
     }
 
     // ---- chapters -----------------------------------------------------------------------------------------------------
@@ -195,6 +204,7 @@ public partial class MainWindow
         var panel = new StackPanel { Width = PW(Math.Min(620, 70 + Math.Ceiling(Math.Sqrt(book.NumberOfChapters)) * 56)) };
         panel.Children.Add(PickerHeading(L("{0} – Kapitel wählen", book.CommonName)));
         var number = new TextBox { PlaceholderText = L("Nummer tippen (1–{0}) + Enter", book.NumberOfChapters), Margin = new(0, 0, 0, 8) };
+        TapToType(number);
         number.KeyDown += (_, e) =>
         {
             if (e.Key != Avalonia.Input.Key.Enter || !int.TryParse(number.Text, out var n)) return;
@@ -212,7 +222,7 @@ public partial class MainWindow
         panel.Children.Add(wrap);
         flyout = NewPickerFlyout(new ScrollViewer { Content = panel, MaxHeight = Math.Max(300, Bounds.Height - 130), HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled });
         flyout.ShowAt(anchor);
-        number.Focus();
+        if (!_phone) number.Focus();
     }
 
     // ---- language -----------------------------------------------------------------------------------------------------
@@ -224,6 +234,7 @@ public partial class MainWindow
         Flyout? flyout = null;
         var current = LanguageBox.SelectedItem as string;
         var search = new TextBox { PlaceholderText = L("Sprache suchen …"), Margin = new(0, 0, 0, 10) };
+        TapToType(search);
         var grid = new WrapPanel();
         void Fill()
         {
@@ -242,7 +253,7 @@ public partial class MainWindow
         var stack = new StackPanel { Width = PW(660), Children = { search, new ScrollViewer { Content = grid, Height = Math.Min(430, Math.Max(250, Bounds.Height - 230)), HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled } } };
         flyout = NewPickerFlyout(stack);
         flyout.ShowAt(Anchor(LangBtn));
-        search.Focus();
+        if (!_phone) search.Focus();
     }
 
     // ---- translation --------------------------------------------------------------------------------------------------
@@ -289,6 +300,7 @@ public partial class MainWindow
         panel.Children.Add(new TextBlock { Text = L("Rechtsklick auf eine Übersetzung: eigenen Namen vergeben"), Classes = { "caption" }, Margin = new(2, 4, 0, 0), Width = PW(692), TextWrapping = TextWrapping.Wrap });
         // a language with a hundred translations (English) needs a search, as the books and the languages have one
         var search = new TextBox { PlaceholderText = L("Übersetzung suchen …"), Margin = new(0, 0, 0, 10), Width = PW(692), HorizontalAlignment = HorizontalAlignment.Left };
+        TapToType(search);
         search.TextChanged += (_, _) =>
         {
             var q = SearchQuery.Fold(search.Text?.Trim() ?? "", true);
@@ -298,6 +310,6 @@ public partial class MainWindow
         if (items.Count < 12) search.IsVisible = false;   // a handful of tiles is seen at a glance
         flyout = NewPickerFlyout(new Border { Child = body, Width = PW(720) });
         flyout.ShowAt(anchor ?? TransBtn);
-        if (search.IsVisible) search.Focus();
+        if (search.IsVisible && !_phone) search.Focus();
     }
 }
