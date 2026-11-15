@@ -18,6 +18,15 @@
       "category": "other",
       "versions": [
         {
+          "version": "1.9.8",
+          "buildVersion": "27",
+          "date": "2026-11-15",
+          "localizedDescription": "## New in 1.9.8\n**Kind of update:** Feature, Bug fix\n- **[Feature]** **Reading progress syncs too:** chapters read on one device show as read on the other; \"unread\" travels as well.\n- **[Feature]** **Sync button:** \"Sync\" next to the version number at the bottom (PC) and at the top of the Tools menu (phone).\n- **[Feature]** While both apps are open, devices sync every 20 seconds besides a few seconds after each change.\n- **[Bug fix]** \"Sync now\" also reaches an iPhone (it never answers the network call-out).\n- **[Bug fix]** Reading progress from another device was taken over only once per star",
+          "downloadURL": "https://github.com/Trofline/BibleStudy/releases/download/v1.9.8/BibleStudy-iOS-1.9.8.ipa",
+          "size": 59339682,
+          "minOSVersion": "15.0"
+        },
+        {
           "version": "1.9.7",
           "buildVersion": "26",
           "date": "2026-11-15",
