@@ -23,8 +23,8 @@
     <RuntimeIdentifier>ios-arm64</RuntimeIdentifier>
     <!-- no signing here: SideStore signs the app on the phone -->
     <EnableCodeSigning>false</EnableCodeSigning>
-    <!-- the program uses reflection (JSON, bindings); a trimmer would cut what it finds only at run time -->
-    <MtouchLink>None</MtouchLink>
+    <!-- only the .NET libraries are trimmed (to what the program uses); the program itself is kept whole, because it uses reflection (JSON, bindings) -->
+    <MtouchLink>SdkOnly</MtouchLink>
     <DefineConstants>$(DefineConstants);MOBILE</DefineConstants>
     <!-- the shared sources warn about many things the desktop build already reports -->
     <NoWarn>$(NoWarn);CA1416;CA1422;CS0618;CS0067;CS0169;CS0414;CS0649;CA2200</NoWarn>

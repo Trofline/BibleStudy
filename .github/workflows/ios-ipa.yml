@@ -23,6 +23,7 @@ permissions:
 jobs:
   ipa:
     runs-on: macos-latest
+    timeout-minutes: 90
     env:
       TAG: ${{ github.event.inputs.tag }}
       GH_TOKEN: ${{ github.token }}
@@ -65,7 +66,7 @@ jobs:
         run: |
           VERSION="${TAG##*-}"; VERSION="${VERSION#v}"
           dotnet build src/BibleStudy.iOS/BibleStudy.iOS.csproj -c Release -r ios-arm64 \
-            -p:EnableCodeSigning=false -p:ApplicationDisplayVersion=$VERSION -p:Version=$VERSION
+            -p:EnableCodeSigning=false -p:ApplicationDisplayVersion=$VERSION -p:Version=$VERSION -v:n
           APP=$(find src/BibleStudy.iOS/bin/Release -name "*.app" -maxdepth 6 -type d | head -1)
           echo "App folder: $APP"
           test -n "$APP"
