@@ -271,6 +271,8 @@
         <!-- Side panel navigation: rail (big sections) and segment pills (views inside a section) -->
         <Style Selector="TabControl#SideTabs /template/ ItemsPresenter#PART_ItemsPresenter">
             <Setter Property="IsVisible" Value="False" />
+            <!-- also no width: measured once while still visible it kept that width, and the content beside it got none (seen on phones) -->
+            <Setter Property="MaxWidth" Value="0" />
         </Style>
         <Style Selector="Button.rail">
             <Setter Property="HorizontalAlignment" Value="Stretch" />
