@@ -18,6 +18,15 @@
                      "category":  "other",
                      "versions":  [
                                       {
+                                          "version":  "1.9.6",
+                                          "buildVersion":  "1.9.6",
+                                          "date":  "2026-11-15",
+                                          "localizedDescription":  "**Beta.** Update through SideStore (source: `https://trofline.github.io/BibleStudy/sidestore.json`). The IPA is attached when its build is done.\n\n- **[Bug fix]** The side panel steps aside while the settings are open and comes back with the text.\n- **[Bug fix]** iPhone: scanning the pairing QR code with the camera pairs the app again.\n- **[Bug fix]** The pairing code can be copied: \"Copy code\" copies the pairing link, with the address of this device, for the field on the other device.",
+                                          "downloadURL":  "https://github.com/Trofline/BibleStudy/releases/download/ios-beta-1.9.6/BibleStudy-iOS-1.9.6.ipa",
+                                          "size":  59320665,
+                                          "minOSVersion":  "15.0"
+                                      },
+                                      {
                                           "version":  "1.9.5",
                                           "buildVersion":  "1.9.5",
                                           "date":  "2026-11-15",
