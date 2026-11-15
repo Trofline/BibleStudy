@@ -79,11 +79,11 @@ touch it, and a backup is made before every update. When you uninstall (or remov
 
 ## On the phone
 
-**Android:** download `BibleStudy-Android-…apk` from [Releases](https://github.com/Trofline/BibleStudy/releases) (beta) and open it.
+**Android:** download `BibleStudy-Android-…apk` from the [latest release](https://github.com/Trofline/BibleStudy/releases/latest) (beta) and open it. After that the app updates itself.
 
 **iPhone (beta), free and without a Mac:** Apple only lets the App Store install apps, so BibleStudy is installed with [SideStore](https://sidestore.io), which signs the app with your own free Apple ID. You need **a Windows PC (or Mac) with a cable once**; afterwards the phone renews the app by itself. About 10 minutes in total.
 
-1. **Put SideStore on the iPhone (about 4 min).** On the PC install *Apple Devices* (Microsoft Store) or iTunes, then open [iloader](https://github.com/nab138/iloader), connect the iPhone with the cable, sign in with your Apple ID and install SideStore. iloader also creates the *pairing file* that SideStore needs.
+1. **Put SideStore on the iPhone (about 4 min).** On the PC install *Apple Devices* (Microsoft Store) or iTunes, then open [iloader](https://github.com/nab138/iloader), connect the iPhone with the cable, sign in with your Apple ID and install SideStore. iloader also creates the *pairing file* that SideStore needs. If SideStore later says the pairing file is missing: open iloader again with the iPhone connected, click **Manage Pairing File** at the bottom and place it for SideStore.
 2. **Trust and Developer Mode (about 2 min).** iPhone: Settings → General → VPN & Device Management → trust your Apple ID. Settings → Privacy & Security → Developer Mode → on (the iPhone restarts).
 3. **Install a loopback VPN (about 1 min).** SideStore talks to the phone itself through a tiny on-device VPN that sends no data anywhere. Install **StosVPN** (or *LocalDevVPN*) from the App Store and switch it on once.
 4. **Add BibleStudy (about 2 min).** Open SideStore, sign in, then tap [this link](sidestore://source?url=https://trofline.github.io/BibleStudy/sidestore.json) on the iPhone (or Sources → **+** → `https://trofline.github.io/BibleStudy/sidestore.json`). Open BibleStudy in the list and tap **Install**.
@@ -91,6 +91,7 @@ touch it, and a backup is made before every update. When you uninstall (or remov
    1. Open **Shortcuts → Shortcuts → +** and add these actions in this order: *Connect to VPN / turn on* StosVPN (action of the VPN app), **Refresh All Apps** (SideStore's own action), then turn the VPN off again. Name it **Renew BibleStudy**.
    2. **Shortcuts → Automation → +** → **Time of Day** (for example 3:00, daily) → **Run Immediately** → choose the shortcut. Turn off *Notify When Run* if you like.
    3. Leave the phone charging at night with Wi-Fi on, that is when it runs.
+6. **Sync with the PC when you get home (about 1 min).** The iPhone syncs only while BibleStudy is open. To make that happen by itself: **Shortcuts → Automation → +** → **Wi-Fi** → choose your Wi-Fi, tick **Joins** → **Run Immediately** → **Next** → **New Blank Automation** → action **Open App** → **BibleStudy**. When you come home the app opens for a moment and syncs. Setting up the sync: handbook chapter 19.3.
 
 If an app has expired anyway: open SideStore and tap **Refresh** at BibleStudy; your data stays. Updates arrive through SideStore.
 

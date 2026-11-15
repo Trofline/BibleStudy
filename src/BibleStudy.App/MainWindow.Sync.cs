@@ -75,7 +75,11 @@ public partial class MainWindow
             SyncStatus.Text = L("Kopplungs-Link kopiert. Auf dem anderen Gerät ins Feld „Code von einem anderen Gerät“ einfügen.");
         };
         ShowSyncState();
-        if (_syncCfg.Key is not null) DispatcherTimer.RunOnce(StartSync, TimeSpan.FromSeconds(8));   // the reader comes first
+        if (_syncCfg.Key is not null)
+        {
+            DispatcherTimer.RunOnce(StartSync, TimeSpan.FromSeconds(8));   // the reader comes first
+            DispatcherTimer.RunOnce(RemindToSync, TimeSpan.FromSeconds(30));
+        }
 #if MOBILE
         if (App.TakePendingPair() is { } link) DispatcherTimer.RunOnce(() => JoinWithCode(link), TimeSpan.FromSeconds(1));
 #endif
@@ -93,6 +97,7 @@ public partial class MainWindow
         StartSync();
         ShowSyncState();
         StatusText.Text = L("Gerät gekoppelt. Der Abgleich läuft jetzt im selben Netzwerk.");
+        Notify(L("Gerät gekoppelt"), L("Suche jetzt das andere Gerät … Lass die App dort offen; sobald ihr euch erreicht, kommt hier eine Meldung."));
     }
 
     void StartSync()
@@ -105,6 +110,7 @@ public partial class MainWindow
                 _lan = new LanSync(new AppVaults(this, _root), _syncCfg, SyncPath, Path.Combine(_root, "sync-tmp"));
                 _lan.VaultsChanged += names => Dispatcher.UIThread.Post(() => OnSyncChanged(names));
                 _lan.Finished += r => Dispatcher.UIThread.Post(() => ShowSyncResult(r));
+                _lan.Contacted += name => Dispatcher.UIThread.Post(() => Greet(name));
             }
             _lan.Start();
         }
@@ -179,8 +185,77 @@ public partial class MainWindow
         else
         {
             ShowSyncState();
+            Greet(r.PeerName);
             if (r.Changed > 0) StatusText.Text = L("Abgeglichen mit {0}: Neues übernommen.", r.PeerName);
         }
+    }
+
+    /// <summary>
+    /// The other device was not reached for some days (an iPhone compares only while the app is open, and that is easily forgotten): a reminder to open
+    /// it once. Nothing gets lost meanwhile (both sides keep their changes), it only waits.
+    /// </summary>
+    void RemindToSync()
+    {
+        if (_syncCfg.Key is null || _greeted.Count > 0) return;   // reached since the start: nothing to remind of
+        if (_syncCfg.LastTime is not { } last || !DateTime.TryParseExact(last, "yyyy-MM-dd HH:mm", System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.None, out var when)) return;
+        var days = (int)(DateTime.Now - when).TotalDays;
+        if (days < 3) return;
+        Notify(L("Seit {0} Tagen kein Abgleich", days), L("Öffne BibleStudy kurz auf {0} (im selben WLAN), dann gleicht ihr euch ab. Bis dahin geht nichts verloren.", _syncCfg.LastPeer ?? L("dem anderen Gerät")));
+    }
+
+    readonly HashSet<string> _greeted = new(StringComparer.OrdinalIgnoreCase);
+
+    /// <summary>The first contact with a device since the start: a notice that cannot be missed, so it is clear that the pairing works (once per device, not at every comparison).</summary>
+    void Greet(string peer)
+    {
+        if (!_greeted.Add(peer)) return;
+        ShowSyncState();
+        Notify(L("Verbunden mit {0}", peer), L("Der Abgleich funktioniert. Ab jetzt gleicht ihr euch von selbst ab, sobald beide Apps im selben WLAN offen sind."), good: true);
+    }
+
+    Border? _notice;
+    IDisposable? _noticeTimer;
+
+    /// <summary>A notice over everything (phone: at the top, desktop: bottom right) that goes again after some seconds; a tap closes it at once.</summary>
+    void Notify(string title, string text, bool good = false)
+    {
+        if (_notice is null)
+        {
+            // the notice lies in a grid over the whole content (the content is wrapped once)
+            if (TopBar.Parent is not DockPanel dock) return;
+            Panel host;
+            if (dock.Parent is Grid g) host = g;
+            else
+            {
+                host = new Grid();
+                if (dock.Parent is Panel p) { var at = p.Children.IndexOf(dock); p.Children.RemoveAt(at); host.Children.Add(dock); p.Children.Insert(at, host); }
+                else if (dock.Parent is ContentControl cc) { cc.Content = null; host.Children.Add(dock); cc.Content = host; }
+                else return;
+            }
+            _notice = new Border
+            {
+                CornerRadius = new Avalonia.CornerRadius(12), Padding = new Avalonia.Thickness(16, 12), BoxShadow = Avalonia.Media.BoxShadows.Parse("0 4 18 0 #40000000"),
+                MaxWidth = 420, Margin = new Avalonia.Thickness(12), IsVisible = false, ZIndex = 1000,
+            };
+            _notice.PointerPressed += (_, e) => { _notice.IsVisible = false; e.Handled = true; };
+            host.Children.Add(_notice);
+        }
+        _notice.HorizontalAlignment = _phone ? Avalonia.Layout.HorizontalAlignment.Stretch : Avalonia.Layout.HorizontalAlignment.Right;
+        _notice.VerticalAlignment = _phone ? Avalonia.Layout.VerticalAlignment.Top : Avalonia.Layout.VerticalAlignment.Bottom;
+        _notice.Margin = _phone ? new Avalonia.Thickness(12, 60, 12, 0) : new Avalonia.Thickness(0, 0, 16, 40);
+        _notice.Background = new Avalonia.Media.SolidColorBrush(Avalonia.Media.Color.Parse(good ? "#2F7D4F" : "#3B5BDB"));
+        _notice.Child = new StackPanel
+        {
+            Spacing = 4,
+            Children =
+            {
+                new TextBlock { Text = (good ? "✓  " : "") + title, FontWeight = Avalonia.Media.FontWeight.SemiBold, FontSize = 15, Foreground = Avalonia.Media.Brushes.White, TextWrapping = Avalonia.Media.TextWrapping.Wrap },
+                new TextBlock { Text = text, FontSize = 13, Foreground = Avalonia.Media.Brushes.White, TextWrapping = Avalonia.Media.TextWrapping.Wrap },
+            },
+        };
+        _notice.IsVisible = true;
+        _noticeTimer?.Dispose();
+        _noticeTimer = DispatcherTimer.RunOnce(() => { if (_notice is not null) _notice.IsVisible = false; }, TimeSpan.FromSeconds(8));
     }
 
     /// <summary>Something new arrived in a vault: what is shown is read again (without closing what the person is writing).</summary>

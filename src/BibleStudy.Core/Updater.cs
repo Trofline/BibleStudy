@@ -14,7 +14,7 @@ public sealed class Updater(HttpClient http)
 {
     public const string Repo = "trofline/BibleStudy";
 
-    /// <summary>Set by the Android app: its updates are the APK of the "android-…" releases, not the installer of a PC.</summary>
+    /// <summary>Set by the Android app: its updates are the APK of a release (also the older "android-…" ones), not the installer of a PC.</summary>
     public static bool ApkMode;
 
     public static Version? Parse(string v)
@@ -54,7 +54,8 @@ public sealed class Updater(HttpClient http)
         {
             if (r.TryGetProperty("draft", out var draft) && draft.GetBoolean()) continue;
             var tagName = r.GetProperty("tag_name").GetString() ?? "";
-            if (tagName.StartsWith("android-", StringComparison.Ordinal) != ApkMode || tagName.StartsWith("ios-", StringComparison.Ordinal)) continue;   // a phone follows the releases of its own kind
+            // from 1.9.7 one release holds every system (its APK too); the older phone releases were "android-…" and "ios-…" of their own
+            if (tagName.StartsWith("ios-", StringComparison.Ordinal) || (tagName.StartsWith("android-", StringComparison.Ordinal) && !ApkMode)) continue;
             if (Parse(r.GetProperty("tag_name").GetString() ?? "") is not { } v || v <= current || (bestVersion is not null && v <= bestVersion)) continue;
             var version = v.ToString();
             string? manifest = null;

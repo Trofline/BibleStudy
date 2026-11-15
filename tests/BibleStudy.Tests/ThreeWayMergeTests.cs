@@ -89,6 +89,25 @@ public class ThreeWayMergeTests
     }
 
     [Fact]
+    public void New_marks_made_apart_on_both_devices_all_arrive_on_both()
+    {
+        // synced once, then the phone stayed closed for days: both got their own new marks
+        var (pc, phonePath, basePath) = Synced(s => s.AddMark("t", R(1), 0, 4, "Wort", "#ffcc00", "", null, []));
+        pc.AddMark("t", R(2), 0, 4, "PC-Wort", "#ff0000", "", null, []);
+        pc.AddMark("t", R(3), 0, 4, "PC-Wort2", "#ff0000", "", null, []);
+        var phone = new VaultStore(phonePath, "phone");
+        phone.AddMark("t", R(4), 0, 4, "Handy-Wort", "#00ff00", "", null, []);
+        phone.AddMark("t", R(2), 5, 9, "Handy-Wort2", "#00ff00", "", null, []);
+
+        pc.MergeFrom(CopyOf(phonePath), "Handy", basePath);
+        phone.MergeFrom(CopyOf(Path.Combine(_dir, "pc.db")), "PC", basePath);
+
+        string[] all = ["Handy-Wort", "Handy-Wort2", "PC-Wort", "PC-Wort2", "Wort"];
+        Assert.Equal(all, pc.GetMarks().Select(m => m.Text).Order());
+        Assert.Equal(all, phone.GetMarks().Select(m => m.Text).Order());
+    }
+
+    [Fact]
     public void Changes_on_both_sides_are_both_kept()
     {
         var (pc, phonePath, basePath) = Synced(s => s.SetNote(R(1), "Anfang"));

@@ -3116,5 +3116,12 @@
   "Gleicht deine Vaults zwischen deinen eigenen Geräten ab (PC und Handy), ohne Konto und ohne Server: Geräte im selben WLAN finden sich von selbst, und eine Änderung ist nach wenigen Sekunden auf dem anderen. Wer etwas geändert hat, gewinnt; haben beide denselben Eintrag geändert, bleibt beides erhalten.": "Synchronise tes vaults entre tes propres appareils (PC et téléphone), sans compte et sans serveur : les appareils du même Wi-Fi se trouvent seuls, et une modification arrive sur l'autre en quelques secondes. Le côté qui a modifié l'emporte ; si les deux ont modifié la même entrée, les deux sont conservées.",
   "Gelöschtes kommt auch auf dem anderen Gerät in den Papierkorb; ein neues oder leeres Gerät löscht nie etwas. Beide Geräte müssen im selben WLAN sein. Die Windows-Firewall fragt beim ersten Mal nach: nur „Private Netzwerke“ erlauben.": "Ce que tu supprimes va aussi dans la corbeille de l'autre appareil ; un appareil neuf ou vide ne supprime jamais rien. Les deux appareils doivent être sur le même Wi-Fi. Le pare-feu Windows demande la première fois : n'autorise que « Réseaux privés ».",
   "Kopiert den Kopplungs-Link (mit der Adresse dieses Geräts): auf dem anderen Gerät ins Feld unten einfügen": "Copie le lien d'appairage (avec l'adresse de cet appareil) : colle-le dans le champ ci-dessous sur l'autre appareil",
-  "Kopplungs-Link kopiert. Auf dem anderen Gerät ins Feld „Code von einem anderen Gerät“ einfügen.": "Lien d'appairage copié. Colle-le sur l'autre appareil dans le champ « Code d'un autre appareil »."
+  "Kopplungs-Link kopiert. Auf dem anderen Gerät ins Feld „Code von einem anderen Gerät“ einfügen.": "Lien d'appairage copié. Colle-le sur l'autre appareil dans le champ « Code d'un autre appareil ».",
+  "Verbunden mit {0}": "Connecté à {0}",
+  "Der Abgleich funktioniert. Ab jetzt gleicht ihr euch von selbst ab, sobald beide Apps im selben WLAN offen sind.": "La synchronisation fonctionne. Désormais, vos appareils se synchronisent seuls dès que les deux applis sont ouvertes sur le même Wi-Fi.",
+  "Gerät gekoppelt": "Appareil associé",
+  "Suche jetzt das andere Gerät … Lass die App dort offen; sobald ihr euch erreicht, kommt hier eine Meldung.": "Recherche de l’autre appareil … Laissez l’appli ouverte là-bas ; un message apparaît ici dès que vous vous trouvez.",
+  "Seit {0} Tagen kein Abgleich": "Aucune synchronisation depuis {0} jours",
+  "Öffne BibleStudy kurz auf {0} (im selben WLAN), dann gleicht ihr euch ab. Bis dahin geht nichts verloren.": "Ouvrez BibleStudy un instant sur {0} (sur le même Wi-Fi) et vos appareils se synchronisent. D’ici là, rien n’est perdu.",
+  "dem anderen Gerät": "l’autre appareil"
 }

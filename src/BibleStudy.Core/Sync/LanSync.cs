@@ -54,6 +54,8 @@ public sealed class LanSync : IDisposable
     public event Action<IReadOnlyList<string>>? VaultsChanged;
     /// <summary>A comparison with a device is over.</summary>
     public event Action<SyncReport>? Finished;
+    /// <summary>A device with the same code reached this one (its name): it compares from its side.</summary>
+    public event Action<string>? Contacted;
 
     // ---- start and stop -------------------------------------------------------------------------------------------------
 
@@ -297,6 +299,13 @@ public sealed class LanSync : IDisposable
                             if (ReadInfo(msg.Data) is { } asked) asker = asked.Id;
                             if (c.Client.RemoteEndPoint is IPEndPoint remote && ReadInfo(msg.Data) is { Port: > 0 } who) _cfg.RememberHost(remote.Address, who.Port, _cfgPath);   // so that it can be found again without the call-out
                             await ch.Send(MsgList, ListPayload(), limit.Token);
+                            if (ReadInfo(msg.Data) is { Name.Length: > 0 } caller)
+                            {
+                                // this side was reached: it counts as a comparison here too (the reminder after some days without one looks at it)
+                                _cfg.LastTime = DateTime.Now.ToString("yyyy-MM-dd HH:mm"); _cfg.LastPeer = caller.Name;
+                                _cfg.Save(_cfgPath);
+                                Contacted?.Invoke(caller.Name);
+                            }
                             break;
                         case MsgGet:
                         {

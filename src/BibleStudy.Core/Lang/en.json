@@ -3116,5 +3116,12 @@
   "Gleicht deine Vaults zwischen deinen eigenen Geräten ab (PC und Handy), ohne Konto und ohne Server: Geräte im selben WLAN finden sich von selbst, und eine Änderung ist nach wenigen Sekunden auf dem anderen. Wer etwas geändert hat, gewinnt; haben beide denselben Eintrag geändert, bleibt beides erhalten.": "Syncs your vaults between your own devices (PC and phone), without an account and without a server: devices in the same Wi-Fi find each other, and a change reaches the other one within seconds. The side that changed something wins; if both changed the same entry, both are kept.",
   "Gelöschtes kommt auch auf dem anderen Gerät in den Papierkorb; ein neues oder leeres Gerät löscht nie etwas. Beide Geräte müssen im selben WLAN sein. Die Windows-Firewall fragt beim ersten Mal nach: nur „Private Netzwerke“ erlauben.": "What you delete goes into the trash on the other device too; a new or empty device never deletes anything. Both devices must be in the same Wi-Fi. The Windows firewall asks the first time: allow only \"Private networks\".",
   "Kopiert den Kopplungs-Link (mit der Adresse dieses Geräts): auf dem anderen Gerät ins Feld unten einfügen": "Copies the pairing link (with the address of this device): paste it into the field below on the other device",
-  "Kopplungs-Link kopiert. Auf dem anderen Gerät ins Feld „Code von einem anderen Gerät“ einfügen.": "Pairing link copied. Paste it on the other device into the field \"Code from another device\"."
+  "Kopplungs-Link kopiert. Auf dem anderen Gerät ins Feld „Code von einem anderen Gerät“ einfügen.": "Pairing link copied. Paste it on the other device into the field \"Code from another device\".",
+  "Verbunden mit {0}": "Connected to {0}",
+  "Der Abgleich funktioniert. Ab jetzt gleicht ihr euch von selbst ab, sobald beide Apps im selben WLAN offen sind.": "Sync works. From now on your devices sync by themselves whenever both apps are open in the same Wi-Fi.",
+  "Gerät gekoppelt": "Device paired",
+  "Suche jetzt das andere Gerät … Lass die App dort offen; sobald ihr euch erreicht, kommt hier eine Meldung.": "Now looking for the other device … Keep the app open there; a message appears here as soon as you reach each other.",
+  "Seit {0} Tagen kein Abgleich": "No sync for {0} days",
+  "Öffne BibleStudy kurz auf {0} (im selben WLAN), dann gleicht ihr euch ab. Bis dahin geht nichts verloren.": "Open BibleStudy on {0} for a moment (in the same Wi-Fi) and your devices sync. Nothing gets lost until then.",
+  "dem anderen Gerät": "the other device"
 }

@@ -3116,5 +3116,12 @@
   "Gleicht deine Vaults zwischen deinen eigenen Geräten ab (PC und Handy), ohne Konto und ohne Server: Geräte im selben WLAN finden sich von selbst, und eine Änderung ist nach wenigen Sekunden auf dem anderen. Wer etwas geändert hat, gewinnt; haben beide denselben Eintrag geändert, bleibt beides erhalten.": "Sincroniza tus vaults entre tus propios dispositivos (PC y móvil), sin cuenta y sin servidor: los dispositivos en la misma wifi se encuentran solos y un cambio llega al otro en pocos segundos. Gana el lado que cambió algo; si ambos cambiaron la misma entrada, se conservan las dos.",
   "Gelöschtes kommt auch auf dem anderen Gerät in den Papierkorb; ein neues oder leeres Gerät löscht nie etwas. Beide Geräte müssen im selben WLAN sein. Die Windows-Firewall fragt beim ersten Mal nach: nur „Private Netzwerke“ erlauben.": "Lo que borras va también a la papelera del otro dispositivo; un dispositivo nuevo o vacío nunca borra nada. Ambos dispositivos deben estar en la misma wifi. El cortafuegos de Windows pregunta la primera vez: permite solo «Redes privadas».",
   "Kopiert den Kopplungs-Link (mit der Adresse dieses Geräts): auf dem anderen Gerät ins Feld unten einfügen": "Copia el enlace de emparejamiento (con la dirección de este dispositivo): pégalo en el campo de abajo en el otro dispositivo",
-  "Kopplungs-Link kopiert. Auf dem anderen Gerät ins Feld „Code von einem anderen Gerät“ einfügen.": "Enlace de emparejamiento copiado. Pégalo en el otro dispositivo en el campo «Código de otro dispositivo»."
+  "Kopplungs-Link kopiert. Auf dem anderen Gerät ins Feld „Code von einem anderen Gerät“ einfügen.": "Enlace de emparejamiento copiado. Pégalo en el otro dispositivo en el campo «Código de otro dispositivo».",
+  "Verbunden mit {0}": "Conectado con {0}",
+  "Der Abgleich funktioniert. Ab jetzt gleicht ihr euch von selbst ab, sobald beide Apps im selben WLAN offen sind.": "La sincronización funciona. A partir de ahora os sincronizáis solos cuando ambas apps estén abiertas en la misma red wifi.",
+  "Gerät gekoppelt": "Dispositivo vinculado",
+  "Suche jetzt das andere Gerät … Lass die App dort offen; sobald ihr euch erreicht, kommt hier eine Meldung.": "Buscando ahora el otro dispositivo … Deja la app abierta allí; en cuanto os encontréis aparecerá un aviso aquí.",
+  "Seit {0} Tagen kein Abgleich": "Sin sincronizar desde hace {0} días",
+  "Öffne BibleStudy kurz auf {0} (im selben WLAN), dann gleicht ihr euch ab. Bis dahin geht nichts verloren.": "Abre BibleStudy un momento en {0} (en la misma red wifi) y os sincronizáis. Hasta entonces no se pierde nada.",
+  "dem anderen Gerät": "el otro dispositivo"
 }

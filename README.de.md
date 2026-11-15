@@ -82,11 +82,11 @@ Beim Deinstallieren (und beim Entfernen der portablen Version) wirst du immer ge
 
 ## Auf dem Handy
 
-**Android:** Lade `BibleStudy-Android-…apk` unter [Releases](https://github.com/Trofline/BibleStudy/releases) herunter (Beta) und öffne sie.
+**Android:** Lade `BibleStudy-Android-…apk` aus dem [neuesten Release](https://github.com/Trofline/BibleStudy/releases/latest) herunter (Beta) und öffne sie. Danach aktualisiert sich die App selbst.
 
 **iPhone (Beta), kostenlos und ohne Mac:** Apple erlaubt nur dem App Store, Apps zu installieren. Deshalb wird BibleStudy mit [SideStore](https://sidestore.io) installiert, das die App mit deiner eigenen, kostenlosen Apple-ID signiert. Du brauchst **einmalig einen Windows-PC (oder Mac) mit Kabel**; danach erneuert das Handy die App von selbst. Zusammen etwa 10 Minuten.
 
-1. **SideStore aufs iPhone bringen (ca. 4 Min.).** Am PC *Apple-Geräte* (Microsoft Store) oder iTunes installieren, dann [iloader](https://github.com/nab138/iloader) öffnen, das iPhone per Kabel anschließen, mit der Apple-ID anmelden und SideStore installieren. iloader erzeugt auch die *Pairing-Datei*, die SideStore braucht.
+1. **SideStore aufs iPhone bringen (ca. 4 Min.).** Am PC *Apple-Geräte* (Microsoft Store) oder iTunes installieren, dann [iloader](https://github.com/nab138/iloader) öffnen, das iPhone per Kabel anschließen, mit der Apple-ID anmelden und SideStore installieren. iloader erzeugt auch die *Pairing-Datei*, die SideStore braucht. Meldet SideStore später, dass sie fehlt: iloader mit angeschlossenem iPhone erneut öffnen, unten auf **Manage Pairing File** klicken und sie für SideStore einsetzen.
 2. **Vertrauen und Entwicklermodus (ca. 2 Min.).** iPhone: Einstellungen → Allgemein → VPN und Geräteverwaltung → deiner Apple-ID vertrauen. Einstellungen → Datenschutz & Sicherheit → Entwicklermodus → ein (das iPhone startet neu).
 3. **Loopback-VPN installieren (ca. 1 Min.).** SideStore spricht über ein winziges VPN auf dem Handy selbst mit dem Handy. Es schickt keine Daten irgendwohin. Installiere **StosVPN** (oder *LocalDevVPN*) aus dem App Store und schalte es einmal ein.
 4. **BibleStudy hinzufügen (ca. 2 Min.).** SideStore öffnen, anmelden, dann auf dem iPhone [diesen Link](sidestore://source?url=https://trofline.github.io/BibleStudy/sidestore.json) antippen (oder Quellen → **+** → `https://trofline.github.io/BibleStudy/sidestore.json`). BibleStudy in der Liste öffnen und **Installieren** tippen.
@@ -94,6 +94,7 @@ Beim Deinstallieren (und beim Entfernen der portablen Version) wirst du immer ge
    1. **Kurzbefehle → Kurzbefehle → +** und diese Aktionen in dieser Reihenfolge anlegen: das VPN von StosVPN **einschalten** (Aktion der VPN-App), **Alle Apps erneuern** (Aktion von SideStore), das VPN wieder **ausschalten**. Name: **BibleStudy erneuern**.
    2. **Kurzbefehle → Automation → +** → **Tageszeit** (zum Beispiel 3:00, täglich) → **Sofort ausführen** → den Kurzbefehl wählen. „Beim Ausführen benachrichtigen“ kannst du ausschalten.
    3. Lass das Handy nachts am Strom und mit WLAN, dann läuft es.
+6. **Abgleich mit dem PC, sobald du heimkommst (ca. 1 Min.).** Das iPhone gleicht nur ab, während BibleStudy offen ist. Damit das von selbst passiert: **Kurzbefehle → Automation → +** → **WLAN** → dein WLAN wählen, **Verbindet** ankreuzen → **Sofort ausführen** → **Weiter** → **Neue leere Automation** → Aktion **App öffnen** → **BibleStudy**. Kommst du heim, öffnet sich die App kurz und gleicht ab. Einrichten des Abgleichs: Handbuch Kapitel 19.3.
 
 Ist eine App trotzdem abgelaufen: SideStore öffnen und bei BibleStudy **Erneuern** tippen; deine Daten bleiben. Updates kommen über SideStore.
 
