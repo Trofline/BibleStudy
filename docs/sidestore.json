@@ -1,4 +1,4 @@
-﻿{
+{
     "name":  "BibleStudy",
     "identifier":  "de.trofline.biblestudy.source",
     "subtitle":  "Bible study for the iPhone",
@@ -19,7 +19,7 @@
                      "versions":  [
                                       {
                                           "version":  "1.9.6",
-                                          "buildVersion":  "1.9.6",
+                                          "buildVersion":  "25",
                                           "date":  "2026-11-15",
                                           "localizedDescription":  "**Beta.** Update through SideStore (source: `https://trofline.github.io/BibleStudy/sidestore.json`). The IPA is attached when its build is done.\n\n- **[Bug fix]** The side panel steps aside while the settings are open and comes back with the text.\n- **[Bug fix]** iPhone: scanning the pairing QR code with the camera pairs the app again.\n- **[Bug fix]** The pairing code can be copied: \"Copy code\" copies the pairing link, with the address of this device, for the field on the other device.",
                                           "downloadURL":  "https://github.com/Trofline/BibleStudy/releases/download/ios-beta-1.9.6/BibleStudy-iOS-1.9.6.ipa",
@@ -28,7 +28,7 @@
                                       },
                                       {
                                           "version":  "1.9.5",
-                                          "buildVersion":  "1.9.5",
+                                          "buildVersion":  "24",
                                           "date":  "2026-11-15",
                                           "localizedDescription":  "**Beta.** Update through SideStore (source: `https://trofline.github.io/BibleStudy/sidestore.json`). The IPA is attached when its build is done.\n\nFixes\n- The options in the side panel (search scope, word match, more options) no longer lie on top of each other.",
                                           "downloadURL":  "https://github.com/Trofline/BibleStudy/releases/download/ios-beta-1.9.5/BibleStudy-iOS-1.9.5.ipa",
@@ -37,7 +37,7 @@
                                       },
                                       {
                                           "version":  "1.9.4",
-                                          "buildVersion":  "1.9.4",
+                                          "buildVersion":  "23",
                                           "date":  "2026-11-15",
                                           "localizedDescription":  "**Beta.** Install or update through SideStore (source: https://trofline.github.io/BibleStudy/sidestore.json). The IPA is attached when its build is done.\n\n\nNew\n- Select words with your finger: hold on a word, then slide on to select more; lift to pick a color. Lift at once for the verse menu.\n- Sync knows which side is newer: a change made on one device replaces the old text on the other instead of being added to it, and deletions travel too (into the trash). A new or empty device never deletes anything on the other.\n- Sync runs by itself: a change reaches the other device within seconds, the ",
                                           "downloadURL":  "https://github.com/Trofline/BibleStudy/releases/download/ios-beta-1.9.4/BibleStudy-iOS-1.9.4.ipa",
@@ -46,7 +46,7 @@
                                       },
                                       {
                                           "version":  "1.9.2",
-                                          "buildVersion":  "1.9.2",
+                                          "buildVersion":  "21",
                                           "date":  "2026-11-15",
                                           "localizedDescription":  "**Beta, iPhone (SideStore).** Install with SideStore, no paid Apple account needed. Step by step: https://github.com/Trofline/BibleStudy#on-the-phone\n\nAdd this source in SideStore: `https://trofline.github.io/BibleStudy/sidestore.json`\n\nFirst iPhone version: please report what does not work. Same features as the Android beta, including syncing with your PC.",
                                           "downloadURL":  "https://github.com/Trofline/BibleStudy/releases/download/ios-beta-1.9.2/BibleStudy-iOS-1.9.2.ipa",
