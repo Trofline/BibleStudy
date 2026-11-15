@@ -18,6 +18,15 @@
                      "category":  "other",
                      "versions":  [
                                       {
+                                          "version":  "1.9.4",
+                                          "buildVersion":  "1.9.4",
+                                          "date":  "2026-11-15",
+                                          "localizedDescription":  "**Beta.** Install or update through SideStore (source: https://trofline.github.io/BibleStudy/sidestore.json). The IPA is attached when its build is done.\n\n\nNew\n- Select words with your finger: hold on a word, then slide on to select more; lift to pick a color. Lift at once for the verse menu.\n- Sync knows which side is newer: a change made on one device replaces the old text on the other instead of being added to it, and deletions travel too (into the trash). A new or empty device never deletes anything on the other.\n- Sync runs by itself: a change reaches the other device within seconds, the ",
+                                          "downloadURL":  "https://github.com/Trofline/BibleStudy/releases/download/ios-beta-1.9.4/BibleStudy-iOS-1.9.4.ipa",
+                                          "size":  59322750,
+                                          "minOSVersion":  "15.0"
+                                      },
+                                      {
                                           "version":  "1.9.2",
                                           "buildVersion":  "1.9.2",
                                           "date":  "2026-11-15",
