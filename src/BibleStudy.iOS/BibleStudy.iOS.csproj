@@ -49,6 +49,11 @@
     <EmbeddedResource Include="../../docs/handbook/*.md" LogicalName="Handbook/%(Filename)%(Extension)" />
   </ItemGroup>
 
+  <!-- the app icon as plain files (no asset catalog: its compiler needs a part of Xcode that is missing on the build machine) -->
+  <ItemGroup>
+    <BundleResource Include="Icons/*.png" />
+  </ItemGroup>
+
   <ItemGroup>
     <Using Include="BibleStudy.Core.Loc" Static="true" />
     <Using Include="BibleStudy.Core.Loc" Alias="Loc" />
