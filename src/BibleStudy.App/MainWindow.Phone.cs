@@ -125,7 +125,7 @@ public partial class MainWindow
         foreach (var c in _capped.ToList()) { c.MaxWidth = cap; if (double.IsInfinity(cap)) _capped.Remove(c); }
         if (!_phone) return;
         foreach (var c in Avalonia.LogicalTree.LogicalExtensions.GetLogicalDescendants(this).OfType<Control>())
-            if (c != SidePanel && !double.IsNaN(c.Width) && c.Width > cap && !_capped.Contains(c) && double.IsInfinity(c.MaxWidth)) { c.MaxWidth = cap; _capped.Add(c); }
+            if (c != SidePanel && c != ReaderPanel && !double.IsNaN(c.Width) && c.Width > cap && !_capped.Contains(c) && double.IsInfinity(c.MaxWidth)) { c.MaxWidth = cap; _capped.Add(c); }
     }
 
 

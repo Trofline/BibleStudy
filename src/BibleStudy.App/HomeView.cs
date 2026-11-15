@@ -52,18 +52,24 @@ public sealed class HomeView : UserControl
         _scroll.SizeChanged += (_, _) => Fit();
     }
 
+    readonly List<Border> _tiles = [];
+
+    /// <summary>A book tile: on a phone two fill the row (the long names like "Apostelgeschichte" need the room), elsewhere 148.</summary>
+    double TileWidth => _scroll.Bounds.Width is > 0 and < 520 and var w ? Math.Floor((Math.Max(200, w - 28) - 20) / 2) - 1 : 148;
+
     void Fit()
     {
         if (_panel is null) return;
         var w = _scroll.Bounds.Width;
         _panel.Width = w < 520 ? Math.Max(200, w - 28) : Math.Clamp(w - 64, 400, 940);   // a phone is narrower than the smallest desktop page
+        foreach (var t in _tiles) if (t.Width != TileWidth) t.Width = TileWidth;
     }
 
     /// <summary>(Re)builds the page; keeps the chapter grid of <paramref name="openBook"/> open if given.</summary>
     public void Show(IReadOnlyList<BookInfo> books, HashSet<(string, int)> read, string? openBook = null)
     {
-        _books = books; _read = read; _openBook = openBook;
-        var panel = new StackPanel { Width = 940, HorizontalAlignment = HorizontalAlignment.Center, Margin = new(0, 40, 0, 70), Spacing = 6 };
+        _books = books; _read = read; _openBook = openBook; _tiles.Clear();
+        var panel = new StackPanel { Width = 940, HorizontalAlignment = HorizontalAlignment.Center, Margin = _scroll.Bounds.Width is > 0 and < 520 ? new(0, 16, 0, 40) : new(0, 40, 0, 70), Spacing = 6 };
         if (_openBook is not null && books.FirstOrDefault(b => b.Id == _openBook) is { } book) BuildChapters(panel, book);
         else BuildBooks(panel);
         _panel = panel;
@@ -204,10 +210,11 @@ public sealed class HomeView : UserControl
 
         var tile = new Border
         {
-            Width = 148, Height = 62, Margin = new(0, 0, 10, 10), Padding = new(10, 9, 12, 9), CornerRadius = new(12), BorderThickness = new(1),
+            Width = TileWidth, Height = 62, Margin = new(0, 0, 10, 10), Padding = new(10, 9, 12, 9), CornerRadius = new(12), BorderThickness = new(1),
             Cursor = new Cursor(StandardCursorType.Hand), Child = inner, Classes = { "tile" },
         };
         Themed(tile, Border.BorderBrushProperty, "BsBorder");
+        _tiles.Add(tile);
         if (done) tile.Background = new SolidColorBrush(color, 0.10);
         else Themed(tile, Border.BackgroundProperty, "BsSurface");
         ToolTip.SetTip(tile, L("{0} · {1}/{2} gelesen", b.CommonName, count, b.NumberOfChapters));

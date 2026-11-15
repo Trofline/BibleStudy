@@ -87,16 +87,20 @@ public class LanSyncTests : IDisposable
         var key = SyncCode.NewKey();
         using var a = new Device(Path.Combine(_dir, "a"), key, "PC");
         a.Vault("Standard").SetNote(new VerseRef("Joh", 3, 16), "vom PC");
-        a.Cfg.Auto = true;
         using var b = new Device(Path.Combine(_dir, "b"), key, "Handy");
-        b.Cfg.Auto = true;
         b.Vault("Standard").SetNote(new VerseRef("Ps", 23, 1), "vom Handy");
+        // only now: a device that starts announces itself, and the other would compare before the note above is written
+        a.Cfg.Auto = true; b.Cfg.Auto = true;
         var done = new TaskCompletionSource();
-        a.Sync.Finished += _ => done.TrySetResult();
-        b.Sync.Finished += _ => done.TrySetResult();
+        var reports = new System.Collections.Concurrent.ConcurrentQueue<string>();
+        a.Sync.Finished += r => { reports.Enqueue("a:" + r.Error + ":" + r.Changed + "/" + r.Sent); done.TrySetResult(); };
+        b.Sync.Finished += r => { reports.Enqueue("b:" + r.Error + ":" + r.Changed + "/" + r.Sent); done.TrySetResult(); };
         a.Sync.Announce(); b.Sync.Announce();
         await Task.WhenAny(done.Task, Task.Delay(20000));
         Assert.True(done.Task.IsCompleted, "no device found the other");
+        // "finished" comes from the first side that is done; the other may still be taking in what it got
+        for (var i = 0; i < 100 && (a.Vault("Standard").GetNotes().Count < 2 || b.Vault("Standard").GetNotes().Count < 2); i++) await Task.Delay(100);
+        Assert.True(a.Vault("Standard").GetNotes().Count == 2, string.Join(" ", reports));
         Assert.Equal(2, a.Vault("Standard").GetNotes().Count);
         Assert.Equal(2, b.Vault("Standard").GetNotes().Count);
     }

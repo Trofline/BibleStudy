@@ -6,6 +6,7 @@ using Avalonia.Layout;
 using Avalonia.LogicalTree;
 using Avalonia.Media;
 using Avalonia.Threading;
+using Avalonia.Styling;
 
 namespace BibleStudy.App;
 
@@ -67,6 +68,8 @@ public partial class MainWindow
         }
         else return;
 
+        InstallPhoneStyles();
+        HookShortHints();
         _pBar = BuildPhoneBar();
         _pNav = BuildPhoneNav();
         DockPanel.SetDock(_pNav, Dock.Bottom);
@@ -142,7 +145,7 @@ public partial class MainWindow
         var grid = new UniformGrid { Rows = 1, Columns = items.Length };
         foreach (var it in items)
         {
-            var label = new TextBlock { Text = it.Label, FontSize = 11, FontWeight = FontWeight.Medium, HorizontalAlignment = HorizontalAlignment.Center, TextTrimming = TextTrimming.CharacterEllipsis };
+            var label = new TextBlock { Text = it.Label, FontSize = 11, FontWeight = FontWeight.Medium, HorizontalAlignment = HorizontalAlignment.Center, TextTrimming = TextTrimming.CharacterEllipsis, TextWrapping = TextWrapping.NoWrap };
             var b = new Button
             {
                 Classes = { "rail" }, Height = 58, Margin = new Thickness(2, 3),
@@ -376,6 +379,7 @@ public partial class MainWindow
 public partial class MainWindow
 {
     string? _wrappedWork;
+    int _wrappedSide = -1;
     bool _rowsWrapped;
 
     /// <summary>
@@ -385,11 +389,17 @@ public partial class MainWindow
     void WrapRows(Control root)
     {
         StackLabelGrids(root);
+        // a line of text made for a wide window wraps instead of being cut (labels inside buttons, boxes and tab heads keep their one line)
+        foreach (var tb in root.GetLogicalDescendants().OfType<TextBlock>())
+            if (tb.TextWrapping == TextWrapping.NoWrap && tb.TextTrimming == TextTrimming.None && tb.GetType() == typeof(TextBlock)
+                && !tb.GetLogicalAncestors().Any(a => a is Button or ComboBox or TabItem or ToggleButton or MenuItem))
+                tb.TextWrapping = TextWrapping.Wrap;
         foreach (var sp in root.GetLogicalDescendants().OfType<StackPanel>().Where(s => s.Orientation == Orientation.Horizontal && s.Name is null && s.GetType() == typeof(StackPanel)).ToList())
         {
             if (sp.Children.Count < 2 || sp.Children.Any(c => c is Icon || c is TextBox { AcceptsReturn: true })) continue;
             if (sp.Parent is not Panel and not Border) continue;
             var wrap = new WrapPanel { ItemSpacing = Math.Max(4, sp.Spacing), LineSpacing = 6, Margin = sp.Margin, HorizontalAlignment = sp.HorizontalAlignment, VerticalAlignment = sp.VerticalAlignment, IsVisible = sp.IsVisible, Tag = sp.Tag };
+            DockPanel.SetDock(wrap, DockPanel.GetDock(sp));
             var kids = sp.Children.ToList();
             sp.Children.Clear();
             foreach (var k in kids) wrap.Children.Add(k);
@@ -401,6 +411,7 @@ public partial class MainWindow
     void WrapOpenAreas()
     {
         if (!_shellOn) return;
+        if (SidePanel.IsVisible && SideTabs.SelectedIndex != _wrappedSide && SideTabs.SelectedItem is TabItem { Content: Control sideContent }) { _wrappedSide = SideTabs.SelectedIndex; WrapRows(sideContent); }
         if (_activeWork == _wrappedWork) return;
         _wrappedWork = _activeWork;
         if (_activeWork is not null) WrapRows(WorkHost);
@@ -426,5 +437,83 @@ public partial class MainWindow
                 if (c is Control ctl && ctl.HorizontalAlignment == HorizontalAlignment.Stretch) ctl.HorizontalAlignment = HorizontalAlignment.Left;
             }
         }
+    }
+}
+
+public partial class MainWindow
+{
+    bool _phoneStyled;
+
+    /// <summary>
+    /// Rules that hold only on a phone: the text of a button wraps instead of running out of it, a box shows "…" when its text is longer than
+    /// the box, the hint text of an empty field too. On a desktop the window is wide enough for one line.
+    /// </summary>
+    void InstallPhoneStyles()
+    {
+        if (_phoneStyled || Application.Current is not { } app) return;
+        _phoneStyled = true;
+        var styles = new Avalonia.Styling.Styles
+        {
+            new Avalonia.Styling.Style(x => x.Is<Button>().Template().OfType<Avalonia.Controls.Presenters.ContentPresenter>().Name("PART_ContentPresenter"))
+            { Setters = { new Avalonia.Styling.Setter(Avalonia.Controls.Presenters.ContentPresenter.TextWrappingProperty, TextWrapping.Wrap) } },
+            new Avalonia.Styling.Style(x => x.Is<Button>().Child().OfType<StackPanel>().Child().OfType<TextBlock>())
+            { Setters = { new Avalonia.Styling.Setter(TextBlock.TextWrappingProperty, TextWrapping.Wrap) } },
+            new Avalonia.Styling.Style(x => x.Is<CheckBox>().Template().OfType<Avalonia.Controls.Presenters.ContentPresenter>())
+            { Setters = { new Avalonia.Styling.Setter(Avalonia.Controls.Presenters.ContentPresenter.TextWrappingProperty, TextWrapping.Wrap) } },
+            new Avalonia.Styling.Style(x => x.OfType<ComboBox>().Descendant().OfType<TextBlock>())
+            { Setters = { new Avalonia.Styling.Setter(TextBlock.TextTrimmingProperty, TextTrimming.CharacterEllipsis) } },
+            new Avalonia.Styling.Style(x => x.OfType<TextBox>().Template().OfType<TextBlock>())
+            { Setters = { new Avalonia.Styling.Setter(TextBlock.TextTrimmingProperty, TextTrimming.CharacterEllipsis) } },
+            new Avalonia.Styling.Style(x => x.OfType<Expander>().Template().Descendant().OfType<Avalonia.Controls.Presenters.ContentPresenter>())
+            { Setters = { new Avalonia.Styling.Setter(Avalonia.Controls.Presenters.ContentPresenter.TextWrappingProperty, TextWrapping.Wrap) } },
+        };
+        app.Styles.Add(styles);
+        // the short descriptions under the tabs of the side panel: on a phone the room belongs to the content
+        SubHint.IsVisible = false;
+        // the title of the documents and its two buttons do not fit in one row: the buttons go below it
+        if (DocNewBtn.Parent is DockPanel docHead)
+        {
+            DockPanel.SetDock(DocNewBtn, Avalonia.Controls.Dock.Bottom); DockPanel.SetDock(DocFolderBtn, Avalonia.Controls.Dock.Bottom);
+            DocNewBtn.HorizontalAlignment = DocFolderBtn.HorizontalAlignment = HorizontalAlignment.Left;
+            DocFolderBtn.Margin = new Thickness(0, 6, 0, 0); DocNewBtn.Margin = new Thickness(0, 6, 0, 0);
+            docHead.Children.Remove(DocNewBtn); docHead.Children.Remove(DocFolderBtn);
+            var row = new WrapPanel { ItemSpacing = 8, Children = { DocFolderBtn, DocNewBtn } };
+            DockPanel.SetDock(row, Avalonia.Controls.Dock.Bottom);
+            docHead.Children.Insert(0, row);
+        }
+    }
+}
+
+public partial class MainWindow
+{
+    static readonly System.Runtime.CompilerServices.ConditionalWeakTable<TextBox, string> FullHints = new();
+    static bool _hintsHooked;
+
+    /// <summary>
+    /// The hint in an empty field ("Notizen durchsuchen (Text oder Stelle)") is cut in the middle of a letter when the field is narrow: on a phone it is
+    /// shortened to its first part (before a bracket, a comma or "z. B."), or ends in "…".
+    /// </summary>
+    static void HookShortHints()
+    {
+        if (_hintsHooked) return;
+        _hintsHooked = true;
+        Visual.BoundsProperty.Changed.AddClassHandler<TextBox>((box, _) => FitHint(box));
+    }
+
+    static void FitHint(TextBox box)
+    {
+        if (box.Bounds.Width <= 0) return;
+        if (!FullHints.TryGetValue(box, out var full)) { full = box.PlaceholderText ?? ""; if (full.Length == 0) return; FullHints.AddOrUpdate(box, full); }
+        var room = box.Bounds.Width - box.Padding.Left - box.Padding.Right - 14;
+        var size = box.FontSize > 0 ? box.FontSize : 14;
+        double Width(string s) => new Avalonia.Media.TextFormatting.TextLayout(s, new Typeface(box.FontFamily), size, null).WidthIncludingTrailingWhitespace;
+        var text = full;
+        if (Width(text) > room)
+        {
+            foreach (var cut in new[] { " (", ", ", " z. B.", " e.g.", " – ", ": " })
+                if (text.IndexOf(cut, StringComparison.Ordinal) is > 3 and var i) text = text[..i] + " …";
+            while (text.Length > 4 && Width(text) > room) text = text[..(text.Length - 3)].TrimEnd(' ', '…', ',') + " …";
+        }
+        if (box.PlaceholderText != text) box.PlaceholderText = text;
     }
 }

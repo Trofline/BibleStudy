@@ -93,12 +93,26 @@ public partial class MainWindow
         };
         pathBox.Bind(Border.BackgroundProperty, this.GetResourceObservable("BsSurface"));
         pathBox.Bind(Border.BorderBrushProperty, this.GetResourceObservable("BsBorder"));
-        var bar = new DockPanel { Margin = new(14, 12, 14, 8) };
-        var right = new StackPanel { Orientation = Orientation.Horizontal, Children = { _exSearch, newFolder } };
-        DockPanel.SetDock(right, Dock.Right);
+        Control bar;
         var nav = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 2, Children = { _exBackBtn, _exUpBtn } };
         DockPanel.SetDock(nav, Dock.Left);
-        bar.Children.Add(nav); bar.Children.Add(right); bar.Children.Add(pathBox);
+        if (IsPhone)
+        {
+            // a phone: the path gets a row of its own, below it back / up, the search (as wide as there is room) and the new folder
+            newFolder.Content = L("＋ Ordner");
+            _exSearch.Width = double.NaN;
+            DockPanel.SetDock(newFolder, Dock.Right);
+            pathBox.Margin = new(0, 0, 0, 6);
+            bar = new StackPanel { Margin = new(10, 10, 10, 8), Children = { pathBox, new DockPanel { Children = { nav, newFolder, _exSearch } } } };
+        }
+        else
+        {
+            var dock = new DockPanel { Margin = new(14, 12, 14, 8) };
+            var right = new StackPanel { Orientation = Orientation.Horizontal, Children = { _exSearch, newFolder } };
+            DockPanel.SetDock(right, Dock.Right);
+            dock.Children.Add(nav); dock.Children.Add(right); dock.Children.Add(pathBox);
+            bar = dock;
+        }
 
         _exTree = new StackPanel { Margin = new(6, 4, 6, 12) };
         var treeBox = new Border { CornerRadius = new(12), BorderThickness = new(1), Child = new ScrollViewer { Content = _exTree } };
@@ -555,7 +569,7 @@ public partial class MainWindow
         if (_exBody is null || _exHead is null || _exSearch is null) return;
         _exBody.ColumnDefinitions = new(IsPhone ? "0,0,*" : "240,8,*");
         _exHead.ColumnDefinitions = new(ExColumns);
-        _exSearch.Width = IsPhone ? 120 : 220;
+        _exSearch.Width = IsPhone ? double.NaN : 220;
         _exBody.Margin = IsPhone ? new(6, 0, 6, 0) : new(14, 0, 14, 0);
         FillExplorerList();
     }
