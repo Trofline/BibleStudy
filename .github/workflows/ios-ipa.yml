@@ -40,7 +40,8 @@ jobs:
           ls -d /Applications/Xcode*
           # .NET for iOS needs the Xcode it was made for (26.6 for the 26.5.10318 workload installed below)
           WANT="${{ github.event.inputs.xcode }}"; WANT="${WANT:-26.6}"
-          APP=$(ls -d /Applications/Xcode_$WANT*.app 2>/dev/null | sort -V | tail -1)
+          APP=/Applications/Xcode_$WANT.app
+          [ -d "$APP" ] || APP=$(ls -d /Applications/Xcode_$WANT*.app 2>/dev/null | sort -V | tail -1)
           [ -d "$APP" ] || APP=$(ls -d /Applications/Xcode_*.app 2>/dev/null | sort -V | tail -1)
           echo "Using $APP"
           sudo xcode-select -s "$APP/Contents/Developer"
@@ -54,6 +55,9 @@ jobs:
           fi
           ls -d "$APP"/Contents/Developer/Platforms/*.platform
           xcrun -find install_name_tool
+          xcrun --sdk iphoneos -find clang
+          xcrun -sdk "$SDKS/MacOSX.sdk" -find clang || true
+          xcodebuild -sdk "$SDKS/MacOSX.sdk" -find clang || true
 
       - name: Install the iOS workload
         run: |
