@@ -61,7 +61,7 @@ public partial class MainWindow
     void ApplyPhoneLayout()
     {
         if (!AppPlatform.IsMobile || Bounds.Width <= 0) return;
-        var phone = Bounds.Width < PhoneWidth;
+        var phone = Bounds.Width < PhoneWidth || Bounds.Height < 500;   // a phone held across is as low as a phone is narrow
         var pickers = (Control)BookBtn.Parent!.Parent!.Parent!;   // the row with the language, translation, book and chapter
         if (phone != _phone)
         {
@@ -95,6 +95,8 @@ public partial class MainWindow
                 foreach (var c in settings.Children.Where(c => Grid.GetColumn(c) == 1)) c.IsVisible = !phone;
                 settings.Margin = phone ? new Thickness(8, 10, 0, 8) : new Thickness(16, 14, 4, 12);
             }
+            ApplyPhoneShell();
+            if (phone && !_rowsWrapped) { _rowsWrapped = true; WrapRows(SettingsStack); }
         }
         if (phone)
         {
@@ -123,7 +125,7 @@ public partial class MainWindow
         foreach (var c in _capped.ToList()) { c.MaxWidth = cap; if (double.IsInfinity(cap)) _capped.Remove(c); }
         if (!_phone) return;
         foreach (var c in Avalonia.LogicalTree.LogicalExtensions.GetLogicalDescendants(this).OfType<Control>())
-            if (!double.IsNaN(c.Width) && c.Width > cap && !_capped.Contains(c) && double.IsInfinity(c.MaxWidth)) { c.MaxWidth = cap; _capped.Add(c); }
+            if (c != SidePanel && !double.IsNaN(c.Width) && c.Width > cap && !_capped.Contains(c) && double.IsInfinity(c.MaxWidth)) { c.MaxWidth = cap; _capped.Add(c); }
     }
 
 
@@ -137,6 +139,7 @@ public partial class MainWindow
     /// <summary>The back key of the phone: first the side panel, then an open tool goes back to the text; at the text the app goes to the background.</summary>
     bool OnPhoneBack()
     {
+        if (_sheetLayer is { IsVisible: true }) { ShowSheet(null); return true; }
         if (SidePanel.IsVisible && _phone) { SetPanelOpen(false); return true; }
         if (_activeWork is not null) { ShowReader(); return true; }
         if (!ReaderHost.IsVisible) { ShowReader(); return true; }
@@ -215,7 +218,7 @@ public partial class MainWindow
     void ApplyFold()
     {
         if (_foldHandle is null || _foldIcon is null) return;
-        _foldHandle.IsVisible = AppPlatform.IsMobile && !_settings.FocusMode && (_phone || _compact);
+        _foldHandle.IsVisible = AppPlatform.IsMobile && !_settings.FocusMode && (_phone || _compact) && !_shellOn;
         if (!_foldHandle.IsVisible) _barsFolded = false;
         TabBar.IsVisible = !_barsFolded && !_settings.FocusMode;
         ParallelBar.ClipToBounds = true;

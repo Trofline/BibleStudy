@@ -64,7 +64,13 @@ public partial class MainWindow
         _palette.IsOpen = false; Focus();   // the command list must be gone: two popups at the same time confuse the renderer
         ShowReader();
         _touring = true;
-        var steps = new TourStep[]
+        var steps = _shellOn ? PhoneTourSteps() : DesktopTourSteps();
+        ShowTourStep(steps, 0);
+    }
+
+    TourStep[] DesktopTourSteps()
+    {
+        return new TourStep[]
         {
             new(() => TransBtn, PlacementMode.Bottom, L("Sprache und Übersetzung"), L("Hier wählst du die Sprache und die Übersetzung. Viele sind frei und ohne Anmeldung dabei; eigene Dateien importierst du in den Einstellungen.")),
             new(() => BookBtn, PlacementMode.Bottom, L("Buch und Kapitel"), L("Buch anklicken: Danach öffnet sich gleich die Kapitelliste. Oder tippe „Joh“ und Enter. Mit den Pfeilen blätterst du Kapitel.")),
@@ -93,7 +99,6 @@ public partial class MainWindow
                 L("Das ausführliche Handbuch: jede Funktion, jedes Tastenkürzel, Anwendung und Strategien. Mit Inhaltsverzeichnis und Suche. Von hier aus kannst du alles Weitere selbst entdecken."),
                 null, () => OpenWork(NavGroups.First(g => g.Name == "Hilfe"), HandbookTab)),
         };
-        ShowTourStep(steps, 0);
     }
 
     /// <summary>Only when backups are off: one button that turns the weekly backup on.</summary>
@@ -125,12 +130,12 @@ public partial class MainWindow
             }, TimeSpan.FromMilliseconds(350));
             return;
         }
-        while (i < steps.Length && steps[i].Anchor() is { IsVisible: false } or { Bounds.Width: 0 }) i++;   // a button that is not there (hidden panel, other layout) is skipped
+        while (i < steps.Length && steps[i].Anchor() is { IsEffectivelyVisible: false } or { Bounds.Width: 0 }) i++;   // a button that is not there (hidden panel, other layout) is skipped
         if (i >= steps.Length) { FinishTour(); return; }
         var step = steps[i]; var last = i == steps.Length - 1;
         var moved = false;
 
-        var panel = new StackPanel { Spacing = 8, Width = 330 };
+        var panel = new StackPanel { Spacing = 8, Width = PW(330) };
         panel.Children.Add(new TextBlock { Text = step.Title, FontSize = 17, FontWeight = FontWeight.SemiBold, TextWrapping = TextWrapping.Wrap });
         panel.Children.Add(new TextBlock { Text = step.Text, TextWrapping = TextWrapping.Wrap });
         if (step.Extra?.Invoke() is { } extra) panel.Children.Add(extra);
@@ -181,4 +186,18 @@ public partial class MainWindow
         _settings.TourPending = false; SaveSettings();
         if (_settings.AutoUpdate) DispatcherTimer.RunOnce(async () => await CheckForUpdateAsync(manual: false), TimeSpan.FromSeconds(2));   // it waited for the first start to be over
     }
+}
+
+public partial class MainWindow
+{
+    /// <summary>The tour on a phone: the bars of the desktop are not there, so it walks along the slim top bar and the bottom bar.</summary>
+    TourStep[] PhoneTourSteps() =>
+    [
+        new(() => _pTitle!, PlacementMode.Bottom, L("Buch und Kapitel"), L("Tippe auf den Titel, um ein Buch und ein Kapitel zu wählen. Mit den Pfeilen rechts blätterst du Kapitel.")),
+        new(() => _pTrans!, PlacementMode.Bottom, L("Übersetzung"), L("Hier wechselst du die Übersetzung. Viele sind frei und ohne Anmeldung dabei.")),
+        new(() => _navBtns["search"], PlacementMode.Top, L("Suche"), L("Suche nach Wörtern, Wendungen und Bibelstellen.")),
+        new(() => _navBtns["tools"], PlacementMode.Top, L("Werkzeuge"), L("Alles zum Kapitel: Wortstudie, Markieren, Vorlesen, Hörbibel, Bericht und mehr.")),
+        new(() => _navBtns["marks"], PlacementMode.Top, L("Merken"), L("Deine Lesezeichen und Markierungen.")),
+        new(() => _navBtns["more"], PlacementMode.Top, L("Mehr"), L("Alle Bereiche, Einstellungen, Hilfe und Sicherung. Hier startest du diesen Rundgang auch wieder.")),
+    ];
 }

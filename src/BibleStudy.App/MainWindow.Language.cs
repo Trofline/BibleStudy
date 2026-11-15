@@ -49,7 +49,7 @@ public partial class MainWindow
         return;
 #elif IOS
         // an iPhone does not let an app start itself again: the person closes it and opens it anew
-        StatusText.Text = L("Schließe die App und öffne sie neu (am unteren Rand nach oben wischen), damit die Änderung gilt.");
+        _ = AskAsync(L("Neustart"), L("Schließe die App und öffne sie neu (am unteren Rand nach oben wischen), damit die Änderung gilt."), L("OK"));
         return;
 #endif
         try

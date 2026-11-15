@@ -54,7 +54,9 @@ public sealed class HomeView : UserControl
 
     void Fit()
     {
-        if (_panel is not null) _panel.Width = Math.Clamp(_scroll.Bounds.Width - 64, 400, 940);
+        if (_panel is null) return;
+        var w = _scroll.Bounds.Width;
+        _panel.Width = w < 520 ? Math.Max(200, w - 28) : Math.Clamp(w - 64, 400, 940);   // a phone is narrower than the smallest desktop page
     }
 
     /// <summary>(Re)builds the page; keeps the chapter grid of <paramref name="openBook"/> open if given.</summary>

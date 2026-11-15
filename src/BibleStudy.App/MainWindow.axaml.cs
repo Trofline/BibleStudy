@@ -1000,11 +1000,11 @@ public partial class MainWindow : AppWindow
     {
         ReaderPanel.HorizontalAlignment = _singleColumn ? Avalonia.Layout.HorizontalAlignment.Center : Avalonia.Layout.HorizontalAlignment.Stretch;
         ReaderScroll.VerticalScrollBarVisibility = _independent ? Avalonia.Controls.Primitives.ScrollBarVisibility.Disabled : Avalonia.Controls.Primitives.ScrollBarVisibility.Auto;
-        ReaderPanel.Margin = _singleColumn ? new(0, 36, 0, 80) : _independent ? new(24, 12, 24, 16) : new(32, 28, 32, 80);
+        ReaderPanel.Margin = _singleColumn && _phone ? new(0, 12, 0, 24) : _singleColumn ? new(0, 36, 0, 80) : _independent ? new(24, 12, 24, 16) : new(32, 28, 32, 80);
         ReaderPanel.Height = _independent ? Math.Max(240, ReaderScroll.Bounds.Height - 28) : double.NaN;
         if (_indepGrid is not null) _indepGrid.Height = Math.Max(160, ReaderPanel.Height - 70);
         var reserve = 0.0;
-        ReaderPanel.Width = _singleColumn ? Math.Clamp(ReaderScroll.Bounds.Width - 64 - reserve, 320, _settings.ReaderWidth) : double.NaN;
+        ReaderPanel.Width = _singleColumn ? (_phone ? Math.Max(200, ReaderScroll.Bounds.Width - 28) : Math.Clamp(ReaderScroll.Bounds.Width - 64 - reserve, 320, _settings.ReaderWidth)) : double.NaN;
     }
 
     /// <summary>A click into empty space (not on a verse, button or scroll bar) takes the selection away again.</summary>

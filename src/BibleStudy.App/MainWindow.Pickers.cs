@@ -99,6 +99,9 @@ public partial class MainWindow
         return label;
     }
 
+    /// <summary>A width made for a desktop, kept inside the screen of a phone (the grids wrap, so a narrower one only has fewer tiles in a row).</summary>
+    double PW(double desktop) => _phone ? Math.Min(desktop, Math.Max(240, Bounds.Width - 56)) : desktop;
+
     Flyout NewPickerFlyout(Control content) => new() { Content = content, Placement = PlacementMode.BottomEdgeAlignedLeft };
 
     Button PickerTile(string text, bool selected, Action pick, double width, Color? underline = null, double height = 40, string? tip = null)
@@ -166,7 +169,7 @@ public partial class MainWindow
         search.TextChanged += (_, _) => Fill();
         search.KeyDown += (_, e) => { if (e.Key == Avalonia.Input.Key.Enter && shown.Count > 0) { e.Handled = true; Choose(shown[0]); } };
         Fill();
-        var panel = new StackPanel { Width = 640, Children = { search, tiles } };
+        var panel = new StackPanel { Width = PW(640), Children = { search, tiles } };
         if (reset is { } r)
         {
             var back = new Button { Content = r.Label, HorizontalAlignment = HorizontalAlignment.Left, Margin = new(0, 0, 0, 6) };
@@ -189,7 +192,7 @@ public partial class MainWindow
     {
         Flyout? flyout = null;
         var color = BookColorAt(_books, book.Id);
-        var panel = new StackPanel { Width = Math.Min(620, 70 + Math.Ceiling(Math.Sqrt(book.NumberOfChapters)) * 56) };
+        var panel = new StackPanel { Width = PW(Math.Min(620, 70 + Math.Ceiling(Math.Sqrt(book.NumberOfChapters)) * 56)) };
         panel.Children.Add(PickerHeading(L("{0} – Kapitel wählen", book.CommonName)));
         var number = new TextBox { PlaceholderText = L("Nummer tippen (1–{0}) + Enter", book.NumberOfChapters), Margin = new(0, 0, 0, 8) };
         number.KeyDown += (_, e) =>
@@ -236,7 +239,7 @@ public partial class MainWindow
         }
         search.TextChanged += (_, _) => Fill();
         Fill();
-        var stack = new StackPanel { Width = 660, Children = { search, new ScrollViewer { Content = grid, Height = Math.Min(430, Math.Max(250, Bounds.Height - 230)), HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled } } };
+        var stack = new StackPanel { Width = PW(660), Children = { search, new ScrollViewer { Content = grid, Height = Math.Min(430, Math.Max(250, Bounds.Height - 230)), HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled } } };
         flyout = NewPickerFlyout(stack);
         flyout.ShowAt(Anchor(LangBtn));
         search.Focus();
@@ -244,13 +247,13 @@ public partial class MainWindow
 
     // ---- translation --------------------------------------------------------------------------------------------------
 
-    void ShowTranslationPicker()
+    void ShowTranslationPicker(Control? anchor = null)
     {
         if (TranslationBox.ItemsSource is not IEnumerable<TranslationInfo> list) return;
         var items = list.ToList();
         Flyout? flyout = null;
         var current = (TranslationBox.SelectedItem as TranslationInfo)?.Id;
-        var panel = new WrapPanel { Width = 700 };
+        var panel = new WrapPanel { Width = PW(700) };
         foreach (var t in items)
         {
             var tr = t;
@@ -260,7 +263,7 @@ public partial class MainWindow
                 Spacing = 1, HorizontalAlignment = HorizontalAlignment.Left,
                 Children = { new TextBlock { Text = t.Name, FontWeight = FontWeight.SemiBold, TextTrimming = TextTrimming.CharacterEllipsis }, new TextBlock { Text = $"{t.ShortName} · {Shorten(license, 40)}", Classes = { "caption" }, TextTrimming = TextTrimming.CharacterEllipsis } },
             };
-            var b = new Button { Content = content, Width = 340, Height = 52, Margin = new(0, 0, 6, 6), Padding = new(12, 0), CornerRadius = new(10), HorizontalContentAlignment = HorizontalAlignment.Left,
+            var b = new Button { Content = content, Width = PW(340), Height = 52, Margin = new(0, 0, 6, 6), Padding = new(12, 0), CornerRadius = new(10), HorizontalContentAlignment = HorizontalAlignment.Left,
                 Background = t.Id == current ? Res("BsAccentSoft") : Res("BsSurface2"), Foreground = Res("BsText") };
             b.Classes.Add("ghost");
             b.Click += (_, _) => { TranslationBox.SelectedItem = tr; flyout!.Hide(); };
@@ -279,13 +282,13 @@ public partial class MainWindow
             var pen = new Button { Content = "✎", Classes = { "tool" }, Width = 28, Height = 28, Padding = new(0), HorizontalAlignment = HorizontalAlignment.Right, VerticalAlignment = VerticalAlignment.Top, Margin = new(0, 4, 4, 0) };
             ToolTip.SetTip(pen, L("Umbenennen …"));
             pen.Click += (_, _) => { flyout!.Hide(); ShowRenameTranslation(tr); };
-            var tile = new Grid { Width = 340, Height = 52, Margin = new(0, 0, 6, 6), Children = { b, pen }, Tag = SearchQuery.Fold($"{t.Name} {t.ShortName} {t.EnglishName}", true) };
+            var tile = new Grid { Width = PW(340), Height = 52, Margin = new(0, 0, 6, 6), Children = { b, pen }, Tag = SearchQuery.Fold($"{t.Name} {t.ShortName} {t.EnglishName}", true) };
             panel.Children.Add(tile);
         }
         // the hint belongs here (it used to stand under the books, where it meant nothing)
-        panel.Children.Add(new TextBlock { Text = L("Rechtsklick auf eine Übersetzung: eigenen Namen vergeben"), Classes = { "caption" }, Margin = new(2, 4, 0, 0), Width = 692, TextWrapping = TextWrapping.Wrap });
+        panel.Children.Add(new TextBlock { Text = L("Rechtsklick auf eine Übersetzung: eigenen Namen vergeben"), Classes = { "caption" }, Margin = new(2, 4, 0, 0), Width = PW(692), TextWrapping = TextWrapping.Wrap });
         // a language with a hundred translations (English) needs a search, as the books and the languages have one
-        var search = new TextBox { PlaceholderText = L("Übersetzung suchen …"), Margin = new(0, 0, 0, 10), Width = 692, HorizontalAlignment = HorizontalAlignment.Left };
+        var search = new TextBox { PlaceholderText = L("Übersetzung suchen …"), Margin = new(0, 0, 0, 10), Width = PW(692), HorizontalAlignment = HorizontalAlignment.Left };
         search.TextChanged += (_, _) =>
         {
             var q = SearchQuery.Fold(search.Text?.Trim() ?? "", true);
@@ -293,8 +296,8 @@ public partial class MainWindow
         };
         var body = new StackPanel { Children = { search, new ScrollViewer { Content = panel, MaxHeight = Math.Max(250, Bounds.Height - 190), HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled } } };
         if (items.Count < 12) search.IsVisible = false;   // a handful of tiles is seen at a glance
-        flyout = NewPickerFlyout(new Border { Child = body, Width = 720 });
-        flyout.ShowAt(TransBtn);
+        flyout = NewPickerFlyout(new Border { Child = body, Width = PW(720) });
+        flyout.ShowAt(anchor ?? TransBtn);
         if (search.IsVisible) search.Focus();
     }
 }
