@@ -164,6 +164,7 @@ public partial class MainWindow
                     await WaitConnectedAsync(peer, info);
                     connect.IsEnabled = true;
                 }
+                catch (InvalidOperationException ex) when (ex.Message == "used") { info.Text = L("Diese Einladung wurde schon benutzt. Erstelle oben eine neue Einladung und tauscht die Codes noch einmal aus."); connect.IsEnabled = true; }
                 catch { info.Text = L("Dieser Code passt nicht. Es muss der Antwortcode sein, der mit „BS1-“ beginnt."); connect.IsEnabled = true; }
             };
             area.Children.Add(answer); area.Children.Add(connect); area.Children.Add(info);

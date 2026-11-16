@@ -3188,5 +3188,6 @@
   "Claude, Ollama": "Claude, Ollama",
   "Hilfe und Updates": "Help and updates",
   "Feedback, Version, Updates": "Feedback, version, updates",
-  "Mit ZeroTier oder Tailscale unter Windows: Das neue Netzwerk gilt dort oft als „Öffentlich“, und die Firewall lässt dann nichts durch. Stelle es unter Einstellungen → Netzwerk und Internet → Eigenschaften auf „Privat“.": "With ZeroTier or Tailscale on Windows: the new network often counts as “Public” there, and the firewall then lets nothing through. Set it to “Private” under Settings → Network and internet → Properties."
+  "Mit ZeroTier oder Tailscale unter Windows: Das neue Netzwerk gilt dort oft als „Öffentlich“, und die Firewall lässt dann nichts durch. Stelle es unter Einstellungen → Netzwerk und Internet → Eigenschaften auf „Privat“.": "With ZeroTier or Tailscale on Windows: the new network often counts as “Public” there, and the firewall then lets nothing through. Set it to “Private” under Settings → Network and internet → Properties.",
+  "Diese Einladung wurde schon benutzt. Erstelle oben eine neue Einladung und tauscht die Codes noch einmal aus.": "This invitation was already used. Create a new invitation above and swap the codes again."
 }

@@ -117,6 +117,8 @@ public sealed class CollabPeer : IDisposable
     /// <summary>Step 3 (host): reads the answer code; the connection comes up by itself.</summary>
     public void CompleteWithAnswer(string answerCode)
     {
+        // a second try with the same invitation cannot work (the library takes one answer only): a new invitation is needed
+        if (_pc?.remoteDescription is not null) throw new InvalidOperationException("used");
         var sdp = Decode(answerCode, "answer");
         var result = _pc!.setRemoteDescription(new RTCSessionDescriptionInit { type = RTCSdpType.answer, sdp = sdp });
         if (result != SetDescriptionResultEnum.OK) throw new InvalidOperationException(result.ToString());

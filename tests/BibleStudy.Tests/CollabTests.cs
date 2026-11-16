@@ -67,4 +67,31 @@ public class CollabTests
         var missing = own.Where(a => !sdp.Contains(" " + a + " ", StringComparison.Ordinal)).ToList();
         Assert.True(missing.Count == 0, "not offered: " + string.Join(", ", missing));
     }
+
+    /// <summary>People swap the codes by messenger: the answer often comes back much later. The guest must still be reachable then.</summary>
+    [Fact]
+    public async Task The_connection_comes_up_even_when_the_answer_is_pasted_much_later()
+    {
+        using var host = new CollabPeer();
+        using var guest = new CollabPeer();
+        var invitation = await host.CreateInvitationAsync();
+        var answer = await guest.AcceptInvitationAsync(invitation);
+        await Task.Delay(TimeSpan.FromSeconds(45));
+        host.CompleteWithAnswer(answer);
+        await host.WaitOpenAsync(TimeSpan.FromSeconds(30));
+        await guest.WaitOpenAsync(TimeSpan.FromSeconds(30));
+        Assert.True(host.IsOpen && guest.IsOpen);
+    }
+
+    /// <summary>A second click on "Connect" after a failed try: it says that a new invitation is needed, not that the code is wrong.</summary>
+    [Fact]
+    public async Task An_invitation_takes_one_answer_only()
+    {
+        using var host = new CollabPeer();
+        using var guest = new CollabPeer();
+        var answer = await guest.AcceptInvitationAsync(await host.CreateInvitationAsync());
+        host.CompleteWithAnswer(answer);
+        var ex = Assert.Throws<InvalidOperationException>(() => host.CompleteWithAnswer(answer));
+        Assert.Equal("used", ex.Message);
+    }
 }
