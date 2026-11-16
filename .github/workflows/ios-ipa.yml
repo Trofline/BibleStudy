@@ -37,6 +37,12 @@ jobs:
       - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: "10.0.x"
+      - name: Use the .NET 10 SDK
+        # the runner image comes with a newer SDK that would be picked first; its iOS tools do not build this .NET 10 app
+        run: |
+          SDK=$(dotnet --list-sdks | grep '^10\.' | sort -V | tail -1 | cut -d' ' -f1)
+          dotnet new globaljson --sdk-version "$SDK" --roll-forward latestFeature --force
+          dotnet --version
 
       - name: Choose Xcode
         run: |
