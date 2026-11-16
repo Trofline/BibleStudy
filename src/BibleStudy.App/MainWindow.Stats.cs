@@ -101,4 +101,19 @@ public partial class MainWindow
         }
         return grid;
     }
+
+    /// <summary>For the start page: the chapters of the last seven days and the streak; null when nothing was read in the last week.</summary>
+    string? ReadingLine()
+    {
+        try
+        {
+            var dates = _vault.GetReadDates().Select(x => x.At).ToList();
+            var today = DateTime.Today;
+            var week = ReadingStats.PerDay(dates, today, 7).Sum();
+            if (week == 0) return null;
+            var streak = ReadingPlans.Streak(dates, today);
+            return streak > 1 ? L("Diese Woche: {0} Kapitel · Serie: {1} Tage", week, streak) : L("Diese Woche: {0} Kapitel", week);
+        }
+        catch (Exception ex) when (ex is not OutOfMemoryException) { ErrorLog.Write(ex); return null; }
+    }
 }

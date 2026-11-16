@@ -26,6 +26,9 @@ public partial class MainWindow
         VersionText.Text = L("Version {0} · ", AppPaths.Version) + (AppPaths.IsPortable ? L("Portable (Daten in {0})", AppPaths.Root) : AppPaths.IsInstalled ? L("installiert") : L("Entwicklungsversion")) + L(" · Daten: {0}", AppPaths.Root);
         AutoUpdateCheck.IsChecked = _settings.AutoUpdate;
         AutoUpdateCheck.IsCheckedChanged += (_, _) => { _settings.AutoUpdate = AutoUpdateCheck.IsChecked == true; SaveSettings(); };
+        SigningWarnCheck.IsVisible = OperatingSystem.IsIOS();
+        SigningWarnCheck.IsChecked = _settings.WarnSigningEnds;
+        SigningWarnCheck.IsCheckedChanged += (_, _) => { _settings.WarnSigningEnds = SigningWarnCheck.IsChecked == true; SaveSettings(); };
         CheckUpdateBtn.Click += async (_, _) => await CheckForUpdateAsync(manual: true);
         RemoveAppBtn.IsVisible = OperatingSystem.IsWindows() && (AppPaths.IsPortable || AppPaths.IsInstalled);
         RemoveAppBtn.Content = AppPaths.IsPortable ? L("Portable-Version entfernen …") : L("Deinstallieren …");
@@ -61,6 +64,32 @@ public partial class MainWindow
             again.Tick += async (_, _) => await CheckForUpdateAsync(manual: false);
             again.Start();
         }
+        if (OperatingSystem.IsIOS() && _settings.WarnSigningEnds) DispatcherTimer.RunOnce(WarnIfSigningEnds, TimeSpan.FromSeconds(8));
+    }
+
+    /// <summary>
+    /// iPhone: an app installed with SideStore runs for 7 days and is then signed anew (the shortcut does that when SideStore opens). When that
+    /// did not happen and less than a day is left, a notice says so, with the button to SideStore; once it ran out the app would not start any more.
+    /// </summary>
+    void WarnIfSigningEnds()
+    {
+#if IOS
+        try
+        {
+            var path = Path.Combine(Foundation.NSBundle.MainBundle.BundlePath, "embedded.mobileprovision");
+            if (!File.Exists(path)) return;
+            // the profile is a signed plist: its text lies readable inside
+            var text = System.Text.Encoding.Latin1.GetString(File.ReadAllBytes(path));
+            var m = System.Text.RegularExpressions.Regex.Match(text, @"<key>ExpirationDate</key>\s*<date>([^<]+)</date>");
+            if (!m.Success || !DateTime.TryParse(m.Groups[1].Value, System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.AdjustToUniversal | System.Globalization.DateTimeStyles.AssumeUniversal, out var ends)) return;
+            var left = ends - DateTime.UtcNow;
+            if (left > TimeSpan.FromHours(20)) return;
+            Notify(L("BibleStudy läuft bald ab"),
+                L("Öffne SideStore, damit die App neu signiert wird (oder tippe dort bei BibleStudy auf „Refresh“). Deine Daten bleiben."),
+                actionLabel: L("SideStore öffnen"), action: () => _ = OpenSideStoreAsync());
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException) { ErrorLog.Write(ex); }
+#endif
     }
 
     // ---- small dialogs -----------------------------------------------------------------------------------------------------

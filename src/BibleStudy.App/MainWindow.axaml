@@ -956,6 +956,20 @@
                                 <TextBlock Classes="eyebrow" Text="GERÄTE SYNCHRONISIEREN" />
                                 <TextBlock Classes="caption" TextWrapping="Wrap" Text="Synchronisiert deine Vaults zwischen deinen eigenen Geräten (PC und Handy), ohne Konto und ohne Server: Geräte im selben WLAN finden sich von selbst, und eine Änderung ist nach wenigen Sekunden auf dem anderen. Wer etwas geändert hat, gewinnt; haben beide denselben Eintrag geändert, bleibt beides erhalten." />
                                 <TextBlock x:Name="SyncStatus" TextWrapping="Wrap" />
+                                <StackPanel x:Name="SyncSteps" Spacing="8" Margin="0,2,0,4">
+                                    <Grid ColumnDefinitions="Auto,*">
+                                        <Border Width="24" Height="24" CornerRadius="12" Background="{DynamicResource BsAccent}" VerticalAlignment="Top" Margin="0,0,10,0"><TextBlock Text="1" Foreground="White" FontWeight="SemiBold" FontSize="12" HorizontalAlignment="Center" VerticalAlignment="Center" /></Border>
+                                        <TextBlock Grid.Column="1" TextWrapping="Wrap" VerticalAlignment="Center" Text="Hier auf „Synchronisation einrichten“ tippen: Ein QR-Code erscheint." />
+                                    </Grid>
+                                    <Grid ColumnDefinitions="Auto,*">
+                                        <Border Width="24" Height="24" CornerRadius="12" Background="{DynamicResource BsAccent}" VerticalAlignment="Top" Margin="0,0,10,0"><TextBlock Text="2" Foreground="White" FontWeight="SemiBold" FontSize="12" HorizontalAlignment="Center" VerticalAlignment="Center" /></Border>
+                                        <TextBlock Grid.Column="1" TextWrapping="Wrap" VerticalAlignment="Center" Text="Auf dem anderen Gerät den QR-Code mit der Kamera scannen und in BibleStudy öffnen, oder dort den Code bei „Code von einem anderen Gerät“ eintippen." />
+                                    </Grid>
+                                    <Grid ColumnDefinitions="Auto,*">
+                                        <Border Width="24" Height="24" CornerRadius="12" Background="{DynamicResource BsAccent}" VerticalAlignment="Top" Margin="0,0,10,0"><TextBlock Text="3" Foreground="White" FontWeight="SemiBold" FontSize="12" HorizontalAlignment="Center" VerticalAlignment="Center" /></Border>
+                                        <TextBlock Grid.Column="1" TextWrapping="Wrap" VerticalAlignment="Center" Text="Fertig. Sind beide im selben WLAN und BibleStudy offen, synchronisieren sie sich nach wenigen Sekunden von selbst." />
+                                    </Grid>
+                                </StackPanel>
                                 <StackPanel x:Name="SyncPairPanel" Spacing="6" IsVisible="False">
                                     <TextBlock Classes="caption" TextWrapping="Wrap" Text="Auf dem anderen Gerät: den QR-Code mit der Kamera scannen oder den Code dort eintippen." />
                                     <ContentControl x:Name="SyncQrHost" HorizontalAlignment="Left" />
@@ -963,6 +977,7 @@
                                     <Button x:Name="SyncCopyBtn" Content="Code kopieren" HorizontalAlignment="Left" ToolTip.Tip="Kopiert den Kopplungs-Link (mit der Adresse dieses Geräts): auf dem anderen Gerät ins Feld unten einfügen" />
                                 </StackPanel>
                                 <CheckBox x:Name="SyncAutoCheck" Content="Im selben Netzwerk automatisch synchronisieren" />
+                                <CheckBox x:Name="SyncWaitCheck" Content="Beim Schließen auf das Handy warten, wenn es den neuesten Stand noch nicht hat" ToolTip.Tip="Das Programm bleibt dann kurz offen und erinnert dich, BibleStudy auf dem Handy zu öffnen. „Jetzt schließen“ beendet es sofort." />
                                 <TextBox x:Name="SyncNameBox" PlaceholderText="Name dieses Geräts" />
                                 <WrapPanel>
                                     <Button x:Name="SyncSetupBtn" Content="Synchronisation einrichten" Margin="0,0,6,6" />
@@ -1016,6 +1031,7 @@
                             <Border Classes="card"><StackPanel Spacing="8">
                                 <TextBlock Classes="eyebrow" Text="UPDATES UND PROGRAMM" />
                                 <TextBlock x:Name="VersionText" Classes="caption" TextWrapping="Wrap" />
+                                <CheckBox x:Name="SigningWarnCheck" IsVisible="False" Content="Warnen, bevor die App abläuft (nur nötig, wenn der Kurzbefehl sie nicht automatisch neu signiert)" />
                                 <CheckBox x:Name="AutoUpdateCheck" Content="Bei jedem Start nach Updates suchen (eine Anfrage an GitHub, es werden keine Daten gesendet). Installiert wird nie ohne deine Zustimmung." />
                                 <WrapPanel>
                                     <Button x:Name="CheckUpdateBtn" Content="Jetzt nach Updates suchen" Margin="0,0,6,6" />

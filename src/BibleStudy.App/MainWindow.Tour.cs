@@ -125,7 +125,7 @@ public partial class MainWindow
             if (steps[i].Prepare is { } prepare) prepare(); else ShowReader();
             DispatcherTimer.RunOnce(() =>
             {
-                try { steps[i].Anchor().BringIntoView(); } catch { /* the anchor may not exist yet; the step is skipped below */ }
+                try { var anchor = steps[i].Anchor(); RevealSetting(anchor); anchor.BringIntoView(); } catch { /* the anchor may not exist yet; the step is skipped below */ }
                 DispatcherTimer.RunOnce(() => ShowTourStep(steps, i, true), TimeSpan.FromMilliseconds(180));
             }, TimeSpan.FromMilliseconds(350));
             return;

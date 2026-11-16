@@ -71,7 +71,9 @@ public partial class MainWindow
         if (fresh) _syncCfg.Save(SyncPath);
         SyncNameBox.Text = _syncCfg.DeviceName;
         SyncAutoCheck.IsChecked = _syncCfg.Auto;
-        SyncAutoCheck.IsCheckedChanged += (_, _) => { _syncCfg.Auto = SyncAutoCheck.IsChecked == true; _syncCfg.Save(SyncPath); };
+        SyncAutoCheck.IsCheckedChanged += (_, _) => { _syncCfg.Auto = SyncAutoCheck.IsChecked == true; _syncCfg.Save(SyncPath); ShowSyncState(); };
+        SyncWaitCheck.IsChecked = _settings.WaitForPhoneOnClose;
+        SyncWaitCheck.IsCheckedChanged += (_, _) => { _settings.WaitForPhoneOnClose = SyncWaitCheck.IsChecked == true; SaveSettings(); };
         SyncNameBox.LostFocus += (_, _) =>
         {
             var name = SyncNameBox.Text?.Trim() ?? "";
@@ -138,7 +140,8 @@ public partial class MainWindow
         {
             if (_lan is null)
             {
-                _lan = new LanSync(new AppVaults(this, _root), _syncCfg, SyncPath, Path.Combine(_root, "sync-tmp"));
+                _syncVaults = new AppVaults(this, _root);
+                _lan = new LanSync(_syncVaults, _syncCfg, SyncPath, Path.Combine(_root, "sync-tmp"));
                 _lan.VaultsChanged += names => Dispatcher.UIThread.Post(() => OnSyncChanged(names));
                 _lan.Finished += r => Dispatcher.UIThread.Post(() => ShowSyncResult(r));
                 _lan.Contacted += name => Dispatcher.UIThread.Post(() => Greet(name));
@@ -175,6 +178,66 @@ public partial class MainWindow
         return true;
     }
 
+    AppVaults? _syncVaults;
+    DateTime _lastSyncOkUtc = DateTime.MinValue;
+
+    /// <summary>True when one of the own vaults (or the reading progress, the settings …) was written after the last finished synchronisation.</summary>
+    bool ChangedSinceSync()
+    {
+        if (_syncVaults is null) return false;
+        var since = _lastSyncOkUtc;
+        if (since == DateTime.MinValue && DateTime.TryParseExact(_syncCfg.LastTime, "yyyy-MM-dd HH:mm", System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.AssumeLocal, out var last))
+            since = last.ToUniversalTime().AddMinutes(1);   // the minute it was written in counts as synced
+        try { return _syncVaults.Names().Any(n => !IsGuestVault(n) && _syncVaults.Stamp(n) > since.AddSeconds(5)); }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException) { return false; }
+    }
+
+    bool _phoneWaiting, _phoneWaitStop;
+    DateTime _phoneWaitSince;
+
+    /// <summary>
+    /// Asked first when the window is to close (before the closing animation, so the window never goes away and comes back): a phone that was
+    /// synced before is not in reach and something changed here since. Then the program stays open and waits for it (the phone app only takes
+    /// part while it is open), with a notice and a button to close at once. A second click on X in the first two seconds does nothing (a quick
+    /// double click would end the waiting before the notice was even read); later it closes at once. True: the closing was held.
+    /// </summary>
+    bool HoldCloseForPhone(WindowClosingEventArgs e)
+    {
+        if (e.CloseReason != WindowCloseReason.WindowClosing) return false;
+        if (_phoneWaiting)
+        {
+            if (DateTime.UtcNow - _phoneWaitSince < TimeSpan.FromSeconds(2)) { e.Cancel = true; return true; }
+            _phoneWaiting = false; _phoneWaitStop = true; HideNotice();
+            return false;
+        }
+        if (_syncedAtClose || _lan is not { } lan || _syncCfg.Key is null) return false;
+        if (!(_settings.WaitForPhoneOnClose && _syncCfg.Auto && !AppPlatform.IsMobile && lan.Cloud is null && _syncCfg.LastPeer is not null && lan.Peers.Count == 0 && ChangedSinceSync())) return false;
+        e.Cancel = true;
+        _syncedAtClose = true; _phoneWaiting = true; _phoneWaitStop = false; _phoneWaitSince = DateTime.UtcNow;
+        Dispatcher.UIThread.Post(() => _ = WaitForPhoneThenCloseAsync(lan));
+        return true;
+    }
+
+    /// <summary>Up to two minutes: every few seconds it tries the known devices; once one was synced (or "Close now" is pressed) the program closes.</summary>
+    async Task WaitForPhoneThenCloseAsync(LanSync lan)
+    {
+        try { AutoSaveDocument(); SaveNoteDraft(); } catch (Exception ex) { ErrorLog.Write(ex); }
+        var before = _lastSyncOkUtc;
+        Notify(L("Warte auf dein Handy …"), L("Öffne kurz BibleStudy auf dem Handy, damit es den neuesten Stand bekommt. Danach schließt sich das Programm von selbst."),
+            actionLabel: L("Jetzt schließen"), action: () => _phoneWaitStop = true, stay: TimeSpan.FromMinutes(2));
+        var until = DateTime.UtcNow.AddMinutes(2);
+        while (!_phoneWaitStop && DateTime.UtcNow < until && _lastSyncOkUtc == before)
+        {
+            try { await Task.WhenAny(Task.Run(lan.SyncKnownAsync), Task.Delay(TimeSpan.FromSeconds(8))); } catch (Exception ex) { ErrorLog.Write(ex); }
+            for (var i = 0; i < 6 && !_phoneWaitStop && _lastSyncOkUtc == before; i++) await Task.Delay(500);
+        }
+        if (!_phoneWaiting) return;   // X was clicked again: the window is closing already
+        if (_lastSyncOkUtc != before) await Task.Delay(TimeSpan.FromSeconds(2));   // "Synced with …" is seen before the window goes
+        _phoneWaiting = false;
+        HideNotice();
+        Close();
+    }
+
     void RestartSync() { _lan?.Stop(); _lan = null; StartSync(); }
 
     void ShowSyncState()
@@ -183,7 +246,9 @@ public partial class MainWindow
         var has = _syncCfg.Key is not null;
         SyncPairPanel.IsVisible = has;
         SyncSetupBtn.IsVisible = !has;
+        SyncSteps.IsVisible = !has;   // the three steps only until it is set up
         SyncNowBtn.IsVisible = has; SyncOffBtn.IsVisible = has; SyncAutoCheck.IsVisible = has;
+        SyncWaitCheck.IsVisible = has && _syncCfg.Auto && !AppPlatform.IsMobile;   // only with the synchronisation switched on, and only a computer is closed
         SyncChip.IsVisible = has;
         if (has)
         {
@@ -230,6 +295,7 @@ public partial class MainWindow
         else if (r.Error is not null) SyncStatus.Text = L("Synchronisation mit {0} unterbrochen: {1}", r.PeerName, r.Error);
         else
         {
+            _lastSyncOkUtc = DateTime.UtcNow;
             ShowSyncState();
             var first = !_greeted.Contains(r.PeerName);
             Greet(r.PeerName);
@@ -282,7 +348,7 @@ public partial class MainWindow
     /// A small notice (phone: above the bar at the bottom, desktop: bottom right) that goes again after a few seconds. It covers nothing else that can be
     /// used: a tap or a swipe to the side takes it away at once.
     /// </summary>
-    void Notify(string title, string text, bool good = false, string? actionLabel = null, Action? action = null)
+    void Notify(string title, string text, bool good = false, string? actionLabel = null, Action? action = null, TimeSpan? stay = null)
     {
         if (_notice is null)
         {
@@ -345,7 +411,7 @@ public partial class MainWindow
         _notice.IsVisible = true;
         _noticeShownAt = DateTime.UtcNow;
         _noticeTimer?.Dispose();
-        _noticeTimer = DispatcherTimer.RunOnce(HideNotice, TimeSpan.FromSeconds(action is not null ? 30 : text.Length > 60 ? 7 : 4));
+        _noticeTimer = DispatcherTimer.RunOnce(HideNotice, stay ?? TimeSpan.FromSeconds(action is not null ? 30 : text.Length > 60 ? 7 : 4));
     }
 
     void HideNotice() { if (_notice is not null) _notice.IsVisible = false; }

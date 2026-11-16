@@ -134,6 +134,7 @@ public partial class MainWindow
             Dispatcher.UIThread.Post(() => _ = AskGuestWorkThenCloseAsync());
             return;
         }
+        if (!toTray && HoldCloseForPhone(e)) return;   // before the animation: the window stays while it waits for the phone
         if (!_closeAnimated && CloseStyle != "none" && IsVisible && WindowState != WindowState.Minimized && e.CloseReason == WindowCloseReason.WindowClosing)
         {
             e.Cancel = true; _closeAnimating = true;

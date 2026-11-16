@@ -14,14 +14,17 @@ public partial class MainWindow
     void ExportVerseImage()
     {
         if (_selected is not int v) { StatusText.Text = L("Erst einen Vers anklicken."); return; }
-        var r = new VerseRef(_curBook, _curChapter, v);
-        var text = VerseTextOf(v).Trim();
+        // several chosen verses (this one among them) make one picture: up to six, longer would not be readable as a picture
+        var verses = _selVerses.Contains(v) && _selVerses.Count > 1 ? _selVerses.OrderBy(x => x).Take(6).ToList() : [v];
+        var r = new VerseRef(_curBook, _curChapter, verses[0]);
+        var text = string.Join(" ", verses.Select(x => VerseTextOf(x).Trim()));
+        var where = verses.Count > 1 ? $"{Label(r)}–{verses[^1]}" : Label(r);
         var translation = (TranslationBox.SelectedItem as TranslationInfo)?.ShortName ?? "";
         var accent = (Res("BsAccent") as ISolidColorBrush)?.Color ?? Color.Parse("#E3B65F");
         var size = text.Length switch { < 100 => 60, < 200 => 50, < 320 => 42, < 480 => 34, _ => 28 };
 
         var quote = new TextBlock { Text = Loc.Quote(text), FontSize = size, FontFamily = ScriptureFont, Foreground = Brushes.White, TextWrapping = TextWrapping.Wrap, LineHeight = size * 1.35, TextAlignment = TextAlignment.Center };
-        var reference = new TextBlock { Text = $"{Label(r)}  ·  {translation}", FontSize = 30, FontWeight = FontWeight.SemiBold, Foreground = new SolidColorBrush(accent), HorizontalAlignment = HorizontalAlignment.Center, Margin = new(0, 36, 0, 0) };
+        var reference = new TextBlock { Text = $"{where}  ·  {translation}", FontSize = 30, FontWeight = FontWeight.SemiBold, Foreground = new SolidColorBrush(accent), HorizontalAlignment = HorizontalAlignment.Center, Margin = new(0, 36, 0, 0) };
         var mark = new TextBlock { Text = "BibleStudy", FontSize = 20, Opacity = 0.45, Foreground = Brushes.White, HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Bottom, Margin = new(0, 0, 0, 40) };
         var root = new Grid
         {
@@ -34,10 +37,11 @@ public partial class MainWindow
 
         var bmp = new RenderTargetBitmap(new PixelSize(1080, 1080), new Vector(96, 96));
         bmp.Render(root);
-        var name = string.Concat(Label(r).Select(c => char.IsLetterOrDigit(c) ? c : '_'));
+        var name = string.Concat(where.Select(c => char.IsLetterOrDigit(c) ? c : '_'));
         var path = Path.Combine(ExportFolder, $"{name}.png");
         bmp.Save(path);
         StatusText.Text = L("Bild gespeichert: {0}", path);
+        // on a phone this opens the share sheet: straight to WhatsApp, Instagram, Photos …
         try { Shell.Open(path); } catch { /* no viewer: the path is in the status line */ }
     }
 }

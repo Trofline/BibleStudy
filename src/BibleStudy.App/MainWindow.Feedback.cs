@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using Avalonia.Controls;
+using Avalonia.Threading;
 using BibleStudy.Core;
 
 namespace BibleStudy.App;
@@ -21,6 +22,11 @@ public partial class MainWindow
         FeedbackBtn.Click += (_, _) => OpenTicket("feedback", L("Feedback: "), L("**Das gefällt mir**\n\n\n**Das könnte besser sein**\n"));
         IdeasListBtn.Click += (_, _) => OpenUrl(IssuesUrl);
         ErrorLogBtn.Click += (_, _) => ShowErrorLog();
+        // the program was ended by an error last time: a notice offers the report (on a phone nobody looks into the log otherwise)
+        if (ErrorLog.TakeCrashFlag())
+            DispatcherTimer.RunOnce(() => Notify(L("BibleStudy wurde unerwartet beendet"),
+                L("Das tut mir leid. Mit einem Tipp schickst du mir den Fehler. Du siehst vorher alles und kannst es noch ändern."),
+                actionLabel: L("Fehler melden"), action: () => OpenTicket("bug", L("Absturz: "), L("**Was hast du gerade gemacht?**\n\n"))), TimeSpan.FromSeconds(4));
         // the bug symbol in the top bar: the same things as in the settings, one click away
         FeedbackTopBtn.Click += (_, _) =>
         {

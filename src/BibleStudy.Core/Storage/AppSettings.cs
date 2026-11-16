@@ -338,6 +338,8 @@ public sealed class AppSettings
     public bool XrefClickOpensTab { get; set; }   // a click on a cross reference opens it in context in a tab instead of going there
     public bool Tray { get; set; }
     public bool CloseToTray { get; set; }
+    public bool WaitForPhoneOnClose { get; set; } = true;   // the PC stays open a little when the phone has not got the last changes yet
+    public bool WarnSigningEnds { get; set; }   // iPhone: a notice before the app runs out (the shortcut normally signs it anew in time)
     public bool RememberWindow { get; set; } = true;
     public bool RestoreWindows { get; set; } = true;
     public string StartMode { get; set; } = "Normal";   // Normal | Maximized | Minimized

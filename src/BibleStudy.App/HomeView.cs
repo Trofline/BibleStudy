@@ -39,6 +39,9 @@ public sealed class HomeView : UserControl
     /// <summary>Recently edited documents and marks: (kind, title, detail, open).</summary>
     public IReadOnlyList<(string Kind, string Title, string Detail, Action Open)> Recent { get; set; } = [];
 
+    /// <summary>"This week: 12 chapters · streak: 5 days" under the progress; null when nothing was read lately.</summary>
+    public string? ReadingLine { get; set; }
+
     IReadOnlyList<BookInfo> _books = [];
     HashSet<(string, int)> _read = [];
     string? _openBook;
@@ -129,7 +132,9 @@ public sealed class HomeView : UserControl
             else DockPanel.SetDock(go, Dock.Right);
             hero.Children.Add(go);
         }
-        hero.Children.Add(new StackPanel { Children = { Heading(L("Bibel"), 46, "BsAccent"), Caption(L("{0} von {1} Kapiteln gelesen · {2} %", read, total, (total == 0 ? 0 : 100 * read / total)), 13) } });
+        var heroText = new StackPanel { Children = { Heading(L("Bibel"), 46, "BsAccent"), Caption(L("{0} von {1} Kapiteln gelesen · {2} %", read, total, (total == 0 ? 0 : 100 * read / total)), 13) } };
+        if (ReadingLine is { } line) { var c = Caption(line, 13); c.FontWeight = FontWeight.SemiBold; c.Margin = new(0, 2, 0, 0); heroText.Children.Add(c); }
+        hero.Children.Add(heroText);
         panel.Children.Add(hero);
         panel.Children.Add(new Border { Margin = new(0, 6, 0, 0), Child = Bar(total == 0 ? 0 : (double)read / total, accent, 6) });
         if (Recent.Count > 0)

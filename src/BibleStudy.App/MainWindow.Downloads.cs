@@ -16,7 +16,18 @@ namespace BibleStudy.App;
 public partial class MainWindow
 {
     /// <summary>One part of the manager. <paramref name="Installed"/> says whether it is on the computer, <paramref name="Remove"/> takes it away again (null: not possible from here).</summary>
-    sealed record DownloadItem(string Label, string Note, Func<IProgress<string>, CancellationToken, Task> Run, string Group, Func<bool> Installed, Action? Remove);
+    /// <paramref name="SizeMb"/> is about what it takes on the device (measured); <paramref name="OnlyOnRequest"/>: "Select all" leaves it out on a phone (big, for few).
+    sealed record DownloadItem(string Label, string Note, Func<IProgress<string>, CancellationToken, Task> Run, string Group, Func<bool> Installed, Action? Remove, int SizeMb = 0, bool OnlyOnRequest = false);
+
+    /// <summary>"12 MB" or "1.3 GB".</summary>
+    static string MbText(double mb) => SizeText((long)(mb * 1048576));
+
+    /// <summary>The free space where the program keeps its data, in MB; null when the system does not say.</summary>
+    double? FreeMb()
+    {
+        try { return new DriveInfo(Path.GetPathRoot(Path.GetFullPath(_root))!).AvailableFreeSpace / 1048576.0; }
+        catch (Exception ex) when (ex is IOException or ArgumentException or UnauthorizedAccessException) { return null; }
+    }
 
     string CacheDir(params string[] parts) => Path.Combine([_root, "cache", .. parts]);
 
@@ -42,7 +53,7 @@ public partial class MainWindow
 
         // a translation counts as loaded when all its chapters were fetched (a marker file says so) or nearly all of them are in the cache
         bool Loaded(TranslationInfo t) => File.Exists(Path.Combine(CacheDir("api", t.Id), OfflineMarker)) || CachedChapters(t.Id) >= 1100;
-        DownloadItem Translation(TranslationInfo t, string label, string note) => new(label, note, (p, ct) => Chapters(t, p, ct), group, () => Loaded(t), () => DeleteDir(CacheDir("api", t.Id)));
+        DownloadItem Translation(TranslationInfo t, string label, string note) => new(label, note, (p, ct) => Chapters(t, p, ct), group, () => Loaded(t), () => DeleteDir(CacheDir("api", t.Id)), 12);
 
         if (TranslationBox.SelectedItem is TranslationInfo cur && !PluginOwns(cur))
             items.Add(Translation(cur, L("Gewählte Übersetzung: {0}", cur.Name), L("Alle Kapitel, danach lesbar ohne Netz.")));
@@ -54,35 +65,35 @@ public partial class MainWindow
         {
             p.Report(L("wird geladen …"));
             await BuildGraphAsync();
-        }, group, CrossRefDataCached, () => DeleteDir(xrefDir)));
+        }, group, CrossRefDataCached, () => DeleteDir(xrefDir), 27));
 
         group = L("Wörterbücher und Grundtext");
         var strongs = CacheDir("strongs"); var step = CacheDir("step"); var bdb = CacheDir("bdb"); var lsj = CacheDir("lsj"); var tagnt = CacheDir("tagnt"); var macula = CacheDir("macula");
-        items.Add(new(L("Strong-Wörterbuch"), "", async (p, ct) => { await _strongs.LookupAsync("G1", ct); await _strongs.LookupAsync("H1", ct); }, group, () => HasFiles(strongs), () => DeleteDir(strongs)));
-        items.Add(new(L("Kurzlexikon (STEPBible)"), "", async (p, ct) => { await _step.LookupAsync("G1", ct); await _step.LookupAsync("H1", ct); }, group, () => HasFiles(step), () => DeleteDir(step)));
-        items.Add(new(L("BDB-Lexikon (Hebräisch)"), "", async (p, ct) => { _bdb ??= new BdbLexicon(_http, CacheDir()); await _bdb.GetAsync("H1", ct); }, group, () => HasFiles(bdb), () => DeleteDir(bdb)));
-        items.Add(new(L("LSJ-Lexikon (Griechisch)"), L("ca. 24 MB"), async (p, ct) => { _lsj ??= new GreekLsj(_http, CacheDir()); await _lsj.GetAsync("G1", ct); }, group, () => HasFiles(lsj), () => DeleteDir(lsj)));
+        items.Add(new(L("Strong-Wörterbuch"), "", async (p, ct) => { await _strongs.LookupAsync("G1", ct); await _strongs.LookupAsync("H1", ct); }, group, () => HasFiles(strongs), () => DeleteDir(strongs), 3));
+        items.Add(new(L("Kurzlexikon (STEPBible)"), "", async (p, ct) => { await _step.LookupAsync("G1", ct); await _step.LookupAsync("H1", ct); }, group, () => HasFiles(step), () => DeleteDir(step), 8));
+        items.Add(new(L("BDB-Lexikon (Hebräisch)"), "", async (p, ct) => { _bdb ??= new BdbLexicon(_http, CacheDir()); await _bdb.GetAsync("H1", ct); }, group, () => HasFiles(bdb), () => DeleteDir(bdb), 5));
+        items.Add(new(L("LSJ-Lexikon (Griechisch)"), "", async (p, ct) => { _lsj ??= new GreekLsj(_http, CacheDir()); await _lsj.GetAsync("G1", ct); }, group, () => HasFiles(lsj), () => DeleteDir(lsj), 24));
         items.Add(new(L("Textkritik (Neues Testament)"), "", async (p, ct) =>
         {
             _variants ??= new TextVariants(_http, CacheDir());
             await _variants.GetAsync("MAT", 1, 1, ct); await _variants.GetAsync("ACT", 1, 1, ct);
-        }, group, () => File.Exists(Path.Combine(tagnt, "mat-jhn.txt")) && File.Exists(Path.Combine(tagnt, "act-rev.txt")), () => DeleteDir(tagnt)));
+        }, group, () => File.Exists(Path.Combine(tagnt, "mat-jhn.txt")) && File.Exists(Path.Combine(tagnt, "act-rev.txt")), () => DeleteDir(tagnt), 29));
         items.Add(new(L("Syntax und Morphologie (Griechisch)"), L("Für Syntaxbaum, Satzdiagramm, Grammatiksuche."), async (p, ct) =>
         {
             await _syntax.LoadGreekWordsAsync(new Progress<(int Done, int Total)>(x => p.Report($"{x.Done}/{x.Total}")), ct);
-        }, group, () => CountFiles(macula, n => n.EndsWith(".xml") && !n.Contains("lowfat")) >= 27, () => DeleteFiles(macula, n => n.EndsWith(".xml") && !n.Contains("lowfat"))));
-        items.Add(new(L("Syntax und Morphologie (Hebräisch)"), L("Für Syntaxbaum, Satzdiagramm, Grammatiksuche."), async (p, ct) =>
+        }, group, () => CountFiles(macula, n => n.EndsWith(".xml") && !n.Contains("lowfat")) >= 27, () => DeleteFiles(macula, n => n.EndsWith(".xml") && !n.Contains("lowfat")), 98));
+        items.Add(new(L("Syntax und Morphologie (Hebräisch)"), _phone ? L("Für Syntaxbaum, Satzdiagramm, Grammatiksuche im Alten Testament. Sehr groß: nur laden, wenn du es brauchst.") : L("Für Syntaxbaum, Satzdiagramm, Grammatiksuche."), async (p, ct) =>
         {
             await _syntax.LoadHebrewWordsAsync(new Progress<(int Done, int Total)>(x => p.Report($"{x.Done}/{x.Total}")), ct);
-        }, group, () => CountFiles(macula, n => n.Contains("lowfat")) >= 900, () => DeleteFiles(macula, n => n.Contains("lowfat"))));
+        }, group, () => CountFiles(macula, n => n.Contains("lowfat")) >= 900, () => DeleteFiles(macula, n => n.Contains("lowfat")), 406, OnlyOnRequest: true));
 
         group = L("Vorlesen");
         if (NaturalVoice.IsAvailable)
             foreach (var v in NaturalVoice.Voices)
             {
                 var voice = v;
-                items.Add(new($"{LanguageNames.GetValueOrDefault(voice.Language, voice.Language)}: {voice.Name}", $"{voice.SizeMb} MB · {voice.License}",
-                    (p, ct) => NaturalVoice.EnsureAsync(_http, _root, voice, p, ct), group, () => NaturalVoice.IsReady(_root, voice), () => NaturalVoice.Remove(_root, voice)));
+                items.Add(new($"{LanguageNames.GetValueOrDefault(voice.Language, voice.Language)}: {voice.Name}", voice.License,
+                    (p, ct) => NaturalVoice.EnsureAsync(_http, _root, voice, p, ct), group, () => NaturalVoice.IsReady(_root, voice), () => NaturalVoice.Remove(_root, voice), voice.SizeMb));
             }
 
 #if !MOBILE   // Ollama runs on a computer only
@@ -95,7 +106,7 @@ public partial class MainWindow
                 _ollama ??= new OllamaClient(_http);
                 try { await _ollama.PullAsync(name, p, ct); }
                 catch (HttpRequestException) { throw new InvalidOperationException(L("Ollama konnte nicht gestartet werden. Ist es von ollama.com installiert?")); }
-            }, group, () => false, null));
+            }, group, () => false, null, name == OllamaClient.SmallModel ? 2000 : 8100));
         }
 #endif
         return items;
@@ -123,7 +134,12 @@ public partial class MainWindow
         var boxes = new List<(DownloadItem Item, CheckBox Box, TextBlock Status)>();
         var list = new StackPanel { Spacing = 4 };
         string? lastGroup = null;
-        string Note(int i) => state[i] ? L("Geladen ✓") : items[i].Note;
+        string Note(int i)
+        {
+            var size = items[i].SizeMb > 0 ? L("ca. {0}", MbText(items[i].SizeMb)) : "";
+            var text = state[i] ? L("Geladen ✓") : items[i].Note;
+            return size.Length == 0 ? text : text.Length == 0 ? size : text + " · " + size;
+        }
         for (var i = 0; i < items.Count; i++)
         {
             var item = items[i];
@@ -140,7 +156,26 @@ public partial class MainWindow
         var go = new Button { Content = L("Anwenden"), Classes = { "primary" } };
         var cancel = new Button { Content = L("Abbrechen"), IsEnabled = false, Margin = new(0, 0, 6, 0) };
         var summary = new TextBlock { Classes = { "caption" }, TextWrapping = TextWrapping.Wrap, Margin = new(0, 8, 0, 0) };
-        all.Click += (_, _) => { foreach (var b in boxes) b.Box.IsChecked = true; };
+        // what the ticks add up to and what is free: before loading everything the phone shows whether it fits
+        var sizes = new TextBlock { Classes = { "caption" }, TextWrapping = TextWrapping.Wrap, Margin = new(0, 8, 0, 0) };
+        void ShowSizes()
+        {
+            double ticked = 0, toLoad = 0;
+            for (var i = 0; i < boxes.Count; i++)
+                if (boxes[i].Box.IsChecked == true) { ticked += items[i].SizeMb; if (!state[i]) toLoad += items[i].SizeMb; }
+            var text = ticked > 0 ? L("Angehakt zusammen: ca. {0}", MbText(ticked)) : L("Nichts angehakt");
+            if (toLoad > 0) text += " · " + L("davon noch zu laden: {0}", MbText(toLoad));
+            if (FreeMb() is { } free)
+            {
+                text += " · " + L("frei: {0}", MbText(free));
+                if (toLoad > free - 200) text += " · " + L("Zu wenig Platz!");
+            }
+            sizes.Text = text;
+        }
+        foreach (var b in boxes) b.Box.IsCheckedChanged += (_, _) => ShowSizes();
+        ShowSizes();
+        // on a phone "all" leaves out what is very big and needed by few (the Hebrew syntax): it can still be ticked by hand
+        all.Click += (_, _) => { foreach (var b in boxes) if (!(_phone && b.Item.OnlyOnRequest)) b.Box.IsChecked = true; };
         none.Click += (_, _) => { foreach (var b in boxes) b.Box.IsChecked = false; };
 
         // a narrow screen (a phone): two rows of two equal buttons in a grid (a wrap panel laid them on each other on the iPhone)
@@ -172,7 +207,7 @@ public partial class MainWindow
         var root = new DockPanel { Margin = new(20) };
         DockPanel.SetDock(info, Dock.Top); info.Margin = new(0, 0, 0, 8);
         // the progress line has a row of its own above the buttons: next to them it ran into them
-        var bottom = new StackPanel { Children = { summary, buttons } };
+        var bottom = new StackPanel { Children = { sizes, summary, buttons } };
         DockPanel.SetDock(bottom, Dock.Bottom);
         root.Children.Add(info); root.Children.Add(bottom);
         root.Children.Add(new ScrollViewer { Content = list });
@@ -224,6 +259,7 @@ public partial class MainWindow
             running = false; cancel.IsEnabled = false; go.IsEnabled = all.IsEnabled = none.IsEnabled = true;
             foreach (var b in boxes) b.Box.IsEnabled = true;
             UpdateOfflineInfo();
+            ShowSizes();
         };
         win.Show(this);
     }

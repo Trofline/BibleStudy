@@ -18,7 +18,19 @@ static class ErrorLog
     {
         Dispatcher.UIThread.UnhandledException += (_, e) => { Write(e.Exception); e.Handled = true; Tell(e.Exception); };
         TaskScheduler.UnobservedTaskException += (_, e) => { if (!e.Exception.Flatten().InnerExceptions.All(x => x is OperationCanceledException)) Write(e.Exception); e.SetObserved(); };   // a cancelled task (stopped reading aloud …) is no error
-        AppDomain.CurrentDomain.UnhandledException += (_, e) => { if (e.ExceptionObject is Exception ex) Write(ex); };
+        AppDomain.CurrentDomain.UnhandledException += (_, e) => { if (e.ExceptionObject is Exception ex) Write(ex); MarkCrash(); };
+    }
+
+    /// <summary>Lies next to the log when the program was ended by an error: the next start offers to report it.</summary>
+    static string CrashFlag => System.IO.Path.Combine(AppPaths.Root, "crashed.flag");
+
+    static void MarkCrash() { try { File.WriteAllText(CrashFlag, DateTime.Now.ToString("O")); } catch { /* nothing more to do while going down */ } }
+
+    /// <summary>True once after the program was ended by an error (the mark is removed).</summary>
+    public static bool TakeCrashFlag()
+    {
+        try { if (!File.Exists(CrashFlag)) return false; File.Delete(CrashFlag); return true; }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException) { return false; }
     }
 
     public static void Write(Exception ex)

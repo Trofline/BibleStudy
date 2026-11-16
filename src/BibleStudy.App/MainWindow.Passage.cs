@@ -57,7 +57,7 @@ public partial class MainWindow
                 var chosen = _selVerses.Contains(verse) ? _selVerses.OrderBy(v => v).ToList() : [verse];
                 _ = ProjectVersesAsync(new VerseRef(_curBook, _curChapter, chosen[0]), chosen[^1]);
             }),
-            Make(L("Als Bild exportieren"), ExportVerseImage),
+            Make(AppPlatform.IsMobile ? L("Als Bild teilen") : L("Als Bild exportieren"), ExportVerseImage),
             Make(L("Zum Auswendiglernen"), () => { Memory.Add(MemoryKey(r), DateTime.Now); StatusText.Text = L("{0} zum Auswendiglernen hinzugefügt.", Label(r)); }),
             Make(L("Zur Leseliste"), () => AddToQueue([r])),
             Make(L("Zum To-do hinzufügen"), () => { _vault.AddTodo(L("{0} studieren", Label(r)), r); RefreshTodos(); StatusText.Text = L("To-do zu {0} angelegt.", Label(r)); }),

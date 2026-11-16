@@ -103,7 +103,7 @@ public partial class MainWindow
             if (inSettings)
             {
                 OpenWork(NavGroups.First(g => g.Name == "Mehr"), SettingsTab);
-                Avalonia.Threading.Dispatcher.UIThread.Post(() => PluginsList.BringIntoView(), Avalonia.Threading.DispatcherPriority.Background);
+                RevealSetting(PluginsList);
             }
             return;
         }
