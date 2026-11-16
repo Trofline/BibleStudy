@@ -15,7 +15,7 @@ Das geht mit **SideStore**. Es signiert die App mit deiner eigenen, kostenlosen 
 
    Fehlt der Punkt: SideStore einmal antippen, dann erscheint er. Sonst war Schritt 1 nicht fertig.
 4. **LocalDevVPN installieren (1 Min.).** Aus dem App Store laden, einmal öffnen und die VPN-Konfiguration **erlauben**. Es ist ein VPN auf dem Handy selbst, über das SideStore mit dem Handy spricht; es schickt keine Daten irgendwohin.
-5. **BibleStudy installieren (2 Min.).** In SideStore anmelden, dann diesen Link auf dem iPhone antippen: `sidestore://source?url=https://trofline.github.io/BibleStudy/sidestore.json`. Oder in SideStore → **Sources → +** → `https://trofline.github.io/BibleStudy/sidestore.json`. Dann BibleStudy → **Installieren**.
+5. **BibleStudy installieren (2 Min.).** In SideStore anmelden, dann diesen Link auf dem iPhone antippen: `sidestore://source?url=https://trofline.github.io/BibleStudy/sidestore.json`. Oder in SideStore → **Sources → +** → `https://trofline.github.io/BibleStudy/sidestore.json`. Dann BibleStudy → **Installieren**. Die `.ipa`-Datei musst du nicht selbst laden, SideStore holt sie über die Quelle aus dem neuesten Release. Nur falls die Quelle nicht klappt: die `.ipa` aus dem Release laden und in SideStore unter **My Apps** → **+** wählen.
 6. **Den fertigen Kurzbefehl übernehmen (1 Min.).** Er schaltet das VPN für SideStore an und aus und signiert BibleStudy alle 6 Tage neu. Siehe **19.4**.
 
 **Falls die App doch einmal abgelaufen ist:** SideStore öffnen und bei BibleStudy auf **Erneuern** tippen. Deine Daten bleiben erhalten.

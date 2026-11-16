@@ -201,6 +201,8 @@ Get **LocalDevVPN** from the App Store, open it once and tap **Allow** for the V
 2. On the iPhone tap **[this link](sidestore://source?url=https://trofline.github.io/BibleStudy/sidestore.json)**.<br><sub>Or in SideStore: **Sources** → **+** → `https://trofline.github.io/BibleStudy/sidestore.json`</sub>
 3. Open **BibleStudy** in the list → **Install**.
 
+<sub>You do **not** download the `.ipa` file yourself: through this source SideStore fetches it straight from the latest release, for every update too.</sub>
+
 </td></tr>
 <tr><td>
 
@@ -219,6 +221,7 @@ Get **LocalDevVPN** from the App Store, open it once and tap **Allow** for the V
 <summary><b>iPhone: updates, problems and limits</b></summary>
 
 - **Updates:** iOS lets no app install another without you, SideStore neither. BibleStudy tells you about a new version and opens SideStore; there tap **Update** at BibleStudy under **My Apps** (pull down in **Sources** first if it does not show yet).
+- **The source cannot be added:** download `BibleStudy-iOS-x.y.z.ipa` from the [latest release](https://github.com/Trofline/BibleStudy/releases/latest) on the iPhone, then in SideStore under **My Apps** tap **+** at the top left and pick the file.
 - **The app expired anyway:** open SideStore and tap **Refresh** at BibleStudy. Your data stays.
 - **SideStore says the pairing file is missing:** open iloader again with the iPhone connected, click **Manage Pairing File** at the bottom and place it for SideStore.
 - **Limits:** a free Apple ID allows at most 3 self-signed apps at once (SideStore counts as one). After a long time switched off or a big iOS update a manual refresh may be needed once. Apple may restrict this method one day. SideStore changes now and then: if a step looks different, [docs.sidestore.io](https://docs.sidestore.io) is the reference.

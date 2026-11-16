@@ -204,6 +204,8 @@ Ohne ihn öffnet iOS keine selbst signierten Apps.
 2. Auf dem iPhone **[diesen Link](sidestore://source?url=https://trofline.github.io/BibleStudy/sidestore.json)** antippen.<br><sub>Oder in SideStore: **Sources** → **+** → `https://trofline.github.io/BibleStudy/sidestore.json`</sub>
 3. **BibleStudy** in der Liste öffnen → **Installieren**.
 
+<sub>Die `.ipa`-Datei musst du **nicht** selbst laden: SideStore holt sie über diese Quelle direkt aus dem neuesten Release, auch bei jedem Update.</sub>
+
 </td></tr>
 <tr><td>
 
@@ -222,6 +224,7 @@ Ohne ihn öffnet iOS keine selbst signierten Apps.
 <summary><b>iPhone: Updates, Probleme und Grenzen</b></summary>
 
 - **Updates:** iOS erlaubt keiner App, eine andere ohne dich zu installieren, auch SideStore nicht. BibleStudy meldet eine neue Version und öffnet SideStore; dort unter **My Apps** bei BibleStudy auf **Update** tippen (vorher in **Sources** nach unten ziehen, falls es noch nicht erscheint).
+- **Die Quelle lässt sich nicht hinzufügen:** `BibleStudy-iOS-x.y.z.ipa` aus dem [neuesten Release](https://github.com/Trofline/BibleStudy/releases/latest) auf dem iPhone laden, dann in SideStore unter **My Apps** oben links auf **+** tippen und die Datei wählen.
 - **Die App ist doch abgelaufen:** SideStore öffnen und bei BibleStudy **Erneuern** tippen. Deine Daten bleiben.
 - **SideStore meldet, die Pairing-Datei fehlt:** iloader mit angeschlossenem iPhone erneut öffnen, unten auf **Manage Pairing File** klicken und sie für SideStore einsetzen.
 - **Grenzen:** Eine kostenlose Apple-ID erlaubt höchstens 3 selbst signierte Apps gleichzeitig (SideStore zählt mit). Nach langem Ausschalten oder einem großen iOS-Update kann einmal manuelles Erneuern nötig sein. Apple könnte die Methode irgendwann einschränken. SideStore ändert sich ab und zu: Sieht ein Schritt anders aus, gilt [docs.sidestore.io](https://docs.sidestore.io).
