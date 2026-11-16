@@ -3129,5 +3129,18 @@
   "Kein Gerät erreicht": "Устройства не найдены",
   "Nicht erreicht": "Нет связи",
   "Synchronisiert": "Синхронизировано",
-  "Jetzt mit deinen anderen Geräten synchronisieren (läuft sonst von selbst alle 20 Sekunden und nach jeder Änderung).": "Синхронизировать с другими устройствами сейчас (иначе это происходит само каждые 20 секунд и после каждого изменения)."
+  "Jetzt mit deinen anderen Geräten synchronisieren (läuft sonst von selbst alle 20 Sekunden und nach jeder Änderung).": "Синхронизировать с другими устройствами сейчас (иначе это происходит само каждые 20 секунд и после каждого изменения).",
+  "FEEDBACK": "ОТЗЫВЫ",
+  "Über einen Cloud-Ordner (die Geräte müssen nicht gleichzeitig an sein)": "Через облачную папку (устройствам не нужно быть включёнными одновременно)",
+  "Wähle auf allen Geräten denselben Ordner, den Google Drive, OneDrive, iCloud Drive oder Dropbox abgleicht (am PC den Ordner der jeweiligen App, am Handy in der Dateien-App). Jedes Gerät legt dort eine Kopie seiner Vaults ab und übernimmt die der anderen, sobald es offen ist. Zusammengeführt wird wie im WLAN: Es geht nichts verloren. Die Kopien liegen unverschlüsselt in deinem Cloud-Speicher.": "Выберите на всех устройствах одну и ту же папку, которую синхронизирует Google Drive, OneDrive, iCloud Drive или Dropbox (на ПК — папку этого приложения, на телефоне — в приложении «Файлы»). Каждое устройство кладёт туда копию своих хранилищ и забирает копии других, как только оно открыто. Объединение как в Wi-Fi: ничего не теряется. Копии хранятся в вашем облаке без шифрования.",
+  "Cloud-Ordner wählen …": "Выбрать облачную папку …",
+  "Cloud-Ordner nicht mehr nutzen": "Больше не использовать облачную папку",
+  "Cloud-Ordner: {0}": "Облачная папка: {0}",
+  "Der Cloud-Ordner ist gerade nicht erreichbar.": "Облачная папка сейчас недоступна.",
+  "Cloud-Ordner wählen": "Выбрать облачную папку",
+  "Diesen Ordner kann sich das System nicht merken. Wähle einen anderen.": "Система не может запомнить эту папку. Выберите другую.",
+  "Anderen Cloud-Ordner wählen …": "Выбрать другую облачную папку …",
+  "Kein Cloud-Ordner gewählt.": "Облачная папка не выбрана.",
+  "BibleStudy {0} ist erschienen (du hast {1}). Auf dem iPhone kommt sie über SideStore: dort unter „My Apps“ bei BibleStudy auf „Update“ tippen.": "Вышла версия BibleStudy {0} (у вас {1}). На iPhone она приходит через SideStore: там в разделе «My Apps» нажмите «Update» рядом с BibleStudy.",
+  "SideStore öffnen": "Открыть SideStore"
 }

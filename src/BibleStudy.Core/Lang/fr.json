@@ -3129,5 +3129,18 @@
   "Kein Gerät erreicht": "Aucun appareil atteint",
   "Nicht erreicht": "Non atteint",
   "Synchronisiert": "Synchronisé",
-  "Jetzt mit deinen anderen Geräten synchronisieren (läuft sonst von selbst alle 20 Sekunden und nach jeder Änderung).": "Synchroniser maintenant avec vos autres appareils (sinon cela se fait tout seul toutes les 20 secondes et après chaque modification)."
+  "Jetzt mit deinen anderen Geräten synchronisieren (läuft sonst von selbst alle 20 Sekunden und nach jeder Änderung).": "Synchroniser maintenant avec vos autres appareils (sinon cela se fait tout seul toutes les 20 secondes et après chaque modification).",
+  "FEEDBACK": "RETOURS",
+  "Über einen Cloud-Ordner (die Geräte müssen nicht gleichzeitig an sein)": "Par un dossier cloud (les appareils n’ont pas besoin d’être allumés en même temps)",
+  "Wähle auf allen Geräten denselben Ordner, den Google Drive, OneDrive, iCloud Drive oder Dropbox abgleicht (am PC den Ordner der jeweiligen App, am Handy in der Dateien-App). Jedes Gerät legt dort eine Kopie seiner Vaults ab und übernimmt die der anderen, sobald es offen ist. Zusammengeführt wird wie im WLAN: Es geht nichts verloren. Die Kopien liegen unverschlüsselt in deinem Cloud-Speicher.": "Choisissez sur tous les appareils le même dossier, synchronisé par Google Drive, OneDrive, iCloud Drive ou Dropbox (sur le PC le dossier de cette appli, sur le téléphone dans l’appli Fichiers). Chaque appareil y dépose une copie de ses vaults et reprend celles des autres dès qu’il est ouvert. La fusion se fait comme en Wi-Fi : rien ne se perd. Les copies sont stockées non chiffrées dans votre cloud.",
+  "Cloud-Ordner wählen …": "Choisir un dossier cloud …",
+  "Cloud-Ordner nicht mehr nutzen": "Ne plus utiliser le dossier cloud",
+  "Cloud-Ordner: {0}": "Dossier cloud : {0}",
+  "Der Cloud-Ordner ist gerade nicht erreichbar.": "Le dossier cloud est inaccessible pour le moment.",
+  "Cloud-Ordner wählen": "Choisir un dossier cloud",
+  "Diesen Ordner kann sich das System nicht merken. Wähle einen anderen.": "Le système ne peut pas mémoriser ce dossier. Choisissez-en un autre.",
+  "Anderen Cloud-Ordner wählen …": "Choisir un autre dossier cloud …",
+  "Kein Cloud-Ordner gewählt.": "Aucun dossier cloud choisi.",
+  "BibleStudy {0} ist erschienen (du hast {1}). Auf dem iPhone kommt sie über SideStore: dort unter „My Apps“ bei BibleStudy auf „Update“ tippen.": "BibleStudy {0} est sorti (vous avez {1}). Sur l’iPhone, il arrive par SideStore : là, sous « My Apps », touchez « Update » à côté de BibleStudy.",
+  "SideStore öffnen": "Ouvrir SideStore"
 }

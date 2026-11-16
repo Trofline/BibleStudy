@@ -972,6 +972,13 @@
                                 <TextBlock Text="Code von einem anderen Gerät" FontWeight="SemiBold" Margin="0,6,0,0" />
                                 <TextBox x:Name="SyncCodeBox" PlaceholderText="ABCD-EFGH-IJKL-MNOP-QRST-UV" />
                                 <Button x:Name="SyncJoinBtn" Content="Mit Code koppeln" HorizontalAlignment="Left" />
+                                <TextBlock Text="Über einen Cloud-Ordner (die Geräte müssen nicht gleichzeitig an sein)" FontWeight="SemiBold" TextWrapping="Wrap" Margin="0,10,0,0" />
+                                <TextBlock Classes="caption" TextWrapping="Wrap" Text="Wähle auf allen Geräten denselben Ordner, den Google Drive, OneDrive, iCloud Drive oder Dropbox abgleicht (am PC den Ordner der jeweiligen App, am Handy in der Dateien-App). Jedes Gerät legt dort eine Kopie seiner Vaults ab und übernimmt die der anderen, sobald es offen ist. Zusammengeführt wird wie im WLAN: Es geht nichts verloren. Die Kopien liegen unverschlüsselt in deinem Cloud-Speicher." />
+                                <TextBlock x:Name="CloudFolderText" Classes="caption" TextWrapping="Wrap" />
+                                <WrapPanel>
+                                    <Button x:Name="CloudChooseBtn" Content="Cloud-Ordner wählen …" Margin="0,0,6,6" />
+                                    <Button x:Name="CloudRemoveBtn" Content="Cloud-Ordner nicht mehr nutzen" Margin="0,0,6,6" IsVisible="False" />
+                                </WrapPanel>
                                 <TextBlock Classes="caption" TextWrapping="Wrap" Text="Gelöschtes kommt auch auf dem anderen Gerät in den Papierkorb; ein neues oder leeres Gerät löscht nie etwas. Beide Geräte müssen im selben WLAN sein. Die Windows-Firewall fragt beim ersten Mal nach: nur „Private Netzwerke“ erlauben." />
                             </StackPanel></Border>
 

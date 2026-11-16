@@ -108,6 +108,43 @@ public class ThreeWayMergeTests
     }
 
     [Fact]
+    public void Todos_bookmarks_and_prayers_change_and_disappear_on_both_devices()
+    {
+        var (pc, phonePath, basePath) = Synced(s =>
+        {
+            s.AddTodo("Röm 8 lesen", null); s.AddTodo("Predigt schreiben", null); s.AddTodo("Lieder aussuchen", null);
+            s.ToggleBookmark(R(1), "Anfang"); s.ToggleBookmark(R(2), "Wort");
+            s.AddPrayer("Für die Gemeinde", null);
+        });
+        var phone = new VaultStore(phonePath, "phone");
+        var todos = phone.GetTodos().ToDictionary(t => t.Text, t => t.Id);
+        phone.SetTodoDone(todos["Röm 8 lesen"], true);            // ticked off on the phone
+        phone.DeleteTodo(todos["Lieder aussuchen"]);               // deleted on the phone
+        phone.SetTodoText(todos["Predigt schreiben"], "Predigt zu Ende schreiben");
+        phone.AddTodo("Neu vom Handy", null);
+        phone.RemoveBookmark(phone.GetBookmarks().Single(b => b.Ref.Verse == 2).Id);
+        phone.SetPrayerAnswered(phone.GetPrayers().Single().Id, true, "erhört");
+        pc.AddTodo("Neu vom PC", null);
+
+        pc.MergeFrom(CopyOf(phonePath), "Handy", basePath);
+
+        var pcTodos = pc.GetTodos().ToDictionary(t => t.Text, t => t.Done);
+        Assert.Equal(["Neu vom Handy", "Neu vom PC", "Predigt zu Ende schreiben", "Röm 8 lesen"], pcTodos.Keys.Order());
+        Assert.True(pcTodos["Röm 8 lesen"]);
+        Assert.Equal([1], pc.GetBookmarks().Select(b => b.Ref.Verse));
+        Assert.Equal("erhört", pc.GetPrayers().Single().Note);
+        Assert.NotNull(pc.GetPrayers().Single().Answered);
+
+        // the other way round, after the PC unticked it again: the phone follows and keeps nothing old
+        var basePc = CopyOf(Path.Combine(_dir, "pc.db"));
+        phone.MergeFrom(CopyOf(Path.Combine(_dir, "pc.db")), "PC", basePath);
+        pc.SetTodoDone(pc.GetTodos().Single(t => t.Text == "Röm 8 lesen").Id, false);
+        phone.MergeFrom(CopyOf(Path.Combine(_dir, "pc.db")), "PC", basePc);
+        Assert.False(phone.GetTodos().Single(t => t.Text == "Röm 8 lesen").Done);
+        Assert.Equal(4, phone.GetTodos().Count);
+    }
+
+    [Fact]
     public void Changes_on_both_sides_are_both_kept()
     {
         var (pc, phonePath, basePath) = Synced(s => s.SetNote(R(1), "Anfang"));

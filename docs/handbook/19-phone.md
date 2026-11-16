@@ -6,10 +6,17 @@ BibleStudy also runs on your phone, with the same vaults, marks, notes and docum
 
 This works with **SideStore**. It signs the app with your own free Apple ID and renews it by itself afterwards. You need a PC or Mac with a cable **once**. All in all it takes about 10 minutes.
 
-1. **Put SideStore on the iPhone (about 4 min).** On the PC open the program *iloader*, connect the iPhone with the cable and install SideStore (guide at docs.sidestore.io). If SideStore says the pairing file is missing: in iloader click **Manage Pairing File** at the bottom and place it for SideStore.
-2. **Trust the profile and switch on Developer Mode (about 2 min).** iPhone: Settings → General → VPN & Device Management → trust your Apple ID. Settings → Privacy & Security → Developer Mode → switch on (the iPhone restarts).
-3. **Add BibleStudy (about 2 min).** Sign in to SideStore, then tap this link on the iPhone: `sidestore://source?url=https://trofline.github.io/BibleStudy/sidestore.json`. Or in SideStore → Sources → **+** → `https://trofline.github.io/BibleStudy/sidestore.json`. Then BibleStudy → **Install**.
-4. **Renew automatically (about 2 min).** A free Apple ID signs apps for 7 days only. An automation does it every night for you; step by step in **19.4**.
+1. **Put SideStore on the iPhone (about 4 min).** On the PC install *Apple Devices* (Microsoft Store) or iTunes, then open the program *iloader* and connect the iPhone with the cable. If the iPhone asks **"Trust This Computer?"**: tap **Trust** and enter your passcode. In iloader sign in with your Apple ID and install **SideStore**. If SideStore later says the pairing file is missing: in iloader click **Manage Pairing File** at the bottom and place it for SideStore.
+2. **Trust your own Apple ID (1 min).** Otherwise SideStore will not start ("Untrusted Developer"). **Settings → General → VPN & Device Management** → under *Developer App* tap your Apple ID (email address) → **Trust "…"** → **Trust**.
+3. **Turn on Developer Mode (2 min).** The switch only appears after SideStore is installed.
+   1. **Settings → Privacy & Security** → all the way down → **Developer Mode** → switch on.
+   2. Tap **Restart**.
+   3. After the restart **"Turn On Developer Mode?"** appears: tap **Turn On** and enter your passcode.
+
+   If the entry is missing: tap SideStore once, then it shows up. Otherwise step 1 did not finish.
+4. **Install LocalDevVPN (1 min).** Get it from the App Store, open it once and **Allow** the VPN configuration. It is a VPN on the phone itself that SideStore uses to talk to the phone; it sends no data anywhere.
+5. **Install BibleStudy (2 min).** Sign in to SideStore, then tap this link on the iPhone: `sidestore://source?url=https://trofline.github.io/BibleStudy/sidestore.json`. Or in SideStore → **Sources → +** → `https://trofline.github.io/BibleStudy/sidestore.json`. Then BibleStudy → **Install**.
+6. **Add the ready-made shortcut (1 min).** It switches the VPN on and off for SideStore and re-signs BibleStudy every 6 days. See **19.4**.
 
 **If the app has expired after all:** open SideStore and tap **Refresh** at BibleStudy. Your data is kept.
 
@@ -40,29 +47,22 @@ Settings → **Sync devices**: your vaults are kept in step between your own dev
 
 **How it runs afterwards:** when both apps are open on the **same Wi-Fi** they sync by themselves: at start, when the app comes to the front again, a few seconds after every change and otherwise every 20 seconds. The PC sends its last changes when it closes. To sync at once use **Sync**: on the PC at the bottom next to the version number, on the phone at the top of the **Tools** menu.
 
-**Nothing gets lost:** if you marked on both devices apart, both have all the marks afterwards. If something changed on one side only, that side wins. If the same note was changed differently on both, both versions are kept. Deletions travel along, into the trash on the other device. A new or empty device never deletes anything. Synced are marks, notes, documents, bookmarks, tasks and the reading progress; settings, your own translations and materials not yet.
+**Nothing gets lost:** if you marked on both devices apart, both have all the marks afterwards. If something changed on one side only, that side wins. If the same note was changed differently on both, both versions are kept. Deletions travel along, into the trash on the other device. A new or empty device never deletes anything. Synced are marks, notes, documents, bookmarks, tasks, prayer requests, reading progress, the reading plan, memory verses, vocabulary, and categories, colors and saved searches. What belongs to one device only (window size, font size, theme) stays on that device. Your own translations and materials are not synced yet.
 
 **iPhone:** iOS does not let apps work in the background, so the iPhone syncs only **while BibleStudy is open**. Until then the changes simply wait on both sides. After 3 days without a sync the app reminds you. The automation below is the easiest way.
 
 On the PC, Windows Firewall asks the first time: allow **Private networks** only. On the iPhone, iOS asks for permission for the **local network**: allow it (otherwise Settings → Privacy & Security → Local Network → BibleStudy).
 
-## 19.4 iPhone automations (Shortcuts)
+## 19.4 The ready-made shortcut (iPhone)
 
-Two automations so you do not have to think of anything. Both are made in the **Shortcuts** app, in the **Automation** tab at the bottom.
+You build nothing yourself. One ready-made shortcut does it all: the VPN goes on as soon as SideStore opens and off again when it closes. Every 6 days the iPhone re-signs BibleStudy by itself, so the 7-day limit never hits.
 
-**A) Sync when you get home**
+1. On the iPhone open in Safari: `https://trofline.github.io/BibleStudy/BibleStudy.shortcut` → **Download**.
+2. Tap the download arrow at the top right → tap the file. It opens in **Shortcuts**.
+3. **Add Shortcut**. Done.
 
-1. **Shortcuts → Automation → +** (top right) → **Wi-Fi**.
-2. **Network** → choose your home Wi-Fi, tick **Joins**.
-3. Choose **Run Immediately** (not "Run After Confirmation"), **Next**.
-4. **New Blank Automation** → action **Open App** → choose **BibleStudy** → **Done**.
+If iOS asks on the first run whether the shortcut may use the VPN: **Always Allow**. It needs **LocalDevVPN** (19.1, step 4).
 
-When you come home, BibleStudy opens for a moment and syncs with the PC (the PC has to be on with BibleStudy open, also minimized in the tray).
+**Optional, sync when you get home:** **Shortcuts → Automation → +** → **Wi-Fi** → choose your Wi-Fi, tick **Joins** → **Run Immediately** → action **Open App** → **BibleStudy**. The app opens for a moment and syncs with the PC (19.3).
 
-**B) Renew the app every day (against the 7-day limit)**
-
-1. **Shortcuts → Shortcuts → +** with these actions in this order: turn **on** the VPN of **StosVPN** (or LocalDevVPN), **Refresh All Apps** of **SideStore**, turn the VPN **off** again. Name it **Renew BibleStudy**.
-2. **Shortcuts → Automation → +** → **Time of Day** → for example **3:00**, **Daily** → **Run Immediately** → **Next** → choose the shortcut **Renew BibleStudy**.
-3. Leave the phone on the charger and on Wi-Fi at night.
-
-The exact names of the actions depend on the version of SideStore and of the VPN app. Just type "SideStore" or "VPN" into the action search.
+**Updates:** iOS lets no app install another without you, SideStore neither. So a new BibleStudy is always one tap: BibleStudy tells you about the new version and opens SideStore if you like; there tap **Update** at BibleStudy under **My Apps** (pull down in **Sources** first if it does not show yet). If an app has expired anyway: open SideStore and tap **Refresh** at BibleStudy; your data stays.

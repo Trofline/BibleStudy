@@ -59,7 +59,7 @@ public partial class MainWindow
             foreach (var w in words) GrundtextPanel.Children.Add(WordCell(w));
             GrundtextInfo.Text = L("{0} · {1}, {2} Wörter. Wort anklicken: Wörterbuch.", Label(r), (hebrew ? L("Hebräisch (von rechts nach links)") : L("Griechisch")), words.Count);
             GrundtextSource.Text = HelloAoProvider.InterlinearAttribution + " · " + StrongsDictionary.Attribution;
-            GrundtextCheckBtn.IsVisible = true;
+            GrundtextCheckBtn.IsVisible = !AppPlatform.IsMobile;   // Claude Code runs on a computer only
         }
         catch (Exception ex) { GrundtextInfo.Text = L("Grundtext nicht verfügbar: ") + ex.Message; }
     }
@@ -111,7 +111,7 @@ public partial class MainWindow
             catch (Exception ex) { GrundtextDetail.Children.Add(new TextBlock { Text = L("Wörterbuch nicht verfügbar: ") + ex.Message, TextWrapping = TextWrapping.Wrap }); }
             var occurrences = new Button { Content = L("Alle Vorkommen"), Margin = new(0, 0, 8, 0) };
             occurrences.Click += async (_, _) => await ShowConcordanceAsync(w.Strongs, $"{w.Strongs}  {w.Text}");
-            var deeper = new Button { Content = L("Mit Claude vertiefen"), Classes = { "primary" } };
+            var deeper = new Button { Content = L("Mit Claude vertiefen"), Classes = { "primary" }, IsVisible = !AppPlatform.IsMobile };
             deeper.Click += async (_, _) => await AskClaudeAboutWordAsync(w);
             GrundtextDetail.Children.Add(new StackPanel { Orientation = Avalonia.Layout.Orientation.Horizontal, Children = { occurrences, deeper } });
         }
@@ -164,7 +164,7 @@ public partial class MainWindow
         var padded = $"{e.Id[0]}{int.Parse(e.Id[1..]):D4}";
         var occurrences = new Button { Content = L("Alle Vorkommen"), Margin = new(0, 0, 8, 0) };
         occurrences.Click += async (_, _) => await ShowConcordanceAsync(padded, $"{e.Id}  {e.Lemma}");
-        var deeper = new Button { Content = L("Mit Claude vertiefen") };
+        var deeper = new Button { Content = L("Mit Claude vertiefen"), IsVisible = !AppPlatform.IsMobile };
         deeper.Click += async (_, _) =>
         {
             SideTabs.SelectedIndex = AiTab;

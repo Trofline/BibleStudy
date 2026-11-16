@@ -27,25 +27,35 @@ public partial class MainWindow
                 var home = Path.Combine(root, "vaults", name);
                 if (File.Exists(Path.Combine(home, "vault.db"))) w.StoreOf(name).MergeFrom(snapshotPath, L("Abgleich"), basePath);
                 else { Directory.CreateDirectory(home); File.Copy(snapshotPath, Path.Combine(home, "vault.db")); }
-                if (!w.IsGuestVault(name)) w._readStore.MergeFrom(snapshotPath, basePath);
+                if (w.IsGuestVault(name)) return;
+                w._readStore.MergeFrom(snapshotPath, basePath);
+                if (AppData.ReadFrom(snapshotPath) is { } theirs) w.MergeAppData(theirs, AppData.ReadFrom(basePath));
             });
         }
 
-        // the reading progress is one list for all vaults (read.db): it travels inside each vault's copy, and a chapter marked read is a change to send
+        // what is not in a vault travels inside each vault's copy: the reading progress (read.db, one list for all vaults) and the person's own
+        // data of the program (see AppData); a change there is a change to send as well
         public override void Snapshot(string name, string path)
         {
             base.Snapshot(name, path);
-            if (!w.IsGuestVault(name)) w._readStore.CopyInto(path);
+            if (w.IsGuestVault(name)) return;
+            w._readStore.CopyInto(path);
+            AppData.WriteInto(path, Dispatcher.UIThread.Invoke(w.CollectAppData));
         }
 
-        public override string Fingerprint(string name) => base.Fingerprint(name) + (w.IsGuestVault(name) ? "" : "|read:" + w._readStore.Fingerprint());
+        public override string Fingerprint(string name) =>
+            base.Fingerprint(name) + (w.IsGuestVault(name) ? "" : "|read:" + w._readStore.Fingerprint() + "|app:" + AppData.Fingerprint(Dispatcher.UIThread.Invoke(w.CollectAppData)));
 
         public override DateTime Stamp(string name)
         {
             var own = base.Stamp(name);
             if (w.IsGuestVault(name)) return own;
-            var read = WriteTime(Path.Combine(root, "read.db"));
-            return read > own ? read : own;
+            foreach (var f in new[] { "read.db", "memory.json", "learn.json", "settings.json" })
+            {
+                var t = WriteTime(Path.Combine(AppPaths.Root, f));
+                if (t > own) own = t;
+            }
+            return own;
         }
     }
 
@@ -81,10 +91,13 @@ public partial class MainWindow
         {
             _lan?.Stop(); _lan = null;
             _syncCfg.Key = null; lock (_syncCfg.Done) _syncCfg.Done.Clear();
+            _syncCfg.CloudPath = null; _syncCfg.CloudBookmark = null;
             _syncCfg.Save(SyncPath);
             ShowSyncState();
         };
         SyncJoinBtn.Click += (_, _) => { JoinWithCode(SyncCodeBox.Text ?? ""); };
+        CloudChooseBtn.Click += async (_, _) => await ChooseCloudAsync();
+        CloudRemoveBtn.Click += (_, _) => StopCloud();
         // the whole pairing link, not only the code: it carries the address of this device, which an iPhone needs (it often does not hear the call-out)
         SyncCopyBtn.Click += async (_, _) =>
         {
@@ -129,6 +142,7 @@ public partial class MainWindow
                 _lan.VaultsChanged += names => Dispatcher.UIThread.Post(() => OnSyncChanged(names));
                 _lan.Finished += r => Dispatcher.UIThread.Post(() => ShowSyncResult(r));
                 _lan.Contacted += name => Dispatcher.UIThread.Post(() => Greet(name));
+                _ = AttachCloudAsync();
             }
             _lan.Start();
         }
@@ -165,6 +179,7 @@ public partial class MainWindow
 
     void ShowSyncState()
     {
+        ShowCloudState();
         var has = _syncCfg.Key is not null;
         SyncPairPanel.IsVisible = has;
         SyncSetupBtn.IsVisible = !has;
@@ -294,9 +309,14 @@ public partial class MainWindow
         try
         {
             RefreshVaultUi();
-            if (!names.Contains(_vault.Name, StringComparer.OrdinalIgnoreCase)) return;
+            // the reading progress is shared by all vaults: shown again whichever vault brought it
             _read = _vault.GetReadChapters();
+            ReadBtn.IsChecked = _read.Contains((_curBook, _curChapter));
+            if (Home.IsVisible) Home.Show(_books, _read, Home.OpenBook);
+            if (PlanPanel.IsEffectivelyVisible) BuildPlanUi();   // the plan shows what was read
+            if (!names.Contains(_vault.Name, StringComparer.OrdinalIgnoreCase)) return;
             RefreshLists(); RefreshDocs(); RefreshQueue(); RefreshTodos(); RefreshBookmarks();
+            _ = RedrawChapterAsync();   // the marks of the chapter that is open, at once
         }
         catch (Exception ex) when (ex is Microsoft.Data.Sqlite.SqliteException or IOException) { ErrorLog.Write(ex); }
     }

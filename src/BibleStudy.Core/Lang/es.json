@@ -3129,5 +3129,18 @@
   "Kein Gerät erreicht": "Ningún dispositivo alcanzado",
   "Nicht erreicht": "No alcanzado",
   "Synchronisiert": "Sincronizado",
-  "Jetzt mit deinen anderen Geräten synchronisieren (läuft sonst von selbst alle 20 Sekunden und nach jeder Änderung).": "Sincronizar ahora con tus otros dispositivos (si no, se hace solo cada 20 segundos y tras cada cambio)."
+  "Jetzt mit deinen anderen Geräten synchronisieren (läuft sonst von selbst alle 20 Sekunden und nach jeder Änderung).": "Sincronizar ahora con tus otros dispositivos (si no, se hace solo cada 20 segundos y tras cada cambio).",
+  "FEEDBACK": "COMENTARIOS",
+  "Über einen Cloud-Ordner (die Geräte müssen nicht gleichzeitig an sein)": "Mediante una carpeta en la nube (los dispositivos no tienen que estar encendidos a la vez)",
+  "Wähle auf allen Geräten denselben Ordner, den Google Drive, OneDrive, iCloud Drive oder Dropbox abgleicht (am PC den Ordner der jeweiligen App, am Handy in der Dateien-App). Jedes Gerät legt dort eine Kopie seiner Vaults ab und übernimmt die der anderen, sobald es offen ist. Zusammengeführt wird wie im WLAN: Es geht nichts verloren. Die Kopien liegen unverschlüsselt in deinem Cloud-Speicher.": "Elige en todos los dispositivos la misma carpeta que sincroniza Google Drive, OneDrive, iCloud Drive o Dropbox (en el PC la carpeta de esa app, en el móvil en la app Archivos). Cada dispositivo deja allí una copia de sus vaults y toma las de los demás en cuanto está abierto. Se combina como en la wifi: no se pierde nada. Las copias quedan sin cifrar en tu almacenamiento en la nube.",
+  "Cloud-Ordner wählen …": "Elegir carpeta en la nube …",
+  "Cloud-Ordner nicht mehr nutzen": "Dejar de usar la carpeta en la nube",
+  "Cloud-Ordner: {0}": "Carpeta en la nube: {0}",
+  "Der Cloud-Ordner ist gerade nicht erreichbar.": "Ahora no se puede acceder a la carpeta en la nube.",
+  "Cloud-Ordner wählen": "Elegir carpeta en la nube",
+  "Diesen Ordner kann sich das System nicht merken. Wähle einen anderen.": "El sistema no puede recordar esta carpeta. Elige otra.",
+  "Anderen Cloud-Ordner wählen …": "Elegir otra carpeta en la nube …",
+  "Kein Cloud-Ordner gewählt.": "Ninguna carpeta en la nube elegida.",
+  "BibleStudy {0} ist erschienen (du hast {1}). Auf dem iPhone kommt sie über SideStore: dort unter „My Apps“ bei BibleStudy auf „Update“ tippen.": "Ya salió BibleStudy {0} (tienes {1}). En el iPhone llega a través de SideStore: allí, en “My Apps”, toca “Update” junto a BibleStudy.",
+  "SideStore öffnen": "Abrir SideStore"
 }

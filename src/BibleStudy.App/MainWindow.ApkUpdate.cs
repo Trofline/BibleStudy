@@ -23,7 +23,7 @@ public partial class MainWindow
             intent.SetDataAndType(uri, "application/vnd.android.package-archive");
             intent.AddFlags(Android.Content.ActivityFlags.GrantReadUriPermission | Android.Content.ActivityFlags.NewTask);
             UpdateStatus.Text = L("Fertig geladen. Bestätige die Installation von Android.");
-            SaveForBackground();
+            _ = SaveForBackground();
             ctx.StartActivity(intent);
         }
         catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException or InvalidDataException or IOException or Java.Lang.Exception)

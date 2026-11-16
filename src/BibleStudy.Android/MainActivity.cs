@@ -52,7 +52,7 @@ public class MainActivity : AvaloniaMainActivity
     /// <summary>The app goes to the background: everything is saved as when the desktop window closes (Android may end it any time after this).</summary>
     protected override void OnStop()
     {
-        BibleStudy.App.App.SaveForBackground();
+        _ = BibleStudy.App.App.SaveForBackground();   // the process lives on for a while: the sync runs to its end
         base.OnStop();
     }
 

@@ -186,11 +186,11 @@ public sealed class LanSync : IDisposable
         var lastRound = DateTime.UtcNow;
         while (!ct.IsCancellationRequested)
         {
-            try { await Task.Delay(TimeSpan.FromSeconds(2), ct); } catch (OperationCanceledException) { return; }
+            try { await Task.Delay(TimeSpan.FromSeconds(1), ct); } catch (OperationCanceledException) { return; }
             if (!_cfg.Auto) continue;
             if (ReadStamps()) Interlocked.CompareExchange(ref _changedAt, DateTime.UtcNow.Ticks, 0);
             var since = Interlocked.Read(ref _changedAt);
-            var settled = since != 0 && DateTime.UtcNow - new DateTime(since, DateTimeKind.Utc) >= TimeSpan.FromSeconds(3);
+            var settled = since != 0 && DateTime.UtcNow - new DateTime(since, DateTimeKind.Utc) >= TimeSpan.FromSeconds(1);
             // besides after a change here: a short look every 20 seconds (only sends what differs), so a change over there
             // that could not be sent at once (the other app was closed, the line broke) still arrives soon
             if (!settled && DateTime.UtcNow - lastRound < PollEvery) continue;
@@ -223,7 +223,8 @@ public sealed class LanSync : IDisposable
     /// <param name="poll">the regular look: devices that failed in the last two minutes are left out (a closed iPhone is not asked every 20 seconds)</param>
     async Task SyncKnownAsync(bool poll)
     {
-        if (Interlocked.Exchange(ref _running, 1) == 1) return;
+        if (poll) { if (Interlocked.Exchange(ref _running, 1) == 1) return; }   // a regular look: one round at a time is enough
+        else while (Interlocked.Exchange(ref _running, 1) == 1) await Task.Delay(100);   // asked for (a change, the app goes away): after the round that runs, one more with what is new
         try
         {
             Interlocked.Exchange(ref _changedAt, 0);
@@ -237,6 +238,7 @@ public sealed class LanSync : IDisposable
                 _tried["host:" + h] = DateTime.UtcNow;
                 await SyncWithAsync(new SyncPeer("host:" + h, h, ip, port, DateTime.UtcNow));
             }
+            await CloudAndReport();
             ReadStamps();   // what the comparison itself wrote is no change to send
         }
         finally { Interlocked.Exchange(ref _running, 0); }
@@ -369,6 +371,7 @@ public sealed class LanSync : IDisposable
             _tried["host:" + h] = DateTime.UtcNow;
             list.Add(await SyncWithAsync(new SyncPeer("host:" + h, h, ip, port, DateTime.UtcNow)));
         }
+        if (await CloudRoundAsync() is { } cloud) { list.Add(cloud); _cloudGreeted = true; Finished?.Invoke(cloud); }
         return list;
     }
 
@@ -479,6 +482,108 @@ public sealed class LanSync : IDisposable
         var fresh = path + ".new";
         _vaults.Snapshot(vault, fresh);
         File.Move(fresh, path, true);
+    }
+
+    // ---- the cloud folder ------------------------------------------------------------------------------------------------
+
+    /// <summary>A folder that a cloud service keeps the same on all devices (null = none): a mailbox, so the devices need not be on at the same time.</summary>
+    public ICloudFolder? Cloud { get; set; }
+
+    /// <summary>
+    /// One look into the cloud folder: what the other devices put there since the last look is merged here (as with a device in the network), then this
+    /// device's vaults go there when they changed. The base for the next merge with a device is its own copy that was merged now: what it changes or
+    /// deletes later is taken over, what was added here meanwhile stays (it never had it).
+    /// </summary>
+    public async Task<SyncReport?> CloudRoundAsync()
+    {
+        if (Cloud is not { } cloud) return null;
+        var me = _cfg.DeviceId;
+        int changed = 0, sent = 0;
+        string? who = null;
+        try
+        {
+            Directory.CreateDirectory(_tmp);
+            foreach (var dev in await cloud.DevicesAsync())
+            {
+                if (dev == me || dev.Length < 8 || !dev.All(char.IsLetterOrDigit)) continue;
+                var files = await cloud.FilesAsync(dev);
+                var name = files.FirstOrDefault(f => f.Name.StartsWith(CloudSync.NamePrefix, StringComparison.Ordinal))?.Name;
+                var devName = name is null ? dev[..8] : name[CloudSync.NamePrefix.Length..^4];
+                foreach (var f in files)
+                {
+                    if (!f.Name.EndsWith(".db", StringComparison.OrdinalIgnoreCase)) continue;
+                    var vault = f.Name[..^3];
+                    if (!MarkLogic.IsValidVaultName(vault)) continue;
+                    var key = "cloud|" + dev + "|" + vault.ToLowerInvariant();
+                    var stamp = f.Modified.UtcTicks + "/" + f.Size;
+                    string? seen; lock (_cfg.Done) _cfg.Done.TryGetValue(key, out seen);
+                    if (seen == stamp) continue;
+                    var file = TempFile();
+                    try
+                    {
+                        await cloud.DownloadAsync(dev, f.Name, file);
+                        var target = _vaults.Names().FirstOrDefault(n => string.Equals(n, vault, StringComparison.OrdinalIgnoreCase)) ?? vault;
+                        // their copy becomes the base for the next one: taken before the merge, which may change the file it gets
+                        var basePath = BasePath(dev, target);
+                        Directory.CreateDirectory(Path.GetDirectoryName(basePath)!);
+                        File.Copy(file, basePath + ".new", true);
+                        if (await MergeInto(target, file, dev)) changed++;
+                        File.Move(basePath + ".new", basePath, true);
+                        lock (_cfg.Done) _cfg.Done[key] = stamp;
+                        who = devName;
+                    }
+                    finally { TryDelete(file); }
+                }
+            }
+            // this device's vaults, when they are not there yet as they are now
+            var files0 = await cloud.FilesAsync(me);
+            var nameFile = CloudSync.NameFile(_cfg.DeviceName);
+            if (!files0.Any(f => f.Name == nameFile))
+            {
+                var empty = TempFile();
+                try { await File.WriteAllBytesAsync(empty, []); await cloud.UploadAsync(me, nameFile, empty); } finally { TryDelete(empty); }
+            }
+            foreach (var name in _vaults.Names())
+            {
+                var fp = await Task.Run(() => _vaults.Fingerprint(name));
+                var key = "cloud|mine|" + name.ToLowerInvariant();
+                string? done; lock (_cfg.Done) _cfg.Done.TryGetValue(key, out done);
+                if (done == fp && files0.Any(f => string.Equals(f.Name, name + ".db", StringComparison.OrdinalIgnoreCase))) continue;
+                var file = TempFile();
+                try
+                {
+                    await Task.Run(() => _vaults.Snapshot(name, file));
+                    await cloud.UploadAsync(me, name + ".db", file);
+                    lock (_cfg.Done) _cfg.Done[key] = fp;
+                    sent++;
+                }
+                finally { TryDelete(file); }
+            }
+            if (changed + sent > 0) { _cfg.LastTime = DateTime.Now.ToString("yyyy-MM-dd HH:mm"); _cfg.LastPeer = who ?? cloud.Label; }
+            _cfg.Save(_cfgPath);
+            ReadStamps();   // what the merge wrote is no change to send again
+            return new SyncReport(who ?? cloud.Label, changed, sent, null);
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or InvalidOperationException or ArgumentException or NotSupportedException or Microsoft.Data.Sqlite.SqliteException)
+        {
+            return new SyncReport(cloud.Label, changed, sent, ex.Message);
+        }
+    }
+
+    bool _cloudGreeted;
+
+    /// <summary>The cloud round of the automatic sync: reported when something went over or failed (and once at the start, so the first contact shows).</summary>
+    async Task CloudAndReport()
+    {
+        if (await CloudRoundAsync() is not { } r) return;
+        if (r.Changed + r.Sent > 0 || r.Error is not null || !_cloudGreeted) { _cloudGreeted = true; Finished?.Invoke(r); }
+    }
+
+    /// <summary>Forgets what was taken from and put into the cloud folder (another folder was chosen).</summary>
+    public void ForgetCloud()
+    {
+        lock (_cfg.Done) foreach (var k in _cfg.Done.Keys.Where(k => k.StartsWith("cloud|", StringComparison.Ordinal)).ToList()) _cfg.Done.Remove(k);
+        _cfg.Save(_cfgPath);
     }
 
     string TempFile() => Path.Combine(_tmp, Guid.NewGuid().ToString("N") + ".db");

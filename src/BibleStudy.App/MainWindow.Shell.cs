@@ -172,11 +172,13 @@ public partial class MainWindow
     /// On Android the app is not closed but sent to the background, and Android may end it there without asking: what is typed and
     /// where the reader stands is saved every time, as when the window closes on a desktop.
     /// </summary>
-    public void SaveForBackground()
+    /// <summary>Saves everything; the task ends when what was just written has gone to the devices in reach (the system lets the app run a little longer for it).</summary>
+    public Task SaveForBackground()
     {
         try { AutoSaveDocument(); SaveNoteDraft(); } catch (Exception ex) { ErrorLog.Write(ex); }
         try { _settings.LastLayout = CaptureLayout(); SaveSettings(); } catch (Exception ex) { ErrorLog.Write(ex); }
-        if (_lan is { } lan) _ = Task.Run(lan.SyncKnownAsync);   // what was just written goes to the other device while the system still lets the app run
+        if (_lan is not { } lan || _syncCfg.Key is null) return Task.CompletedTask;
+        return Task.WhenAny(Task.Run(lan.SyncKnownAsync), Task.Delay(TimeSpan.FromSeconds(25)));
     }
 
     // ---- tray ---------------------------------------------------------------------------------------------------------

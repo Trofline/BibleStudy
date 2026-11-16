@@ -26,8 +26,11 @@ public partial class MainWindow
             var card = cards[i];
             var panel = (StackPanel)card.Child!;
             var title = (TextBlock)panel.Children[0];
-            // no keyboard and no windows to arrange on a phone: these two sections have nothing to offer there
-            if (AppPlatform.IsMobile && Avalonia.LogicalTree.LogicalExtensions.GetLogicalDescendants(panel).Any(d => d == KeysPanel || d == LayoutNameBox)) { card.IsVisible = false; continue; }
+            // what only a computer has, left out on a phone: keyboard shortcuts, windows and layouts, start with Windows and the tray,
+            // plugins (programs for a computer), and the AI (the Claude Code app, Ollama and the MCP server run on a computer)
+            if (AppPlatform.IsMobile && Avalonia.LogicalTree.LogicalExtensions.GetLogicalDescendants(panel)
+                    .Any(d => d == KeysPanel || d == LayoutNameBox || d == StartWithWindowsCheck || d == PluginsList || d == AiContextBox)) { card.IsVisible = false; continue; }
+            if (AppPlatform.IsMobile && Avalonia.LogicalTree.LogicalExtensions.GetLogicalDescendants(panel).Contains(StartMenuBtn)) title.Text = L("FEEDBACK");
             panel.Children.RemoveAt(0);
             card.Child = null;   // the panel moves into a new container, so it must leave the card first
 

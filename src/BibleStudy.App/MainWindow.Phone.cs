@@ -26,6 +26,9 @@ public partial class MainWindow
         MinBtn.IsVisible = MaxBtn.IsVisible = CloseBtn.IsVisible = false;
         WrapDocumentBar();
         KeysTopBtn.IsVisible = LayoutTopBtn.IsVisible = false;   // no keyboard, no windows to arrange
+        // what needs a computer: the Windows start menu, a Syncthing folder, opening a folder in the file manager
+        StartMenuBtn.IsVisible = StartMenuInfo.IsVisible = BackupSyncBtn.IsVisible = SourcesCacheBtn.IsVisible = false;
+        if (OperatingSystem.IsIOS()) RestartBtn.IsVisible = false;   // an iPhone app cannot start itself again
         // the list of sections beside the settings is longer than a low screen: it scrolls on its own
         if (SettingsScroll.Parent is Grid sg && sg.Children.FirstOrDefault(c => Grid.GetColumn(c) == 1) is Control toc and not ScrollViewer)
         {

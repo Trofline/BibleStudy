@@ -179,7 +179,15 @@ public partial class MainWindow
         var canInstall = plan is not null || (OperatingSystem.IsWindows() && (AppPaths.IsInstalled || AppPaths.IsPortable)) || (OperatingSystem.IsAndroid() && info.DownloadUrl.Length > 0);   // the full package installs itself on Windows only; elsewhere the download page opens
         if (!canInstall)
         {
-            if (OperatingSystem.IsIOS()) { UpdateStatus.Text = L("Neue Version {0} verfügbar. Auf dem iPhone kommt sie über SideStore: Öffne SideStore und aktualisiere BibleStudy dort.", info.Version); return; }
+            if (OperatingSystem.IsIOS())
+            {
+                // iOS lets no app install another by itself: SideStore is opened, the update is one tap there (My Apps → Update)
+                UpdateStatus.Text = L("Neue Version {0} verfügbar. Auf dem iPhone kommt sie über SideStore: Öffne SideStore und aktualisiere BibleStudy dort.", info.Version);
+                if (await AskAsync(L("Neue Version {0}", info.Version), L("BibleStudy {0} ist erschienen (du hast {1}). Auf dem iPhone kommt sie über SideStore: dort unter „My Apps“ bei BibleStudy auf „Update“ tippen.", info.Version, AppPaths.Version), L("SideStore öffnen"), L("Später")) == 0
+                    && TopLevel.GetTopLevel(this)?.Launcher is { } launcher)
+                    await launcher.LaunchUriAsync(new Uri("sidestore://"));
+                return;
+            }
             var open = await AskAsync(L("Neue Version {0}", info.Version), L("BibleStudy {0} ist erschienen (du hast {1}). Auf diesem System lädst du das neue Paket selbst herunter. Soll die Download-Seite geöffnet werden?", info.Version, AppPaths.Version), L("Seite öffnen"), L("Später"));
             // a quick release has no packages: the last full release has them
             var downloads = info.DownloadUrl.Length > 0 ? info.PageUrl : $"https://github.com/{Updater.Repo}/releases/latest";

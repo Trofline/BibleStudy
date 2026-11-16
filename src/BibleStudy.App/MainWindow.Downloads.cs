@@ -85,6 +85,7 @@ public partial class MainWindow
                     (p, ct) => NaturalVoice.EnsureAsync(_http, _root, voice, p, ct), group, () => NaturalVoice.IsReady(_root, voice), () => NaturalVoice.Remove(_root, voice)));
             }
 
+#if !MOBILE   // Ollama runs on a computer only
         group = L("Übersetzen ohne Internet");
         foreach (var (model, note) in new[] { (OllamaClient.SmallModel, L("Schnell und klein, läuft auch auf schwächeren Rechnern, übersetzt einfacher.")), (OllamaClient.LargeModel, L("Beste Übersetzung, braucht rund 10 GB freien Arbeits- oder Grafikspeicher.")) })
         {
@@ -96,6 +97,7 @@ public partial class MainWindow
                 catch (HttpRequestException) { throw new InvalidOperationException(L("Ollama konnte nicht gestartet werden. Ist es von ollama.com installiert?")); }
             }, group, () => false, null));
         }
+#endif
         return items;
     }
 
@@ -141,11 +143,23 @@ public partial class MainWindow
         all.Click += (_, _) => { foreach (var b in boxes) b.Box.IsChecked = true; };
         none.Click += (_, _) => { foreach (var b in boxes) b.Box.IsChecked = false; };
 
-        var buttons = new DockPanel { Margin = new(0, 6, 0, 0) };
-        var right = new StackPanel { Orientation = Orientation.Horizontal, Children = { cancel, go } };
-        DockPanel.SetDock(right, Dock.Right);
-        buttons.Children.Add(right);
-        buttons.Children.Add(new StackPanel { Orientation = Orientation.Horizontal, Children = { all, none } });
+        // a narrow screen (a phone): the buttons go to a second row instead of lying on each other
+        Control buttons;
+        if (_phone)
+        {
+            foreach (var b in new[] { all, none, cancel }) b.Margin = new(0, 0, 6, 6);
+            go.Margin = new(0, 0, 0, 6);
+            buttons = new WrapPanel { Margin = new(0, 6, 0, 0), Children = { all, none, cancel, go } };
+        }
+        else
+        {
+            var dock = new DockPanel { Margin = new(0, 6, 0, 0) };
+            var right = new StackPanel { Orientation = Orientation.Horizontal, Children = { cancel, go } };
+            DockPanel.SetDock(right, Dock.Right);
+            dock.Children.Add(right);
+            dock.Children.Add(new StackPanel { Orientation = Orientation.Horizontal, Children = { all, none } });
+            buttons = dock;
+        }
 
         var root = new DockPanel { Margin = new(20) };
         DockPanel.SetDock(info, Dock.Top); info.Margin = new(0, 0, 0, 8);

@@ -64,7 +64,10 @@ public sealed partial class VaultStore
             else if (theirSame && !mineSame) other.UpdateDocument(t!.Id, t.Title, Unnumbered(m!.Body), t.Path, t.IsTemplate, t.Tags, t.FolderId);
         }
 
-        var total = mineMarks.Count + mineNotes.Count + mineDocs.Count;
+        // the plain lists: to-dos, bookmarks, the reading queue, prayers, own headings and cross references, the archive of the Bible studies
+        var listCount = MergeLists(other, bas, deletions, ref taken);
+
+        var total = mineMarks.Count + mineNotes.Count + mineDocs.Count + listCount;
         var held = 0;
         if (deletions.Count > Math.Max(5, total / 4)) held = deletions.Count;   // looks like a lost or reset copy over there: keep everything
         else foreach (var d in deletions) d();

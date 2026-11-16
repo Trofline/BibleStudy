@@ -38,7 +38,7 @@ public partial class MainWindow
         // a phone has no program file to start again: the app is opened anew and this process ends (so that a new language really applies)
         try
         {
-            SaveForBackground();
+            _ = SaveForBackground();
             var ctx = Android.App.Application.Context;
             var intent = new Android.Content.Intent(ctx, typeof(BibleStudy.Droid.RestartActivity));
             intent.AddFlags(Android.Content.ActivityFlags.NewTask);

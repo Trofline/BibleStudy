@@ -3129,5 +3129,18 @@
   "Kein Gerät erreicht": "No device reached",
   "Nicht erreicht": "Not reached",
   "Synchronisiert": "Synced",
-  "Jetzt mit deinen anderen Geräten synchronisieren (läuft sonst von selbst alle 20 Sekunden und nach jeder Änderung).": "Sync with your other devices now (otherwise it runs by itself every 20 seconds and after every change)."
+  "Jetzt mit deinen anderen Geräten synchronisieren (läuft sonst von selbst alle 20 Sekunden und nach jeder Änderung).": "Sync with your other devices now (otherwise it runs by itself every 20 seconds and after every change).",
+  "FEEDBACK": "FEEDBACK",
+  "Über einen Cloud-Ordner (die Geräte müssen nicht gleichzeitig an sein)": "Through a cloud folder (the devices need not be on at the same time)",
+  "Wähle auf allen Geräten denselben Ordner, den Google Drive, OneDrive, iCloud Drive oder Dropbox abgleicht (am PC den Ordner der jeweiligen App, am Handy in der Dateien-App). Jedes Gerät legt dort eine Kopie seiner Vaults ab und übernimmt die der anderen, sobald es offen ist. Zusammengeführt wird wie im WLAN: Es geht nichts verloren. Die Kopien liegen unverschlüsselt in deinem Cloud-Speicher.": "Choose the same folder on all devices, one that Google Drive, OneDrive, iCloud Drive or Dropbox keeps in step (on the PC the folder of that app, on the phone in the Files app). Every device puts a copy of its vaults there and takes over those of the others as soon as it is open. It is merged as in the Wi-Fi: nothing gets lost. The copies lie unencrypted in your cloud storage.",
+  "Cloud-Ordner wählen …": "Choose cloud folder …",
+  "Cloud-Ordner nicht mehr nutzen": "Stop using the cloud folder",
+  "Cloud-Ordner: {0}": "Cloud folder: {0}",
+  "Der Cloud-Ordner ist gerade nicht erreichbar.": "The cloud folder cannot be reached right now.",
+  "Cloud-Ordner wählen": "Choose cloud folder",
+  "Diesen Ordner kann sich das System nicht merken. Wähle einen anderen.": "The system cannot remember this folder. Choose another one.",
+  "Anderen Cloud-Ordner wählen …": "Choose another cloud folder …",
+  "Kein Cloud-Ordner gewählt.": "No cloud folder chosen.",
+  "BibleStudy {0} ist erschienen (du hast {1}). Auf dem iPhone kommt sie über SideStore: dort unter „My Apps“ bei BibleStudy auf „Update“ tippen.": "BibleStudy {0} is out (you have {1}). On the iPhone it comes through SideStore: tap “Update” next to BibleStudy under “My Apps” there.",
+  "SideStore öffnen": "Open SideStore"
 }

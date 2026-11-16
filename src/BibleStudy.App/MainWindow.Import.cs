@@ -127,7 +127,7 @@ public partial class MainWindow
                 _lastImportReportName = SafeName(bible.ShortName, "import") + "-import-check.md";
                 ImportCheckBtn.IsVisible = true;
                 _lastImportBible = bible; _lastImportId = id;
-                ImportAiBtn.IsVisible = ImportCheck.CorrectionPrompt(bible).Length > 0;
+                ImportAiBtn.IsVisible = !AppPlatform.IsMobile && ImportCheck.CorrectionPrompt(bible).Length > 0;
                 ImportBibleInfo.Text += " " + (check.Clean ? L("Die Prüfung fand nichts Auffälliges.") : L("Die Prüfung fand {0} auffällige Stellen: Der Bericht für eine KI lässt sich speichern.", check.Counts.Values.Sum()));
             }
             catch { ImportCheckBtn.IsVisible = false; ImportAiBtn.IsVisible = false; /* the check is a help, never a reason to fail an import */ }
@@ -172,7 +172,7 @@ public partial class MainWindow
         await RealignMarksAsync(id);
         _store.ForgetTranslation(id); _corpora.Remove(id); _strongIndexes.Remove(id);
         _lastImportBible = wanted;
-        ImportAiBtn.IsVisible = ImportCheck.CorrectionPrompt(wanted).Length > 0;
+        ImportAiBtn.IsVisible = !AppPlatform.IsMobile && ImportCheck.CorrectionPrompt(wanted).Length > 0;
         await ReloadTranslationsAsync(id);
         ImportBibleInfo.Text = L("{0} Verse korrigiert, {1} Vorschläge abgelehnt, weil sie zu viel geändert hätten.", applied, refused);
     }

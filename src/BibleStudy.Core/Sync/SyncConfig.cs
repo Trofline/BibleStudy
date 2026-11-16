@@ -96,6 +96,9 @@ public sealed class SyncConfig
     public string? LastPeer { get; set; }
     /// <summary>Addresses (ip:port) of other devices of the group: the call-out may not reach them (an iPhone hears none), a direct connection does.</summary>
     public List<string> Hosts { get; } = [];
+    /// <summary>The cloud folder used as a mailbox: a path on a computer, or a bookmark of the system (a phone). Null = none.</summary>
+    public string? CloudPath { get; set; }
+    public string? CloudBookmark { get; set; }
 
     public IReadOnlyList<string> HostList() { lock (Hosts) return [.. Hosts]; }
 
@@ -135,6 +138,7 @@ public sealed class SyncConfig
             c.Key = S("key");
             if (r.TryGetProperty("auto", out var a) && a.ValueKind is JsonValueKind.True or JsonValueKind.False) c.Auto = a.GetBoolean();
             c.LastTime = S("lastTime"); c.LastPeer = S("lastPeer");
+            c.CloudPath = S("cloud"); c.CloudBookmark = S("cloudBookmark");
             if (r.TryGetProperty("hosts", out var hs) && hs.ValueKind == JsonValueKind.Array)
                 foreach (var h in hs.EnumerateArray()) if (h.GetString() is { } hv) c.Hosts.Add(hv);
             if (r.TryGetProperty("done", out var d) && d.ValueKind == JsonValueKind.Object)
@@ -157,6 +161,8 @@ public sealed class SyncConfig
                 w.WriteBoolean("auto", Auto);
                 if (LastTime is not null) w.WriteString("lastTime", LastTime);
                 if (LastPeer is not null) w.WriteString("lastPeer", LastPeer);
+                if (CloudPath is not null) w.WriteString("cloud", CloudPath);
+                if (CloudBookmark is not null) w.WriteString("cloudBookmark", CloudBookmark);
                 w.WriteStartArray("hosts");
                 lock (Hosts) foreach (var h in Hosts) w.WriteStringValue(h);
                 w.WriteEndArray();

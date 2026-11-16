@@ -13,10 +13,10 @@
     <RootNamespace>BibleStudy.App</RootNamespace>
     <AssemblyName>BibleStudy.App</AssemblyName>
     <ApplicationId>de.trofline.biblestudy</ApplicationId>
-    <ApplicationVersion>27</ApplicationVersion>
-    <ApplicationDisplayVersion>1.9.8-beta</ApplicationDisplayVersion>
+    <ApplicationVersion>28</ApplicationVersion>
+    <ApplicationDisplayVersion>1.9.9-beta</ApplicationDisplayVersion>
     <!-- the updater compares this with the android-… release tags: keep it equal to the version above -->
-    <Version>1.9.8</Version>
+    <Version>1.9.9</Version>
     <ApplicationTitle>BibleStudy</ApplicationTitle>
     <AndroidPackageFormat>apk</AndroidPackageFormat>
     <!-- Release: the whole program compiled ahead of time; a phone starts it much faster than with the JIT -->

@@ -33,6 +33,7 @@ public partial class MainWindow
     static NavGroup[] MakeNavGroups()
     {
         var all = BuildNavGroups();
+        if (AppPlatform.IsMobile) all = [.. all.Where(g => g.Name != "KI")];   // the AI is the Claude Code app of a computer
         if (!CompactLook) return all;
         var pool = all.SelectMany(g => g.Tabs).ToDictionary(t => t.Index);
         NavTab[] Pick(params int[] idx) => idx.Where(pool.ContainsKey).Select(i => pool[i]).ToArray();

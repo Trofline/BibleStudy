@@ -117,6 +117,22 @@ public sealed class LearnStore(string path)
         Save();
     }
 
+    /// <summary>All cards as id → JSON of their state (for the device sync).</summary>
+    public Dictionary<string, string> Export() => Cards.ToDictionary(c => c.Key, c => JsonSerializer.Serialize(c.Value));
+
+    /// <summary>Takes the cards over from the device sync (id → JSON of the state); a card that cannot be read is left as it was.</summary>
+    public void ReplaceAll(IReadOnlyDictionary<string, string> cards)
+    {
+        var next = new Dictionary<string, CardState>();
+        foreach (var (id, json) in cards)
+        {
+            try { if (JsonSerializer.Deserialize<CardState>(json) is { } c) next[id] = c; }
+            catch (JsonException) { if (Cards.TryGetValue(id, out var old)) next[id] = old; }
+        }
+        _cards = next;
+        Save();
+    }
+
     public int Known => Cards.Values.Count(c => c.Box >= 3);
     public int Seen => Cards.Count;
 
