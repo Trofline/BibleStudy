@@ -50,7 +50,13 @@ static class Shell
         {
             var app = UIKit.UIApplication.SharedApplication;
             if (target.StartsWith("http://", StringComparison.OrdinalIgnoreCase) || target.StartsWith("https://", StringComparison.OrdinalIgnoreCase) || target.StartsWith("mailto:", StringComparison.OrdinalIgnoreCase))
-                return app.CanOpenUrl(new Foundation.NSUrl(target)) && app.OpenUrl(new Foundation.NSUrl(target));
+            {
+                // the old OpenUrl(url) does nothing any more since iOS 18 (it only returns false): the one with options opens it
+                var url = new Foundation.NSUrl(target);
+                if (!app.CanOpenUrl(url)) return false;
+                app.OpenUrl(url, new UIKit.UIApplicationOpenUrlOptions(), null);
+                return true;
+            }
             if (Directory.Exists(target))
             {
                 // a folder (the program shows where an export went): the file just written there is offered instead

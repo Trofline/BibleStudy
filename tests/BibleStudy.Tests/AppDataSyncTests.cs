@@ -46,4 +46,20 @@ public class AppDataSyncTests : IDisposable
         Assert.Equal(AppData.Fingerprint(sets), AppData.Fingerprint(back));
         Assert.Null(AppData.ReadFrom(Path.Combine(_dir, "none.db")));
     }
+
+    [Fact]
+    public void A_value_changed_on_both_sides_ends_the_same_on_both_and_lists_are_joined()
+    {
+        Dictionary<string, string> bas = new() { ["PlanDoneDays"] = "[1,2]", ["PlanId"] = "\"a\"" };
+        Dictionary<string, string> pc = new() { ["PlanDoneDays"] = "[1,2,3]", ["PlanId"] = "\"b\"" };
+        Dictionary<string, string> phone = new() { ["PlanDoneDays"] = "[1,2,4]", ["PlanId"] = "\"c\"" };
+
+        var onPc = AppData.Merge(pc, phone, bas);
+        var onPhone = AppData.Merge(phone, pc, bas);
+
+        Assert.Equal(onPc["PlanDoneDays"], onPhone["PlanDoneDays"]);
+        Assert.Equal(onPc["PlanId"], onPhone["PlanId"]);
+        var days = System.Text.Json.JsonSerializer.Deserialize<int[]>(onPc["PlanDoneDays"])!;
+        Assert.Equal([1, 2, 3, 4], days.Order());
+    }
 }

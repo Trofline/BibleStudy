@@ -148,8 +148,12 @@ public sealed class SyncConfig
         return c;
     }
 
+    readonly object _saveGate = new();
+
     public void Save(string path)
     {
+        // a comparison that is asked and one that asks can save at the same moment: one after the other, or one of them would be lost
+        lock (_saveGate)
         try
         {
             using var ms = new MemoryStream();

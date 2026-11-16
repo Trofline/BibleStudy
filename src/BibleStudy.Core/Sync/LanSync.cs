@@ -314,6 +314,12 @@ public sealed class LanSync : IDisposable
                             if (ReadInfo(msg.Data) is { } asked) asker = asked.Id;
                             if (c.Client.RemoteEndPoint is IPEndPoint remote && ReadInfo(msg.Data) is { Port: > 0 } who) _cfg.RememberHost(remote.Address, who.Port, _cfgPath);   // so that it can be found again without the call-out
                             await ch.Send(MsgList, ListPayload(), limit.Token);
+                            // vaults that are the same on both sides need no exchange, but the base for the next merge with that device must be this state
+                            // (they may have become the same through a third device or the cloud folder): else a later deletion would come back
+                            if (asker.Length > 0 && ReadInfo(msg.Data) is { } same)
+                                foreach (var n in _vaults.Names())
+                                    if (same.Vaults.TryGetValue(n, out var theirFp) && await Task.Run(() => _vaults.Fingerprint(n), limit.Token) is var fp && fp == theirFp)
+                                        await Task.Run(() => EnsureBase(asker, n, fp), limit.Token);
                             if (ReadInfo(msg.Data) is { Name.Length: > 0 } caller)
                             {
                                 // this side was reached: it counts as a comparison here too (the reminder after some days without one looks at it)
@@ -407,7 +413,12 @@ public sealed class LanSync : IDisposable
                 var myFp = have is null ? "" : await Task.Run(() => _vaults.Fingerprint(have), ct);
                 var theirFp = theirName is null ? "" : theirs[theirName];
                 var key = peer.Id + "|" + (have ?? name);
-                if (myFp == theirFp) { Remember(key, myFp, theirFp); continue; }
+                if (myFp == theirFp)
+                {
+                    Remember(key, myFp, theirFp);
+                    if (have is not null && peer.Id.Length > 0) await Task.Run(() => EnsureBase(peer.Id, have, myFp), ct);   // see Serve: the base must be this state
+                    continue;
+                }
                 string? done; lock (_cfg.Done) _cfg.Done.TryGetValue(key, out done);
                 if (done == myFp + "|" + theirFp) continue;   // neither side changed since the last comparison
 
@@ -479,9 +490,19 @@ public sealed class LanSync : IDisposable
     {
         var path = BasePath(peerId, vault);
         Directory.CreateDirectory(Path.GetDirectoryName(path)!);
-        var fresh = path + ".new";
+        var fresh = path + "." + Guid.NewGuid().ToString("N") + ".new";   // two comparisons at once must not write the same file
         _vaults.Snapshot(vault, fresh);
         File.Move(fresh, path, true);
+    }
+
+    /// <summary>Makes the base for a device the state of a vault that is the same on both sides; written only when that state changed since the last time.</summary>
+    void EnsureBase(string peerId, string vault, string fp)
+    {
+        var key = "base|" + peerId + "|" + vault.ToLowerInvariant();
+        string? had; lock (_cfg.Done) _cfg.Done.TryGetValue(key, out had);
+        if (had == fp && File.Exists(BasePath(peerId, vault))) return;
+        SaveBase(peerId, vault);
+        lock (_cfg.Done) _cfg.Done[key] = fp;
     }
 
     // ---- the cloud folder ------------------------------------------------------------------------------------------------
@@ -500,6 +521,8 @@ public sealed class LanSync : IDisposable
         var me = _cfg.DeviceId;
         int changed = 0, sent = 0;
         string? who = null;
+        // the automatic round and "sync now" may come at the same time: one look into the folder at a time (they would write the same files)
+        await _cloudGate.WaitAsync();
         try
         {
             Directory.CreateDirectory(_tmp);
@@ -507,8 +530,10 @@ public sealed class LanSync : IDisposable
             {
                 if (dev == me || dev.Length < 8 || !dev.All(char.IsLetterOrDigit)) continue;
                 var files = await cloud.FilesAsync(dev);
-                var name = files.FirstOrDefault(f => f.Name.StartsWith(CloudSync.NamePrefix, StringComparison.Ordinal))?.Name;
-                var devName = name is null ? dev[..8] : name[CloudSync.NamePrefix.Length..^4];
+                // the newest name file (a device that was renamed has an old one too); a strange file there must not stop the whole round
+                var name = files.Where(f => f.Name.StartsWith(CloudSync.NamePrefix, StringComparison.Ordinal) && f.Name.EndsWith(".txt", StringComparison.OrdinalIgnoreCase))
+                    .OrderByDescending(f => f.Modified).FirstOrDefault()?.Name;
+                var devName = name is null || name.Length <= CloudSync.NamePrefix.Length + 4 ? dev[..8] : name[CloudSync.NamePrefix.Length..^4];
                 foreach (var f in files)
                 {
                     if (!f.Name.EndsWith(".db", StringComparison.OrdinalIgnoreCase)) continue;
@@ -568,7 +593,10 @@ public sealed class LanSync : IDisposable
         {
             return new SyncReport(cloud.Label, changed, sent, ex.Message);
         }
+        finally { _cloudGate.Release(); }
     }
+
+    readonly SemaphoreSlim _cloudGate = new(1, 1);
 
     bool _cloudGreeted;
 

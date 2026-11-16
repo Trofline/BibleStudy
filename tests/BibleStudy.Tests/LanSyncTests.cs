@@ -103,6 +103,27 @@ public class LanSyncTests : IDisposable
     }
 
     [Fact]
+    public async Task A_deletion_does_not_come_back_after_both_got_the_entry_through_a_third_device()
+    {
+        var key = SyncCode.NewKey();
+        using var a = new Device(Path.Combine(_dir, "a"), key, "PC");
+        using var b = new Device(Path.Combine(_dir, "b"), key, "Handy");
+        using var c = new Device(Path.Combine(_dir, "c"), key, "Tablet");
+        a.Vault("Standard").SetNote(new VerseRef("Joh", 3, 16), "vom PC");
+        Assert.Null((await a.Sync.SyncWithAsync(b.AsPeer())).Error);
+
+        c.Vault("Standard").SetNote(new VerseRef("Ps", 23, 1), "vom Tablet");
+        Assert.Null((await c.Sync.SyncWithAsync(a.AsPeer())).Error);
+        Assert.Null((await c.Sync.SyncWithAsync(b.AsPeer())).Error);
+        Assert.Null((await a.Sync.SyncWithAsync(b.AsPeer())).Error);   // the same on both: nothing to exchange
+
+        a.Vault("Standard").SetNote(new VerseRef("Ps", 23, 1), "");   // deleted on the PC
+        Assert.Null((await a.Sync.SyncWithAsync(b.AsPeer())).Error);
+
+        foreach (var d in new[] { a, b }) Assert.Equal("vom PC", Assert.Single(d.Vault("Standard").GetNotes()).Text);
+    }
+
+    [Fact]
     public async Task AChange_ReachesTheOtherDevice_WithinSeconds_WithoutAsking()
     {
         var key = SyncCode.NewKey();

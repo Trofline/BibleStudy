@@ -73,16 +73,42 @@ public static class AppData
     public static Dictionary<string, string> Merge(IReadOnlyDictionary<string, string> mine, IReadOnlyDictionary<string, string> theirs, IReadOnlyDictionary<string, string>? bas)
     {
         var result = new Dictionary<string, string>(mine);
-        if (bas is not null)
-            foreach (var (key, was) in bas)
-            {
-                mine.TryGetValue(key, out var m); theirs.TryGetValue(key, out var t);
-                if (m != was) continue;   // changed or deleted here: that stays
-                if (t is null) { if (theirs.Count > 0) result.Remove(key); }
-                else result[key] = t;
-            }
         foreach (var (key, t) in theirs)
-            if (!mine.ContainsKey(key) && bas?.ContainsKey(key) != true) result[key] = t;   // new over there (what was deleted here does not come back)
+        {
+            string? was = null;
+            var inBase = bas is not null && bas.TryGetValue(key, out was);
+            if (!mine.TryGetValue(key, out var m)) { if (!inBase) result[key] = t; continue; }   // new over there; deleted here stays deleted
+            if (m == t) continue;
+            if (inBase && m == was) { result[key] = t; continue; }   // changed only there
+            if (inBase && t == was) continue;                        // changed only here
+            result[key] = Resolve(m, t);                             // changed on both sides (or new on both): both devices must end the same
+        }
+        if (bas is not null && theirs.Count > 0)
+            foreach (var (key, was) in bas)
+                if (!theirs.ContainsKey(key) && mine.TryGetValue(key, out var m) && m == was) result.Remove(key);   // deleted only there
         return result;
+    }
+
+    /// <summary>
+    /// A value changed on both devices. Lists (the days of the reading plan done, saved searches …) are joined, so nothing ticked off on either side is lost;
+    /// anything else takes one of the two by a rule that does not depend on the side, so both devices keep the same and do not drift apart.
+    /// </summary>
+    static string Resolve(string m, string t)
+    {
+        var (first, second) = string.CompareOrdinal(m, t) >= 0 ? (m, t) : (t, m);
+        try
+        {
+            using var a = System.Text.Json.JsonDocument.Parse(first);
+            using var b = System.Text.Json.JsonDocument.Parse(second);
+            if (a.RootElement.ValueKind == System.Text.Json.JsonValueKind.Array && b.RootElement.ValueKind == System.Text.Json.JsonValueKind.Array)
+            {
+                var items = new List<string>();
+                foreach (var e in a.RootElement.EnumerateArray().Concat(b.RootElement.EnumerateArray()))
+                    if (!items.Contains(e.GetRawText())) items.Add(e.GetRawText());
+                return "[" + string.Join(",", items) + "]";
+            }
+        }
+        catch (System.Text.Json.JsonException) { /* not JSON: one of the two */ }
+        return first;
     }
 }

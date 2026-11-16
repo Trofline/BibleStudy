@@ -115,6 +115,15 @@ Alle Dateien liegen im **[neuesten Release](https://github.com/Trofline/BibleStu
 
 </details>
 
+## 💛 Du bist nicht allein damit
+
+> [!IMPORTANT]
+> **BibleStudy bleibt.** Ich halte die App am Leben: Sie bekommt weiter Updates, und Fehler werden behoben. Du musst dir keine Sorgen machen, dass sie irgendwann liegen gelassen wird.
+
+**Jedes Problem zählt, auch wenn es nur dich betrifft.** Dein gekauftes Buch lässt sich nicht gut importieren, auf deinem Gerät sieht etwas falsch aus, du hast eine Idee oder kommst einfach nicht weiter: Ich kümmere mich selbst um jede Person und helfe dir persönlich, bis alles klappt. Keine Frage ist zu klein, und niemand bekommt „das betrifft ja nur dich“ zu hören.
+
+**So erreichst du mich:** im Programm unter **Einstellungen → Feedback** („Fehler melden“, „Idee vorschlagen“, „Feedback geben“) oder direkt als [Issue auf GitHub](https://github.com/Trofline/BibleStudy/issues). Schreiben kannst du auf Deutsch oder Englisch.
+
 ---
 
 ## 📥 Installation

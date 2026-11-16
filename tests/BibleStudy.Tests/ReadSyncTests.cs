@@ -52,6 +52,20 @@ public class ReadSyncTests
     }
 
     [Fact]
+    public void A_chapter_marked_unread_here_does_not_come_back_from_the_other_device()
+    {
+        var pc = Store("pc"); var phone = Store("phone");
+        pc.Set("JHN", [1, 2], true);
+        phone.MergeFrom(Copy(pc, "pc"), null);
+        var basePath = Copy(pc, "base");
+        pc.Set("JHN", [2], false);   // unread here; the phone still has it from before
+
+        pc.MergeFrom(Copy(phone, "phone"), basePath);
+
+        Assert.True(pc.Chapters().SetEquals([("JHN", 1)]));
+    }
+
+    [Fact]
     public void An_empty_device_or_an_old_copy_removes_nothing()
     {
         var pc = Store("pc");

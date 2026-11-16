@@ -112,6 +112,15 @@ All files are in the **[latest release](https://github.com/Trofline/BibleStudy/r
 
 </details>
 
+## 💛 You are not on your own
+
+> [!IMPORTANT]
+> **BibleStudy is here to stay.** I keep the app alive: it keeps getting updates, and bugs get fixed. You do not need to worry that it is left behind one day.
+
+**Every problem counts, even if it only happens to you.** Your bought book does not import well, something looks wrong on your device, you have an idea, or you simply do not get on: I look after every person myself and help you personally until it works. No question is too small, and nobody is told "that only affects you".
+
+**How to reach me:** in the program under **Settings → Feedback** ("Report a bug", "Suggest an idea", "Give feedback"), or directly as an [issue on GitHub](https://github.com/Trofline/BibleStudy/issues). Writing in German or English is fine.
+
 ---
 
 ## 📥 Installation

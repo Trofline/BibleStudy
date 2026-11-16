@@ -91,10 +91,12 @@ public sealed class ReadStore : SqliteDb
         }
         var other = Read(otherPath);
         if (other is null) return;
+        var mine = Chapters();
         MergeFrom(otherPath);
         if (!HasTable(otherPath, "read_shared")) return;   // an older device: its file may hold an old per-vault list, which only adds
         if (Read(basePath) is not { Count: > 0 } before || other.Count == 0) return;
-        var unread = before.Where(c => !other.Contains(c)).ToList();
+        // marked unread over there since the last sync, or marked unread here (the other side still has it from before): unread on both
+        var unread = before.Where(c => !other.Contains(c) || !mine.Contains(c)).ToList();
         foreach (var g in unread.GroupBy(c => c.Item1)) Set(g.Key, g.Select(c => c.Item2), false);
     }
 
@@ -115,19 +117,26 @@ public sealed class ReadStore : SqliteDb
     {
         using var con = Open();
         using (var attach = con.CreateCommand()) { attach.CommandText = "ATTACH DATABASE $p AS target"; attach.Parameters.AddWithValue("$p", vaultDbPath); attach.ExecuteNonQuery(); }
-        using var tx = con.BeginTransaction();
-        foreach (var sql in new[]
+        try
         {
-            "CREATE TABLE IF NOT EXISTS target.read_chapters(book TEXT, chapter INT, read_at TEXT, PRIMARY KEY(book,chapter))",
-            "CREATE TABLE IF NOT EXISTS target.read_shared(x INT)",   // marks a full copy of the shared list (an old per-vault list is only ever added)
-            "DELETE FROM target.read_chapters",
-            "INSERT INTO target.read_chapters(book,chapter,read_at) SELECT book,chapter,read_at FROM main.read_chapters",
-        })
-        {
-            using var cmd = con.CreateCommand(); cmd.CommandText = sql; cmd.ExecuteNonQuery();
+            using var tx = con.BeginTransaction();
+            foreach (var sql in new[]
+            {
+                "CREATE TABLE IF NOT EXISTS target.read_chapters(book TEXT, chapter INT, read_at TEXT, PRIMARY KEY(book,chapter))",
+                "CREATE TABLE IF NOT EXISTS target.read_shared(x INT)",   // marks a full copy of the shared list (an old per-vault list is only ever added)
+                "DELETE FROM target.read_chapters",
+                "INSERT INTO target.read_chapters(book,chapter,read_at) SELECT book,chapter,read_at FROM main.read_chapters",
+            })
+            {
+                using var cmd = con.CreateCommand(); cmd.CommandText = sql; cmd.ExecuteNonQuery();
+            }
+            tx.Commit();
         }
-        tx.Commit();
-        // let go of the file: the connection goes back to the pool, and an attached file would stay locked (the export could not pack it)
-        using (var detach = con.CreateCommand()) { detach.CommandText = "DETACH DATABASE target"; detach.ExecuteNonQuery(); }
+        finally
+        {
+            // let go of the file, also after an error: the connection goes back to the pool, and an attached file would stay locked
+            // (the export could not pack it, and every later copy for the sync would fail to attach)
+            using var detach = con.CreateCommand(); detach.CommandText = "DETACH DATABASE target"; detach.ExecuteNonQuery();
+        }
     }
 }
