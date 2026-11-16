@@ -18,6 +18,15 @@
       "category": "other",
       "versions": [
         {
+          "version": "1.9.13",
+          "buildVersion": "32",
+          "date": "2026-11-16",
+          "localizedDescription": "## New in 1.9.13\n**Kind of update:** Feature\n- **[Feature]** **Study together without codes in the same network:** on the same Wi-Fi or in the same ZeroTier or Tailscale network you see each other by name on the \"Study together\" page. Tap the name, the other person accepts, and you are connected directly and encrypted. Both see a check number; if it matches, nobody is in between. If nobody shows up, connect by typing the other person's address. The codes are still there for people in different networks.\n\n**iPhone:** update in SideStore (Sources ÔåÆ pull down ÔåÆ My Apps ÔåÆ Update). **Android:",
+          "downloadURL": "https://github.com/Trofline/BibleStudy/releases/download/v1.9.13/BibleStudy-iOS-1.9.13.ipa",
+          "size": 59634323,
+          "minOSVersion": "15.0"
+        },
+        {
           "version": "1.9.11",
           "buildVersion": "30",
           "date": "2026-11-16",
