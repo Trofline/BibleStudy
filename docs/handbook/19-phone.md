@@ -20,7 +20,7 @@ This works with **SideStore**. It signs the app with your own free Apple ID and 
 
 **If the app has expired after all:** open SideStore and tap **Refresh** at BibleStudy. Your data is kept.
 
-**Updates** come through SideStore: update BibleStudy there.
+**Updates:** BibleStudy tells you when a new version is out. You do the update by hand in SideStore: open SideStore → pull down in **Sources** → **My Apps** → **Update** at BibleStudy.
 
 ### Limits, honestly
 
@@ -65,4 +65,10 @@ If iOS asks on the first run whether the shortcut may use the VPN: **Always Allo
 
 **Optional, sync when you get home:** **Shortcuts → Automation → +** → **Wi-Fi** → choose your Wi-Fi, tick **Joins** → **Run Immediately** → action **Open App** → **BibleStudy**. The app opens for a moment and syncs with the PC (19.3).
 
-**Updates:** iOS lets no app install another without you, SideStore neither. So a new BibleStudy is always one tap: BibleStudy tells you about the new version and opens SideStore if you like; there tap **Update** at BibleStudy under **My Apps** (pull down in **Sources** first if it does not show yet). If an app has expired anyway: open SideStore and tap **Refresh** at BibleStudy; your data stays.
+**Updates:** iOS lets no app install another, BibleStudy neither. So BibleStudy only tells you when a new version is out; you do the update by hand in SideStore:
+
+1. Open SideStore yourself (the button in the notice may open it too).
+2. Tap **Sources** at the bottom and pull the list down once.
+3. Tap **My Apps** at the bottom and tap **Update** at BibleStudy.
+
+If no update shows yet, wait a few minutes and pull down in **Sources** again. If an app has expired anyway: open SideStore and tap **Refresh** at BibleStudy; your data stays.

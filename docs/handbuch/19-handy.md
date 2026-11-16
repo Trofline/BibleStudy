@@ -20,7 +20,7 @@ Das geht mit **SideStore**. Es signiert die App mit deiner eigenen, kostenlosen 
 
 **Falls die App doch einmal abgelaufen ist:** SideStore öffnen und bei BibleStudy auf **Erneuern** tippen. Deine Daten bleiben erhalten.
 
-**Updates** kommen über SideStore: BibleStudy dort aktualisieren.
+**Updates:** BibleStudy sagt dir Bescheid, wenn eine neue Version da ist. Das Update selbst machst du von Hand in SideStore: SideStore öffnen → **Sources** nach unten ziehen → **My Apps** → bei BibleStudy **Update**.
 
 ### Grenzen, ehrlich gesagt
 
@@ -65,4 +65,10 @@ Fragt iOS beim ersten Lauf, ob der Kurzbefehl das VPN nutzen darf: **Immer erlau
 
 **Freiwillig, synchronisieren beim Heimkommen:** **Kurzbefehle → Automation → +** → **WLAN** → dein WLAN wählen, **Verbindet** ankreuzen → **Sofort ausführen** → Aktion **App öffnen** → **BibleStudy**. Die App öffnet sich kurz und synchronisiert mit dem PC (19.3).
 
-**Updates:** iOS erlaubt keiner App, eine andere ohne dich zu installieren, auch SideStore nicht. Ein neues BibleStudy ist deshalb immer ein Tipp: BibleStudy meldet die neue Version und öffnet auf Wunsch SideStore, dort unter **My Apps** bei BibleStudy auf **Update** tippen (vorher in **Sources** nach unten ziehen, falls es noch nicht erscheint). Ist eine App trotzdem abgelaufen: SideStore öffnen und bei BibleStudy **Erneuern** tippen; deine Daten bleiben.
+**Updates:** iOS erlaubt keiner App, eine andere zu installieren, auch BibleStudy nicht. BibleStudy sagt dir deshalb nur Bescheid, wenn eine neue Version da ist; das Update machst du von Hand in SideStore:
+
+1. SideStore selbst öffnen (der Knopf in der Meldung kann es auch öffnen).
+2. Unten auf **Sources** tippen und die Liste einmal nach unten ziehen.
+3. Unten auf **My Apps** tippen und bei BibleStudy auf **Update** tippen.
+
+Steht noch kein Update da, ein paar Minuten warten und in **Sources** noch einmal nach unten ziehen. Ist eine App trotzdem abgelaufen: SideStore öffnen und bei BibleStudy **Erneuern** tippen; deine Daten bleiben.

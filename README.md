@@ -228,10 +228,19 @@ Get **LocalDevVPN** from the App Store, open it once and tap **Allow** for the V
 </td></tr>
 </table>
 
-<details>
-<summary><b>iPhone: updates, problems and limits</b></summary>
+#### 🔄 Updating on the iPhone
 
-- **Updates:** iOS lets no app install another without you, SideStore neither. BibleStudy tells you about a new version and opens SideStore; there tap **Update** at BibleStudy under **My Apps** (pull down in **Sources** first if it does not show yet).
+BibleStudy **tells you** when a new version is out (a small notice in the app). It cannot install it by itself: iOS lets no app install another, so you do the update **by hand in SideStore**:
+
+1. **Open SideStore** yourself (from the home screen; the button in the notice may open it for you).
+2. Tap **Sources** at the bottom → **pull the list down** once, so SideStore looks for the new version.
+3. Tap **My Apps** at the bottom → at **BibleStudy** tap **Update**.
+
+<sub>Your data stays. If no **Update** shows yet, wait a few minutes and pull down in **Sources** again.</sub>
+
+<details>
+<summary><b>iPhone: problems and limits</b></summary>
+
 - **The source cannot be added:** download `BibleStudy-iOS-x.y.z.ipa` from the [latest release](https://github.com/Trofline/BibleStudy/releases/latest) on the iPhone, then in SideStore under **My Apps** tap **+** at the top left and pick the file.
 - **The app expired anyway:** open SideStore and tap **Refresh** at BibleStudy. Your data stays.
 - **SideStore says the pairing file is missing:** open iloader again with the iPhone connected, click **Manage Pairing File** at the bottom and place it for SideStore.
