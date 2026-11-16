@@ -1798,7 +1798,7 @@
   "Verbinden": "Connecter",
   "Verbindungen: Verse, Links, Erwähnungen": "Liens : versets, liens, mentions",
   "Verbunden": "Connecté",
-  "Verbunden mit {0}": "Connecté avec {0}",
+  "Verbunden mit {0}": "Connecté à {0}",
   "Verknüpft mit": "Lié à",
   "Verknüpfte Datei: ": "Fichier lié : ",
   "Vers": "Verset",
@@ -3117,7 +3117,6 @@
   "Gelöschtes kommt auch auf dem anderen Gerät in den Papierkorb; ein neues oder leeres Gerät löscht nie etwas. Beide Geräte müssen im selben WLAN sein. Die Windows-Firewall fragt beim ersten Mal nach: nur „Private Netzwerke“ erlauben.": "Ce que tu supprimes va aussi dans la corbeille de l'autre appareil ; un appareil neuf ou vide ne supprime jamais rien. Les deux appareils doivent être sur le même Wi-Fi. Le pare-feu Windows demande la première fois : n'autorise que « Réseaux privés ».",
   "Kopiert den Kopplungs-Link (mit der Adresse dieses Geräts): auf dem anderen Gerät ins Feld unten einfügen": "Copie le lien d'appairage (avec l'adresse de cet appareil) : colle-le dans le champ ci-dessous sur l'autre appareil",
   "Kopplungs-Link kopiert. Auf dem anderen Gerät ins Feld „Code von einem anderen Gerät“ einfügen.": "Lien d'appairage copié. Colle-le sur l'autre appareil dans le champ « Code d'un autre appareil ».",
-  "Verbunden mit {0}": "Connecté à {0}",
   "Der Abgleich funktioniert. Ab jetzt gleicht ihr euch von selbst ab, sobald beide Apps im selben WLAN offen sind.": "La synchronisation fonctionne. Désormais, vos appareils se synchronisent seuls dès que les deux applis sont ouvertes sur le même Wi-Fi.",
   "Gerät gekoppelt": "Appareil associé",
   "Suche jetzt das andere Gerät … Lass die App dort offen; sobald ihr euch erreicht, kommt hier eine Meldung.": "Recherche de l’autre appareil … Laissez l’appli ouverte là-bas ; un message apparaît ici dès que vous vous trouvez.",
@@ -3141,6 +3140,9 @@
   "Diesen Ordner kann sich das System nicht merken. Wähle einen anderen.": "Le système ne peut pas mémoriser ce dossier. Choisissez-en un autre.",
   "Anderen Cloud-Ordner wählen …": "Choisir un autre dossier cloud …",
   "Kein Cloud-Ordner gewählt.": "Aucun dossier cloud choisi.",
-  "BibleStudy {0} ist erschienen (du hast {1}). Auf dem iPhone kommt sie über SideStore: dort unter „My Apps“ bei BibleStudy auf „Update“ tippen.": "BibleStudy {0} est sorti (vous avez {1}). Sur l’iPhone, il arrive par SideStore : là, sous « My Apps », touchez « Update » à côté de BibleStudy.",
-  "SideStore öffnen": "Ouvrir SideStore"
+  "SideStore öffnen": "Ouvrir SideStore",
+  "Einen Moment.": "Un instant.",
+  "Update-Suche nicht möglich": "Impossible de rechercher des mises à jour",
+  "Es gibt gerade kein Update.": "Aucune mise à jour pour le moment.",
+  "BibleStudy {0} ist erschienen (du hast {1}). In SideStore unter „Sources“ nach unten ziehen, dann bei BibleStudy auf „Update“ tippen.": "BibleStudy {0} est sorti (tu as {1}). Dans SideStore, sous « Sources », tire vers le bas, puis touche « Update » à BibleStudy."
 }

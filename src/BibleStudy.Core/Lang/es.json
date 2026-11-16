@@ -3117,7 +3117,6 @@
   "Gelöschtes kommt auch auf dem anderen Gerät in den Papierkorb; ein neues oder leeres Gerät löscht nie etwas. Beide Geräte müssen im selben WLAN sein. Die Windows-Firewall fragt beim ersten Mal nach: nur „Private Netzwerke“ erlauben.": "Lo que borras va también a la papelera del otro dispositivo; un dispositivo nuevo o vacío nunca borra nada. Ambos dispositivos deben estar en la misma wifi. El cortafuegos de Windows pregunta la primera vez: permite solo «Redes privadas».",
   "Kopiert den Kopplungs-Link (mit der Adresse dieses Geräts): auf dem anderen Gerät ins Feld unten einfügen": "Copia el enlace de emparejamiento (con la dirección de este dispositivo): pégalo en el campo de abajo en el otro dispositivo",
   "Kopplungs-Link kopiert. Auf dem anderen Gerät ins Feld „Code von einem anderen Gerät“ einfügen.": "Enlace de emparejamiento copiado. Pégalo en el otro dispositivo en el campo «Código de otro dispositivo».",
-  "Verbunden mit {0}": "Conectado con {0}",
   "Der Abgleich funktioniert. Ab jetzt gleicht ihr euch von selbst ab, sobald beide Apps im selben WLAN offen sind.": "La sincronización funciona. A partir de ahora os sincronizáis solos cuando ambas apps estén abiertas en la misma red wifi.",
   "Gerät gekoppelt": "Dispositivo vinculado",
   "Suche jetzt das andere Gerät … Lass die App dort offen; sobald ihr euch erreicht, kommt hier eine Meldung.": "Buscando ahora el otro dispositivo … Deja la app abierta allí; en cuanto os encontréis aparecerá un aviso aquí.",
@@ -3141,6 +3140,9 @@
   "Diesen Ordner kann sich das System nicht merken. Wähle einen anderen.": "El sistema no puede recordar esta carpeta. Elige otra.",
   "Anderen Cloud-Ordner wählen …": "Elegir otra carpeta en la nube …",
   "Kein Cloud-Ordner gewählt.": "Ninguna carpeta en la nube elegida.",
-  "BibleStudy {0} ist erschienen (du hast {1}). Auf dem iPhone kommt sie über SideStore: dort unter „My Apps“ bei BibleStudy auf „Update“ tippen.": "Ya salió BibleStudy {0} (tienes {1}). En el iPhone llega a través de SideStore: allí, en “My Apps”, toca “Update” junto a BibleStudy.",
-  "SideStore öffnen": "Abrir SideStore"
+  "SideStore öffnen": "Abrir SideStore",
+  "Einen Moment.": "Un momento.",
+  "Update-Suche nicht möglich": "No se pudo buscar actualizaciones",
+  "Es gibt gerade kein Update.": "Ahora no hay ninguna actualización.",
+  "BibleStudy {0} ist erschienen (du hast {1}). In SideStore unter „Sources“ nach unten ziehen, dann bei BibleStudy auf „Update“ tippen.": "Ha salido BibleStudy {0} (tienes {1}). En SideStore, en \"Sources\", desliza hacia abajo y toca \"Update\" en BibleStudy."
 }

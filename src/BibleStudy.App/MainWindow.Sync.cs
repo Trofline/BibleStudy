@@ -262,7 +262,7 @@ public partial class MainWindow
     IDisposable? _noticeTimer;
 
     /// <summary>A notice over everything (phone: at the top, desktop: bottom right) that goes again after some seconds; a tap closes it at once.</summary>
-    void Notify(string title, string text, bool good = false)
+    void Notify(string title, string text, bool good = false, string? actionLabel = null, Action? action = null)
     {
         if (_notice is null)
         {
@@ -289,7 +289,7 @@ public partial class MainWindow
         _notice.VerticalAlignment = _phone ? Avalonia.Layout.VerticalAlignment.Top : Avalonia.Layout.VerticalAlignment.Bottom;
         _notice.Margin = _phone ? new Avalonia.Thickness(12, 60, 12, 0) : new Avalonia.Thickness(0, 0, 16, 40);
         _notice.Background = new Avalonia.Media.SolidColorBrush(Avalonia.Media.Color.Parse(good ? "#2F7D4F" : "#3B5BDB"));
-        _notice.Child = new StackPanel
+        var body = new StackPanel
         {
             Spacing = 4,
             Children =
@@ -298,9 +298,21 @@ public partial class MainWindow
                 new TextBlock { Text = text, FontSize = 13, Foreground = Avalonia.Media.Brushes.White, TextWrapping = Avalonia.Media.TextWrapping.Wrap },
             },
         };
+        if (actionLabel is not null && action is not null)
+        {
+            // a notice that asks for a step (open SideStore …) has its button; it stays longer, so there is time to read and tap
+            var b = new Button
+            {
+                Content = actionLabel, Margin = new Avalonia.Thickness(0, 8, 0, 0), HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Left,
+                Background = Avalonia.Media.Brushes.White, Foreground = Avalonia.Media.Brushes.Black, Padding = new Avalonia.Thickness(14, 8), MinHeight = 40,
+            };
+            b.Click += (_, _) => { if (_notice is not null) _notice.IsVisible = false; action(); };
+            body.Children.Add(b);
+        }
+        _notice.Child = body;
         _notice.IsVisible = true;
         _noticeTimer?.Dispose();
-        _noticeTimer = DispatcherTimer.RunOnce(() => { if (_notice is not null) _notice.IsVisible = false; }, TimeSpan.FromSeconds(8));
+        _noticeTimer = DispatcherTimer.RunOnce(() => { if (_notice is not null) _notice.IsVisible = false; }, TimeSpan.FromSeconds(action is null ? 8 : 30));
     }
 
     /// <summary>Something new arrived in a vault: what is shown is read again (without closing what the person is writing).</summary>

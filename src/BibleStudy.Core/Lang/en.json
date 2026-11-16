@@ -1798,7 +1798,7 @@
   "Verbinden": "Connect",
   "Verbindungen: Verse, Links, Erwähnungen": "Connections: verses, links, mentions",
   "Verbunden": "Connected",
-  "Verbunden mit {0}": "Connected with {0}",
+  "Verbunden mit {0}": "Connected to {0}",
   "Verknüpft mit": "Linked with",
   "Verknüpfte Datei: ": "Linked file: ",
   "Vers": "Verse",
@@ -3117,7 +3117,6 @@
   "Gelöschtes kommt auch auf dem anderen Gerät in den Papierkorb; ein neues oder leeres Gerät löscht nie etwas. Beide Geräte müssen im selben WLAN sein. Die Windows-Firewall fragt beim ersten Mal nach: nur „Private Netzwerke“ erlauben.": "What you delete goes into the trash on the other device too; a new or empty device never deletes anything. Both devices must be in the same Wi-Fi. The Windows firewall asks the first time: allow only \"Private networks\".",
   "Kopiert den Kopplungs-Link (mit der Adresse dieses Geräts): auf dem anderen Gerät ins Feld unten einfügen": "Copies the pairing link (with the address of this device): paste it into the field below on the other device",
   "Kopplungs-Link kopiert. Auf dem anderen Gerät ins Feld „Code von einem anderen Gerät“ einfügen.": "Pairing link copied. Paste it on the other device into the field \"Code from another device\".",
-  "Verbunden mit {0}": "Connected to {0}",
   "Der Abgleich funktioniert. Ab jetzt gleicht ihr euch von selbst ab, sobald beide Apps im selben WLAN offen sind.": "Sync works. From now on your devices sync by themselves whenever both apps are open in the same Wi-Fi.",
   "Gerät gekoppelt": "Device paired",
   "Suche jetzt das andere Gerät … Lass die App dort offen; sobald ihr euch erreicht, kommt hier eine Meldung.": "Now looking for the other device … Keep the app open there; a message appears here as soon as you reach each other.",
@@ -3141,6 +3140,9 @@
   "Diesen Ordner kann sich das System nicht merken. Wähle einen anderen.": "The system cannot remember this folder. Choose another one.",
   "Anderen Cloud-Ordner wählen …": "Choose another cloud folder …",
   "Kein Cloud-Ordner gewählt.": "No cloud folder chosen.",
-  "BibleStudy {0} ist erschienen (du hast {1}). Auf dem iPhone kommt sie über SideStore: dort unter „My Apps“ bei BibleStudy auf „Update“ tippen.": "BibleStudy {0} is out (you have {1}). On the iPhone it comes through SideStore: tap “Update” next to BibleStudy under “My Apps” there.",
-  "SideStore öffnen": "Open SideStore"
+  "SideStore öffnen": "Open SideStore",
+  "Einen Moment.": "One moment.",
+  "Update-Suche nicht möglich": "Could not check for updates",
+  "Es gibt gerade kein Update.": "There is no update right now.",
+  "BibleStudy {0} ist erschienen (du hast {1}). In SideStore unter „Sources“ nach unten ziehen, dann bei BibleStudy auf „Update“ tippen.": "BibleStudy {0} is out (you have {1}). In SideStore pull down under \"Sources\", then tap \"Update\" at BibleStudy."
 }

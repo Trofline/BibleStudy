@@ -164,11 +164,24 @@ public partial class MainWindow
         _updater ??= new Updater(_http);
         Updater.ApkMode = OperatingSystem.IsAndroid();   // the phone follows its own releases
         UpdateStatus.Text = L("Suche nach Updates …");
+        // on a phone the status line of the settings is out of sight: a search started by hand answers with a notice on top
+        var tell = manual && AppPlatform.IsMobile;
+        if (tell) Notify(L("Suche nach Updates …"), L("Einen Moment."));
         UpdateInfo? info;
         try { info = await _updater.CheckAsync(AppPaths.Version, AppPaths.IsPortable); }
-        catch (Exception ex) { UpdateStatus.Text = manual ? L("Update-Suche nicht möglich: ") + ex.Message : ""; return; }
+        catch (Exception ex)
+        {
+            UpdateStatus.Text = manual ? L("Update-Suche nicht möglich: ") + ex.Message : "";
+            if (tell) Notify(L("Update-Suche nicht möglich"), ex.Message);
+            return;
+        }
         _settings.LastUpdateCheck = DateTime.Today.ToString("yyyy-MM-dd"); SaveSettings();
-        if (info is null) { UpdateStatus.Text = L("Du hast die neueste Version ({0}).", AppPaths.Version); return; }
+        if (info is null)
+        {
+            UpdateStatus.Text = L("Du hast die neueste Version ({0}).", AppPaths.Version);
+            if (tell) Notify(L("Du hast die neueste Version ({0}).", AppPaths.Version), L("Es gibt gerade kein Update."), good: true);
+            return;
+        }
         UpdateStatus.Text = L("Neue Version {0} verfügbar.", info.Version);
 
         // a check that runs by itself asks once per version and never while the program sits in the tray
@@ -182,10 +195,11 @@ public partial class MainWindow
             if (OperatingSystem.IsIOS())
             {
                 // iOS lets no app install another by itself: SideStore is opened, the update is one tap there (My Apps → Update)
+                // a notice on top with its button, not a question page: it is seen at once and does not block the reader
                 UpdateStatus.Text = L("Neue Version {0} verfügbar. Auf dem iPhone kommt sie über SideStore: Öffne SideStore und aktualisiere BibleStudy dort.", info.Version);
-                if (await AskAsync(L("Neue Version {0}", info.Version), L("BibleStudy {0} ist erschienen (du hast {1}). Auf dem iPhone kommt sie über SideStore: dort unter „My Apps“ bei BibleStudy auf „Update“ tippen.", info.Version, AppPaths.Version), L("SideStore öffnen"), L("Später")) == 0
-                    && TopLevel.GetTopLevel(this)?.Launcher is { } launcher)
-                    await launcher.LaunchUriAsync(new Uri("sidestore://"));
+                Notify(L("Neue Version {0}", info.Version),
+                    L("BibleStudy {0} ist erschienen (du hast {1}). In SideStore unter „Sources“ nach unten ziehen, dann bei BibleStudy auf „Update“ tippen.", info.Version, AppPaths.Version),
+                    actionLabel: L("SideStore öffnen"), action: () => _ = OpenSideStoreAsync());
                 return;
             }
             var open = await AskAsync(L("Neue Version {0}", info.Version), L("BibleStudy {0} ist erschienen (du hast {1}). Auf diesem System lädst du das neue Paket selbst herunter. Soll die Download-Seite geöffnet werden?", info.Version, AppPaths.Version), L("Seite öffnen"), L("Später"));
@@ -203,6 +217,12 @@ public partial class MainWindow
         question += "\n\n" + L("Es werden nur die geänderten Dateien geladen ({0:0.0} MB). Du kannst gleich weiterlesen, wo du warst, oder ungestört weiterarbeiten: Dann lädt es im Hintergrund und kommt beim nächsten Schließen drauf.", plan.DownloadBytes / 1048576.0);
         var answer = await AskAsync(L("Neue Version {0}", info.Version), question, L("Jetzt installieren"), L("Beim Schließen installieren"), L("Später"));
         if (answer is 0 or 1) await InstallUpdateAsync(info, plan, onClose: answer == 1);
+    }
+
+    async Task OpenSideStoreAsync()
+    {
+        try { if (TopLevel.GetTopLevel(this)?.Launcher is { } launcher) await launcher.LaunchUriAsync(new Uri("sidestore://")); }
+        catch (Exception ex) when (ex is InvalidOperationException or UriFormatException) { ErrorLog.Write(ex); }
     }
 
     /// <summary>

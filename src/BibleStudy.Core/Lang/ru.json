@@ -1798,7 +1798,7 @@
   "Verbinden": "Соединить",
   "Verbindungen: Verse, Links, Erwähnungen": "Связи: стихи, ссылки, упоминания",
   "Verbunden": "Соединено",
-  "Verbunden mit {0}": "Соединено с {0}",
+  "Verbunden mit {0}": "Подключено к {0}",
   "Verknüpft mit": "Связано с",
   "Verknüpfte Datei: ": "Связанный файл: ",
   "Vers": "Стих",
@@ -3117,7 +3117,6 @@
   "Gelöschtes kommt auch auf dem anderen Gerät in den Papierkorb; ein neues oder leeres Gerät löscht nie etwas. Beide Geräte müssen im selben WLAN sein. Die Windows-Firewall fragt beim ersten Mal nach: nur „Private Netzwerke“ erlauben.": "Удалённое попадает в корзину и на другом устройстве; новое или пустое устройство никогда ничего не удаляет. Оба устройства должны быть в одной сети Wi-Fi. Брандмауэр Windows спросит в первый раз: разреши только «Частные сети».",
   "Kopiert den Kopplungs-Link (mit der Adresse dieses Geräts): auf dem anderen Gerät ins Feld unten einfügen": "Копирует ссылку для связывания (с адресом этого устройства): вставь её в поле ниже на другом устройстве",
   "Kopplungs-Link kopiert. Auf dem anderen Gerät ins Feld „Code von einem anderen Gerät“ einfügen.": "Ссылка для связывания скопирована. Вставь её на другом устройстве в поле «Код с другого устройства».",
-  "Verbunden mit {0}": "Подключено к {0}",
   "Der Abgleich funktioniert. Ab jetzt gleicht ihr euch von selbst ab, sobald beide Apps im selben WLAN offen sind.": "Синхронизация работает. Теперь устройства синхронизируются сами, когда оба приложения открыты в одной сети Wi-Fi.",
   "Gerät gekoppelt": "Устройство связано",
   "Suche jetzt das andere Gerät … Lass die App dort offen; sobald ihr euch erreicht, kommt hier eine Meldung.": "Ищем другое устройство … Оставьте там приложение открытым; как только устройства найдут друг друга, здесь появится сообщение.",
@@ -3141,6 +3140,9 @@
   "Diesen Ordner kann sich das System nicht merken. Wähle einen anderen.": "Система не может запомнить эту папку. Выберите другую.",
   "Anderen Cloud-Ordner wählen …": "Выбрать другую облачную папку …",
   "Kein Cloud-Ordner gewählt.": "Облачная папка не выбрана.",
-  "BibleStudy {0} ist erschienen (du hast {1}). Auf dem iPhone kommt sie über SideStore: dort unter „My Apps“ bei BibleStudy auf „Update“ tippen.": "Вышла версия BibleStudy {0} (у вас {1}). На iPhone она приходит через SideStore: там в разделе «My Apps» нажмите «Update» рядом с BibleStudy.",
-  "SideStore öffnen": "Открыть SideStore"
+  "SideStore öffnen": "Открыть SideStore",
+  "Einen Moment.": "Минутку.",
+  "Update-Suche nicht möglich": "Не удалось проверить обновления",
+  "Es gibt gerade kein Update.": "Сейчас обновлений нет.",
+  "BibleStudy {0} ist erschienen (du hast {1}). In SideStore unter „Sources“ nach unten ziehen, dann bei BibleStudy auf „Update“ tippen.": "Вышла BibleStudy {0} (у вас {1}). В SideStore в разделе «Sources» потяните вниз, затем нажмите «Update» у BibleStudy."
 }
