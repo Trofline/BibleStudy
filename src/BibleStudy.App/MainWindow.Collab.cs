@@ -23,7 +23,7 @@ public partial class MainWindow
     const int MaxSharedBody = 200_000;
     const int MaxSentBody = 60_000;
 
-    CollabPeer? _peer;
+    ICollabLink? _peer;
     string _peerName = "";
     bool _collabSuppress;       // true while the app itself jumps to the partner's place, so that it does not echo back
     bool _follow;
@@ -50,7 +50,7 @@ public partial class MainWindow
     {
         CollabPanel.Children.Add(new TextBlock
         {
-            Text = L("Studiere die Bibel mit einer anderen Person, direkt von Programm zu Programm: verschlüsselt, ohne Server, ohne Konto und kostenlos. Ihr tauscht dafür zwei kurze Codes aus, zum Beispiel per Messenger."),
+            Text = L("Studiere die Bibel mit einer anderen Person, direkt von Programm zu Programm: verschlüsselt, ohne Server, ohne Konto und kostenlos."),
             Classes = { "caption" }, TextWrapping = TextWrapping.Wrap,
         });
         CollabPanel.Children.Add(Card(new StackPanel
@@ -64,17 +64,31 @@ public partial class MainWindow
         }));
 
         var name = new TextBox { PlaceholderText = L("Dein Name (wird der anderen Person gezeigt)"), Text = _settings.CollabName, MaxLength = 40 };
-        name.LostFocus += (_, _) => { _settings.CollabName = (name.Text ?? "").Trim(); SaveSettings(); };
+        name.LostFocus += (_, _) => { _settings.CollabName = (name.Text ?? "").Trim(); SaveSettings(); EnsureNet(); };
         CollabPanel.Children.Add(name);
-        CollabPanel.Children.Add(BuildRelayBox());
+        CollabPanel.Children.Add(BuildNetCard());
 
         var area = new StackPanel { Spacing = 8 };
         var host = new Button { Content = L("Einladung erstellen"), Classes = { "primary" }, Margin = new(0, 0, 8, 0) };
         var join = new Button { Content = L("Einladung annehmen") };
         host.Click += async (_, _) => { if (CollabNameOk(name)) await HostFlowAsync(area); };
         join.Click += (_, _) => { if (CollabNameOk(name)) JoinFlow(area); };
-        CollabPanel.Children.Add(new WrapPanel { Children = { host, join } });
-        CollabPanel.Children.Add(area);
+        // the codes are for two people in different networks: they swap two codes, e.g. by messenger
+        CollabPanel.Children.Add(new Expander
+        {
+            Header = L("Mit Codes (andere Netze)"), Margin = new(0, 8, 0, 0),
+            Content = new StackPanel
+            {
+                Spacing = 8, Margin = new(0, 6, 0, 0),
+                Children =
+                {
+                    new TextBlock { Text = L("Seid ihr nicht im selben Netzwerk, tauscht ihr zwei kurze Codes aus, zum Beispiel per Messenger."), Classes = { "caption" }, TextWrapping = TextWrapping.Wrap },
+                    new WrapPanel { Children = { host, join } },
+                    area,
+                    BuildRelayBox(),
+                },
+            },
+        });
     }
 
     /// <summary>The optional own relay server (TURN): used when no direct connection is possible. Collapsed, because most people never need it.</summary>
@@ -111,8 +125,15 @@ public partial class MainWindow
 
     CollabPeer NewPeer()
     {
-        _peer?.Dispose();
         var peer = new CollabPeer(RelayServer.Parse(_settings.RelayUrl, _settings.RelayUser, _settings.RelayPassword));
+        Wire(peer);
+        return peer;
+    }
+
+    /// <summary>Makes this the one connection of the page (codes or same network alike).</summary>
+    void Wire(ICollabLink peer)
+    {
+        _peer?.Dispose();
         var wasOpen = false;
         peer.Connected += () => OnUi(() => { if (_peer != peer) return; wasOpen = true; CollabSend(new { t = "hello", name = _settings.CollabName }); BuildCollabUi(); });
         peer.Received += m => OnUi(() => { if (_peer == peer) HandleCollab(m); });
@@ -125,7 +146,6 @@ public partial class MainWindow
             if (CollabPanel.Children.Count > 0) BuildCollabUi();
         });
         _peer = peer;
-        return peer;
     }
 
     Control CodeBox(string code)
@@ -232,8 +252,10 @@ public partial class MainWindow
         DockPanel.SetDock(leave, Dock.Right);
         top.Children.Add(leave); top.Children.Add(head);
         CollabPanel.Children.Add(top);
+        if (_peer is NetLink net)
+            CollabPanel.Children.Add(new TextBlock { Text = L("Prüfzahl: {0} (bei euch beiden gleich, dann sitzt niemand dazwischen)", net.CheckCode), Classes = { "caption" }, TextWrapping = TextWrapping.Wrap });
 
-        var send = new CheckBox { Content = L("Meine Bibelstelle mitsenden"), IsChecked = _settings.CollabSendLocation };
+        var send =new CheckBox { Content = L("Meine Bibelstelle mitsenden"), IsChecked = _settings.CollabSendLocation };
         ToolTip.SetTip(send, L("Die andere Person sieht, welches Kapitel du gerade liest."));
         send.IsCheckedChanged += (_, _) => { _settings.CollabSendLocation = send.IsChecked == true; SaveSettings(); if (_settings.CollabSendLocation) CollabSendLocation(_selected); };
         var follow = new CheckBox { Content = L("Ihrer/seiner Stelle folgen"), IsChecked = _follow };

@@ -24,7 +24,7 @@ public sealed record RelayServer(string Url, string User, string Password)
     }
 }
 
-public sealed class CollabPeer : IDisposable
+public sealed class CollabPeer : ICollabLink
 {
     readonly RelayServer? _relay;
 

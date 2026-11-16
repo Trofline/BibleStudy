@@ -1,10 +1,25 @@
 # 10. Studying together
 
-Study **directly connected** with another person: chat, share verses and documents, and read along in the same Bible passage. The connection is **encrypted, needs no server, no account, and is free** (technology: WebRTC).
+Study **directly connected** with another person: chat, share verses and documents, and read along in the same Bible passage. The connection is **encrypted, needs no server, no account, and is free** (technology: in the same network a direct connection encrypted with ECDH and AES-GCM; across different networks WebRTC).
 
 ## 10.1 Setting up the connection
 
-Right-hand bar → **Together → Study together**.
+Right-hand bar → **Together → Study together**. Enter your name first.
+
+### In the same network (no codes)
+
+If you are on the same Wi-Fi or in the same ZeroTier or Tailscale network, you need no codes:
+
+1. Both open the **Study together** page and enter their name.
+2. Under **In the same network** the other person's name appears after a few seconds. Tap **Connect with …**.
+3. The other person sees the request and taps **Accept**.
+4. Both see a **check number**. If it is the same for both of you, nobody is in between.
+
+If nobody shows up, some networks do not allow searching. Then open **Connect by address** and enter the other person's address. Your own address is shown right below; with ZeroTier it is also in the ZeroTier app under “Managed IPs”.
+
+### In different networks (with codes)
+
+Under **With codes (other networks)**:
 
 1. Person A chooses **Create an invitation**. A code appears.
 2. Person A sends the code to person B by messenger.
@@ -39,7 +54,7 @@ Right-hand bar → **Together → Study together**.
 
 There are two ways that are not built into BibleStudy:
 
-- **A private network such as ZeroTier or Tailscale** (both offer a free plan for individuals, but need an account). Both of you install the program and join the same network. Afterwards the computers behave as if they were on the same Wi-Fi. Then create new codes. These programs are independent products with their own licences and terms; BibleStudy does not ship them and is not affiliated with them. We have not yet tested the connection through them.
+- **A private network such as ZeroTier or Tailscale** (both offer a free plan for individuals, but need an account). Both of you install the program and join the same network. Afterwards the computers behave as if they were on the same Wi-Fi, and you connect as described above under *In the same network*, without codes. These programs are independent products with their own licences and terms; BibleStudy does not ship them and is not affiliated with them.
 - **Your own relay server (TURN)** that forwards the traffic. This is for advanced users and usually costs money or effort of your own. The data stays encrypted. In BibleStudy you enter it in the *Study together* tab under **Own relay server (optional)**: address (for example `turn:server.example:3478`), user name and password. Best if both of you enter the same, and then create new codes. The password is stored unencrypted in the settings. We have not yet tested the connection with a relay server.
 
 ## 10.5 Strategies for groups

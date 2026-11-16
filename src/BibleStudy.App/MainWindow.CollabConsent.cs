@@ -63,6 +63,7 @@ public partial class MainWindow
     void RevokeCollabConsent()
     {
         _peer?.Dispose(); _peer = null; _follow = false;
+        StopNet();
         _settings.CollabConsent = "";
         SaveSettings();
         BuildCollabUi();
