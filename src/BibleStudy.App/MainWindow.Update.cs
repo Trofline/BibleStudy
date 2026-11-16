@@ -168,7 +168,8 @@ public partial class MainWindow
         var tell = manual && AppPlatform.IsMobile;
         if (tell) Notify(L("Suche nach Updates …"), L("Einen Moment."));
         UpdateInfo? info;
-        try { info = await _updater.CheckAsync(AppPaths.Version, AppPaths.IsPortable); }
+        // the iPhone asks the SideStore source, not the releases: a release is out minutes before SideStore can install it
+        try { info = OperatingSystem.IsIOS() ? await _updater.CheckSideStoreAsync(AppPaths.Version) : await _updater.CheckAsync(AppPaths.Version, AppPaths.IsPortable); }
         catch (Exception ex)
         {
             UpdateStatus.Text = manual ? L("Update-Suche nicht möglich: ") + ex.Message : "";
@@ -221,6 +222,8 @@ public partial class MainWindow
 
     async Task OpenSideStoreAsync()
     {
+        // straight through UIKit: the launcher of Avalonia asks CanOpenUrl first, which says "no" for another app's scheme, and then nothing happened
+        if (OperatingSystem.IsIOS()) { Shell.Open("sidestore://"); return; }
         try { if (TopLevel.GetTopLevel(this)?.Launcher is { } launcher) await launcher.LaunchUriAsync(new Uri("sidestore://")); }
         catch (Exception ex) when (ex is InvalidOperationException or UriFormatException) { ErrorLog.Write(ex); }
     }

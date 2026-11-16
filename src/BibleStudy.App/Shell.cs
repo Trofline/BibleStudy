@@ -57,6 +57,12 @@ static class Shell
                 app.OpenUrl(url, new UIKit.UIApplicationOpenUrlOptions(), null);
                 return true;
             }
+            if (target.Contains("://", StringComparison.Ordinal) && !target.StartsWith("file://", StringComparison.OrdinalIgnoreCase))
+            {
+                // another app (sidestore://): CanOpenUrl answers "no" for a scheme the app has not declared, so it is opened straight away
+                app.OpenUrl(new Foundation.NSUrl(target), new UIKit.UIApplicationOpenUrlOptions(), null);
+                return true;
+            }
             if (Directory.Exists(target))
             {
                 // a folder (the program shows where an export went): the file just written there is offered instead

@@ -143,13 +143,21 @@ public partial class MainWindow
         all.Click += (_, _) => { foreach (var b in boxes) b.Box.IsChecked = true; };
         none.Click += (_, _) => { foreach (var b in boxes) b.Box.IsChecked = false; };
 
-        // a narrow screen (a phone): the buttons go to a second row instead of lying on each other
+        // a narrow screen (a phone): two rows of two equal buttons in a grid (a wrap panel laid them on each other on the iPhone)
         Control buttons;
         if (_phone)
         {
-            foreach (var b in new[] { all, none, cancel }) b.Margin = new(0, 0, 6, 6);
-            go.Margin = new(0, 0, 0, 6);
-            buttons = new WrapPanel { Margin = new(0, 6, 0, 0), Children = { all, none, cancel, go } };
+            var grid = new Grid { Margin = new(0, 6, 0, 0), ColumnDefinitions = new("*,*"), RowDefinitions = new("Auto,Auto"), ColumnSpacing = 8, RowSpacing = 8 };
+            var cells = new (Button B, int Row, int Col)[] { (all, 0, 0), (none, 0, 1), (cancel, 1, 0), (go, 1, 1) };
+            foreach (var (b, row, col) in cells)
+            {
+                b.Margin = default;
+                b.HorizontalAlignment = HorizontalAlignment.Stretch;
+                b.HorizontalContentAlignment = HorizontalAlignment.Center;
+                Grid.SetRow(b, row); Grid.SetColumn(b, col);
+                grid.Children.Add(b);
+            }
+            buttons = grid;
         }
         else
         {

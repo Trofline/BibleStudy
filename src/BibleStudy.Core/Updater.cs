@@ -39,6 +39,40 @@ public sealed class Updater(HttpClient http)
         return ParseUpdate(await resp.Content.ReadAsStringAsync(ct), currentVersion, portable, DeltaUpdate.Rid);
     }
 
+    /// <summary>The source SideStore reads: the iPhone app is only told of a version once SideStore can install it (the release comes first, its IPA minutes later).</summary>
+    public const string SideStoreSource = "https://trofline.github.io/BibleStudy/sidestore.json";
+
+    /// <summary>The newest version in the SideStore source when it is newer than this one, otherwise null.</summary>
+    public async Task<UpdateInfo?> CheckSideStoreAsync(string currentVersion, CancellationToken ct = default)
+    {
+        // a fresh copy: the page is cached for some minutes, the question mark goes past that cache
+        using var req = new HttpRequestMessage(HttpMethod.Get, SideStoreSource + "?t=" + DateTime.UtcNow.Ticks);
+        req.Headers.UserAgent.Add(new ProductInfoHeaderValue("BibleStudy", currentVersion));
+        using var resp = await http.SendAsync(req, ct);
+        resp.EnsureSuccessStatusCode();
+        return ParseSideStore(await resp.Content.ReadAsStringAsync(ct), currentVersion);
+    }
+
+    public static UpdateInfo? ParseSideStore(string json, string currentVersion)
+    {
+        if (Parse(currentVersion) is not { } current) return null;
+        using var doc = JsonDocument.Parse(json);
+        UpdateInfo? best = null; Version? bestVersion = null;
+        foreach (var app in doc.RootElement.GetProperty("apps").EnumerateArray())
+        {
+            if (!app.TryGetProperty("versions", out var versions)) continue;
+            foreach (var v in versions.EnumerateArray())
+            {
+                if (Parse(v.GetProperty("version").GetString() ?? "") is not { } ver || ver <= current || (bestVersion is not null && ver <= bestVersion)) continue;
+                var notes = v.TryGetProperty("localizedDescription", out var d) ? d.GetString() ?? "" : "";
+                var url = v.TryGetProperty("downloadURL", out var u) ? u.GetString() ?? "" : "";
+                best = new UpdateInfo(ver.ToString(), notes, "", url, null, 0, $"https://github.com/{Repo}/releases/tag/v{ver}");
+                bestVersion = ver;
+            }
+        }
+        return best;
+    }
+
     /// <summary>
     /// Picks the newest newer release from the list of releases, with its full package for this kind of copy and its list of files for this system; either can
     /// be missing. How many versions lie in between does not matter: the list of files of the newest one leads to every file, also in packs of older releases.
