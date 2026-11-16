@@ -4,9 +4,9 @@ BibleStudy also runs on your phone, with the same vaults, marks, notes and docum
 
 ## 19.1 Installing on the iPhone (without a paid Apple account)
 
-This works with **SideStore**. It signs the app with your own free Apple ID and renews it by itself afterwards. You need a PC or Mac with a cable **once**. All in all it takes about 10 minutes.
+This works with **SideStore**. It signs the app with your own free Apple ID and renews it by itself afterwards. You need a computer (Windows or Mac) and a cable **once**. All in all it takes about 10 minutes.
 
-1. **Put SideStore on the iPhone (about 4 min).** On the PC install *Apple Devices* (Microsoft Store) or iTunes, then open the program *iloader* and connect the iPhone with the cable. If the iPhone asks **"Trust This Computer?"**: tap **Trust** and enter your passcode. In iloader sign in with your Apple ID and install **SideStore**. If SideStore later says the pairing file is missing: in iloader click **Manage Pairing File** at the bottom and place it for SideStore.
+1. **Put SideStore on the iPhone (about 4 min).** On Windows install *Apple Devices* (Microsoft Store) or iTunes (not needed on a Mac), then open the program *iloader* and connect the iPhone with the cable. If the iPhone asks **"Trust This Computer?"**: tap **Trust** and enter your passcode. In iloader sign in with your Apple ID and install **SideStore**. If SideStore later says the pairing file is missing: in iloader click **Manage Pairing File** at the bottom and place it for SideStore.
 2. **Trust your own Apple ID (1 min).** Otherwise SideStore will not start ("Untrusted Developer"). **Settings → General → VPN & Device Management** → under *Developer App* tap your Apple ID (email address) → **Trust "…"** → **Trust**.
 3. **Turn on Developer Mode (2 min).** The switch only appears after SideStore is installed.
    1. **Settings → Privacy & Security** → all the way down → **Developer Mode** → switch on.

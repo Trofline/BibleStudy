@@ -4,9 +4,9 @@ BibleStudy läuft auch auf dem Handy, mit denselben Vaults, Markierungen, Notize
 
 ## 19.1 iPhone installieren (ohne bezahlten Apple-Account)
 
-Das geht mit **SideStore**. Es signiert die App mit deiner eigenen, kostenlosen Apple-ID und erneuert sie danach von selbst. Du brauchst **einmalig** einen PC oder Mac mit Kabel. Insgesamt dauert es etwa 10 Minuten.
+Das geht mit **SideStore**. Es signiert die App mit deiner eigenen, kostenlosen Apple-ID und erneuert sie danach von selbst. Du brauchst **einmalig** einen Computer (Windows oder Mac) und ein Kabel. Insgesamt dauert es etwa 10 Minuten.
 
-1. **SideStore aufs iPhone bringen (ca. 4 Min.).** Am PC *Apple-Geräte* (Microsoft Store) oder iTunes installieren, dann das Programm *iloader* öffnen und das iPhone per Kabel anschließen. Fragt das iPhone **„Diesem Computer vertrauen?“**: **Vertrauen** tippen und den Code eingeben. In iloader mit der Apple-ID anmelden und **SideStore** installieren. Meldet SideStore später, dass die Pairing-Datei fehlt: in iloader unten auf **Manage Pairing File** klicken und sie für SideStore einsetzen.
+1. **SideStore aufs iPhone bringen (ca. 4 Min.).** Unter Windows *Apple-Geräte* (Microsoft Store) oder iTunes installieren (am Mac nicht nötig), dann das Programm *iloader* öffnen und das iPhone per Kabel anschließen. Fragt das iPhone **„Diesem Computer vertrauen?“**: **Vertrauen** tippen und den Code eingeben. In iloader mit der Apple-ID anmelden und **SideStore** installieren. Meldet SideStore später, dass die Pairing-Datei fehlt: in iloader unten auf **Manage Pairing File** klicken und sie für SideStore einsetzen.
 2. **Der eigenen Apple-ID vertrauen (1 Min.).** Sonst startet SideStore nicht („Nicht vertrauenswürdiger Entwickler“). **Einstellungen → Allgemein → VPN und Geräteverwaltung** → unter *Entwickler-App* deine Apple-ID (E-Mail-Adresse) antippen → **„… vertrauen“** → **Vertrauen**.
 3. **Entwicklermodus einschalten (2 Min.).** Der Schalter erscheint erst, nachdem SideStore installiert ist.
    1. **Einstellungen → Datenschutz & Sicherheit** → ganz nach unten → **Entwicklermodus** → Schalter ein.

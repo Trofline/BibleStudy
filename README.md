@@ -146,16 +146,16 @@ All files are in the **[latest release](https://github.com/Trofline/BibleStudy/r
 
 ### Install on iPhone
 
-**Free, and you do not need a Mac.** Apple lets only the App Store install apps, so BibleStudy comes through [SideStore](https://sidestore.io), which signs the app with your own free Apple ID. You need **a Windows PC (or Mac) with a cable once**. About 10 minutes in total.
+**Free.** Apple lets only the App Store install apps, so BibleStudy comes through [SideStore](https://sidestore.io), which signs the app with your own free Apple ID. You need **a computer (Windows or Mac) and a cable once**. About 10 minutes in total.
 
-**What you will do:** put SideStore on the iPhone with the PC → allow it on the iPhone → install BibleStudy → add one ready-made shortcut. That is all.
+**What you will do:** put SideStore on the iPhone with the computer → allow it on the iPhone → install BibleStudy → add one ready-made shortcut. That is all.
 
 <table>
 <tr><td>
 
-**① Put SideStore on the iPhone** <sub>· on the PC · 4 min</sub>
+**① Put SideStore on the iPhone** <sub>· on the computer · 4 min</sub>
 
-1. On the PC install **Apple Devices** (Microsoft Store) or **iTunes**.
+1. Windows only: install **Apple Devices** (Microsoft Store) or **iTunes**. On a Mac nothing is needed.
 2. Open **[iloader](https://github.com/nab138/iloader)** and connect the iPhone with the cable.
 3. The iPhone asks **"Trust This Computer?"** → tap **Trust** and enter your passcode.
 4. In iloader sign in with your Apple ID and install **SideStore**.
