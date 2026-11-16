@@ -3187,5 +3187,6 @@
   "Layouts, Tastenkürzel, Start": "Макеты, сочетания клавиш, запуск",
   "Claude, Ollama": "Claude, Ollama",
   "Hilfe und Updates": "Помощь и обновления",
-  "Feedback, Version, Updates": "Отзывы, версия, обновления"
+  "Feedback, Version, Updates": "Отзывы, версия, обновления",
+  "Mit ZeroTier oder Tailscale unter Windows: Das neue Netzwerk gilt dort oft als „Öffentlich“, und die Firewall lässt dann nichts durch. Stelle es unter Einstellungen → Netzwerk und Internet → Eigenschaften auf „Privat“.": "С ZeroTier или Tailscale в Windows: новая сеть там часто считается «Общедоступной», и брандмауэр ничего не пропускает. Переключите её на «Частную» в Параметры → Сеть и Интернет → Свойства."
 }

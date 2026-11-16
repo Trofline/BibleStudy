@@ -214,6 +214,7 @@ public partial class MainWindow
             info.Text = L("Die Verbindung kam nicht zustande. Häufige Gründe: ein VPN, eine strenge Firewall oder ein Firmennetz. Versucht es im Heimnetz oder ohne VPN noch einmal.")
                 + "\n" + L("Unter Windows beim ersten Start „Zugriff zulassen“ für private Netzwerke wählen; am Mac unter Systemeinstellungen → Datenschutz & Sicherheit → Lokales Netzwerk die App erlauben.")
                 + "\n" + L("Klappt es nicht? Beide Seiten müssen im selben Netzwerk sein. Sonst hilft ein kostenloses privates Netzwerk wie ZeroTier oder Tailscale (beide installieren und beitreten, dann neue Codes erstellen) oder ein eigener Relay-Server.")
+                + (OperatingSystem.IsWindows() ? "\n" + L("Mit ZeroTier oder Tailscale unter Windows: Das neue Netzwerk gilt dort oft als „Öffentlich“, und die Firewall lässt dann nichts durch. Stelle es unter Einstellungen → Netzwerk und Internet → Eigenschaften auf „Privat“.") : "")
                 + "\n" + L("Technische Angaben: {0}", peer.Diagnose());
     }
 

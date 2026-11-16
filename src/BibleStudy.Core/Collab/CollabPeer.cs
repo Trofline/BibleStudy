@@ -65,7 +65,9 @@ public sealed class CollabPeer : IDisposable
     {
         var servers = StunServers.Select(u => new RTCIceServer { urls = u }).ToList();
         if (_relay is not null) servers.Add(new RTCIceServer { urls = _relay.Url, username = _relay.User, credential = _relay.Password, credentialType = RTCIceCredentialType.password });
-        var pc = new RTCPeerConnection(new RTCConfiguration { iceServers = servers });
+        // every network of this device offers its address, not only the one with the internet route: a ZeroTier or Tailscale network
+        // (or a second network card) is a network of its own, and the two people are only reachable to each other there
+        var pc = new RTCPeerConnection(new RTCConfiguration { iceServers = servers, X_ICEIncludeAllInterfaceAddresses = true });
         pc.onicecandidate += c =>
         {
             if (c?.candidate is { Length: > 0 } line) lock (_candidates) _candidates.Add(line.StartsWith("candidate:") ? line : "candidate:" + line);

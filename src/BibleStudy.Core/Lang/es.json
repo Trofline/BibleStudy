@@ -3187,5 +3187,6 @@
   "Layouts, Tastenkürzel, Start": "Diseños, atajos, inicio",
   "Claude, Ollama": "Claude, Ollama",
   "Hilfe und Updates": "Ayuda y actualizaciones",
-  "Feedback, Version, Updates": "Comentarios, versión, actualizaciones"
+  "Feedback, Version, Updates": "Comentarios, versión, actualizaciones",
+  "Mit ZeroTier oder Tailscale unter Windows: Das neue Netzwerk gilt dort oft als „Öffentlich“, und die Firewall lässt dann nichts durch. Stelle es unter Einstellungen → Netzwerk und Internet → Eigenschaften auf „Privat“.": "Con ZeroTier o Tailscale en Windows: la nueva red suele contar allí como «Pública», y el cortafuegos no deja pasar nada. Cámbiala a «Privada» en Configuración → Red e Internet → Propiedades."
 }

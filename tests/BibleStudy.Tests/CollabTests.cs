@@ -47,4 +47,24 @@ public class CollabTests
         using var guest = new CollabPeer();
         await Assert.ThrowsAnyAsync<Exception>(() => guest.AcceptInvitationAsync("kein code"));
     }
+
+    /// <summary>A ZeroTier or Tailscale network is a network card of its own: its address must be in the invitation, not only the one with the internet route.</summary>
+    [Fact]
+    public async Task The_invitation_offers_the_address_of_every_network_of_this_device()
+    {
+        var own = System.Net.NetworkInformation.NetworkInterface.GetAllNetworkInterfaces()
+            .Where(n => n.OperationalStatus == System.Net.NetworkInformation.OperationalStatus.Up && n.NetworkInterfaceType != System.Net.NetworkInformation.NetworkInterfaceType.Loopback)
+            .SelectMany(n => n.GetIPProperties().UnicastAddresses).Select(a => a.Address)
+            .Where(a => a.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork && !System.Net.IPAddress.IsLoopback(a) && !a.ToString().StartsWith("169.254.", StringComparison.Ordinal))
+            .Select(a => a.ToString()).Distinct().ToList();
+        if (own.Count < 2) return;   // one network only: nothing to show here
+        using var host = new CollabPeer();
+        var code = await host.CreateInvitationAsync();
+        var b64 = code[CollabPeer.Prefix.Length..].Replace('-', '+').Replace('_', '/');
+        b64 = b64.PadRight(b64.Length + (4 - b64.Length % 4) % 4, '=');
+        using var z = new System.IO.Compression.DeflateStream(new MemoryStream(Convert.FromBase64String(b64)), System.IO.Compression.CompressionMode.Decompress);
+        var sdp = new StreamReader(z).ReadToEnd();
+        var missing = own.Where(a => !sdp.Contains(" " + a + " ", StringComparison.Ordinal)).ToList();
+        Assert.True(missing.Count == 0, "not offered: " + string.Join(", ", missing));
+    }
 }
