@@ -1,5 +1,7 @@
 <p align="center"><img src="src/BibleStudy.App/Assets/app.png" width="112" alt="BibleStudy logo"></p>
 
+<p align="center"><a href="README.md"><img alt="English" src="https://img.shields.io/badge/English-selected-c9a227?style=for-the-badge"></a> <a href="README.de.md"><img alt="Deutsch" src="https://img.shields.io/badge/Deutsch-lesen-555?style=for-the-badge"></a></p>
+
 <h1 align="center">BibleStudy</h1>
 
 <p align="center"><b>Free Bible study software for your PC and your phone.</b><br>
@@ -13,7 +15,7 @@ Works offline. No account. No ads. Open source.</p>
   <img alt="Platforms" src="https://img.shields.io/badge/Windows%20%C2%B7%20macOS%20%C2%B7%20Linux%20%C2%B7%20Android%20%C2%B7%20iPhone-555">
 </p>
 
-<p align="center"><a href="README.de.md">🇩🇪 Deutsche Version</a> · <a href="https://trofline.github.io/BibleStudy/">Website</a> · <a href="docs/handbook/README.md">Handbook</a> · <a href="https://github.com/Trofline/BibleStudy/issues">Report a problem</a></p>
+<p align="center"><a href="https://trofline.github.io/BibleStudy/">Website</a> · <a href="docs/handbook/README.md">Handbook</a> · <a href="https://github.com/Trofline/BibleStudy/issues">Report a problem</a></p>
 
 <br>
 
