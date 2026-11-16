@@ -18,6 +18,15 @@
       "category": "other",
       "versions": [
         {
+          "version": "1.9.11",
+          "buildVersion": "30",
+          "date": "2026-11-16",
+          "localizedDescription": "## New in 1.9.11\n**Kind of update:** Bug fix\n- **[Bug fix]** iPhone: \"Open SideStore\" in the update notice did nothing.\n- **[Bug fix]** iPhone: an update was announced before SideStore could install it; now it is only shown once SideStore has it.\n- **[Bug fix]** Phone: the buttons at the bottom of the download manager lay on top of each other.\n\n**iPhone:** update in SideStore (Sources ÔåÆ pull down ÔåÆ Update). **Android:** the app updates itself.",
+          "downloadURL": "https://github.com/Trofline/BibleStudy/releases/download/v1.9.11/BibleStudy-iOS-1.9.11.ipa",
+          "size": 59505463,
+          "minOSVersion": "15.0"
+        },
+        {
           "version": "1.9.10",
           "buildVersion": "29",
           "date": "2026-11-16",
