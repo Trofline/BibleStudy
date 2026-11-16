@@ -944,7 +944,7 @@
                                 <TextBlock x:Name="BackupFolderText" Classes="caption" TextWrapping="Wrap" />
                                 <WrapPanel>
                                     <Button x:Name="BackupFolderBtn" Content="Sicherungsordner wählen …" Margin="0,0,6,6" />
-                                    <Button x:Name="BackupSyncBtn" Content="Syncthing-Ordner nutzen …" Margin="0,0,6,6" ToolTip.Tip="Die Sicherungen in einen Ordner legen, den Syncthing auf deine anderen Geräte abgleicht" />
+                                    <Button x:Name="BackupSyncBtn" Content="Syncthing-Ordner nutzen …" Margin="0,0,6,6" ToolTip.Tip="Die Sicherungen in einen Ordner legen, den Syncthing mit deinen anderen Geräten synchronisiert" />
                                     <Button x:Name="BackupNowBtn" Content="Jetzt sichern" Margin="0,0,6,6" />
                                 </WrapPanel>
                                 <TextBlock Classes="caption" TextWrapping="Wrap" Text="Zwischen mehreren Geräten: Lege die Sicherungen in einen Syncthing-Ordner. Synchronisiere nie den laufenden Datenordner selbst, das kann Dateien beschädigen." />
@@ -953,8 +953,8 @@
                             </StackPanel></Border>
 
                             <Border Classes="card"><StackPanel Spacing="8">
-                                <TextBlock Classes="eyebrow" Text="GERÄTE ABGLEICHEN" />
-                                <TextBlock Classes="caption" TextWrapping="Wrap" Text="Gleicht deine Vaults zwischen deinen eigenen Geräten ab (PC und Handy), ohne Konto und ohne Server: Geräte im selben WLAN finden sich von selbst, und eine Änderung ist nach wenigen Sekunden auf dem anderen. Wer etwas geändert hat, gewinnt; haben beide denselben Eintrag geändert, bleibt beides erhalten." />
+                                <TextBlock Classes="eyebrow" Text="GERÄTE SYNCHRONISIEREN" />
+                                <TextBlock Classes="caption" TextWrapping="Wrap" Text="Synchronisiert deine Vaults zwischen deinen eigenen Geräten (PC und Handy), ohne Konto und ohne Server: Geräte im selben WLAN finden sich von selbst, und eine Änderung ist nach wenigen Sekunden auf dem anderen. Wer etwas geändert hat, gewinnt; haben beide denselben Eintrag geändert, bleibt beides erhalten." />
                                 <TextBlock x:Name="SyncStatus" TextWrapping="Wrap" />
                                 <StackPanel x:Name="SyncPairPanel" Spacing="6" IsVisible="False">
                                     <TextBlock Classes="caption" TextWrapping="Wrap" Text="Auf dem anderen Gerät: den QR-Code mit der Kamera scannen oder den Code dort eintippen." />
@@ -962,18 +962,18 @@
                                     <SelectableTextBlock x:Name="SyncCodeText" FontWeight="SemiBold" TextWrapping="Wrap" />
                                     <Button x:Name="SyncCopyBtn" Content="Code kopieren" HorizontalAlignment="Left" ToolTip.Tip="Kopiert den Kopplungs-Link (mit der Adresse dieses Geräts): auf dem anderen Gerät ins Feld unten einfügen" />
                                 </StackPanel>
-                                <CheckBox x:Name="SyncAutoCheck" Content="Im selben Netzwerk automatisch abgleichen" />
+                                <CheckBox x:Name="SyncAutoCheck" Content="Im selben Netzwerk automatisch synchronisieren" />
                                 <TextBox x:Name="SyncNameBox" PlaceholderText="Name dieses Geräts" />
                                 <WrapPanel>
-                                    <Button x:Name="SyncSetupBtn" Content="Abgleich einrichten" Margin="0,0,6,6" />
+                                    <Button x:Name="SyncSetupBtn" Content="Synchronisation einrichten" Margin="0,0,6,6" />
                                     <Button x:Name="SyncNowBtn" Content="Jetzt synchronisieren" Margin="0,0,6,6" />
-                                    <Button x:Name="SyncOffBtn" Content="Abgleich beenden" Margin="0,0,6,6" />
+                                    <Button x:Name="SyncOffBtn" Content="Synchronisation beenden" Margin="0,0,6,6" />
                                 </WrapPanel>
                                 <TextBlock Text="Code von einem anderen Gerät" FontWeight="SemiBold" Margin="0,6,0,0" />
                                 <TextBox x:Name="SyncCodeBox" PlaceholderText="ABCD-EFGH-IJKL-MNOP-QRST-UV" />
                                 <Button x:Name="SyncJoinBtn" Content="Mit Code koppeln" HorizontalAlignment="Left" />
                                 <TextBlock Text="Über einen Cloud-Ordner (die Geräte müssen nicht gleichzeitig an sein)" FontWeight="SemiBold" TextWrapping="Wrap" Margin="0,10,0,0" />
-                                <TextBlock Classes="caption" TextWrapping="Wrap" Text="Wähle auf allen Geräten denselben Ordner, den Google Drive, OneDrive, iCloud Drive oder Dropbox abgleicht (am PC den Ordner der jeweiligen App, am Handy in der Dateien-App). Jedes Gerät legt dort eine Kopie seiner Vaults ab und übernimmt die der anderen, sobald es offen ist. Zusammengeführt wird wie im WLAN: Es geht nichts verloren. Die Kopien liegen unverschlüsselt in deinem Cloud-Speicher." />
+                                <TextBlock Classes="caption" TextWrapping="Wrap" Text="Wähle auf allen Geräten denselben Ordner, den Google Drive, OneDrive, iCloud Drive oder Dropbox synchronisiert (am PC den Ordner der jeweiligen App, am Handy in der Dateien-App). Jedes Gerät legt dort eine Kopie seiner Vaults ab und übernimmt die der anderen, sobald es offen ist. Zusammengeführt wird wie im WLAN: Es geht nichts verloren. Die Kopien liegen unverschlüsselt in deinem Cloud-Speicher." />
                                 <TextBlock x:Name="CloudFolderText" Classes="caption" TextWrapping="Wrap" />
                                 <WrapPanel>
                                     <Button x:Name="CloudChooseBtn" Content="Cloud-Ordner wählen …" Margin="0,0,6,6" />

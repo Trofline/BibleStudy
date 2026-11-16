@@ -246,9 +246,9 @@ Once set up, PC, Android and iPhone keep each other up to date: marks, notes, do
 
 1. On the PC: **Settings** → **Sync devices** → **Set up syncing**. A QR code appears.
 2. Scan it with the phone's camera. BibleStudy opens and pairs.
-3. A green notice **"Connected to …"** confirms it. You never pair again.
+3. A small green notice **"Connected to …"** confirms it, then **"Synced with …"** once everything is transferred. You never pair again.
 
-In the same Wi-Fi the devices sync by themselves every few seconds. Away from home, pick a **cloud folder** (OneDrive, Google Drive, Dropbox …) in the same settings. Details: [handbook, chapter 19.3](docs/handbook/19-phone.md).
+In the same Wi-Fi the devices sync by themselves every few seconds. When **"Synced with …"** appears, you can close the app on the phone. Away from home, pick a **cloud folder** (OneDrive, Google Drive, Dropbox …) in the same settings. Details: [handbook, chapter 19.3](docs/handbook/19-phone.md).
 
 ---
 

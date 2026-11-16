@@ -305,7 +305,8 @@ public sealed class LanSync : IDisposable
             {
                 using var stream = c.GetStream();
                 using var ch = await Channel.Open(stream, _cfg.KeyBytes!, false, limit.Token);
-                var asker = "";
+                var asker = ""; var askerName = "";
+                int got = 0, gave = 0;
                 while (await ch.Receive(limit.Token) is { } msg)
                 {
                     switch (msg.Type)
@@ -322,6 +323,7 @@ public sealed class LanSync : IDisposable
                                         await Task.Run(() => EnsureBase(asker, n, fp), limit.Token);
                             if (ReadInfo(msg.Data) is { Name.Length: > 0 } caller)
                             {
+                                askerName = caller.Name;
                                 // this side was reached: it counts as a comparison here too (the reminder after some days without one looks at it)
                                 _cfg.LastTime = DateTime.Now.ToString("yyyy-MM-dd HH:mm"); _cfg.LastPeer = caller.Name;
                                 _cfg.Save(_cfgPath);
@@ -333,6 +335,7 @@ public sealed class LanSync : IDisposable
                             var name = Encoding.UTF8.GetString(msg.Data);
                             if (!MarkLogic.IsValidVaultName(name) || !_vaults.Names().Contains(name, StringComparer.OrdinalIgnoreCase)) { await ch.Send(MsgNone, [], limit.Token); break; }
                             await ch.Send(MsgData, await Snapshot(name), limit.Token);
+                            gave++;
                             break;
                         }
                         case MsgPut:
@@ -344,7 +347,7 @@ public sealed class LanSync : IDisposable
                             try
                             {
                                 await File.WriteAllBytesAsync(file, msg.Data.AsMemory(4 + len).ToArray(), limit.Token);
-                                await MergeInto(name, file, asker);
+                                if (await MergeInto(name, file, asker)) got++;
                                 if (asker.Length > 0) await Task.Run(() => SaveBase(asker, name), limit.Token);
                                 await ch.Send(MsgOk, Encoding.UTF8.GetBytes(await Task.Run(() => _vaults.Fingerprint(name), limit.Token)), limit.Token);
                             }
@@ -353,6 +356,8 @@ public sealed class LanSync : IDisposable
                         }
                     }
                 }
+                // the other device closed the line: its round is over, here as well (an iPhone is only ever asked, so it learns of the end only this way)
+                if (askerName.Length > 0) Finished?.Invoke(new SyncReport(askerName, got, gave, null));
             }
             catch (Exception ex) when (ex is IOException or CryptographicException or OperationCanceledException or SocketException or InvalidDataException or ObjectDisposedException or ArgumentException or UnauthorizedAccessException or Microsoft.Data.Sqlite.SqliteException)
             { /* a device with another code, or the line broke: nothing happens */ }

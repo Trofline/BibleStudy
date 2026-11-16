@@ -40,7 +40,7 @@ Läuft offline. Kein Konto. Keine Werbung. Quelloffen.</p>
   </tr>
 </table>
 
-Alle Dateien liegen im **[neuesten Release](https://github.com/Trofline/BibleStudy/releases/latest)**. PC und Handy können sich [gegenseitig abgleichen](#geräte-abgleichen), ohne Konto und ohne Server.
+Alle Dateien liegen im **[neuesten Release](https://github.com/Trofline/BibleStudy/releases/latest)**. PC und Handy können sich [gegenseitig synchronisieren](#geräte-synchronisieren), ohne Konto und ohne Server.
 
 ## 🖼️ So sieht es aus
 
@@ -89,7 +89,7 @@ Alle Dateien liegen im **[neuesten Release](https://github.com/Trofline/BibleStu
 | 📅 **Planen** | Lesepläne mit Fortschritt, Leseliste, Aufgaben, Gebetsliste |
 | 🎓 **Lernen** | Griechisches und hebräisches Alphabet, Vokabeltrainer, Verse auswendig lernen |
 | 🗺️ **Entdecken** | Zeitleiste mit Karte, Reisen, Stammbaum |
-| 🔄 **Abgleichen und teilen** | PC und Handy abgleichen, mit einer anderen Person zusammen studieren (verschlüsselt, ohne Server), Sicherungen |
+| 🔄 **Synchronisieren und teilen** | PC und Handy synchronisieren, mit einer anderen Person zusammen studieren (verschlüsselt, ohne Server), Sicherungen |
 | 🧩 **Erweitern** | Plugins, fünf Sprachen (Deutsch, Englisch, Spanisch, Französisch, Russisch), optionale KI-Anbindung (MCP-Server für Claude) |
 
 <details>
@@ -110,7 +110,7 @@ Alle Dateien liegen im **[neuesten Release](https://github.com/Trofline/BibleStu
 - **Reiter wie im Explorer**, Layouts (Desktops), frei belegbare Tastenkürzel
 - **Mehrsprachig:** Oberfläche auf Deutsch, Englisch, Spanisch, Französisch und Russisch (KI-erstellte Übersetzungen, Korrekturen willkommen; weitere Sprachen als JSON-Datei im Ordner `lang` ergänzbar)
 - **Zusammen studieren:** direkt mit einer anderen Person verbunden (verschlüsselt, kein Server, kein Konto, kostenlos): Chat, Verse und Dokumente teilen, der Stelle der anderen folgen; eingerichtet durch den Austausch von zwei kurzen Codes. Klappt am besten im selben Netzwerk; über verschiedene Netzwerke kann ein privates Netzwerk wie ZeroTier oder Tailscale oder ein eigener Relay-Server helfen (siehe Handbuch)
-- **Geräte abgleichen:** PC, Android und iPhone halten sich gegenseitig auf dem Stand, im selben WLAN oder über einen Cloud-Ordner (OneDrive, Google Drive, Dropbox …)
+- **Geräte synchronisieren:** PC, Android und iPhone halten sich gegenseitig auf dem Stand, im selben WLAN oder über einen Cloud-Ordner (OneDrive, Google Drive, Dropbox …)
 - **Sicherungen:** von Hand oder geplant, in einen Ordner deiner Wahl
 - **KI-Anbindung (optional):** MCP-Server, damit Claude das Programm bedienen kann
 - **Plugins:** zusätzliche Übersetzungen, Befehle und Zugriff auf das Programm (siehe [PLUGINS.md](PLUGINS.md)). Fertige Plugins liegen im Ordner [`plugins`](plugins) und in jedem Release, zum Beispiel **Strong-Nummern ergänzen** (fügt Übersetzungen ohne Strong-Nummern eine *geschätzte* Nummerierung hinzu; keine Garantie, bitte prüfen)
@@ -243,15 +243,15 @@ Ohne ihn öffnet iOS keine selbst signierten Apps.
 
 </details>
 
-### Geräte abgleichen
+### Geräte synchronisieren
 
 Einmal eingerichtet, halten sich PC, Android und iPhone gegenseitig auf dem Stand: Markierungen, Notizen, Dokumente, Aufgaben, Lesefortschritt, Pläne, Auswendiglernen und mehr. **Kein Konto, kein Server.**
 
-1. Am PC: **Einstellungen** → **Geräte abgleichen** → **Abgleich einrichten**. Ein QR-Code erscheint.
+1. Am PC: **Einstellungen** → **Geräte synchronisieren** → **Synchronisation einrichten**. Ein QR-Code erscheint.
 2. Mit der Kamera des Handys scannen. BibleStudy öffnet sich und koppelt.
-3. Eine grüne Meldung **„Verbunden mit …“** bestätigt es. Koppeln musst du nie wieder.
+3. Eine kleine grüne Meldung **„Verbunden mit …“** bestätigt es, danach **„Synchronisiert mit …“**, sobald alles übertragen ist. Koppeln musst du nie wieder.
 
-Im selben WLAN gleichen sich die Geräte alle paar Sekunden von selbst ab. Für unterwegs wählst du in denselben Einstellungen einen **Cloud-Ordner** (OneDrive, Google Drive, Dropbox …). Mehr dazu: [Handbuch, Kapitel 19.3](docs/handbuch/19-handy.md).
+Im selben WLAN synchronisieren sich die Geräte alle paar Sekunden von selbst. Erscheint **„Synchronisiert mit …“**, kannst du die App auf dem Handy schließen. Für unterwegs wählst du in denselben Einstellungen einen **Cloud-Ordner** (OneDrive, Google Drive, Dropbox …). Mehr dazu: [Handbuch, Kapitel 19.3](docs/handbuch/19-handy.md).
 
 ---
 

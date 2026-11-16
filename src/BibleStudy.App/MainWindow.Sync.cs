@@ -7,7 +7,7 @@ using BibleStudy.Core.Sync;
 namespace BibleStudy.App;
 
 /// <summary>
-/// "Geräte abgleichen": the user's own devices in the same network compare their vaults by themselves (see <see cref="LanSync"/>).
+/// "Geräte synchronisieren": the user's own devices in the same network compare their vaults by themselves (see <see cref="LanSync"/>).
 /// One device shows a code (as text and as a QR code), the others take it over; after that they find each other without anything else to do.
 /// </summary>
 public partial class MainWindow
@@ -18,14 +18,14 @@ public partial class MainWindow
     string SyncPath => Path.Combine(_root, "sync.json");
 
     /// <summary>The vaults of this program for the comparison: what arrives is merged into the vault that is open, on the interface thread.</summary>
-    sealed class AppVaults(MainWindow w, string root) : FolderVaults(root, n => w.IsGuestVault(n), L("Abgleich"))
+    sealed class AppVaults(MainWindow w, string root) : FolderVaults(root, n => w.IsGuestVault(n), L("Synchronisation"))
     {
         public override async Task MergeAsync(string name, string snapshotPath, string? basePath)
         {
             await Dispatcher.UIThread.InvokeAsync(() =>
             {
                 var home = Path.Combine(root, "vaults", name);
-                if (File.Exists(Path.Combine(home, "vault.db"))) w.StoreOf(name).MergeFrom(snapshotPath, L("Abgleich"), basePath);
+                if (File.Exists(Path.Combine(home, "vault.db"))) w.StoreOf(name).MergeFrom(snapshotPath, L("Synchronisation"), basePath);
                 else { Directory.CreateDirectory(home); File.Copy(snapshotPath, Path.Combine(home, "vault.db")); }
                 if (w.IsGuestVault(name)) return;
                 w._readStore.MergeFrom(snapshotPath, basePath);
@@ -127,7 +127,7 @@ public partial class MainWindow
         SyncCodeBox.Text = "";
         StartSync();
         ShowSyncState();
-        StatusText.Text = L("Gerät gekoppelt. Der Abgleich läuft jetzt im selben Netzwerk.");
+        StatusText.Text = L("Gerät gekoppelt. Die Synchronisation läuft jetzt im selben Netzwerk.");
         Notify(L("Gerät gekoppelt"), L("Suche jetzt das andere Gerät … Lass die App dort offen; sobald ihr euch erreicht, kommt hier eine Meldung."));
     }
 
@@ -149,7 +149,7 @@ public partial class MainWindow
         catch (Exception ex) when (ex is System.Net.Sockets.SocketException or IOException)
         {
             _lan = null;
-            SyncStatus.Text = L("Der Abgleich konnte nicht starten: ") + ex.Message;
+            SyncStatus.Text = L("Die Synchronisation konnte nicht starten: ") + ex.Message;
         }
     }
 
@@ -189,7 +189,7 @@ public partial class MainWindow
         {
             SyncQrHost.Content = new QrView { Size = 200, Text = SyncCode.ToUrl(_syncCfg.Key!, LanSync.LocalAddresses().Select(a => a + ":" + (_lan?.Port is > 0 and var p ? p : LanSync.DataPort))) };
             SyncCodeText.Text = SyncCode.Pretty(_syncCfg.Key!);
-            SyncStatus.Text = _syncCfg.LastTime is { } t ? L("Zuletzt abgeglichen: {0} mit {1}.", t, _syncCfg.LastPeer ?? "") : L("Eingerichtet. Sobald ein anderes Gerät mit demselben Code im Netzwerk ist, gleicht ihr euch ab.");
+            SyncStatus.Text = _syncCfg.LastTime is { } t ? L("Zuletzt synchronisiert: {0} mit {1}.", t, _syncCfg.LastPeer ?? "") : L("Eingerichtet. Sobald ein anderes Gerät mit demselben Code im Netzwerk ist, synchronisiert ihr euch.");
         }
         else
         {
@@ -207,11 +207,12 @@ public partial class MainWindow
         SyncChipText.Text = L("Synchronisiere …");
         try
         {
+            _syncAsked = true;
             var reports = await _lan.SyncAllNowAsync();
             string done;
             if (reports.Count == 0)
             {
-                SyncStatus.Text = L("Kein anderes Gerät gefunden. Beide Geräte müssen im selben WLAN sein, den Abgleich eingeschaltet und denselben Code haben.");
+                SyncStatus.Text = L("Kein anderes Gerät gefunden. Beide Geräte müssen im selben WLAN sein, die Synchronisation eingeschaltet und denselben Code haben.");
                 done = L("Kein Gerät erreicht");
                 StatusText.Text = SyncStatus.Text;
             }
@@ -226,13 +227,27 @@ public partial class MainWindow
     void ShowSyncResult(SyncReport r)
     {
         if (r.Error == "code") SyncStatus.Text = L("{0} hat einen anderen Code.", r.PeerName);
-        else if (r.Error is not null) SyncStatus.Text = L("Abgleich mit {0} unterbrochen: {1}", r.PeerName, r.Error);
+        else if (r.Error is not null) SyncStatus.Text = L("Synchronisation mit {0} unterbrochen: {1}", r.PeerName, r.Error);
         else
         {
             ShowSyncState();
+            var first = !_greeted.Contains(r.PeerName);
             Greet(r.PeerName);
-            if (r.Changed > 0) StatusText.Text = L("Abgeglichen mit {0}: Neues übernommen.", r.PeerName);
+            if (r.Changed > 0) StatusText.Text = L("Synchronisiert mit {0}: Neues übernommen.", r.PeerName);
+            // the end of a round that moved something (or the first one): it is all over, the app on the other device may be closed now
+            if (first || r.Changed + r.Sent > 0 || _syncAsked) ShowSynced(r.PeerName);
         }
+    }
+
+    bool _syncAsked;   // "sync now" was pressed: its end is shown even when nothing had to move
+
+    void ShowSynced(string peer)
+    {
+        _syncAsked = false;
+        // shown a moment after "connected", so both can be read
+        var wait = _noticeShownAt.AddSeconds(1.5) - DateTime.UtcNow;
+        void Show() => Notify(L("Synchronisiert mit {0}", peer), _phone ? L("Alles übertragen. Du kannst die App jetzt schließen.") : L("Alles übertragen."), good: true);
+        if (wait > TimeSpan.Zero) DispatcherTimer.RunOnce(Show, wait); else Show();
     }
 
     /// <summary>
@@ -245,23 +260,28 @@ public partial class MainWindow
         if (_syncCfg.LastTime is not { } last || !DateTime.TryParseExact(last, "yyyy-MM-dd HH:mm", System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.None, out var when)) return;
         var days = (int)(DateTime.Now - when).TotalDays;
         if (days < 3) return;
-        Notify(L("Seit {0} Tagen kein Abgleich", days), L("Öffne BibleStudy kurz auf {0} (im selben WLAN), dann gleicht ihr euch ab. Bis dahin geht nichts verloren.", _syncCfg.LastPeer ?? L("dem anderen Gerät")));
+        Notify(L("Seit {0} Tagen nicht synchronisiert", days), L("Öffne BibleStudy kurz auf {0} (im selben WLAN), dann synchronisiert ihr euch. Bis dahin geht nichts verloren.", _syncCfg.LastPeer ?? L("dem anderen Gerät")));
     }
 
     readonly HashSet<string> _greeted = new(StringComparer.OrdinalIgnoreCase);
 
-    /// <summary>The first contact with a device since the start: a notice that cannot be missed, so it is clear that the pairing works (once per device, not at every comparison).</summary>
+    /// <summary>The first contact with a device since the start: a short notice who it is (once per device, not at every round).</summary>
     void Greet(string peer)
     {
         if (!_greeted.Add(peer)) return;
         ShowSyncState();
-        Notify(L("Verbunden mit {0}", peer), L("Der Abgleich funktioniert. Ab jetzt gleicht ihr euch von selbst ab, sobald beide Apps im selben WLAN offen sind."), good: true);
+        // on the PC a reminder: the phone is mostly closed while one works here, so it gets the newest state only when it is opened before the PC stops
+        Notify(L("Verbunden mit {0}", peer), _phone ? "" : L("Tipp: Bevor du am PC aufhörst, öffne kurz BibleStudy auf dem Handy, damit es den neuesten Stand bekommt."), good: true);
     }
 
     Border? _notice;
     IDisposable? _noticeTimer;
+    DateTime _noticeShownAt;
 
-    /// <summary>A notice over everything (phone: at the top, desktop: bottom right) that goes again after some seconds; a tap closes it at once.</summary>
+    /// <summary>
+    /// A small notice (phone: above the bar at the bottom, desktop: bottom right) that goes again after a few seconds. It covers nothing else that can be
+    /// used: a tap or a swipe to the side takes it away at once.
+    /// </summary>
     void Notify(string title, string text, bool good = false, string? actionLabel = null, Action? action = null)
     {
         if (_notice is null)
@@ -279,41 +299,56 @@ public partial class MainWindow
             }
             _notice = new Border
             {
-                CornerRadius = new Avalonia.CornerRadius(12), Padding = new Avalonia.Thickness(16, 12), BoxShadow = Avalonia.Media.BoxShadows.Parse("0 4 18 0 #40000000"),
-                MaxWidth = 420, Margin = new Avalonia.Thickness(12), IsVisible = false, ZIndex = 1000,
+                CornerRadius = new Avalonia.CornerRadius(10), Padding = new Avalonia.Thickness(12, 8), BoxShadow = Avalonia.Media.BoxShadows.Parse("0 2 10 0 #38000000"),
+                MaxWidth = 340, IsVisible = false, ZIndex = 1000, RenderTransform = new Avalonia.Media.TranslateTransform(),
             };
-            _notice.PointerPressed += (_, e) => { _notice.IsVisible = false; e.Handled = true; };
+            // a swipe to the side moves it with the finger and takes it away; a tap takes it away too
+            double startX = 0; var down = false;
+            _notice.PointerPressed += (_, e) => { down = true; startX = e.GetPosition(host).X; e.Pointer.Capture(_notice); e.Handled = true; };
+            _notice.PointerMoved += (_, e) =>
+            {
+                if (!down || _notice.RenderTransform is not Avalonia.Media.TranslateTransform t) return;
+                t.X = e.GetPosition(host).X - startX;
+                _notice.Opacity = Math.Max(0.2, 1 - Math.Abs(t.X) / 200);
+            };
+            _notice.PointerReleased += (_, e) =>
+            {
+                if (!down) return;
+                down = false; e.Pointer.Capture(null);
+                var dx = e.GetPosition(host).X - startX;
+                if (Math.Abs(dx) is < 8 or > 50) HideNotice();
+                else { if (_notice.RenderTransform is Avalonia.Media.TranslateTransform t) t.X = 0; _notice.Opacity = 1; }
+            };
             host.Children.Add(_notice);
         }
-        _notice.HorizontalAlignment = _phone ? Avalonia.Layout.HorizontalAlignment.Stretch : Avalonia.Layout.HorizontalAlignment.Right;
-        _notice.VerticalAlignment = _phone ? Avalonia.Layout.VerticalAlignment.Top : Avalonia.Layout.VerticalAlignment.Bottom;
-        _notice.Margin = _phone ? new Avalonia.Thickness(12, 60, 12, 0) : new Avalonia.Thickness(0, 0, 16, 40);
+        _notice.HorizontalAlignment = _phone ? Avalonia.Layout.HorizontalAlignment.Center : Avalonia.Layout.HorizontalAlignment.Right;
+        _notice.VerticalAlignment = Avalonia.Layout.VerticalAlignment.Bottom;
+        _notice.Margin = _phone ? new Avalonia.Thickness(16, 0, 16, 78) : new Avalonia.Thickness(0, 0, 16, 36);
         _notice.Background = new Avalonia.Media.SolidColorBrush(Avalonia.Media.Color.Parse(good ? "#2F7D4F" : "#3B5BDB"));
-        var body = new StackPanel
-        {
-            Spacing = 4,
-            Children =
-            {
-                new TextBlock { Text = (good ? "✓  " : "") + title, FontWeight = Avalonia.Media.FontWeight.SemiBold, FontSize = 15, Foreground = Avalonia.Media.Brushes.White, TextWrapping = Avalonia.Media.TextWrapping.Wrap },
-                new TextBlock { Text = text, FontSize = 13, Foreground = Avalonia.Media.Brushes.White, TextWrapping = Avalonia.Media.TextWrapping.Wrap },
-            },
-        };
+        var body = new StackPanel { Spacing = 2 };
+        body.Children.Add(new TextBlock { Text = (good ? "✓  " : "") + title, FontWeight = Avalonia.Media.FontWeight.SemiBold, FontSize = 13, Foreground = Avalonia.Media.Brushes.White, TextWrapping = Avalonia.Media.TextWrapping.Wrap });
+        if (text.Length > 0) body.Children.Add(new TextBlock { Text = text, FontSize = 12, Foreground = new Avalonia.Media.SolidColorBrush(Avalonia.Media.Color.Parse("#E8FFFFFF")), TextWrapping = Avalonia.Media.TextWrapping.Wrap });
         if (actionLabel is not null && action is not null)
         {
             // a notice that asks for a step (open SideStore …) has its button; it stays longer, so there is time to read and tap
             var b = new Button
             {
-                Content = actionLabel, Margin = new Avalonia.Thickness(0, 8, 0, 0), HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Left,
-                Background = Avalonia.Media.Brushes.White, Foreground = Avalonia.Media.Brushes.Black, Padding = new Avalonia.Thickness(14, 8), MinHeight = 40,
+                Content = actionLabel, Margin = new Avalonia.Thickness(0, 6, 0, 0), HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Left,
+                Background = Avalonia.Media.Brushes.White, Foreground = Avalonia.Media.Brushes.Black, Padding = new Avalonia.Thickness(12, 6), MinHeight = 36, FontSize = 13,
             };
-            b.Click += (_, _) => { if (_notice is not null) _notice.IsVisible = false; action(); };
+            b.Click += (_, _) => { HideNotice(); action(); };
             body.Children.Add(b);
         }
         _notice.Child = body;
+        if (_notice.RenderTransform is Avalonia.Media.TranslateTransform tt) tt.X = 0;
+        _notice.Opacity = 1;
         _notice.IsVisible = true;
+        _noticeShownAt = DateTime.UtcNow;
         _noticeTimer?.Dispose();
-        _noticeTimer = DispatcherTimer.RunOnce(() => { if (_notice is not null) _notice.IsVisible = false; }, TimeSpan.FromSeconds(action is null ? 8 : 30));
+        _noticeTimer = DispatcherTimer.RunOnce(HideNotice, TimeSpan.FromSeconds(action is not null ? 30 : text.Length > 60 ? 7 : 4));
     }
+
+    void HideNotice() { if (_notice is not null) _notice.IsVisible = false; }
 
     /// <summary>Something new arrived in a vault: what is shown is read again (without closing what the person is writing).</summary>
     void OnSyncChanged(IReadOnlyList<string> names)
