@@ -229,6 +229,8 @@ public sealed class AppSettings
         }
     }
     public bool CollabSendLocation { get; set; } = true;
+    /// <summary>Studying together: the other person sees the mouse pointer when both read the same chapter.</summary>
+    public bool CollabSendPointer { get; set; } = true;
     public List<SavedSearch> SavedSearches { get; set; } = [];
     /// <summary>How the hits are shown: 0 verses, 1 aligned, 2 grid, 3 comparison, 4 analysis.</summary>
     public int SearchView { get; set; }

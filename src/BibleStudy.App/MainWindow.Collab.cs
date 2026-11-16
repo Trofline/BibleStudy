@@ -76,13 +76,14 @@ public partial class MainWindow
         // the codes are for two people in different networks: they swap two codes, e.g. by messenger
         CollabPanel.Children.Add(new Expander
         {
-            Header = L("Mit Codes (andere Netze)"), Margin = new(0, 8, 0, 0),
+            Header = L("Mit Codes (Beta, andere Netze)"), Margin = new(0, 8, 0, 0),
             Content = new StackPanel
             {
                 Spacing = 8, Margin = new(0, 6, 0, 0),
                 Children =
                 {
                     new TextBlock { Text = L("Seid ihr nicht im selben Netzwerk, tauscht ihr zwei kurze Codes aus, zum Beispiel per Messenger."), Classes = { "caption" }, TextWrapping = TextWrapping.Wrap },
+                    new TextBlock { Text = L("Beta: Über verschiedene Netzwerke klappt die Verbindung nicht immer. Getestet und zuverlässig ist der Weg im selben Netzwerk. Seid ihr weit voneinander entfernt, tretet beide demselben ZeroTier-Netzwerk bei (kostenlos) und verbindet euch oben unter „Im selben Netzwerk“."), Classes = { "caption" }, TextWrapping = TextWrapping.Wrap, Foreground = new SolidColorBrush(Color.Parse("#B54708")) },
                     new WrapPanel { Children = { host, join } },
                     area,
                     BuildRelayBox(),
@@ -135,14 +136,14 @@ public partial class MainWindow
     {
         _peer?.Dispose();
         var wasOpen = false;
-        peer.Connected += () => OnUi(() => { if (_peer != peer) return; wasOpen = true; CollabSend(new { t = "hello", name = _settings.CollabName }); BuildCollabUi(); });
+        peer.Connected += () => OnUi(() => { if (_peer != peer) return; wasOpen = true; InitCollabLive(); ResetCollabLive(); CollabSend(new { t = "hello", name = _settings.CollabName }); BuildCollabUi(); });
         peer.Received += m => OnUi(() => { if (_peer == peer) HandleCollab(m); });
         // Only a connection that really stood ends the page. Before that the library reports "failed/closed" on its own (e.g. while the
         // other person still has to paste the code); rebuilding the page then wiped the half-finished invitation after ~15 seconds.
         peer.Closed += _ => OnUi(() =>
         {
             if (_peer != peer || !wasOpen) return;
-            _peer = null; _follow = false; AddCollabLog(L("Die Verbindung wurde beendet."), system: true);
+            _peer = null; _follow = false; _incoming.Clear(); ResetCollabLive(); AddCollabLog(L("Die Verbindung wurde beendet."), system: true);
             if (CollabPanel.Children.Count > 0) BuildCollabUi();
         });
         _peer = peer;
@@ -247,7 +248,7 @@ public partial class MainWindow
         head.Children.Add(new Border { Width = 10, Height = 10, CornerRadius = new(5), Background = new SolidColorBrush(Color.Parse("#30A46C")), VerticalAlignment = VerticalAlignment.Center });
         head.Children.Add(new TextBlock { Text = _peerName.Length > 0 ? L("Verbunden mit {0}", _peerName) : L("Verbunden"), FontWeight = FontWeight.SemiBold, VerticalAlignment = VerticalAlignment.Center });
         var leave = new Button { Content = L("Trennen"), Classes = { "tool" }, Width = double.NaN, Padding = new(10, 0) };
-        leave.Click += (_, _) => { _peer?.Dispose(); _peer = null; _follow = false; BuildCollabUi(); };
+        leave.Click += (_, _) => { _peer?.Dispose(); _peer = null; _follow = false; _incoming.Clear(); ResetCollabLive(); BuildCollabUi(); };
         var top = new DockPanel();
         DockPanel.SetDock(leave, Dock.Right);
         top.Children.Add(leave); top.Children.Add(head);
@@ -261,18 +262,29 @@ public partial class MainWindow
         var follow = new CheckBox { Content = L("Ihrer/seiner Stelle folgen"), IsChecked = _follow };
         ToolTip.SetTip(follow, L("Dein Lesefenster springt mit, wenn die andere Person die Stelle wechselt."));
         follow.IsCheckedChanged += async (_, _) => { _follow = follow.IsChecked == true; if (_follow && _peerPlace is { } p) await FollowAsync(p); };
-        CollabPanel.Children.Add(send); CollabPanel.Children.Add(follow);
+        var pointer = new CheckBox { Content = L("Meinen Mauszeiger zeigen"), IsChecked = _settings.CollabSendPointer };
+        ToolTip.SetTip(pointer, L("Liest ihr dasselbe Kapitel, sieht die andere Person deinen Mauszeiger und die Verse, die du anklickst."));
+        pointer.IsCheckedChanged += (_, _) => { _settings.CollabSendPointer = pointer.IsChecked == true; SaveSettings(); if (!_settings.CollabSendPointer) SendPointer(0, 0, 0); };
+        CollabPanel.Children.Add(send); CollabPanel.Children.Add(pointer); CollabPanel.Children.Add(follow);
         CollabPanel.Children.Add(_collabPlace);
         ShowPeerPlace();
 
         var actions = new WrapPanel();
         var verse = new Button { Content = L("Diesen Vers teilen"), Margin = new(0, 0, 8, 6) };
         verse.Click += (_, _) => ShareSelectedVerse();
-        var marksBtn = new Button { Content = L("Markierungen dieses Kapitels teilen"), Margin = new(0, 0, 8, 6) };
-        marksBtn.Click += (_, _) => ShareChapterMarks();
+        var come = new Button { Content = L("Hierher zeigen"), Margin = new(0, 0, 8, 6) };
+        ToolTip.SetTip(come, L("Die andere Person bekommt einen Hinweis mit einem Knopf zu deiner Stelle."));
+        come.Click += (_, _) => CollabCallOver();
+        var marksBtn = new Button { Content = L("Markierungen teilen ▾"), Margin = new(0, 0, 8, 6) };
+        marksBtn.Click += (_, _) => ShowShareMarksMenu(marksBtn);
+        var notesBtn = new Button { Content = L("Notizen teilen ▾"), Margin = new(0, 0, 8, 6) };
+        notesBtn.Click += (_, _) => ShowShareNotesMenu(notesBtn);
         var doc = new Button { Content = L("Dokument teilen ▾"), Margin = new(0, 0, 8, 6) };
         doc.Click += (_, _) => ShowShareDocMenu(doc);
-        actions.Children.Add(verse); actions.Children.Add(marksBtn); actions.Children.Add(doc);
+        var vaultBtn = new Button { Content = L("Vault senden ▾"), Margin = new(0, 0, 8, 6) };
+        ToolTip.SetTip(vaultBtn, L("Sendet eine Kopie des ganzen Vaults. Die andere Person kann ihn als Gast ansehen oder als neuen Vault speichern."));
+        vaultBtn.Click += (_, _) => ShowSendVaultMenu(vaultBtn);
+        foreach (var b in new[] { verse, come, marksBtn, notesBtn, doc, vaultBtn }) actions.Children.Add(b);
         CollabPanel.Children.Add(actions);
 
         var input = new TextBox { PlaceholderText = L("Nachricht schreiben, Enter sendet"), MaxLength = 2000, AcceptsReturn = false };
@@ -283,6 +295,9 @@ public partial class MainWindow
             CollabSend(new { t = "chat", text });
             AddCollabLog(text, mine: true);
         };
+        input.TextChanged += (_, _) => { if (!string.IsNullOrWhiteSpace(input.Text)) CollabTyping(); };
+        Detach(_peerTyping);
+        CollabPanel.Children.Add(_peerTyping);
         CollabPanel.Children.Add(input);
         CollabPanel.Children.Add(_collabLog);
     }
@@ -360,7 +375,8 @@ public partial class MainWindow
             var root = doc.RootElement;
             string Str(string key, int max) => root.TryGetProperty(key, out var e) && e.ValueKind == JsonValueKind.String ? Clip(e.GetString(), max) : "";
             int Int(string key) => root.TryGetProperty(key, out var e) && e.ValueKind == JsonValueKind.Number && e.TryGetInt32(out var n) ? n : 0;
-            switch (Str("t", 12))
+            var type = Str("t", 12);
+            switch (type)
             {
                 case "hello":
                     _peerName = Str("name", 40).Trim();
@@ -369,7 +385,7 @@ public partial class MainWindow
                     CollabSendLocation(_selected);
                     break;
                 case "chat":
-                    if (Str("text", 2000) is { Length: > 0 } text) AddCollabLog(text);
+                    if (Str("text", 2000) is { Length: > 0 } text) { _peerTyping.IsVisible = false; AddCollabLog(text); NotifyChat(text); }
                     break;
                 case "nav":
                 {
@@ -379,6 +395,7 @@ public partial class MainWindow
                     _peerPlace = (book, chapter, verse);
                     ShowPeerPlace();
                     if (_follow) _ = FollowAsync(_peerPlace.Value);
+                    RenderPeerLayer();
                     break;
                 }
                 case "verse":
@@ -389,6 +406,9 @@ public partial class MainWindow
                     break;
                 case "doc":
                     ShowSharedDocument(Str("title", 200), Str("body", MaxSharedBody));
+                    break;
+                default:
+                    if (!HandleCollabLive(type, root)) HandleCollabShare(type, root);
                     break;
             }
         }

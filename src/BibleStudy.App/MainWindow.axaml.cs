@@ -974,6 +974,7 @@ public partial class MainWindow : AppWindow
             else box.ClearValue(Border.BackgroundProperty);
             box.BorderBrush = selected ? new SolidColorBrush(ink, 0.55) : whole is { } c2 ? new SolidColorBrush(c2) : Brushes.Transparent;
         }
+        if (_peer?.IsOpen == true) { CollabSendSelection(); Avalonia.Threading.Dispatcher.UIThread.Post(RenderPeerLayer, Avalonia.Threading.DispatcherPriority.Background); }
     }
 
     /// <summary>Scrolls so the verse sits near the top, after the new text has been laid out.</summary>

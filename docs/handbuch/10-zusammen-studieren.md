@@ -17,9 +17,11 @@ Seid ihr im selben WLAN oder im selben ZeroTier- oder Tailscale-Netzwerk, brauch
 
 Erscheint niemand, lassen manche Netzwerke das Suchen nicht zu. Dann öffne **Mit Adresse verbinden** und gib die Adresse der anderen Person ein. Die eigene Adresse steht direkt darunter; bei ZeroTier steht sie auch in der ZeroTier-App unter „Managed IPs“.
 
-### In verschiedenen Netzwerken (mit Codes)
+### In verschiedenen Netzwerken (mit Codes, Beta)
 
-Unter **Mit Codes (andere Netze)**:
+Über verschiedene Netzwerke klappt die Verbindung nicht immer. Getestet und zuverlässig ist der Weg im selben Netzwerk: Seid ihr weit voneinander entfernt, tretet beide demselben ZeroTier-Netzwerk bei (kostenlos) und verbindet euch wie oben beschrieben.
+
+Unter **Mit Codes (Beta, andere Netze)**:
 
 1. Person A wählt **Einladung erstellen**. Es erscheint ein Code.
 2. Person A schickt den Code per Messenger an Person B.
@@ -29,7 +31,12 @@ Unter **Mit Codes (andere Netze)**:
 
 ## 10.2 Was ihr tun könnt
 
-- **Chatten.**
+- **Chatten.** Du siehst, wenn die andere Person schreibt. Ist die Seite zu, meldet ein kleiner Hinweis neue Nachrichten.
+- **Live mitsehen:** Lest ihr dasselbe Kapitel, siehst du die Verse, die die andere Person anklickt (lila umrahmt, mit Namen), und ihren Mauszeiger. Abschalten mit **Meinen Mauszeiger zeigen**.
+- **Hierher zeigen:** Die andere Person bekommt einen Hinweis mit einem Knopf zu deiner Stelle.
+- **Markierungen teilen:** der gewählten Verse, dieses Kapitels, dieses Buchs oder alle. Beim Übernehmen kommen nur neue dazu.
+- **Notizen teilen:** dieses Kapitel, dieses Buch oder alle. Wo schon eine Notiz ist, wird die andere darunter angehängt.
+- **Vault senden:** eine Kopie eines ganzen Vaults. Die andere Person kann ihn **als Gast ansehen** (verschwindet beim Schließen) oder **als neuen Vault speichern**.
 - **Verse teilen.**
 - **Dokumente teilen** (als Kopie; Gesendetes ist in der Größe begrenzt, lange Dokumente werden gekürzt).
 - **Die eigene Bibelstelle mitsenden** und **der Stelle der anderen Person folgen.**

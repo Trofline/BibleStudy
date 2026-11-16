@@ -17,9 +17,11 @@ If you are on the same Wi-Fi or in the same ZeroTier or Tailscale network, you n
 
 If nobody shows up, some networks do not allow searching. Then open **Connect by address** and enter the other person's address. Your own address is shown right below; with ZeroTier it is also in the ZeroTier app under “Managed IPs”.
 
-### In different networks (with codes)
+### In different networks (with codes, beta)
 
-Under **With codes (other networks)**:
+Across different networks the connection does not always work. Tested and reliable is the way in the same network: if you are far apart, both join the same ZeroTier network (free) and connect as described above.
+
+Under **With codes (beta, other networks)**:
 
 1. Person A chooses **Create an invitation**. A code appears.
 2. Person A sends the code to person B by messenger.
@@ -29,7 +31,12 @@ Under **With codes (other networks)**:
 
 ## 10.2 What you can do
 
-- **Chat.**
+- **Chat.** You see when the other person is typing. While the page is closed, a small notice shows new messages.
+- **See live:** when you read the same chapter, you see the verses the other person clicks (framed in purple, with their name) and their mouse pointer. Switch off with **Show my mouse pointer**.
+- **Show here:** the other person gets a notice with a button to your place.
+- **Share highlights:** of the chosen verses, this chapter, this book or all. Taking them over adds only new ones.
+- **Share notes:** this chapter, this book or all. Where there is already a note, the other one is added below it.
+- **Send vault:** a copy of a whole vault. The other person can **view it as a guest** (gone when the program closes) or **save it as a new vault**.
 - **Share verses.**
 - **Share documents** (as a copy; what you send is limited in size, and long documents are shortened).
 - **Send along your own Bible passage** and **follow the other person's passage.**

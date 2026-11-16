@@ -16,15 +16,7 @@ public partial class MainWindow
 {
     const int MaxSharedMarks = 150;
 
-    void ShareChapterMarks()
-    {
-        var marks = _vault.GetMarks(_curBook, _curChapter).Take(MaxSharedMarks).ToList();
-        if (marks.Count == 0) { StatusText.Text = L("In diesem Kapitel gibt es noch keine Markierungen von dir."); return; }
-        var items = marks.Select(m => new { v = m.Ref.Verse, c = m.Color, t = Clip(m.Text, 300), n = Clip(m.Note, 300) }).ToList();
-        CollabSend(new { t = "marks", book = _curBook, chapter = _curChapter, items });
-        AddCollabLog(L("Du hast {0} Markierungen aus {1} gesendet.", marks.Count, $"{BookName(_curBook)} {_curChapter}"), mine: true, system: true);
-    }
-
+    // the receiving side of the older single-chapter message stays, so a partner with an older version can still send highlights
     void ShowSharedMarks(string book, int chapter, JsonElement items)
     {
         if (_books.All(b => b.Id != book) || chapter < 1 || items.ValueKind != JsonValueKind.Array) return;
