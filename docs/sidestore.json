@@ -18,6 +18,15 @@
       "category": "other",
       "versions": [
         {
+          "version": "1.9.9",
+          "buildVersion": "28",
+          "date": "2026-11-16",
+          "localizedDescription": "## New in 1.9.9\n**Kind of update:** Feature, Bug fix\n- **[Feature]** **Everything syncs:** besides marks and notes now also tasks, bookmarks, the reading list, prayer requests, headings, your own cross-references, studies, memory verses, vocabulary, the reading plan, categories, colors and saved searches.\n- **[Feature]** **Changes show at once:** what another device synced appears on the home page, in the reading view and in the lists without restarting.\n- **[Feature]** **Cloud folder:** sync through OneDrive, Google Drive, Dropbox or any shared folder; the devices need not be on at the same t",
+          "downloadURL": "https://github.com/Trofline/BibleStudy/releases/download/v1.9.9/BibleStudy-iOS-1.9.9.ipa",
+          "size": 59478723,
+          "minOSVersion": "15.0"
+        },
+        {
           "version": "1.9.8",
           "buildVersion": "27",
           "date": "2026-11-15",
