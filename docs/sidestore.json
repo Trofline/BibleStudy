@@ -18,6 +18,15 @@
       "category": "other",
       "versions": [
         {
+          "version": "1.9.10",
+          "buildVersion": "29",
+          "date": "2026-11-16",
+          "localizedDescription": "## New in 1.9.10\n**Kind of update:** Feature, Bug fix\n- **[Bug fix]** A chapter marked unread came back as read from the other device.\n- **[Bug fix]** Something deleted could come back when both devices had got it through a third device or the cloud folder.\n- **[Bug fix]** The reading plan and other settings changed on both devices no longer drift apart; ticked-off days from both are kept.\n- **[Bug fix]** One failed copy of the reading progress could block the sync until a restart.\n- **[Bug fix]** Two syncs at once could disturb each other in the cloud folder; a stray file there could stop the",
+          "downloadURL": "https://github.com/Trofline/BibleStudy/releases/download/v1.9.10/BibleStudy-iOS-1.9.10.ipa",
+          "size": 59505226,
+          "minOSVersion": "15.0"
+        },
+        {
           "version": "1.9.9",
           "buildVersion": "28",
           "date": "2026-11-16",
