@@ -37,6 +37,9 @@
                     </Button>
                 </StackPanel>
                 <StackPanel Grid.Column="5" Orientation="Horizontal" VerticalAlignment="Stretch" Margin="10,0,0,0">
+                    <Button x:Name="TimerTopChip" Classes="ghost" Padding="10,0" MinHeight="0" Height="30" Margin="0,0,6,0" VerticalAlignment="Center" IsVisible="False" ToolTip.Tip="Laufender Timer. Klicken: anhalten, fortsetzen oder beenden.">
+                        <TextBlock x:Name="TimerTopText" FontWeight="SemiBold" FontSize="15" VerticalAlignment="Center" FontFeatures="+tnum" />
+                    </Button>
                     <Button x:Name="MinBtn" Classes="caption" ToolTip.Tip="Minimieren"><local:Icon Data="M5 12h14" IconSize="15" /></Button>
                     <Button x:Name="MaxBtn" Classes="caption" ToolTip.Tip="Maximieren / Wiederherstellen"><local:Icon Data="M5 5h14v14H5z" IconSize="14" /></Button>
                     <Button x:Name="CloseBtn" Classes="caption close" ToolTip.Tip="Schließen"><local:Icon Data="M18 6L6 18 M6 6l12 12" IconSize="15" /></Button>

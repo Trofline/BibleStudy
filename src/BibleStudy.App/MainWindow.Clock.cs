@@ -27,6 +27,7 @@ public partial class MainWindow
         ShowClockCheck.IsCheckedChanged += (_, _) => { _settings.ShowClock = ShowClockCheck.IsChecked == true; SaveSettings(); ClockChip.IsVisible = _settings.ShowClock; };
         ClockChip.Click += (_, _) => ShowTimerFlyout(ClockChip);
         TimerChip.Click += (_, _) => ShowTimerFlyout(TimerChip);
+        TimerTopChip.Click += (_, _) => ShowTimerFlyout(TimerTopChip);
         _clockTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(500) };
         _clockTimer.Tick += (_, _) => TickClock();
         _clockTimer.Start();
@@ -44,6 +45,9 @@ public partial class MainWindow
         }
         else if (_timerPaused is { } p) TimerChipText.Text = "⏸ " + ProgramPrefix() + TimerText(p);
         TimerChip.IsVisible = _timerEnd is not null || _timerPaused is not null;
+        // the same time at the top, beside the close button: everyone sees a timer runs without looking down
+        TimerTopChip.IsVisible = TimerChip.IsVisible;
+        if (TimerChip.IsVisible) TimerTopText.Text = TimerChipText.Text;
     }
 
     /// <summary>"4:05" or, from an hour on, "1:04:05"; seconds are rounded up, so the timer never shows 0:00 while it still runs.</summary>
@@ -90,7 +94,7 @@ public partial class MainWindow
 
     void ShowTimerFlyout(Control anchor)
     {
-        var flyout = new Flyout { Placement = PlacementMode.TopEdgeAlignedRight };
+        var flyout = new Flyout { Placement = anchor == TimerTopChip ? PlacementMode.BottomEdgeAlignedRight : PlacementMode.TopEdgeAlignedRight };
         var panel = new StackPanel { Spacing = 8, Width = 390 };
         panel.Children.Add(new TextBlock { Text = L("TIMER"), Classes = { "eyebrow" } });
         if (_timerEnd is not null || _timerPaused is not null)
