@@ -154,6 +154,25 @@ public class MaterialReaderTests : IDisposable
     }
 
     [Fact]
+    public void A_picture_name_in_the_file_never_leads_out_of_the_picture_folder()
+    {
+        // a crafted file: its picture is named so that it would land two folders higher, or in the root of the drive
+        const string a = "http://schemas.openxmlformats.org/drawingml/2006/main", r = "http://schemas.openxmlformats.org/officeDocument/2006/relationships";
+        var xml = $"""<w:document xmlns:w="{Wns}" xmlns:a="{a}" xmlns:r="{r}"><w:body><w:p><w:r><w:t>Text</w:t></w:r><w:r><w:drawing><a:blip r:embed="rId1"/></w:drawing></w:r></w:p></w:body></w:document>""";
+        foreach (var (target, entry) in new[] { (@"..\..\..\boese.png", @"word/..\..\..\boese.png"), (@"C:\boese2.png", @"word/C:\boese2.png") })
+        {
+            var rels = $"""<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Target="{target}"/></Relationships>""";
+            var path = Zip(Guid.NewGuid().ToString("N") + ".docx", ("word/document.xml", xml), ("word/_rels/document.xml.rels", rels), (entry, "png"));
+            var media = Path.Combine(_dir, "deep", "er", "media");
+            var doc = MaterialReader.Read(path, media);
+            Assert.Null(doc.Problem);
+            var picture = Assert.Single(doc.Blocks, b => b.Kind == BlockKind.Image);   // the picture is shown, from inside its folder
+            Assert.StartsWith(Path.GetFullPath(media) + Path.DirectorySeparatorChar, Path.GetFullPath(picture.ImagePath!));
+            Assert.False(File.Exists(Path.Combine(_dir, "deep", "er", "boese.png")));
+        }
+    }
+
+    [Fact]
     public void Word_table_of_contents_in_a_content_control_links_to_its_headings()
     {
         var xml = $"""

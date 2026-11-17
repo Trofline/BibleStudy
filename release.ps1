@@ -197,6 +197,22 @@ foreach ($rid in 'linux-x64', 'osx-arm64', 'osx-x64') {
     }
     Remove-Item -LiteralPath (Join-Path $rel "unix-$rid") -Recurse -Force
 }
+Write-Host "== Android app (APK), signed with the key of the app"
+# every release carries it: the Android app updates itself from the newest release that has one (1.9.15 to 1.9.17 went out without it,
+# and the phones stayed on 1.9.14). The key stays on this computer; without it there is no APK, and that is said loudly.
+$androidProject = "$root\src\BibleStudy.Android\BibleStudy.Android.csproj"
+if (-not ([IO.File]::ReadAllText($androidProject) -match "<Version>$([regex]::Escape($Version))</Version>")) { throw "the Android project does not carry version $Version (<Version> in $androidProject)" }
+$keystore = Join-Path $env:USERPROFILE '.biblestudy-android\biblestudy.keystore'
+if (Test-Path $keystore) {
+    $apkOut = Join-Path $rel 'android'
+    dotnet publish $androidProject -c Release -p:DebugType=none -o $apkOut
+    if ($LASTEXITCODE) { throw 'publish android failed' }
+    $apk = Get-ChildItem $apkOut -Filter '*-Signed.apk' | Select-Object -First 1
+    if (-not $apk) { throw 'no signed APK was made' }
+    Move-Item $apk.FullName "$rel\BibleStudy-Android-$Version.apk"
+    Remove-Item -LiteralPath $apkOut -Recurse -Force
+} else { Write-Warning "No Android key in $keystore : this release has no APK, phones with Android get no update" }
+
 Remove-Item -LiteralPath (Join-Path $rel 'stage') -Recurse -Force
 if (-not $Quick) { Remove-Item -LiteralPath (Join-Path $rel 'setup'), $payload -Recurse -Force }
 Get-ChildItem $rel -File | Where-Object { $_.Name -ne 'SHA256SUMS.txt' } | ForEach-Object { '{0}  {1}' -f (Get-FileHash $_.FullName -Algorithm SHA256).Hash.ToLower(), $_.Name } | Set-Content "$rel\SHA256SUMS.txt"

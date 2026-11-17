@@ -154,6 +154,15 @@ public partial class MainWindow
             ApplyCollectionFilter();
         };
         TagFilterBox.SelectionChanged += (_, _) => { if (!_vaultUiLoading) ApplyCollectionFilter(); };
+        // closed, the two boxes are narrow ("Alle Ordner" was cut to "Alle Ord"): they say "Ordner" and "Tags" (the list still says it in full),
+        // and a long name ends in "…" instead of being cut off
+        Control Closed(object? item, string all, string shortText) => new TextBlock
+        {
+            Text = item is string s && s == all ? shortText : item?.ToString()?.Trim() ?? "",
+            TextTrimming = TextTrimming.CharacterEllipsis, VerticalAlignment = VerticalAlignment.Center,
+        };
+        FolderFilterBox.SelectionBoxItemTemplate = new Avalonia.Controls.Templates.FuncDataTemplate<object>((o, _) => Closed(o, L("Alle Ordner"), L("Ordner")));
+        TagFilterBox.SelectionBoxItemTemplate = new Avalonia.Controls.Templates.FuncDataTemplate<object>((o, _) => Closed(o, L("Alle Tags"), L("Tags")));
         DeleteFolderBtn.Click += (_, _) => { if (FolderFilterBox.SelectedItem is Folder f) TrashFolderWithUndo(f.Id, f.Name); };
         NewFolderBox.KeyDown += (_, e) =>
         {

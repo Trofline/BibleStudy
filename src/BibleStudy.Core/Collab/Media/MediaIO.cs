@@ -47,10 +47,11 @@ public static class MediaIO
             _ = p.StandardError.ReadToEndAsync();   // keeps the pipe empty (a full pipe would stop ffmpeg)
             new Thread(() =>
             {
-                var s = p.StandardOutput.BaseStream;
-                var buf = new byte[piece];
+                // an error on this thread would end the whole program: whatever goes wrong only ends the reading
                 try
                 {
+                    var s = p.StandardOutput.BaseStream;   // inside: the process may already be gone (stopped right after starting)
+                    var buf = new byte[piece];
                     while (!_cts.IsCancellationRequested)
                     {
                         int n;
@@ -59,9 +60,7 @@ public static class MediaIO
                         try { on(buf[..n]); } catch { }
                     }
                 }
-                catch (EndOfStreamException) { }
-                catch (IOException) { }
-                catch (ObjectDisposedException) { }
+                catch (Exception) { /* the end of the stream, a stopped process: the reading is over */ }
             }) { IsBackground = true, Name = "ffmpeg-in" }.Start();
         }
 
@@ -80,10 +79,11 @@ public static class MediaIO
             _ = p.StandardError.ReadToEndAsync();
             new Thread(() =>
             {
-                var s = p.StandardInput.BaseStream;
-                var clock = Stopwatch.StartNew(); long sent = 0;
+                // an error on this thread would end the whole program: whatever goes wrong only ends the playing
                 try
                 {
+                    var s = p.StandardInput.BaseStream;   // inside: the process may already be gone
+                    var clock = Stopwatch.StartNew(); long sent = 0;
                     while (!_cts.IsCancellationRequested)
                     {
                         // keep about 120 ms ahead of the clock, not more (else the delay grows)
@@ -91,8 +91,7 @@ public static class MediaIO
                         s.Write(MuLaw.ToBytes(next())); s.Flush(); sent++;
                     }
                 }
-                catch (IOException) { }
-                catch (ObjectDisposedException) { }
+                catch (Exception) { /* a closed pipe, a stopped process: the playing is over */ }
             }) { IsBackground = true, Name = "ffmpeg-out" }.Start();
         }
 

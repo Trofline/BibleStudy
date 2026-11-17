@@ -148,7 +148,11 @@ public static partial class MaterialReader
     {
         if (mediaDir is null || !ShowablePictures.Contains(System.IO.Path.GetExtension(entryPath)) || zip.GetEntry(entryPath) is not { } entry) return null;
         Directory.CreateDirectory(mediaDir);
-        var file = System.IO.Path.Combine(mediaDir, entryPath.Replace('/', '_'));
+        // one plain file name inside the folder: a name in the package like "..\..\x.png" or "C:\x.png" must not lead out of it
+        var name = string.Concat(entryPath.Select(c => c is '/' or '\\' or ':' || System.IO.Path.GetInvalidFileNameChars().Contains(c) ? '_' : c));
+        var file = System.IO.Path.Combine(mediaDir, name);
+        var inside = System.IO.Path.GetFullPath(mediaDir).TrimEnd(System.IO.Path.DirectorySeparatorChar) + System.IO.Path.DirectorySeparatorChar;
+        if (!System.IO.Path.GetFullPath(file).StartsWith(inside, StringComparison.OrdinalIgnoreCase)) return null;
         if (!File.Exists(file)) entry.ExtractToFile(file, true);
         return new Block(BlockKind.Image, [], file);
     }

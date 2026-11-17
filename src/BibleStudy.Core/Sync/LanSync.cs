@@ -325,7 +325,7 @@ public sealed class LanSync : IDisposable
                             {
                                 askerName = caller.Name;
                                 // this side was reached: it counts as a comparison here too (the reminder after some days without one looks at it)
-                                _cfg.LastTime = DateTime.Now.ToString("yyyy-MM-dd HH:mm"); _cfg.LastPeer = caller.Name;
+                                _cfg.LastTime = DateTime.Now.ToString("yyyy-MM-dd HH:mm", System.Globalization.CultureInfo.InvariantCulture); _cfg.LastPeer = caller.Name;
                                 _cfg.Save(_cfgPath);
                                 Contacted?.Invoke(caller.Name);
                             }
@@ -467,7 +467,7 @@ public sealed class LanSync : IDisposable
                     if (peer.Id.Length > 0) await Task.Run(() => SaveBase(peer.Id, nowMine), ct);
                 }
             }
-            _cfg.LastTime = DateTime.Now.ToString("yyyy-MM-dd HH:mm"); _cfg.LastPeer = peer.Name;
+            _cfg.LastTime = DateTime.Now.ToString("yyyy-MM-dd HH:mm", System.Globalization.CultureInfo.InvariantCulture); _cfg.LastPeer = peer.Name;
             _cfg.Save(_cfgPath);
             report = new SyncReport(peer.Name, changed, sent, null);
         }
@@ -589,7 +589,7 @@ public sealed class LanSync : IDisposable
                 }
                 finally { TryDelete(file); }
             }
-            if (changed + sent > 0) { _cfg.LastTime = DateTime.Now.ToString("yyyy-MM-dd HH:mm"); _cfg.LastPeer = who ?? cloud.Label; }
+            if (changed + sent > 0) { _cfg.LastTime = DateTime.Now.ToString("yyyy-MM-dd HH:mm", System.Globalization.CultureInfo.InvariantCulture); _cfg.LastPeer = who ?? cloud.Label; }
             _cfg.Save(_cfgPath);
             ReadStamps();   // what the merge wrote is no change to send again
             return new SyncReport(who ?? cloud.Label, changed, sent, null);

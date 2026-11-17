@@ -1,5 +1,7 @@
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Input;
+using Avalonia.Interactivity;
 using Avalonia.Layout;
 using Avalonia.Media;
 
@@ -21,6 +23,8 @@ public partial class MainWindow
 
     void InitPhone()
     {
+        // the work tabs scroll sideways on a computer too: with many of them the last one and the "+" ran off the right edge
+        if (!AppPlatform.IsMobile && TabBar.Child == TabStrip) { TabBar.Child = null; TabBar.Child = MakeTabScroller(); }
         if (!AppPlatform.IsMobile) return;
         // a phone has no window to minimize, maximize or close
         MinBtn.IsVisible = MaxBtn.IsVisible = CloseBtn.IsVisible = false;
@@ -266,6 +270,14 @@ public partial class MainWindow
         void Update() => more.IsVisible = scroll.Extent.Width > scroll.Viewport.Width + 2 && scroll.Offset.X < scroll.Extent.Width - scroll.Viewport.Width - 2;
         scroll.ScrollChanged += (_, _) => Update();
         scroll.PropertyChanged += (_, e) => { if (e.Property == Visual.BoundsProperty) Update(); };
+        // the mouse wheel moves the row sideways (it has nothing to scroll up and down)
+        scroll.AddHandler(PointerWheelChangedEvent, (object? _, PointerWheelEventArgs e) =>
+        {
+            if (scroll.Extent.Width <= scroll.Viewport.Width + 1) return;
+            var step = (Math.Abs(e.Delta.Y) > Math.Abs(e.Delta.X) ? e.Delta.Y : e.Delta.X) * 60;
+            scroll.Offset = new Vector(Math.Clamp(scroll.Offset.X - step, 0, scroll.Extent.Width - scroll.Viewport.Width), 0);
+            e.Handled = true;
+        }, RoutingStrategies.Tunnel);
         return new Grid { Children = { scroll, more } };
     }
 

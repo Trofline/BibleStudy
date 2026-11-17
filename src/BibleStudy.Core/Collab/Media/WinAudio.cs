@@ -129,7 +129,9 @@ public sealed class WinAudio : IDisposable
                 var hdr = Read(_hdrs[i]);
                 if (used[i] && (hdr.Flags & WhdrDone) == 0) continue;   // still playing
                 if (used[i]) waveOutUnprepareHeader(_h, _hdrs[i], HdrSize);
-                var bytes = MuLaw.ToBytes(next());
+                short[] pcm;
+                try { pcm = next(); } catch { pcm = new short[AudioFormat.FrameSamples]; }   // an error on this thread would end the program: silence instead
+                var bytes = MuLaw.ToBytes(pcm);
                 var length = Math.Min(bytes.Length, BufferBytes);   // never more than the buffer holds
                 Marshal.Copy(bytes, 0, hdr.Data, length);
                 hdr.BufferLength = (uint)length; hdr.Flags = 0;

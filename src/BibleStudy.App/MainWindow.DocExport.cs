@@ -94,7 +94,7 @@ public partial class MainWindow
         var byVerse = verses.ToDictionary(v => v.Span, v => Uri.EscapeDataString(verseFile) + "#" + v.Anchor);
         string? VerseHref(string span) => verseFile.Length > 0 && byVerse.TryGetValue(span, out var h) ? h : null;
         string Head(string t, string tagText) => !s.MarkdownFrontMatter ? "" :
-            "---\ntitle: \"" + t.Replace("\"", "'") + "\"\ndate: " + DateTime.Now.ToString("yyyy-MM-dd") + "\n"
+            "---\ntitle: \"" + t.Replace("\"", "'") + "\"\ndate: " + DateTime.Now.ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture) + "\n"
             + (HandoutTags(tagText) is { Length: > 0 } tg ? "tags: [" + string.Join(", ", tg.Split(", ").Select(x => "\"" + x.Replace("\"", "'") + "\"")) + "]\n" : "") + "---\n\n";
         string Page(Document p, string tagText)
         {

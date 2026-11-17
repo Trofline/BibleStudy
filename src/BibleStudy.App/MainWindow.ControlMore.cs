@@ -165,7 +165,7 @@ public partial class MainWindow
             longestStreakDays = ReadingStats.LongestStreak(times),
             chaptersPerDayLast14Days = ReadingStats.PerDay(times, DateTime.Today, 14),
             chaptersPerWeekLast8Weeks = ReadingStats.PerWeek(times, DateTime.Today, 8),
-            recentlyRead = dates.OrderByDescending(d => d.At).Take(20).Select(d => new { reference = $"{d.Book} {d.Chapter}", at = d.At.ToString("yyyy-MM-dd") }),
+            recentlyRead = dates.OrderByDescending(d => d.At).Take(20).Select(d => new { reference = $"{d.Book} {d.Chapter}", at = d.At.ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture) }),
             counts = new { marks = _vault.GetMarks().Count, verseNotes = _vault.GetNotes().Count, documents = _vault.GetDocuments().Count },
             showingNow = new { book = _curBook, chapter = _curChapter, verse = _selected },
         };

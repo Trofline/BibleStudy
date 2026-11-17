@@ -17,6 +17,7 @@ public sealed class CollabGroup
     readonly HashSet<string> _seen = [];
     readonly Queue<string> _order = new();
     readonly Dictionary<ICollabLink, string> _fallback = [];
+    readonly Dictionary<ICollabLink, Action<string>> _handlers = [];
 
     public CollabGroup(string myId) => MyId = myId;
 
@@ -31,16 +32,24 @@ public sealed class CollabGroup
 
     public void Add(ICollabLink link)
     {
+        Action<string> handler = raw => OnReceive(link, raw);
         lock (_gate)
         {
             if (_links.Contains(link)) return;
             _links.Add(link);
             _fallback[link] = "L" + Convert.ToHexString(RandomNumberGenerator.GetBytes(6));
+            _handlers[link] = handler;
         }
-        link.Received += raw => OnReceive(link, raw);
+        link.Received += handler;
     }
 
-    public void Remove(ICollabLink link) { lock (_gate) { _links.Remove(link); } }
+    /// <summary>The connection leaves the group: nothing of it is passed on any more (added again later, its messages do not arrive twice).</summary>
+    public void Remove(ICollabLink link)
+    {
+        Action<string>? handler;
+        lock (_gate) { _links.Remove(link); _fallback.Remove(link); _handlers.Remove(link, out handler); }
+        if (handler is not null) link.Received -= handler;
+    }
 
     /// <summary>The id the people behind this connection are known by when their messages carry none (older versions).</summary>
     public string FallbackId(ICollabLink link) { lock (_gate) return _fallback.TryGetValue(link, out var id) ? id : ""; }

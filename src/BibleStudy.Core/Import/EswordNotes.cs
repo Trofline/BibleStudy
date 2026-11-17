@@ -58,10 +58,11 @@ public static class EswordNotes
             var title = Col("Title", "Topic", "Name", "Subject");
 
             using var q = con.CreateCommand();
+            // the names come from the file itself: quoted, so a name with a quotation mark cannot break the query
+            static string Q(string? name) => name is null ? "NULL" : "\"" + name.Replace("\"", "\"\"") + "\"";
             if (book is not null)
             {
-                q.CommandText = $"SELECT \"{book}\", {(chapter is null ? "NULL" : $"\"{chapter}\"")}, {(verse is null ? "NULL" : $"\"{verse}\"")}, " +
-                                $"{(chapterEnd is null ? "NULL" : $"\"{chapterEnd}\"")}, {(verseEnd is null ? "NULL" : $"\"{verseEnd}\"")}, \"{text}\" FROM \"{table}\"";
+                q.CommandText = $"SELECT {Q(book)}, {Q(chapter)}, {Q(verse)}, {Q(chapterEnd)}, {Q(verseEnd)}, {Q(text)} FROM {Q(table)}";
                 using var r = q.ExecuteReader();
                 var mySword = book.Equals("book_number", StringComparison.OrdinalIgnoreCase);
                 while (r.Read())
@@ -82,7 +83,7 @@ public static class EswordNotes
             }
             else if (title is not null)
             {
-                q.CommandText = $"SELECT \"{title}\", \"{text}\" FROM \"{table}\"";
+                q.CommandText = $"SELECT {Q(title)}, {Q(text)} FROM {Q(table)}";
                 using var r = q.ExecuteReader();
                 while (r.Read())
                 {

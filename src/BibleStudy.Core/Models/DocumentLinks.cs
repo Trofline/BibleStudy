@@ -166,6 +166,7 @@ public static partial class DocumentLinks
                 if (Regex.Match(m.Groups["b"].Value, @"^[1-5]\s?\.?\s?") is { Success: true, Length: > 0 } l && TryName(m.Groups["b"].Value[l.Length..], out book)) lead = l.Length;
                 else continue;
             }
+            if (NoPlace(m)) continue;   // "Joh 0,0": there is no chapter or verse 0
             result.Add(SpanOf(m, m.Index + lead, m.Length - lead, book));
         }
         // places without a book take the book of the reference just before them in the same line
@@ -180,11 +181,14 @@ public static partial class DocumentLinks
             var next = end < text.Length ? text[end] : ')';
             var closed = next is ')' or ';' or ',' or ']' or '\n' or '\r' || (next is '.' or ':' && (end + 1 >= text.Length || !char.IsDigit(text[end + 1])));
             if (!closed && m.Groups["sep"].Value.TrimStart().StartsWith('(')) continue;
+            if (NoPlace(m)) continue;
             result.Add(SpanOf(m, start, end - start, before.Ref.Book));
         }
         result.Sort((a, b) => a.Index.CompareTo(b.Index));
         return result;
     }
+
+    static bool NoPlace(Match m) => int.Parse(m.Groups["c"].Value) == 0 || int.Parse(m.Groups["v"].Value) == 0;
 
     static VerseSpan SpanOf(Match m, int index, int length, string book)
     {

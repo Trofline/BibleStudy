@@ -25,8 +25,9 @@ public partial class MainWindow
         ImportCheckBtn.Click += (_, _) =>
         {
             if (_lastImportReport is null) return;
-            var path = Path.Combine(ExportFolder, _lastImportReportName);
-            File.WriteAllText(path, _lastImportReport, new System.Text.UTF8Encoding(false));
+            var path = Path.Combine(ExportFolder, _lastImportReportName ?? "import-check.md");
+            try { Directory.CreateDirectory(ExportFolder); File.WriteAllText(path, _lastImportReport, new System.Text.UTF8Encoding(false)); }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException) { ImportBibleInfo.Text = L("Fehler: ") + ex.Message; return; }
             ImportBibleInfo.Text = L("Prüfbericht gespeichert: {0}. Gib ihn zusammen mit der Quelldatei an eine KI und lade die korrigierte USFM-Datei wieder hier hinein.", path);
             if (!NoShell) try { Shell.Open(ExportFolder); } catch { }
         };

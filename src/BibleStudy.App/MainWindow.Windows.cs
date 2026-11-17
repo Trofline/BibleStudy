@@ -272,6 +272,8 @@ public partial class MainWindow
         ToolTip.SetTip(plus, L("Neuer Reiter"));
         plus.Click += (_, _) => ShowNewTabMenu(plus);
         TabStrip.Children.Add(plus);
+        // with more tabs than fit the row scrolls: the open one is always to be seen
+        Dispatcher.UIThread.Post(() => TabStrip.Children.OfType<Button>().FirstOrDefault(b => b.Classes.Contains("active") && b.Tag is string)?.BringIntoView(), DispatcherPriority.Loaded);
     }
 
     /// <summary>The tabs that can be opened (from the "+" of the tab strip, or from the empty right side of the split view).</summary>

@@ -205,7 +205,7 @@ public partial class MainWindow
             if (tell) Notify(L("Update-Suche nicht möglich"), ex.Message);
             return;
         }
-        _settings.LastUpdateCheck = DateTime.Today.ToString("yyyy-MM-dd"); SaveSettings();
+        _settings.LastUpdateCheck = DateTime.Today.ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture); SaveSettings();
         if (info is null)
         {
             UpdateStatus.Text = L("Du hast die neueste Version ({0}).", AppPaths.Version);

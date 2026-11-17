@@ -911,10 +911,8 @@ public partial class MainWindow
             if (wasDragging && target is not null) ExMove(items, target.Folder);
             else if (!wasDragging && !e.KeyModifiers.HasFlag(Mods.Ctrl) && !e.KeyModifiers.HasFlag(KeyModifiers.Shift) && _exSel.Count > 1) { _exSel.Clear(); _exSel.Add(item); ExShowSelection(); }
         };
-        row.PointerCaptureLost += (_, _) => { if (_exDrag is not null && !_exKeepCapture) Reset(); };
+        row.PointerCaptureLost += (_, _) => { if (_exDrag is not null) Reset(); };
     }
-
-    bool _exKeepCapture;
 
     /// <summary>Shows a new choice of rows: only their color and the line below change, nothing is read from the vault again.</summary>
     void ExShowSelection()

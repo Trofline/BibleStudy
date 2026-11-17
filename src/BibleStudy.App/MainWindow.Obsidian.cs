@@ -35,7 +35,7 @@ public partial class MainWindow
         if (picked[0].LocalPath() is not { } parent) { StatusText.Text = StorageFiles.NoFolderHere; return; }
         // a new folder every time: files of an older export (with other names) must not mix with this one
         var root = Path.Combine(parent, SafeFileName($"BibleStudy – {_vault.Name}"));
-        if (Directory.Exists(root)) root += " " + DateTime.Now.ToString("yyyy-MM-dd HH-mm-ss");
+        if (Directory.Exists(root)) root += " " + DateTime.Now.ToString("yyyy-MM-dd HH-mm-ss", System.Globalization.CultureInfo.InvariantCulture);
         StatusText.Text = L("Export wird vorbereitet …");
         if (_exBuilt) ExNote(L("Export wird vorbereitet …"), false);
         try

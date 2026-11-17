@@ -74,7 +74,7 @@ public partial class MainWindow
             {
                 var pl = p;
                 var btn = new Button { HorizontalAlignment = HorizontalAlignment.Stretch, HorizontalContentAlignment = HorizontalAlignment.Left, Padding = new(14, 10), Content = new StackPanel { Children = { new TextBlock { Text = p.Name, FontWeight = FontWeight.SemiBold }, new TextBlock { Text = L("{0} · {1} Tage", p.About, p.Days), Classes = { "caption" } } } } };
-                btn.Click += (_, _) => { _settings.PlanId = pl.Id; _settings.PlanStart = DateTime.Today.ToString("yyyy-MM-dd"); _settings.PlanDoneDays = []; _planDayShown = 0; SaveSettings(); BuildPlanUi(); };
+                btn.Click += (_, _) => { _settings.PlanId = pl.Id; _settings.PlanStart = DateTime.Today.ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture); _settings.PlanDoneDays = []; _planDayShown = 0; SaveSettings(); BuildPlanUi(); };
                 PlanPanel.Children.Add(btn);
             }
             PlanPanel.Children.Add(CustomPlanForm());
@@ -135,7 +135,7 @@ public partial class MainWindow
         finish.Click += (_, _) =>
         {
             foreach (var g in chapters.GroupBy(c => c.Book)) SetRead(g.Key, g.Select(c => c.Chapter).ToList(), true);
-            var key = DateTime.Today.ToString("yyyy-MM-dd");
+            var key = DateTime.Today.ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture);
             if (!_settings.PlanDoneDays.Contains(key)) _settings.PlanDoneDays.Add(key);
             SaveSettings(); BuildPlanUi();
         };
@@ -151,7 +151,7 @@ public partial class MainWindow
 
     /// <summary>Consecutive days (ending today or yesterday) on which a plan day was finished.</summary>
     int PlanStreak() =>
-        ReadingPlans.Streak(_settings.PlanDoneDays.Select(d => DateTime.TryParse(d, out var t) ? t : (DateTime?)null).OfType<DateTime>(), DateTime.Today);
+        ReadingPlans.Streak(_settings.PlanDoneDays.Select(d => DateTime.TryParse(d, System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.None, out var t) ? t : (DateTime?)null).OfType<DateTime>(), DateTime.Today);
 
     /// <summary>The card on the start page: what is next in the reading plan today (null without a running plan).</summary>
     (string Label, string Hint, Action Go)? PlanTodayCard()
@@ -189,7 +189,7 @@ public partial class MainWindow
             int a = from.SelectedIndex, b = to.SelectedIndex;
             if (a < 0 || b < a) return;
             _settings.CustomPlan = new CustomPlan { Name = name.Text?.Trim() ?? "", FromBook = _books[a].Id, ToBook = _books[b].Id, Days = (int)(days.Value ?? 30) };
-            _settings.PlanId = "custom"; _settings.PlanStart = DateTime.Today.ToString("yyyy-MM-dd"); _settings.PlanDoneDays = []; _planDayShown = 0;
+            _settings.PlanId = "custom"; _settings.PlanStart = DateTime.Today.ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture); _settings.PlanDoneDays = []; _planDayShown = 0;
             SaveSettings(); BuildPlanUi();
         };
         Show();

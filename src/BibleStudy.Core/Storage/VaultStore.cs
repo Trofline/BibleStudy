@@ -561,7 +561,7 @@ public sealed partial class VaultStore : SqliteDb
     public List<TodoItem> GetTodos() =>
         Query("SELECT id,text,done,book,chapter,verse,parent_id,due,COALESCE(pos,id) FROM todos ORDER BY COALESCE(pos,id), id", _ => { },
             r => new TodoItem(r.GetInt64(0), r.GetString(1), r.GetInt32(2) != 0, r.IsDBNull(3) ? null : new VerseRef(r.GetString(3), r.GetInt32(4), r.GetInt32(5)),
-                r.IsDBNull(6) ? null : r.GetInt64(6), !r.IsDBNull(7) && DateOnly.TryParseExact(r.GetString(7), "yyyy-MM-dd", out var due) ? due : null, r.GetInt64(8)));
+                r.IsDBNull(6) ? null : r.GetInt64(6), !r.IsDBNull(7) && DateOnly.TryParseExact(r.GetString(7), "yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.None, out var due) ? due : null, r.GetInt64(8)));
 
     /// <summary>Adds a line at the end of its list (or of the sub-tasks of <paramref name="parentId"/>).</summary>
     public void AddTodo(string text, VerseRef? r, long? parentId = null, DateOnly? due = null) =>
@@ -571,7 +571,7 @@ public sealed partial class VaultStore : SqliteDb
             c.Parameters.AddWithValue("$b", r is { } v ? v.Book : DBNull.Value); c.Parameters.AddWithValue("$c", r is { } v2 ? v2.Chapter : DBNull.Value);
             c.Parameters.AddWithValue("$v", r is { } v3 ? v3.Verse : DBNull.Value); c.Parameters.AddWithValue("$t", DateTime.UtcNow.ToString("o"));
             c.Parameters.AddWithValue("$p", (object?)parentId ?? DBNull.Value);
-            c.Parameters.AddWithValue("$u", due is { } d ? d.ToString("yyyy-MM-dd") : DBNull.Value);
+            c.Parameters.AddWithValue("$u", due is { } d ? d.ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture) : DBNull.Value);
         });
 
     /// <summary>Ticking a task ticks its sub-tasks too; taking the tick away leaves them as they are.</summary>
@@ -585,7 +585,7 @@ public sealed partial class VaultStore : SqliteDb
     }
 
     public void SetTodoDue(long id, DateOnly? due) =>
-        Exec("UPDATE todos SET due=$u WHERE id=$i", c => { c.Parameters.AddWithValue("$u", due is { } d ? d.ToString("yyyy-MM-dd") : DBNull.Value); c.Parameters.AddWithValue("$i", id); });
+        Exec("UPDATE todos SET due=$u WHERE id=$i", c => { c.Parameters.AddWithValue("$u", due is { } d ? d.ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture) : DBNull.Value); c.Parameters.AddWithValue("$i", id); });
 
     public void SetTodoRef(long id, VerseRef r) =>
         Exec("UPDATE todos SET book=$b,chapter=$c,verse=$v WHERE id=$i", c =>

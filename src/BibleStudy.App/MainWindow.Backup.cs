@@ -81,14 +81,14 @@ public partial class MainWindow
     void ShowBackupState()
     {
         BackupFolderText.Text = L("Sicherungsordner: {0}", BackupFolder);
-        AutoBackupInfo.Text = DateTime.TryParse(_settings.LastAutoBackup, out var last) ? L("Letzte Sicherung: {0:g}", last) : L("Noch keine Sicherung gemacht.");
+        AutoBackupInfo.Text = DateTime.TryParse(_settings.LastAutoBackup, System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.AssumeLocal, out var last) ? L("Letzte Sicherung: {0:g}", last) : L("Noch keine Sicherung gemacht.");
     }
 
     async Task AutoBackupIfDueAsync()
     {
         var every = Interval(_settings.BackupSchedule);
         if (every == TimeSpan.Zero) return;
-        if (DateTime.TryParse(_settings.LastAutoBackup, out var last) && DateTime.Now - last < every) return;
+        if (DateTime.TryParse(_settings.LastAutoBackup, System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.AssumeLocal, out var last) && DateTime.Now - last < every) return;
         await RunBackupAsync(manual: false);
     }
 
@@ -103,7 +103,7 @@ public partial class MainWindow
             var folder = BackupFolder;
             // only automatic backups are thinned out later; one made by hand is kept
             var path = await Task.Run(() => BackupData(manual ? "Manuell" : "Auto", folder));
-            _settings.LastAutoBackup = DateTime.Now.ToString("yyyy-MM-dd HH:mm"); SaveSettings();
+            _settings.LastAutoBackup = DateTime.Now.ToString("yyyy-MM-dd HH:mm", System.Globalization.CultureInfo.InvariantCulture); SaveSettings();
             await Task.Run(() => PruneAutoBackups(folder));
             ShowBackupState();
             if (manual) AutoBackupInfo.Text += "  " + path;
