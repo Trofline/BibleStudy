@@ -475,7 +475,48 @@ public partial class MainWindow
             Background = Res("BsSurface"), Content = d.Panel, Icon = Icon,
             WindowStartupLocation = saved is null && at is null ? WindowStartupLocation.CenterOwner : WindowStartupLocation.Manual,
         };
+#if !MOBILE
+        // the whole window on the screen it is meant for: one that sticks out over an edge is moved by Windows, and with more screens
+        // (a virtual one of a remote session, say) it may land on one nobody looks at, which looks as if it vanished
+        // Windows also picks the scaling of a new window from where it will reach: near a screen with another scaling (here a virtual one at 300 %)
+        // it is made for that screen and then moved onto it. So the window opens in the middle of the main window's screen and moves to its place
+        // once it is there.
+        PixelPoint? place = at ?? (saved is not null ? new PixelPoint(saved.X, saved.Y) : null);
+        var home = seen.FirstOrDefault();
+        PixelPoint? target = null;
+        var settled = true;   // false while the window still moves to its place: that move is no dragging (it must not dock it again)
+        if (place is { } want && (seen.FirstOrDefault(sc => sc.WorkingArea.Contains(new PixelPoint(want.X + 40, want.Y + 20))) ?? home) is { } screen)
+        {
+            var area = screen.WorkingArea; var scale = screen.Scaling;
+            win.Height = Math.Min(win.Height, area.Height / scale - 16);
+            win.Width = Math.Min(win.Width, area.Width / scale - 16);
+            var (pw, ph) = ((int)(win.Width * scale), (int)(win.Height * scale));
+            target = new PixelPoint(Math.Clamp(want.X, area.X, Math.Max(area.X, area.Right - pw)), Math.Clamp(want.Y, area.Y, Math.Max(area.Y, area.Bottom - ph)));
+        }
+        if (target is { } t0)
+        {
+            if (home is not null)
+            {
+                var area = home.WorkingArea; var scale = home.Scaling;
+                win.Position = new PixelPoint(area.X + (area.Width - (int)(win.Width * scale)) / 2, area.Y + (area.Height - (int)(win.Height * scale)) / 2);
+                settled = false;
+                win.Opened += (_, _) => { win.Position = t0; DispatcherTimer.RunOnce(() => settled = true, TimeSpan.FromMilliseconds(400)); };
+            }
+            else win.Position = t0;
+        }
+        // and if it still ends up on a screen that does not count, it comes back to the middle of the main window
+        void Rescue()
+        {
+            if (d.Win != win || home is null || win.WindowState == WindowState.Maximized) return;
+            if (Screens.ScreenFromWindow(win) is { } now && seen.Any(sc => sc.Bounds == now.Bounds)) return;
+            var area = home.WorkingArea; var scale = home.Scaling;
+            win.Width = Math.Min(win.Width, area.Width / scale - 16); win.Height = Math.Min(win.Height, area.Height / scale - 16);
+            win.Position = new PixelPoint(area.X + (area.Width - (int)(win.Width * scale)) / 2, area.Y + (area.Height - (int)(win.Height * scale)) / 2);
+        }
+        win.Opened += (_, _) => { DispatcherTimer.RunOnce(Rescue, TimeSpan.FromMilliseconds(120)); DispatcherTimer.RunOnce(Rescue, TimeSpan.FromMilliseconds(600)); };
+#else
         if (at is { } p) win.Position = p; else if (saved is not null) win.Position = new PixelPoint(saved.X, saved.Y);
+#endif
         if (saved is { Maximized: true }) win.WindowState = WindowState.Maximized;
         d.Win = win; d.Panel.IsVisible = true;
 
@@ -513,6 +554,9 @@ public partial class MainWindow
         };
         win.PositionChanged += (_, _) =>
         {
+#if !MOBILE
+            if (!settled) return;
+#endif
             timer.Stop(); timer.Start();
             var inside = InZone();
             if (!inside) armed = true;
