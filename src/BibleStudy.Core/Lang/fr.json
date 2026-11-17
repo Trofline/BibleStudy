@@ -3367,5 +3367,8 @@
   "Bild fehlt: {0}": "Image manquante : {0}",
   "Gleich noch einmal klicken, dann schließt das Programm sofort.": "Cliquez encore dans un instant, le programme se fermera alors tout de suite.",
   "Leisten über der Datei wieder zeigen": "Afficher à nouveau les barres au-dessus du fichier",
-  "Leisten über der Datei ausblenden (mehr Platz für die Datei)": "Masquer les barres au-dessus du fichier (plus de place pour le fichier)"
+  "Leisten über der Datei ausblenden (mehr Platz für die Datei)": "Masquer les barres au-dessus du fichier (plus de place pour le fichier)",
+  "Seitenzahl eingeben und Enter drücken (Strg+G)": "Tapez un numéro de page et appuyez sur Entrée (Ctrl+G)",
+  "Folie": "Diapositive",
+  "Seite": "Page"
 }

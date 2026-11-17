@@ -3367,5 +3367,8 @@
   "Bild fehlt: {0}": "Picture missing: {0}",
   "Gleich noch einmal klicken, dann schließt das Programm sofort.": "Click again in a moment, then the program closes at once.",
   "Leisten über der Datei wieder zeigen": "Show the bars above the file again",
-  "Leisten über der Datei ausblenden (mehr Platz für die Datei)": "Hide the bars above the file (more room for the file)"
+  "Leisten über der Datei ausblenden (mehr Platz für die Datei)": "Hide the bars above the file (more room for the file)",
+  "Seitenzahl eingeben und Enter drücken (Strg+G)": "Type a page number and press Enter (Ctrl+G)",
+  "Folie": "Slide",
+  "Seite": "Page"
 }

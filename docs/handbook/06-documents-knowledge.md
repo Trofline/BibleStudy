@@ -125,6 +125,10 @@ New, renamed or deleted files in the folder appear by themselves; an open file t
 
 **Searching:** the field **"Search all materials …"** above the tree searches every file of the folder (case and accents do not matter: "holle" also finds "Hölle"). The hits are listed by file with a piece of text; a click opens the file at exactly that place. **Ctrl+F** searches the open file: Enter goes to the next place, Shift+Enter to the previous one, Esc closes the bar. For a PDF shown as page images, Ctrl+F switches to its text so the words can be marked.
 
+**Go to a page:** beside the open files stands **"Page [ 1 ] / 40"**. Type a page number and press Enter, or **Ctrl+G**. While you scroll, the field shows the page you are on. This works for PDF, PowerPoint (slides) and Word and OpenDocument files; for those the pages are as Word or LibreOffice laid them out when the file was last saved.
+
+**More room:** the button with the four corners beside the folder list hides the bars above the file (heading, file name, Bible references); another click brings them back.
+
 **Preview:** resting the mouse on a Bible reference in the text shows the verse in the chosen translation, without jumping there.
 
 **Marks and notes:** select text and **right-click** → "Mark" (a color) or "Mark with a note …". The note then stands below the paragraph; a click on it changes it. A right-click on a mark offers note, color and remove. **The file itself stays unchanged:** marks and notes are kept in the vault (and so in the backups) together with the marked words. If the file changes or is moved, the program finds the words again. The button **"My marks"** above the file lists all marks of the file to jump to.

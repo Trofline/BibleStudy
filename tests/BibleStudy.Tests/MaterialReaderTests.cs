@@ -27,6 +27,50 @@ public class MaterialReaderTests : IDisposable
     const string Wns = "http://schemas.openxmlformats.org/wordprocessingml/2006/main";
 
     [Fact]
+    public void Word_pages_come_from_where_Word_last_began_a_page()
+    {
+        // Word laid it out: only its page beginnings count (the manual break is followed by one of them, it is not counted twice)
+        var xml = $"""
+            <w:document xmlns:w="{Wns}"><w:body>
+              <w:p><w:r><w:t>Eins</w:t></w:r><w:r><w:br w:type="page"/></w:r></w:p>
+              <w:p><w:r><w:lastRenderedPageBreak/><w:t>Zwei</w:t></w:r></w:p>
+              <w:tbl><w:tr><w:tc><w:p><w:r><w:lastRenderedPageBreak/><w:t>Drei</w:t></w:r></w:p></w:tc></w:tr></w:tbl>
+            </w:body></w:document>
+            """;
+        var blocks = MaterialReader.Read(Zip("Seiten.docx", ("word/document.xml", xml))).Blocks;
+        Assert.Equal(["Seite 1", "Eins", "Seite 2", "Zwei", "Seite 3", "Drei"], blocks.Select(b => b.Kind == BlockKind.Page ? b.Text.Replace("Page", "Seite") : b.Text.Trim()));
+        // never laid out by Word: the manual breaks
+        var plain = $"""
+            <w:document xmlns:w="{Wns}"><w:body>
+              <w:p><w:r><w:t>Eins</w:t></w:r></w:p>
+              <w:p><w:pPr><w:pageBreakBefore/></w:pPr><w:r><w:t>Zwei</w:t></w:r></w:p>
+            </w:body></w:document>
+            """;
+        Assert.Equal(2, MaterialReader.Read(Zip("Ohne.docx", ("word/document.xml", plain))).Blocks.Count(b => b.Kind == BlockKind.Page));
+        // one page only: no page lines at all
+        var one = $"""<w:document xmlns:w="{Wns}"><w:body><w:p><w:r><w:t>Nur</w:t></w:r></w:p></w:body></w:document>""";
+        Assert.DoesNotContain(MaterialReader.Read(Zip("Eine.docx", ("word/document.xml", one))).Blocks, b => b.Kind == BlockKind.Page);
+    }
+
+    [Fact]
+    public void OpenDocument_pages_come_from_its_soft_page_breaks()
+    {
+        const string content = """
+            <office:document-content xmlns:office="urn:oasis:names:tc:opendocument:xmlns:office:1.0" xmlns:text="urn:oasis:names:tc:opendocument:xmlns:text:1.0"><office:body><office:text>
+              <text:p>Eins</text:p>
+              <text:soft-page-break/>
+              <text:p>Zwei</text:p>
+              <text:list><text:soft-page-break/><text:list-item><text:p>Drei</text:p></text:list-item></text:list>
+            </office:text></office:body></office:document-content>
+            """;
+        var blocks = MaterialReader.Read(Zip("Seiten.odt", ("content.xml", content))).Blocks;
+        Assert.Equal(3, blocks.Count(b => b.Kind == BlockKind.Page));
+        Assert.Equal(BlockKind.Page, blocks[0].Kind);
+        Assert.Equal("Drei", blocks[^1].Text);
+        Assert.Equal(BlockKind.Page, blocks[^2].Kind);
+    }
+
+    [Fact]
     public void Word_keeps_headings_lists_tables_and_bold_text()
     {
         var xml = $"""

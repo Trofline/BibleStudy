@@ -96,6 +96,7 @@ Die Spaltenfarben der Parallel-Ansicht haben kein Tastenkürzel; sie liegen am F
 | In den Farben: Pfeiltasten, Enter, Esc | Farbe wählen, übernehmen, schließen |
 | Tab / Umschalt+Tab (Materialien) | Nächste / vorige geöffnete Datei |
 | Strg+F (Materialien) | In der geöffneten Datei suchen; Enter / Umschalt+Enter: nächste / vorige Stelle |
+| Strg+G (Materialien) | Zu einer Seite der geöffneten Datei springen |
 
 ## 14.6 Beamer-Fenster
 

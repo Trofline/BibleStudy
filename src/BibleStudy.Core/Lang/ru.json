@@ -3367,5 +3367,8 @@
   "Bild fehlt: {0}": "Изображение отсутствует: {0}",
   "Gleich noch einmal klicken, dann schließt das Programm sofort.": "Щёлкните ещё раз через мгновение, и программа сразу закроется.",
   "Leisten über der Datei wieder zeigen": "Снова показать панели над файлом",
-  "Leisten über der Datei ausblenden (mehr Platz für die Datei)": "Скрыть панели над файлом (больше места для файла)"
+  "Leisten über der Datei ausblenden (mehr Platz für die Datei)": "Скрыть панели над файлом (больше места для файла)",
+  "Seitenzahl eingeben und Enter drücken (Strg+G)": "Введите номер страницы и нажмите Enter (Ctrl+G)",
+  "Folie": "Слайд",
+  "Seite": "Страница"
 }

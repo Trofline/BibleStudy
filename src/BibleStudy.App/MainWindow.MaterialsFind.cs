@@ -226,6 +226,7 @@ public partial class MainWindow
     /// <summary>Keeps where the file is read (a little after scrolling stops).</summary>
     void MaterialScrolled()
     {
+        ShowCurrentPage();
         if (_matCurrent is not { } path || !string.Equals(_matSpotReady, path, StringComparison.OrdinalIgnoreCase)) return;
         _matSpotTimer ??= new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(800) };
         _matSpotTimer.Stop();

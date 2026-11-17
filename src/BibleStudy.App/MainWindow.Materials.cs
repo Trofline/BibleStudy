@@ -105,8 +105,8 @@ public partial class MainWindow
                 if (w.Indices.Contains(MaterialsTab) && w.Current == MaterialsTab) w.SelectAction?.Invoke(MaterialsTab);
         }
         compactBtn.Click += (_, _) => { _settings.MaterialsCompact = !_settings.MaterialsCompact; SaveSettings(); ApplyCompact(); };
-        var stripRow = new DockPanel { Children = { treeBtn, compactBtn, stripScroll } };
-        DockPanel.SetDock(treeBtn, Dock.Left); DockPanel.SetDock(compactBtn, Dock.Left);
+        var stripRow = new DockPanel { Children = { treeBtn, compactBtn, BuildPageBox(), stripScroll } };
+        DockPanel.SetDock(treeBtn, Dock.Left); DockPanel.SetDock(compactBtn, Dock.Left); DockPanel.SetDock(_matPageBox, Dock.Right);
         var rightTop = new StackPanel { Children = { stripRow, _matActions, _matRefs, _matInfo, BuildFindBar() } };
         var right = new DockPanel { Margin = new(8, 12, 14, 12) };
         DockPanel.SetDock(rightTop, Dock.Top); right.Children.Add(rightTop); right.Children.Add(_matViewer);
@@ -344,6 +344,7 @@ public partial class MainWindow
     {
         if (!_matBuilt) return;
         _matActions.Children.Clear(); _matRefs.Children.Clear(); _matInfo.Text = "";
+        _matPageBox.IsVisible = false;
         _matView.Children.Clear();
         _matView.Children.Add(new TextBlock { Text = L("Materialien"), Classes = { "h2" }, Margin = new(0, 20, 0, 4) });
         _matView.Children.Add(new TextBlock
@@ -431,6 +432,7 @@ public partial class MainWindow
             toc.Click += (_, _) => ShowContentsFlyout(toc, contents, path, version);
             _matActions.Children.Insert(1, toc);
         }
+        SetMaterialPages(doc, isPdf && !_matPdfText, path, version);
         if (isPdf && !_matPdfText) { await ShowPdfPagesAsync(path, 0, version); MaterialArrived(path, version); return; }
         var textNo = 0;
         foreach (var b in doc.Blocks)
@@ -701,6 +703,13 @@ public partial class MainWindow
         {
             e.Handled = true;
             OpenFindBar(_matSelected?.SelectedText is { Length: > 0 and < 60 } sel ? sel : null);
+            return;
+        }
+        // Ctrl+G: go to a page of the open file
+        if (!e.Handled && e.Key == Key.G && e.KeyModifiers == Mods.Ctrl && _matBuilt && _matPageBox.IsVisible && MaterialsHost.IsEffectivelyVisible && TabActive(MaterialsTab))
+        {
+            e.Handled = true;
+            _matPageInput.Focus(); _matPageInput.SelectAll();
             return;
         }
         if (e.Handled || e.Key != Key.Tab || e.KeyModifiers is not (KeyModifiers.None or KeyModifiers.Shift) || !_matBuilt) return;

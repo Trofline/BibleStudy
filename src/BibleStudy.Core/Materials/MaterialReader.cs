@@ -175,12 +175,25 @@ public static partial class MaterialReader
                 if (id is not null && rels.TryGetValue(id, out var target) && Picture(zip, target, mediaDir) is { } pic) blocks.Add(pic);
         }
         var inToc = 0;   // inside the field of a table of contents (it may span many paragraphs)
+        // the pages: Word notes where each page began when it last laid the file out (w:lastRenderedPageBreak); a file never laid out by Word
+        // has only its manual page breaks. Each new page gets a line "Seite n", so one can jump to a page as in a PDF.
+        var rendered = body.Descendants(W + "lastRenderedPageBreak").Any();
+        var page = 1;
+        void PageBreaks(XElement e)
+        {
+            var breaks = rendered ? e.Descendants(W + "lastRenderedPageBreak").Count()
+                : e.Descendants(W + "br").Count(b => (string?)b.Attribute(W + "type") == "page") + (e.Element(W + "pPr")?.Element(W + "pageBreakBefore") is { } pb && (string?)pb.Attribute(W + "val") is not ("0" or "false") ? 1 : 0);
+            if (breaks == 0 || blocks.Count == 0) return;
+            page += breaks;
+            blocks.Add(Block.Of(BlockKind.Page, L("Seite {0}", page)));
+        }
         void Walk(XElement parent)
         {
             foreach (var e in parent.Elements())
             {
                 if (e.Name == W + "p")
                 {
+                    PageBreaks(e);
                     if (DocxParagraph(e, ref inToc) is { } b) blocks.Add(b);
                     Pictures(e);
                 }
@@ -188,6 +201,7 @@ public static partial class MaterialReader
                 {
                     foreach (var row in e.Elements(W + "tr"))
                     {
+                        PageBreaks(row);
                         var cells = row.Elements(W + "tc").Select(c => Spaces().Replace(string.Join(" ", c.Descendants(W + "p").Select(p => string.Concat(p.Descendants(W + "t").Select(t => t.Value)))), " ").Trim()).ToList();
                         if (cells.Any(c => c.Length > 0)) blocks.Add(Block.Of(BlockKind.TableRow, string.Join("  │  ", cells)));
                     }
@@ -199,6 +213,7 @@ public static partial class MaterialReader
             }
         }
         Walk(body);
+        if (page > 1) blocks.Insert(0, Block.Of(BlockKind.Page, L("Seite {0}", 1)));
         return blocks;
     }
 
@@ -288,8 +303,16 @@ public static partial class MaterialReader
         using (var s = entry.Open()) doc = XDocument.Load(s);
         XNamespace text = "urn:oasis:names:tc:opendocument:xmlns:text:1.0", draw = "urn:oasis:names:tc:opendocument:xmlns:drawing:1.0", xlink = "http://www.w3.org/1999/xlink";
         var blocks = new List<Block>();
+        var page = 1;
         foreach (var e in doc.Descendants().Where(e => (e.Name == text + "p" || e.Name == text + "h") && !e.Ancestors(text + "note").Any()))
         {
+            // where LibreOffice last saw a page begin: a soft page break just before this paragraph (or its list) or inside it
+            var before = e.ElementsBeforeSelf().LastOrDefault() ?? e.Ancestors().TakeWhile(a => a.Name != text + "p" && a.Name != text + "h").Select(a => a.ElementsBeforeSelf().LastOrDefault()).FirstOrDefault(x => x is not null);
+            if ((before?.Name == text + "soft-page-break" || e.Elements(text + "soft-page-break").Any()) && blocks.Count > 0)
+            {
+                page++;
+                blocks.Add(Block.Of(BlockKind.Page, L("Seite {0}", page)));
+            }
             var line = Spaces().Replace(string.Concat(e.DescendantNodes().OfType<XText>().Where(t => !t.Ancestors(draw + "frame").Any()).Select(t => t.Value)), " ").Trim();
             if (line.Length > 0)
             {
@@ -301,6 +324,7 @@ public static partial class MaterialReader
             foreach (var img in e.Descendants(draw + "image").Where(i => i.Ancestors().First(x => x.Name == text + "p" || x.Name == text + "h") == e))
                 if ((string?)img.Attribute(xlink + "href") is { } href && Picture(zip, Normalize(href), mediaDir) is { } pic) blocks.Add(pic);
         }
+        if (page > 1) blocks.Insert(0, Block.Of(BlockKind.Page, L("Seite {0}", 1)));
         return blocks;
     }
 

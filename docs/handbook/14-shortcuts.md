@@ -96,6 +96,7 @@ The column colors of the Parallel view have no keyboard shortcut; they're found 
 | In the colors: arrow keys, Enter, Esc | Pick a color, apply it, close |
 | Tab / Shift+Tab (Materials) | Next / previous open file |
 | Ctrl+F (materials) | Search the open file; Enter / Shift+Enter: next / previous place |
+| Ctrl+G (materials) | Go to a page of the open file |
 
 ## 14.6 Projector window
 

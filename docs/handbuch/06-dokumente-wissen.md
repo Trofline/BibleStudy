@@ -125,6 +125,10 @@ Neue, umbenannte oder gelöschte Dateien im Ordner erscheinen von selbst; eine g
 
 **Suchen:** Das Feld **„In allen Materialien suchen …“** über dem Baum durchsucht alle Dateien des Ordners (Groß- und Kleinschreibung und Umlaute sind egal: „holle“ findet auch „Hölle“). Die Treffer stehen nach Dateien geordnet mit einem Stück Text; ein Klick öffnet die Datei an genau dieser Stelle. **Strg+F** sucht in der geöffneten Datei: Enter springt zur nächsten Stelle, Umschalt+Enter zur vorigen, Esc schließt die Leiste. Bei einem PDF in Seitenbildern wechselt Strg+F zum Text, damit die Wörter markiert werden können.
 
+**Zu einer Seite springen:** Rechts neben den geöffneten Dateien steht **„Seite [ 1 ] / 40“**. Seitenzahl eingeben und Enter drücken, oder **Strg+G**. Beim Scrollen zeigt das Feld, auf welcher Seite du bist. Das geht bei PDF, PowerPoint (Folien) und bei Word- und OpenDocument-Dateien; dort gelten die Seiten so, wie Word bzw. LibreOffice sie beim letzten Speichern aufgeteilt hat.
+
+**Mehr Platz:** Der Knopf mit den vier Ecken neben der Ordnerliste blendet die Leisten über der Datei aus (Überschrift, Dateiname, Bibelstellen); noch ein Klick holt sie zurück.
+
 **Vorschau:** Ruht die Maus auf einer Bibelstelle im Text, erscheint der Vers in der gewählten Übersetzung, ohne dass du springen musst.
 
 **Markieren und Notizen:** Text auswählen und **rechts klicken** → „Markieren“ (eine Farbe) oder „Markieren mit Notiz …“. Die Notiz steht dann unter dem Absatz; ein Klick darauf ändert sie. Ein Rechtsklick auf eine Markierung bietet Notiz, Farbe und Entfernen. **Die Datei selbst bleibt unverändert:** Markierungen und Notizen liegen im Vault (und damit auch in den Sicherungen) zusammen mit den markierten Wörtern. Ändert sich die Datei oder wird sie verschoben, findet das Programm die Wörter wieder. Der Knopf **„Meine Markierungen“** über der Datei listet alle Markierungen der Datei zum Hinspringen.

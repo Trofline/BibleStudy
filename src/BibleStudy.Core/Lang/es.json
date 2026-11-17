@@ -3367,5 +3367,8 @@
   "Bild fehlt: {0}": "Falta la imagen: {0}",
   "Gleich noch einmal klicken, dann schließt das Programm sofort.": "Vuelve a hacer clic en un momento y el programa se cerrará enseguida.",
   "Leisten über der Datei wieder zeigen": "Volver a mostrar las barras sobre el archivo",
-  "Leisten über der Datei ausblenden (mehr Platz für die Datei)": "Ocultar las barras sobre el archivo (más espacio para el archivo)"
+  "Leisten über der Datei ausblenden (mehr Platz für die Datei)": "Ocultar las barras sobre el archivo (más espacio para el archivo)",
+  "Seitenzahl eingeben und Enter drücken (Strg+G)": "Escribe un número de página y pulsa Intro (Ctrl+G)",
+  "Folie": "Diapositiva",
+  "Seite": "Página"
 }
