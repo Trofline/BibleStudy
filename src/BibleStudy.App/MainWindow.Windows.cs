@@ -124,6 +124,7 @@ public partial class MainWindow
             for (var k = 0; k < items.Count; k++) items[k].Item3.IsVisible = indices[k] == index;
             foreach (var b in pills.Children.OfType<Button>()) b.Classes.Set("active", (int)b.Tag! == index);
             hint.Text = group?.Tabs.FirstOrDefault(t => t.Index == index)?.Hint ?? "";
+            pills.IsVisible = hint.IsVisible = !(index == MaterialsTab && _settings.MaterialsCompact);   // the materials can fold their heading away
             TabShown(index);
             if (d.Win is null && _activeWork == key) SideForSettings();
         }

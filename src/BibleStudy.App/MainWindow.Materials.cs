@@ -92,8 +92,21 @@ public partial class MainWindow
         _matScroll.ScrollChanged += (_, _) => MaterialScrolled();
         // the folder list can be hidden, so the file gets the whole width (in the split view above all); the button stays beside the tabs
         var treeBtn = new Button { Classes = { "tool" }, Width = 32, Height = 32, Margin = new(0, 0, 6, 4), VerticalAlignment = VerticalAlignment.Top, Content = new Icon { Data = Geometry.Parse("M4 4h16v16H4z M10 4v16"), IconSize = 16 } };
-        var stripRow = new DockPanel { Children = { treeBtn, stripScroll } };
-        DockPanel.SetDock(treeBtn, Dock.Left);
+        // the bars above the file can be folded away too, so the file gets the whole height
+        var compactBtn = new Button { Classes = { "tool" }, Width = 32, Height = 32, Margin = new(0, 0, 6, 4), VerticalAlignment = VerticalAlignment.Top, Content = new Icon { Data = Geometry.Parse("M8 3H5a2 2 0 0 0-2 2v3 M21 8V5a2 2 0 0 0-2-2h-3 M3 16v3a2 2 0 0 0 2 2h3 M16 21h3a2 2 0 0 0 2-2v-3"), IconSize = 16 } };
+        void ApplyCompact()
+        {
+            var compact = _settings.MaterialsCompact;
+            _matActions.IsVisible = _matRefs.IsVisible = _matInfo.IsVisible = !compact;
+            compactBtn.Classes.Set("active", compact);
+            ToolTip.SetTip(compactBtn, compact ? L("Leisten über der Datei wieder zeigen") : L("Leisten über der Datei ausblenden (mehr Platz für die Datei)"));
+            // the heading of the work area (Materialien · Live · Archiv and its line of help) goes as well
+            foreach (var w in _windows.Values)
+                if (w.Indices.Contains(MaterialsTab) && w.Current == MaterialsTab) w.SelectAction?.Invoke(MaterialsTab);
+        }
+        compactBtn.Click += (_, _) => { _settings.MaterialsCompact = !_settings.MaterialsCompact; SaveSettings(); ApplyCompact(); };
+        var stripRow = new DockPanel { Children = { treeBtn, compactBtn, stripScroll } };
+        DockPanel.SetDock(treeBtn, Dock.Left); DockPanel.SetDock(compactBtn, Dock.Left);
         var rightTop = new StackPanel { Children = { stripRow, _matActions, _matRefs, _matInfo, BuildFindBar() } };
         var right = new DockPanel { Margin = new(8, 12, 14, 12) };
         DockPanel.SetDock(rightTop, Dock.Top); right.Children.Add(rightTop); right.Children.Add(_matViewer);
@@ -135,6 +148,7 @@ public partial class MainWindow
         _matApplyTree = ApplyTree;
         treeBtn.Click += (_, _) => { _settings.MaterialsTreeHidden = !_settings.MaterialsTreeHidden; SaveSettings(); ApplyTree(); };
         ApplyTree();
+        ApplyCompact();
 
         RefreshMaterialsTree();
         _settings.MaterialsOpen.RemoveAll(p => !File.Exists(p));

@@ -117,6 +117,8 @@ public sealed class AppSettings
     public List<string> MaterialsCollapsed { get; set; } = [];
     /// <summary>The folder list of the materials is hidden, so the file has the whole width.</summary>
     public bool MaterialsTreeHidden { get; set; }
+    /// <summary>The bars above a file of the materials (heading, name and buttons, Bible references) are folded away, so the file gets the whole height.</summary>
+    public bool MaterialsCompact { get; set; }
     /// <summary>Where each file of the materials was last read (by its path), so it opens there again.</summary>
     public Dictionary<string, MaterialSpot> MaterialsSpots { get; set; } = new(StringComparer.OrdinalIgnoreCase);
     public bool SelectWholeWords { get; set; } = true;   // a selection always starts and ends at word borders

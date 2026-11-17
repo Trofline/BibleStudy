@@ -3365,5 +3365,7 @@
   "Bild einfügen": "Insertar imagen",
   "Das Bild ließ sich nicht laden: {0}": "No se pudo cargar la imagen: {0}",
   "Bild fehlt: {0}": "Falta la imagen: {0}",
-  "Gleich noch einmal klicken, dann schließt das Programm sofort.": "Vuelve a hacer clic en un momento y el programa se cerrará enseguida."
+  "Gleich noch einmal klicken, dann schließt das Programm sofort.": "Vuelve a hacer clic en un momento y el programa se cerrará enseguida.",
+  "Leisten über der Datei wieder zeigen": "Volver a mostrar las barras sobre el archivo",
+  "Leisten über der Datei ausblenden (mehr Platz für die Datei)": "Ocultar las barras sobre el archivo (más espacio para el archivo)"
 }

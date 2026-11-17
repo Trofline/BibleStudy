@@ -3365,5 +3365,7 @@
   "Bild einfügen": "Insert picture",
   "Das Bild ließ sich nicht laden: {0}": "The picture could not be loaded: {0}",
   "Bild fehlt: {0}": "Picture missing: {0}",
-  "Gleich noch einmal klicken, dann schließt das Programm sofort.": "Click again in a moment, then the program closes at once."
+  "Gleich noch einmal klicken, dann schließt das Programm sofort.": "Click again in a moment, then the program closes at once.",
+  "Leisten über der Datei wieder zeigen": "Show the bars above the file again",
+  "Leisten über der Datei ausblenden (mehr Platz für die Datei)": "Hide the bars above the file (more room for the file)"
 }

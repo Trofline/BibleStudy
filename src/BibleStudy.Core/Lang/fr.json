@@ -3365,5 +3365,7 @@
   "Bild einfügen": "Insérer une image",
   "Das Bild ließ sich nicht laden: {0}": "L'image n'a pas pu être chargée : {0}",
   "Bild fehlt: {0}": "Image manquante : {0}",
-  "Gleich noch einmal klicken, dann schließt das Programm sofort.": "Cliquez encore dans un instant, le programme se fermera alors tout de suite."
+  "Gleich noch einmal klicken, dann schließt das Programm sofort.": "Cliquez encore dans un instant, le programme se fermera alors tout de suite.",
+  "Leisten über der Datei wieder zeigen": "Afficher à nouveau les barres au-dessus du fichier",
+  "Leisten über der Datei ausblenden (mehr Platz für die Datei)": "Masquer les barres au-dessus du fichier (plus de place pour le fichier)"
 }
