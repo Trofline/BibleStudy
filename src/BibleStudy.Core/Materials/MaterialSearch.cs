@@ -63,11 +63,11 @@ public static class MaterialSearch
         {
             if (!Searchable(b)) continue;
             var text = b.Text;
-            foreach (var (index, length, first) in DocumentLinks.VerseSpans(text))
+            foreach (var found in DocumentLinks.Spans(text))
             {
+                var (index, length, first) = (found.Index, found.Length, found.Ref);
                 if (first.Book != verse.Book || first.Chapter != verse.Chapter) continue;
-                var end = DocumentLinks.VerseRanges(text.Substring(index, length)).FirstOrDefault().EndVerse;
-                if (verse.Verse < first.Verse || verse.Verse > Math.Max(first.Verse, end)) continue;
+                if ((verse.Verse < first.Verse || verse.Verse > found.EndInChapter) && !found.MoreVerses.Contains(verse.Verse)) continue;
                 hits.Add(new MaterialHit(path, n, index, length, Snippet(text, index, length), page));
                 break;   // one hit per paragraph is enough
             }

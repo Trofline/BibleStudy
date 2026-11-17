@@ -570,11 +570,11 @@ public partial class MainWindow
     void AddPlain(InlineBuilder b, string text, bool bold, bool italic)
     {
         var pos = 0;
-        foreach (var (index, length, r) in DocumentLinks.VerseSpans(text))
+        foreach (var found in DocumentLinks.Spans(text))
         {
+            var (index, length, r, end) = (found.Index, found.Length, found.Ref, found.EndInChapter);
             if (index > pos) AddRun(b, text[pos..index], bold, italic);
             var span = text.Substring(index, length);
-            var end = DocumentLinks.VerseRanges(span).FirstOrDefault().EndVerse;
             AddLink(b, span, bold, italic, () => _ = GoToRangeAsync(r, end));
             pos = index + length;
         }

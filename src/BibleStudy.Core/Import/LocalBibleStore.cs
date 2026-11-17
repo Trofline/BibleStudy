@@ -95,13 +95,49 @@ public sealed class LocalBibleStore : SqliteDb, IBibleProvider
         {
             c.Parameters.AddWithValue("$t", translationId); c.Parameters.AddWithValue("$b", bookId); c.Parameters.AddWithValue("$c", chapter);
         }, r => new ChapterHeading(r.GetInt32(0), r.GetString(1), r.GetInt32(2)));
-        return Task.FromResult(new Chapter(translationId, bookId, chapter, verses, notes, headings.Count > 0 ? headings : null));
+        // some files put the parallel passages of a section at the start of its first verse ("2Kö 20,12-19; 2Chr 32,25-26 Zu jener Zeit …"):
+        // they become a footnote of the verse, so the verse reads as the text it is
+        var allNotes = notes.ToList();
+        for (var i = 0; i < verses.Count; i++)
+        {
+            var v = verses[i];
+            if (v.Segments.Count == 0 || v.Segments[0].NoteId is not null || LeadingReferences(v.Segments[0].Text) is not { } split) continue;
+            var id = 100_000 + v.Number;
+            verses[i] = v with { Segments = [new Segment("", false, null, id), v.Segments[0] with { Text = split.Text }, .. v.Segments.Skip(1)] };
+            allNotes.Add(new Footnote(id, v.Number, split.References));
+        }
+        return Task.FromResult(new Chapter(translationId, bookId, chapter, verses, allNotes, headings.Count > 0 ? headings : null));
+    }
+
+    /// <summary>
+    /// Bible references at the very start of a verse, before its text ("2Kö 20,12-19; 2Chr 32,25-26 Zu jener Zeit"): the references and the rest.
+    /// Null when the verse does not start so, or nothing but references would be left.
+    /// </summary>
+    public static (string References, string Text)? LeadingReferences(string text)
+    {
+        var pos = 0;
+        foreach (var span in Models.DocumentLinks.Spans(text))
+        {
+            if (span.Index != pos) break;
+            pos = span.Index + span.Length;
+            var next = pos;
+            while (next < text.Length && text[next] is ';' or ',' or ' ') next++;
+            if (next == pos) break;
+            pos = next;
+        }
+        if (pos == 0) return null;
+        var refs = text[..pos].TrimEnd(' ', ';', ',');
+        var rest = text[pos..].TrimStart();
+        // the text of the verse has to follow: a word beginning with a capital letter (or a quotation mark)
+        if (rest.Length == 0 || !(char.IsUpper(rest[0]) || rest[0] is '„' or '"' or '«' or '»' or '‚' or '(')) return null;
+        return (refs, rest);
     }
 
     public async Task<IReadOnlyList<VerseText>> GetAllVersesAsync(string translationId, CancellationToken ct = default)
     {
         var rows = Query("SELECT book,chapter,verse,segs FROM verses WHERE translation=$t", c => c.Parameters.AddWithValue("$t", translationId),
-            r => new VerseText(r.GetString(0), r.GetInt32(1), r.GetInt32(2), new Verse(r.GetInt32(2), FromJson(r.GetString(3))).Text));
+            r => new VerseText(r.GetString(0), r.GetInt32(1), r.GetInt32(2), new Verse(r.GetInt32(2), FromJson(r.GetString(3))).Text))
+            .Select(v => LeadingReferences(v.Text) is { } split ? v with { Text = split.Text } : v).ToList();   // parallel passages before a verse are no words of it (see GetChapterAsync)
         // Bible order, whatever order the imported file had (search hits and the concordance are listed in this order)
         var order = BookData.UsfmIds.Select((b, i) => (b, i)).ToDictionary(x => x.b, x => x.i);
         return await Task.FromResult<IReadOnlyList<VerseText>>(rows.OrderBy(v => order.GetValueOrDefault(v.BookId, 99)).ThenBy(v => v.Chapter).ThenBy(v => v.Number).ToList());

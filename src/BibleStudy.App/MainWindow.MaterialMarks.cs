@@ -44,11 +44,7 @@ public partial class MainWindow
         // found and chosen words keep their letters readable: a light tint of the accent, not a full bar
         if (Res("BsAccent") is ISolidColorBrush accent) { tb.SelectionBrush = new SolidColorBrush(accent.Color, 0.3); tb.SelectionForegroundBrush = Res("BsText"); }
         var whole = string.Concat(b.Spans.Select(s => s.Text));
-        var links = DocumentLinks.VerseSpans(whole).Select(v =>
-        {
-            var end = DocumentLinks.VerseRanges(whole.Substring(v.Index, v.Length)).FirstOrDefault().EndVerse;
-            return (Start: v.Index, End: v.Index + v.Length, v.Ref, To: end);
-        }).ToList();
+        var links = DocumentLinks.Spans(whole).Select(v => (Start: v.Index, End: v.Index + v.Length, v.Ref, To: v.EndInChapter)).ToList();
         var marks = _matMarks.Where(m => m.TextNo == textNo && m.Start + m.Mark.Text.Length <= whole.Length).Select(m => (Start: m.Start, End: m.Start + m.Mark.Text.Length, m.Mark)).ToList();
 
         // the text is cut wherever a span, a link or a mark begins or ends; each piece gets its looks

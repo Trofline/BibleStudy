@@ -114,58 +114,76 @@ public static partial class DocumentLinks
             : body;
     }
 
-    /// <summary>Verse references in the text, first verse of a range, in order of appearance without duplicates.</summary>
+    /// <summary>Verse references in the text, first verse of a range, in order of appearance without duplicates (each verse of a list "4,13.20" counts).</summary>
     public static IReadOnlyList<VerseRef> VerseRefs(string body)
     {
         var result = new List<VerseRef>();
-        foreach (var (m, _, book) in Found(body))
+        foreach (var s in Spans(body))
         {
-            var r = new VerseRef(book, int.Parse(m.Groups["c"].Value), int.Parse(m.Groups["v"].Value));
-            if (!result.Contains(r)) result.Add(r);
+            if (!result.Contains(s.Ref)) result.Add(s.Ref);
+            foreach (var v in s.MoreVerses) if (new VerseRef(s.Ref.Book, s.Ref.Chapter, v) is var r && !result.Contains(r)) result.Add(r);
         }
         return result;
     }
 
-    /// <summary>Verse references with their last verse ("Joh 3,14-18" → 3,14 to 18; a single verse ends where it starts).</summary>
-    public static IReadOnlyList<(VerseRef First, int EndVerse)> VerseRanges(string body)
-    {
-        var result = new List<(VerseRef, int)>();
-        foreach (var (m, _, book) in Found(body))
-        {
-            var first = new VerseRef(book, int.Parse(m.Groups["c"].Value), int.Parse(m.Groups["v"].Value));
-            result.Add((first, m.Groups["e"].Success ? Math.Max(first.Verse, int.Parse(m.Groups["e"].Value)) : first.Verse));
-        }
-        return result;
-    }
+    /// <summary>
+    /// Verse references with their last verse ("Joh 3,14-18" → 3,14 to 18; a single verse ends where it starts). A range into a later chapter
+    /// ("Jes 44,27–45,3") runs to the end of the first chapter here (999).
+    /// </summary>
+    public static IReadOnlyList<(VerseRef First, int EndVerse)> VerseRanges(string body) => Spans(body).Select(s => (s.Ref, s.EndInChapter)).ToList();
 
     /// <summary>Where verse references stand in the text: position, length and the (first) verse, for making them clickable.</summary>
-    public static IReadOnlyList<(int Index, int Length, VerseRef Ref)> VerseSpans(string text)
+    public static IReadOnlyList<(int Index, int Length, VerseRef Ref)> VerseSpans(string text) => Spans(text).Select(s => (s.Index, s.Length, s.Ref)).ToList();
+
+    /// <summary>A reference in a text: where it stands, its first verse, where it ends (chapter and verse) and the further verses of a list ("4,13.20.22" → 20, 22).</summary>
+    public sealed record VerseSpan(int Index, int Length, VerseRef Ref, int EndChapter, int EndVerse, IReadOnlyList<int> MoreVerses)
     {
-        var result = new List<(int, int, VerseRef)>();
-        foreach (var (m, lead, book) in Found(text))
-            result.Add((m.Index + lead, m.Length - lead, new VerseRef(book, int.Parse(m.Groups["c"].Value), int.Parse(m.Groups["v"].Value))));
+        /// <summary>The last verse in the first chapter (999: the range goes on into a later chapter).</summary>
+        public int EndInChapter => EndChapter > Ref.Chapter ? 999 : Math.Max(Ref.Verse, EndVerse);
+    }
+
+    /// <summary>
+    /// All the references of a text, in the ways they are written: "Joh 3,16", "1Kö 8,44–48", "Jes 44,27–45,3", "Dan 2,4b–7,28", "Dan 4,13.20.22",
+    /// and those that leave out the book because it was just named: "Jer 50,38; 51,30–32" and "(4,13.20)" after "Dan 4,10" in the same line.
+    /// A number in front that does not belong to the book ("Seite 4 Joh 3,16") is left out.
+    /// </summary>
+    public static IReadOnlyList<VerseSpan> Spans(string text)
+    {
+        var result = new List<VerseSpan>();
+        foreach (Match m in Verse().Matches(text))
+        {
+            var lead = 0;
+            if (!TryName(m.Groups["b"].Value, out var book))
+            {
+                if (Regex.Match(m.Groups["b"].Value, @"^[1-5]\s?\.?\s?") is { Success: true, Length: > 0 } l && TryName(m.Groups["b"].Value[l.Length..], out book)) lead = l.Length;
+                else continue;
+            }
+            result.Add(SpanOf(m, m.Index + lead, m.Length - lead, book));
+        }
+        // places without a book take the book of the reference just before them in the same line
+        foreach (Match m in BareVerse().Matches(text))
+        {
+            var start = m.Index + m.Groups["sep"].Length;
+            var end = m.Index + m.Length;
+            if (result.Any(r => start < r.Index + r.Length && end > r.Index)) continue;
+            if (result.LastOrDefault(r => r.Index + r.Length <= start) is not { } before || text.AsSpan(before.Index, start - before.Index).IndexOfAny('\n', '\r') >= 0) continue;
+            // "(3,5 Millionen)" is no reference: one in brackets has to end there (or go on with ";" or ","); after ";" or "vgl." anything goes
+            var next = end < text.Length ? text[end] : ')';
+            var closed = next is ')' or ';' or ',' or ']' or '\n' or '\r' || (next is '.' or ':' && (end + 1 >= text.Length || !char.IsDigit(text[end + 1])));
+            if (!closed && m.Groups["sep"].Value.TrimStart().StartsWith('(')) continue;
+            result.Add(SpanOf(m, start, end - start, before.Ref.Book));
+        }
+        result.Sort((a, b) => a.Index.CompareTo(b.Index));
         return result;
     }
 
-    /// <summary>
-    /// The references in a text with their book. A number in front that does not belong to the book ("Seite 4 Joh 3,16") is left out:
-    /// Lead is how many characters of the match stand before the reference.
-    /// </summary>
-    static IEnumerable<(Match Match, int Lead, string Book)> Found(string text)
+    static VerseSpan SpanOf(Match m, int index, int length, string book)
     {
-        foreach (Match m in Verse().Matches(text))
-        {
-            if (TryBook(m, out var book)) yield return (m, 0, book);
-            else if (Regex.Match(m.Groups["b"].Value, @"^[1-5]\s?\.?\s?") is { Success: true, Length: > 0 } lead && TryName(m.Groups["b"].Value[lead.Length..], out book))
-                yield return (m, lead.Length, book);
-        }
+        var c = int.Parse(m.Groups["c"].Value); var v = int.Parse(m.Groups["v"].Value);
+        var endChapter = m.Groups["ec"].Success ? Math.Max(c, int.Parse(m.Groups["ec"].Value)) : c;
+        var endVerse = m.Groups["e"].Success ? int.Parse(m.Groups["e"].Value) : v;
+        return new VerseSpan(index, length, new VerseRef(book, c, v), endChapter, endVerse, m.Groups["more"].Captures.Select(x => int.Parse(x.Value)).ToList());
     }
-
-    /// <summary>
-    /// The book of a reference found in running text. Short names that are everyday words as well ("mal 3,5", "hab 3,5", "am 2,4")
-    /// count only when written with a capital letter, as a book name is.
-    /// </summary>
-    static bool TryBook(Match m, out string book) => TryName(m.Groups["b"].Value, out book);
 
     static bool TryName(string raw, out string book)
     {
@@ -208,6 +226,16 @@ public static partial class DocumentLinks
             ("Gal", "GAL"), ("Eph", "EPH"), ("Phil", "PHP"), ("Kol", "COL"), ("1Thess", "1TH"), ("2Thess", "2TH"), ("1Tim", "1TI"), ("2Tim", "2TI"), ("Tit", "TIT"), ("Heb", "HEB"),
             ("Jak", "JAS"), ("1Petr", "1PE"), ("2Petr", "2PE"), ("1Joh", "1JN"), ("2Joh", "2JN"), ("3Joh", "3JN"), ("Offb", "REV"), ("Apk", "REV"), ("Rev", "REV"),
             ("Hebr", "HEB"), ("Koh", "ECC"), ("Hi", "JOB"), ("Esr", "EZR"), ("Obd", "OBA"), ("Zef", "ZEP"), ("Am", "AMO"), ("Mi", "MIC"),   // more of the usual German short forms (Loccum list)
+            // and the other ways people write them: "1Kö", "1Kg", "1Mo", "1Chron", English short forms …
+            ("1Kö", "1KI"), ("2Kö", "2KI"), ("1Kg", "1KI"), ("2Kg", "2KI"), ("1Kgs", "1KI"), ("2Kgs", "2KI"), ("1Ki", "1KI"), ("2Ki", "2KI"), ("1Kon", "1KI"), ("2Kon", "2KI"),
+            ("1Mo", "GEN"), ("2Mo", "EXO"), ("3Mo", "LEV"), ("4Mo", "NUM"), ("5Mo", "DEU"), ("1Mos", "GEN"), ("2Mos", "EXO"), ("3Mos", "LEV"), ("4Mos", "NUM"), ("5Mos", "DEU"),
+            ("1Sa", "1SA"), ("2Sa", "2SA"), ("1Ch", "1CH"), ("2Ch", "2CH"), ("1Chron", "1CH"), ("2Chron", "2CH"), ("Esth", "EST"), ("Ijob", "JOB"),
+            ("Psa", "PSA"), ("Psalmen", "PSA"), ("Prov", "PRO"), ("Ecc", "ECC"), ("Eccl", "ECC"), ("Song", "SNG"), ("Isa", "ISA"), ("Lam", "LAM"), ("Ez", "EZK"), ("Ezek", "EZK"),
+            ("Jon", "JON"), ("Mich", "MIC"), ("Zeph", "ZEP"), ("Sach", "ZEC"), ("Zech", "ZEC"), ("Mat", "MAT"), ("Mrk", "MRK"), ("Luk", "LUK"),
+            ("Act", "ACT"), ("Rö", "ROM"), ("1Ko", "1CO"), ("2Ko", "2CO"), ("1Cor", "1CO"), ("2Cor", "2CO"), ("Phl", "PHP"), ("Php", "PHP"), ("Col", "COL"),
+            ("1Th", "1TH"), ("2Th", "2TH"), ("1Thes", "1TH"), ("2Thes", "2TH"), ("1Ti", "1TI"), ("2Ti", "2TI"), ("Phm", "PHM"), ("Philem", "PHM"), ("Jas", "JAS"),
+            ("1Pe", "1PE"), ("2Pe", "2PE"), ("1Pet", "1PE"), ("2Pet", "2PE"), ("1Jo", "1JN"), ("2Jo", "2JN"), ("3Jo", "3JN"), ("1Jn", "1JN"), ("2Jn", "2JN"), ("3Jn", "3JN"),
+            ("Jude", "JUD"), ("Offbg", "REV"), ("Offenb", "REV"),
         }) map.TryAdd(Normalize(alt), id);
         return map;
     }
@@ -215,7 +243,14 @@ public static partial class DocumentLinks
     [GeneratedRegex(@"\[\[(?:#(?<id>\d+):)?(?<t>[^\]|#]*)(?:[|#](?<a>[^\]]*))?\]\]")] private static partial Regex Wiki();
     [GeneratedRegex("<!--.*?-->", RegexOptions.Singleline)] private static partial Regex Comment();
 
+    // chapter,verse with an optional letter (4b), a range in the chapter or into another one (44,27–45,3), a list of more verses (.20.22-23) and "f."/"ff."
+    const string Place = @"(?<c>\d{1,3})\s*[,:]\s*(?<v>\d{1,3})(?:[a-e](?!\p{L}))?(?:\s*[-–—]\s*(?:(?<ec>\d{1,3})\s*[,:]\s*)?(?<e>\d{1,3})(?:[a-e](?!\p{L}))?(?![,:]\s*\d))?(?:\.(?<more>\d{1,3})(?:[a-e](?!\p{L}))?(?:[-–]\d{1,3})?(?![\d,:]))*(?:\s?ff?\.(?!\p{L}))?";
+
     // a number before the book name goes up to 5: "4. Mose" and "5. Mose" are books of their own
-    [GeneratedRegex(@"(?<![\p{L}\d])(?<b>(?:[1-5]\s?\.?\s?)?\p{L}{1,20}\.?)\s*(?<c>\d{1,3})\s*[,:]\s*(?<v>\d{1,3})(?:\s*[-–]\s*(?<e>\d{1,3}))?")]
+    [GeneratedRegex(@"(?<![\p{L}\d])(?<b>(?:[1-5]\s?\.?\s?)?\p{L}{1,20}\.?)\s*" + Place)]
     private static partial Regex Verse();
+
+    // a place without a book right after "(", ";", "vgl.", "und" … (its book is that of the reference before it)
+    [GeneratedRegex(@"(?<sep>(?:[(;]|(?<![\p{L}])(?:vgl|siehe|s|und|sowie|bzw|auch|cf|see|and)\.?)\s*)(?<![\d,.:])" + Place)]
+    private static partial Regex BareVerse();
 }
