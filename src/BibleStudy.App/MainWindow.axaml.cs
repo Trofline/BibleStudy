@@ -628,6 +628,7 @@ public partial class MainWindow : AppWindow
             FlowDirection = t.TextDirection == "rtl" ? FlowDirection.RightToLeft : FlowDirection.LeftToRight,
         };
         RenderOptions.SetEdgeMode(tb, EdgeMode.Aliased);   // the backgrounds of neighbouring words meet without an anti-aliased seam (a dark line in a mark)
+        TextOptions.SetTextRenderingMode(tb, TextRenderingMode.SubpixelAntialias);   // ... but the letters stay smooth (without this, "aliased" makes them pixelated too)
         if (!foreign)
         {
             tb.Cursor = new Cursor(StandardCursorType.Ibeam);
