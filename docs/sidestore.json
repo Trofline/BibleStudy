@@ -18,6 +18,15 @@
       "category": "other",
       "versions": [
         {
+          "version": "1.9.15",
+          "buildVersion": "34",
+          "date": "2026-11-17",
+          "localizedDescription": "## New in 1.9.15\n**Kind of update:** Feature\n- **[Feature]** **Study in groups:** friends, a leader, questions, a shared pad, reactions and live highlights.\n- **[Feature]** **Voice and video on the PC:** push-to-talk, calls and camera while studying together.\n- **[Feature]** **Pictures in documents:** add pictures from files; they are kept inside the vault, shown in the reading view, printed, and saved with a Markdown export.\n- **[Feature]** **See everything at once:** \"Show all\" in the explorer, documents and marks of all vaults, and shared vaults whose content shows in every vault.\n- **[Feat",
+          "downloadURL": "https://github.com/Trofline/BibleStudy/releases/download/v1.9.15/BibleStudy-iOS-1.9.15.ipa",
+          "size": 60071926,
+          "minOSVersion": "15.0"
+        },
+        {
           "version": "1.9.14",
           "buildVersion": "33",
           "date": "2026-11-16",
