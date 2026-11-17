@@ -140,6 +140,14 @@ public static partial class DocumentLinks
     {
         /// <summary>The last verse in the first chapter (999: the range goes on into a later chapter).</summary>
         public int EndInChapter => EndChapter > Ref.Chapter ? 999 : Math.Max(Ref.Verse, EndVerse);
+
+        /// <summary>True when the reference takes in this verse: in its range (also one into a later chapter) or in its list.</summary>
+        public bool Covers(VerseRef verse)
+        {
+            if (verse.Book != Ref.Book || verse.Chapter < Ref.Chapter || verse.Chapter > Math.Max(Ref.Chapter, EndChapter)) return false;
+            if (verse.Chapter == Ref.Chapter) return verse.Verse >= Ref.Verse && verse.Verse <= EndInChapter || MoreVerses.Contains(verse.Verse);
+            return verse.Chapter < EndChapter || verse.Verse <= EndVerse;
+        }
     }
 
     /// <summary>
@@ -166,7 +174,8 @@ public static partial class DocumentLinks
             var start = m.Index + m.Groups["sep"].Length;
             var end = m.Index + m.Length;
             if (result.Any(r => start < r.Index + r.Length && end > r.Index)) continue;
-            if (result.LastOrDefault(r => r.Index + r.Length <= start) is not { } before || text.AsSpan(before.Index, start - before.Index).IndexOfAny('\n', '\r') >= 0) continue;
+            // the reference nearest before it (the list is not in order of the text here: places found by this loop come after all named ones)
+            if (result.Where(r => r.Index + r.Length <= start).MaxBy(r => r.Index) is not { } before || text.AsSpan(before.Index, start - before.Index).IndexOfAny('\n', '\r') >= 0) continue;
             // "(3,5 Millionen)" is no reference: one in brackets has to end there (or go on with ";" or ","); after ";" or "vgl." anything goes
             var next = end < text.Length ? text[end] : ')';
             var closed = next is ')' or ';' or ',' or ']' or '\n' or '\r' || (next is '.' or ':' && (end + 1 >= text.Length || !char.IsDigit(text[end + 1])));

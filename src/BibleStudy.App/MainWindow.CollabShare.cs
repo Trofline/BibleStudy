@@ -23,23 +23,60 @@ public partial class MainWindow
 
     // ---- sending ----------------------------------------------------------------------------------------------------------
 
-    async Task SendBlobAsync(string kind, string name, byte[] data, string done)
+    /// <summary>Sends data in pieces; <paramref name="done"/> null sends it quietly (no line in the log, as for the pictures of a document). False when the connection went.</summary>
+    async Task<bool> SendBlobAsync(string kind, string name, byte[] data, string? done)
     {
         var id = Guid.NewGuid().ToString("N")[..12];
         var parts = (int)Math.Max(1, (data.LongLength + PieceBytes - 1) / PieceBytes);
         var progress = new TextBlock { Classes = { "caption" }, TextWrapping = TextWrapping.Wrap };
-        AddCollabItem(progress);
+        if (done is not null) AddCollabItem(progress);
         CollabSend(new { t = "blob", id, kind, name, size = data.LongLength, parts });
 
         for (var n = 0; n < parts; n++)
         {
-            if (!CollabOpen) { progress.Text = L("Senden abgebrochen: die Verbindung ist getrennt."); return; }
+            if (!CollabOpen) { progress.Text = L("Senden abgebrochen: die Verbindung ist getrennt."); return false; }
             var len = (int)Math.Min(PieceBytes, data.LongLength - (long)n * PieceBytes);
             CollabSend(new { t = "part", id, n, data = Convert.ToBase64String(data, n * PieceBytes, len) });
             if (n % 8 == 0) progress.Text = L("Sende „{0}“ … {1} %", name, n * 100 / parts);
             await Task.Delay(n % 4 == 0 ? 15 : 2);   // gives the connection time; a burst of megabytes could overflow it
         }
-        progress.Text = done;
+        if (done is not null) progress.Text = done;
+        return true;
+    }
+
+    // ---- the pictures of a shared document ------------------------------------------------------------------------------
+
+    const long MaxSharedImage = 16L * 1024 * 1024;
+    static readonly string[] ImageMimes = ["image/png", "image/jpeg", "image/gif", "image/webp", "image/bmp"];
+    /// <summary>Pictures received for documents (by their id), until the document is saved; only the latest few are kept.</summary>
+    readonly Dictionary<string, (string Mime, byte[] Data)> _receivedImages = [];
+
+    /// <summary>The pictures a document shows, sent before it (each in pieces, as a quiet blob "image" named "id mime").</summary>
+    async Task SendDocImagesAsync(string body)
+    {
+        foreach (var id in DocImageRef().Matches(body).Select(m => m.Groups["id"].Value).Distinct().Take(40))
+        {
+            if (_vault.GetImage(id) is not { } img || img.Data.LongLength > MaxSharedImage) continue;
+            if (!await SendBlobAsync("image", id + " " + img.Mime, img.Data, null)) return;
+        }
+    }
+
+    /// <summary>A picture arrived: kept only when it is what its id says (the id is made from the picture itself) and of a known kind.</summary>
+    void ReceiveImage(string name, byte[] data)
+    {
+        var parts = name.Split(' ', 2);
+        if (parts.Length != 2 || !ImageMimes.Contains(parts[1])) return;
+        if (VaultStore.ImageId(data) != parts[0]) return;
+        if (_receivedImages.Count >= 60) _receivedImages.Remove(_receivedImages.Keys.First());
+        _receivedImages[parts[0]] = (parts[1], data);
+    }
+
+    /// <summary>The received pictures that a document shows go into the own vault (before the document is saved).</summary>
+    void KeepReceivedImages(string body)
+    {
+        foreach (Match m in DocImageRef().Matches(body))
+            if (_receivedImages.TryGetValue(m.Groups["id"].Value, out var img))
+                try { _vault.AddImage(img.Data, img.Mime); } catch (Exception ex) { ErrorLog.Write(ex); }
     }
 
     void ShowShareMarksMenu(Control anchor)
@@ -142,10 +179,11 @@ public partial class MainWindow
             case "blob":
             {
                 var id = Str("id", 16); var kind = Str("kind", 10); var size = Long("size"); var parts = (int)Long("parts");
-                if (id.Length == 0 || kind is not ("vault" or "marks" or "notes" or "voice") || size < 1 || size > MaxBlob || parts < 1 || parts != (size + PieceBytes - 1) / PieceBytes) return true;
+                if (id.Length == 0 || kind is not ("vault" or "marks" or "notes" or "voice" or "image") || size < 1 || size > MaxBlob || parts < 1 || parts != (size + PieceBytes - 1) / PieceBytes) return true;
+                if (kind == "image" && size > MaxSharedImage) return true;
                 if (_incoming.Count >= 3) return true;
                 var progress = new TextBlock { Classes = { "caption" }, TextWrapping = TextWrapping.Wrap, Text = L("{0} sendet etwas …", PeerWho) };
-                AddCollabItem(progress);
+                if (kind != "image") AddCollabItem(progress);   // the pictures of a document come quietly
                 _incoming[id] = (kind, Str("name", 100).Trim(), size, parts, new MemoryStream(), 0, progress);
                 return true;
             }
@@ -173,6 +211,7 @@ public partial class MainWindow
                         case "marks": ShowReceivedMarks(b.Name, data); break;
                         case "notes": ShowReceivedNotes(b.Name, data); break;
                         case "voice": ShowVoiceMessage(PeerWho, b.Name, data, false); break;
+                        case "image": ReceiveImage(b.Name, data); break;
                     }
                 }
                 return true;

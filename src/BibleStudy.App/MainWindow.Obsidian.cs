@@ -129,7 +129,7 @@ public partial class MainWindow
             md.Append("# ").Append(Label(n.Ref)).Append("\n\n");
             if (await Text(n.Ref, n.Ref.Verse) is { Length: > 0 } verse) md.Append("> ").Append(verse).Append("\n\n");
             md.Append(Linked(DocumentLinks.WithoutNumbers(n.Text).Trim())).Append('\n');
-            var from = notes.Where(o => o.Ref != n.Ref && DocumentLinks.VerseRanges(o.Text).Any(x => x.First.Book == n.Ref.Book && x.First.Chapter == n.Ref.Chapter && n.Ref.Verse >= x.First.Verse && n.Ref.Verse <= x.EndVerse)).ToList();
+            var from = notes.Where(o => o.Ref != n.Ref && BibleStudy.Core.Storage.OwnSearch.Mentions(o.Text, n.Ref)).ToList();
             if (from.Count > 0)
             {
                 md.Append("\n## ").Append(L("Erwähnt in Notizen zu:").TrimEnd(':')).Append("\n\n");

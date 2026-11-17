@@ -506,11 +506,12 @@ public partial class MainWindow
         foreach (var d in _vault.GetDocuments().Where(x => x.Path is null).Take(40))
         {
             var doc = d; var item = new MenuItem { Header = doc.Title };
-            item.Click += (_, _) =>
+            item.Click += async (_, _) =>
             {
                 // one message of the connection holds at most about 256 KB: a longer document is sent shortened, and the sender is told so
                 var shortened = doc.Body.Length > MaxSentBody;
                 var sent = DocumentLinks.WithoutNumbers(doc.Body);   // the numbers of the links mean something only in this vault
+                await SendDocImagesAsync(shortened ? sent[..Math.Min(sent.Length, MaxSentBody)] : sent);   // its pictures go first, so they are there when the document arrives
                 CollabSend(new { t = "doc", title = doc.Title, body = shortened ? sent[..Math.Min(sent.Length, MaxSentBody)] : sent });
                 AddCollabLog(L("Du hast das Dokument „{0}“ als Kopie gesendet.", doc.Title) + (shortened ? " " + L("Es war sehr lang und wurde gekürzt gesendet.") : ""), mine: true, system: true);
             };
@@ -640,7 +641,8 @@ public partial class MainWindow
         var save = new Button { Content = L("Als Kopie speichern"), Classes = { "tool" }, Width = double.NaN, Padding = new(10, 0), HorizontalAlignment = HorizontalAlignment.Left };
         save.Click += (_, _) =>
         {
-            // always a new document, tagged with its origin; nothing of the existing documents is touched
+            // always a new document, tagged with its origin; nothing of the existing documents is touched. Its pictures come into the vault with it.
+            KeepReceivedImages(body);
             _vault.AddDocument(title.Trim(), DocumentLinks.WithoutNumbers(body), null, false, [L("geteilt")]);
             save.IsEnabled = false; save.Content = L("Gespeichert ✓");
             RefreshDocs();
@@ -651,7 +653,7 @@ public partial class MainWindow
             Children =
             {
                 new TextBlock { Text = L("{0} sendet ein Dokument: „{1}“", PeerWho, title), FontWeight = FontWeight.SemiBold, TextWrapping = TextWrapping.Wrap },
-                new TextBlock { Text = Shorten(body.ReplaceLineEndings(" ").Trim(), 240), Classes = { "caption" }, TextWrapping = TextWrapping.Wrap },
+                new TextBlock { Text = Shorten(PlainPreview(body), 240), Classes = { "caption" }, TextWrapping = TextWrapping.Wrap },
                 save,
             },
         });

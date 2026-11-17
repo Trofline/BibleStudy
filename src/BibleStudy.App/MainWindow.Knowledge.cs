@@ -51,7 +51,7 @@ public partial class MainWindow
         BuildDocTagChips();
         if (DocFilterBox.SelectedIndex == 2)
         {
-            if (_selected is int v) { var r = new VerseRef(_curBook, _curChapter, v); docs = docs.Where(d => DocumentLinks.VerseRefs(d.Body).Contains(r)).ToList(); DocInfo.Text = L("Dokumente, die {0} erwähnen: {1}", Label(r), docs.Count); }
+            if (_selected is int v) { var r = new VerseRef(_curBook, _curChapter, v); docs = docs.Where(d => BibleStudy.Core.Storage.OwnSearch.Mentions(d.Body, r)).ToList(); DocInfo.Text = L("Dokumente, die {0} erwähnen: {1}", Label(r), docs.Count); }
             else { docs = []; DocInfo.Text = L("Erst einen Vers anklicken."); }
         }
         else DocInfo.Text = (docs.Count == 1 ? L("1 Dokument") : L("{0} Dokumente", docs.Count));

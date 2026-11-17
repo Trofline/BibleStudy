@@ -38,6 +38,7 @@ public sealed class WinAudio : IDisposable
     [DllImport("winmm.dll")] static extern int waveOutClose(IntPtr h);
 
     static readonly int HdrSize = Marshal.SizeOf<WaveHdr>();
+    const int BufferBytes = AudioFormat.FrameSamples * 2;
     readonly bool _input;
     IntPtr _h;
     readonly IntPtr[] _hdrs = new IntPtr[Buffers];
@@ -129,8 +130,9 @@ public sealed class WinAudio : IDisposable
                 if (used[i] && (hdr.Flags & WhdrDone) == 0) continue;   // still playing
                 if (used[i]) waveOutUnprepareHeader(_h, _hdrs[i], HdrSize);
                 var bytes = MuLaw.ToBytes(next());
-                Marshal.Copy(bytes, 0, hdr.Data, bytes.Length);
-                hdr.BufferLength = (uint)bytes.Length; hdr.Flags = 0;
+                var length = Math.Min(bytes.Length, BufferBytes);   // never more than the buffer holds
+                Marshal.Copy(bytes, 0, hdr.Data, length);
+                hdr.BufferLength = (uint)length; hdr.Flags = 0;
                 Marshal.StructureToPtr(hdr, _hdrs[i], false);
                 waveOutPrepareHeader(_h, _hdrs[i], HdrSize);
                 waveOutWrite(_h, _hdrs[i], HdrSize);
@@ -144,9 +146,11 @@ public sealed class WinAudio : IDisposable
     {
         if (_cts.IsCancellationRequested) return;
         _cts.Cancel();
-        _loop?.Join(500);
+        // the loop may still be in the callback (sending the sound on): the buffers are freed only once it has stopped, never under its hands
+        var stopped = _loop?.Join(3000) ?? true;
         if (_input) { waveInReset(_h); foreach (var p in _hdrs) if (p != IntPtr.Zero) waveInUnprepareHeader(_h, p, HdrSize); waveInClose(_h); }
         else { waveOutReset(_h); foreach (var p in _hdrs) if (p != IntPtr.Zero) waveOutUnprepareHeader(_h, p, HdrSize); waveOutClose(_h); }
+        if (!stopped) return;   // a few KB left behind is better than a crash
         foreach (var p in _hdrs) if (p != IntPtr.Zero) { Marshal.FreeHGlobal(Read(p).Data); Marshal.FreeHGlobal(p); }
     }
 }

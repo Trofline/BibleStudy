@@ -60,7 +60,7 @@ public static class OwnSearch
 
     /// <summary>True when the text mentions the verse, also inside a range ("Joh 3,14-18" mentions Joh 3,16).</summary>
     public static bool Mentions(string text, VerseRef r) =>
-        DocumentLinks.VerseRanges(text).Any(x => x.First.Book == r.Book && x.First.Chapter == r.Chapter && r.Verse >= x.First.Verse && r.Verse <= x.EndVerse);
+        DocumentLinks.Spans(text).Any(s => s.Covers(r));   // also a list ("3,14.16") and a range into the next chapter
 
     /// <summary>Everything the user has about a verse: written on it, or mentioning it somewhere else.</summary>
     public static List<OwnHit> About(VaultStore vault, VerseRef r)

@@ -56,7 +56,7 @@ public partial class MainWindow
             foreach (var n in _vault.GetNotes())
             {
                 if (n.Ref == me) continue;
-                if (!DocumentLinks.VerseRanges(n.Text).Any(x => x.First.Book == me.Book && x.First.Chapter == me.Chapter && me.Verse >= x.First.Verse && me.Verse <= x.EndVerse)) continue;
+                if (!BibleStudy.Core.Storage.OwnSearch.Mentions(n.Text, me)) continue;
                 if (NoteBacklinksPanel.Children.Count == 0) NoteBacklinksPanel.Children.Add(LinkCaption(L("Erwähnt in Notizen zu:")));
                 NoteBacklinksPanel.Children.Add(LinkChip("← " + Label(n.Ref), Shorten(n.Text.ReplaceLineEndings(" ").Trim(), 200), n.Ref));
             }

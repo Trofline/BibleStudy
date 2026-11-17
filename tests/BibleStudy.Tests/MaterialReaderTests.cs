@@ -53,6 +53,54 @@ public class MaterialReaderTests : IDisposable
     }
 
     [Fact]
+    public void Manual_page_breaks_count_every_page_and_stand_where_the_page_begins()
+    {
+        // a break at the end of "Eins" begins page 2 after it; an empty page 2 still counts, so "Drei" is on page 3;
+        // a "page break before" on the very first paragraph makes no page
+        var xml = $"""
+            <w:document xmlns:w="{Wns}"><w:body>
+              <w:p><w:pPr><w:pageBreakBefore/></w:pPr><w:r><w:t>Titel</w:t></w:r></w:p>
+              <w:p><w:r><w:t>Eins</w:t><w:br w:type="page"/></w:r></w:p>
+              <w:p><w:r><w:br w:type="page"/></w:r></w:p>
+              <w:p><w:r><w:t>Drei</w:t></w:r></w:p>
+            </w:body></w:document>
+            """;
+        var blocks = MaterialReader.Read(Zip("Manuell.docx", ("word/document.xml", xml))).Blocks;
+        Assert.Equal(["Seite 1", "Titel", "Eins", "Seite 2", "Seite 3", "Drei"], blocks.Select(b => b.Kind == BlockKind.Page ? b.Text.Replace("Page", "Seite") : b.Text.Trim()));
+    }
+
+    [Fact]
+    public void A_table_row_over_a_page_boundary_is_one_new_page()
+    {
+        var xml = $"""
+            <w:document xmlns:w="{Wns}"><w:body>
+              <w:p><w:r><w:t>Eins</w:t></w:r></w:p>
+              <w:tbl><w:tr>
+                <w:tc><w:p><w:r><w:lastRenderedPageBreak/><w:t>A</w:t></w:r></w:p></w:tc>
+                <w:tc><w:p><w:r><w:lastRenderedPageBreak/><w:t>B</w:t></w:r></w:p></w:tc>
+              </w:tr></w:tbl>
+            </w:body></w:document>
+            """;
+        Assert.Equal(2, MaterialReader.Read(Zip("Tabelle.docx", ("word/document.xml", xml))).Blocks.Count(b => b.Kind == BlockKind.Page));
+    }
+
+    [Fact]
+    public void An_empty_first_page_of_an_OpenDocument_file_counts()
+    {
+        const string content = """
+            <office:document-content xmlns:office="urn:oasis:names:tc:opendocument:xmlns:office:1.0" xmlns:text="urn:oasis:names:tc:opendocument:xmlns:text:1.0"><office:body><office:text>
+              <text:p/>
+              <text:soft-page-break/>
+              <text:p>Zwei</text:p>
+            </office:text></office:body></office:document-content>
+            """;
+        var blocks = MaterialReader.Read(Zip("Leer.odt", ("content.xml", content))).Blocks;
+        Assert.Equal(2, blocks.Count(b => b.Kind == BlockKind.Page));
+        Assert.Equal(BlockKind.Page, blocks[^2].Kind);
+        Assert.Equal("Zwei", blocks[^1].Text);
+    }
+
+    [Fact]
     public void OpenDocument_pages_come_from_its_soft_page_breaks()
     {
         const string content = """

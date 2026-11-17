@@ -65,9 +65,8 @@ public static class MaterialSearch
             var text = b.Text;
             foreach (var found in DocumentLinks.Spans(text))
             {
-                var (index, length, first) = (found.Index, found.Length, found.Ref);
-                if (first.Book != verse.Book || first.Chapter != verse.Chapter) continue;
-                if ((verse.Verse < first.Verse || verse.Verse > found.EndInChapter) && !found.MoreVerses.Contains(verse.Verse)) continue;
+                var (index, length) = (found.Index, found.Length);
+                if (!found.Covers(verse)) continue;
                 hits.Add(new MaterialHit(path, n, index, length, Snippet(text, index, length), page));
                 break;   // one hit per paragraph is enough
             }

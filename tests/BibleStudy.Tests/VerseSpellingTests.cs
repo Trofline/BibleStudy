@@ -50,6 +50,30 @@ public class VerseSpellingTests
     }
 
     [Fact]
+    public void A_place_without_a_book_takes_the_nearest_book_before_it()
+    {
+        Assert.Equal(["DAN 2,21", "DAN 4,14", "JER 5,1", "JER 6,2"], Refs("Dan 2,21; 4,14; Jer 5,1; 6,2"));
+        Assert.Equal(["MAT 5,3", "MAT 6,9", "LUK 6,20", "LUK 11,2", "LUK 12,1"], Refs("Mt 5,3; 6,9; Lk 6,20; 11,2; 12,1"));
+    }
+
+    [Fact]
+    public void A_reference_covers_its_range_its_list_and_the_next_chapter()
+    {
+        var range = DocumentLinks.Spans("Jes 44,27–45,3")[0];
+        Assert.True(range.Covers(new VerseRef("ISA", 44, 27)));
+        Assert.True(range.Covers(new VerseRef("ISA", 44, 30)));
+        Assert.True(range.Covers(new VerseRef("ISA", 45, 1)));
+        Assert.True(range.Covers(new VerseRef("ISA", 45, 3)));
+        Assert.False(range.Covers(new VerseRef("ISA", 45, 4)));
+        Assert.False(range.Covers(new VerseRef("ISA", 44, 26)));
+        Assert.False(range.Covers(new VerseRef("JER", 44, 30)));
+        var list = DocumentLinks.Spans("Dan 6,9.13")[0];
+        Assert.True(list.Covers(new VerseRef("DAN", 6, 13)));
+        Assert.False(list.Covers(new VerseRef("DAN", 6, 10)));
+        Assert.True(BibleStudy.Core.Storage.OwnSearch.Mentions("siehe Jes 44,27–45,3", new VerseRef("ISA", 45, 2)));
+    }
+
+    [Fact]
     public void Numbers_that_are_no_places_stay_text()
     {
         Assert.Empty(Found("Es kostet 3,50 Euro."));
