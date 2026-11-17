@@ -18,6 +18,15 @@
       "category": "other",
       "versions": [
         {
+          "version": "1.9.17",
+          "buildVersion": "36",
+          "date": "2026-11-17",
+          "localizedDescription": "## New in 1.9.17\n**Kind of update:** Feature\n- **[Feature]** **Go to a page in materials:** a page box beside the open file (Ctrl+G) jumps to a page of a PDF, Word or OpenDocument file and shows the current page while scrolling.\n- **[Feature]** **More room for materials:** a button folds the bars above the file away, so the file gets the whole height.\n- **[Feature]** **All ways of writing Bible references become links:** short forms (1K├Â, 2K├Â, 1Mo, 1Chron, Ezek ÔÇª), ranges into the next chapter (Jes 44,27ÔÇô45,3), verse parts (4b), lists (Dan 6,9.13.16), f./ff., and places without a book af",
+          "downloadURL": "https://github.com/Trofline/BibleStudy/releases/download/v1.9.17/BibleStudy-iOS-1.9.17.ipa",
+          "size": 60131571,
+          "minOSVersion": "15.0"
+        },
+        {
           "version": "1.9.16",
           "buildVersion": "35",
           "date": "2026-11-17",
