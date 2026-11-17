@@ -3364,5 +3364,6 @@
   "Vers kopieren": "Копировать стих",
   "Bild einfügen": "Вставить изображение",
   "Das Bild ließ sich nicht laden: {0}": "Не удалось загрузить изображение: {0}",
-  "Bild fehlt: {0}": "Изображение отсутствует: {0}"
+  "Bild fehlt: {0}": "Изображение отсутствует: {0}",
+  "Gleich noch einmal klicken, dann schließt das Programm sofort.": "Щёлкните ещё раз через мгновение, и программа сразу закроется."
 }

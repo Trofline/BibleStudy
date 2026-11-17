@@ -215,7 +215,31 @@ public partial class MainWindow
         e.Cancel = true;
         _syncedAtClose = true; _phoneWaiting = true; _phoneWaitStop = false; _phoneWaitSince = DateTime.UtcNow;
         Dispatcher.UIThread.Post(() => _ = WaitForPhoneThenCloseAsync(lan));
+        ShowCloseLock(TimeSpan.FromSeconds(2));
         return true;
+    }
+
+    /// <summary>
+    /// While a second click on X does nothing, X shows the seconds left ("2", "1"), so one knows to wait and then click again;
+    /// afterwards it is the X again.
+    /// </summary>
+    async void ShowCloseLock(TimeSpan length)
+    {
+        var icon = CloseBtn.Content;
+        var tip = ToolTip.GetTip(CloseBtn);
+        var until = DateTime.UtcNow + length;
+        var count = new TextBlock { FontWeight = Avalonia.Media.FontWeight.SemiBold, FontSize = 14, HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center, VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center };
+        ToolTip.SetTip(CloseBtn, L("Gleich noch einmal klicken, dann schließt das Programm sofort."));
+        CloseBtn.Content = count;
+        try
+        {
+            for (var left = until - DateTime.UtcNow; left > TimeSpan.Zero && _phoneWaiting; left = until - DateTime.UtcNow)
+            {
+                count.Text = ((int)Math.Ceiling(left.TotalSeconds)).ToString();
+                await Task.Delay(100);
+            }
+        }
+        finally { CloseBtn.Content = icon; ToolTip.SetTip(CloseBtn, tip); }
     }
 
     /// <summary>Up to two minutes: every few seconds it tries the known devices; once one was synced (or "Close now" is pressed) the program closes.</summary>
