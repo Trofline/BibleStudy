@@ -62,7 +62,7 @@ public partial class MainWindow
     /// <summary>Withdraws the agreement and ends a running connection.</summary>
     void RevokeCollabConsent()
     {
-        _peer?.Dispose(); _peer = null; _follow = false;
+        DisconnectAll();
         StopNet();
         _settings.CollabConsent = "";
         SaveSettings();

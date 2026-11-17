@@ -103,17 +103,19 @@ public partial class MainWindow
         }
         if (list.Count == 0) stack.Children.Add(new TextBlock { Text = L("Es gibt noch keine veröffentlichten Versionen."), TextWrapping = TextWrapping.Wrap });
 
-        var close = new Button { Content = L("Schließen"), Classes = { "primary" }, HorizontalAlignment = HorizontalAlignment.Right, Margin = new(0, 10, 0, 0) };
+        // the close button sits at the top, next to the title: it is always one click away, however long the notes are
+        var close = new Button { Content = L("Schließen"), Classes = { "primary" }, VerticalAlignment = VerticalAlignment.Center };
         var win = new Window { Title = L("Patch Notes"), Width = 640, Height = 560, MinWidth = 380, MinHeight = 300, Background = Res("BsSurface"), Icon = Icon, WindowStartupLocation = WindowStartupLocation.CenterOwner };
         var dock = new DockPanel { Margin = new(20) };
-        DockPanel.SetDock(close, Dock.Bottom);
-        dock.Children.Add(close);
-        var title = new TextBlock { Text = L("Patch Notes"), FontSize = 20, FontWeight = FontWeight.SemiBold, Margin = new(0, 0, 0, 10) };
-        DockPanel.SetDock(title, Dock.Top);
-        dock.Children.Add(title);
+        var title = new TextBlock { Text = L("Patch Notes"), FontSize = 20, FontWeight = FontWeight.SemiBold, VerticalAlignment = VerticalAlignment.Center };
+        DockPanel.SetDock(close, Dock.Right);
+        var top = new DockPanel { Margin = new(0, 0, 0, 10), Children = { close, title } };
+        DockPanel.SetDock(top, Dock.Top);
+        dock.Children.Add(top);
         dock.Children.Add(new ScrollViewer { Content = stack });
         win.Content = dock;
         close.Click += (_, _) => win.Close();
+        win.KeyDown += (_, e) => { if (e.Key == Avalonia.Input.Key.Escape) win.Close(); };
         win.Closed += (_, _) => _patchNotes = null;
         _patchNotes = win;
         win.Show(this);

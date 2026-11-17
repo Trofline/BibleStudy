@@ -28,7 +28,7 @@ public partial class MainWindow
             list.Add((verse, color, e.TryGetProperty("t", out var t) ? Clip(t.GetString(), 300) : "", e.TryGetProperty("n", out var n) ? Clip(n.GetString(), 300) : ""));
         }
         if (list.Count == 0) return;
-        var who = _peerName.Length > 0 ? _peerName : L("Die andere Person");
+        var who = PeerWho;
         var take = new Button { Content = L("Übernehmen"), Classes = { "tool" }, Width = double.NaN, Padding = new(10, 0), HorizontalAlignment = HorizontalAlignment.Left };
         take.Click += (_, _) =>
         {

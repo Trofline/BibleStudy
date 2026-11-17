@@ -358,6 +358,7 @@ public partial class MainWindow
         _normalMarking = false;
         if (_sel is null) return;
         if (paint) PaintSelection(null); else _sel = null;
+        if (CollabOpen) CollabSendSelection();
     }
 
     string SelectedText()
@@ -374,6 +375,7 @@ public partial class MainWindow
     void OnSelectionMade()
     {
         if (_sel is not { Parts.Count: > 0 }) return;
+        if (CollabOpen) CollabSendSelection();
         var text = SelectedText();
         if (string.IsNullOrWhiteSpace(text)) { ClearTextSelection(true); return; }
         if (_settings.QuickMark) { _ = ApplyColorAsync(QuickColor()); return; }
@@ -401,6 +403,12 @@ public partial class MainWindow
         {
             var text = SelectedText();
             if (text.Length > 0 && TopLevel.GetTopLevel(this)?.Clipboard is { } cb) { _ = cb.SetTextAsync(text); StatusText.Text = L("Kopiert: „{0}“", Shorten(text, 60)); }
+            e.Handled = true;
+        }
+        else if (ctrl && e.Key == Key.C && _sel is null && _selected is not null && ReaderHost.IsVisible && !Home.IsVisible && !TextFieldHasFocus()
+                 && !(TopLevel.GetTopLevel(this)?.FocusManager?.GetFocusedElement() is Avalonia.Visual fv && fv.GetVisualAncestors().Contains(SidePanel)))
+        {
+            _ = CopyPlaceAsync();   // a chosen verse: only its place; with Shift the verse and its place
             e.Handled = true;
         }
         else if (ctrl && e.Key == Key.Z && !TextFieldHasFocus() && !FocusInExplorer() && _markUndo.Count > 0)   // the explorer has its own steps back

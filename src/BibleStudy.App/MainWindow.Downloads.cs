@@ -1,3 +1,4 @@
+using BibleStudy.Core.Collab.Media;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Layout;
@@ -96,7 +97,14 @@ public partial class MainWindow
                     (p, ct) => NaturalVoice.EnsureAsync(_http, _root, voice, p, ct), group, () => NaturalVoice.IsReady(_root, voice), () => NaturalVoice.Remove(_root, voice), voice.SizeMb));
             }
 
-#if !MOBILE   // Ollama runs on a computer only
+#if !MOBILE   // Ollama and FFmpeg run on a computer only
+        group = L("Kamera und Ton");
+        items.Add(new(L("FFmpeg (Kamera beim gemeinsamen Studium)"),
+            OperatingSystem.IsWindows() ? L("Freies Programm von ffmpeg.org (Build von gyan.dev, GPL). Wird nur für die Kamera gebraucht; Sprechen geht unter Windows auch ohne.")
+                : L("Unter Mac und Linux kommt FFmpeg aus der Paketverwaltung (brew install ffmpeg oder sudo apt install ffmpeg)."),
+            (p, ct) => FfmpegDownload.EnsureAsync(_http, _root, p, ct), group,
+            () => FfmpegDownload.IsInstalled(_root) || BibleStudy.Core.Collab.Media.Ffmpeg.Find() is not null, () => FfmpegDownload.Remove(_root), FfmpegDownload.SizeMb, OnlyOnRequest: true));
+
         group = L("Übersetzen ohne Internet");
         foreach (var (model, note) in new[] { (OllamaClient.SmallModel, L("Schnell und klein, läuft auch auf schwächeren Rechnern, übersetzt einfacher.")), (OllamaClient.LargeModel, L("Beste Übersetzung, braucht rund 10 GB freien Arbeits- oder Grafikspeicher.")) })
         {

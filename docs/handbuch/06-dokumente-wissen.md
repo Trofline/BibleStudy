@@ -54,6 +54,8 @@ Das Blatt hat A4-Seiten mit Seitenzahlen und keine einzelnen Zeilen allein am Se
 
 **Markdown:** Hier wählst du, wie die Bibelstellen mitkommen: als **eigene Datei mit Links** (wie bisher), **als Zitat unter dem Text** (alles in einer Datei, jeder Vers direkt unter dem Absatz, der ihn nennt) oder **gar nicht**. Außerdem: ob verlinkte Dokumente als eigene Dateien mitkommen und ob jede Datei einen **Kopf mit Titel, Datum und Schlagworten** bekommt (YAML, wie Obsidian ihn liest). Die **Vorschau** zeigt den Text der Hauptdatei und welche Dateien im Ordner entstehen, noch bevor du speicherst.
 
+**Bilder:** Das Bild-Symbol in der Leiste des Editors fügt ein oder mehrere Bilder aus Dateien ein. Sie liegen im Vault selbst, kommen also mit Sicherungen und beim Synchronisieren mit. Sehr große Bilder werden auf 1600 Pixel Breite verkleinert. Im Text steht eine Zeile `![Name](bild:…)`; in der Lesen-Ansicht, im Druck und im HTML-Export erscheint das Bild, beim Markdown-Export landet es im Ordner `images`.
+
 ## 6.3 Verknüpfen: Verse und [[Links]]
 
 - Schreibst du eine Bibelstelle wie „Joh 3,16“, wird sie zu einem Link, der zur Stelle springt.

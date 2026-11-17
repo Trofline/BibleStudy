@@ -12,7 +12,7 @@ public class NetCollabTests
         using var anna = new NetCollab { Name = "Anna" };
         using var ben = new NetCollab { Name = "Ben" };
         string? asked = null, annaCheck = null;
-        anna.Approve = (name, _, check) => { asked = name; annaCheck = check; return Task.FromResult(true); };
+        anna.Approve = a => { asked = a.Name; annaCheck = a.CheckCode; return Task.FromResult(true); };
         var incoming = new TaskCompletionSource<NetLink>();
         anna.Incoming += l => incoming.TrySetResult(l);
         anna.Start(0, 47923); ben.Start(0, 47923);
@@ -44,9 +44,24 @@ public class NetCollabTests
     }
 
     [Fact]
+    public async Task A_friend_is_recognised_by_id_and_token()
+    {
+        using var anna = new NetCollab { Name = "Anna", Id = "ANNA1" };
+        using var ben = new NetCollab { Name = "Ben", Id = "BEN1" };
+        CollabAsk? got = null;
+        anna.Approve = a => { got = a; return Task.FromResult(true); };
+        anna.Start(0, 47927); ben.Start(0, 47927);
+        using var link = await ben.ConnectAsync(IPAddress.Loopback, anna.Port, TimeSpan.FromSeconds(10), "secret-token");
+        Assert.Equal("BEN1", got!.Id);
+        Assert.Equal("secret-token", got.Token);
+        Assert.Equal("ANNA1", link.PeerId);
+        Assert.Equal(IPAddress.Loopback, link.RemoteAddress);
+    }
+
+    [Fact]
     public async Task A_person_who_says_no_is_not_connected()
     {
-        using var anna = new NetCollab { Name = "Anna", Approve = (_, _, _) => Task.FromResult(false) };
+        using var anna = new NetCollab { Name = "Anna", Approve = _ => Task.FromResult(false) };
         using var ben = new NetCollab { Name = "Ben" };
         anna.Start(0, 47924); ben.Start(0, 47924);
         await Assert.ThrowsAsync<UnauthorizedAccessException>(() => ben.ConnectAsync(IPAddress.Loopback, anna.Port, TimeSpan.FromSeconds(10)));
@@ -55,7 +70,7 @@ public class NetCollabTests
     [Fact]
     public async Task Someone_with_another_program_on_the_port_is_turned_away()
     {
-        using var anna = new NetCollab { Name = "Anna", Approve = (_, _, _) => Task.FromResult(true) };
+        using var anna = new NetCollab { Name = "Anna", Approve = _ => Task.FromResult(true) };
         anna.Start(0, 47925);
         using var stranger = new System.Net.Sockets.TcpClient();
         await stranger.ConnectAsync(IPAddress.Loopback, anna.Port);

@@ -492,6 +492,7 @@ public partial class MainWindow : AppWindow
             ThreadPane.SelectedVerse = null;
             FollowSentence(true);
             FollowPericope(true);
+            CollabNavigatedByMe();
             CollabSendLocation(focusVerse);
             _curChapterData = ch;
             LoadChapterMarks();
@@ -626,6 +627,7 @@ public partial class MainWindow : AppWindow
             FontFamily = ScriptureFont,
             FlowDirection = t.TextDirection == "rtl" ? FlowDirection.RightToLeft : FlowDirection.LeftToRight,
         };
+        RenderOptions.SetEdgeMode(tb, EdgeMode.Aliased);   // the backgrounds of neighbouring words meet without an anti-aliased seam (a dark line in a mark)
         if (!foreign)
         {
             tb.Cursor = new Cursor(StandardCursorType.Ibeam);
@@ -804,6 +806,7 @@ public partial class MainWindow : AppWindow
         }
         var props = e.GetCurrentPoint(this).Properties;
         var withKeys = e.KeyModifiers.HasFlag(Mods.Ctrl) || e.KeyModifiers.HasFlag(KeyModifiers.Shift);
+        var chosenBefore = !foreign && _selVerses.Count > 1 && _selVerses.Contains(verse) ? _selVerses.ToList() : null;   // several chosen verses, one of them clicked
         if (!foreign)   // a column with another passage is only for reading and word study: its verse numbers are not those of the main text
         {
             // right click on text that is selected keeps the selection: the menu works on it
@@ -829,6 +832,13 @@ public partial class MainWindow : AppWindow
         }
         // a click on the verse number marks the whole verse: the colors show over it (like over selected text)
         var onNumber = cell.Runs.Count > 0 && hit < cell.Runs[0].Tb && span?.Note is null;   // the small sign beside the number is not the number
+        if (chosenBefore is null && onNumber && props.IsLeftButtonPressed && !withKeys && _wholeMarks.ContainsKey(verse)) _recolorGroup = true;   // a marked verse: a new color goes to the whole group of marked verses beside it
+        if (chosenBefore is not null && onNumber && props.IsLeftButtonPressed && !withKeys)
+        {
+            // a click on the number of one of several chosen verses colors all of them, not only that one
+            _selVerses.Clear(); foreach (var n in chosenBefore) _selVerses.Add(n);
+            Paint();
+        }
         if (!foreign && props.IsLeftButtonPressed && !withKeys && onNumber && _settings.SelectionPopup && !_settings.QuickMark)
         {
             e.Handled = true;
@@ -974,7 +984,7 @@ public partial class MainWindow : AppWindow
             else box.ClearValue(Border.BackgroundProperty);
             box.BorderBrush = selected ? new SolidColorBrush(ink, 0.55) : whole is { } c2 ? new SolidColorBrush(c2) : Brushes.Transparent;
         }
-        if (_peer?.IsOpen == true) { CollabSendSelection(); Avalonia.Threading.Dispatcher.UIThread.Post(RenderPeerLayer, Avalonia.Threading.DispatcherPriority.Background); }
+        if (CollabOpen) { CollabSendSelection(); CollabSendChapterMarks(); if (_peopleChapter != $"{_curBook} {_curChapter}") { _peopleChapter = $"{_curBook} {_curChapter}"; ShowPeople(); } Avalonia.Threading.Dispatcher.UIThread.Post(RenderPeerLayer, Avalonia.Threading.DispatcherPriority.Background); }
     }
 
     /// <summary>Scrolls so the verse sits near the top, after the new text has been laid out.</summary>
@@ -1033,7 +1043,7 @@ public partial class MainWindow : AppWindow
 
     void SelectVerse(int n)
     {
-        _selected = n; _selVerses.Clear(); _selVerses.Add(n); _anchorVerse = n; Paint();
+        _selected = n; _selVerses.Clear(); _selVerses.Add(n); _anchorVerse = n; _recolorGroup = false; Paint();
         ThreadPane.SelectedVerse = n;
         var r = new VerseRef(_curBook, _curChapter, n);
         if (_noteRef != r) SaveNoteDraft();

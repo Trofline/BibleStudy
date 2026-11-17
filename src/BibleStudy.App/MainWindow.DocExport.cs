@@ -131,7 +131,19 @@ public partial class MainWindow
     {
         Directory.CreateDirectory(dir);
         var utf8 = new UTF8Encoding(false);
-        foreach (var (file, text) in await MarkdownFilesAsync(title, body, tags, selfId, linked)) await File.WriteAllTextAsync(Path.Combine(dir, file), text, utf8);
+        foreach (var (file, text0) in await MarkdownFilesAsync(title, body, tags, selfId, linked))
+        {
+            // a picture of the vault is saved in the folder "images" next to the files; the file points to it
+            var text = DocImageRef().Replace(text0, m =>
+            {
+                if (_vault.GetImage(m.Groups["id"].Value) is not { } img) return "";
+                var name = m.Groups["id"].Value + (img.Mime.Contains("jpeg") ? ".jpg" : ".png");
+                Directory.CreateDirectory(Path.Combine(dir, "images"));
+                File.WriteAllBytes(Path.Combine(dir, "images", name), img.Data);
+                return $"![{m.Groups["n"].Value}](images/{name})";
+            });
+            await File.WriteAllTextAsync(Path.Combine(dir, file), text, utf8);
+        }
     }
 
     async Task SaveDocumentAsMarkdownAsync()

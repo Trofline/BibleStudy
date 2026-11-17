@@ -188,6 +188,17 @@ public sealed partial class VaultStore
                 {
                     using var cmd = con.CreateCommand(); cmd.CommandText = sql; others += cmd.ExecuteNonQuery();
                 }
+                // the pictures of the documents (the id is made from the picture: the same id is the same picture)
+                using (var has = con.CreateCommand())
+                {
+                    has.CommandText = "SELECT 1 FROM g.sqlite_master WHERE type='table' AND name='images'";
+                    if (has.ExecuteScalar() is not null)
+                    {
+                        using var cmd = con.CreateCommand();
+                        cmd.CommandText = "INSERT OR IGNORE INTO main.images(id,mime,data) SELECT id,mime,data FROM g.images";
+                        others += cmd.ExecuteNonQuery();
+                    }
+                }
                 // the archive of the Bible studies (vaults from before 1.9 have none)
                 using (var has = con.CreateCommand())
                 {

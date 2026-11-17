@@ -551,6 +551,7 @@
                                     </StackPanel>
                                 </DockPanel>
                                 <TextBox x:Name="DocSearchBox" PlaceholderText="Dokumente durchsuchen (Titel, Text, Tags)" />
+                                <CheckBox x:Name="DocAllVaultsCheck" Content="Dokumente aller Vaults zeigen" ToolTip.Tip="Zeigt unter deinen Dokumenten auch die der anderen Vaults. Ein Klick darauf wechselt den Vault und öffnet es." />
                                 <TextBlock Classes="eyebrow" Text="KATEGORIEN" />
                                 <WrapPanel x:Name="DocCategoryChips" />
                                 <Expander Header="Mehr Filter und Graph" Padding="0">
@@ -844,6 +845,8 @@
                                     <TextBox x:Name="NewVaultBox" Width="170" PlaceholderText="Name des neuen Vaults" />
                                     <Button x:Name="NewVaultBtn" Content="Anlegen" />
                                 </StackPanel>
+                                <TextBlock Text="Gemeinsame Vaults: ihr Inhalt (Markierungen, Dokumente, Explorer) wird in jedem Vault mit gezeigt." Classes="caption" TextWrapping="Wrap" />
+                                <WrapPanel x:Name="SharedVaultsPanel" />
                                 <Button x:Name="RenameVaultBtn" Content="Diesen Vault umbenennen …" HorizontalAlignment="Left" ToolTip.Tip="Gibt dem oben gewählten Vault einen neuen Namen. Alles darin bleibt, wie es ist." />
                                 <Button x:Name="DeleteVaultBtn" Content="Diesen Vault löschen …" HorizontalAlignment="Left" ToolTip.Tip="Löscht den oben gewählten Vault mit allem, was darin ist. Vorher wird eine Sicherung angelegt." />
                                 <TextBlock x:Name="VaultInfo" Classes="caption" TextWrapping="Wrap" />

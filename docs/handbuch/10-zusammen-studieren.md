@@ -17,6 +17,14 @@ Seid ihr im selben WLAN oder im selben ZeroTier- oder Tailscale-Netzwerk, brauch
 
 Erscheint niemand, lassen manche Netzwerke das Suchen nicht zu. Dann öffne **Mit Adresse verbinden** und gib die Adresse der anderen Person ein. Die eigene Adresse steht direkt darunter; bei ZeroTier steht sie auch in der ZeroTier-App unter „Managed IPs“.
 
+### Mehrere Personen (Hauskreis)
+
+Ihr könnt beliebig viele sein. Wer schon verbunden ist, holt unter **Weitere Person dazuholen** jemanden dazu. Jedes Programm gibt weiter, was es bekommt: Ist Anna mit Ben verbunden und Ben mit Carla, sehen sich trotzdem alle drei. Jede Person hat ihre eigene Farbe.
+
+### Freunde
+
+Bei einer Person im selben Netzwerk erscheint **Als Freund merken**. Danach steht sie unter **Freunde**, und ein Tipp verbindet euch, auch wenn sie gerade nicht in der Liste auftaucht (dann über die zuletzt benutzte Adresse). Mit **Automatisch annehmen** wirst du bei diesem Freund nicht mehr gefragt. Erkannt wird ein Freund an einem gemeinsamen Geheimnis, das beim Merken ausgetauscht wird, nicht nur am Namen.
+
 ### In verschiedenen Netzwerken (mit Codes, Beta)
 
 Über verschiedene Netzwerke klappt die Verbindung nicht immer. Getestet und zuverlässig ist der Weg im selben Netzwerk: Seid ihr weit voneinander entfernt, tretet beide demselben ZeroTier-Netzwerk bei (kostenlos) und verbindet euch wie oben beschrieben.
@@ -32,7 +40,12 @@ Unter **Mit Codes (Beta, andere Netze)**:
 ## 10.2 Was ihr tun könnt
 
 - **Chatten.** Du siehst, wenn die andere Person schreibt. Ist die Seite zu, meldet ein kleiner Hinweis neue Nachrichten.
-- **Live mitsehen:** Lest ihr dasselbe Kapitel, siehst du die Verse, die die andere Person anklickt (lila umrahmt, mit Namen), und ihren Mauszeiger. Abschalten mit **Meinen Mauszeiger zeigen**.
+- **Leiten:** Wer auf **Ich leite** tippt, gibt die Stelle vor. Alle anderen springen automatisch mit, bis sie selbst blättern; dann erscheint **Wieder folgen**.
+- **Fragen zum Text:** eine gemeinsame Liste. Jeder kann Fragen hinzufügen und abhaken, wenn sie besprochen sind.
+- **Gemeinsames Notizblatt:** eine Seite, an der alle schreiben (schreiben zwei gleichzeitig, gilt die zuletzt gesendete Fassung). Lässt sich als Dokument speichern.
+- **Reagieren:** auf eine Chatnachricht tippen oder für einen Vers **Reagieren** wählen (♥, Amen, ✓, !, ?). Eine Reaktion auf einen Vers erscheint kurz über dem Vers.
+- **Treffen als Dokument speichern:** Gespräch, geteilte Verse, Fragen und Notizblatt kommen als ein Dokument in deinen Vault.
+- **Live mitsehen:** Lest ihr dasselbe Kapitel, siehst du die Verse, die die andere Person anklickt (lila umrahmt, mit Namen), und ihren Mauszeiger. Hat sie Wörter markiert, stehen sie am Rahmen. Ihre Markierungen erscheinen als Balken neben den Versen (übernehmen mit einem Knopf), und liest sie vor, ist der gerade gelesene Vers unterstrichen. Abschalten mit **Meinen Mauszeiger zeigen**.
 - **Hierher zeigen:** Die andere Person bekommt einen Hinweis mit einem Knopf zu deiner Stelle.
 - **Markierungen teilen:** der gewählten Verse, dieses Kapitels, dieses Buchs oder alle. Beim Übernehmen kommen nur neue dazu.
 - **Notizen teilen:** dieses Kapitel, dieses Buch oder alle. Wo schon eine Notiz ist, wird die andere darunter angehängt.
@@ -41,6 +54,20 @@ Unter **Mit Codes (Beta, andere Netze)**:
 - **Dokumente teilen** (als Kopie; Gesendetes ist in der Größe begrenzt, lange Dokumente werden gekürzt).
 - **Die eigene Bibelstelle mitsenden** und **der Stelle der anderen Person folgen.**
 - Markierungen mitsehen (Zusammen-Markierungen).
+
+### Sprechen und Kamera (am Computer)
+
+Unter **Sprechen und Kamera**:
+
+- **Gedrückt halten zum Sprechen:** Solange du den Knopf drückst, hören dich die anderen (wie ein Funkgerät).
+- **Mikrofon an (Gespräch):** wie ein Anruf, bis du es wieder ausschaltest. Mit Kopfhörern gibt es kein Echo.
+- **Sprachnachricht:** antippen, sprechen, noch einmal antippen; höchstens 2 Minuten. Die anderen spielen sie mit **▶ Abspielen** ab.
+- **Kamera an:** Dein Bild erscheint bei allen als kleine Kachel; **Videos groß** zeigt alle Bilder in einem eigenen Fenster.
+- **Die anderen hören** schaltet den Ton der anderen aus und an. Unter **Mikrofon und Kamera wählen** suchst du die Geräte aus.
+
+Unter Windows geht Sprechen ohne Zusatz. Für die Kamera (und unter Mac und Linux auch für den Ton) braucht BibleStudy das freie Programm **FFmpeg**: unter Windows im Download-Manager unter **Kamera und Ton** (rund 110 MB), am Mac mit `brew install ffmpeg`, unter Linux mit der Paketverwaltung (`sudo apt install ffmpeg`). Ist FFmpeg schon installiert, wird es benutzt. Auf dem Handy kommen Sprechen und Kamera später.
+
+Nichts wird aufgezeichnet, außer einer Sprachnachricht, die du selbst sendest. Ton und Bild laufen über dieselbe verschlüsselte Verbindung wie alles andere.
 
 ## 10.3 Datenschutz
 

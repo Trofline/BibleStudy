@@ -227,6 +227,24 @@ public partial class MainWindow
         OpenWork(g);
     }
 
+    /// <summary>
+    /// Tab and Shift+Tab switch to the next / previous tab of the tab strip (Lesen, Dokumente, …), like in a browser, instead of moving the focus from
+    /// button to button. A text field, a list or a menu keeps Tab for itself; Ctrl+Tab does the old switch between reading and the last tab.
+    /// </summary>
+    void OnTabKey(object? sender, KeyEventArgs e)
+    {
+        if (e.Handled || e.Key != Key.Tab || e.KeyModifiers is not (KeyModifiers.None or KeyModifiers.Shift) || _capturing is not null || Home.IsVisible) return;
+        var focused = FocusedControl();
+        if (focused is TextBox or ComboBox or ListBoxItem or ListBox or Slider or MenuItem or TabItem) return;
+        var keys = new List<string?> { null };
+        keys.AddRange(_windows.Values.Where(w => !w.Side && w.Win is null).OrderBy(w => _settings.TabOrder.IndexOf(w.Key) is var i and >= 0 ? i : int.MaxValue).Select(w => (string?)w.Key));
+        if (keys.Count < 2) return;   // only the reading tab: Tab keeps its usual job
+        e.Handled = true;
+        var at = Math.Max(0, keys.IndexOf(_activeWork));
+        var next = keys[(at + (e.KeyModifiers == KeyModifiers.Shift ? keys.Count - 1 : 1)) % keys.Count];
+        if (next is null) ShowReader(); else ShowWork(next);
+    }
+
     /// <summary>Ctrl+W: closes the tab you are on (the reader itself stays).</summary>
     void CloseActiveTab()
     {
@@ -443,7 +461,12 @@ public partial class MainWindow
 #if MOBILE
         WindowBounds? saved = null;
 #else
-        var saved = _settings.Windows.TryGetValue(WindowStateKey(d.Key), out var s) && s.W > 0 && Screens.All.Any(sc => sc.WorkingArea.Contains(new PixelPoint(s.X + 40, s.Y + 20))) ? s : null;
+        // only a place on the screen of the main window (or the main screen) counts: a second or virtual screen that is gone or that nobody looks at
+        // (remote sessions add some) would put the window where it cannot be seen
+        var seen = new[] { Screens.ScreenFromWindow(this), Screens.Primary }.OfType<Avalonia.Platform.Screen>().ToList();
+        bool Visible(PixelPoint pt) => seen.Any(sc => sc.WorkingArea.Contains(pt));
+        var saved = _settings.Windows.TryGetValue(WindowStateKey(d.Key), out var s) && s.W > 0 && Visible(new PixelPoint(s.X + 40, s.Y + 20)) ? s : null;
+        if (at is { } wanted && !Visible(new PixelPoint(wanted.X + 40, wanted.Y + 20))) at = null;
 #endif
         var win = new Window
         {

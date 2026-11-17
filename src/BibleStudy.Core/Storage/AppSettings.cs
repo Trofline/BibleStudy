@@ -77,7 +77,9 @@ public sealed class AppSettings
     public string QuickMarkColor { get; set; } = "";
     /// <summary>A small bar with the colors appears over the selected text (no click on the mark button needed).</summary>
     public bool SelectionPopup { get; set; } = true;
-    public bool MarksAllVaults { get; set; }   // the collection and the text show the marks of all vaults, not only of the active one
+    public bool MarksAllVaults { get; set; }   // the collection, the explorer, the documents and the text show all vaults, not only the active one
+    /// <summary>Shared vaults: their content shows in every other vault too (to look at; it is changed in the vault itself).</summary>
+    public List<string> SharedVaults { get; set; } = [];
     /// <summary>The clock at the bottom right of the status bar.</summary>
     public bool ShowClock { get; set; } = true;
     /// <summary>The length of the timer chosen last, in minutes.</summary>
@@ -231,6 +233,14 @@ public sealed class AppSettings
     public bool CollabSendLocation { get; set; } = true;
     /// <summary>Studying together: the other person sees the mouse pointer when both read the same chapter.</summary>
     public bool CollabSendPointer { get; set; } = true;
+    /// <summary>Studying together: the lasting id of this person, so friends recognise each other again.</summary>
+    public string CollabId { get; set; } = "";
+    /// <summary>People remembered as friends: one tap connects, and with auto-accept their request is accepted at once.</summary>
+    public List<CollabFriend> CollabFriends { get; set; } = [];
+    /// <summary>Studying together: the chosen microphone and camera (by name; empty = the standard one) and whether the others are heard.</summary>
+    public string CollabMic { get; set; } = "";
+    public string CollabCamera { get; set; } = "";
+    public bool CollabHear { get; set; } = true;
     public List<SavedSearch> SavedSearches { get; set; } = [];
     /// <summary>How the hits are shown: 0 verses, 1 aligned, 2 grid, 3 comparison, 4 analysis.</summary>
     public int SearchView { get; set; }
@@ -415,4 +425,15 @@ public sealed class TranslationAlias
 {
     public string Name { get; set; } = "";
     public string Short { get; set; } = "";
+}
+
+/// <summary>A friend for studying together: their lasting id, name, the address and port last used, the shared secret that proves them, and whether their request is accepted at once.</summary>
+public sealed class CollabFriend
+{
+    public string Id { get; set; } = "";
+    public string Name { get; set; } = "";
+    public string Address { get; set; } = "";
+    public int Port { get; set; }
+    public string Token { get; set; } = "";
+    public bool AutoAccept { get; set; }
 }

@@ -51,6 +51,7 @@ public partial class MainWindow
             }
             else Directory.Move(from, to);
             if (_settings.Vault == old) { _settings.Vault = name; SaveSettings(); }
+            if (_settings.SharedVaults.Remove(old)) { _settings.SharedVaults.Add(name); SaveSettings(); }
             if (active) await SwitchVaultAsync(name, alreadySaved: true); else RefreshVaultUi();
             VaultInfo.Text = L("Vault „{0}“ heißt jetzt „{1}“.", old, name);
         }

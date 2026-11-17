@@ -292,6 +292,17 @@ public partial class MainWindow
 
     // ---- shortcuts ----------------------------------------------------------------------------------------------------
 
+    /// <summary>Ctrl+C on a chosen verse: only the place ("Genesis 15,2"; several verses as "Genesis 15,2–4, 7"), without the text. Ctrl+Shift+C copies the verse with its place.</summary>
+    async Task CopyPlaceAsync()
+    {
+        var verses = _selVerses.Count > 0 ? _selVerses.ToHashSet() : _selected is int one ? [one] : [];
+        if (verses.Count == 0 || TopLevel.GetTopLevel(this)?.Clipboard is not { } clipboard) { StatusText.Text = L("Erst einen Vers anklicken."); return; }
+        var parts = BibleStudy.Core.Storage.MarkLogic.Runs(verses).Select(x => x.From == x.To ? Label(new VerseRef(_curBook, _curChapter, x.From)) : Label(new VerseRef(_curBook, _curChapter, x.From)) + "–" + x.To).ToList();
+        var place = parts.Count == 1 ? parts[0] : parts[0] + ", " + string.Join(", ", parts.Skip(1).Select(p => p[(p.LastIndexOf(' ') + 1)..]));
+        await clipboard.SetTextAsync(place);
+        StatusText.Text = L("Stelle kopiert: {0}", place);
+    }
+
     async Task CopyVerseAsync()
     {
         if (_selected is not int v || TopLevel.GetTopLevel(this)?.Clipboard is not { } clipboard) { StatusText.Text = L("Erst einen Vers anklicken."); return; }

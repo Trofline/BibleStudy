@@ -42,7 +42,47 @@ public partial class MainWindow
 
     // ---- the tree ------------------------------------------------------------------------------------------------------
 
+    /// <summary>With "all vaults" (or shared vaults): the documents of the other vaults under their own heading; a click opens the vault and the document.</summary>
+    void AddForeignDocs(string? query)
+    {
+        foreach (var name in ShownVaults().Skip(1))
+        {
+            List<Document> docs;
+            try { docs = StoreOf(name).GetDocuments(string.IsNullOrEmpty(query) ? null : query).Where(d => !d.IsTemplate).ToList(); }
+            catch { continue; }
+            if (docs.Count == 0) continue;
+            DocTree.Children.Add(new TextBlock { Text = "◆ " + name + "   ·   " + docs.Count, FontWeight = FontWeight.SemiBold, Margin = new(4, 14, 0, 4) });
+            foreach (var d in docs)
+            {
+                var vault = name; var doc = d;
+                var row = new Border
+                {
+                    Padding = new(10, 7, 8, 7), CornerRadius = new(8), Background = Brushes.Transparent, Cursor = new Cursor(StandardCursorType.Hand),
+                    Child = new StackPanel { Spacing = 2, Children = {
+                        new TextBlock { Text = d.Title.Length > 0 ? d.Title : L("(ohne Titel)"), FontWeight = FontWeight.SemiBold, TextTrimming = TextTrimming.CharacterEllipsis },
+                        new TextBlock { Text = Shorten(PlainPreview(d.Body), 100), Classes = { "caption" }, TextTrimming = TextTrimming.CharacterEllipsis } } },
+                };
+                ToolTip.SetTip(row, L("Wechselt in den Vault „{0}“ und öffnet das Dokument.", vault));
+                row.PointerEntered += (_, _) => row.Background = Res("BsSurface2") ?? Brushes.Transparent;
+                row.PointerExited += (_, _) => row.Background = Brushes.Transparent;
+                row.PointerReleased += async (_, e) =>
+                {
+                    if (e.InitialPressMouseButton != MouseButton.Left) return;
+                    await SwitchVaultAsync(vault);
+                    if (_vault.GetDocuments().FirstOrDefault(x => x.Id == doc.Id) is { } fresh) OpenDocument(fresh);
+                };
+                DocTree.Children.Add(row);
+            }
+        }
+    }
+
     void BuildDocTree(List<Document> docs, bool flat)
+    {
+        BuildOwnDocTree(docs, flat);
+        if (ShownVaults().Count > 1) AddForeignDocs(DocSearchBox.Text?.Trim());
+    }
+
+    void BuildOwnDocTree(List<Document> docs, bool flat)
     {
         DocTree.Children.Clear();
         var folders = FolderTree(_vault.GetFolders());
@@ -131,7 +171,7 @@ public partial class MainWindow
         head.Children.Add(left);
 
         var preview = d.Path is not null ? L("Datei: ") + System.IO.Path.GetFileName(d.Path)
-            : Shorten(BibleStudy.Core.Models.DocumentLinks.WithLinkTexts(d.Body).ReplaceLineEndings(" ").Replace("#", "").Replace("**", "").Replace(">", "").Trim(), 100);
+            : Shorten(PlainPreview(d.Body), 100);
         var stack = new StackPanel { Spacing = 2, Children = { head } };
         if (preview.Length > 0) stack.Children.Add(new TextBlock { Text = preview, Classes = { "caption" }, TextTrimming = TextTrimming.CharacterEllipsis });
         var shown = d.Tags.Where(t => !IsCategoryTag(t)).ToList();

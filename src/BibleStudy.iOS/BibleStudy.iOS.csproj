@@ -14,9 +14,9 @@
     <RootNamespace>BibleStudy.App</RootNamespace>
     <AssemblyName>BibleStudy.App</AssemblyName>
     <ApplicationId>de.trofline.biblestudy</ApplicationId>
-    <ApplicationVersion>33</ApplicationVersion>
-    <ApplicationDisplayVersion>1.9.14</ApplicationDisplayVersion>
-    <Version>1.9.14</Version>
+    <ApplicationVersion>34</ApplicationVersion>
+    <ApplicationDisplayVersion>1.9.15</ApplicationDisplayVersion>
+    <Version>1.9.15</Version>
     <ApplicationTitle>BibleStudy</ApplicationTitle>
     <Product>BibleStudy</Product>
     <Authors>Trofline</Authors>

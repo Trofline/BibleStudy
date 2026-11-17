@@ -21,6 +21,9 @@ public interface ICollabLink : IDisposable
 /// <summary>Another person with the app open in the same network (home Wi-Fi, ZeroTier, Tailscale …).</summary>
 public sealed record CollabNeighbor(string Id, string Name, IPAddress Address, int Port, DateTime Seen);
 
+/// <summary>Someone asks to connect: their name, address, the check number, their lasting id and the friend token they bring (empty when none).</summary>
+public sealed record CollabAsk(string Name, IPAddress Address, string CheckCode, string Id, string Token);
+
 /// <summary>
 /// Studying together in the same network, without codes: like the sync, the apps call out with a short broadcast (only a random id, the port and
 /// the chosen name) and so see each other. A tap on a name asks the other person, who has to accept. The connection is direct (TCP) and encrypted:
@@ -39,13 +42,14 @@ public sealed class NetCollab : IDisposable
     TcpListener? _tcp;
     UdpClient? _udp;
 
-    public string Id { get; } = Convert.ToHexString(RandomNumberGenerator.GetBytes(8));
+    /// <summary>The lasting id of this person (kept in the settings), so friends are recognised again.</summary>
+    public string Id { get; init; } = Convert.ToHexString(RandomNumberGenerator.GetBytes(8));
     public string Name { get; set; } = "";
     public int Port { get; private set; }
     public bool Running => _cts is not null;
 
     /// <summary>Someone asks to connect. Return true to accept (the call may wait for the person to decide).</summary>
-    public Func<string, IPAddress, string, Task<bool>>? Approve;
+    public Func<CollabAsk, Task<bool>>? Approve;
     /// <summary>An accepted connection from someone who asked us.</summary>
     public event Action<NetLink>? Incoming;
     public event Action? NeighborsChanged;
@@ -181,7 +185,7 @@ public sealed class NetCollab : IDisposable
     // ---- asking -------------------------------------------------------------------------------------------------------
 
     /// <summary>Asks the other person and waits until they decide (at most <paramref name="wait"/>). Throws <see cref="UnauthorizedAccessException"/> when they say no.</summary>
-    public async Task<NetLink> ConnectAsync(IPAddress address, int port, TimeSpan wait, CancellationToken ct = default)
+    public async Task<NetLink> ConnectAsync(IPAddress address, int port, TimeSpan wait, string token = "", CancellationToken ct = default)
     {
         var client = new TcpClient(address.AddressFamily) { NoDelay = true };
         try
@@ -192,7 +196,8 @@ public sealed class NetCollab : IDisposable
                 await client.ConnectAsync(address, port, reach.Token);
             }
             var link = await NetLink.Open(client.GetStream(), client, true, ct);
-            await link.SendRaw(JsonSerializer.Serialize(new { t = "ask", id = Id, name = Name }), ct);
+            await link.SendRaw(JsonSerializer.Serialize(new { t = "ask", id = Id, name = Name, token }), ct);
+            link.RemoteAddress = address;
             using var answer = CancellationTokenSource.CreateLinkedTokenSource(ct);
             answer.CancelAfter(wait);
             var reply = await link.ReceiveRaw(answer.Token) ?? throw new IOException("closed");
@@ -203,6 +208,7 @@ public sealed class NetCollab : IDisposable
                 throw new UnauthorizedAccessException(doc.RootElement.TryGetProperty("why", out var w) ? w.GetString() : "no");
             }
             link.PeerName = doc.RootElement.TryGetProperty("name", out var n) ? n.GetString() ?? "" : "";
+            link.PeerId = doc.RootElement.TryGetProperty("id", out var pid) ? (pid.GetString() ?? "")[..Math.Min(32, (pid.GetString() ?? "").Length)] : "";
             return link;
         }
         catch { client.Dispose(); throw; }
@@ -225,6 +231,7 @@ public sealed class NetCollab : IDisposable
     {
         c.NoDelay = true;
         NetLink? link = null;
+        var token = "";
         try
         {
             using (var hello = CancellationTokenSource.CreateLinkedTokenSource(ct))
@@ -237,10 +244,14 @@ public sealed class NetCollab : IDisposable
                 var name = (doc.RootElement.GetProperty("name").GetString() ?? "").Trim();
                 if (name.Length > 40) name = name[..40];
                 link.PeerName = name;
+                link.PeerId = doc.RootElement.TryGetProperty("id", out var pid) && pid.ValueKind == JsonValueKind.String ? (pid.GetString() ?? "")[..Math.Min(32, (pid.GetString() ?? "").Length)] : "";
+                token = doc.RootElement.TryGetProperty("token", out var tk) && tk.ValueKind == JsonValueKind.String ? (tk.GetString() ?? "")[..Math.Min(64, (tk.GetString() ?? "").Length)] : "";
             }
             var remote = ((IPEndPoint)c.Client.RemoteEndPoint!).Address;
-            var ok = Approve is { } approve && await approve(link.PeerName, remote, link.CheckCode);
-            await link.SendRaw(ok ? JsonSerializer.Serialize(new { t = "yes", name = Name }) : JsonSerializer.Serialize(new { t = "no", why = "declined" }), ct);
+            if (remote.IsIPv4MappedToIPv6) remote = remote.MapToIPv4();
+            link.RemoteAddress = remote;
+            var ok = Approve is { } approve && await approve(new CollabAsk(link.PeerName, remote, link.CheckCode, link.PeerId, token));
+            await link.SendRaw(ok ? JsonSerializer.Serialize(new { t = "yes", name = Name, id = Id }) : JsonSerializer.Serialize(new { t = "no", why = "declined" }), ct);
             if (!ok) { link.Dispose(); return; }
             Incoming?.Invoke(link);
         }
@@ -268,6 +279,9 @@ public sealed class NetLink : ICollabLink
     public event Action<string>? Received;
 
     public string PeerName { get; internal set; } = "";
+    /// <summary>The lasting id of the other person, and the address they were reached at.</summary>
+    public string PeerId { get; internal set; } = "";
+    public IPAddress? RemoteAddress { get; internal set; }
     /// <summary>Four digits made from the shared key: the same on both sides when nobody sits in between.</summary>
     public string CheckCode { get; }
     public bool IsOpen => _started && _closed == 0;

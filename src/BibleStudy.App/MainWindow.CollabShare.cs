@@ -30,10 +30,10 @@ public partial class MainWindow
         var progress = new TextBlock { Classes = { "caption" }, TextWrapping = TextWrapping.Wrap };
         AddCollabItem(progress);
         CollabSend(new { t = "blob", id, kind, name, size = data.LongLength, parts });
-        var peer = _peer;
+
         for (var n = 0; n < parts; n++)
         {
-            if (_peer != peer || _peer?.IsOpen != true) { progress.Text = L("Senden abgebrochen: die Verbindung ist getrennt."); return; }
+            if (!CollabOpen) { progress.Text = L("Senden abgebrochen: die Verbindung ist getrennt."); return; }
             var len = (int)Math.Min(PieceBytes, data.LongLength - (long)n * PieceBytes);
             CollabSend(new { t = "part", id, n, data = Convert.ToBase64String(data, n * PieceBytes, len) });
             if (n % 8 == 0) progress.Text = L("Sende „{0}“ … {1} %", name, n * 100 / parts);
@@ -142,7 +142,7 @@ public partial class MainWindow
             case "blob":
             {
                 var id = Str("id", 16); var kind = Str("kind", 10); var size = Long("size"); var parts = (int)Long("parts");
-                if (id.Length == 0 || kind is not ("vault" or "marks" or "notes") || size < 1 || size > MaxBlob || parts < 1 || parts != (size + PieceBytes - 1) / PieceBytes) return true;
+                if (id.Length == 0 || kind is not ("vault" or "marks" or "notes" or "voice") || size < 1 || size > MaxBlob || parts < 1 || parts != (size + PieceBytes - 1) / PieceBytes) return true;
                 if (_incoming.Count >= 3) return true;
                 var progress = new TextBlock { Classes = { "caption" }, TextWrapping = TextWrapping.Wrap, Text = L("{0} sendet etwas …", PeerWho) };
                 AddCollabItem(progress);
@@ -172,6 +172,7 @@ public partial class MainWindow
                         case "vault": ShowReceivedVault(b.Name, data); break;
                         case "marks": ShowReceivedMarks(b.Name, data); break;
                         case "notes": ShowReceivedNotes(b.Name, data); break;
+                        case "voice": ShowVoiceMessage(PeerWho, b.Name, data, false); break;
                     }
                 }
                 return true;

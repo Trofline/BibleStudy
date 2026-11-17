@@ -54,6 +54,8 @@ The sheet has A4 pages with page numbers and no lonely lines at a page edge. **P
 
 **Markdown:** here you choose how the Bible references come along: as **a file of their own, with links** (as before), **as a quote under the text** (all in one file, each verse right under the paragraph that names it) or **not at all**. Also whether linked documents come along as files of their own, and whether every file gets a **head with title, date and tags** (YAML, as Obsidian reads it). The **preview** shows the text of the main file and which files will be made in the folder, before you save.
 
+**Pictures:** the picture button in the editor ribbon inserts one or more pictures from files. They are kept inside the vault, so backups and synchronizing take them along. Very large pictures are shrunk to 1600 pixels wide. The text gets a line `![Name](bild:…)`; the reading view, the print page and the HTML export show the picture, a Markdown export saves it in the folder `images`.
+
 ## 6.3 Linking: Verses and [[Links]]
 
 - If you write a Bible passage like "John 3:16", it becomes a link that jumps to the passage.

@@ -1,5 +1,6 @@
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Controls.Primitives;
 using Avalonia.Input;
 using Avalonia.Layout;
 using Avalonia.Media;
@@ -24,6 +25,9 @@ public partial class MainWindow
     sealed record ExTarget(Control Control, long? Folder, Action<bool> Highlight);
 
     bool _exBuilt, _exQuiet;
+    bool _exFlat;                          // everything of the vault at once, without folders
+    ToggleButton? _exAllVaultsBtn;
+    ToggleButton _exFlatBtn = null!;
     long? _exFolder;                       // the folder that is open (null = the top)
     readonly Stack<long?> _exBack = new();
     readonly HashSet<long> _exOpen = [];   // folders that are opened in the tree
@@ -93,6 +97,12 @@ public partial class MainWindow
         };
         pathBox.Bind(Border.BackgroundProperty, this.GetResourceObservable("BsSurface"));
         pathBox.Bind(Border.BorderBrushProperty, this.GetResourceObservable("BsBorder"));
+        _exFlatBtn = new ToggleButton { Content = L("Alles zeigen"), Margin = new(8, 0, 0, 0), VerticalAlignment = VerticalAlignment.Center, IsChecked = _exFlat };
+        ToolTip.SetTip(_exFlatBtn, L("Alle Markierungen und Notizen auf einmal, ohne Ordner (auch die gemeinsamen Vaults)."));
+        _exFlatBtn.IsCheckedChanged += (_, _) => { _exFlat = _exFlatBtn.IsChecked == true; _exSel.Clear(); RefreshExplorer(); };
+        _exAllVaultsBtn = new ToggleButton { Content = L("Alle Vaults"), Margin = new(8, 0, 0, 0), VerticalAlignment = VerticalAlignment.Center, IsChecked = _settings.MarksAllVaults };
+        ToolTip.SetTip(_exAllVaultsBtn, L("Auch die Einträge der anderen Vaults zeigen (zum Ansehen; ändern geht im jeweiligen Vault)."));
+        _exAllVaultsBtn.IsCheckedChanged += (_, _) => SetShowAllVaults(_exAllVaultsBtn.IsChecked == true);
         Control bar;
         var nav = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 2, Children = { _exBackBtn, _exUpBtn } };
         DockPanel.SetDock(nav, Dock.Left);
@@ -103,12 +113,12 @@ public partial class MainWindow
             _exSearch.Width = double.NaN;
             DockPanel.SetDock(newFolder, Dock.Right);
             pathBox.Margin = new(0, 0, 0, 6);
-            bar = new StackPanel { Margin = new(10, 10, 10, 8), Children = { pathBox, new DockPanel { Children = { nav, newFolder, _exSearch } } } };
+            bar = new StackPanel { Margin = new(10, 10, 10, 8), Children = { pathBox, new DockPanel { Children = { nav, newFolder, _exSearch } }, new StackPanel { Orientation = Orientation.Horizontal, Children = { _exFlatBtn, _exAllVaultsBtn } } } };
         }
         else
         {
             var dock = new DockPanel { Margin = new(14, 12, 14, 8) };
-            var right = new StackPanel { Orientation = Orientation.Horizontal, Children = { _exSearch, newFolder } };
+            var right = new StackPanel { Orientation = Orientation.Horizontal, Children = { _exSearch, _exFlatBtn, _exAllVaultsBtn, newFolder } };
             DockPanel.SetDock(right, Dock.Right);
             dock.Children.Add(nav); dock.Children.Add(right); dock.Children.Add(pathBox);
             bar = dock;
@@ -387,6 +397,28 @@ public partial class MainWindow
         return items;
     }
 
+    /// <summary>The marks and notes of the vaults that show with the open one: to look at (ids that belong to no row of the open vault, so nothing changes them).</summary>
+    List<ExItem> ForeignExItems()
+    {
+        var items = new List<ExItem>();
+        var serial = long.MinValue + 1;
+        foreach (var name in ShownVaults().Skip(1))
+            try
+            {
+                var store = StoreOf(name);
+                foreach (var m in store.GetMarks())
+                {
+                    var place = Label(m.Ref) + (m.MultiVerse ? "–" + m.LastVerse : "") + "  ·  " + name;
+                    var title = (m.Note.Length > 0 ? m.Note : m.Text).ReplaceLineEndings(" ").Trim();
+                    items.Add(new ExItem(ExKind.Mark, serial++, title.Length > 0 ? title : place, place, m.Color, null, m.Ref));
+                }
+                foreach (var n in store.GetNotes())
+                    items.Add(new ExItem(ExKind.Note, serial++, n.Text.ReplaceLineEndings(" ").Trim(), Label(n.Ref) + "  ·  " + name, null, null, n.Ref));
+            }
+            catch { /* a vault that cannot be read just does not show */ }
+        return items;
+    }
+
     /// <summary>Notes have no id of their own (one note per verse): the verse is the key.</summary>
     static long NoteKey(VerseRef r) => (long)r.Book.Aggregate(0, (h, c) => (h * 31 + c) % 100_000) * 1_000_000 + r.Chapter * 1000 + r.Verse;   // the same book always gives the same number, two books never the same one
 
@@ -400,7 +432,7 @@ public partial class MainWindow
         FillExplorerList();
         _exBackBtn.IsEnabled = _exBack.Count > 0;
         _exUpBtn.IsEnabled = _exFolder is not null || _exInTrash;
-        _exSearch.PlaceholderText = _exInTrash ? L("Im Papierkorb suchen …") : L("In diesem Ordner suchen …");
+        _exSearch.PlaceholderText = _exInTrash ? L("Im Papierkorb suchen …") : _exFlat ? L("In allem suchen …") : L("In diesem Ordner suchen …");
     }
 
     /// <summary>After a change here the other lists (Markierungen, Notizen, the text) show it too.</summary>
@@ -500,7 +532,14 @@ public partial class MainWindow
         var words = query.Split(' ', StringSplitOptions.RemoveEmptyEntries);
         var all = ExAllItems();
         IEnumerable<ExItem> folderRows, itemRows;
-        if (words.Length == 0)
+        if (_exFlat)
+        {
+            // everything at once: no folders, every mark and note of the vault (and of the vaults that show with it), narrowed by the search
+            bool Hit(string text) => words.All(w => text.Contains(w, StringComparison.CurrentCultureIgnoreCase));
+            folderRows = Enumerable.Empty<ExItem>();
+            itemRows = all.Concat(ForeignExItems()).Where(i => Hit(i.Title + " " + i.Place));
+        }
+        else if (words.Length == 0)
         {
             folderRows = ChildFolders(_exFolder).Select(f => new ExItem(ExKind.Folder, f.Id, f.Name, "", null, Known(f.ParentId)));
             itemRows = all.Where(i => i.FolderId == _exFolder);
@@ -531,7 +570,7 @@ public partial class MainWindow
         _exSel.RemoveAll(s => !rows.Any(r => SameItem(r, s)));
         foreach (var r in rows) _exList.Children.Add(ListRow(r, all));
         _exEmpty.IsVisible = rows.Count == 0;
-        _exEmpty.Text = words.Length > 0 ? L("Nichts gefunden.") : L("Dieser Ordner ist leer. Ziehe Markierungen, Notizen oder Ordner hierher, oder lege mit „＋ Neuer Ordner“ einen Unterordner an.");
+        _exEmpty.Text = _exFlat && words.Length == 0 ? L("Noch keine Markierungen oder Notizen.") : words.Length > 0 ? L("Nichts gefunden.") : L("Dieser Ordner ist leer. Ziehe Markierungen, Notizen oder Ordner hierher, oder lege mit „＋ Neuer Ordner“ einen Unterordner an.");
         ExUpdateInfo();
     }
 

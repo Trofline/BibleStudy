@@ -19,6 +19,8 @@ public partial class MainWindow
     CancellationTokenSource? _speakRestartCts;
     bool _speechMode, _speakNatural, _speakRestart;
     string _speakFull = "";
+    List<(int Verse, int Length)> _speakVerses = [];
+    DateTime _speakStartedAt;
     int _speakOffset, _speakAbs;
 
     // ---- the bar -------------------------------------------------------------------------------------------------------
@@ -114,6 +116,7 @@ public partial class MainWindow
         if (_curChapterData is null || TranslationBox.SelectedItem is not TranslationInfo t) { SpeakBtn.IsChecked = false; return; }
         var verses = _selected is int v ? _curChapterData.Verses.Where(x => x.Number >= v) : _curChapterData.Verses;
         var text = string.Join(" ", verses.Select(x => x.Text));
+        _speakVerses = verses.Select(x => (x.Number, x.Text.Length + 1)).ToList(); _speakStartedAt = DateTime.UtcNow; _speakAbs = 0;   // which verse is read now (studying together)
         if (string.IsNullOrWhiteSpace(text)) { SpeakBtn.IsChecked = false; return; }
         StopAudio();
         var culture = CultureInfo.GetCultures(CultureTypes.NeutralCultures).FirstOrDefault(c => c.ThreeLetterISOLanguageName == t.Language || c.Name == t.Language);

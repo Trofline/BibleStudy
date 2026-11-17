@@ -152,7 +152,9 @@ public partial class MainWindow
         DocRibbon.Children.Add(RibbonButton("1.", L("Nummerierte Liste (Strg+Umschalt+7)"), () => SetBlock("1.")));
         DocRibbon.Children.Add(RibbonButton("❝", L("Zitat (Strg+Umschalt+9)"), () => SetBlock(">")));
         DocRibbon.Children.Add(RibbonButton("—", L("Trennlinie (Strg+Umschalt+−)"), InsertRule));
+        DocRibbon.Children.Add(RibbonButton(new Icon { Data = Geometry.Parse("M3 5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z M8.5 10a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3z M21 15l-5-5L5 21"), IconSize = 15 }, L("Bild einfügen"), () => _ = InsertImageAsync()));
         DocRibbon.Children.Add(RibbonSeparator());
+        ImageUri = id => _vault.GetImage(id) is { } img ? $"data:{img.Mime};base64,{Convert.ToBase64String(img.Data)}" : null;
 
         var verse = RibbonButton(L("＋ Vers"), L("Bibelstelle als Zitat oder Link einfügen"), () => { }, 74);
         verse.Flyout = BuildVerseFlyout();
@@ -473,6 +475,7 @@ public partial class MainWindow
             var line = raw.TrimEnd();
             if (line.Length == 0) { Flush(); continue; }
             if (Regex.IsMatch(line, @"^\s*([-*_])\1{2,}\s*$")) { Flush(); DocPreview.Children.Add(new Border { Height = 1, Margin = new(0, 8), Opacity = 0.5, Background = Res("BsBorder") }); continue; }
+            if (DocImageLine().Match(line) is { Success: true } pic) { Flush(); DocPreview.Children.Add(PictureControl(pic.Groups["id"].Value, pic.Groups["n"].Value)); continue; }
             var m = BlockStart().Match(line);
             if (m.Success && m.Groups["h"].Success)
             {

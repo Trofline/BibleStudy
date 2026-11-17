@@ -170,10 +170,28 @@ public partial class MainWindow
         return Loc.Quote(Shorten(SelectedText(), 40));
     }
 
+    bool _recolorGroup;
+
+    /// <summary>
+    /// The verse number of a marked verse was clicked: the verses of the same color that lie directly beside it (a mark over several verses,
+    /// or several marks in a row) are one group, so a new color changes all of them and does not tear the group apart.
+    /// </summary>
+    HashSet<int> MarkedGroupAround(int verse)
+    {
+        var group = new HashSet<int> { verse };
+        if (!_wholeMarks.TryGetValue(verse, out var color)) return group;
+        bool Same(int v) => _wholeMarks.TryGetValue(v, out var c) && string.Equals(c, color, StringComparison.OrdinalIgnoreCase) && _verseBoxes.ContainsKey(v);
+        for (var v = verse - 1; Same(v); v--) group.Add(v);
+        for (var v = verse + 1; Same(v); v++) group.Add(v);
+        return group;
+    }
+
     string ApplyVerseColor(string hex)
     {
         PushUndo();
         var verses = _selVerses.Count > 0 ? _selVerses.ToHashSet() : _selected is int one ? [one] : [];
+        if (_recolorGroup && verses.Count == 1) verses = MarkedGroupAround(verses.First());
+        _recolorGroup = false;
         var runs = MarkLogic.Runs(verses);
         var covered = (Mark m) => Enumerable.Range(m.Ref.Verse, m.LastVerse - m.Ref.Verse + 1);
         var wholes = _chapterMarks.Where(m => m.WholeVerse && covered(m).Any(verses.Contains)).ToList();

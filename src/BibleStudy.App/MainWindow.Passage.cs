@@ -41,7 +41,8 @@ public partial class MainWindow
         var picked = SelectedText().Length > 0 ? SelectedText() : PickedText(anchor);
         if (picked.Length > 0) Item(L("Markierten Text kopieren"), async () => { if (TopLevel.GetTopLevel(this)?.Clipboard is { } cb) await cb.SetTextAsync(picked); });
         var marked = MarkedTextOf(anchor);
-        Item(L("Vers mit Stelle kopieren"), () => _ = CopyVerseAsync());
+        Item(L("Nur die Stelle kopieren (Strg+C)"), () => _ = CopyPlaceAsync());
+        Item(L("Vers mit Stelle kopieren (Strg+Umschalt+C)"), () => _ = CopyVerseAsync());
         Item(L("Markieren (Farbe wählen) …"), ShowColorFlyout);
         Item(L("Notiz schreiben"), () => { Open(2); NoteEditor.Focus(); });
         Item(HeadingBefore(verse) is null ? L("Überschrift davor einfügen …") : L("Überschrift davor bearbeiten …"), () => ShowHeadingEditor(r, HeadingBefore(verse), anchor));
@@ -139,7 +140,8 @@ public partial class MainWindow
         }
         Action(L("Notiz"), () => { RevealSideTab(2); NoteEditor.Focus(); }, true);
         Action(L("Dokument"), () => { SideTabs.SelectedIndex = KnowledgeTab; NewDocumentFromVerse(); });
-        Action(L("Kopieren"), () => _ = CopyVerseAsync());
+        Action(L("Stelle kopieren"), () => _ = CopyPlaceAsync());
+        Action(L("Vers kopieren"), () => _ = CopyVerseAsync());
         Action(L("Leseliste"), () => AddToQueue([r]));
         GuidePanel.Children.Add(actions);
 

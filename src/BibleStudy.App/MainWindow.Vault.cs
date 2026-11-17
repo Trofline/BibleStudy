@@ -36,6 +36,63 @@ public partial class MainWindow
         return vault;
     }
 
+    /// <summary>
+    /// The vaults whose content is shown: the active one first, then the others that show with it (all of them with "all vaults" on,
+    /// otherwise the shared ones). Only the active vault is changed; the others are there to look at.
+    /// </summary>
+    List<string> ShownVaults()
+    {
+        var names = VaultNames();
+        return [_vault.Name, .. names.Where(n => n != _vault.Name && !IsGuestVault(n) && (_settings.MarksAllVaults || _settings.SharedVaults.Contains(n)))];
+    }
+
+    bool _allVaultsSyncing;
+
+    /// <summary>"All vaults" on or off: one setting for the marks, the explorer, the documents and the text; every switch for it follows.</summary>
+    void SetShowAllVaults(bool on)
+    {
+        if (_allVaultsSyncing) return;
+        _allVaultsSyncing = true;
+        try
+        {
+            MarksTopBtn.IsChecked = MarksAllVaultsBtn.IsChecked = on;
+            if (_exAllVaultsBtn is not null) _exAllVaultsBtn.IsChecked = on;
+            DocAllVaultsCheck.IsChecked = on;
+        }
+        finally { _allVaultsSyncing = false; }
+        if (_settings.MarksAllVaults == on) return;
+        _settings.MarksAllVaults = on; SaveSettings();
+        StatusText.Text = on ? L("Alle Vaults werden gezeigt: Markierungen, Explorer und Dokumente.") : L("Nur der aktive Vault wird gezeigt.");
+        AfterShownVaultsChanged();
+    }
+
+    /// <summary>Which vaults show changed: every list and the text follow.</summary>
+    void AfterShownVaultsChanged()
+    {
+        _foldersTouched = false; CloseEditor(); ApplyCollectionFilter();
+        
+        RefreshExplorer(); RefreshDocs();
+        RefreshCells();   // the marks of the other vaults show in the text, or go away again
+    }
+
+    /// <summary>The settings list of the vaults that are shared (they show in every other vault).</summary>
+    void FillSharedVaults()
+    {
+        SharedVaultsPanel.Children.Clear();
+        foreach (var name in VaultNames().Where(n => !IsGuestVault(n)))
+        {
+            var check = new CheckBox { Content = name, IsChecked = _settings.SharedVaults.Contains(name), Margin = new(0, 0, 14, 0) };
+            check.IsCheckedChanged += (_, _) =>
+            {
+                _settings.SharedVaults.Remove(name);
+                if (check.IsChecked == true) _settings.SharedVaults.Add(name);
+                SaveSettings();
+                AfterShownVaultsChanged();
+            };
+            SharedVaultsPanel.Children.Add(check);
+        }
+    }
+
     List<string> VaultNames()
     {
         var dir = Path.Combine(_root, "vaults");
@@ -55,6 +112,7 @@ public partial class MainWindow
         RefreshHiddenXrefs();
         if (!IsGuestVault(name)) { _settings.Vault = name; SaveSettings(); }   // a guest vault is never the one that opens next time
         _read = _vault.GetReadChapters();
+        _exFolder = null; _exBack.Clear();   // the explorer starts at the top of the vault just opened
         _myXrefKey = null;
         _sermonVault = null; if (TabActive(PrayerTab)) BuildPrayerUi(); RefreshLists(); RefreshDocs(); RefreshQueue(); RefreshTodos(); RefreshBookmarks(); RefreshVaultUi();
         if (_windows.TryGetValue("group:Dokumente", out var docs)) docs.SelectAction?.Invoke(docs.Current);
@@ -82,6 +140,7 @@ public partial class MainWindow
         if (VaultQuickBox is not null) { VaultQuickBox.ItemsSource = VaultNames(); VaultQuickBox.SelectedItem = _vault.Name; }
         _vaultUiLoading = false;
         VaultInfo.Text = L("Aktiver Vault: {0}", _vault.Name);
+        FillSharedVaults();
         if (VaultTopText is not null) VaultTopText.Text = _vault.Name;
     }
 
@@ -105,16 +164,10 @@ public partial class MainWindow
         MarksDetailBtn.IsCheckedChanged += (_, _) => ApplyCollectionFilter();
         MarksAllVaultsBtn.IsChecked = MarksTopBtn.IsChecked = _settings.MarksAllVaults;   // the state is kept between starts
         // the same switch sits in the top bar, so it can be turned on and off without opening the marks panel
-        MarksTopBtn.IsCheckedChanged += (_, _) => MarksAllVaultsBtn.IsChecked = MarksTopBtn.IsChecked;
-        MarksAllVaultsBtn.IsCheckedChanged += (_, _) =>
-        {
-            MarksTopBtn.IsChecked = MarksAllVaultsBtn.IsChecked;
-            if (_settings.MarksAllVaults == (MarksAllVaultsBtn.IsChecked == true)) return;
-            _settings.MarksAllVaults = MarksAllVaultsBtn.IsChecked == true; SaveSettings();
-            StatusText.Text = _settings.MarksAllVaults ? L("Markierungen aller Vaults werden gezeigt.") : L("Nur die Markierungen des aktiven Vaults werden gezeigt.");
-            _foldersTouched = false; CloseEditor(); ApplyCollectionFilter();
-            RefreshCells();   // the marks of the other vaults show in the text, or go away again
-        };
+        DocAllVaultsCheck.IsChecked = _settings.MarksAllVaults;
+        MarksTopBtn.IsCheckedChanged += (_, _) => SetShowAllVaults(MarksTopBtn.IsChecked == true);
+        MarksAllVaultsBtn.IsCheckedChanged += (_, _) => SetShowAllVaults(MarksAllVaultsBtn.IsChecked == true);
+        DocAllVaultsCheck.IsCheckedChanged += (_, _) => SetShowAllVaults(DocAllVaultsCheck.IsChecked == true);
         var more = new MenuFlyout();
         void AddItem(string text, Action act) { var i = new MenuItem { Header = text }; i.Click += (_, _) => act(); more.Items.Add(i); }
         AddItem(L("Alle Ordner aufklappen"), () =>
@@ -190,10 +243,9 @@ public partial class MainWindow
         foreach (var m in _chapterMarks.Where(m => m.WholeVerse))   // a mark of several verses colors each of them
             for (var v = m.Ref.Verse; v <= m.LastVerse; v++) _wholeMarks[v] = m.Color;
         _headings = _vault.GetHeadings(_curBook, _curChapter);
-        // with "all vaults" on, the marks of the other vaults show in the text too (to look at: negative ids, so they are never edited by mistake)
+        // with "all vaults" on (or shared vaults), the marks of the other vaults show in the text too (to look at: negative ids, so they are never edited by mistake)
         _otherChapterMarks = []; _otherWhole = [];
-        if (_settings.MarksAllVaults)
-            foreach (var name in VaultNames().Where(n => n != _vault.Name))
+        foreach (var name in ShownVaults().Skip(1))
                 try
                 {
                     foreach (var m in StoreOf(name).GetMarks(_curBook, _curChapter))

@@ -64,21 +64,23 @@ public partial class MainWindow
     /// <summary>The folders as a collapsible tree; verses that follow each other with the same note and color are shown as one range (19,24–29).</summary>
     void ApplyCollectionFilter()
     {
-        var all = MarksAllVaultsBtn.IsChecked == true;
+        var names = ShownVaults();
+        var allNames = VaultNames();
+        var all = names.Count > 1;
         FolderFilterBox.IsEnabled = !all;
         long? folder = all ? null : (FolderFilterBox.SelectedItem as Folder)?.Id;
         var noFolder = !all && FolderFilterBox.SelectedIndex == 1;
         var tagFilter = TagFilterBox.SelectedIndex > 0 ? TagFilterBox.SelectedItem as string : null;
         var detail = MarksDetailBtn.IsChecked == true;
-        var names = all ? VaultNames() : [_vault.Name];
         var rows = new List<Entry>();
         var total = 0;
         // few folders: start expanded; many: collapsed (until the user decides)
         if (!_foldersTouched) _openFolders.Clear();
 
-        for (var vi = 0; vi < names.Count; vi++)
+        foreach (var vname in names)
         {
-            var store = StoreOf(names[vi]);
+            var vi = allNames.IndexOf(vname);   // the number in the list of all vaults: the same as when a row is picked
+            var store = StoreOf(vname);
             var foreign = !ReferenceEquals(store, _vault);
             var vnum = foreign ? vi + 1 : 0;   // 0 = the open vault (its ids stay what they always were)
             var everything = store.GetMarks();
@@ -91,7 +93,7 @@ public partial class MainWindow
             if (all)
             {
                 var vopen = _openFolders.Contains(VaultKeyBase + vi);
-                rows.Add(new Entry(default, $"{(vopen ? "▾" : "▸")}  ◆ {names[vi]}   ·   {L("{0} Verse", marks.Count)}", -1 - (VaultKeyBase + vi), null));
+                rows.Add(new Entry(default, $"{(vopen ? "▾" : "▸")}  ◆ {vname}   ·   {L("{0} Verse", marks.Count)}", -1 - (VaultKeyBase + vi), null));
                 if (!vopen) continue;
             }
 

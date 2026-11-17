@@ -43,6 +43,7 @@ public partial class MainWindow
     void InitMaterials()
     {
         AddHandler(KeyDownEvent, OnMaterialsKey, RoutingStrategies.Tunnel);
+        AddHandler(KeyDownEvent, OnTabKey, RoutingStrategies.Tunnel);
     }
 
     void BuildMaterials()

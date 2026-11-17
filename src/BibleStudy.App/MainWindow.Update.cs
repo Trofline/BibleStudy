@@ -228,8 +228,8 @@ public partial class MainWindow
                 // a notice on top with its button, not a question page: it is seen at once and does not block the reader
                 UpdateStatus.Text = L("Neue Version {0} verfügbar. Auf dem iPhone kommt sie über SideStore: Öffne SideStore und aktualisiere BibleStudy dort.", info.Version);
                 Notify(L("Neue Version {0}", info.Version),
-                    L("BibleStudy {0} ist erschienen (du hast {1}). In SideStore unter „Sources“ nach unten ziehen, dann bei BibleStudy auf „Update“ tippen.", info.Version, AppPaths.Version),
-                    actionLabel: L("SideStore öffnen"), action: () => _ = OpenSideStoreAsync());
+                    L("BibleStudy {0} ist erschienen (du hast {1}). Der Knopf holt die neue Version in SideStore; dort musst du sie nur noch bestätigen.", info.Version, AppPaths.Version),
+                    actionLabel: L("In SideStore aktualisieren"), action: () => _ = OpenSideStoreAsync(info.Version));
                 return;
             }
             var open = await AskAsync(L("Neue Version {0}", info.Version), L("BibleStudy {0} ist erschienen (du hast {1}). Auf diesem System lädst du das neue Paket selbst herunter. Soll die Download-Seite geöffnet werden?", info.Version, AppPaths.Version), L("Seite öffnen"), L("Später"));
@@ -249,11 +249,18 @@ public partial class MainWindow
         if (answer is 0 or 1) await InstallUpdateAsync(info, plan, onClose: answer == 1);
     }
 
-    async Task OpenSideStoreAsync()
+    /// <summary>
+    /// Opens SideStore. With a version, SideStore is asked to install that release's IPA itself (sidestore://install?url=…): the same app with a higher
+    /// version is an update, so it only has to be confirmed there. Without one SideStore just opens (to renew the signing).
+    /// </summary>
+    async Task OpenSideStoreAsync(string? version = null)
     {
+        var link = version is { Length: > 0 }
+            ? "sidestore://install?url=" + Uri.EscapeDataString($"https://github.com/{Updater.Repo}/releases/download/v{version}/BibleStudy-iOS-{version}.ipa")
+            : "sidestore://";
         // straight through UIKit: the launcher of Avalonia asks CanOpenUrl first, which says "no" for another app's scheme, and then nothing happened
-        if (OperatingSystem.IsIOS()) { Shell.Open("sidestore://"); return; }
-        try { if (TopLevel.GetTopLevel(this)?.Launcher is { } launcher) await launcher.LaunchUriAsync(new Uri("sidestore://")); }
+        if (OperatingSystem.IsIOS()) { Shell.Open(link); return; }
+        try { if (TopLevel.GetTopLevel(this)?.Launcher is { } launcher) await launcher.LaunchUriAsync(new Uri(link)); }
         catch (Exception ex) when (ex is InvalidOperationException or UriFormatException) { ErrorLog.Write(ex); }
     }
 

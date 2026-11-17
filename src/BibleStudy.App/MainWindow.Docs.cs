@@ -21,7 +21,7 @@ public partial class MainWindow
 
     string? _docCategory;   // null = all, "" = without category, otherwise the category name
 
-    readonly MenuItem _miOpenFile = new(), _miFromTemplate = new(), _miDelete = new();
+    readonly MenuItem _miOpenFile = new(), _miFromTemplate = new(), _miDelete = new(), _miCopy = new();
 
     /// <summary>A category as a colored dot and its name (the dots were emoji, unlike every other symbol of the program).</summary>
     static Control CategoryChip(int color, string label) => new StackPanel
@@ -147,7 +147,15 @@ public partial class MainWindow
             if (_doc is not { Id: > 0 } d) return;
             CloseDocument(); TrashDocumentWithUndo(d);
         };
-        more.Items.Add(_miOpenFile); more.Items.Add(_miFromTemplate); more.Items.Add(new Separator()); more.Items.Add(_miDelete);
+        _miCopy.Header = L("Duplizieren");
+        _miCopy.Click += (_, _) =>
+        {
+            if (_doc is not { Id: > 0 } d) return;
+            _vault.AddDocument(d.Title + L(" (Kopie)"), d.Body, null, d.IsTemplate, d.Tags.ToArray(), d.FolderId);
+            RefreshDocs(); RefreshCollection();
+            DocInfo.Text = L("„{0}“ wurde dupliziert.", d.Title);
+        };
+        more.Items.Add(_miOpenFile); more.Items.Add(_miFromTemplate); more.Items.Add(_miCopy); more.Items.Add(new Separator()); more.Items.Add(_miDelete);
         DocMoreBtn.Flyout = more;
     }
 

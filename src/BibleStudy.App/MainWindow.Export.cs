@@ -52,6 +52,9 @@ public partial class MainWindow
     }
 
     /// <summary>The little Markdown the editor uses: headings, quotes, lists, bold, italic; [[links]] become plain titles.</summary>
+    /// <summary>Set by the window: the data address of a picture of the open vault (for the pages of exports and handouts).</summary>
+    static Func<string, string?>? ImageUri;
+
     static string MarkdownToHtml(string md, Func<long?, string, string?>? hrefOf = null, Func<string, string?>? verseHref = null)
     {
         md = Regex.Replace(md, "<!--.*?-->", "", RegexOptions.Singleline);
@@ -93,6 +96,12 @@ public partial class MainWindow
         {
             var line = raw.TrimEnd();
             if (line.Length == 0) { FlushPara(); CloseList(); continue; }
+            if (DocImageLine().Match(line) is { Success: true } pic)
+            {
+                FlushPara(); CloseList();
+                if (ImageUri?.Invoke(pic.Groups["id"].Value) is { } uri) sb.Append($"<p><img src=\"{uri}\" alt=\"{H(pic.Groups["n"].Value)}\" style=\"max-width:100%;height:auto\"></p>");
+                continue;
+            }
             var h = Regex.Match(line, @"^(#{1,6})\s+(.*)$");
             if (h.Success) { FlushPara(); CloseList(); var n = Math.Min(h.Groups[1].Length, 3); sb.Append($"<h{n}>{Inline(h.Groups[2].Value)}</h{n}>"); continue; }
             if (line.StartsWith('>')) { FlushPara(); CloseList(); sb.Append("<blockquote>" + Inline(line.TrimStart('>', ' ')) + "</blockquote>"); continue; }
