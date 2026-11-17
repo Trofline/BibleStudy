@@ -18,6 +18,15 @@
       "category": "other",
       "versions": [
         {
+          "version": "1.9.16",
+          "buildVersion": "35",
+          "date": "2026-11-17",
+          "localizedDescription": "## New in 1.9.16\n**Kind of update:** Fix\n- **[Fix]** iPhone: scrolling and animations use the full 120 Hz of ProMotion screens.\n\n**iPhone:** update in SideStore (Sources ÔåÆ pull down ÔåÆ My Apps ÔåÆ Update). **Android:** the app updates itself.",
+          "downloadURL": "https://github.com/Trofline/BibleStudy/releases/download/v1.9.16/BibleStudy-iOS-1.9.16.ipa",
+          "size": 60076007,
+          "minOSVersion": "15.0"
+        },
+        {
           "version": "1.9.15",
           "buildVersion": "34",
           "date": "2026-11-17",
