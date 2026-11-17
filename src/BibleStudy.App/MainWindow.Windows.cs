@@ -60,6 +60,8 @@ public partial class MainWindow
     void RevealSideTab(int index)
     {
         if (_windows.Values.FirstOrDefault(d => d.Side && d.Indices.Contains(index)) is { Win: { } win }) { win.Activate(); return; }
+        // a tab of a work area (Studium, Planen …) is not in the side panel: its work tab opens (or comes to the front) on that tab
+        if (GroupOf(index) is { Windowed: true } group) { OpenWork(group, index); return; }
         SetPanelOpen(true);
         SideTabs.SelectedIndex = index;
     }
