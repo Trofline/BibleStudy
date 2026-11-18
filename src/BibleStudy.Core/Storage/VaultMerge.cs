@@ -42,7 +42,7 @@ public sealed partial class VaultStore
             marks.Where(m => !m.WholeVerse && m.TranslationId != Mark.AnyTranslation).Select(m => m.TranslationId).Distinct().Order().ToList());
     }
 
-    static readonly string[] ContentTables = ["notes", "read_chapters", "folders", "marks", "mark_tags", "mark_places", "queue", "documents", "doc_tags", "todos", "my_xrefs", "hidden_xrefs", "bookmarks", "prayers", "headings", "studies"];
+    static readonly string[] ContentTables = ["notes", "read_chapters", "folders", "marks", "mark_tags", "mark_places", "queue", "documents", "doc_tags", "todos", "my_xrefs", "hidden_xrefs", "bookmarks", "prayers", "headings", "studies", "material_marks", "material_gone"];
 
     /// <summary>A fingerprint of what the user wrote in this vault. Reading (the last position) and the time stamps of a save without a change do not count.</summary>
     public string Fingerprint()
@@ -57,7 +57,7 @@ public sealed partial class VaultStore
             hash.AppendData(Encoding.UTF8.GetBytes("#" + table));
             while (r.Read())
                 for (var i = 0; i < r.FieldCount; i++)
-                    if (r.GetName(i) is not ("updated" or "created" or "read_at"))
+                    if (r.GetName(i) is not ("updated" or "created" or "read_at" or "changed") && !(table == "material_marks" && r.GetName(i) is "path" or "id"))   // a file lies at another place on every device
                         hash.AppendData(Encoding.UTF8.GetBytes(r.GetValue(i) + "\u0001"));
         }
         return Convert.ToHexString(hash.GetHashAndReset());
@@ -136,6 +136,9 @@ public sealed partial class VaultStore
         var places = GetMarkPlaces();
         foreach (var ((mark, translation, verse), at) in other.GetMarkPlaces())
             if (markMap.TryGetValue(mark, out var id) && !places.ContainsKey((id, translation, verse))) SetMarkPlace(id, translation, verse, at.Start, at.End);
+
+        // marks in the materials (PDF, Word …): by file name and place, with notes of what was deleted (see VaultMaterialSync)
+        others += MergeMaterialMarks(other);
 
         // notes
         var mineNotes = GetNotes().ToDictionary(n => n.Ref);

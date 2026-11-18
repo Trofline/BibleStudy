@@ -105,6 +105,7 @@ public sealed partial class VaultStore : SqliteDb
         InitImages();
         Exec("CREATE TABLE IF NOT EXISTS studies(id INTEGER PRIMARY KEY, day TEXT NOT NULL, title TEXT NOT NULL, passages TEXT, notes TEXT, questions TEXT, created TEXT)");
         Exec("CREATE TABLE IF NOT EXISTS material_marks(id INTEGER PRIMARY KEY, path TEXT NOT NULL, name TEXT NOT NULL, block INT, start_off INT, text TEXT NOT NULL, color TEXT, note TEXT, created TEXT)");
+        InitMaterialSync();
         // links from older versions lead by title: they get the number of their document
         try
         {
@@ -401,13 +402,15 @@ public sealed partial class VaultStore : SqliteDb
 
     // ---- marks and notes in the materials ------------------------------------------------------------------------------
 
-    /// <summary>The marks of a file: those made at this path, or, when there are none, those of a file with the same name (it was moved).</summary>
+    /// <summary>
+    /// The marks of a file: those made at this path, and those of a file with the same name that is not there (it was moved, or the mark was made
+    /// on another device, where the file lies elsewhere).
+    /// </summary>
     public List<MaterialMark> GetMaterialMarks(string path)
     {
         var all = Query("SELECT id,path,block,start_off,text,color,note,created FROM material_marks WHERE name=$n COLLATE NOCASE ORDER BY block,start_off",
             c => c.Parameters.AddWithValue("$n", System.IO.Path.GetFileName(path)), ReadMaterialMark);
-        var here = all.Where(m => string.Equals(m.Path, path, StringComparison.OrdinalIgnoreCase)).ToList();
-        return here.Count > 0 ? here : all.Where(m => !File.Exists(m.Path)).ToList();
+        return all.Where(m => string.Equals(m.Path, path, StringComparison.OrdinalIgnoreCase) || !File.Exists(m.Path)).ToList();
     }
 
     public List<MaterialMark> GetAllMaterialMarks() =>
@@ -419,26 +422,49 @@ public sealed partial class VaultStore : SqliteDb
 
     public long AddMaterialMark(string path, int block, int start, string text, string color, string note = "")
     {
+        var now = DateTime.UtcNow.ToString("o");
+        return InsertMaterialMark(path, block, start, text, color, note, now, now);
+    }
+
+    long InsertMaterialMark(string path, int block, int start, string text, string color, string note, string created, string changed)
+    {
         using var con = Open(); using var cmd = con.CreateCommand();
-        cmd.CommandText = "INSERT INTO material_marks(path,name,block,start_off,text,color,note,created) VALUES($p,$n,$b,$s,$x,$c,$o,$t); SELECT last_insert_rowid()";
+        cmd.CommandText = "INSERT INTO material_marks(path,name,block,start_off,text,color,note,created,changed) VALUES($p,$n,$b,$s,$x,$c,$o,$t,$g); SELECT last_insert_rowid()";
         cmd.Parameters.AddWithValue("$p", path); cmd.Parameters.AddWithValue("$n", System.IO.Path.GetFileName(path));
         cmd.Parameters.AddWithValue("$b", block); cmd.Parameters.AddWithValue("$s", start); cmd.Parameters.AddWithValue("$x", text);
-        cmd.Parameters.AddWithValue("$c", color); cmd.Parameters.AddWithValue("$o", note); cmd.Parameters.AddWithValue("$t", DateTime.UtcNow.ToString("o"));
+        cmd.Parameters.AddWithValue("$c", color); cmd.Parameters.AddWithValue("$o", note); cmd.Parameters.AddWithValue("$t", created); cmd.Parameters.AddWithValue("$g", changed);
         return (long)cmd.ExecuteScalar()!;
     }
 
-    /// <summary>A mark was found at another place (the file changed or moved): it is kept there from now on.</summary>
-    public void MoveMaterialMark(long id, string path, int block, int start) =>
-        Exec("UPDATE material_marks SET path=$p, name=$n, block=$b, start_off=$s WHERE id=$i", c =>
+    /// <summary>
+    /// A mark was found at another place (the file changed or moved): it is kept there from now on. When its place in the text changed, the old place
+    /// is noted as gone, so the other devices do not keep a second copy of it there.
+    /// </summary>
+    public void MoveMaterialMark(long id, string path, int block, int start)
+    {
+        // only a new place in the text makes it a new mark for the other devices (a file found at another path is the same mark: a deletion elsewhere still counts)
+        var moved = GetAllMaterialMarks().FirstOrDefault(m => m.Id == id) is { } old && (old.Block != block || old.Start != start || !string.Equals(old.FileName, System.IO.Path.GetFileName(path), StringComparison.OrdinalIgnoreCase));
+        if (moved) NoteMaterialGone(GetAllMaterialMarks().First(m => m.Id == id));
+        Exec($"UPDATE material_marks SET path=$p, name=$n, block=$b, start_off=$s{(moved ? ", created=$t" : "")} WHERE id=$i", c =>
         {
             c.Parameters.AddWithValue("$p", path); c.Parameters.AddWithValue("$n", System.IO.Path.GetFileName(path));
             c.Parameters.AddWithValue("$b", block); c.Parameters.AddWithValue("$s", start); c.Parameters.AddWithValue("$i", id);
+            c.Parameters.AddWithValue("$t", DateTime.UtcNow.ToString("o"));
         });
+    }
 
     public void UpdateMaterialMark(long id, string color, string note) =>
-        Exec("UPDATE material_marks SET color=$c, note=$o WHERE id=$i", c => { c.Parameters.AddWithValue("$c", color); c.Parameters.AddWithValue("$o", note); c.Parameters.AddWithValue("$i", id); });
+        Exec("UPDATE material_marks SET color=$c, note=$o, changed=$g WHERE id=$i", c =>
+        {
+            c.Parameters.AddWithValue("$c", color); c.Parameters.AddWithValue("$o", note); c.Parameters.AddWithValue("$i", id); c.Parameters.AddWithValue("$g", DateTime.UtcNow.ToString("o"));
+        });
 
-    public void DeleteMaterialMark(long id) => Exec("DELETE FROM material_marks WHERE id=$i", c => c.Parameters.AddWithValue("$i", id));
+    /// <summary>Deletes the mark; a note that it is gone stays behind, so it goes on the other devices too and does not come back from them.</summary>
+    public void DeleteMaterialMark(long id)
+    {
+        if (GetAllMaterialMarks().FirstOrDefault(m => m.Id == id) is { } old) NoteMaterialGone(old);
+        Exec("DELETE FROM material_marks WHERE id=$i", c => c.Parameters.AddWithValue("$i", id));
+    }
 
     public List<(string Tag, int Count)> GetTags() =>
         Query("SELECT tag, COUNT(*) FROM mark_tags GROUP BY tag ORDER BY tag COLLATE NOCASE", _ => { }, r => (r.GetString(0), r.GetInt32(1)));
@@ -531,7 +557,7 @@ public sealed partial class VaultStore : SqliteDb
     /// </summary>
     public void Wipe()
     {
-        InTransaction(0, [.. new[] { "notes", "read_chapters", "folders", "marks", "mark_tags", "queue", "documents", "doc_tags", "todos", "my_xrefs", "hidden_xrefs", "prayers", "bookmarks", "last_position", "headings", "mark_places", "studies", "trash", "material_marks", "images" }
+        InTransaction(0, [.. new[] { "notes", "read_chapters", "folders", "marks", "mark_tags", "queue", "documents", "doc_tags", "todos", "my_xrefs", "hidden_xrefs", "prayers", "bookmarks", "last_position", "headings", "mark_places", "studies", "trash", "material_marks", "material_gone", "images" }
             .Select(table => $"DELETE FROM {table}")]);
         SharedRead?.Clear();
     }
