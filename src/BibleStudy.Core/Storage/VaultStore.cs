@@ -525,10 +525,16 @@ public sealed partial class VaultStore : SqliteDb
 
     // ---- delete everything in this vault ---------------------------------------------------------------------------------------
 
-    /// <summary>Empties the vault completely (notes, highlights, own headings, folders, documents, lists, prayers, reading progress, and what waits in the trash). Cannot be undone.</summary>
-    public void Wipe() =>
-        InTransaction(0, [.. new[] { "notes", "read_chapters", "folders", "marks", "mark_tags", "queue", "documents", "doc_tags", "todos", "my_xrefs", "hidden_xrefs", "prayers", "bookmarks", "last_position", "headings", "mark_places", "studies", "trash" }
+    /// <summary>
+    /// Empties the vault completely (notes, highlights, own headings, folders, documents and their pictures, marks in the materials, lists, prayers,
+    /// reading progress (the shared list too), and what waits in the trash). Cannot be undone.
+    /// </summary>
+    public void Wipe()
+    {
+        InTransaction(0, [.. new[] { "notes", "read_chapters", "folders", "marks", "mark_tags", "queue", "documents", "doc_tags", "todos", "my_xrefs", "hidden_xrefs", "prayers", "bookmarks", "last_position", "headings", "mark_places", "studies", "trash", "material_marks", "images" }
             .Select(table => $"DELETE FROM {table}")]);
+        SharedRead?.Clear();
+    }
 
     // ---- queue ------------------------------------------------------------------------------------------------------
 

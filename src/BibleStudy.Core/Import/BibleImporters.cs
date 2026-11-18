@@ -12,6 +12,23 @@ namespace BibleStudy.Core.Import;
 /// </summary>
 public static partial class BibleImporters
 {
+    /// <summary>
+    /// A chapter or verse number as the file writes it: the digits of any script count (Arabic ٣, Persian ۳, wide ３ — "\d" finds them all).
+    /// A number too big to be a place gives 0, and the line is left out (one odd line must not stop the whole Bible).
+    /// </summary>
+    public static int Num(string digits)
+    {
+        var n = 0;
+        foreach (var c in digits)
+        {
+            var d = System.Globalization.CharUnicodeInfo.GetDecimalDigitValue(c);
+            if (d < 0) return 0;
+            n = n * 10 + d;
+            if (n > 99_999) return 0;
+        }
+        return n;
+    }
+
     public static ParsedBible Read(string path, string languageCode, IProgress<string>? progress = null)
     {
         var ext = Path.GetExtension(path).ToLowerInvariant();
@@ -128,7 +145,7 @@ public static partial class BibleImporters
             var bookIndex = Array.FindIndex(BookData.GermanAbbreviations, a => string.Equals(a, abbreviation, StringComparison.OrdinalIgnoreCase));
             if (bookIndex < 0) continue;
             var book = BookData.UsfmIds[bookIndex];
-            int chapter = reference.Groups["c"].Success ? int.Parse(reference.Groups["c"].Value) : 1, verse = int.Parse(reference.Groups["v"].Value);
+            int chapter = reference.Groups["c"].Success ? Num(reference.Groups["c"].Value) : 1, verse = Num(reference.Groups["v"].Value);
 
             var start = html.IndexOf('>', m.Index + m.Length) + 1;                       // end of the verse number button's opening tag
             var next = i + 1 < matches.Count ? matches[i + 1].Index : Math.Min(html.Length, start + 20000);
@@ -162,7 +179,7 @@ public static partial class BibleImporters
             {
                 var word = StrongSuffix().Replace(WebUtility.HtmlDecode(Tags().Replace(t.Groups["inner"].Value, "")), "").Trim();
                 var id = StrongId().Match(t.Groups["pos"].Value);
-                if (word.Length > 0) segments.Add(new Segment(word, false, id.Success ? [$"{(id.Groups["l"].Value.ToUpperInvariant() is "A" ? "H" : id.Groups["l"].Value.ToUpperInvariant())}{int.Parse(id.Groups["n"].Value):D4}"] : null));
+                if (word.Length > 0) segments.Add(new Segment(word, false, id.Success ? [$"{(id.Groups["l"].Value.ToUpperInvariant() is "A" ? "H" : id.Groups["l"].Value.ToUpperInvariant())}{Num(id.Groups["n"].Value):D4}"] : null));
             }
             else if (t.Groups["note"].Success)
             {

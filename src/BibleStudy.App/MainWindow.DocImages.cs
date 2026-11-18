@@ -57,21 +57,46 @@ public partial class MainWindow
     }
 
     /// <summary>
-    /// A big picture is made smaller before it goes into the vault (at most 1600 pixels wide, as PNG), so a few photos do not make the vault huge;
-    /// a small one is kept exactly as it is.
+    /// A big picture is made smaller before it goes into the vault (at most 1600 pixels wide), so a few photos do not make the vault huge (the vault
+    /// travels whole to the other devices); a small one is kept exactly as it is. A photo becomes a JPEG (as a PNG it would be bigger than before),
+    /// a picture with see-through parts stays a PNG.
     /// </summary>
-    static (byte[] Data, string Mime) ShrinkImage(byte[] original, string fileName)
+    internal static (byte[] Data, string Mime) ShrinkImage(byte[] original, string fileName)
     {
         using var input = new MemoryStream(original);
         using var bitmap = new Bitmap(input);   // also checks that it is a picture
         var mime = Path.GetExtension(fileName).ToLowerInvariant() switch { ".jpg" or ".jpeg" => "image/jpeg", ".gif" => "image/gif", ".webp" => "image/webp", ".bmp" => "image/bmp", _ => "image/png" };
         if (original.Length <= 1_500_000 && bitmap.PixelSize.Width <= 1800) return (original, mime);
+        try
+        {
+            using var decoded = SkiaSharp.SKBitmap.Decode(original);
+            if (decoded is { Width: > 0, Height: > 0 })
+            {
+                var w = Math.Min(1600, decoded.Width);
+                var h = Math.Max(1, (int)Math.Round(decoded.Height * (w / (double)decoded.Width)));
+                using var scaled = w == decoded.Width ? decoded.Copy() : decoded.Resize(new SkiaSharp.SKImageInfo(w, h, decoded.ColorType, decoded.AlphaType), new SkiaSharp.SKSamplingOptions(SkiaSharp.SKCubicResampler.Mitchell));
+                var photo = mime == "image/jpeg" || decoded.AlphaType == SkiaSharp.SKAlphaType.Opaque || !HasSeeThrough(scaled);
+                using var encoded = scaled?.Encode(photo ? SkiaSharp.SKEncodedImageFormat.Jpeg : SkiaSharp.SKEncodedImageFormat.Png, 85);
+                if (encoded is not null && encoded.Size > 0) return (encoded.ToArray(), photo ? "image/jpeg" : "image/png");
+            }
+        }
+        catch (Exception ex) when (ex is ArgumentException or InvalidOperationException or NotSupportedException) { /* the way below */ }
         var width = Math.Min(1600, bitmap.PixelSize.Width);
         var size = new PixelSize(width, Math.Max(1, (int)Math.Round(bitmap.PixelSize.Height * (width / (double)bitmap.PixelSize.Width))));
         using var small = bitmap.CreateScaledBitmap(size, BitmapInterpolationMode.HighQuality);
         using var output = new MemoryStream();
         small.Save(output);
         return (output.ToArray(), "image/png");
+    }
+
+    /// <summary>True when some pixel is not fully opaque (a logo or drawing on a see-through background must stay a PNG).</summary>
+    static bool HasSeeThrough(SkiaSharp.SKBitmap? b)
+    {
+        if (b is null) return false;
+        for (var y = 0; y < b.Height; y += Math.Max(1, b.Height / 200))
+            for (var x = 0; x < b.Width; x += Math.Max(1, b.Width / 200))
+                if (b.GetPixel(x, y).Alpha < 255) return true;
+        return false;
     }
 
     /// <summary>A picture of the finished view; one that is not in this vault says so.</summary>

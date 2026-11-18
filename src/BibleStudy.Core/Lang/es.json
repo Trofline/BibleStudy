@@ -3370,5 +3370,6 @@
   "Leisten über der Datei ausblenden (mehr Platz für die Datei)": "Ocultar las barras sobre el archivo (más espacio para el archivo)",
   "Seitenzahl eingeben und Enter drücken (Strg+G)": "Escribe un número de página y pulsa Intro (Ctrl+G)",
   "Folie": "Diapositiva",
-  "Seite": "Página"
+  "Seite": "Página",
+  "Das gehört zu einem anderen Vault und wird hier nur gezeigt. Zum Ändern wechsle in diesen Vault.": "Esto pertenece a otro vault y solo se muestra aquí. Para cambiarlo, cambia a ese vault."
 }

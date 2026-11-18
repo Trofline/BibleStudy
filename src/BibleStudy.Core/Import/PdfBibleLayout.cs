@@ -150,7 +150,7 @@ public static class PdfBibleLayout
                         // "8" in the regular font right in front of a bold "3" on the same line is the verse number 83
                         if (tokens.Count > 0 && tokens[^1] is { Kind: Kind.Text, Text.Length: 1 } digit && char.IsAsciiDigit(digit.Text[0]) && lastRight > 0 && Math.Abs(lastBottom - w.Bottom) < 1.5 && w.Left - lastRight < 2.5)
                         { number = digit.Text + number; tokens.RemoveAt(tokens.Count - 1); }
-                        tokens.Add(new Token(Kind.Verse, number, int.Parse(number)));
+                        tokens.Add(new Token(Kind.Verse, number, BibleImporters.Num(number)));
                         lastRight = 0; continue;
                     }
                     var (plain, lig) = Unligate(w.Text);

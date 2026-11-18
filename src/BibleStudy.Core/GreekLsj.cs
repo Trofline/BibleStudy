@@ -40,8 +40,8 @@ public sealed partial class GreekLsj(HttpClient http, string cacheDir)
             try { _byStrong ??= Parse(await File.ReadAllTextAsync(await FileAsync(ct), ct)); }
             finally { _gate.Release(); }
         }
-        var digits = new string(strongId.Skip(1).TakeWhile(char.IsDigit).ToArray());
-        return digits.Length > 0 && strongId[0] is 'G' or 'g' && _byStrong.TryGetValue("G" + int.Parse(digits).ToString("D4"), out var l) ? l : [];
+        var digits = new string(strongId.Skip(1).TakeWhile(char.IsAsciiDigit).ToArray());   // 0-9 only: int.Parse reads no digits of other scripts
+        return strongId.Length > 0 && strongId[0] is 'G' or 'g' && int.TryParse(digits, out var n) && _byStrong.TryGetValue("G" + n.ToString("D4"), out var l) ? l : [];
     }
 
     /// <summary>Tab-separated lines: eStrong, dStrong, uStrong, Greek, transliteration, morph, gloss, entry (HTML-like).</summary>

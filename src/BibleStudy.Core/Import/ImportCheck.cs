@@ -50,7 +50,7 @@ public static class ImportCheck
     public static (ParsedBible Bible, int Applied, int Refused) ApplyCorrections(ParsedBible bible, string answer)
     {
         var lines = new Dictionary<(string, int, int), string>();
-        foreach (Match m in AnswerLine.Matches(answer)) lines[(m.Groups[1].Value, int.Parse(m.Groups[2].Value), int.Parse(m.Groups[3].Value))] = m.Groups[4].Value;
+        foreach (Match m in AnswerLine.Matches(answer)) lines[(m.Groups[1].Value, BibleImporters.Num(m.Groups[2].Value), BibleImporters.Num(m.Groups[3].Value))] = m.Groups[4].Value;
         int applied = 0, refused = 0;
         var verses = new List<ParsedVerse>(bible.Verses.Count);
         var known = bible.Verses.Select(v => (v.Book, v.Chapter, v.Verse)).ToHashSet();

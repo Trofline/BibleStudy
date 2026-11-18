@@ -290,7 +290,8 @@ public partial class MainWindow
     void ExCut()
     {
         if (_exSel.Count == 0) return;
-        _exCut = _exSel.ToList();
+        if (_exSel.All(Foreign)) { ExNote(ForeignNote(), false); return; }
+        _exCut = _exSel.Where(i => !Foreign(i)).ToList();
         FillExplorerList();
         ExNote(L("{0} ausgeschnitten. Öffne den Zielordner und drücke Strg+V.", _exCut.Count == 1 ? "„" + Shorten(_exCut[0].Title, 40) + "“" : L("{0} Einträge", _exCut.Count)), false);
     }
@@ -702,9 +703,16 @@ public partial class MainWindow
         },
     };
 
+    /// <summary>A mark or note of another vault that only shows here (see <see cref="ForeignExItems"/>: its id is below zero, those of this vault never are).</summary>
+    static bool Foreign(ExItem i) => i.Kind != ExKind.Folder && i.Id < 0;
+
+    string ForeignNote() => L("Das gehört zu einem anderen Vault und wird hier nur gezeigt. Zum Ändern wechsle in diesen Vault.");
+
     ContextMenu ItemContextMenu(ExItem item, Control anchor)
     {
-        var targets = _exSel.Any(s => s.Kind == item.Kind && s.Id == item.Id) && _exSel.Count > 1 ? _exSel.ToList() : [item];
+        if (Foreign(item))
+            return new ContextMenu { Items = { MenuAction(L("Zur Stelle springen"), () => ExOpen(item)), MenuAction(ForeignNote(), () => { }, enabled: false) } };
+        var targets = _exSel.Any(s => s.Kind == item.Kind && s.Id == item.Id) && _exSel.Count > 1 ? _exSel.Where(i => !Foreign(i)).ToList() : [item];
         return new ContextMenu
         {
             Items =
@@ -778,6 +786,8 @@ public partial class MainWindow
 
     void ExMove(List<ExItem> items, long? target)
     {
+        if (items.Count > 0 && items.All(Foreign)) { ExNote(ForeignNote(), false); return; }
+        items = items.Where(i => !Foreign(i)).ToList();
         var moved = 0; var refused = false; ExItem? firstMoved = null;
         var back = new List<Action>();
         foreach (var i in items)
@@ -821,6 +831,8 @@ public partial class MainWindow
     /// </summary>
     async void ExDelete(List<ExItem> items)
     {
+        if (items.Count > 0 && items.All(Foreign)) { ExNote(ForeignNote(), false); return; }
+        items = items.Where(i => !Foreign(i)).ToList();   // another vault is only shown here: its notes have the same verse as one here, and must not take that one along
         if (items.Count == 0) return;
         var trash = new List<long>();
         var touchedText = false;

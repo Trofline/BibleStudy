@@ -206,7 +206,7 @@ public static partial class BibleImporters
                 if (marker == "v")
                 {
                     var vm = UsfmVerse().Match(rest);
-                    if (vm.Success) { verse = int.Parse(vm.Groups["n"].Value); if (book is not null) c.Add(book, chapter, verse, UsfmInline().Replace(vm.Groups["t"].Value, "")); }
+                    if (vm.Success) { verse = Num(vm.Groups["n"].Value); if (book is not null) c.Add(book, chapter, verse, UsfmInline().Replace(vm.Groups["t"].Value, "")); }
                     continue;
                 }
                 if (marker is "s" or "s1" or "s2" or "s3")
@@ -246,10 +246,10 @@ public static partial class BibleImporters
             {
                 var f = SplitFields(line, delimiter == '\t' || csv ? delimiter : '\t');
                 if (f.Count >= 4 && BookFromName(f[0]) is { } b && int.TryParse(f[1], out var ch) && int.TryParse(f[2], out var v)) { c.Add(b, ch, v, string.Join(" ", f.Skip(3))); continue; }
-                if (f.Count >= 2 && LineRef().Match(f[0] + " x") is { Success: true } rm && BookFromName(rm.Groups["b"].Value) is { } b2) { c.Add(b2, int.Parse(rm.Groups["c"].Value), int.Parse(rm.Groups["v"].Value), string.Join(" ", f.Skip(1))); continue; }
+                if (f.Count >= 2 && LineRef().Match(f[0] + " x") is { Success: true } rm && BookFromName(rm.Groups["b"].Value) is { } b2) { c.Add(b2, Num(rm.Groups["c"].Value), Num(rm.Groups["v"].Value), string.Join(" ", f.Skip(1))); continue; }
             }
             var m = LineRef().Match(line);
-            if (m.Success && BookFromName(m.Groups["b"].Value) is { } bk) c.Add(bk, int.Parse(m.Groups["c"].Value), int.Parse(m.Groups["v"].Value), m.Groups["t"].Value);
+            if (m.Success && BookFromName(m.Groups["b"].Value) is { } bk) c.Add(bk, Num(m.Groups["c"].Value), Num(m.Groups["v"].Value), m.Groups["t"].Value);
         }
         return c.Done(Path.GetFileNameWithoutExtension(path), languageCode);
     }
@@ -354,10 +354,10 @@ public static partial class BibleImporters
                 var h = MdInline().Replace(line.TrimStart('#'), "$1").Trim();
                 // "## 1" is a chapter, not the first book (book numbers are only for other formats)
                 var ch = MdChapter().Match(h);
-                if (ch.Success && book is not null) { chapter = int.Parse(ch.Groups["c"].Value); lastVerse = 0; continue; }
+                if (ch.Success && book is not null) { chapter = Num(ch.Groups["c"].Value); lastVerse = 0; continue; }
                 if (!h.All(char.IsDigit) && BookFromName(h) is { } onlyBook) { book = onlyBook; chapter = 0; lastVerse = 0; continue; }
                 var bc = MdBookChapter().Match(h);
-                if (bc.Success && BookFromName(bc.Groups["b"].Value) is { } b2) { book = b2; chapter = int.Parse(bc.Groups["c"].Value); lastVerse = 0; }
+                if (bc.Success && BookFromName(bc.Groups["b"].Value) is { } b2) { book = b2; chapter = Num(bc.Groups["c"].Value); lastVerse = 0; }
                 continue;
             }
             line = line.TrimStart('>', ' ');
@@ -370,7 +370,7 @@ public static partial class BibleImporters
                 for (var i = 0; i < marks.Count; i++)
                 {
                     var end = i + 1 < marks.Count ? marks[i + 1].Index : line.Length;
-                    NextVerse(int.Parse(marks[i].Groups.Cast<Group>().Skip(1).First(g => g.Success).Value));
+                    NextVerse(Num(marks[i].Groups.Cast<Group>().Skip(1).First(g => g.Success).Value));
                     c.Add(book, chapter, lastVerse, Clean(line[(marks[i].Index + marks[i].Length)..end]));
                 }
                 continue;
@@ -380,13 +380,13 @@ public static partial class BibleImporters
             var full = LineRef().Match(line);
             if (full.Success && BookFromName(full.Groups["b"].Value) is { } bk)
             {
-                book = bk; chapter = int.Parse(full.Groups["c"].Value); lastVerse = int.Parse(full.Groups["v"].Value);
+                book = bk; chapter = Num(full.Groups["c"].Value); lastVerse = Num(full.Groups["v"].Value);
                 c.Add(bk, chapter, lastVerse, full.Groups["t"].Value);
                 continue;
             }
             // a line that starts with a number is a new verse only when the number fits the count ("12 Stämme …" inside a verse is text)
             var vm = MdVerseLine().Match(line);
-            if (vm.Success && book is not null && chapter > 0 && int.Parse(vm.Groups["v"].Value) is var n && (lastVerse == 0 || n == 1 || (n > lastVerse && n <= lastVerse + 3)))
+            if (vm.Success && book is not null && chapter > 0 && Num(vm.Groups["v"].Value) is var n && (lastVerse == 0 || n == 1 || (n > lastVerse && n <= lastVerse + 3)))
             { NextVerse(n); c.Add(book, chapter, lastVerse, vm.Groups["t"].Value); }
             else if (book is not null && chapter > 0 && lastVerse > 0) c.Add(book, chapter, lastVerse, line);   // a verse that continues in the next line
         }

@@ -202,7 +202,7 @@ public partial class MainWindow
     {
         var s = strong.Trim().ToUpperInvariant();
         if (s.Length < 2 || s[0] is not ('H' or 'G')) return s;
-        var digits = new string(s.Skip(1).TakeWhile(char.IsDigit).ToArray());
-        return digits.Length == 0 ? s : s[0] + int.Parse(digits).ToString();
+        var digits = new string(s.Skip(1).TakeWhile(char.IsAsciiDigit).ToArray());   // 0-9 only: int.Parse reads no digits of other scripts
+        return int.TryParse(digits, out var n) ? s[0] + n.ToString() : s;
     }
 }

@@ -256,8 +256,8 @@ public static partial class DocumentLinks
     [GeneratedRegex(@"\[\[(?:#(?<id>\d+):)?(?<t>[^\]|#]*)(?:[|#](?<a>[^\]]*))?\]\]")] private static partial Regex Wiki();
     [GeneratedRegex("<!--.*?-->", RegexOptions.Singleline)] private static partial Regex Comment();
 
-    // chapter,verse with an optional letter (4b), a range in the chapter or into another one (44,27–45,3), a list of more verses (.20.22-23) and "f."/"ff."
-    const string Place = @"(?<c>\d{1,3})\s*[,:]\s*(?<v>\d{1,3})(?:[a-e](?!\p{L}))?(?:\s*[-–—]\s*(?:(?<ec>\d{1,3})\s*[,:]\s*)?(?<e>\d{1,3})(?:[a-e](?!\p{L}))?(?![,:]\s*\d))?(?:\.(?<more>\d{1,3})(?:[a-e](?!\p{L}))?(?:[-–]\d{1,3})?(?![\d,:]))*(?:\s?ff?\.(?!\p{L}))?";
+    // chapter,verse (digits 0-9 only: \d takes the digits of other scripts too, which int.Parse cannot read) with an optional letter (4b), a range in the chapter or into another one (44,27–45,3), a list of more verses (.20.22-23) and "f."/"ff."
+    const string Place = @"(?<c>[0-9]{1,3})\s*[,:]\s*(?<v>[0-9]{1,3})(?:[a-e](?!\p{L}))?(?:\s*[-–—]\s*(?:(?<ec>[0-9]{1,3})\s*[,:]\s*)?(?<e>[0-9]{1,3})(?:[a-e](?!\p{L}))?(?![,:]\s*[0-9]))?(?:\.(?<more>[0-9]{1,3})(?:[a-e](?!\p{L}))?(?:[-–][0-9]{1,3})?(?![0-9,:]))*(?:\s?ff?\.(?!\p{L}))?";
 
     // a number before the book name goes up to 5: "4. Mose" and "5. Mose" are books of their own
     [GeneratedRegex(@"(?<![\p{L}\d])(?<b>(?:[1-5]\s?\.?\s?)?\p{L}{1,20}\.?)\s*" + Place)]

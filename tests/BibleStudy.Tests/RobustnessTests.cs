@@ -21,6 +21,7 @@ public class RobustnessTests
         "f.", "ff.", "vgl.", "und", "s.", "<!--", "-->", "<b>", "</b>", "&amp;", "\"", "'", "\\", "{", "}", "\t", "\n", "\r\n", " ", "  ",
         "ä", "ß", "Ö", "€", "😀", "​", "é", "ﬁ", "İ", "ı", "α", "א", "ἀγάπη", "Wort", "Jesus", "AND", "OR", "NOT", "\"Wort\"", "L=", "G3056", "H1254a",
         "?", "*", "~", "^", "$", "/", "%", "+", "=", "@", "\0", "\u001f",
+        "٣", "١٦", "５", "３,１６", "Joh ٣,١٦", "۱۲", "99999999999", "Joh 99999999999:1",   // digits of other scripts, numbers too big for a number
     ];
 
     static IEnumerable<string> OddTexts(int count = 2500)
@@ -90,6 +91,29 @@ public class RobustnessTests
     }
 
     [Fact]
+    public void Searching_the_Bible_with_any_query_and_any_option()
+    {
+        var corpus = new List<CorpusVerse>
+        {
+            new(new VerseRef("JHN", 3, 16), "Denn also hat Gott die Welt geliebt, dass er seinen eingeborenen Sohn gab."),
+            new(new VerseRef("JHN", 3, 17), "Denn Gott hat seinen Sohn nicht in die Welt gesandt, dass er die Welt richte."),
+            new(new VerseRef("GEN", 1, 1), "Im Anfang schuf Gott Himmel und Erde."),
+            new(new VerseRef("PSA", 23, 1), "Der HERR ist mein Hirte; mir wird nichts mangeln."),
+            new(new VerseRef("ISA", 39, 1), "Zu jener Zeit sandte Merodach-Baladan … ٣ ١٦ 😀 ἀγάπη א"),
+        };
+        var options = new[]
+        {
+            new SearchOptions(), new SearchOptions(WordMatch.Whole, CaseSensitive: true), new SearchOptions(WordMatch.Suffix, Range: 2),
+            new SearchOptions(WordMatch.Contains, Original: true, Range: 5), new SearchOptions(WordMatch.Prefix, Range: 99),
+        };
+        Never(t =>
+        {
+            foreach (var o in options) SearchEngine.Run(corpus, t, null, o);
+            SearchEngine.Run(corpus, t, null, exactWords: true, books: ["JHN"]);
+        }, "search engine");
+    }
+
+    [Fact]
     public void Markdown_text_and_web_pages_of_any_kind()
     {
         Never(t =>
@@ -128,6 +152,9 @@ public class RobustnessTests
             BibleStudy.Core.Sync.SyncCode.ParseHosts(t);
             BibleStudy.Core.Collab.Media.Ffmpeg.ParseDshow(t); BibleStudy.Core.Collab.Media.Ffmpeg.ParseAvfoundation(t);
             ImportDiff.Focus(t, t + "x");
+            WordAnalyzer.Normalize(t); WordAnalyzer.Normalize("G" + t); WordAnalyzer.Normalize("H" + t);
+            AudioBible.ChapterOf(t + ".mp3"); AudioBible.ChapterOf("Chapter " + t + ".mp3");
+            MaterialReader.HeadingLevel(t); MaterialReader.HeadingLevel("Heading" + t);
         }, "readers");
     }
 }

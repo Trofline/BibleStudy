@@ -41,6 +41,9 @@ public sealed class ReadStore : SqliteDb
         tx.Commit();
     }
 
+    /// <summary>Forgets every chapter read (a vault that is emptied completely).</summary>
+    public void Clear() => Exec("DELETE FROM read_chapters");
+
     /// <summary>Adds the chapters read in a vault file (nothing is removed; what is read stays read). A file without the table adds nothing.</summary>
     public void MergeFrom(string vaultDbPath)
     {

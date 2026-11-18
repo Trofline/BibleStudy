@@ -35,19 +35,28 @@ public partial class MainWindow
             if (!_settings.AutoSaveDocs) return;   // off: saved with "Speichern", and when the document is left or the program closed
             // a title being typed is not saved half-way: renaming moves the links to it, and "Gnade" on the way to "Gnade 2" could be another document
             if (DocTitleBox.IsFocused && _doc is { } d && (DocTitleBox.Text?.Trim() ?? "") != d.Title) return;
-            AutoSaveDocument();
+            AutoSaveDocument(leaving: false);
         };
         timer.Start();
     }
 
-    /// <summary>Saves quietly while the document is open and changed (needs a title); the editor keeps its cursor and selection.</summary>
-    void AutoSaveDocument()
+    /// <summary>
+    /// Saves quietly while the document is open and changed; the editor keeps its cursor and selection. While it stays open a document needs a title
+    /// (the title may still be coming); when it is left (another document, the list, closing the program) text without a title is kept too, under its first line.
+    /// </summary>
+    void AutoSaveDocument(bool leaving = true)
     {
         if (_doc is null || !DocEditorPanel.IsVisible) return;
         var state = DocState();
         if (state == _docSnapshot) return;
         var title = DocTitleBox.Text?.Trim() ?? "";
-        if (title.Length == 0) return;
+        if (title.Length == 0)
+        {
+            if (!leaving || string.IsNullOrWhiteSpace(DocBodyBox.Text)) return;
+            title = UntitledName(DocBodyBox.Text!);
+            DocTitleBox.Text = title;
+            state = DocState();
+        }
         try
         {
             var tags = (DocTagsBox.Text ?? "").Split(',', ';').Where(t => !IsCategoryTag(t.Trim())).Concat(SelectedCategoryTag()).ToArray();
@@ -64,5 +73,13 @@ public partial class MainWindow
             DocPathText.Text = L("Automatisch gespeichert um {0:HH:mm:ss}", DateTime.Now);
         }
         catch (Exception ex) { DocPathText.Text = L("Automatisches Speichern fehlgeschlagen: ") + ex.Message; }
+    }
+
+    /// <summary>A title for a document written without one: its first line of text (without the marks of a heading), else "Untitled".</summary>
+    internal static string UntitledName(string body)
+    {
+        var first = body.ReplaceLineEndings("\n").Split('\n').Select(l => l.Trim().TrimStart('#', '>', '-', '*', ' ').Trim()).FirstOrDefault(l => l.Length > 0) ?? "";
+        if (first.Length > 60) first = first[..60].TrimEnd() + " …";
+        return first.Length > 0 ? first : L("Ohne Titel");
     }
 }

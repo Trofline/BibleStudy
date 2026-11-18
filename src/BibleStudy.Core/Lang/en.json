@@ -3370,5 +3370,6 @@
   "Leisten über der Datei ausblenden (mehr Platz für die Datei)": "Hide the bars above the file (more room for the file)",
   "Seitenzahl eingeben und Enter drücken (Strg+G)": "Type a page number and press Enter (Ctrl+G)",
   "Folie": "Slide",
-  "Seite": "Page"
+  "Seite": "Page",
+  "Das gehört zu einem anderen Vault und wird hier nur gezeigt. Zum Ändern wechsle in diesen Vault.": "This belongs to another vault and is only shown here. To change it, switch to that vault."
 }

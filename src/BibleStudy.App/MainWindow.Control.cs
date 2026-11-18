@@ -1,4 +1,4 @@
-﻿using System.Text.Json;
+using System.Text.Json;
 using System.Text.RegularExpressions;
 using Avalonia.Controls;
 using BibleStudy.Core.Models;
@@ -392,7 +392,7 @@ public partial class MainWindow
         var added = new List<VerseRef>();
         foreach (var s in ArgStrings(a, "references") ?? [])
         {
-            var m = Regex.Match(s, @"^\s*(?<b>[1-3]?\s?[\p{L}]+)\.?\s+(?<c>\d+)\s*[:.]\s*(?<v>\d+)");
+            var m = Regex.Match(s, @"^\s*(?<b>[1-3]?\s?[\p{L}]+)\.?\s+(?<c>[0-9]{1,3})\s*[:.]\s*(?<v>[0-9]{1,3})\b");
             if (!m.Success) continue;
             var name = m.Groups["b"].Value;
             var book = FindBook(books, name.Replace(" ", "")) ?? FindBook(books, name);

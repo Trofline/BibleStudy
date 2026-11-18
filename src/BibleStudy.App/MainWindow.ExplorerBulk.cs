@@ -11,7 +11,7 @@ namespace BibleStudy.App;
 /// </summary>
 public partial class MainWindow
 {
-    List<long> MarkIds(List<ExItem> items) => items.Where(i => i.Kind == ExKind.Mark).Select(i => i.Id).ToList();
+    List<long> MarkIds(List<ExItem> items) => items.Where(i => i.Kind == ExKind.Mark && !Foreign(i)).Select(i => i.Id).ToList();
 
     MenuItem ColorMenu(List<ExItem> items, Control anchor)
     {

@@ -236,7 +236,7 @@ public static partial class MaterialReader
         return blocks;
     }
 
-    static readonly Regex TocStyle = new(@"^(?:TOC|toc|Verzeichnis|Inhaltsverzeichnis|Contents)\s*(\d)", RegexOptions.IgnoreCase);
+    static readonly Regex TocStyle = new(@"^(?:TOC|toc|Verzeichnis|Inhaltsverzeichnis|Contents)\s*([0-9])", RegexOptions.IgnoreCase);
     static readonly Regex InnerLink = new(@"^\s*(?:HYPERLINK\s.*\\l\s*""?([^""\s]+)|PAGEREF\s+(\S+))", RegexOptions.IgnoreCase);
 
     static Block? DocxParagraph(XElement p, ref int inToc)
@@ -308,7 +308,7 @@ public static partial class MaterialReader
     public static int HeadingLevel(string style)
     {
         if (style.Equals("Title", StringComparison.OrdinalIgnoreCase) || style.Equals("Titel", StringComparison.OrdinalIgnoreCase)) return 1;
-        var m = Regex.Match(style, @"(?:eading|berschrift)\s*(\d)", RegexOptions.IgnoreCase);
+        var m = Regex.Match(style, @"(?:eading|berschrift)\s*([0-9])", RegexOptions.IgnoreCase);
         return m.Success ? int.Parse(m.Groups[1].Value) : 0;
     }
 
@@ -352,8 +352,8 @@ public static partial class MaterialReader
     public static List<Block> ReadPptx(string path, string? mediaDir = null)
     {
         using var zip = ZipFile.OpenRead(path);
-        var slides = zip.Entries.Where(e => Regex.IsMatch(e.FullName, @"^ppt/slides/slide\d+\.xml$"))
-            .OrderBy(e => int.Parse(Regex.Match(e.FullName, @"\d+").Value)).ToList();
+        var slides = zip.Entries.Where(e => Regex.IsMatch(e.FullName, @"^ppt/slides/slide[0-9]{1,6}\.xml$"))
+            .OrderBy(e => int.Parse(Regex.Match(e.FullName, @"[0-9]+").Value)).ToList();
         var blocks = new List<Block>();
         var n = 0;
         foreach (var slide in slides)

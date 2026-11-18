@@ -44,7 +44,7 @@ public partial class MainWindow
             }
             VaultInfo.Text = L("Vault „{0}“ gelöscht. Sicherung: {1}", name, backup);
         }
-        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or SqliteException)
         {
             VaultInfo.Text = L("Der Vault ließ sich nicht löschen: {0}", ex.Message);
         }

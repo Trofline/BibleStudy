@@ -1,4 +1,4 @@
-﻿using System.Globalization;
+using System.Globalization;
 using System.IO.Compression;
 using System.Speech.Synthesis;
 using System.Text.Json;
@@ -161,7 +161,7 @@ public partial class MainWindow
         StrongDetail.Children.Clear();
         StrongDetail.Children.Add(StudyCard(e));
         var stepTask = StepCardAsync(e.Id);
-        var padded = $"{e.Id[0]}{int.Parse(e.Id[1..]):D4}";
+        var padded = BibleStudy.Core.WordAnalyzer.Normalize(e.Id) is { } normal ? $"{normal[0]}{int.Parse(normal[1..]):D4}" : e.Id;   // "H1254a" too
         var occurrences = new Button { Content = L("Alle Vorkommen"), Margin = new(0, 0, 8, 0) };
         occurrences.Click += async (_, _) => await ShowConcordanceAsync(padded, $"{e.Id}  {e.Lemma}");
         var deeper = new Button { Content = L("Mit Claude vertiefen"), IsVisible = !AppPlatform.IsMobile };

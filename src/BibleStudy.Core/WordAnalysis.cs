@@ -34,8 +34,8 @@ public sealed partial class WordAnalyzer
         return m.Success ? char.ToUpperInvariant(m.Groups[1].Value[0]) + int.Parse(m.Groups[2].Value).ToString() : null;
     }
 
-    [GeneratedRegex(@"^([GgHh])0*(\d{1,4})")] private static partial Regex IdPattern();
-    [GeneratedRegex(@"([GH])0*(\d{1,4})")] private static partial Regex RelatedPattern();
+    [GeneratedRegex(@"^([GgHh])0*([0-9]{1,4})")] private static partial Regex IdPattern();
+    [GeneratedRegex(@"([GH])0*([0-9]{1,4})")] private static partial Regex RelatedPattern();
 
     public int Count(string id) => _verses.TryGetValue(id, out var l) ? l.Count : 0;
 

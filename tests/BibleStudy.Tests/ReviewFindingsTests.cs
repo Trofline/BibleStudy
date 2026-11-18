@@ -60,6 +60,20 @@ public class ReviewFindingsTests : IDisposable
     }
 
     [Fact]
+    public void Wipe_also_empties_the_marks_in_materials_the_pictures_and_the_shared_reading_progress()
+    {
+        var read = new ReadStore(Path.Combine(_dir, "read.db"));
+        var vault = new VaultStore(Path.Combine(_dir, "w.db"), "t") { SharedRead = read };
+        vault.AddMaterialMark(Path.Combine(_dir, "predigt.pdf"), 2, 5, "Gnade", "#FFD54F", "privat");
+        var picture = vault.AddImage([1, 2, 3, 4], "image/png");
+        vault.SetRead("GEN", [1, 2], true);
+        vault.Wipe();
+        Assert.Empty(vault.GetAllMaterialMarks());
+        Assert.Null(vault.GetImage(picture));
+        Assert.Empty(vault.GetReadChapters());
+    }
+
+    [Fact]
     public void EverydayWords_AreNoBibleReferences()
     {
         // "mal" and "hab" are words of every German sentence; written with a capital letter they are Malachi and Habakkuk

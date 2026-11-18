@@ -68,7 +68,7 @@ public static class AudioBible
     public static int? ChapterOf(string fileName)
     {
         var plain = Path.GetFileNameWithoutExtension(fileName);
-        if (Regex.Match(plain, @"Chapter[\s_\-]*0*(\d+)", RegexOptions.IgnoreCase) is { Success: true } digits) return int.Parse(digits.Groups[1].Value);   // Proverbs: "Chapter 001"
+        if (Regex.Match(plain, @"Chapter[\s_\-]*0*([0-9]{1,3})(?![0-9])", RegexOptions.IgnoreCase) is { Success: true } digits) return int.Parse(digits.Groups[1].Value);   // Proverbs: "Chapter 001"
         var words = Regex.Matches(plain, "[A-Za-z]+").Select(m => m.Value.ToLowerInvariant()).ToList();
         int? value = null; var total = 0;
         foreach (var w in words)

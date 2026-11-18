@@ -3370,5 +3370,6 @@
   "Leisten über der Datei ausblenden (mehr Platz für die Datei)": "Скрыть панели над файлом (больше места для файла)",
   "Seitenzahl eingeben und Enter drücken (Strg+G)": "Введите номер страницы и нажмите Enter (Ctrl+G)",
   "Folie": "Слайд",
-  "Seite": "Страница"
+  "Seite": "Страница",
+  "Das gehört zu einem anderen Vault und wird hier nur gezeigt. Zum Ändern wechsle in diesen Vault.": "Это относится к другому хранилищу и здесь только показано. Чтобы изменить, переключись на это хранилище."
 }
