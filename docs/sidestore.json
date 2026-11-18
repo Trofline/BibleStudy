@@ -18,6 +18,15 @@
       "category": "other",
       "versions": [
         {
+          "version": "1.9.18",
+          "buildVersion": "37",
+          "date": "2026-11-18",
+          "localizedDescription": "## New in 1.9.18\n**Kind of update:** Bugfix\n- **[Feature]** **No sync notice on closing when nothing changed:** if nothing new was done since the last synchronisation with the phone, closing no longer waits for the phone or shows the notice.\n- **[Fix]** The Android app is part of every release again (1.9.15–1.9.17 had none).\n- **[Fix]** The tab row scrolls when it is full (the last tab and + ran off the edge).\n- **[Fix]** A Bible reference without a book takes the nearest book before it (e.g. Dan 2,21; 4,14).\n- **[Fix]** A range into the next chapter counts for all its verses in searches and b",
+          "downloadURL": "https://github.com/Trofline/BibleStudy/releases/download/v1.9.18/BibleStudy-iOS-1.9.18.ipa",
+          "size": 60137614,
+          "minOSVersion": "15.0"
+        },
+        {
           "version": "1.9.17",
           "buildVersion": "36",
           "date": "2026-11-17",
