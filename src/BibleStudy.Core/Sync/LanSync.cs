@@ -348,8 +348,9 @@ public sealed class LanSync : IDisposable
                             {
                                 await File.WriteAllBytesAsync(file, msg.Data.AsMemory(4 + len).ToArray(), limit.Token);
                                 if (await MergeInto(name, file, asker)) got++;
-                                if (asker.Length > 0) await Task.Run(() => SaveBase(asker, name), limit.Token);
-                                await ch.Send(MsgOk, Encoding.UTF8.GetBytes(await Task.Run(() => _vaults.Fingerprint(name), limit.Token)), limit.Token);
+                                var fpNow = await Task.Run(() => _vaults.Fingerprint(name), limit.Token);
+                                if (asker.Length > 0) await Task.Run(() => SaveBase(asker, name, fpNow), limit.Token);
+                                await ch.Send(MsgOk, Encoding.UTF8.GetBytes(fpNow), limit.Token);
                             }
                             finally { TryDelete(file); }
                             break;
@@ -463,8 +464,9 @@ public sealed class LanSync : IDisposable
                 }
                 if (nowMine is not null)
                 {
-                    Remember(key, await Task.Run(() => _vaults.Fingerprint(nowMine), ct), theirNow);
-                    if (peer.Id.Length > 0) await Task.Run(() => SaveBase(peer.Id, nowMine), ct);
+                    var fpNow = await Task.Run(() => _vaults.Fingerprint(nowMine), ct);
+                    Remember(key, fpNow, theirNow);
+                    if (peer.Id.Length > 0) await Task.Run(() => SaveBase(peer.Id, nowMine, fpNow), ct);
                 }
             }
             _cfg.LastTime = DateTime.Now.ToString("yyyy-MM-dd HH:mm", System.Globalization.CultureInfo.InvariantCulture); _cfg.LastPeer = peer.Name;
@@ -491,23 +493,43 @@ public sealed class LanSync : IDisposable
     string BasePath(string peerId, string vault) =>
         Path.Combine(Path.GetDirectoryName(Path.GetFullPath(_cfgPath))!, "sync-base", string.Concat(peerId.Where(char.IsLetterOrDigit)), vault.ToLowerInvariant() + ".db");
 
-    void SaveBase(string peerId, string vault)
+    void SaveBase(string peerId, string vault, string? fingerprint = null)
     {
+        // the fingerprint of what the base holds is noted with it (taken before the copy: a change while copying makes it differ, so the
+        // base is written anew next time, never the other way round); else EnsureBase could keep an older base that only looked current
+        fingerprint ??= _vaults.Fingerprint(vault);
         var path = BasePath(peerId, vault);
         Directory.CreateDirectory(Path.GetDirectoryName(path)!);
         var fresh = path + "." + Guid.NewGuid().ToString("N") + ".new";   // two comparisons at once must not write the same file
         _vaults.Snapshot(vault, fresh);
         File.Move(fresh, path, true);
+        lock (_cfg.Done) _cfg.Done[BaseKey(peerId, vault)] = fingerprint;
+    }
+
+    static string BaseKey(string peerId, string vault) => "base|" + peerId + "|" + vault.ToLowerInvariant();
+
+    /// <summary>
+    /// True when a device already has this state of the vault (its fingerprint): a comparison with it ended with this state on both sides.
+    /// Then there is nothing to send, whatever files were written meanwhile (opening a vault, the settings of a window).
+    /// </summary>
+    public bool IsOnADevice(string vault, string fingerprint)
+    {
+        lock (_cfg.Done)
+            foreach (var (key, value) in _cfg.Done)
+            {
+                if (key.StartsWith("cloud|", StringComparison.Ordinal) || !key.EndsWith("|" + vault, StringComparison.OrdinalIgnoreCase)) continue;
+                // "device|vault" holds "mine|theirs" of the last comparison, "base|device|vault" the state both had
+                if (key.StartsWith("base|", StringComparison.Ordinal) ? value == fingerprint : value.StartsWith(fingerprint + "|", StringComparison.Ordinal)) return true;
+            }
+        return false;
     }
 
     /// <summary>Makes the base for a device the state of a vault that is the same on both sides; written only when that state changed since the last time.</summary>
     void EnsureBase(string peerId, string vault, string fp)
     {
-        var key = "base|" + peerId + "|" + vault.ToLowerInvariant();
-        string? had; lock (_cfg.Done) _cfg.Done.TryGetValue(key, out had);
+        string? had; lock (_cfg.Done) _cfg.Done.TryGetValue(BaseKey(peerId, vault), out had);
         if (had == fp && File.Exists(BasePath(peerId, vault))) return;
-        SaveBase(peerId, vault);
-        lock (_cfg.Done) _cfg.Done[key] = fp;
+        SaveBase(peerId, vault, fp);
     }
 
     // ---- the cloud folder ------------------------------------------------------------------------------------------------

@@ -168,6 +168,8 @@ public partial class MainWindow
     bool SyncBeforeClose()
     {
         if (_syncedAtClose || _lan is not { } lan || _syncCfg.Key is null) return false;
+        SaveOpenEdits();
+        if (!ChangedSinceSync()) return false;   // nothing new here: the devices have it all, the program closes at once
         _syncedAtClose = true;
         Dispatcher.UIThread.Post(async () =>
         {
@@ -181,15 +183,34 @@ public partial class MainWindow
     AppVaults? _syncVaults;
     DateTime _lastSyncOkUtc = DateTime.MinValue;
 
-    /// <summary>True when one of the own vaults (or the reading progress, the settings …) was written after the last finished synchronisation.</summary>
+    /// <summary>
+    /// True when this computer has something new for the other devices: an own vault whose content (with the reading progress and the person's
+    /// data of the program) is not the state the last comparison left on a device. That a file was written is not enough: the settings are written
+    /// by every move of a window and opening a vault touches its file, and then there is nothing to send (the notice "Warte auf dein Handy" came anyway).
+    /// </summary>
     bool ChangedSinceSync()
     {
         if (_syncVaults is null) return false;
         var since = _lastSyncOkUtc;
         if (since == DateTime.MinValue && DateTime.TryParseExact(_syncCfg.LastTime, "yyyy-MM-dd HH:mm", System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.AssumeLocal, out var last))
             since = last.ToUniversalTime().AddMinutes(1);   // the minute it was written in counts as synced
-        try { return _syncVaults.Names().Any(n => !IsGuestVault(n) && _syncVaults.Stamp(n) > since.AddSeconds(5)); }
-        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException) { return false; }
+        try
+        {
+            foreach (var n in _syncVaults.Names())
+            {
+                if (IsGuestVault(n) || _syncVaults.Stamp(n) <= since.AddSeconds(5)) continue;   // nothing written since: unchanged, no need to look closer
+                // written since: the content decides, by the same fingerprint the synchronisation compares (a few milliseconds for a vault)
+                if (_lan?.IsOnADevice(n, _syncVaults.Fingerprint(n)) != true) return true;
+            }
+            return false;
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or Microsoft.Data.Sqlite.SqliteException) { return false; }
+    }
+
+    /// <summary>A note or document that is still being written is saved first: it counts as something new for the other devices.</summary>
+    void SaveOpenEdits()
+    {
+        try { AutoSaveDocument(); SaveNoteDraft(); } catch (Exception ex) { ErrorLog.Write(ex); }
     }
 
     bool _phoneWaiting, _phoneWaitStop;
@@ -211,7 +232,9 @@ public partial class MainWindow
             return false;
         }
         if (_syncedAtClose || _lan is not { } lan || _syncCfg.Key is null) return false;
-        if (!(_settings.WaitForPhoneOnClose && _syncCfg.Auto && !AppPlatform.IsMobile && lan.Cloud is null && _syncCfg.LastPeer is not null && lan.Peers.Count == 0 && ChangedSinceSync())) return false;
+        if (!(_settings.WaitForPhoneOnClose && _syncCfg.Auto && !AppPlatform.IsMobile && lan.Cloud is null && _syncCfg.LastPeer is not null && lan.Peers.Count == 0)) return false;
+        SaveOpenEdits();
+        if (!ChangedSinceSync()) return false;   // nothing new since the last synchronisation: the phone has it all, no waiting and no notice
         e.Cancel = true;
         _syncedAtClose = true; _phoneWaiting = true; _phoneWaitStop = false; _phoneWaitSince = DateTime.UtcNow;
         Dispatcher.UIThread.Post(() => _ = WaitForPhoneThenCloseAsync(lan));

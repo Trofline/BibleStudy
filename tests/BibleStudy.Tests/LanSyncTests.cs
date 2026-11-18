@@ -164,6 +164,50 @@ public class LanSyncTests : IDisposable
     }
 
     [Fact]
+    public async Task After_a_sync_only_new_content_counts_as_something_to_send()
+    {
+        // the computer asks the phone (as with an iPhone): afterwards the phone has all of it
+        var key = SyncCode.NewKey();
+        using var pc = new Device(Path.Combine(_dir, "pc"), key, "PC");
+        using var phone = new Device(Path.Combine(_dir, "phone"), key, "Handy");
+        pc.Vault("Standard").SetNote(new VerseRef("JHN", 3, 16), "vom PC");
+        Assert.False(pc.Sync.IsOnADevice("Standard", pc.Vaults.Fingerprint("Standard")));   // never compared: new
+        Assert.Null((await pc.Sync.SyncWithAsync(phone.AsPeer())).Error);
+        bool Synced() => pc.Sync.IsOnADevice("Standard", pc.Vaults.Fingerprint("Standard"));
+        Assert.True(Synced());
+
+        // the file is written again without anything new (the same note saved once more, the vault opened): still nothing to send
+        var file = Path.Combine(pc.Root, "vaults", "Standard", "vault.db");
+        var written = File.GetLastWriteTimeUtc(file);
+        Thread.Sleep(20);
+        pc.Vault("Standard").SetNote(new VerseRef("JHN", 3, 16), "vom PC");
+        Assert.True(Synced());
+
+        // something new: to send; taken back again: nothing to send
+        pc.Vault("Standard").SetNote(new VerseRef("PSA", 23, 1), "neu am PC");
+        Assert.False(Synced());
+        pc.Vault("Standard").SetNote(new VerseRef("PSA", 23, 1), "");
+        Assert.True(Synced());
+        Assert.False(pc.Sync.IsOnADevice("Anderer", pc.Vaults.Fingerprint("Standard")));   // another vault has no state on a device
+    }
+
+    [Fact]
+    public async Task When_the_phone_asks_the_computer_knows_afterwards_what_the_phone_has()
+    {
+        // the phone starts the comparison (as an Android phone does) and brings something new: the computer merges it and knows the shared state
+        var key = SyncCode.NewKey();
+        using var pc = new Device(Path.Combine(_dir, "pc"), key, "PC");
+        using var phone = new Device(Path.Combine(_dir, "phone"), key, "Handy");
+        pc.Vault("Standard").SetNote(new VerseRef("JHN", 3, 16), "vom PC");
+        phone.Vault("Standard").SetNote(new VerseRef("PSA", 23, 1), "vom Handy");
+        Assert.Null((await phone.Sync.SyncWithAsync(pc.AsPeer())).Error);
+        Assert.Equal(2, pc.Vault("Standard").GetNotes().Count);
+        Assert.True(pc.Sync.IsOnADevice("Standard", pc.Vaults.Fingerprint("Standard")));
+        pc.Vault("Standard").SetNote(new VerseRef("MAT", 5, 3), "danach am PC");
+        Assert.False(pc.Sync.IsOnADevice("Standard", pc.Vaults.Fingerprint("Standard")));
+    }
+
+    [Fact]
     public async Task ADeviceWithAnotherCode_GetsNothing()
     {
         using var a = new Device(Path.Combine(_dir, "a"), SyncCode.NewKey(), "PC");
