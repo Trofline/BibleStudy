@@ -50,13 +50,26 @@ public class EntityNamesTests
     public void Only_names_of_one_alone_are_looked_for_in_the_text()
     {
         var abraham = new LexiconEntry("people", "abraham_58", "Abraham", ["Abram"], [], [], [], "");
-        Assert.Equal(["Abraham", "Abram"], EntityNames.UniqueNames(Items, abraham, "Abraham"));
+        Assert.Equal(["Abraham", "Abram"], EntityNames.NamesInText(Items, abraham, "Abraham").Names);
         var jacob = new LexiconEntry("people", "jacob_1", "Jacob", ["Israel"], [], [], [], "");
-        Assert.Equal(["Jakob", "Jacob"], EntityNames.UniqueNames(Items, jacob, "Jakob"));   // Israel is a place too
+        Assert.Equal(["Jakob", "Jacob"], EntityNames.NamesInText(Items, jacob, "Jakob").Names);   // Israel is a place too
         var mary = new LexiconEntry("people", "mary_1", "Mary", [], [], [], [], "");
-        Assert.Empty(EntityNames.UniqueNames(Items, mary, "Maria"));                         // several Marys
+        Assert.Empty(EntityNames.NamesInText(Items, mary, "Maria").Names);                         // several Marys, none far ahead
         var judah = new LexiconEntry("people", "judah_1", "Judah", [], [], [], [], "");
-        Assert.Empty(EntityNames.UniqueNames(Items, judah, "Juda"));
+        Assert.Empty(EntityNames.NamesInText([.. Items, new("places", "judah_9", "Judah", 800)], judah, "Juda").Names);   // also the land
+
+        // far ahead of the others with the same name: the name counts, and the others' verses are left out
+        List<LexiconItem> nt = [new("people", "jesus_1", "Jesus", 1), new("people", "jesus_905", "Jesus Christ", 1296), new("people", "peter_2745", "Simon Peter", 129),
+            new("people", "simon_1", "Simon", 9), new("people", "simon_2", "Simon", 4), new("places", "babylon_1", "Babylon", 300)];
+        var jesus = new LexiconEntry("people", "jesus_905", "Jesus Christ", [], [], [], [], "");
+        var forJesus = EntityNames.NamesInText(nt, jesus, "Jesus");
+        Assert.Contains("Jesus", forJesus.Names); Assert.Contains("Jesu", forJesus.Names);
+        Assert.Equal(["jesus_1"], forJesus.Others.Select(o => o.Id));
+        var peter = new LexiconEntry("people", "peter_2745", "Simon Peter", ["Cephas", "Simon"], [], [], [], "");
+        var forPeter = EntityNames.NamesInText(nt, peter, "Petrus").Names;
+        Assert.Contains("Petrus", forPeter); Assert.Contains("Kephas", forPeter); Assert.DoesNotContain("Simon", forPeter);   // other Simons are too many
+        var babylon = new LexiconEntry("places", "babylon_1", "Babylon", [], [], [], [], "");
+        Assert.Contains("Babel", EntityNames.NamesInText(nt, babylon, "Babylon").Names);   // as the Elberfelder writes it
     }
 
     [Fact]

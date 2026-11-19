@@ -83,28 +83,39 @@ public static partial class EntityNames
 
     [GeneratedRegex(@"[\p{L}\p{N}]+")] private static partial Regex NameWords();
 
+    /// <summary>The name of an entry without what the data adds in brackets: "Mary (Mother of Jesus)" → Mary.</summary>
+    static string Bare(string name) => name.IndexOf('(') is var p and > 0 ? name[..p].Trim() : name.Trim();
+
+    /// <summary>Names to look for in the text, and the other entries whose verses must be left out because they bear one of these names too.</summary>
+    public sealed record TextNames(List<string> Names, List<LexiconItem> Others);
+
     /// <summary>
-    /// The names under which the verses of an entry can be found in the text: what was typed, its name in the data and its other names,
-    /// each only if no other person or place has it (Maria and Juda are several; Abraham, Abram and Jerusalem are one).
+    /// The names under which the verses of an entry can be found in the text: what was typed, its name in the data, its other names and their
+    /// German forms (Babylon → Babel, Peter → Petrus, Kephas). A name others bear too counts only when this entry is named far more often
+    /// (Jesus Christ 1296 times, another Jesus once): then the verses of the others are left out. Maria (several, none far ahead) gets none.
     /// </summary>
-    public static List<string> UniqueNames(IEnumerable<LexiconItem> items, LexiconEntry entry, string typed)
+    public static TextNames NamesInText(IEnumerable<LexiconItem> items, LexiconEntry entry, string typed)
     {
-        var counts = items.GroupBy(i => SearchQuery.Fold(i.Name, true)).ToDictionary(g => g.Key, g => g.Count());
-        var mine = SearchQuery.Fold(entry.Name, true);
-        if (counts.GetValueOrDefault(mine) > 1) return [];   // the name itself is shared: nothing from the text, it might be the other one
-        var names = new List<string>();
-        foreach (var n in new[] { typed.Trim(), entry.Name }.Concat(entry.AlsoCalled))
+        var all = items.ToList();
+        var self = all.FirstOrDefault(i => i.Id == entry.Id && i.Kind == entry.Kind);
+        var refs = Math.Max(self?.References ?? 0, entry.References.Count);
+        var english = new[] { entry.Name, Bare(entry.Name), DataName(typed) }.Concat(entry.AlsoCalled).Select(n => n.Trim()).Where(n => n.Length > 0).ToHashSet(StringComparer.OrdinalIgnoreCase);
+        var candidates = new[] { typed.Trim(), Bare(entry.Name) }.Concat(entry.AlsoCalled)
+            .Concat(Names.Where(kv => english.Contains(kv.Value)).Select(kv => kv.Key))   // the German names of all of them
+            .Where(n => n.Length >= 3 && !n.Contains(' ')).Distinct(StringComparer.OrdinalIgnoreCase).ToList();
+        var names = new List<string>(); var others = new List<LexiconItem>();
+        foreach (var n in candidates)
         {
-            var f = SearchQuery.Fold(n, true);
-            if (n.Length < 3 || n.Contains(' ') || names.Contains(n, StringComparer.OrdinalIgnoreCase)) continue;
-            // an other name of the entry that is also the name of someone or something else (Jacob is also called Israel) is left out
-            if (f != mine && counts.GetValueOrDefault(f) > 0) continue;
-            // a typed German name is checked against the data the same way: Juda typed for one Judah while there are several
-            if (n == typed.Trim() && DataName(typed) is var english && SearchQuery.Fold(english, true) != mine && counts.GetValueOrDefault(SearchQuery.Fold(english, true)) > 0) continue;
+            // who else bears this name, in German or English: Jacob also in Matthew 1, Israel also as a land
+            var forms = new[] { SearchQuery.Fold(n, true), SearchQuery.Fold(DataName(n), true) }.Distinct().ToList();
+            var bearers = all.Where(i => i.Id != entry.Id && forms.Contains(SearchQuery.Fold(Bare(i.Name), true))).ToList();
+            if (bearers.Count > 0 && refs < 10 * Math.Max(1, bearers.Sum(b => b.References))) continue;   // not clearly this one
             names.Add(n);
+            others.AddRange(bearers.Where(b => others.All(o => o.Id != b.Id)));
         }
-        return names;
+        return new(names, others);
     }
+
 
     /// <summary>The verses whose text names one of the names, as a word of its own or with an s (Abrahams); capitals count, a name is written with one.</summary>
     public static HashSet<VerseRef> NamedIn(IEnumerable<CorpusVerse> corpus, IReadOnlyCollection<string> names)

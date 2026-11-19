@@ -3384,5 +3384,6 @@
   "{0} hat keine Strong-Nummern: Die Verse sind über den hebräischen und griechischen Grundtext gefunden, das Wort ist darin nicht markiert.": "{0} n'a pas de numéros Strong : les versets ont été trouvés par le texte original hébreu et grec ; le mot n'y est pas marqué.",
   "{0} hat keine Strong-Nummern. „Im Grundtext suchen“, O=… und G…=Wort brauchen eine Übersetzung mit Strong-Nummern (z. B. KJV); eine Strong-Nummer allein (G3056) geht auch hier.": "{0} n'a pas de numéros Strong. « Rechercher dans la langue originale », O=… et G…=mot demandent une traduction avec numéros Strong (p. ex. Ostervald) ; un numéro Strong seul (G3056) fonctionne aussi ici.",
   "Der Grundtext ließ sich nicht laden: {0}": "Le texte original n'a pas pu être chargé : {0}",
-  "„{0}“ wurde als {1} gesucht. Gemeint sein kann auch: {2}. Gezielt so: {3}:\"{4}\"": "« {0} » a été cherché comme {1}. Peut aussi désigner : {2}. Pour choisir : {3}:\"{4}\""
+  "„{0}“ wurde als {1} gesucht. Gemeint sein kann auch: {2}. Gezielt so: {3}:\"{4}\"": "« {0} » a été cherché comme {1}. Peut aussi désigner : {2}. Pour choisir : {3}:\"{4}\"",
+  "{0} von {1} Kapiteln ließen sich nicht laden (keine Verbindung?): Die Treffer sind unvollständig.": "{0} chapitres sur {1} n'ont pas pu être chargés (pas de connexion ?) : les résultats sont incomplets."
 }

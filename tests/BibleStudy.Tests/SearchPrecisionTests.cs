@@ -90,6 +90,32 @@ public class SearchPrecisionTests
     }
 
     [Fact]
+    public void English_base_forms_do_not_take_other_words_that_start_alike()
+    {
+        var en = new SearchOptions(Language: "eng");
+        var c = Corpus("Go ye.", "In the beginning God created.", "He goeth.", "Thou shalt surely die.", "He did so.", "He died.",
+            "The man came.", "In this manner.", "They sinned.", "The sinners.", "He loved her.", "Her lover.");
+        Assert.Equal([1, 3], Hits(c, "L=go", en));       // not God
+        Assert.Equal([4, 6], Hits(c, "L=die", en));      // not did
+        Assert.Equal([7], Hits(c, "L=man", en));         // not manner
+        Assert.Equal([9], Hits(c, "L=sin", en));         // sinners are another word
+        Assert.Equal([11], Hits(c, "L=love", en));
+    }
+
+    [Fact]
+    public void A_word_behind_a_translated_word_counts_only_when_it_is_rendered_so_often_enough()
+    {
+        var occ = new List<BibleStudy.Core.Models.StrongsOccurrence>();
+        for (var i = 1; i <= 120; i++) occ.Add(new("G5485", new VerseRef("ROM", 1, i), "grace"));
+        for (var i = 1; i <= 30; i++) occ.Add(new("G5485", new VerseRef("ROM", 2, i), "favour"));
+        for (var i = 1; i <= 400; i++) occ.Add(new("H853", new VerseRef("GEN", 1, i), "him"));
+        occ.Add(new("H853", new VerseRef("GEN", 2, 1), "find grace in his sight"));   // once, inside a longer rendering
+        occ.Add(new("H9999", new VerseRef("GEN", 3, 1), "grace"));                    // a rare word, rendered so its only time
+        var idx = new StrongIndex(occ);
+        Assert.Equal(["G5485", "H9999"], idx.IdsForWords(w => w == "grace").Order());
+    }
+
+    [Fact]
     public void Other_languages_take_the_ending_of_the_base_form_off()
     {
         var c = Corpus("Dios amó al mundo.", "Amamos porque él nos amó.", "Un amigo fiel.", "Amarás al Señor.", "Amaba a su hijo.");

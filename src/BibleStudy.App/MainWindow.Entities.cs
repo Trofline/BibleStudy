@@ -94,10 +94,15 @@ public partial class MainWindow
     {
         var set = entry.References.ToHashSet();
         if (TranslationBox.SelectedItem is not TranslationInfo t || _lexIndex is null) return set;
-        var names = EntityNames.UniqueNames(_lexIndex, entry, typed);
+        var (names, others) = EntityNames.NamesInText(_lexIndex, entry, typed);
         if (names.Count == 0) return set;
         var corpus = await CorpusForAsync(t);
-        set.UnionWith(await Task.Run(() => EntityNames.NamedIn(corpus, names)));
+        var named = await Task.Run(() => EntityNames.NamedIn(corpus, names));
+        // the verses of others with the same name stay out (the Jesus called Justus, Jacob the father of Joseph)
+        foreach (var o in others.Take(8))
+            try { if (await _hello.GetLexiconEntryAsync(o.Kind, o.Id) is { } other) named.ExceptWith(other.References); }
+            catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException or IOException or System.Text.Json.JsonException) { return set; }   // unknown: better too few than someone else's
+        set.UnionWith(named);
         return set;
     }
 
@@ -175,7 +180,7 @@ public partial class MainWindow
         if (_jesusCorpora.TryGetValue(t.Id, out var cached)) return cached;
         var chapters = _books.Where(b => BookCategories.IsNewTestament(BookCategories.Of(b.Id))).SelectMany(b => Enumerable.Range(1, b.NumberOfChapters).Select(c => (b.Id, c))).ToList();
         var found = new List<CorpusVerse>();
-        var gate = new SemaphoreSlim(6); var done = 0; var finished = false;
+        var gate = new SemaphoreSlim(6); var done = 0; var failed = 0; var finished = false;
         await Task.WhenAll(chapters.Select(async ch =>
         {
             await gate.WaitAsync();
@@ -190,13 +195,19 @@ public partial class MainWindow
                 }
                 lock (found) found.AddRange(local);
             }
-            catch { /* skipped */ }
+            catch (Exception ex) when (ex is not OutOfMemoryException) { Interlocked.Increment(ref failed); }   // counted: the hits would be incomplete
             finally { gate.Release(); Interlocked.Increment(ref done); }
             if (done % 20 == 0) Avalonia.Threading.Dispatcher.UIThread.Post(() => { if (!finished) SearchInfo.Text = L("Einmalig: Die Worte Jesu werden gesammelt … {0}/{1}", done, chapters.Count); });
         }));
         finished = true;
         var order = _books.Select((b, i) => (b.Id, i)).ToDictionary(x => x.Id, x => x.i);
         found = found.OrderBy(v => order.GetValueOrDefault(v.Ref.Book, 999)).ThenBy(v => v.Ref.Chapter).ThenBy(v => v.Ref.Verse).ToList();
+        if (failed > 0)
+        {
+            // not kept: the next search tries the missing chapters again; this one says that it is incomplete
+            _searchExtra += (_searchExtra.Length > 0 ? "\n" : "") + L("{0} von {1} Kapiteln ließen sich nicht laden (keine Verbindung?): Die Treffer sind unvollständig.", failed, chapters.Count);
+            return found.Count > 0 ? found : null;
+        }
         return _jesusCorpora[t.Id] = found.Count > 0 ? found : null;
     }
 }

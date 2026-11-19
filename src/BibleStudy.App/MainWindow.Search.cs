@@ -366,7 +366,7 @@ public partial class MainWindow
             if (IsJesusScope(SearchScopeBox.SelectedIndex))
             {
                 corpus = await JesusCorpusAsync(t) ?? [];
-                if (corpus.Count == 0) { SearchInfo.Text = L("Diese Übersetzung kennzeichnet die Worte Jesu nicht (Rotdruck). Wähle eine andere, z. B. eine englische oder die Schlachter."); SearchList.ItemsSource = null; _hits = []; return; }
+                if (corpus.Count == 0) { SearchInfo.Text = _searchExtra.Length > 0 ? _searchExtra : L("Diese Übersetzung kennzeichnet die Worte Jesu nicht (Rotdruck). Wähle eine andere, z. B. eine englische oder die Schlachter."); SearchList.ItemsSource = null; _hits = []; return; }
                 books = null;
             }
             var searched = narrowTo is null ? corpus : corpus.Where(c => narrowTo.Contains(c.Ref)).ToList();

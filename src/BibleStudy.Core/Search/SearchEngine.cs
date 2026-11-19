@@ -39,7 +39,9 @@ public sealed partial class CorpusVerse
 public sealed class StrongIndex
 {
     readonly Dictionary<string, Dictionary<VerseRef, List<string>>> _by = [];
-    readonly Dictionary<string, HashSet<string>> _idsByWord = [];
+    // how often each number is rendered with each word, and how often it is rendered at all
+    readonly Dictionary<string, Dictionary<string, int>> _wordsById = [];
+    readonly Dictionary<string, int> _countById = [];
 
     public StrongIndex(IEnumerable<StrongsOccurrence> occurrences)
     {
@@ -52,17 +54,26 @@ public sealed class StrongIndex
             var folded = SearchQuery.Fold(o.Word.Trim().Trim('.', ',', ';', ':', '!', '?', '(', ')', '„', '“', '"'), true);
             words.Add(folded);
             if (folded.Length == 0) continue;
-            if (!_idsByWord.TryGetValue(folded, out var ids)) _idsByWord[folded] = ids = [];
-            ids.Add(id);
+            if (!_wordsById.TryGetValue(id, out var counts)) _wordsById[id] = counts = [];
+            counts[folded] = counts.GetValueOrDefault(folded) + 1;
+            _countById[id] = _countById.GetValueOrDefault(id) + 1;
         }
     }
 
-    /// <summary>The Strong numbers whose translated words (or a part of a multi-word rendering) satisfy the test.</summary>
+    /// <summary>
+    /// The Strong numbers the translation renders with words that satisfy the test (also as part of a rendering of several words): those it renders
+    /// so often enough, at least twice and one time in twenty, so that a word once tagged in "find grace in his sight" does not count for grace.
+    /// </summary>
     public HashSet<string> IdsForWords(Func<string, bool> test)
     {
         var found = new HashSet<string>();
-        foreach (var (word, ids) in _idsByWord)
-            if (test(word) || (word.Contains(' ') && word.Split(' ').Any(test))) found.UnionWith(ids);
+        foreach (var (id, counts) in _wordsById)
+        {
+            var hits = 0;
+            foreach (var (word, n) in counts) if (test(word) || (word.Contains(' ') && word.Split(' ').Any(test))) hits += n;
+            if (hits == 0) continue;
+            if (hits >= 2 && hits * 20 >= _countById[id] || hits * 2 >= _countById[id]) found.Add(id);   // a rare word rendered so once out of one or two counts too
+        }
         return found;
     }
 
@@ -558,7 +569,11 @@ public static class SearchEngine
 
     // English: the regular endings (with the old ones of the King James Bible: loveth, lovest), a final e dropped (loving), y as i (carried),
     // a doubled consonant (stopped), and the irregular forms of the common verbs and nouns
-    static readonly string[] EnglishEndings = ["", "s", "es", "ed", "d", "ing", "er", "ers", "est", "eth", "th", "st", "'s", "s'"];
+    // which endings each kind of stem takes: "d", "th", "st" only after an e (loved, loveth, lovest; not go+d = god), a stem without its e or with a
+    // doubled consonant only endings that start with a vowel (lov-ing, stopp-ed; not di+d = did, mann+er = manner); a word made of it (lover, giver) is another word
+    static readonly string[] EnglishEndings = ["", "s", "es", "ed", "ing", "est", "eth", "'s", "s'"];
+    static readonly string[] EnglishAfterE = ["", "s", "d", "th", "st", "'s", "s'"];
+    static readonly string[] EnglishVowelEndings = ["ed", "ing", "est", "eth", "es"];
     static readonly Dictionary<string, string[]> EnglishIrregular = new(StringComparer.Ordinal)
     {
         ["be"] = ["am", "is", "are", "was", "were", "been", "being", "art", "wast", "wert"], ["have"] = ["has", "had", "having", "hath", "hast", "hadst"],
@@ -580,7 +595,7 @@ public static class SearchEngine
         ["dwell"] = ["dwelt", "dwelleth"], ["spread"] = ["spreadeth"], ["weep"] = ["wept", "weepeth"], ["draw"] = ["drew", "drawn", "draweth"], ["grow"] = ["grew", "grown", "groweth"],
         ["throw"] = ["threw", "thrown"], ["blow"] = ["blew", "blown"], ["fly"] = ["flew", "flown", "flieth"], ["hide"] = ["hid", "hidden", "hideth"], ["ride"] = ["rode", "ridden", "rideth"],
         ["strive"] = ["strove", "striven"], ["drive"] = ["drove", "driven", "driveth"], ["wake"] = ["woke", "woken", "waketh"], ["wear"] = ["wore", "worn"], ["tear"] = ["tore", "torn"],
-        ["die"] = ["died", "dieth", "dying", "dead"], ["pay"] = ["paid"], ["lay"] = ["laid", "layeth"], ["mean"] = ["meant"], ["feel"] = ["felt"], ["meet"] = ["met"], ["lose"] = ["lost", "loseth"],
+        ["die"] = ["died", "dieth", "dying", "diest"], ["pay"] = ["paid"], ["lay"] = ["laid", "layeth"], ["mean"] = ["meant"], ["feel"] = ["felt"], ["meet"] = ["met"], ["lose"] = ["lost", "loseth"],
         ["man"] = ["men", "man's", "men's"], ["woman"] = ["women"], ["child"] = ["children"], ["brother"] = ["brethren"], ["foot"] = ["feet"], ["tooth"] = ["teeth"], ["sheep"] = [], ["ox"] = ["oxen"],
         ["mouse"] = ["mice"], ["goose"] = ["geese"], ["life"] = ["lives"], ["wife"] = ["wives"], ["knife"] = ["knives"], ["leaf"] = ["leaves"], ["thief"] = ["thieves"], ["wolf"] = ["wolves"],
     };
@@ -601,20 +616,20 @@ public static class SearchEngine
         {
             var forms = new HashSet<string>(StringComparer.Ordinal) { pattern };
             if (EnglishIrregular.TryGetValue(pattern, out var irregular)) forms.UnionWith(irregular);
-            var stems = new List<string> { pattern };
-            if (pattern.Length > 2 && pattern.EndsWith('e')) stems.Add(pattern[..^1]);                                          // love → lov(ing), lov(eth)
-            if (pattern.Length > 2 && pattern.EndsWith('y') && !"aeiou".Contains(pattern[^2])) stems.Add(pattern[..^1] + "i"); // carry → carri(ed), carri(es)
+            var stems = new List<(string Stem, string[] Endings)> { (pattern, pattern.EndsWith('e') ? EnglishAfterE : EnglishEndings) };
+            if (pattern.Length > 2 && pattern.EndsWith('e')) stems.Add((pattern[..^1], EnglishVowelEndings));                                    // love → lov(ing), lov(eth)
+            if (pattern.Length > 2 && pattern.EndsWith('y') && !"aeiou".Contains(pattern[^2])) stems.Add((pattern[..^1] + "i", ["es", "ed", "est", "eth"]));   // carry → carri(ed)
             if (pattern.Length > 2 && !"aeiouwxy".Contains(pattern[^1]) && "aeiou".Contains(pattern[^2]) && !"aeiou".Contains(pattern[^3]))
-                stems.Add(pattern + pattern[^1]);                                                                              // stop → stopp(ed), sin → sinn(eth)
-            if (pattern.EndsWith('f') || pattern.EndsWith("fe", StringComparison.Ordinal)) stems.Add(pattern.TrimEnd('e')[..^1] + "v");   // life → liv(es)
+                stems.Add((pattern + pattern[^1], ["ed", "ing", "est", "eth"]));                                                                     // stop → stopp(ed), sin → sinn(eth)
+            if (pattern.Length > 2 && (pattern.EndsWith('f') || pattern.EndsWith("fe", StringComparison.Ordinal))) stems.Add((pattern.TrimEnd('e')[..^1] + "v", ["es"]));   // life → liv(es)
             return tok =>
             {
                 if (forms.Contains(tok)) return true;
-                foreach (var s in stems)
+                foreach (var (s, endings) in stems)
                     if (tok.Length >= s.Length && tok.StartsWith(s, StringComparison.Ordinal))
                     {
                         var rest = tok.AsSpan(s.Length);
-                        foreach (var e in EnglishEndings) if (rest.SequenceEqual(e) && !(s == pattern && e.Length > 0 && pattern[^1] == 'e' && e[0] == 'e')) return true;   // not "loveed"
+                        foreach (var e in endings) if (rest.SequenceEqual(e)) return true;
                     }
                 return false;
             };

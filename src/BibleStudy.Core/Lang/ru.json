@@ -3384,5 +3384,6 @@
   "{0} hat keine Strong-Nummern: Die Verse sind über den hebräischen und griechischen Grundtext gefunden, das Wort ist darin nicht markiert.": "В {0} нет номеров Стронга: стихи найдены по еврейскому и греческому тексту оригинала, само слово в них не выделено.",
   "{0} hat keine Strong-Nummern. „Im Grundtext suchen“, O=… und G…=Wort brauchen eine Übersetzung mit Strong-Nummern (z. B. KJV); eine Strong-Nummer allein (G3056) geht auch hier.": "В {0} нет номеров Стронга. «Искать на языке оригинала», O=… и G…=слово требуют перевода с номерами Стронга (например, KJV); один номер Стронга (G3056) работает и здесь.",
   "Der Grundtext ließ sich nicht laden: {0}": "Не удалось загрузить текст оригинала: {0}",
-  "„{0}“ wurde als {1} gesucht. Gemeint sein kann auch: {2}. Gezielt so: {3}:\"{4}\"": "«{0}» искали как {1}. Также может означать: {2}. Точно так: {3}:\"{4}\""
+  "„{0}“ wurde als {1} gesucht. Gemeint sein kann auch: {2}. Gezielt so: {3}:\"{4}\"": "«{0}» искали как {1}. Также может означать: {2}. Точно так: {3}:\"{4}\"",
+  "{0} von {1} Kapiteln ließen sich nicht laden (keine Verbindung?): Die Treffer sind unvollständig.": "Не удалось загрузить {0} из {1} глав (нет соединения?): результаты неполные."
 }
