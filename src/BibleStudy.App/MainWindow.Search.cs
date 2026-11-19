@@ -13,7 +13,7 @@ namespace BibleStudy.App;
 /// <summary>Search after the csv-bibel.de syntax: words, phrases, / - ( ), lemma, Strong numbers, passages, original-language words.</summary>
 public partial class MainWindow
 {
-    const int ShownHits = 400;
+    const int ShownHits = 40_000;   // the list draws only what is in sight, so every hit can be in it
 
     readonly Dictionary<string, List<CorpusVerse>> _corpora = [];
     readonly Dictionary<string, StrongIndex> _strongIndexes = [];
@@ -124,6 +124,8 @@ public partial class MainWindow
         SearchOriginalCheck.IsCheckedChanged += (_, _) => { _settings.SearchOriginal = SearchOriginalCheck.IsChecked == true; SaveSettings(); };
         SearchCaseCheck.IsChecked = _settings.SearchCase;
         SearchCaseCheck.IsCheckedChanged += (_, _) => { _settings.SearchCase = SearchCaseCheck.IsChecked == true; SaveSettings(); };
+        SearchAccentsCheck.IsChecked = _settings.SearchIgnoreAccents;
+        SearchAccentsCheck.IsCheckedChanged += (_, _) => { _settings.SearchIgnoreAccents = SearchAccentsCheck.IsChecked == true; SaveSettings(); };
         SearchOptionsBtn.IsCheckedChanged += (_, _) => SearchOptionsCard.IsVisible = SearchOptionsBtn.IsChecked == true;
         SearchBuilderBtn.IsCheckedChanged += (_, _) => { SearchBuilder.IsVisible = SearchBuilderBtn.IsChecked == true; if (SearchBuilder.IsVisible && _builderRows.Count == 0) { AddBuilderRow(0); AddBuilderRow(0); } };
         SearchBuilderAddBtn.Click += (_, _) => AddBuilderRow(0);
@@ -131,7 +133,7 @@ public partial class MainWindow
         // a changed option searches again at once, so the effect is visible
         foreach (var box in new[] { SearchMatchBox, SearchRangeBox })
             box.SelectionChanged += async (_, _) => { if (!string.IsNullOrWhiteSpace(SearchBox.Text) && _hits.Count > 0 && IsLoaded) await SearchAsync(); };
-        foreach (var check in new[] { SearchOriginalCheck, SearchCaseCheck })
+        foreach (var check in new[] { SearchOriginalCheck, SearchCaseCheck, SearchAccentsCheck })
             check.IsCheckedChanged += async (_, _) => { if (!string.IsNullOrWhiteSpace(SearchBox.Text) && _hits.Count > 0 && IsLoaded) await SearchAsync(); };
         SearchBox.KeyDown += async (_, e) => { if (e.Key == Key.Enter) await SearchAsync(); };
         SearchGoBtn.Click += async (_, _) => await SearchAsync();
@@ -205,7 +207,43 @@ public partial class MainWindow
 
     static string ShortBook(BookInfo b) => BookData.ShortName(b.Id, BookNameLanguage) ?? b.CommonName;
 
-    IEnumerable<SearchResult> CurrentHits() => _hitBook is null ? _hits : _hits.Where(h => h.Ref.Book == _hitBook);
+    /// <summary>The hits shown: all, or those of the chosen book; with a chosen word form only the verses with it, and only it marked.</summary>
+    IEnumerable<SearchResult> CurrentHits()
+    {
+        var hits = _hitBook is null ? _hits : _hits.Where(h => h.Ref.Book == _hitBook);
+        if (_hitForm is not { } form) return hits;
+        return hits.Select(h => h with { Spans = h.Spans.Where(s => h.Text.Substring(s.Start, s.Len).ToLowerInvariant() == form).ToList() }).Where(h => h.Spans.Count > 0);
+    }
+
+    /// <summary>A found word form chosen above the hits (lower case), or null for all.</summary>
+    string? _hitForm;
+
+    /// <summary>
+    /// Which spellings the search found and how often, as buttons: so it is plain what was counted (Gott finds Gottes and gottlos too when
+    /// words are matched by their beginning), and a click shows only the verses with that one form.
+    /// </summary>
+    void ShowFoundForms(TranslationInfo t)
+    {
+        SearchFormsPanel.Children.Clear();
+        var inBook = _hitBook is null ? _hits : _hits.Where(h => h.Ref.Book == _hitBook).ToList();
+        var forms = HitViews.WordForms(inBook);
+        if (forms.Count < 2 && _hitForm is null) return;
+        SearchFormsPanel.Children.Add(new TextBlock { Text = L("Gefundene Formen:"), Classes = { "caption" }, VerticalAlignment = VerticalAlignment.Center, Margin = new(0, 0, 6, 4) });
+        const int Shown = 8;   // the rest behind "+n more": the list of verses stays in sight
+        foreach (var (form, count) in forms.Take(_formsAll ? 400 : Shown))
+        {
+            var f = form;
+            SearchFormsPanel.Children.Add(FilterChip($"{form}  {count:N0}", _hitForm == form, null, () => { _hitForm = _hitForm == f ? null : f; ShowHits(t); },
+                _hitForm == form ? L("Wieder alle Formen zeigen") : L("Nur Verse mit „{0}“ zeigen", form)));
+        }
+        if (forms.Count > Shown)
+        {
+            var more = new Button { Content = _formsAll ? L("weniger") : L("+{0} weitere", forms.Count - Shown), Classes = { "tool" }, Width = double.NaN, Height = 24, Padding = new(8, 0), FontSize = 11, Margin = new(0, 0, 4, 4) };
+            more.Click += (_, _) => { _formsAll = !_formsAll; ShowFoundForms(t); };
+            SearchFormsPanel.Children.Add(more);
+        }
+    }
+    bool _formsAll;
 
     void RefreshSearchHistory()
     {
@@ -244,7 +282,7 @@ public partial class MainWindow
         _searching = true;
         try
         {
-            SearchQueueBtn.IsVisible = false; UpdateHitActions(false); SearchBooksPanel.Children.Clear(); _hitBook = null; _queueRefs = []; SearchStrongsPanel.Children.Clear();
+            SearchQueueBtn.IsVisible = false; UpdateHitActions(false); SearchBooksPanel.Children.Clear(); _hitBook = null; _hitForm = null; _formsAll = false; _queueRefs = []; SearchStrongsPanel.Children.Clear(); SearchFormsPanel.Children.Clear();
             var narrowTo = SearchInHitsCheck.IsChecked == true && _hits.Count > 0 ? _hits.Select(h => h.Ref).ToHashSet() : null;
 
             // 1. passages: "Joh 3,16" opens, several passages become a list of verses
@@ -324,7 +362,7 @@ public partial class MainWindow
             var scope = SearchScopeBox.SelectedIndex is var si and > 0 && si < Scopes.Length ? Scopes[si].Match : null;
             var books = scope is null ? null : _books.Select(b => b.Id).Where(scope).ToHashSet();
             var options = new SearchOptions((WordMatch)Math.Max(0, SearchMatchBox.SelectedIndex), SearchCaseCheck.IsChecked == true, SearchOriginalCheck.IsChecked == true,
-                Ranges[Math.Clamp(SearchRangeBox.SelectedIndex, 0, Ranges.Length - 1)].Range);
+                Ranges[Math.Clamp(SearchRangeBox.SelectedIndex, 0, Ranges.Length - 1)].Range, Accents: SearchAccentsCheck.IsChecked != true);
             if (IsJesusScope(SearchScopeBox.SelectedIndex))
             {
                 corpus = await JesusCorpusAsync(t) ?? [];
@@ -368,14 +406,17 @@ public partial class MainWindow
         ShowSearchView();
         var words = list.Sum(h => h.Spans.Count);
         SearchInfo.Text = _hits.Count == 0 ? L("Keine Treffer in {0}.", t.ShortName)
-            : words == 0 ? L("{0} Verse in {1}{2}", list.Count, t.ShortName, (list.Count > ShownHits ? L(" (erste {0} angezeigt)", ShownHits) : ""))
-            : L("{0} Verse · {1} Fundstellen in {2}{3}", list.Count, words, t.ShortName, (list.Count > ShownHits ? L(" (erste {0} angezeigt)", ShownHits) : ""));
+            : words == 0 ? L("{0} Verse in {1}{2}", list.Count.ToString("N0"), t.ShortName, (list.Count > ShownHits ? L(" (erste {0} angezeigt)", ShownHits) : ""))
+            : L("{0} Verse · {1} Fundstellen in {2}{3}", list.Count.ToString("N0"), words.ToString("N0"), t.ShortName, (list.Count > ShownHits ? L(" (erste {0} angezeigt)", ShownHits) : ""));
+        if (_hitForm is not null) SearchInfo.Text += " · " + L("nur „{0}“", _hitForm);
         if (_hits.Count > 0 && _searchExtra.Length > 0) SearchInfo.Text += "\n" + _searchExtra;
         SearchQueueBtn.IsVisible = list.Count > 0; UpdateHitActions(list.Count > 0);
+        ShowFoundForms(t);
 
-        // hits per book, in Bible order; click narrows the list to that book, click again shows all
+        // hits per book, in Bible order; click narrows the list to that book, click again shows all (with a chosen form: the verses with it)
         SearchBooksPanel.Children.Clear();
-        var perBook = _hits.GroupBy(h => h.Ref.Book).ToDictionary(g => g.Key, g => g.Count());
+        var perBook = (_hitForm is null ? _hits : _hits.Where(h => h.Spans.Any(s => h.Text.Substring(s.Start, s.Len).ToLowerInvariant() == _hitForm)))
+            .GroupBy(h => h.Ref.Book).ToDictionary(g => g.Key, g => g.Count());
         if (perBook.Count > 1)
             foreach (var b in _books.Where(b => perBook.ContainsKey(b.Id)))
             {

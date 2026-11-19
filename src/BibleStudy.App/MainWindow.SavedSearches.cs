@@ -72,7 +72,7 @@ public partial class MainWindow
             _settings.SavedSearches.Add(new SavedSearch
             {
                 Name = title, Query = query, Scope = Math.Max(0, SearchScopeBox.SelectedIndex), Match = Math.Max(0, SearchMatchBox.SelectedIndex), Range = Math.Max(0, SearchRangeBox.SelectedIndex),
-                Original = SearchOriginalCheck.IsChecked == true, CaseSensitive = SearchCaseCheck.IsChecked == true,
+                Original = SearchOriginalCheck.IsChecked == true, CaseSensitive = SearchCaseCheck.IsChecked == true, IgnoreAccents = SearchAccentsCheck.IsChecked == true,
             });
             SaveSettings();
             fly.Hide();
@@ -119,7 +119,7 @@ public partial class MainWindow
         SearchScopeBox.SelectedIndex = Math.Clamp(s.Scope, 0, Scopes.Length - 1);
         SearchMatchBox.SelectedIndex = Math.Clamp(s.Match, 0, MatchModes.Length - 1);
         SearchRangeBox.SelectedIndex = Math.Clamp(s.Range, 0, Ranges.Length - 1);
-        SearchOriginalCheck.IsChecked = s.Original; SearchCaseCheck.IsChecked = s.CaseSensitive;
+        SearchOriginalCheck.IsChecked = s.Original; SearchCaseCheck.IsChecked = s.CaseSensitive; SearchAccentsCheck.IsChecked = s.IgnoreAccents;
         SearchBox.Text = s.Query;
         await SearchAsync();
     }

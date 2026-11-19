@@ -206,6 +206,8 @@ public sealed class AppSettings
     public int SearchMatch { get; set; }
     public bool SearchOriginal { get; set; }
     public bool SearchCase { get; set; }
+    /// <summary>Umlauts, ß and accents are left out when comparing (schon finds schön too).</summary>
+    public bool SearchIgnoreAccents { get; set; }
     /// <summary>Index of the "all words must occur …" choice: verse, 2 verses, 5 verses, chapter.</summary>
     public int SearchRange { get; set; }
     /// <summary>Name shown to the other person when studying together.</summary>
@@ -407,6 +409,7 @@ public sealed class SavedSearch
     public int Range { get; set; }
     public bool Original { get; set; }
     public bool CaseSensitive { get; set; }
+    public bool IgnoreAccents { get; set; }
 }
 
 /// <summary>One saved arrangement of the parallel columns: which translations (and own passages) next to the main text, in this order.</summary>

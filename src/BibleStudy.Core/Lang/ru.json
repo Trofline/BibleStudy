@@ -3371,5 +3371,14 @@
   "Seitenzahl eingeben und Enter drücken (Strg+G)": "Введите номер страницы и нажмите Enter (Ctrl+G)",
   "Folie": "Слайд",
   "Seite": "Страница",
-  "Das gehört zu einem anderen Vault und wird hier nur gezeigt. Zum Ändern wechsle in diesen Vault.": "Это относится к другому хранилищу и здесь только показано. Чтобы изменить, переключись на это хранилище."
+  "Das gehört zu einem anderen Vault und wird hier nur gezeigt. Zum Ändern wechsle in diesen Vault.": "Это относится к другому хранилищу и здесь только показано. Чтобы изменить, переключись на это хранилище.",
+  "Umlaute und Akzente egal": "Не различать ё/е и ударения",
+  "Dann findet schon auch schön und das auch daß. Sonst zählen ä, ö, ü und ß als eigene Buchstaben.": "Тогда «все» находит и «всё». Иначе буквы с диакритикой считаются отдельными буквами.",
+  "Gefundene Formen:": "Найденные формы:",
+  "Wieder alle Formen zeigen": "Снова показать все формы",
+  "Nur Verse mit „{0}“ zeigen": "Показать только стихи с «{0}»",
+  "weniger": "меньше",
+  "+{0} weitere": "ещё +{0}",
+  "Die ersten {0} von {1} Fundstellen; die Ansicht „Verse“ zeigt alle.": "Первые {0} из {1} совпадений; вид «Стихи» показывает все.",
+  "nur „{0}“": "только «{0}»"
 }

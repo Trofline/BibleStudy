@@ -196,8 +196,11 @@ public partial class MainWindow
         var longest = hits.SelectMany(h => h.Spans).Select(s => s.Len).DefaultIfEmpty(0).Max();
         var wordWidth = Math.Min(longest * 7.2 + 8, Math.Max(70, width / 3));
         var context = (int)Math.Max(6, (width - labelWidth - wordWidth - 30) / 2 / charWidth);
-        var lines = HitViews.Align(hits, context, ShownHits);
+        const int MaxLines = 400;   // every line is drawn: more would make the panel slow
+        var lines = HitViews.Align(hits, context, MaxLines);
         if (lines.Count == 0) SearchAltPanel.Children.Add(new TextBlock { Classes = { "caption" }, TextWrapping = TextWrapping.Wrap, Text = L("Diese Suche markiert keine einzelnen Wörter. Nimm die Ansicht „Verse“.") });
+        var all = hits.Sum(h => h.Spans.Count);
+        if (all > lines.Count) SearchAltPanel.Children.Add(new TextBlock { Classes = { "caption" }, TextWrapping = TextWrapping.Wrap, Margin = new(0, 0, 0, 6), Text = L("Die ersten {0} von {1} Fundstellen; die Ansicht „Verse“ zeigt alle.", lines.Count, all) });
         foreach (var line in lines)
         {
             var row = new Grid { ColumnDefinitions = new($"{labelWidth.ToString(System.Globalization.CultureInfo.InvariantCulture)},*,{wordWidth.ToString(System.Globalization.CultureInfo.InvariantCulture)},*"), ClipToBounds = true };

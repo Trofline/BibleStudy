@@ -3371,5 +3371,14 @@
   "Seitenzahl eingeben und Enter drücken (Strg+G)": "Type a page number and press Enter (Ctrl+G)",
   "Folie": "Slide",
   "Seite": "Page",
-  "Das gehört zu einem anderen Vault und wird hier nur gezeigt. Zum Ändern wechsle in diesen Vault.": "This belongs to another vault and is only shown here. To change it, switch to that vault."
+  "Das gehört zu einem anderen Vault und wird hier nur gezeigt. Zum Ändern wechsle in diesen Vault.": "This belongs to another vault and is only shown here. To change it, switch to that vault.",
+  "Umlaute und Akzente egal": "Ignore accents and umlauts",
+  "Dann findet schon auch schön und das auch daß. Sonst zählen ä, ö, ü und ß als eigene Buchstaben.": "Then schon also finds schön and das also daß. Otherwise ä, ö, ü, ß and accented letters count as letters of their own.",
+  "Gefundene Formen:": "Forms found:",
+  "Wieder alle Formen zeigen": "Show all forms again",
+  "Nur Verse mit „{0}“ zeigen": "Show only verses with “{0}”",
+  "weniger": "fewer",
+  "+{0} weitere": "+{0} more",
+  "Die ersten {0} von {1} Fundstellen; die Ansicht „Verse“ zeigt alle.": "The first {0} of {1} hits; the “Verses” view shows them all.",
+  "nur „{0}“": "only “{0}”"
 }

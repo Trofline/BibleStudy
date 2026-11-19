@@ -11,19 +11,28 @@ public sealed partial class CorpusVerse
     public string Text { get; }
     public string Fold { get; }   // no diacritics, case kept
     public string Lower { get; }  // no diacritics, lower case
+    string? _exactLower;
+    /// <summary>Umlauts and accents kept, lower case (made on first use).</summary>
+    public string ExactLower => _exactLower ??= Text.ToLowerInvariant();
     public (int Start, int Len)[] Words { get; }
 
     public CorpusVerse(VerseRef r, string text)
     {
-        Ref = r; Text = text;
-        Fold = SearchQuery.Fold(text, false);
+        // ü stored as u + ¨ (some imported texts) becomes one letter: otherwise "über" would be the two words "u" and "ber"
+        Ref = r; Text = SearchQuery.Composed(text);
+        Fold = SearchQuery.Fold(Text, false);
         Lower = Fold.ToLowerInvariant();
-        Words = Tokens().Matches(Fold).Select(m => (m.Index, m.Length)).ToArray();
+        Words = Tokens().Matches(Text).Select(m => (m.Index, m.Length)).ToArray();
     }
 
     public string Word(int i, bool lower) => (lower ? Lower : Fold).Substring(Words[i].Start, Words[i].Len);
 
-    [GeneratedRegex(@"[\p{L}\p{N}]+")] private static partial Regex Tokens();
+    /// <summary>The i-th word as it is compared: with or without umlauts and accents, with or without capitals.</summary>
+    public string Word(int i, bool lower, bool accents) =>
+        accents ? (lower ? ExactLower : Text).Substring(Words[i].Start, Words[i].Len) : Word(i, lower);
+
+    // a letter with its marks (Hebrew points, combining accents) stays one word
+    [GeneratedRegex(@"[\p{L}\p{N}][\p{L}\p{N}\p{M}]*")] private static partial Regex Tokens();
 }
 
 /// <summary>Strong's tags of a translation: Strong number → verse → the words that carry it.</summary>
@@ -87,7 +96,8 @@ public enum WordMatch { Prefix, Whole, Suffix, Contains }
 /// <param name="CaseSensitive">Capitals count (Herr ≠ HERR).</param>
 /// <param name="Original">Plain words are looked up as the Hebrew/Greek words behind the translated word (via Strong's tags).</param>
 /// <param name="Range">0 = all words in one verse; n > 0 = within n verses of each other; -1 = within one chapter.</param>
-public sealed record SearchOptions(WordMatch Match = WordMatch.Prefix, bool CaseSensitive = false, bool Original = false, int Range = 0);
+/// <param name="Accents">Umlauts, ß and accents count (schön ≠ schon, daß ≠ das); false: they are left out when comparing.</param>
+public sealed record SearchOptions(WordMatch Match = WordMatch.Prefix, bool CaseSensitive = false, bool Original = false, int Range = 0, bool Accents = true);
 
 public static class SearchEngine
 {
@@ -375,7 +385,7 @@ public static class SearchEngine
     /// <summary>Tests one word of the text against a search word: wildcards (*) or the chosen match mode.</summary>
     static Func<string, bool> Matcher(string text, SearchOptions o)
     {
-        var q = SearchQuery.Fold(text, !o.CaseSensitive);
+        var q = SearchQuery.Compare(text, !o.CaseSensitive, o.Accents);
         if (SearchQuery.HasWildcard(q)) return SearchQuery.WildcardRegex(q).IsMatch;
         return o.Match switch
         {
@@ -392,7 +402,7 @@ public static class SearchEngine
         var hit = false;
         for (var i = 0; i < v.Words.Length; i++)
         {
-            if (!test(v.Word(i, !c.Options.CaseSensitive))) continue;
+            if (!test(v.Word(i, !c.Options.CaseSensitive, c.Options.Accents))) continue;
             hit = true; spans.Add(v.Words[i]);
         }
         return hit;
@@ -401,13 +411,13 @@ public static class SearchEngine
     /// <summary>Words that differ from the search word by a few letters (one up to six letters long, two beyond that).</summary>
     static bool Fuzzy(string text, CorpusVerse v, Ctx c, List<(int, int)> spans)
     {
-        var q = SearchQuery.Fold(text, !c.Options.CaseSensitive);
+        var q = SearchQuery.Compare(text, !c.Options.CaseSensitive, c.Options.Accents);
         var max = q.Length <= 6 ? 1 : 2;
         var hit = false;
         for (var i = 0; i < v.Words.Length; i++)
         {
             if (Math.Abs(v.Words[i].Len - q.Length) > max) continue;
-            if (Distance(v.Word(i, !c.Options.CaseSensitive), q, max) > max) continue;
+            if (Distance(v.Word(i, !c.Options.CaseSensitive, c.Options.Accents), q, max) > max) continue;
             hit = true; spans.Add(v.Words[i]);
         }
         return hit;
@@ -439,7 +449,7 @@ public static class SearchEngine
         if (!c.IdsByTerm.TryGetValue(text, out var ids))
         {
             // the numbers are found without regard to capitals; the options only decide how the word has to match
-            c.IdsByTerm[text] = ids = c.Strongs.IdsForWords(Matcher(text, c.Options with { CaseSensitive = false }));
+            c.IdsByTerm[text] = ids = c.Strongs.IdsForWords(Matcher(text, c.Options with { CaseSensitive = false, Accents = false }));   // the index keeps its words folded
             c.Used.UnionWith(ids);
         }
         var hit = false;
@@ -458,12 +468,12 @@ public static class SearchEngine
     {
         var cs = c.Options.CaseSensitive;
         if (!c.Phrases.TryGetValue(node, out var q))
-            c.Phrases[node] = q = node.Words.Select(w => SearchQuery.Fold(w, !cs)).Select<string, Func<string, bool>>(f => SearchQuery.HasWildcard(f) ? SearchQuery.WildcardRegex(f).IsMatch : t => t == f).ToArray();
+            c.Phrases[node] = q = node.Words.Select(w => SearchQuery.Compare(w, !cs, c.Options.Accents)).Select<string, Func<string, bool>>(f => SearchQuery.HasWildcard(f) ? SearchQuery.WildcardRegex(f).IsMatch : t => t == f).ToArray();
         var hit = false;
         for (var i = 0; i + q.Length <= v.Words.Length; i++)
         {
             var ok = true;
-            for (var k = 0; k < q.Length && ok; k++) ok = q[k](v.Word(i + k, !cs));
+            for (var k = 0; k < q.Length && ok; k++) ok = q[k](v.Word(i + k, !cs, c.Options.Accents));
             if (!ok) continue;
             hit = true;
             var last = v.Words[i + q.Length - 1];
@@ -512,29 +522,71 @@ public static class SearchEngine
 
     static bool Lemma(LemmaNode l, CorpusVerse v, Ctx c, List<(int, int)> spans)
     {
-        if (!c.Lemmas.TryGetValue(l, out var test)) c.Lemmas[l] = test = LemmaMatcher(l);
+        if (!c.Lemmas.TryGetValue(l, out var test)) c.Lemmas[l] = test = LemmaMatcher(l, c.Options.Accents);
         var hit = false;
         for (var i = 0; i < v.Words.Length; i++)
         {
-            if (!test(v.Word(i, l.IgnoreCase))) continue;
+            if (!test(v.Word(i, l.IgnoreCase, c.Options.Accents))) continue;
             hit = true; spans.Add(v.Words[i]);
         }
         return hit;
     }
 
-    static Func<string, bool> LemmaMatcher(LemmaNode l)
+    // the endings German puts on a stem: only these count, so L=gehen finds geht and gingen but not geheim, L=Haus finds Häuser but not Haushalter
+    static readonly string[] VerbEndings = ["", "e", "st", "est", "t", "et", "en", "n", "end", "ende", "enden", "ender", "endes", "endem", "te", "ten", "test", "tet", "ete", "eten", "etest", "etet"];
+    static readonly string[] ParticipleEndings = ["t", "et", "en", "te", "ten", "ter", "tes", "tem", "ete", "eten", "eter", "etes", "etem", "ene", "enen", "ener", "enes", "enem"];
+    static readonly string[] NounEndings = ["", "e", "en", "n", "s", "es", "er", "ern", "ens", "ns", "se", "sen", "ses"];
+    static readonly string[] AdjectiveEndings = ["", "e", "en", "er", "es", "em", "ere", "eren", "erer", "eres", "erem", "ste", "sten", "ster", "stes", "stem", "este", "esten", "ester", "estes", "estem"];
+
+    static Func<string, bool> LemmaMatcher(LemmaNode l, bool accents = true)
     {
-        var pattern = SearchQuery.Fold(l.Pattern, l.IgnoreCase);
+        var pattern = SearchQuery.Compare(l.Pattern.Trim(), l.IgnoreCase, accents);
         if (SearchQuery.HasWildcard(pattern)) return SearchQuery.WildcardRegex(pattern).IsMatch;
-        var lowerStart = pattern.Length > 0 && char.IsLower(pattern[0]);
-        var isVerb = pattern.EndsWith("en", StringComparison.Ordinal) && pattern.Length > 4 && lowerStart;
-        var stem = isVerb ? pattern[..^2] : pattern;
-        if (pattern.Length > 3 && pattern.EndsWith("ern", StringComparison.Ordinal) && lowerStart) stem = pattern[..^1];
-        var irregular = Irregular.FirstOrDefault(kv => SearchQuery.Fold(kv.Key, l.IgnoreCase) == pattern).Value;
-        var forms = irregular?.Select(f => SearchQuery.Fold(f, l.IgnoreCase)).ToHashSet();
-        return tok => tok == pattern || (tok.Length - stem.Length is >= 0 and <= 3 && tok.StartsWith(stem, StringComparison.Ordinal))
-            || (lowerStart && tok.Length > 4 && tok.StartsWith("ge", StringComparison.Ordinal) && tok.Length - stem.Length - 2 is >= 1 and <= 2 && tok.AsSpan(2).StartsWith(stem, StringComparison.Ordinal))
-            || (forms is not null && forms.Contains(tok));
+        if (pattern.Length == 0) return _ => false;
+        var lowerStart = char.IsLower(pattern[0]);
+        var shortStem = pattern.EndsWith("ern", StringComparison.Ordinal) || pattern.EndsWith("eln", StringComparison.Ordinal);   // wandern, handeln
+        var isVerb = lowerStart && pattern.Length > 4 && (pattern.EndsWith("en", StringComparison.Ordinal) || shortStem);
+        var stem = isVerb ? (shortStem ? pattern[..^1] : pattern[..^2]) : pattern;
+        var irregular = Irregular.FirstOrDefault(kv => SearchQuery.Compare(kv.Key, l.IgnoreCase, accents) == pattern).Value;
+        var forms = irregular?.Select(f => SearchQuery.Compare(f, l.IgnoreCase, accents)).ToHashSet() ?? [];
+
+        // the stems with their endings; a noun also with umlaut (Haus → Häuser, Vater → Väter)
+        var stems = new List<(string Stem, string[] Endings)>();
+        if (isVerb) stems.Add((stem, VerbEndings));
+        else if (irregular is null)   // sein, tun: all their forms are in the table (seine is not a form of sein)
+        {
+            var endings = lowerStart && !l.IgnoreCase ? AdjectiveEndings : NounEndings.Concat(AdjectiveEndings).Distinct().ToArray();
+            stems.Add((stem, endings));
+            if (Umlauted(stem, accents) is { } umlaut) stems.Add((umlaut, NounEndings));
+        }
+        bool WithEnding(string tok, string s, string[] endings, int from)
+        {
+            if (tok.Length < from + s.Length || string.CompareOrdinal(tok, from, s, 0, s.Length) != 0) return false;
+            var rest = tok.Length - from - s.Length;
+            foreach (var e in endings) if (e.Length == rest && tok.EndsWith(e, StringComparison.Ordinal)) return true;
+            return false;
+        }
+        return tok => tok == pattern || forms.Contains(tok)
+            || stems.Any(s => WithEnding(tok, s.Stem, s.Endings, 0))
+            || (isVerb && tok.StartsWith("ge", StringComparison.Ordinal) && WithEnding(tok, stem, ParticipleEndings, 2));   // gesagt, geliebte, gegebenen
+    }
+
+    /// <summary>The stem with its last a, o, u (or au) as umlaut, as German plurals have it; null when there is none or umlauts do not count.</summary>
+    static string? Umlauted(string stem, bool accents)
+    {
+        if (!accents) return null;   // without umlauts Haus and Häus are the same anyway
+        var end = stem.Length;
+        if (end > 4 && (stem.EndsWith("er", StringComparison.Ordinal) || stem.EndsWith("el", StringComparison.Ordinal) || stem.EndsWith("en", StringComparison.Ordinal))) end -= 2;   // Vater → Väter, Apfel → Äpfel
+        for (var i = end - 1; i >= 0; i--)
+        {
+            var c = stem[i];
+            var u = c switch { 'a' => 'ä', 'o' => 'ö', 'u' => 'ü', 'A' => 'Ä', 'O' => 'Ö', 'U' => 'Ü', _ => '\0' };
+            if (u == '\0') { if ("eiyäöüEIÄÖÜ".Contains(c)) return null; continue; }
+            if (c is 'u' && i > 0 && stem[i - 1] is 'a' or 'A') return stem[..(i - 1)] + (stem[i - 1] == 'A' ? 'Ä' : 'ä') + stem[i..];   // Haus → Häus(er)
+            if (c is 'u' && i > 0 && stem[i - 1] is 'e' or 'E') return null;   // Heu, Freund: no umlaut
+            return stem[..i] + u + stem[(i + 1)..];
+        }
+        return null;
     }
 
     static IReadOnlyList<(int Start, int Len)> Merge(List<(int, int)> spans)

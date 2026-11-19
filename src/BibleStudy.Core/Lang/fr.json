@@ -3371,5 +3371,14 @@
   "Seitenzahl eingeben und Enter drücken (Strg+G)": "Tapez un numéro de page et appuyez sur Entrée (Ctrl+G)",
   "Folie": "Diapositive",
   "Seite": "Page",
-  "Das gehört zu einem anderen Vault und wird hier nur gezeigt. Zum Ändern wechsle in diesen Vault.": "Cela appartient à un autre vault et n'est affiché qu'ici. Pour le modifier, passe à ce vault."
+  "Das gehört zu einem anderen Vault und wird hier nur gezeigt. Zum Ändern wechsle in diesen Vault.": "Cela appartient à un autre vault et n'est affiché qu'ici. Pour le modifier, passe à ce vault.",
+  "Umlaute und Akzente egal": "Ignorer les accents",
+  "Dann findet schon auch schön und das auch daß. Sonst zählen ä, ö, ü und ß als eigene Buchstaben.": "Ainsi « ou » trouve aussi « où ». Sinon, les lettres accentuées comptent comme des lettres à part.",
+  "Gefundene Formen:": "Formes trouvées :",
+  "Wieder alle Formen zeigen": "Afficher de nouveau toutes les formes",
+  "Nur Verse mit „{0}“ zeigen": "Afficher seulement les versets avec « {0} »",
+  "weniger": "moins",
+  "+{0} weitere": "+{0} de plus",
+  "Die ersten {0} von {1} Fundstellen; die Ansicht „Verse“ zeigt alle.": "Les {0} premières de {1} occurrences ; la vue « Versets » les montre toutes.",
+  "nur „{0}“": "seulement « {0} »"
 }

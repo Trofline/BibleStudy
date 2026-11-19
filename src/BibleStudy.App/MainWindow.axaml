@@ -342,6 +342,7 @@
                                 <StackPanel Spacing="8">
                                     <CheckBox x:Name="SearchOriginalCheck" Content="Im Grundtext suchen (Hebräisch/Griechisch)" ToolTip.Tip="Findet das Wort auch dort, wo die Übersetzung ein anderes deutsches Wort verwendet: Es wird nach den Strong-Nummern gesucht, die hinter dem Wort stehen." />
                                     <CheckBox x:Name="SearchCaseCheck" Content="Groß-/Kleinschreibung beachten" ToolTip.Tip="HERR (Gottesname) und Herr sind dann verschieden" />
+                                    <CheckBox x:Name="SearchAccentsCheck" Content="Umlaute und Akzente egal" ToolTip.Tip="Dann findet schon auch schön und das auch daß. Sonst zählen ä, ö, ü und ß als eigene Buchstaben." />
                                     <CheckBox x:Name="SearchInHitsCheck" Content="Nur in den letzten Treffern suchen" ToolTip.Tip="Grenzt die vorigen Treffer weiter ein" />
                                     <TextBlock Text="Alle Suchwörter müssen vorkommen …" Classes="caption" />
                                     <Border Classes="pill" HorizontalAlignment="Left"><ComboBox x:Name="SearchRangeBox" Width="250" SelectedIndex="0" /></Border>
@@ -365,6 +366,7 @@
                             <WrapPanel x:Name="SearchStrongsPanel" />
                             <WrapPanel x:Name="SearchHistoryPanel" />
                             <TextBlock x:Name="SearchInfo" Classes="caption" TextWrapping="Wrap" />
+                            <WrapPanel x:Name="SearchFormsPanel" />
                             <WrapPanel x:Name="SearchBooksPanel" />
                             <Button x:Name="SearchQueueBtn" IsVisible="False" Content="Alle Treffer zur Leseliste" HorizontalAlignment="Left" />
                         </StackPanel>

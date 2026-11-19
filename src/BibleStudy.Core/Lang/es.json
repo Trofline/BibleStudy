@@ -3371,5 +3371,14 @@
   "Seitenzahl eingeben und Enter drücken (Strg+G)": "Escribe un número de página y pulsa Intro (Ctrl+G)",
   "Folie": "Diapositiva",
   "Seite": "Página",
-  "Das gehört zu einem anderen Vault und wird hier nur gezeigt. Zum Ändern wechsle in diesen Vault.": "Esto pertenece a otro vault y solo se muestra aquí. Para cambiarlo, cambia a ese vault."
+  "Das gehört zu einem anderen Vault und wird hier nur gezeigt. Zum Ändern wechsle in diesen Vault.": "Esto pertenece a otro vault y solo se muestra aquí. Para cambiarlo, cambia a ese vault.",
+  "Umlaute und Akzente egal": "Ignorar acentos y diéresis",
+  "Dann findet schon auch schön und das auch daß. Sonst zählen ä, ö, ü und ß als eigene Buchstaben.": "Así «si» encuentra también «sí». Si no, las letras con acento cuentan como letras propias.",
+  "Gefundene Formen:": "Formas encontradas:",
+  "Wieder alle Formen zeigen": "Mostrar de nuevo todas las formas",
+  "Nur Verse mit „{0}“ zeigen": "Mostrar solo versículos con «{0}»",
+  "weniger": "menos",
+  "+{0} weitere": "+{0} más",
+  "Die ersten {0} von {1} Fundstellen; die Ansicht „Verse“ zeigt alle.": "Los primeros {0} de {1} hallazgos; la vista «Versículos» los muestra todos.",
+  "nur „{0}“": "solo «{0}»"
 }

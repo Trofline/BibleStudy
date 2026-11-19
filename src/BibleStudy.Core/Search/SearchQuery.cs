@@ -42,6 +42,26 @@ public static partial class SearchQuery
         return sb.ToString();
     }
 
+    /// <summary>
+    /// For comparing when umlauts and accents count (schön ≠ schon, daß ≠ das): the letters as they are, only in their composed form
+    /// (ü as one letter, not u with two dots), lower case if wanted. The length stays that of the composed text.
+    /// </summary>
+    public static string Exact(string s, bool lower)
+    {
+        var composed = Composed(s);
+        return lower ? composed.ToLowerInvariant() : composed;
+    }
+
+    /// <summary>The text with letters and their marks as one character (NFC): imported texts sometimes store ü as u + ¨.</summary>
+    public static string Composed(string s)
+    {
+        try { return s.IsNormalized(NormalizationForm.FormC) ? s : s.Normalize(NormalizationForm.FormC); }
+        catch (ArgumentException) { return s; }   // a broken half of a character pair
+    }
+
+    /// <summary>The form of a text for comparing: with or without umlauts and accents, with or without capitals.</summary>
+    public static string Compare(string s, bool lower, bool accents) => accents ? Exact(s, lower) : Fold(Composed(s), lower);
+
     /// <summary>True when the text looks like a Strong number (G3056, h1).</summary>
     public static bool IsStrongId(string s) => StrongRx().IsMatch(s);
 
@@ -61,6 +81,7 @@ public static partial class SearchQuery
     public static SearchNode? Parse(string input, out string? error)
     {
         error = null;
+        input = Composed(input);   // ü typed or pasted as u + ¨ is one letter
         var tokens = Tokenize(input);
         // the Bible texts here carry no paragraph marks: better to say so than to search for the word PARAGRAPH
         if (tokens.Any(t => t.Kind == K.Term && !t.Quoted && t.Text is "PARAGRAPH" or "PARAGRAPHS")) { error = L("Absätze sind in den Bibeltexten nicht gekennzeichnet. Nimm WITHIN 1 SENTENCE oder WITHIN 3 VERSES."); return null; }
@@ -284,6 +305,6 @@ public static partial class SearchQuery
     [GeneratedRegex(@"^[Ll](?<m>[=~])(?<w>.+)$")] private static partial Regex LemmaRx();
     [GeneratedRegex(@"^[Oo]=(?<w>.+)$")] private static partial Regex OriginalRx();
     [GeneratedRegex(@"^(?<id>[GgHh][0-9]{1,4}[a-cA-C]?)=(?<w>.+)$")] private static partial Regex StrongWordRx();
-    [GeneratedRegex(@"[\p{L}\p{N}*?]+")] private static partial Regex WordRx();
-    [GeneratedRegex(@"[^\p{L}\p{N}*?]+")] private static partial Regex NotWordRx();
+    [GeneratedRegex(@"[\p{L}\p{N}\p{M}*?]+")] private static partial Regex WordRx();
+    [GeneratedRegex(@"[^\p{L}\p{N}\p{M}*?]+")] private static partial Regex NotWordRx();
 }
