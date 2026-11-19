@@ -3387,5 +3387,16 @@
   "„{0}“ wurde als {1} gesucht. Gemeint sein kann auch: {2}. Gezielt so: {3}:\"{4}\"": "«{0}» se buscó como {1}. También puede referirse a: {2}. Para elegir: {3}:\"{4}\"",
   "{0} von {1} Kapiteln ließen sich nicht laden (keine Verbindung?): Die Treffer sind unvollständig.": "No se pudieron cargar {0} de {1} capítulos (¿sin conexión?): los resultados están incompletos.",
   "Microsoft Store": "Microsoft Store",
-  "Updates kommen über den Microsoft Store.": "Las actualizaciones llegan por la Microsoft Store."
+  "Updates kommen über den Microsoft Store.": "Las actualizaciones llegan por la Microsoft Store.",
+  "Video festhalten": "Fijar el vídeo",
+  "Video nicht festhalten": "Soltar el vídeo",
+  "Zeigt die Bilder der anderen in einem kleinen Feld über dem Text, damit du sie beim Lesen immer siehst. Das Feld lässt sich verkleinern, vergrößern, in eine andere Ecke setzen oder als eigenes Fenster lösen.": "Muestra las imágenes de los demás en un pequeño recuadro sobre el texto para que siempre los veas al leer. El recuadro se puede reducir, ampliar, cambiar de esquina o sacar a una ventana propia.",
+  "Kleiner": "Más pequeño",
+  "Größer": "Más grande",
+  "In die nächste Ecke": "A la siguiente esquina",
+  "Als eigenes Fenster": "Como ventana propia",
+  "Nicht mehr festhalten": "Dejar de fijar",
+  "Immer im Vordergrund": "Siempre visible",
+  "Zurück ins Programm": "Volver al programa",
+  "Doppelklick: Vollbild": "Doble clic: pantalla completa"
 }

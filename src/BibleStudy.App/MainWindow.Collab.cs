@@ -602,9 +602,13 @@ public partial class MainWindow
 
     async Task FollowAsync((string Book, int Chapter, int? Verse) p)
     {
+        // the chapter is already open: only the verse comes into view, the text is not loaded again
+        if (p.Verse is int open && p.Book == _curBook && p.Chapter == _curChapter && _verseBoxes.ContainsKey(open)) { ScrollToVerse(open); return; }
         _collabSuppress = true;
         try { await GoToAsync(p.Book, p.Chapter, p.Verse); }
         finally { _collabSuppress = false; }
+        // in the chapter already open the view keeps its place: the verse the other one clicked is brought to the top after that
+        if (p.Verse is int v) Avalonia.Threading.Dispatcher.UIThread.Post(() => ScrollToVerse(v), Avalonia.Threading.DispatcherPriority.Background);
     }
 
     void ShowSharedVerse(string book, int chapter, int verse, string text, string translation)

@@ -73,6 +73,10 @@ public partial class MainWindow
         Mark(cam, _camOn);
         cam.Click += async (_, _) => { cam.IsEnabled = false; await SetCameraAsync(!_camOn); cam.IsEnabled = true; cam.Content = _camOn ? L("Kamera aus") : L("Kamera an"); Mark(cam, _camOn); };
 
+        var pin = new Button { Content = _dockWanted ? L("Video nicht festhalten") : L("Video festhalten"), Margin = new(0, 0, 8, 6) };
+        Mark(pin, _dockWanted);
+        ToolTip.SetTip(pin, L("Zeigt die Bilder der anderen in einem kleinen Feld über dem Text, damit du sie beim Lesen immer siehst. Das Feld lässt sich verkleinern, vergrößern, in eine andere Ecke setzen oder als eigenes Fenster lösen."));
+        pin.Click += (_, _) => { ToggleDock(); pin.Content = _dockWanted ? L("Video nicht festhalten") : L("Video festhalten"); Mark(pin, _dockWanted); };
         var big = new Button { Content = L("Videos groß"), Classes = { "tool" }, Width = double.NaN, Padding = new(10, 0), Margin = new(0, 0, 8, 6) };
         big.Click += (_, _) => ShowBigVideo();
         var hear = new CheckBox { Content = L("Die anderen hören"), IsChecked = _settings.CollabHear };
@@ -90,7 +94,7 @@ public partial class MainWindow
                 Spacing = 6, Margin = new(0, 6, 0, 0),
                 Children =
                 {
-                    new WrapPanel { Children = { ptt, call, voice, cam, big } },
+                    new WrapPanel { Children = { ptt, call, voice, cam, pin, big } },
                     hear, _speaking, _mediaInfo, _videoTiles, expander,
                     new TextBlock { Text = L("Mit Kopfhörern klingt es am besten. Nichts wird aufgezeichnet, außer einer Sprachnachricht, die du selbst sendest."), Classes = { "caption" }, TextWrapping = TextWrapping.Wrap },
                 },
@@ -258,37 +262,17 @@ public partial class MainWindow
         var old = t.Image.Source as Bitmap;
         t.Image.Source = bmp;
         _tiles[id] = (t.Tile, t.Image, DateTime.UtcNow);
+        _tileInfo[id] = (name, ink);
         UpdateBigVideo(id, name, ink, bmp);
+        UpdateDock(id, bmp);
         old?.Dispose();
     }
 
     void RemoveTile(string id)
     {
-        if (_tiles.Remove(id, out var t)) { _videoTiles.Children.Remove(t.Tile); (t.Image.Source as Bitmap)?.Dispose(); }
         if (_bigGrid?.Children.FirstOrDefault(c => c.Tag as string == id) is { } b) _bigGrid.Children.Remove(b);
-    }
-
-    /// <summary>All pictures large in a window of their own (on a computer).</summary>
-    void ShowBigVideo()
-    {
-        if (AppPlatform.IsMobile) return;
-        if (_bigVideo is { IsVisible: true }) { _bigVideo.Activate(); return; }
-        _bigGrid = new UniformGrid { Margin = new(8) };
-        _bigVideo = new Window { Title = L("Zusammen studieren · Video"), Width = 900, Height = 600, Content = _bigGrid, Background = Brushes.Black };
-        _bigVideo.Closed += (_, _) => { _bigVideo = null; _bigGrid = null; };
-        _bigVideo.Show(this);
-    }
-
-    void UpdateBigVideo(string id, string name, Color ink, Bitmap bmp)
-    {
-        if (_bigGrid is null) return;
-        if (_bigGrid.Children.FirstOrDefault(c => c.Tag as string == id) is not Border box)
-        {
-            box = new Border { Tag = id, Margin = new(4), VerticalAlignment = VerticalAlignment.Center, BorderThickness = new(2), BorderBrush = new SolidColorBrush(ink), CornerRadius = new(8), ClipToBounds = true,
-                Child = new Grid { Children = { new Image { Stretch = Stretch.Uniform }, new Border { Background = new SolidColorBrush(ink), CornerRadius = new(4), Padding = new(6, 2), Margin = new(6), HorizontalAlignment = HorizontalAlignment.Left, VerticalAlignment = VerticalAlignment.Bottom, Child = new TextBlock { Text = name, Foreground = Brushes.White } } } } };
-            _bigGrid.Children.Add(box);
-        }
-        ((Image)((Grid)box.Child!).Children[0]).Source = bmp;
+        _tileInfo.Remove(id);
+        if (_tiles.Remove(id, out var t)) { _videoTiles.Children.Remove(t.Tile); RefreshDock(); (t.Image.Source as Bitmap)?.Dispose(); }   // the field no longer shows it before the picture goes
     }
 
     // ---- the line "who speaks" and old pictures ----------------------------------------------------------------------------

@@ -3387,5 +3387,16 @@
   "„{0}“ wurde als {1} gesucht. Gemeint sein kann auch: {2}. Gezielt so: {3}:\"{4}\"": "«{0}» искали как {1}. Также может означать: {2}. Точно так: {3}:\"{4}\"",
   "{0} von {1} Kapiteln ließen sich nicht laden (keine Verbindung?): Die Treffer sind unvollständig.": "Не удалось загрузить {0} из {1} глав (нет соединения?): результаты неполные.",
   "Microsoft Store": "Microsoft Store",
-  "Updates kommen über den Microsoft Store.": "Обновления приходят через Microsoft Store."
+  "Updates kommen über den Microsoft Store.": "Обновления приходят через Microsoft Store.",
+  "Video festhalten": "Закрепить видео",
+  "Video nicht festhalten": "Открепить видео",
+  "Zeigt die Bilder der anderen in einem kleinen Feld über dem Text, damit du sie beim Lesen immer siehst. Das Feld lässt sich verkleinern, vergrößern, in eine andere Ecke setzen oder als eigenes Fenster lösen.": "Показывает изображения других участников в небольшом поле над текстом, чтобы вы всегда видели их во время чтения. Поле можно уменьшить, увеличить, перенести в другой угол или вынести в отдельное окно.",
+  "Kleiner": "Меньше",
+  "Größer": "Больше",
+  "In die nächste Ecke": "В следующий угол",
+  "Als eigenes Fenster": "В отдельном окне",
+  "Nicht mehr festhalten": "Больше не закреплять",
+  "Immer im Vordergrund": "Всегда поверх окон",
+  "Zurück ins Programm": "Обратно в программу",
+  "Doppelklick: Vollbild": "Двойной щелчок: полный экран"
 }

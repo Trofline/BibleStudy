@@ -129,6 +129,8 @@ public partial class MainWindow
                     ? arr.EnumerateArray().Take(200).Where(x => x.ValueKind == JsonValueKind.Number && x.TryGetInt32(out _)).Select(x => x.GetInt32()).Where(v => v is > 0 and <= 200).ToArray() : [];
                 p.Sel = (book, chapter, verses, Str("words", 120).Trim());
                 ShowPeople(); RenderPeerLayer();
+                // whoever is followed clicks a verse: it comes into view here too (nav is sent only when the chapter changes)
+                if (verses.Length > 0 && (_follow || (_leaderId == p.Id && _followLeader))) _ = FollowAsync((book, chapter, verses.Min()));
                 return true;
             }
             case "ptr":

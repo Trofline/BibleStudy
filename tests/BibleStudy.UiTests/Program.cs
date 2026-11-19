@@ -521,6 +521,36 @@ Check("no sign where the mark is shown", !RunsOf((Control)F<System.Collections.I
     Check("backup was made", madeBackups.Length > 0);
     foreach (var f in madeBackups) File.Delete(f);   // the test's own backup does not stay in the real backup folder
 }
+// the pictures of a call: a field that stays above the text, in four sizes, giving way to the window of its own; following jumps to the clicked verse
+{
+    var wb = new Avalonia.Media.Imaging.WriteableBitmap(new PixelSize(8, 6), new Vector(96, 96), Avalonia.Platform.PixelFormat.Bgra8888, Avalonia.Platform.AlphaFormat.Opaque);
+    using var png = new MemoryStream(); wb.Save(png); var frame = png.ToArray();
+    Call("ShowFrame", "p1", "Anna", Avalonia.Media.Color.Parse("#E5484D"), frame); Settle(200);
+    Check("no field before it is wanted", typeof(MainWindow).GetField("_dock", All)!.GetValue(win) is not Border { Parent: not null });
+    Call("ToggleDock"); Settle(200);
+    var dock = F<Border>("_dock");
+    Check("the field shows above the text", dock.Parent is not null && dock.IsVisible);
+    var dockImage = dock.GetLogicalDescendants().OfType<Image>().FirstOrDefault();
+    Check("the field holds the picture at its size", dockImage is { Width: 220 }, dockImage?.Width.ToString() ?? "none");
+    Call("ShowFrame", "p1", "Anna", Avalonia.Media.Color.Parse("#E5484D"), frame); Settle(100);
+    Check("a new picture of the same person does not add a second", dock.GetLogicalDescendants().OfType<Image>().Count() == 1);
+    Call("ShowBigVideo"); Settle(300);
+    var bigWin = win.OwnedWindows.FirstOrDefault(w => w.Title?.Contains("Video") == true);
+    Check("the window of its own opens with the picture", bigWin is not null && bigWin.GetLogicalDescendants().OfType<Image>().Any(i => i.Source is not null));
+    Check("the field gives way to the window", dock.Parent is null);
+    bigWin?.Close(); Settle(300);
+    Check("the field is back after the window closes", dock.Parent is not null);
+    Call("ToggleDock"); Settle(200);
+    Check("the field goes away when not wanted", dock.Parent is null);
+    Call("RemoveTile", "p1"); Settle(100);
+
+    // following: the other clicks a verse in the open chapter: here it comes into view
+    RunTask("GoToAsync", "GEN", 1, (int?)1); Settle(500);
+    var sc = C<ScrollViewer>("ReaderScroll");
+    var before = sc.Offset.Y;
+    Call("FollowAsync", ("GEN", 1, (int?)13)); Settle(800);
+    Check("following scrolls to the verse the other one clicked", sc.Offset.Y > before + 50, $"{before} -> {sc.Offset.Y}");
+}
 // closing with changed guest work: the question comes, and "cancel" keeps the program open
 {
     foreach (var w in win.OwnedWindows.ToList()) w.Close();

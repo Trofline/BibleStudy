@@ -3387,5 +3387,16 @@
   "„{0}“ wurde als {1} gesucht. Gemeint sein kann auch: {2}. Gezielt so: {3}:\"{4}\"": "« {0} » a été cherché comme {1}. Peut aussi désigner : {2}. Pour choisir : {3}:\"{4}\"",
   "{0} von {1} Kapiteln ließen sich nicht laden (keine Verbindung?): Die Treffer sind unvollständig.": "{0} chapitres sur {1} n'ont pas pu être chargés (pas de connexion ?) : les résultats sont incomplets.",
   "Microsoft Store": "Microsoft Store",
-  "Updates kommen über den Microsoft Store.": "Les mises à jour viennent du Microsoft Store."
+  "Updates kommen über den Microsoft Store.": "Les mises à jour viennent du Microsoft Store.",
+  "Video festhalten": "Épingler la vidéo",
+  "Video nicht festhalten": "Détacher la vidéo",
+  "Zeigt die Bilder der anderen in einem kleinen Feld über dem Text, damit du sie beim Lesen immer siehst. Das Feld lässt sich verkleinern, vergrößern, in eine andere Ecke setzen oder als eigenes Fenster lösen.": "Affiche les images des autres dans un petit cadre au-dessus du texte pour que vous les voyiez toujours en lisant. Le cadre peut être réduit, agrandi, déplacé dans un autre coin ou sorti dans une fenêtre à part.",
+  "Kleiner": "Plus petit",
+  "Größer": "Plus grand",
+  "In die nächste Ecke": "Dans le coin suivant",
+  "Als eigenes Fenster": "Dans une fenêtre à part",
+  "Nicht mehr festhalten": "Ne plus épingler",
+  "Immer im Vordergrund": "Toujours au premier plan",
+  "Zurück ins Programm": "Retour dans le programme",
+  "Doppelklick: Vollbild": "Double-clic : plein écran"
 }
