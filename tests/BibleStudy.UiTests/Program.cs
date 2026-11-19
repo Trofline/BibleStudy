@@ -521,6 +521,23 @@ Check("no sign where the mark is shown", !RunsOf((Control)F<System.Collections.I
     Check("backup was made", madeBackups.Length > 0);
     foreach (var f in madeBackups) File.Delete(f);   // the test's own backup does not stay in the real backup folder
 }
+// a document put into a folder shows in the Explorer with the marks of that folder
+{
+    var docVault = (BibleStudy.Core.Storage.VaultStore)typeof(MainWindow).GetField("_vault", All)!.GetValue(win)!;
+    var folder = docVault.AddFolder("Ordner mit Dokument");
+    docVault.AddDocument("Dokument im Ordner", "Inhalt", null, false, [], folder);
+    docVault.AddDocument("Dokument ohne Ordner", "Inhalt", null, false, []);
+    typeof(MainWindow).GetField("_exFolder", All)!.SetValue(win, (long?)folder);
+    Call("BuildExplorer"); Call("RefreshExplorer"); Settle(300);
+    var rows = ((System.Collections.IEnumerable)typeof(MainWindow).GetField("_exRows", All)!.GetValue(win)!).Cast<object>()
+        .Select(r => (Kind: r.GetType().GetProperty("Kind")!.GetValue(r)!.ToString(), Title: (string)r.GetType().GetProperty("Title")!.GetValue(r)!)).ToList();
+    Check("a document in the folder shows in the Explorer", rows.Any(r => r.Kind == "Doc" && r.Title == "Dokument im Ordner"), string.Join(" | ", rows));
+    Check("a document without a folder does not", !rows.Any(r => r.Title == "Dokument ohne Ordner"));
+    typeof(MainWindow).GetField("_exFolder", All)!.SetValue(win, null);
+    Call("RefreshExplorer"); Settle(200);
+    var root = ((System.Collections.IEnumerable)typeof(MainWindow).GetField("_exRows", All)!.GetValue(win)!).Cast<object>().Select(r => (string)r.GetType().GetProperty("Title")!.GetValue(r)!).ToList();
+    Check("it is not in the top level", !root.Contains("Dokument im Ordner"));
+}
 // the pictures of a call: a field that stays above the text, in four sizes, giving way to the window of its own; following jumps to the clicked verse
 {
     var wb = new Avalonia.Media.Imaging.WriteableBitmap(new PixelSize(8, 6), new Vector(96, 96), Avalonia.Platform.PixelFormat.Bgra8888, Avalonia.Platform.AlphaFormat.Opaque);

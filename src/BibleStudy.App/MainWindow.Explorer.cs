@@ -18,7 +18,7 @@ public partial class MainWindow
 {
     const int ExplorerTab = 30;
 
-    enum ExKind { Folder, Mark, Note }
+    enum ExKind { Folder, Mark, Note, Doc }
 
     sealed record ExItem(ExKind Kind, long Id, string Title, string Place, string? Color, long? FolderId, VerseRef? Ref = null, IReadOnlyList<(string Text, string Color)>? Cores = null);
 
@@ -68,6 +68,7 @@ public partial class MainWindow
 
     const string FolderIcon = "M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z";
     const string NoteIcon = "M12 20h9 M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z";
+    const string DocIcon = "M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z M14 3v5h5 M9 13h6 M9 17h6";
     const string MarkIcon = "M9 11l-6 6v3h9l3-3 M22 12l-4.6 4.6a2 2 0 0 1-2.8 0l-5.2-5.2a2 2 0 0 1 0-2.8L14 4";
 
     void BuildExplorer()
@@ -395,6 +396,10 @@ public partial class MainWindow
         }
         foreach (var n in _vault.GetNotes())
             items.Add(new ExItem(ExKind.Note, NoteKey(n.Ref), n.Text.ReplaceLineEndings(" ").Trim(), Label(n.Ref), null, Known(n.FolderId), n.Ref));
+        // a document put into a folder shows there like a mark; one without a folder stays in the document list only (all of them here would bury the marks)
+        foreach (var d in _vault.GetDocuments())
+            if (Known(d.FolderId) is not null)
+                items.Add(new ExItem(ExKind.Doc, d.Id, d.Title.Trim(), d.Updated.ToString("d"), null, Known(d.FolderId)));
         return items;
     }
 
@@ -622,6 +627,7 @@ public partial class MainWindow
         {
             ExKind.Folder => new Icon { Data = Geometry.Parse(FolderIcon), IconSize = 16 },
             ExKind.Note => new Icon { Data = Geometry.Parse(NoteIcon), IconSize = 15 },
+            ExKind.Doc => new Icon { Data = Geometry.Parse(DocIcon), IconSize = 15 },
             _ => new Border { Width = 12, Height = 12, CornerRadius = new(6), Background = new SolidColorBrush(MarkColor(item.Color ?? "")) },
         };
         lead.VerticalAlignment = VerticalAlignment.Center; lead.HorizontalAlignment = HorizontalAlignment.Left;
@@ -633,7 +639,7 @@ public partial class MainWindow
         if (item.Kind == ExKind.Folder) { name.Text = title; name.TextTrimming = TextTrimming.CharacterEllipsis; }
         else FillWrapped(name, title, item.Cores);
         var place = new TextBlock { Text = item.Place, Classes = { "caption" }, VerticalAlignment = VerticalAlignment.Center, TextTrimming = TextTrimming.CharacterEllipsis };
-        var kind = new TextBlock { Text = item.Kind switch { ExKind.Folder => L("Ordner"), ExKind.Note => L("Notiz"), _ => L("Markierung") }, Classes = { "caption" }, VerticalAlignment = VerticalAlignment.Center };
+        var kind = new TextBlock { Text = item.Kind switch { ExKind.Folder => L("Ordner"), ExKind.Note => L("Notiz"), ExKind.Doc => L("Dokument"), _ => L("Markierung") }, Classes = { "caption" }, VerticalAlignment = VerticalAlignment.Center };
         Grid.SetColumn(name, 1); Grid.SetColumn(place, 2); Grid.SetColumn(kind, 3);
         grid.Children.Add(lead); grid.Children.Add(name); grid.Children.Add(place); grid.Children.Add(kind);
         var row = new Border { Padding = new(8, 7), CornerRadius = new(8), Child = grid, Margin = new(0, 1), Cursor = new Cursor(StandardCursorType.Hand), Opacity = _exCut?.Any(c => SameItem(c, item)) == true ? 0.45 : 1 };
@@ -677,6 +683,11 @@ public partial class MainWindow
     void ExOpen(ExItem item)
     {
         if (item.Kind == ExKind.Folder) { ExNavigate(item.Id); return; }
+        if (item.Kind == ExKind.Doc)
+        {
+            if (_vault.GetDocuments().FirstOrDefault(d => d.Id == item.Id) is { } doc) { ShowReader(); SideTabs.SelectedIndex = KnowledgeTab; OpenDocument(doc); }
+            return;
+        }
         if (item.Ref is not { } r) return;
         _ = GoToAsync(r.Book, r.Chapter, r.Verse);
     }
@@ -713,6 +724,8 @@ public partial class MainWindow
         if (Foreign(item))
             return new ContextMenu { Items = { MenuAction(L("Zur Stelle springen"), () => ExOpen(item)), MenuAction(ForeignNote(), () => { }, enabled: false) } };
         var targets = _exSel.Any(s => s.Kind == item.Kind && s.Id == item.Id) && _exSel.Count > 1 ? _exSel.Where(i => !Foreign(i)).ToList() : [item];
+        if (item.Kind == ExKind.Doc)
+            return new ContextMenu { Items = { MenuAction(L("Dokument öffnen"), () => ExOpen(item)), MenuAction(L("Ausschneiden (Strg+X)"), () => { ExSelectFor(item); ExCut(); }), MoveMenu(targets), new Separator(), MenuAction(targets.Count > 1 ? L("{0} Einträge löschen", targets.Count) : L("Dokument löschen"), () => ExDelete(targets)) } };
         return new ContextMenu
         {
             Items =
@@ -804,6 +817,11 @@ public partial class MainWindow
                     _vault.SetMarkFolder(i.Id, target); moved++; firstMoved ??= i;
                     var oldMark = i.FolderId; back.Add(() => _vault.SetMarkFolder(i.Id, oldMark));
                     break;
+                case ExKind.Doc:
+                    if (i.FolderId == target) continue;
+                    _vault.SetDocumentFolder(i.Id, target); moved++; firstMoved ??= i;
+                    var oldDoc = i.FolderId; back.Add(() => _vault.SetDocumentFolder(i.Id, oldDoc));
+                    break;
                 case ExKind.Note:
                     if (i.FolderId == target || i.Ref is not { } r) continue;
                     _vault.SetNoteFolder(r, target); moved++; firstMoved ??= i;
@@ -843,6 +861,7 @@ public partial class MainWindow
             {
                 case ExKind.Folder: t = _vault.TrashFolder(i.Id); _exOpen.Remove(i.Id); break;
                 case ExKind.Mark: t = _vault.TrashMark(i.Id); touchedText |= t > 0; break;
+                case ExKind.Doc: t = _vault.TrashDocument(i.Id); if (t > 0 && _doc is { } open && open.Id == i.Id && DocEditorPanel.IsVisible) CloseDocument(); break;
                 case ExKind.Note when i.Ref is { } r:
                     t = _vault.TrashNote(r);
                     if (t > 0 && _noteRef == r) NoteEditor.Text = _noteLoaded = "";
