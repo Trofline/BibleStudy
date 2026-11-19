@@ -3400,5 +3400,7 @@
   "Zurück ins Programm": "Volver al programa",
   "Doppelklick: Vollbild": "Doble clic: pantalla completa",
   "Dokument öffnen": "Abrir documento",
-  "Dokument löschen": "Eliminar documento"
+  "Dokument löschen": "Eliminar documento",
+  "To-dos aller Vaults zeigen": "Mostrar las tareas de todas las bóvedas",
+  "Zeigt auch die To-dos der anderen Vaults. Sie lassen sich hier genauso abhaken, ändern und löschen; neue To-dos kommen in den aktiven Vault.": "También muestra las tareas de las otras bóvedas. Aquí se pueden marcar, cambiar y eliminar igual; las tareas nuevas van a la bóveda activa."
 }

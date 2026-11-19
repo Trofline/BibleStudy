@@ -3400,5 +3400,7 @@
   "Zurück ins Programm": "Обратно в программу",
   "Doppelklick: Vollbild": "Двойной щелчок: полный экран",
   "Dokument öffnen": "Открыть документ",
-  "Dokument löschen": "Удалить документ"
+  "Dokument löschen": "Удалить документ",
+  "To-dos aller Vaults zeigen": "Показывать задачи всех хранилищ",
+  "Zeigt auch die To-dos der anderen Vaults. Sie lassen sich hier genauso abhaken, ändern und löschen; neue To-dos kommen in den aktiven Vault.": "Показывает также задачи других хранилищ. Их можно так же отмечать, изменять и удалять; новые задачи попадают в активное хранилище."
 }

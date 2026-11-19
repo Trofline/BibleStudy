@@ -3400,5 +3400,7 @@
   "Zurück ins Programm": "Back into the program",
   "Doppelklick: Vollbild": "Double-click: full screen",
   "Dokument öffnen": "Open document",
-  "Dokument löschen": "Delete document"
+  "Dokument löschen": "Delete document",
+  "To-dos aller Vaults zeigen": "Show to-dos of all vaults",
+  "Zeigt auch die To-dos der anderen Vaults. Sie lassen sich hier genauso abhaken, ändern und löschen; neue To-dos kommen in den aktiven Vault.": "Also shows the to-dos of the other vaults. They can be ticked off, changed and deleted here just the same; new to-dos go into the active vault."
 }

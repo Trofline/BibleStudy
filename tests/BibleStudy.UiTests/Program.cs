@@ -521,6 +521,27 @@ Check("no sign where the mark is shown", !RunsOf((Control)F<System.Collections.I
     Check("backup was made", madeBackups.Length > 0);
     foreach (var f in madeBackups) File.Delete(f);   // the test's own backup does not stay in the real backup folder
 }
+// the to-dos: only those of the active vault, or with the checkbox those of all vaults (each under its vault's name)
+{
+    var activeVault = (BibleStudy.Core.Storage.VaultStore)typeof(MainWindow).GetField("_vault", All)!.GetValue(win)!;
+    var secondVault = (BibleStudy.Core.Storage.VaultStore)Call("StoreOf", "Zweiter Vault")!;
+    activeVault.AddTodo("Aktives To-do", null); secondVault.AddTodo("Fremdes To-do", null);
+    List<string> TodoTexts() => C<StackPanel>("TodoPanel").GetLogicalDescendants().OfType<TextBlock>().Select(t => t.Text ?? "").ToList();
+    Call("SetTodosAllVaults", false); Call("RefreshTodos"); Settle(200);
+    Check("only the active vault's to-dos by default", TodoTexts().Contains("Aktives To-do") && !TodoTexts().Contains("Fremdes To-do"), string.Join(" | ", TodoTexts()));
+    Call("SetTodosAllVaults", true); Settle(300);
+    Check("all vaults: the other vault's to-do shows too", TodoTexts().Contains("Aktives To-do") && TodoTexts().Contains("Fremdes To-do"), string.Join(" | ", TodoTexts()));
+    Check("each vault has its heading", TodoTexts().Contains("Zweiter Vault"));
+    Check("the checkbox follows", C<CheckBox>("TodoAllVaultsCheck").IsChecked == true);
+    var otherTodo = secondVault.GetTodos().First(t => t.Text == "Fremdes To-do");
+    secondVault.SetTodoDone(otherTodo.Id, true); Call("RefreshTodos"); Settle(200);
+    Check("a to-do of another vault counts in the progress", C<TextBlock>("TodoCount").Text?.Contains("1") == true, C<TextBlock>("TodoCount").Text ?? "");
+    Call("SetTodosAllVaults", false); Settle(200);
+    Check("off again: the other vault's to-do is gone from the list", !TodoTexts().Contains("Fremdes To-do"));
+    secondVault.DeleteTodo(otherTodo.Id);
+    foreach (var t in activeVault.GetTodos().Where(t => t.Text == "Aktives To-do")) activeVault.DeleteTodo(t.Id);
+    Call("RefreshTodos");
+}
 // a document put into a folder shows in the Explorer with the marks of that folder
 {
     var docVault = (BibleStudy.Core.Storage.VaultStore)typeof(MainWindow).GetField("_vault", All)!.GetValue(win)!;

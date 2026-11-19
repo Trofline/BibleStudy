@@ -503,6 +503,7 @@
                                 <CheckBox x:Name="TodoVerseCheck" Content="Angeklickten Vers anhängen" Margin="0,0,12,0" />
                                 <CalendarDatePicker x:Name="TodoDue" PlaceholderText="Fällig am (optional)" Width="190" />
                             </WrapPanel>
+                            <CheckBox x:Name="TodoAllVaultsCheck" Content="To-dos aller Vaults zeigen" ToolTip.Tip="Zeigt auch die To-dos der anderen Vaults. Sie lassen sich hier genauso abhaken, ändern und löschen; neue To-dos kommen in den aktiven Vault." />
                             <Grid ColumnDefinitions="*,Auto">
                                 <ProgressBar x:Name="TodoBar" Minimum="0" Maximum="1" Height="6" VerticalAlignment="Center" />
                                 <TextBlock x:Name="TodoCount" Grid.Column="1" Classes="caption" Margin="10,0,0,0" />

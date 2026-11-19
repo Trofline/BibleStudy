@@ -78,6 +78,7 @@ public sealed class AppSettings
     /// <summary>A small bar with the colors appears over the selected text (no click on the mark button needed).</summary>
     public bool SelectionPopup { get; set; } = true;
     public bool MarksAllVaults { get; set; }   // the collection, the explorer, the documents and the text show all vaults, not only the active one
+    public bool TodosAllVaults { get; set; }   // the to-do list shows the to-dos of all vaults, not only of the active one
     /// <summary>Shared vaults: their content shows in every other vault too (to look at; it is changed in the vault itself).</summary>
     public List<string> SharedVaults { get; set; } = [];
     /// <summary>The clock at the bottom right of the status bar.</summary>

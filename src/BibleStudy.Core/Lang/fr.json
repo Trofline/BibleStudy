@@ -3400,5 +3400,7 @@
   "Zurück ins Programm": "Retour dans le programme",
   "Doppelklick: Vollbild": "Double-clic : plein écran",
   "Dokument öffnen": "Ouvrir le document",
-  "Dokument löschen": "Supprimer le document"
+  "Dokument löschen": "Supprimer le document",
+  "To-dos aller Vaults zeigen": "Afficher les tâches de tous les coffres",
+  "Zeigt auch die To-dos der anderen Vaults. Sie lassen sich hier genauso abhaken, ändern und löschen; neue To-dos kommen in den aktiven Vault.": "Affiche aussi les tâches des autres coffres. Elles peuvent être cochées, modifiées et supprimées ici de la même façon ; les nouvelles tâches vont dans le coffre actif."
 }
