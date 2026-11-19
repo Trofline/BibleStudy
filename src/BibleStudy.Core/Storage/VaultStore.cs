@@ -422,6 +422,13 @@ public sealed partial class VaultStore : SqliteDb
 
     public long AddMaterialMark(string path, int block, int start, string text, string color, string note = "")
     {
+        // the same words marked again: the mark there takes the new color (two of them would never be the same on the other devices)
+        var name = System.IO.Path.GetFileName(path);
+        if (GetAllMaterialMarks().FirstOrDefault(m => m.Block == block && m.Start == start && m.Text == text && string.Equals(m.FileName, name, StringComparison.OrdinalIgnoreCase)) is { } same)
+        {
+            UpdateMaterialMark(same.Id, color, note.Length > 0 ? note : same.Note);
+            return same.Id;
+        }
         var now = DateTime.UtcNow.ToString("o");
         return InsertMaterialMark(path, block, start, text, color, note, now, now);
     }

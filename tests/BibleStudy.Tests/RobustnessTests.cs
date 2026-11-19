@@ -21,7 +21,7 @@ public class RobustnessTests
         "f.", "ff.", "vgl.", "und", "s.", "<!--", "-->", "<b>", "</b>", "&amp;", "\"", "'", "\\", "{", "}", "\t", "\n", "\r\n", " ", "  ",
         "ä", "ß", "Ö", "€", "😀", "​", "é", "ﬁ", "İ", "ı", "α", "א", "ἀγάπη", "Wort", "Jesus", "AND", "OR", "NOT", "\"Wort\"", "L=", "G3056", "H1254a",
         "?", "*", "~", "^", "$", "/", "%", "+", "=", "@", "\0", "\u001f",
-        "٣", "١٦", "５", "３,１６", "Joh ٣,١٦", "۱۲", "99999999999", "Joh 99999999999:1",   // digits of other scripts, numbers too big for a number
+        "٣", "١٦", "５", "３,１６", "Joh ٣,١٦", "۱۲", "NAH٣", "G٣٠٥٦", "H١=", "NEAR", "G", "99999999999", "Joh 99999999999:1",   // digits of other scripts, numbers too big for a number
     ];
 
     static IEnumerable<string> OddTexts(int count = 2500)

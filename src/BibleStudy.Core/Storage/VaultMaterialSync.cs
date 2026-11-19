@@ -63,7 +63,7 @@ public sealed partial class VaultStore
         foreach (var m in MaterialRows())
         {
             if (Deleted(m)) { Exec("DELETE FROM material_marks WHERE id=$i", c => c.Parameters.AddWithValue("$i", m.Id)); changed++; continue; }
-            here.TryAdd(m.Key, m);
+            if (!here.TryAdd(m.Key, m)) { Exec("DELETE FROM material_marks WHERE id=$i", c => c.Parameters.AddWithValue("$i", m.Id)); changed++; }   // a second copy of the same mark
         }
         foreach (var o in other.MaterialRows())
         {

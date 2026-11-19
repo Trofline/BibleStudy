@@ -279,11 +279,11 @@ public static partial class SearchQuery
         return words.Count switch { 0 => null, 1 => new WordNode(words[0]), _ => new PhraseNode(words) };
     }
 
-    [GeneratedRegex(@"^(?<k>NAH|NEAR|DANN|THEN)(?<n>\d{1,3})$")] private static partial Regex NearRx();
-    [GeneratedRegex(@"^[GgHh]\d{1,4}[a-cA-C]?$")] private static partial Regex StrongRx();
+    [GeneratedRegex(@"^(?<k>NAH|NEAR|DANN|THEN)(?<n>[0-9]{1,3})$")] private static partial Regex NearRx();
+    [GeneratedRegex(@"^[GgHh][0-9]{1,4}[a-cA-C]?$")] private static partial Regex StrongRx();
     [GeneratedRegex(@"^[Ll](?<m>[=~])(?<w>.+)$")] private static partial Regex LemmaRx();
     [GeneratedRegex(@"^[Oo]=(?<w>.+)$")] private static partial Regex OriginalRx();
-    [GeneratedRegex(@"^(?<id>[GgHh]\d{1,4}[a-cA-C]?)=(?<w>.+)$")] private static partial Regex StrongWordRx();
+    [GeneratedRegex(@"^(?<id>[GgHh][0-9]{1,4}[a-cA-C]?)=(?<w>.+)$")] private static partial Regex StrongWordRx();
     [GeneratedRegex(@"[\p{L}\p{N}*?]+")] private static partial Regex WordRx();
     [GeneratedRegex(@"[^\p{L}\p{N}*?]+")] private static partial Regex NotWordRx();
 }

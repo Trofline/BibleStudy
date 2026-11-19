@@ -124,6 +124,26 @@ public class MaterialMarkSyncTests : IDisposable
     }
 
     [Fact]
+    public void The_same_words_marked_twice_are_one_mark_and_the_devices_end_up_the_same()
+    {
+        var pc = Vault("pc"); var phone = Vault("phone");
+        var first = pc.AddMaterialMark(PcFile, 1, 0, "Gnade", "#FFD54F");
+        Assert.Equal(first, pc.AddMaterialMark(PcFile, 1, 0, "Gnade", "#81C784"));
+        Assert.Equal("#81C784", Assert.Single(pc.GetAllMaterialMarks()).Color);
+
+        // a second copy from an older version (or two marks found at the same place) goes when merging
+        var raw = new Microsoft.Data.Sqlite.SqliteConnection("Data Source=" + Path.Combine(_dir, "pc.db"));
+        raw.Open();
+        using (var c = raw.CreateCommand()) { c.CommandText = "INSERT INTO material_marks(path,name,block,start_off,text,color,note,created,changed) SELECT path,name,block,start_off,text,color,note,created,changed FROM material_marks"; c.ExecuteNonQuery(); }
+        raw.Close();
+        Sync(pc, phone, Copy, null);
+        Sync(pc, phone, Copy, Base(pc));
+        Assert.Single(pc.GetAllMaterialMarks());
+        Assert.Single(phone.GetAllMaterialMarks());
+        Assert.Equal(pc.Fingerprint(), phone.Fingerprint());
+    }
+
+    [Fact]
     public void A_mark_in_a_file_counts_as_something_new_to_synchronise()
     {
         var pc = Vault("pc");
