@@ -15,6 +15,9 @@ public static class AppPaths
     /// <summary>True when the program was set up by the installer (it wrote "installed.flag" next to the program).</summary>
     public static bool IsInstalled => File.Exists(Path.Combine(ProgramDir, "installed.flag"));
 
+    /// <summary>True in the Microsoft Store package (it carries "store.flag"): the Store brings the updates, the program does not look for them.</summary>
+    public static bool IsStore => File.Exists(Path.Combine(ProgramDir, "store.flag"));
+
     public static string Root => IsPortable
         ? Path.Combine(ProgramDir, "Data")
         : Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "BibleStudy");

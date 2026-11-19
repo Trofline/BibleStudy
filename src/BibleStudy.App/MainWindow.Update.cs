@@ -23,7 +23,7 @@ public partial class MainWindow
 
     void InitUpdate()
     {
-        VersionText.Text = L("Version {0} · ", AppPaths.Version) + (AppPaths.IsPortable ? L("Portable (Daten in {0})", AppPaths.Root) : AppPaths.IsInstalled ? L("installiert") : L("Entwicklungsversion")) + L(" · Daten: {0}", AppPaths.Root);
+        VersionText.Text = L("Version {0} · ", AppPaths.Version) + (AppPaths.IsPortable ? L("Portable (Daten in {0})", AppPaths.Root) : AppPaths.IsStore ? L("Microsoft Store") : AppPaths.IsInstalled ? L("installiert") : L("Entwicklungsversion")) + L(" · Daten: {0}", AppPaths.Root);
         AutoUpdateCheck.IsChecked = _settings.AutoUpdate;
         AutoUpdateCheck.IsCheckedChanged += (_, _) => { _settings.AutoUpdate = AutoUpdateCheck.IsChecked == true; SaveSettings(); };
         SigningWarnCheck.IsVisible = OperatingSystem.IsIOS();
@@ -34,6 +34,12 @@ public partial class MainWindow
         RemoveAppBtn.Content = AppPaths.IsPortable ? L("Portable-Version entfernen …") : L("Deinstallieren …");
         RemoveAppBtn.Click += async (_, _) => await RemoveProgramAsync();
         RestartBtn.Click += (_, _) => RestartProgram();
+        if (AppPaths.IsStore)
+        {
+            // the Store brings the updates: no search of our own, no switch for it
+            AutoUpdateCheck.IsVisible = false; CheckUpdateBtn.IsVisible = false;
+            UpdateStatus.Text = L("Updates kommen über den Microsoft Store.");
+        }
         // older versions downloaded updates in the background and installed them without asking: nothing waiting is installed any more
         if (_settings.PendingUpdateFile is { } waiting) { try { File.Delete(waiting); } catch (IOException) { } _settings.PendingUpdateFile = null; _settings.PendingUpdateVersion = null; SaveSettings(); }
         if (DeltaUpdate.LastFailed(AppPaths.Root) is { } failedUpdate && failedUpdate.Version != AppPaths.Version && Updater.Parse(failedUpdate.Version) > Updater.Parse(AppPaths.Version))
@@ -57,7 +63,7 @@ public partial class MainWindow
         InitSources();
         InitHiddenXrefs();
         // once per start, right after the window is up (the check itself runs in the background and never blocks the reader)
-        if (_settings.AutoUpdate)
+        if (_settings.AutoUpdate && !AppPaths.IsStore)
         {
             DispatcherTimer.RunOnce(async () => await CheckForUpdateAsync(manual: false), TimeSpan.FromSeconds(2));
             var again = new DispatcherTimer { Interval = TimeSpan.FromHours(6) };
@@ -189,7 +195,7 @@ public partial class MainWindow
 
     async Task CheckForUpdateAsync(bool manual)
     {
-        if (_updating || !UpdateMayAsk(manual)) return;
+        if (AppPaths.IsStore || _updating || !UpdateMayAsk(manual)) return;
         _updater ??= new Updater(_http);
         Updater.ApkMode = OperatingSystem.IsAndroid();   // the phone follows its own releases
         UpdateStatus.Text = L("Suche nach Updates …");

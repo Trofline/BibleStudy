@@ -41,7 +41,7 @@ public partial class MainWindow
             menu.ShowAt(Anchor(FeedbackTopBtn));
         };
         // the installer makes the entry itself; a portable or development copy must not bend it to another program file
-        StartMenuBtn.IsVisible = OperatingSystem.IsWindows() && !AppPaths.IsInstalled;
+        StartMenuBtn.IsVisible = OperatingSystem.IsWindows() && !AppPaths.IsInstalled && !AppPaths.IsStore;
         StartMenuBtn.Click += (_, _) => StartMenuInfo.Text = AddStartMenuEntry();
         if (OperatingSystem.IsWindows())
             StartMenuInfo.Text = AppPaths.IsInstalled ? L("Der Installer hat BibleStudy im Startmenü eingetragen.")
