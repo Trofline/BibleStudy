@@ -200,7 +200,7 @@ public partial class MainWindow
         var added = new List<string>();
         foreach (var word in fresh)
         {
-            var hits = await Task.Run(() => SearchEngine.Run(corpus, word.Contains(' ') ? $"\"{word}\"" : $"L={word}", null, new SearchOptions(), null).Results.Select(r => r.Ref).ToHashSet());
+            var hits = await Task.Run(() => SearchEngine.Run(corpus, word.Contains(' ') ? $"\"{word}\"" : $"L={word}", null, new SearchOptions(Language: t.Language), null).Results.Select(r => r.Ref).ToHashSet());
             var isStart = !expand && starts.Contains(word, StringComparer.OrdinalIgnoreCase);
             if (hits.Count == 0 && !isStart) continue;
             _topicVerses[word] = hits; _topicWords.Add(word); added.Add(word);

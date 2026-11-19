@@ -362,7 +362,7 @@ public partial class MainWindow
             var scope = SearchScopeBox.SelectedIndex is var si and > 0 && si < Scopes.Length ? Scopes[si].Match : null;
             var books = scope is null ? null : _books.Select(b => b.Id).Where(scope).ToHashSet();
             var options = new SearchOptions((WordMatch)Math.Max(0, SearchMatchBox.SelectedIndex), SearchCaseCheck.IsChecked == true, SearchOriginalCheck.IsChecked == true,
-                Ranges[Math.Clamp(SearchRangeBox.SelectedIndex, 0, Ranges.Length - 1)].Range, Accents: SearchAccentsCheck.IsChecked != true);
+                Ranges[Math.Clamp(SearchRangeBox.SelectedIndex, 0, Ranges.Length - 1)].Range, Accents: SearchAccentsCheck.IsChecked != true, Language: t.Language);
             if (IsJesusScope(SearchScopeBox.SelectedIndex))
             {
                 corpus = await JesusCorpusAsync(t) ?? [];
@@ -377,12 +377,26 @@ public partial class MainWindow
             var outcome = query.Length == 0
                 ? new SearchOutcome(searched.Where(c => books is null || books.Contains(c.Ref.Book)).Select(c => new SearchResult(c.Ref, c.Text, [])).ToList(), null, false)
                 : await Task.Run(() => SearchEngine.Run(searched, query, strongs, options, books));
+            var again = outcome.NeedsStrongs;
             if (outcome.NeedsStrongs)
             {
                 strongs = await StrongsForAsync(t);
                 if (strongs is null) return;
-                outcome = await Task.Run(() => SearchEngine.Run(searched, query, strongs, options, books));
             }
+            // a translation without Strong numbers: "no hits" would not be true. The numbers are looked up in the Greek and Hebrew text instead
+            if (strongs is { IsEmpty: true } && query.Length > 0 && SearchQuery.Parse(query, out _) is { } parsed && (SearchEngine.UsesStrongs(parsed) || options.Original))
+            {
+                if (options.Original || NeedsTranslatedWords(parsed))
+                {
+                    SearchInfo.Text = L("{0} hat keine Strong-Nummern. „Im Grundtext suchen“, O=… und G…=Wort brauchen eine Übersetzung mit Strong-Nummern (z. B. KJV); eine Strong-Nummer allein (G3056) geht auch hier.", t.ShortName);
+                    SearchList.ItemsSource = null; _hits = []; return;
+                }
+                strongs = await OriginalStrongsAsync(Regex.IsMatch(query, @"(?<![\p{L}\p{N}])[Gg][0-9]"), Regex.IsMatch(query, @"(?<![\p{L}\p{N}])[Hh][0-9]"));
+                if (strongs is null) return;
+                _searchExtra += (_searchExtra.Length > 0 ? "\n" : "") + L("{0} hat keine Strong-Nummern: Die Verse sind über den hebräischen und griechischen Grundtext gefunden, das Wort ist darin nicht markiert.", t.ShortName);
+                again = true;
+            }
+            if (again) outcome = await Task.Run(() => SearchEngine.Run(searched, query, strongs, options, books));
             if (outcome.Error is not null) { SearchInfo.Text = outcome.Error; SearchList.ItemsSource = null; _hits = []; return; }
 
             RememberSearch(text);
@@ -395,6 +409,38 @@ public partial class MainWindow
         }
         catch (Exception ex) { SearchInfo.Text = L("Fehler: ") + ex.Message; }
         finally { _searching = false; }
+    }
+
+    static bool NeedsTranslatedWords(SearchNode n) => n switch
+    {
+        OriginalNode or StrongWordNode => true,
+        NotNode x => NeedsTranslatedWords(x.Inner),
+        NearNode nn => NeedsTranslatedWords(nn.Left) || NeedsTranslatedWords(nn.Right),
+        AndNode a => a.Items.Any(NeedsTranslatedWords),
+        OrNode o => o.Items.Any(NeedsTranslatedWords),
+        _ => false,
+    };
+
+    readonly Dictionary<(bool, bool), StrongIndex> _originalIndexes = [];
+
+    /// <summary>The Strong numbers of the Greek New Testament and the Hebrew Old Testament, verse by verse: for translations that carry none.</summary>
+    async Task<StrongIndex?> OriginalStrongsAsync(bool greek, bool hebrew)
+    {
+        if (!greek && !hebrew) greek = hebrew = true;
+        if (_originalIndexes.TryGetValue((greek, hebrew), out var known)) return known;
+        try
+        {
+            var words = new List<GrammarWord>();
+            if (greek) words.AddRange(await GreekWordsAsync());
+            if (hebrew) words.AddRange(await HebrewWordsAsync());
+            return _originalIndexes[(greek, hebrew)] = await Task.Run(() => new StrongIndex(words.Where(w => w.Strong.Length > 1).Select(w => new StrongsOccurrence(w.Strong, new VerseRef(w.Book, w.Chapter, w.Verse), ""))));
+        }
+        catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException or IOException)
+        {
+            SearchInfo.Text = L("Der Grundtext ließ sich nicht laden: {0}", ex.Message);
+            SearchList.ItemsSource = null; _hits = [];
+            return null;
+        }
     }
 
     void ShowHits(TranslationInfo t)

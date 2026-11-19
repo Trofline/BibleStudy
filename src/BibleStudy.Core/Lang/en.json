@@ -3380,5 +3380,9 @@
   "weniger": "fewer",
   "+{0} weitere": "+{0} more",
   "Die ersten {0} von {1} Fundstellen; die Ansicht „Verse“ zeigt alle.": "The first {0} of {1} hits; the “Verses” view shows them all.",
-  "nur „{0}“": "only “{0}”"
+  "nur „{0}“": "only “{0}”",
+  "{0} hat keine Strong-Nummern: Die Verse sind über den hebräischen und griechischen Grundtext gefunden, das Wort ist darin nicht markiert.": "{0} has no Strong's numbers: the verses were found through the Hebrew and Greek original text, the word itself is not marked in them.",
+  "{0} hat keine Strong-Nummern. „Im Grundtext suchen“, O=… und G…=Wort brauchen eine Übersetzung mit Strong-Nummern (z. B. KJV); eine Strong-Nummer allein (G3056) geht auch hier.": "{0} has no Strong's numbers. “Search in the original language”, O=… and G…=word need a translation with Strong's numbers (e.g. KJV); a Strong's number alone (G3056) works here too.",
+  "Der Grundtext ließ sich nicht laden: {0}": "The original text could not be loaded: {0}",
+  "„{0}“ wurde als {1} gesucht. Gemeint sein kann auch: {2}. Gezielt so: {3}:\"{4}\"": "“{0}” was searched as {1}. It may also mean: {2}. To pick one: {3}:\"{4}\""
 }

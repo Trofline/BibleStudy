@@ -50,7 +50,12 @@ public partial class MainWindow
             SearchInfo.Text = L("Suche {0} „{1}“ …", places ? L("Ort") : L("Person"), name);
             var entry = await FindEntityAsync(places ? "places" : "people", name);
             if (entry is null) { SearchInfo.Text = places ? L("Kein Ort „{0}“ gefunden.", name) : L("Keine Person „{0}“ gefunden.", name); return new(new(), notes, "", "") { HasMessage = true }; }
-            Narrow(entry.References.ToHashSet());
+            Narrow(await EntityVersesAsync(entry, name));
+            // a name of several (Johannes, Maria): say which one was taken and how to take another
+            var others = _lexIndex is null ? [] : EntityNames.Candidates(_lexIndex, places ? "places" : "people", name).Where(i => i.Id != entry.Id).Take(5).ToList();
+            if (others.Count > 0)
+                _searchExtra += (_searchExtra.Length > 0 ? "\n" : "") + L("„{0}“ wurde als {1} gesucht. Gemeint sein kann auch: {2}. Gezielt so: {3}:\"{4}\"",
+                    name, entry.Name, string.Join(", ", others.Select(o => o.Name)), m.Groups["k"].Value, others[0].Name);
             titles.Add(entry.Name);
         }
         foreach (var m in bezug)
@@ -77,11 +82,23 @@ public partial class MainWindow
     async Task<LexiconEntry?> FindEntityAsync(string kind, string name)
     {
         var all = _lexIndex ??= await _hello.GetLexiconIndexAsync();
-        var q = SearchQuery.Fold(name, true);
-        var of = all.Where(i => i.Kind == kind).ToList();
-        var item = of.Where(i => SearchQuery.Fold(i.Name, true) == q).OrderByDescending(i => i.References).FirstOrDefault()
-                   ?? of.Where(i => SearchQuery.Fold(i.Name, true).StartsWith(q, StringComparison.Ordinal)).OrderByDescending(i => i.References).FirstOrDefault();
+        var item = EntityNames.Find(all, kind, name);   // Isaak → Isaac, Ägypten → Egypt
         return item is null ? null : await _hello.GetLexiconEntryAsync(item.Kind, item.Id);
+    }
+
+    /// <summary>
+    /// The verses of a person or place: those the data lists, and (when the name is theirs alone) those whose text in the translation names them,
+    /// since the data leaves many out (Gen 12 names Abram nine times, the data lists five of them).
+    /// </summary>
+    async Task<HashSet<VerseRef>> EntityVersesAsync(LexiconEntry entry, string typed)
+    {
+        var set = entry.References.ToHashSet();
+        if (TranslationBox.SelectedItem is not TranslationInfo t || _lexIndex is null) return set;
+        var names = EntityNames.UniqueNames(_lexIndex, entry, typed);
+        if (names.Count == 0) return set;
+        var corpus = await CorpusForAsync(t);
+        set.UnionWith(await Task.Run(() => EntityNames.NamedIn(corpus, names)));
+        return set;
     }
 
     // ---- references between the testaments --------------------------------------------------------------------------------

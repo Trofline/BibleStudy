@@ -69,6 +69,66 @@ public class SearchPrecisionTests
     }
 
     [Fact]
+    public void Base_forms_in_an_English_Bible()
+    {
+        var en = new SearchOptions(Language: "eng");
+        var c = Corpus("For God so loved the world.", "He that loveth not knoweth not God.", "Love is patient.", "Thou lovest righteousness.",
+            "A lovely place.", "The glove fell.", "Loving one another.", "Beloved, let us love.");
+        Assert.Equal([1, 2, 3, 4, 7, 8], Hits(c, "L=love", en));
+
+        var go = Corpus("Jesus went up.", "Go ye therefore.", "He goeth before you.", "They were gone.", "A good man.", "Going forth.");
+        Assert.Equal([1, 2, 3, 4, 6], Hits(go, "L=go", en));
+
+        var man = Corpus("The man said.", "Men of Israel.", "The son of man's.", "Manna fell.", "Many came.");
+        Assert.Equal([1, 2, 3], Hits(man, "L=man", en));
+
+        var carry = Corpus("He carried it.", "She carries it.", "To carry the ark.", "A carriage.");
+        Assert.Equal([1, 2, 3], Hits(carry, "L=carry", en));
+
+        var say = Corpus("Thus saith the LORD.", "He said unto them.", "Saying, Repent.", "A saying.", "Sayest thou this?");
+        Assert.Equal([1, 2, 3, 4, 5], Hits(say, "L=say", en));
+    }
+
+    [Fact]
+    public void Other_languages_take_the_ending_of_the_base_form_off()
+    {
+        var c = Corpus("Dios amó al mundo.", "Amamos porque él nos amó.", "Un amigo fiel.", "Amarás al Señor.", "Amaba a su hijo.");
+        Assert.Equal([1, 2, 4, 5], Hits(c, "L=amar", new SearchOptions(Language: "spa")));
+    }
+
+    [Fact]
+    public void A_search_limited_to_passages_and_whole_books()
+    {
+        var verses = new[] { new VerseRef("ROM", 1, 1), new VerseRef("ROM", 8, 39), new VerseRef("ROM", 9, 1), new VerseRef("GAL", 6, 18), new VerseRef("EPH", 1, 1) };
+        var rest = ScopeFilter.Extract("Gnade in:\"Röm 1-8; Gal\"", out var passages, out var error);
+        Assert.Null(error);
+        Assert.Equal("Gnade", rest);
+        Assert.Equal([true, true, false, true, false], verses.Select(v => ScopeFilter.Contains(passages!, v)));
+
+        ScopeFilter.Extract("in:\"Joh 15,11; 16,24; Offb\"", out passages, out error);
+        Assert.Null(error);
+        Assert.True(ScopeFilter.Contains(passages!, new VerseRef("JHN", 16, 24)));
+        Assert.False(ScopeFilter.Contains(passages!, new VerseRef("JHN", 16, 25)));
+        Assert.True(ScopeFilter.Contains(passages!, new VerseRef("REV", 22, 21)));
+
+        ScopeFilter.Extract("in:\"1. Mose; Mt 5-7\"", out passages, out error);
+        Assert.Null(error);
+        Assert.True(ScopeFilter.Contains(passages!, new VerseRef("GEN", 50, 26)));
+        Assert.True(ScopeFilter.Contains(passages!, new VerseRef("MAT", 7, 29)));
+        Assert.False(ScopeFilter.Contains(passages!, new VerseRef("MAT", 8, 1)));
+
+        ScopeFilter.Extract("in:\"Röm 1; Quatsch\"", out _, out error);
+        Assert.NotNull(error);
+    }
+
+    [Fact]
+    public void A_similar_spelling_does_not_count_an_umlaut_as_a_mistake()
+    {
+        var c = Corpus("Die Könige kamen.", "Der König sprach.", "Die Kinder spielten.");
+        Assert.Equal([1, 2], Hits(c, "~Konige"));
+    }
+
+    [Fact]
     public void The_counts_are_exact()
     {
         var c = Corpus("Gott sprach zu Gott, und Gottes Geist.", "Die Gottlosen und der Gott.");

@@ -118,12 +118,13 @@ public partial class MainWindow
         _strongIndexes.TryGetValue(t.Id, out var strongs);
         List<SearchResult> Everything() => searched.Where(c => run.Books is null || run.Books.Contains(c.Ref.Book)).Select(c => new SearchResult(c.Ref, c.Text, [])).ToList();
         if (run.Query.Length == 0) return _otherHits[t.Id] = Everything();
-        var outcome = await Task.Run(() => SearchEngine.Run(searched, run.Query, strongs, run.Options, run.Books));
+        var options = run.Options with { Language = t.Language };   // base forms after the grammar of that translation
+        var outcome = await Task.Run(() => SearchEngine.Run(searched, run.Query, strongs, options, run.Books));
         if (outcome.NeedsStrongs)
         {
             strongs = await StrongsForAsync(t);
             if (strongs is null) return [];
-            outcome = await Task.Run(() => SearchEngine.Run(searched, run.Query, strongs, run.Options, run.Books));
+            outcome = await Task.Run(() => SearchEngine.Run(searched, run.Query, strongs, options, run.Books));
         }
         return _otherHits[t.Id] = outcome.Results.ToList();
     }

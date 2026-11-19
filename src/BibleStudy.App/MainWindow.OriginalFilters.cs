@@ -45,12 +45,15 @@ public partial class MainWindow
                 {
                     hits = [];
                     var corpora = await CorporaForAsync(term);
-                    var strongs = await TranslationStrongsAsync(t, term, corpora);
+                    // a word of the translation: the meaning it has where the translation writes it ("vergeben" is nasa where it means forgive, not where it means carry)
+                    var places = await TranslationPlacesAsync(t, term, corpora);
+                    var seed = places is null ? OriginalSearch.Matcher(term, await TranslationStrongsAsync(t, term, corpora))
+                        : w => places.Contains((w.Strong, new VerseRef(w.Book, w.Chapter, w.Verse)));
                     var members = new List<(string Lemma, string Gloss, int Count)>();
                     var senses = new List<(string Gloss, int Count, bool Used)>();
                     foreach (var words in corpora)
                     {
-                        var r = await Task.Run(() => OriginalSearch.Meaning(words, OriginalSearch.Matcher(term, strongs)));
+                        var r = await Task.Run(() => OriginalSearch.Meaning(words, seed));
                         hits.AddRange(r.Hits); members.AddRange(r.Members); senses.AddRange(r.Senses);
                     }
                     if (hits.Count == 0) return Fail(L("Für „{0}“ ist kein Bedeutungsfeld bekannt. Nimm eine Strong-Nummer (G863), die Grundform oder ein englisches Wort (forgive).", term));
@@ -143,7 +146,7 @@ public partial class MainWindow
                 if (list.Count < 4 && !list.Contains(h.Note)) list.Add(h.Note);
             }
         }
-        _searchExtra = string.Join("\n", extras);
+        _searchExtra = string.Join("\n", (_searchExtra.Length > 0 ? [_searchExtra] : Array.Empty<string>()).Concat(extras));   // a note of Person: before stays
         var shown = notes.Where(kv => verses!.Contains(kv.Key)).ToDictionary(kv => kv.Key, kv => L("Grundtext: ") + string.Join(", ", kv.Value));
         return new(verses ?? [], shown, OriginalFilterRx().Replace(text, " ").Trim(), false);
     }
@@ -166,17 +169,30 @@ public partial class MainWindow
     /// The Strong numbers the chosen translation puts behind a word (vergeben → G863, G5483 …), so that a word of any language works;
     /// none for a Strong number, Greek or Hebrew letters, or a translation without Strong numbers.
     /// </summary>
-    async Task<IReadOnlyCollection<string>?> TranslationStrongsAsync(TranslationInfo t, string term, IEnumerable<List<GrammarWord>> corpora)
+    async Task<IReadOnlyCollection<string>?> TranslationStrongsAsync(TranslationInfo t, string term, IEnumerable<List<GrammarWord>> corpora) =>
+        await TranslationIndexAsync(t, term, corpora) is ({ } index, var folded) ? index.IdsForWords(w => w == folded) : null;
+
+    /// <summary>The places (number and verse) where the translation writes the word: the meaning it has there, not every meaning of the words behind it.</summary>
+    async Task<HashSet<(string Id, VerseRef Ref)>?> TranslationPlacesAsync(TranslationInfo t, string term, IEnumerable<List<GrammarWord>> corpora) =>
+        term.Contains('=') ? null : await TranslationIndexAsync(t, term, corpora) is ({ } index, var folded) ? index.PlacesForWords(w => w == folded) : null;
+
+    /// <summary>The Strong index to read a translated word with (null for a Strong number, a Greek or Hebrew word, or an English gloss of the original).</summary>
+    async Task<(StrongIndex? Index, string Folded)> TranslationIndexAsync(TranslationInfo t, string term, IEnumerable<List<GrammarWord>> corpora)
     {
         term = term.Split('=')[0];
-        if (SearchQuery.IsStrongId(term.Trim()) || OriginalSearch.IsHebrew(term) || OriginalSearch.IsGreek(term) || !TranslationHasStrongs(t)) return null;
+        if (SearchQuery.IsStrongId(term.Trim()) || OriginalSearch.IsHebrew(term) || OriginalSearch.IsGreek(term)) return (null, "");
         // an English gloss (forgive) is found without the Strong's index of the translation, which takes a while to build the first time
         var plain = OriginalSearch.Matcher(term);
-        if (await Task.Run(() => corpora.Any(c => c.Any(plain)))) return null;
+        if (await Task.Run(() => corpora.Any(c => c.Any(plain)))) return (null, "");
+        // a translation without numbers learns from one of its language that has them (Elberfelder → Luther 1912): which words of the original are "vergeben"
+        if (!TranslationHasStrongs(t))
+        {
+            var helper = TranslationBox.Items.OfType<TranslationInfo>().FirstOrDefault(x => x.Language == t.Language && StrongsSupport.Known.Contains(x.Id));
+            if (helper is null) return (null, "");
+            t = helper;
+        }
         var index = _strongIndexes.GetValueOrDefault(t.Id) ?? await StrongsForAsync(t);
-        if (index is null) return null;
-        var folded = SearchQuery.Fold(term.Trim().Trim('"', '„', '“', '”'), true);
-        return index.IdsForWords(w => w == folded);
+        return (index, SearchQuery.Fold(term.Trim().Trim('"', '„', '“', '”'), true));
     }
 
     List<TimelineEvent>? _events;

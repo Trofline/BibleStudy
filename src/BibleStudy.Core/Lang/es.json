@@ -3380,5 +3380,9 @@
   "weniger": "menos",
   "+{0} weitere": "+{0} más",
   "Die ersten {0} von {1} Fundstellen; die Ansicht „Verse“ zeigt alle.": "Los primeros {0} de {1} hallazgos; la vista «Versículos» los muestra todos.",
-  "nur „{0}“": "solo «{0}»"
+  "nur „{0}“": "solo «{0}»",
+  "{0} hat keine Strong-Nummern: Die Verse sind über den hebräischen und griechischen Grundtext gefunden, das Wort ist darin nicht markiert.": "{0} no tiene números de Strong: los versículos se encontraron mediante el texto original hebreo y griego; la palabra no está marcada en ellos.",
+  "{0} hat keine Strong-Nummern. „Im Grundtext suchen“, O=… und G…=Wort brauchen eine Übersetzung mit Strong-Nummern (z. B. KJV); eine Strong-Nummer allein (G3056) geht auch hier.": "{0} no tiene números de Strong. «Buscar en el idioma original», O=… y G…=palabra necesitan una traducción con números de Strong (p. ej. RVR09); un número de Strong solo (G3056) también funciona aquí.",
+  "Der Grundtext ließ sich nicht laden: {0}": "No se pudo cargar el texto original: {0}",
+  "„{0}“ wurde als {1} gesucht. Gemeint sein kann auch: {2}. Gezielt so: {3}:\"{4}\"": "«{0}» se buscó como {1}. También puede referirse a: {2}. Para elegir: {3}:\"{4}\""
 }

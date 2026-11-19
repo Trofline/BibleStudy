@@ -66,6 +66,19 @@ public sealed class StrongIndex
         return found;
     }
 
+    /// <summary>Where the translation renders a word of the original with a word that satisfies the test: the number and the verse.</summary>
+    public HashSet<(string Id, VerseRef Ref)> PlacesForWords(Func<string, bool> test)
+    {
+        var found = new HashSet<(string, VerseRef)>();
+        foreach (var (id, verses) in _by)
+            foreach (var (r, words) in verses)
+                if (words.Any(w => test(w) || (w.Contains(' ') && w.Split(' ').Any(test)))) found.Add((id, r));
+        return found;
+    }
+
+    /// <summary>The translation carries no Strong numbers at all.</summary>
+    public bool IsEmpty => _by.Count == 0;
+
     public bool Has(string id, VerseRef r) => _by.TryGetValue(id, out var v) && v.ContainsKey(r);
     public IReadOnlyList<string>? Words(string id, VerseRef r) => _by.TryGetValue(id, out var v) && v.TryGetValue(r, out var w) ? w : null;
 }
@@ -97,7 +110,8 @@ public enum WordMatch { Prefix, Whole, Suffix, Contains }
 /// <param name="Original">Plain words are looked up as the Hebrew/Greek words behind the translated word (via Strong's tags).</param>
 /// <param name="Range">0 = all words in one verse; n > 0 = within n verses of each other; -1 = within one chapter.</param>
 /// <param name="Accents">Umlauts, ß and accents count (schön ≠ schon, daß ≠ das); false: they are left out when comparing.</param>
-public sealed record SearchOptions(WordMatch Match = WordMatch.Prefix, bool CaseSensitive = false, bool Original = false, int Range = 0, bool Accents = true);
+/// <param name="Language">The language of the text (deu, eng, spa …): base forms (L=) follow its grammar; null is German.</param>
+public sealed record SearchOptions(WordMatch Match = WordMatch.Prefix, bool CaseSensitive = false, bool Original = false, int Range = 0, bool Accents = true, string? Language = null);
 
 public static class SearchEngine
 {
@@ -411,13 +425,13 @@ public static class SearchEngine
     /// <summary>Words that differ from the search word by a few letters (one up to six letters long, two beyond that).</summary>
     static bool Fuzzy(string text, CorpusVerse v, Ctx c, List<(int, int)> spans)
     {
-        var q = SearchQuery.Compare(text, !c.Options.CaseSensitive, c.Options.Accents);
+        var q = SearchQuery.Compare(text, !c.Options.CaseSensitive, false);   // a similar spelling: Gnade and Gnäde differ by nothing here
         var max = q.Length <= 6 ? 1 : 2;
         var hit = false;
         for (var i = 0; i < v.Words.Length; i++)
         {
             if (Math.Abs(v.Words[i].Len - q.Length) > max) continue;
-            if (Distance(v.Word(i, !c.Options.CaseSensitive, c.Options.Accents), q, max) > max) continue;
+            if (Distance(v.Word(i, !c.Options.CaseSensitive, false), q, max) > max) continue;
             hit = true; spans.Add(v.Words[i]);
         }
         return hit;
@@ -522,14 +536,115 @@ public static class SearchEngine
 
     static bool Lemma(LemmaNode l, CorpusVerse v, Ctx c, List<(int, int)> spans)
     {
-        if (!c.Lemmas.TryGetValue(l, out var test)) c.Lemmas[l] = test = LemmaMatcher(l, c.Options.Accents);
+        var german = Lang(c.Options.Language) == "de";
+        var lower = l.IgnoreCase || !german;   // capitals tell nouns in German only: elsewhere "Love" at the start of a sentence is love
+        if (!c.Lemmas.TryGetValue(l, out var test)) c.Lemmas[l] = test = german ? LemmaMatcher(l, c.Options.Accents) : OtherLemma(l.Pattern, Lang(c.Options.Language), c.Options.Accents);
         var hit = false;
         for (var i = 0; i < v.Words.Length; i++)
         {
-            if (!test(v.Word(i, l.IgnoreCase, c.Options.Accents))) continue;
+            if (!test(v.Word(i, lower, c.Options.Accents))) continue;
             hit = true; spans.Add(v.Words[i]);
         }
         return hit;
+    }
+
+    /// <summary>The language of a translation as two letters (deu, ger → de); null or unknown: German, the language the base forms were made for first.</summary>
+    internal static string Lang(string? code) => code?.ToLowerInvariant() switch
+    {
+        null or "" or "deu" or "ger" or "de" => "de",
+        "eng" or "en" => "en", "spa" or "es" => "es", "fra" or "fre" or "fr" => "fr", "rus" or "ru" => "ru", "por" or "pt" => "pt", "ita" or "it" => "it", "nld" or "dut" or "nl" => "nl",
+        var other => other,
+    };
+
+    // English: the regular endings (with the old ones of the King James Bible: loveth, lovest), a final e dropped (loving), y as i (carried),
+    // a doubled consonant (stopped), and the irregular forms of the common verbs and nouns
+    static readonly string[] EnglishEndings = ["", "s", "es", "ed", "d", "ing", "er", "ers", "est", "eth", "th", "st", "'s", "s'"];
+    static readonly Dictionary<string, string[]> EnglishIrregular = new(StringComparer.Ordinal)
+    {
+        ["be"] = ["am", "is", "are", "was", "were", "been", "being", "art", "wast", "wert"], ["have"] = ["has", "had", "having", "hath", "hast", "hadst"],
+        ["do"] = ["does", "did", "done", "doing", "doth", "dost", "didst", "doeth"], ["say"] = ["says", "said", "saying", "saith", "sayest", "saidst"],
+        ["go"] = ["goes", "went", "gone", "going", "goeth", "goest", "wentest"], ["come"] = ["came", "coming", "comes", "cometh", "comest"],
+        ["see"] = ["saw", "seen", "seeth", "seest", "sawest"], ["give"] = ["gave", "given", "giveth", "givest", "gavest"], ["take"] = ["took", "taken", "taketh", "tookest"],
+        ["know"] = ["knew", "known", "knoweth", "knowest", "knewest"], ["speak"] = ["spoke", "spake", "spoken", "speaketh", "speakest"], ["make"] = ["made", "maketh", "makest", "madest"],
+        ["bring"] = ["brought", "bringeth", "broughtest"], ["think"] = ["thought", "thinketh"], ["eat"] = ["ate", "eaten", "eateth", "eatest"], ["drink"] = ["drank", "drunk", "drinketh"],
+        ["stand"] = ["stood", "standeth"], ["understand"] = ["understood"], ["find"] = ["found", "findeth"], ["fall"] = ["fell", "fallen", "falleth"], ["rise"] = ["rose", "risen", "riseth"],
+        ["arise"] = ["arose", "arisen", "ariseth"], ["lie"] = ["lay", "lain", "lying", "lieth", "lied"], ["sit"] = ["sat", "sitteth", "sittest"], ["write"] = ["wrote", "written", "writeth"],
+        ["smite"] = ["smote", "smitten", "smiteth"], ["slay"] = ["slew", "slain", "slayeth"], ["beget"] = ["begat", "begot", "begotten", "begetteth"], ["bear"] = ["bore", "bare", "born", "borne", "beareth"],
+        ["flee"] = ["fled", "fleeth"], ["hear"] = ["heard", "heareth", "hearest"], ["tell"] = ["told", "telleth"], ["sell"] = ["sold", "selleth"], ["buy"] = ["bought", "buyeth"],
+        ["teach"] = ["taught", "teacheth"], ["seek"] = ["sought", "seeketh", "seekest"], ["lead"] = ["led", "leadeth"], ["feed"] = ["fed", "feedeth"], ["build"] = ["built", "buildeth"],
+        ["send"] = ["sent", "sendeth"], ["keep"] = ["kept", "keepeth", "keepest"], ["sleep"] = ["slept", "sleepeth"], ["leave"] = ["left", "leaveth"], ["hold"] = ["held", "holdeth"],
+        ["run"] = ["ran", "runneth", "running"], ["begin"] = ["began", "begun", "beginneth"], ["sing"] = ["sang", "sung", "singeth"], ["swear"] = ["swore", "sware", "sworn", "sweareth"],
+        ["break"] = ["broke", "brake", "broken", "breaketh"], ["choose"] = ["chose", "chosen", "chooseth"], ["forgive"] = ["forgave", "forgiven", "forgiveth"], ["forget"] = ["forgot", "forgotten", "forgetteth"],
+        ["get"] = ["got", "gotten", "getteth"], ["become"] = ["became", "becometh"], ["overcome"] = ["overcame", "overcometh"], ["shake"] = ["shook", "shaken"], ["win"] = ["won"],
+        ["fight"] = ["fought", "fighteth"], ["catch"] = ["caught"], ["cast"] = ["casteth", "castest"], ["put"] = ["putteth"], ["shut"] = ["shutteth"], ["let"] = ["letteth"], ["set"] = ["setteth"],
+        ["dwell"] = ["dwelt", "dwelleth"], ["spread"] = ["spreadeth"], ["weep"] = ["wept", "weepeth"], ["draw"] = ["drew", "drawn", "draweth"], ["grow"] = ["grew", "grown", "groweth"],
+        ["throw"] = ["threw", "thrown"], ["blow"] = ["blew", "blown"], ["fly"] = ["flew", "flown", "flieth"], ["hide"] = ["hid", "hidden", "hideth"], ["ride"] = ["rode", "ridden", "rideth"],
+        ["strive"] = ["strove", "striven"], ["drive"] = ["drove", "driven", "driveth"], ["wake"] = ["woke", "woken", "waketh"], ["wear"] = ["wore", "worn"], ["tear"] = ["tore", "torn"],
+        ["die"] = ["died", "dieth", "dying", "dead"], ["pay"] = ["paid"], ["lay"] = ["laid", "layeth"], ["mean"] = ["meant"], ["feel"] = ["felt"], ["meet"] = ["met"], ["lose"] = ["lost", "loseth"],
+        ["man"] = ["men", "man's", "men's"], ["woman"] = ["women"], ["child"] = ["children"], ["brother"] = ["brethren"], ["foot"] = ["feet"], ["tooth"] = ["teeth"], ["sheep"] = [], ["ox"] = ["oxen"],
+        ["mouse"] = ["mice"], ["goose"] = ["geese"], ["life"] = ["lives"], ["wife"] = ["wives"], ["knife"] = ["knives"], ["leaf"] = ["leaves"], ["thief"] = ["thieves"], ["wolf"] = ["wolves"],
+    };
+
+    // in the other languages only the ending of the base form is taken off and a few letters may follow (amar → amo, amaba; aimer → aime, aimons)
+    static readonly Dictionary<string, string[]> BaseEndings = new()
+    {
+        ["es"] = ["ar", "er", "ir", "se"], ["pt"] = ["ar", "er", "ir"], ["it"] = ["are", "ere", "ire"], ["fr"] = ["er", "ir", "re", "oir"],
+        ["nl"] = ["en"], ["ru"] = ["ться", "тись", "ть", "ти", "чь"],
+    };
+
+    static Func<string, bool> OtherLemma(string word, string lang, bool accents)
+    {
+        var pattern = SearchQuery.Compare(word.Trim(), true, accents);
+        if (SearchQuery.HasWildcard(pattern)) return SearchQuery.WildcardRegex(pattern).IsMatch;
+        if (pattern.Length == 0) return _ => false;
+        if (lang == "en")
+        {
+            var forms = new HashSet<string>(StringComparer.Ordinal) { pattern };
+            if (EnglishIrregular.TryGetValue(pattern, out var irregular)) forms.UnionWith(irregular);
+            var stems = new List<string> { pattern };
+            if (pattern.Length > 2 && pattern.EndsWith('e')) stems.Add(pattern[..^1]);                                          // love → lov(ing), lov(eth)
+            if (pattern.Length > 2 && pattern.EndsWith('y') && !"aeiou".Contains(pattern[^2])) stems.Add(pattern[..^1] + "i"); // carry → carri(ed), carri(es)
+            if (pattern.Length > 2 && !"aeiouwxy".Contains(pattern[^1]) && "aeiou".Contains(pattern[^2]) && !"aeiou".Contains(pattern[^3]))
+                stems.Add(pattern + pattern[^1]);                                                                              // stop → stopp(ed), sin → sinn(eth)
+            if (pattern.EndsWith('f') || pattern.EndsWith("fe", StringComparison.Ordinal)) stems.Add(pattern.TrimEnd('e')[..^1] + "v");   // life → liv(es)
+            return tok =>
+            {
+                if (forms.Contains(tok)) return true;
+                foreach (var s in stems)
+                    if (tok.Length >= s.Length && tok.StartsWith(s, StringComparison.Ordinal))
+                    {
+                        var rest = tok.AsSpan(s.Length);
+                        foreach (var e in EnglishEndings) if (rest.SequenceEqual(e) && !(s == pattern && e.Length > 0 && pattern[^1] == 'e' && e[0] == 'e')) return true;   // not "loveed"
+                    }
+                return false;
+            };
+        }
+        // a few letters after the stem: the conjugation and plural of most words; the stem has to be long enough not to be the start of everything
+        var stem = pattern;
+        if (BaseEndings.TryGetValue(lang, out var cut))
+            foreach (var e in cut) if (pattern.Length - e.Length >= 2 && pattern.EndsWith(e, StringComparison.Ordinal)) { stem = pattern[..^e.Length]; break; }
+        // Spanish: the endings of its three conjugations, so that amar finds amó and amaremos but not amigo
+        if (lang == "es" && stem != pattern)
+        {
+            var endings = SpanishEndings(pattern[^2..]);
+            return tok => tok == pattern || (tok.StartsWith(stem, StringComparison.Ordinal) && endings.Contains(tok[stem.Length..]));
+        }
+        if (stem.Length < 3) return tok => tok == pattern;   // too short to say which words belong to it
+        return tok => tok == pattern || (tok.Length - stem.Length is >= 0 and <= 5 && tok.StartsWith(stem, StringComparison.Ordinal));
+    }
+
+    static HashSet<string> SpanishEndings(string infinitive)
+    {
+        var all = new HashSet<string>(StringComparer.Ordinal) { "o", "é", "e", "es", "en", "emos", "éis", "a", "as", "an", "amos", "áis" };
+        string[] mine = infinitive switch
+        {
+            "ar" => ["ar", "aste", "ó", "asteis", "aron", "aba", "abas", "ábamos", "abais", "aban", "aré", "arás", "ará", "aremos", "aréis", "arán", "aría", "arías", "aríamos", "aríais", "arían",
+                     "ara", "aras", "áramos", "arais", "aran", "ase", "ases", "ásemos", "aseis", "asen", "ando", "ado", "ada", "ados", "adas", "ad", "ándo", "arte", "arle", "arlo", "arla", "arse", "aos"],
+            _ => ["er", "ir", "í", "iste", "ió", "imos", "isteis", "ieron", "ía", "ías", "íamos", "íais", "ían", "eré", "erás", "erá", "eremos", "eréis", "erán", "iré", "irás", "irá", "iremos",
+                  "iréis", "irán", "ería", "erían", "iría", "irían", "iera", "ieras", "iéramos", "ierais", "ieran", "iese", "iendo", "ido", "ida", "idos", "idas", "ed", "id", "ís"],
+        };
+        all.UnionWith(mine);
+        return all;
     }
 
     // the endings German puts on a stem: only these count, so L=gehen finds geht and gingen but not geheim, L=Haus finds Häuser but not Haushalter

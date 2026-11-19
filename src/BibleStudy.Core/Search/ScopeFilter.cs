@@ -18,8 +18,29 @@ public static partial class ScopeFilter
         {
             var text = (m.Groups["q"].Success ? m.Groups["q"].Value : m.Groups["w"].Value).Trim();
             if (PassageParser.Parse(text, out _) is { } parsed) { found.AddRange(parsed); continue; }
-            if (DocumentLinks.BookId(text) is { } book) { found.Add(new PassageRef(book, 1, null, null, 999)); continue; }
-            error = L("„{0}“ ist keine Bibelstelle und kein Buch.", text);
+            // a list of passages and whole books ("Röm 1-8; Gal"): passages one after another keep their book ("Joh 3; 5"), a book alone is all of it
+            var run = new List<string>();
+            bool Flush()
+            {
+                if (run.Count == 0) return true;
+                var part = PassageParser.Parse(string.Join("; ", run), out _);
+                run.Clear();
+                if (part is null) return false;
+                found.AddRange(part);
+                return true;
+            }
+            string? bad = null;
+            foreach (var piece in text.Split(';', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+            {
+                if ((PassageParser.Parse(piece, out _) is null ? DocumentLinks.BookId(piece) : null) is { } whole)
+                {
+                    if (!Flush()) { bad = piece; break; }
+                    found.Add(new PassageRef(whole, 1, null, null, 999));
+                }
+                else run.Add(piece);
+            }
+            if (bad is null && Flush()) continue;
+            error = L("„{0}“ ist keine Bibelstelle und kein Buch.", bad ?? text);
             return query;
         }
         if (found.Count == 0) return query;
