@@ -3422,5 +3422,12 @@
   "■ Stopp": "■ Arrêter",
   "▶ Anhören": "▶ Écouter",
   "● Aufnehmen": "● Enregistrer",
-  "● Neu aufnehmen": "● Réenregistrer"
+  "● Neu aufnehmen": "● Réenregistrer",
+  "Der Vault „{0}“ ließ sich nicht öffnen: {1}": "Impossible d'ouvrir le vault « {0} » : {1}",
+  "Es gibt keinen anderen Vault.": "Il n'y a pas d'autre vault.",
+  "In anderen Vault": "Vers un autre vault",
+  "Verschieben": "Déplacer",
+  "{0} in den Vault „{1}“ kopiert.": "{0} copié dans le vault « {1} ».",
+  "{0} in den Vault „{1}“ verschoben.": "{0} déplacé dans le vault « {1} ».",
+  "{0} in „{1}“ verschoben": "{0} déplacé dans « {1} »"
 }

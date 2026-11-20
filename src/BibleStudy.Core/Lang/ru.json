@@ -3422,5 +3422,12 @@
   "■ Stopp": "■ Стоп",
   "▶ Anhören": "▶ Прослушать",
   "● Aufnehmen": "● Записать",
-  "● Neu aufnehmen": "● Записать заново"
+  "● Neu aufnehmen": "● Записать заново",
+  "Der Vault „{0}“ ließ sich nicht öffnen: {1}": "Не удалось открыть хранилище «{0}»: {1}",
+  "Es gibt keinen anderen Vault.": "Другого хранилища нет.",
+  "In anderen Vault": "В другое хранилище",
+  "Verschieben": "Переместить",
+  "{0} in den Vault „{1}“ kopiert.": "{0} скопировано в хранилище «{1}».",
+  "{0} in den Vault „{1}“ verschoben.": "{0} перемещено в хранилище «{1}».",
+  "{0} in „{1}“ verschoben": "{0} перемещено в «{1}»"
 }

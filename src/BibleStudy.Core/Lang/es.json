@@ -3422,5 +3422,12 @@
   "■ Stopp": "■ Detener",
   "▶ Anhören": "▶ Escuchar",
   "● Aufnehmen": "● Grabar",
-  "● Neu aufnehmen": "● Grabar de nuevo"
+  "● Neu aufnehmen": "● Grabar de nuevo",
+  "Der Vault „{0}“ ließ sich nicht öffnen: {1}": "No se pudo abrir el vault «{0}»: {1}",
+  "Es gibt keinen anderen Vault.": "No hay otro vault.",
+  "In anderen Vault": "A otro vault",
+  "Verschieben": "Mover",
+  "{0} in den Vault „{1}“ kopiert.": "{0} copiado al vault «{1}».",
+  "{0} in den Vault „{1}“ verschoben.": "{0} movido al vault «{1}».",
+  "{0} in „{1}“ verschoben": "{0} movido a «{1}»"
 }

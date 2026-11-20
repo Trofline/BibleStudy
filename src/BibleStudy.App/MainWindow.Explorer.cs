@@ -4,6 +4,7 @@ using Avalonia.Controls.Primitives;
 using Avalonia.Input;
 using Avalonia.Layout;
 using Avalonia.Media;
+using Avalonia.Threading;
 using BibleStudy.Core.Models;
 using BibleStudy.Core.Storage;
 
@@ -33,7 +34,8 @@ public partial class MainWindow
     readonly HashSet<long> _exOpen = [];   // folders that are opened in the tree
     readonly List<ExItem> _exSel = [];
     readonly List<ExTarget> _exTargets = [];
-    StackPanel _exTree = null!, _exList = null!, _exPath = null!;
+    StackPanel _exTree = null!, _exList = null!;
+    DockPanel _exPath = null!;   // the crumbs of the path: the last one (the open folder) takes the room that is left and ends in "…"
     TextBlock _exInfo = null!, _exEmpty = null!;
     TextBox _exSearch = null!;
     Button _exBackBtn = null!, _exUpBtn = null!;
@@ -90,11 +92,11 @@ public partial class MainWindow
         newFolder.Click += (_, _) => AskFolderName(newFolder, L("Neuer Ordner"), "", n => { _vault.AddFolder(n); var made = _vault.GetFolders().Where(f => f.Name == n.Trim() && f.ParentId is null).MaxBy(f => f.Id); if (made is not null && _exFolder is long p) _vault.SetFolderParent(made.Id, p); AfterExplorerChange(); });
         _exSearch = new TextBox { PlaceholderText = L("In diesem Ordner suchen …"), Width = IsPhone ? 120 : 220, Margin = new(8, 0, 0, 0), VerticalAlignment = VerticalAlignment.Center };
         _exSearch.TextChanged += (_, _) => FillExplorerList();
-        _exPath = new StackPanel { Orientation = Orientation.Horizontal, VerticalAlignment = VerticalAlignment.Center, Spacing = 2 };
+        _exPath = new DockPanel { VerticalAlignment = VerticalAlignment.Center, LastChildFill = true };
         var pathBox = new Border
         {
-            CornerRadius = new(10), Padding = new(6, 2), Margin = new(8, 0, 0, 0), MinHeight = 34, BorderThickness = new(1),
-            Child = new ScrollViewer { HorizontalScrollBarVisibility = Avalonia.Controls.Primitives.ScrollBarVisibility.Hidden, VerticalScrollBarVisibility = Avalonia.Controls.Primitives.ScrollBarVisibility.Disabled, Content = _exPath },
+            CornerRadius = new(10), Padding = new(6, 2), Margin = new(8, 0, 0, 0), MinHeight = 34, BorderThickness = new(1), ClipToBounds = true,
+            Child = _exPath,
         };
         pathBox.Bind(Border.BackgroundProperty, this.GetResourceObservable("BsSurface"));
         pathBox.Bind(Border.BorderBrushProperty, this.GetResourceObservable("BsBorder"));
@@ -109,12 +111,21 @@ public partial class MainWindow
         DockPanel.SetDock(nav, Dock.Left);
         if (IsPhone)
         {
-            // a phone: the path gets a row of its own, below it back / up, the search (as wide as there is room) and the new folder
-            newFolder.Content = L("＋ Ordner");
-            _exSearch.Width = double.NaN;
-            DockPanel.SetDock(newFolder, Dock.Right);
+            // a phone: the path gets a row of its own (it shows the end, the folder that is open); below it in one row back / up, the search
+            // (as wide as there is room), the view (show all, all vaults) in a small menu and the new folder as a plus
+            newFolder.Content = "＋"; newFolder.Width = 40; newFolder.Height = 34; newFolder.Padding = new(0); newFolder.Margin = new(6, 0, 0, 0);
+            newFolder.HorizontalContentAlignment = HorizontalAlignment.Center; newFolder.VerticalContentAlignment = VerticalAlignment.Center;
+            ToolTip.SetTip(newFolder, L("Neuer Ordner"));
+            _exSearch.Width = double.NaN; _exSearch.Margin = new(4, 0, 0, 0); _exSearch.MinWidth = 0;
+            _exFlatBtn.Margin = _exAllVaultsBtn.Margin = new(0);
+            _exFlatBtn.HorizontalAlignment = _exAllVaultsBtn.HorizontalAlignment = HorizontalAlignment.Stretch;
+            var view = new Button { Content = L("Ansicht"), Margin = new(6, 0, 0, 0), Height = 34, Padding = new(10, 0), VerticalAlignment = VerticalAlignment.Center, VerticalContentAlignment = VerticalAlignment.Center };
+            view.Flyout = new Flyout { Placement = PlacementMode.BottomEdgeAlignedRight, Content = new StackPanel { Spacing = 6, MinWidth = 180, Children = { _exFlatBtn, _exAllVaultsBtn } } };
+            void ViewMark() => view.Classes.Set("primary", _exFlatBtn.IsChecked == true || _exAllVaultsBtn.IsChecked == true);   // something is switched on: the button says so
+            _exFlatBtn.IsCheckedChanged += (_, _) => ViewMark(); _exAllVaultsBtn.IsCheckedChanged += (_, _) => ViewMark(); ViewMark();
+            DockPanel.SetDock(newFolder, Dock.Right); DockPanel.SetDock(view, Dock.Right);
             pathBox.Margin = new(0, 0, 0, 6);
-            bar = new StackPanel { Margin = new(10, 10, 10, 8), Children = { pathBox, new DockPanel { Children = { nav, newFolder, _exSearch } }, new StackPanel { Orientation = Orientation.Horizontal, Children = { _exFlatBtn, _exAllVaultsBtn } } } };
+            bar = new StackPanel { Margin = new(10, 8, 10, 6), Children = { pathBox, new DockPanel { Children = { nav, newFolder, view, _exSearch } } } };
         }
         else
         {
@@ -438,7 +449,7 @@ public partial class MainWindow
         FillExplorerList();
         _exBackBtn.IsEnabled = _exBack.Count > 0;
         _exUpBtn.IsEnabled = _exFolder is not null || _exInTrash;
-        _exSearch.PlaceholderText = _exInTrash ? L("Im Papierkorb suchen …") : _exFlat ? L("In allem suchen …") : L("In diesem Ordner suchen …");
+        _exSearch.PlaceholderText = IsPhone ? L("Suche …") : _exInTrash ? L("Im Papierkorb suchen …") : _exFlat ? L("In allem suchen …") : L("In diesem Ordner suchen …");   // a phone has room only for the short word
     }
 
     /// <summary>After a change here the other lists (Markierungen, Notizen, the text) show it too.</summary>
@@ -479,10 +490,12 @@ public partial class MainWindow
         var icon = new Icon { Data = Geometry.Parse(id is null ? "M3 12l9-8 9 8 M5 10v10h14V10" : FolderIcon), IconSize = 15, VerticalAlignment = VerticalAlignment.Center };
         var label = new TextBlock { Text = name, VerticalAlignment = VerticalAlignment.Center, TextTrimming = TextTrimming.CharacterEllipsis };
         var num = new TextBlock { Text = count > 0 ? count.ToString() : "", Classes = { "caption" }, VerticalAlignment = VerticalAlignment.Center };
+        // the name takes the room that is left and ends in "…" when it is longer (a stack panel would give it endless room: it ran out of the tree)
         var line = new DockPanel();
-        DockPanel.SetDock(num, Dock.Right);
-        line.Children.Add(num);
-        line.Children.Add(new StackPanel { Orientation = Orientation.Horizontal, Spacing = 6, Children = { chevron, icon, label } });
+        DockPanel.SetDock(num, Dock.Right); DockPanel.SetDock(chevron, Dock.Left); DockPanel.SetDock(icon, Dock.Left);
+        icon.Margin = new(0, 0, 6, 0); num.Margin = new(6, 0, 0, 0);
+        line.Children.Add(num); line.Children.Add(chevron); line.Children.Add(icon); line.Children.Add(label);
+        ToolTip.SetTip(line, name);
         var current = id == _exFolder && !_exInTrash;
         var box = new Border { Padding = new(6 + depth * 14, 6, 8, 6), CornerRadius = new(8), Child = line, Cursor = new Cursor(StandardCursorType.Hand), Margin = new(0, 1) };
         void Paint(bool hover) => box.Background = current ? Res("BsAccentSoft") ?? Brushes.Transparent : hover ? Res("BsHover") ?? Brushes.Transparent : Brushes.Transparent;
@@ -515,7 +528,14 @@ public partial class MainWindow
         for (long? at = _exFolder; at is long a && FolderById(a) is { } f && chain.Count < 50; at = f.ParentId) chain.Insert(0, f);
         void Crumb(string text, long? folder, bool last)
         {
-            var b = new Button { Content = text, Classes = { "tool" }, Width = double.NaN, Height = 28, Padding = new(8, 0), FontWeight = last ? FontWeight.SemiBold : FontWeight.Normal };
+            // a long folder name ends in "…" (the whole name in the tooltip)
+            var b = new Button
+            {
+                Content = new TextBlock { Text = text, TextTrimming = TextTrimming.CharacterEllipsis, MaxWidth = last ? double.PositiveInfinity : IsPhone ? 110 : 180, VerticalAlignment = VerticalAlignment.Center },
+                HorizontalAlignment = HorizontalAlignment.Left,
+                Classes = { "tool" }, Width = double.NaN, Height = 28, Padding = new(8, 0), FontWeight = last ? FontWeight.SemiBold : FontWeight.Normal,
+            };
+            ToolTip.SetTip(b, text);
             b.Click += (_, _) => ExNavigate(folder);
             _exTargets.Add(new ExTarget(b, folder, on => b.Background = on ? Res("BsAccentSoft") ?? Brushes.Transparent : Brushes.Transparent));
             _exPath.Children.Add(b);
@@ -733,6 +753,7 @@ public partial class MainWindow
                 MenuAction(L("Zur Stelle springen"), () => ExOpen(item)),
                 MenuAction(L("Ausschneiden (Strg+X)"), () => { ExSelectFor(item); ExCut(); }),
                 MoveMenu(targets),
+                OtherVaultMenu(targets),
                 ColorMenu(targets, anchor),
                 TagMenu(targets, anchor),
                 new Separator(),

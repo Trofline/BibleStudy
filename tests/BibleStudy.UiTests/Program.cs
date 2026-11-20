@@ -623,6 +623,34 @@ Check("no sign where the mark is shown", !RunsOf((Control)F<System.Collections.I
     vv.DeleteVoiceNote(voiceId); Call("RefreshCells"); Settle(200);
     Check("deleted: the ♪ is gone", !HasSign(2));
 }
+// marks into another vault (copied: here too; moved: here in the trash), and a long folder name stays inside the tree
+{
+    var here = (BibleStudy.Core.Storage.VaultStore)typeof(MainWindow).GetField("_vault", All)!.GetValue(win)!;
+    var other = (BibleStudy.Core.Storage.VaultStore)Call("StoreOf", "Zweiter Vault")!;
+    var longFolder = here.AddFolder("Missbrauche nicht Gottes Namen – ein sehr langer Ordnername");
+    var m1 = here.AddMark("", new BibleStudy.Core.Models.VerseRef("GEN", 1, 3), 0, 0, "Kopierte Markierung", "#E5484D", "", longFolder, []);
+    var m2 = here.AddMark("", new BibleStudy.Core.Models.VerseRef("GEN", 1, 4), 0, 0, "Verschobene Markierung", "#E5484D", "", longFolder, []);
+    typeof(MainWindow).GetField("_exFolder", All)!.SetValue(win, (long?)longFolder);
+    Call("RefreshExplorer"); Settle(300);
+    var exItem = typeof(MainWindow).GetNestedType("ExItem", All)!; var exKind = typeof(MainWindow).GetNestedType("ExKind", All)!;
+    object Item(long id, string title) => Activator.CreateInstance(exItem, Enum.Parse(exKind, "Mark"), id, title, "", "#E5484D", (long?)longFolder, null, null)!;
+    System.Collections.IList List(params object[] xs) { var l = (System.Collections.IList)Activator.CreateInstance(typeof(List<>).MakeGenericType(exItem))!; foreach (var x in xs) l.Add(x); return l; }
+    Call("CopyToVault", List(Item(m1, "Kopierte Markierung")), "Zweiter Vault", false); Settle(400);
+    Check("copied: the mark is in the other vault", other.GetMarks().Any(m => m.Text == "Kopierte Markierung"));
+    Check("copied: and still here", here.GetMarks().Any(m => m.Id == m1));
+    Check("copied: into a folder of the same name there", other.GetFolders().Any(f => f.Name.StartsWith("Missbrauche nicht Gottes Namen")));
+    Call("CopyToVault", List(Item(m2, "Verschobene Markierung")), "Zweiter Vault", true); Settle(600);
+    Check("moved: the mark is in the other vault", other.GetMarks().Any(m => m.Text == "Verschobene Markierung"));
+    Check("moved: and gone from here", !here.GetMarks().Any(m => m.Id == m2));
+    var tree = F<StackPanel>("_exTree");
+    var label = tree.GetVisualDescendants().OfType<TextBlock>().FirstOrDefault(t => t.Text?.StartsWith("Missbrauche nicht") == true);
+    Check("the long folder name stays inside the tree", label is not null && label.TranslatePoint(new Point(label.Bounds.Width, 0), tree)!.Value.X <= tree.Bounds.Width + 1,
+        label is null ? "no label" : $"{label.TranslatePoint(new Point(label.Bounds.Width, 0), tree)!.Value.X:0} > {tree.Bounds.Width:0}");
+    Shot(win, "explorer-long-folder");
+    foreach (var m in other.GetMarks().Where(m => m.Text is "Kopierte Markierung" or "Verschobene Markierung")) other.DeleteMark(m.Id);
+    here.DeleteMark(m1);
+    typeof(MainWindow).GetField("_exFolder", All)!.SetValue(win, null);
+}
 Console.WriteLine(fails == 0 ? "ALL OK" : $"{fails} FAILED");
 Environment.Exit(fails == 0 ? 0 : 1);
 Environment.Exit(fails);

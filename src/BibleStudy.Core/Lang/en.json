@@ -3422,5 +3422,12 @@
   "■ Stopp": "■ Stop",
   "▶ Anhören": "▶ Listen",
   "● Aufnehmen": "● Record",
-  "● Neu aufnehmen": "● Record again"
+  "● Neu aufnehmen": "● Record again",
+  "Der Vault „{0}“ ließ sich nicht öffnen: {1}": "The vault \"{0}\" could not be opened: {1}",
+  "Es gibt keinen anderen Vault.": "There is no other vault.",
+  "In anderen Vault": "To another vault",
+  "Verschieben": "Move",
+  "{0} in den Vault „{1}“ kopiert.": "{0} copied into the vault \"{1}\".",
+  "{0} in den Vault „{1}“ verschoben.": "{0} moved into the vault \"{1}\".",
+  "{0} in „{1}“ verschoben": "{0} moved into \"{1}\""
 }
