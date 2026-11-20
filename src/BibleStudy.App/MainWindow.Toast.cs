@@ -14,11 +14,11 @@ public partial class MainWindow
 {
     Border? _undoToast;
     TextBlock? _undoToastText;
-    Button? _undoToastBtn;
+    Button? _undoToastBtn, _undoToastTrash;
     DispatcherTimer? _undoToastTimer;
     Func<Task>? _undoToastAction;
 
-    void ShowUndoToast(string text, Func<Task> undo, string? button = null)
+    void ShowUndoToast(string text, Func<Task> undo, string? button = null, bool trash = false)
     {
         if (_undoToast is null)
         {
@@ -27,13 +27,17 @@ public partial class MainWindow
             var close = new Button { Content = "✕", Classes = { "ghost" }, Margin = new(4, 0, 0, 0), Padding = new(8, 4), VerticalAlignment = VerticalAlignment.Center };
             ToolTip.SetTip(close, L("Schließen"));
             _undoToastBtn.Click += async (_, _) => { var a = _undoToastAction; HideUndoToast(); if (a is not null) await a(); };
+            // what went into the trash: one click shows the trash itself, with everything that lies there
+            _undoToastTrash = new Button { Content = L("Papierkorb"), Classes = { "ghost" }, Margin = new(6, 0, 0, 0), VerticalAlignment = VerticalAlignment.Center };
+            ToolTip.SetTip(_undoToastTrash, L("Papierkorb öffnen"));
+            _undoToastTrash.Click += (_, _) => { HideUndoToast(); OpenTrash(); };
             close.Click += (_, _) => HideUndoToast();
             _undoToast = new Border
             {
                 CornerRadius = new(10), Padding = new(14, 6, 6, 6), Margin = new(0, 0, 0, 22), BorderThickness = new(1), ZIndex = 60,
                 HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Bottom,
                 BoxShadow = BoxShadows.Parse("0 4 18 0 #33000000"),
-                Child = new StackPanel { Orientation = Orientation.Horizontal, Children = { _undoToastText, _undoToastBtn, close } },
+                Child = new StackPanel { Orientation = Orientation.Horizontal, Children = { _undoToastText, _undoToastBtn, _undoToastTrash, close } },
             };
             _undoToast.Bind(Border.BackgroundProperty, this.GetResourceObservable("BsSurface2"));
             _undoToast.Bind(Border.BorderBrushProperty, this.GetResourceObservable("BsAccent"));
@@ -41,6 +45,7 @@ public partial class MainWindow
         }
         _undoToastText!.Text = text;
         _undoToastBtn!.Content = button ?? L("Rückgängig");
+        _undoToastTrash!.IsVisible = trash;
         _undoToastAction = undo;
         if (_undoToast.Parent is null) ReaderHost.Children.Add(_undoToast);
         _undoToastTimer?.Stop();

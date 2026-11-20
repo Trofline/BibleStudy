@@ -712,6 +712,66 @@ Check("no sign where the mark is shown", !RunsOf((Control)F<System.Collections.I
     }
     extras.Remove(added); RunTask("RedrawChapterAsync"); Settle(400);
 }
+// ---- Tab between two places, the dots, the start page, the trash button ------------------------------------------------
+{
+    Console.WriteLine("-- tab switch, dots, start page, trash");
+    var st = F<AppSettings>("_settings"); st.PinnedTabs.Clear(); st.PinnedTab = null;
+    string? Act() => (string?)typeof(MainWindow).GetField("_activeWork", All)!.GetValue(win);
+    Console.WriteLine("split view: " + st.SplitView);
+    Call("ShowReader"); Settle(200);
+    Call("GoToTab", "group:Dokumente"); Settle(200);
+    Call("ShowReader"); Settle(200);
+    Call("SwitchReadTab"); Settle(200);
+    Check("Tab: from reading to the last tab", Act() == "group:Dokumente", Act() ?? "reading");
+    Call("SwitchReadTab"); Settle(200);
+    Check("Tab: and back to reading", Act() is null, Act() ?? "");
+    win.Focus(); Settle(100);
+    win.KeyPress(Key.Tab, RawInputModifiers.None, PhysicalKey.Tab, null); win.KeyRelease(Key.Tab, RawInputModifiers.None, PhysicalKey.Tab, null); Settle(200);
+    Check("the Tab key itself switches", Act() == "group:Dokumente", Act() ?? "reading");
+    Call("ShowReader"); Settle(200);
+    // one dot: between reading and that tab, also after another tab was open
+    Call("GoToTab", "group:Planen"); Settle(200); Call("ShowReader"); Settle(200);
+    st.PinnedTabs = ["group:Dokumente"];
+    Call("SwitchReadTab"); Settle(200);
+    Check("one dot: Tab goes to that tab, not to the last one", Act() == "group:Dokumente", Act() ?? "reading");
+    Call("SwitchReadTab"); Settle(200);
+    Check("one dot: and back to reading", Act() is null, Act() ?? "");
+    // two dots: between those two, reading is left out
+    st.PinnedTabs = ["group:Dokumente", "group:Planen"];
+    var seen = new List<string?>();
+    for (var i = 0; i < 4; i++) { Call("SwitchReadTab"); Settle(150); seen.Add(Act()); }
+    Check("two dots: Tab goes back and forth between them", seen.All(s => s is "group:Dokumente" or "group:Planen") && seen.Distinct().Count() == 2 && seen[0] != seen[1] && seen[1] != seen[2], string.Join(",", seen.Select(s => s ?? "reading")));
+    st.PinnedTabs = ["group:Dokumente", "group:Planen", "group:Studium"];
+    Check("never more than two dots", ((List<string>)Call("PinnedTabs")!).Count == 2);
+    st.PinnedTabs.Clear();
+    Call("ShowReader"); Settle(200);
+
+    // the start page: no book and chapter in the top bar
+    typeof(MainWindow).GetMethod("ShowHome", All, [typeof(bool)])!.Invoke(win, [false]); Settle(300);
+    Check("start page: book and chapter are hidden", !C<Border>("BookPill").IsVisible);
+    Shot(win, "home-top-bar");
+    Call("ShowReader"); Settle(300);
+    Check("reading: book and chapter are back", C<Border>("BookPill").IsVisible);
+
+    // the trash: a button above the documents and in the bar after deleting
+    var vt = F<BibleStudy.Core.Storage.VaultStore>("_vault");
+    var did = vt.AddDocument("Papierkorb-Test", "Inhalt", null, false, []);
+    var doc = vt.GetDocuments().Single(d => d.Id == did);
+    Call("TrashDocumentWithUndo", doc); Settle(300);
+    var trashBtn = F<Button>("_undoToastTrash");
+    Check("the bar after deleting has a trash button", trashBtn.IsVisible);
+    Check("the trash button above the documents counts", C<Button>("DocTrashBtn").Content is StackPanel { Children: [_, TextBlock { Text: var tt }] } && tt!.Contains(' '), (C<Button>("DocTrashBtn").Content as StackPanel)?.Children.OfType<TextBlock>().FirstOrDefault()?.Text ?? "");
+    Press2(trashBtn);
+    Check("it opens the trash", (bool)typeof(MainWindow).GetField("_exInTrash", All)!.GetValue(win)!);
+    Shot(win, "trash-open");
+    var tid2 = vt.GetTrash().First(t => t.Kind == "doc" && t.Title == "Papierkorb-Test").Id;
+    RunTask("RestoreTrashAsync", new List<long> { tid2 }, true);
+    Check("and it comes back from there", vt.GetDocuments().Any(d => d.Title == "Papierkorb-Test"));
+    vt.DeleteDocument(vt.GetDocuments().First(d => d.Title == "Papierkorb-Test").Id);
+    typeof(MainWindow).GetField("_exInTrash", All)!.SetValue(win, false);
+    Call("ShowReader"); Settle(200);
+}
+
 Console.WriteLine(fails == 0 ? "ALL OK" : $"{fails} FAILED");
 Environment.Exit(fails == 0 ? 0 : 1);
 Environment.Exit(fails);

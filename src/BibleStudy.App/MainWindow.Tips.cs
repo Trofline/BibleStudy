@@ -23,7 +23,7 @@ public partial class MainWindow
         string Key(string id) => _keyActions.FirstOrDefault(a => a.Id == id) is { } a && GestureOf(a) is { Length: > 0 } g ? Pretty(g) : "–";
         var lines = new (string Keys, string Text)[]
         {
-            (Key("tabswitch"), L("wechselt zwischen Lesen und dem letzten Reiter. Ein Klick auf den kleinen Punkt am Reiter legt fest, zu welchem.")),
+            ("Tab", L("wechselt zwischen Lesen und dem letzten Reiter. Ein Punkt am Reiter legt fest, zu welchem; mit zwei Punkten wechselt Tab zwischen diesen beiden.")),
             (L("Mittlere Maustaste"), L("schaltet Schnellmarkieren ein und aus.")),
             (Key("back") + " / " + Key("forward"), L("blättern durch die zuletzt gelesenen Stellen, ebenso die Seitentasten der Maus.")),
             (L("Strg") + "+Z", L("macht im Explorer (Reiter „Markierung“) Löschen und Verschieben rückgängig.")),

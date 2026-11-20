@@ -23,6 +23,9 @@ public partial class MainWindow
         InitAutosave();
         InitDocTree();
         InitDocEditor();
+        // the start page shows no chapter: book and chapter in the top bar would only name the last one read ("Daniel 9"); they come back with the text
+        Home.PropertyChanged += (_, e) => { if (e.Property == IsVisibleProperty) BookPill.IsVisible = !Home.IsVisible; };
+        BookPill.IsVisible = !Home.IsVisible;
         DocGraphBtn.Click += (_, _) => ShowKnowledgeGraph();
         DocBackBtn.Click += (_, _) => CloseDocument();
         DocSaveBtn.Click += (_, _) => SaveDocument();
@@ -45,6 +48,7 @@ public partial class MainWindow
         var query = DocSearchBox.Text?.Trim();
         var docs = _vault.GetDocuments(string.IsNullOrEmpty(query) ? null : query, tag: _docTag, templates: DocFilterBox.SelectedIndex == 1 ? true : null);
         DocWelcome.IsVisible = _vault.GetDocuments().Count == 0;
+        UpdateDocTrashBtn();
         _dropTargets.Clear();
         BuildCategoryChips();
         if (_docCategory is not null) docs = docs.Where(d => _docCategory.Length == 0 ? CategoryOf(d) is null : InCategory(d, _docCategory)).ToList();

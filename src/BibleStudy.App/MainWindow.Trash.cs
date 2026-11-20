@@ -55,7 +55,7 @@ public partial class MainWindow
         var t = _vault.TrashDocument(d.Id);
         RefreshDocs(); RefreshCollection();
         if (t == 0) return;
-        ShowUndoToast(L("„{0}“ in den Papierkorb gelegt.", Shorten(d.Title, 40)), async () => { await RestoreTrashAsync([t], quiet: true); RefreshDocs(); });
+        ShowUndoToast(L("„{0}“ in den Papierkorb gelegt.", Shorten(d.Title, 40)), async () => { await RestoreTrashAsync([t], quiet: true); RefreshDocs(); }, trash: true);
     }
 
     /// <summary>A note goes into the trash (it used to be gone at once); the bar under the text can take it back.</summary>
@@ -65,7 +65,7 @@ public partial class MainWindow
         if (_noteRef == r) NoteEditor.Text = _noteLoaded = "";
         RefreshLists(); RefreshCells();
         if (t == 0) return;
-        ShowUndoToast(L("Notiz zu {0} in den Papierkorb gelegt.", Label(r)), () => RestoreTrashAsync([t], quiet: true));
+        ShowUndoToast(L("Notiz zu {0} in den Papierkorb gelegt.", Label(r)), () => RestoreTrashAsync([t], quiet: true), trash: true);
     }
 
     /// <summary>A folder goes into the trash with what lay in it (the content itself stays, without the folder); the bar can put it all back.</summary>
@@ -74,10 +74,13 @@ public partial class MainWindow
         var t = _vault.TrashFolder(id);
         RefreshCollection(); RefreshDocs(); RefreshNotesTree();
         if (t == 0) return;
-        ShowUndoToast(L("Ordner „{0}“ in den Papierkorb gelegt.", Shorten(name, 40)), async () => { await RestoreTrashAsync([t], quiet: true); RefreshCollection(); RefreshNotesTree(); });
+        ShowUndoToast(L("Ordner „{0}“ in den Papierkorb gelegt.", Shorten(name, 40)), async () => { await RestoreTrashAsync([t], quiet: true); RefreshCollection(); RefreshNotesTree(); }, trash: true);
     }
 
     // ---- the trash in the explorer ----------------------------------------------------------------------------------
+
+    /// <summary>Opens the trash (in the Explorer), from wherever one is.</summary>
+    void OpenTrash() { OpenWork(GroupOf(ExplorerTab)!, ExplorerTab); BuildExplorer(); ExOpenTrash(); }
 
     void ExOpenTrash()
     {

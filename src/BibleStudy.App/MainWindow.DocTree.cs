@@ -38,6 +38,19 @@ public partial class MainWindow
         create.Click += (_, _) => Make();
         name.KeyDown += (_, e) => { if (e.Key == Key.Enter) Make(); };
         DocFolderBtn.Flyout = fly;
+        DocTrashBtn.Click += (_, _) => OpenTrash();
+        UpdateDocTrashBtn();
+    }
+
+    /// <summary>The trash button above the documents, with how much lies in the trash.</summary>
+    void UpdateDocTrashBtn()
+    {
+        if (_vault is null) return;
+        var n = _vault.GetTrash().Count;
+        var row = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 6 };
+        row.Children.Add(new Icon { Data = Geometry.Parse(TrashIcon), IconSize = 14, VerticalAlignment = VerticalAlignment.Center });
+        row.Children.Add(new TextBlock { Text = n > 0 ? $"{L("Papierkorb")} {n}" : L("Papierkorb"), VerticalAlignment = VerticalAlignment.Center });
+        DocTrashBtn.Content = row;
     }
 
     // ---- the tree ------------------------------------------------------------------------------------------------------

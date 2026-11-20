@@ -42,8 +42,8 @@ public class VaultMergeTests
         Assert.Equal("Oben", folders.Single(f => f.Id == folders.Single(x => x.Name == "Unten").ParentId).Name);
         Assert.Equal("neue Notiz", home.GetNotes().Single(n => n.Ref.Verse == 3).Text);
         var docs = home.GetDocuments();
-        Assert.Equal("Text A", docs.Single(d => d.Title == "Gleich").Body);
-        Assert.Equal("Text B", docs.Single(d => d.Title == "Gleich (Gast)").Body);
+        Assert.Equal("Text A\nText B", docs.Single(d => d.Title == "Gleich").Body);   // one document with both, no copy
+        Assert.DoesNotContain(docs, d => d.Title == "Gleich (Gast)");
         Assert.Contains("Gleich", docs.Single(d => d.Title == "Neu").Body);
         var todos = home.GetTodos();
         Assert.Equal(todos.Single(t => t.Text == "Aufgabe").Id, todos.Single(t => t.Text == "Teil").ParentId);
@@ -157,6 +157,25 @@ public class MergeReviewTests
 {
     static string TempDir() { var d = Path.Combine(Path.GetTempPath(), "bs_review_" + Guid.NewGuid().ToString("N")); Directory.CreateDirectory(d); return d; }
     static VerseRef R(int v) => new("GEN", 1, v);
+
+    [Fact]
+    public void A_document_changed_on_both_devices_stays_one_document()
+    {
+        var dir = TempDir();
+        var pcPath = Path.Combine(dir, "pc.db"); var phonePath = Path.Combine(dir, "phone.db");
+        var pc = new VaultStore(pcPath, "pc"); var phone = new VaultStore(phonePath, "phone");
+        pc.AddDocument("Daniel", "Zeitpunkt\nam PC geschrieben\nEnde", null, false, []);
+        phone.AddDocument("Daniel", "Zeitpunkt\nam Handy geschrieben\nEnde", null, false, []);
+        // an old copy of an earlier round is already on the phone
+        phone.AddDocument("Daniel (Synchronisation)", "Zeitpunkt\nam PC geschrieben\nEnde", null, false, []);
+        for (var round = 0; round < 3; round++) { pc.MergeFrom(phonePath, "Synchronisation"); phone.MergeFrom(pcPath, "Synchronisation"); }
+        var a = pc.GetDocuments().Single(d => d.Title == "Daniel").Body; var b = phone.GetDocuments().Single(d => d.Title == "Daniel").Body;
+        Assert.Equal(a, b);   // both devices end with the same text
+        Assert.Contains("am PC geschrieben", a); Assert.Contains("am Handy geschrieben", a);
+        Assert.Single(a.Split('\n'), l => l == "Zeitpunkt");
+        Assert.DoesNotContain(pc.GetDocuments().Concat(phone.GetDocuments()), d => d.Title.Contains("(Synchronisation) (Synchronisation)"));
+        Assert.True(pc.GetDocuments().Count <= 2);
+    }
 
     [Fact]
     public void A_conflict_can_be_settled_either_way()

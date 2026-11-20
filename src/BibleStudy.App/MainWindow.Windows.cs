@@ -215,37 +215,68 @@ public partial class MainWindow
     string? _lastWorkTab;
 
     /// <summary>
-    /// Ctrl+Tab (it was Tab, which then no longer moved the focus from button to button): from the reading tab to the pinned tab (the dot on a tab), or to the tab you were on last; from any other tab back to reading.
+    /// The tabs with a dot (at most two). The one dot of older versions (PinnedTab) is taken over; a dot on a tab that cannot come back any more
+    /// (a closed context tab) counts no longer.
     /// </summary>
-    void SwitchReadTab()
+    List<string> PinnedTabs()
     {
-        if (_activeWork is not null) { ShowReader(); return; }
-        var target = _settings.PinnedTab ?? _lastWorkTab;
-        if (target is not null && _contextTabs.TryGetValue(target, out var context)) { FocusContextTab(context); return; }
-        if (target is null || NavGroups.FirstOrDefault(g => "group:" + g.Name == target) is not { } g)
-        {
-            StatusText.Text = L("Noch kein anderer Reiter offen. Öffne einen Reiter oder setze den Punkt an einem Reiter, dann wechselt Tab dorthin.");
-            return;
-        }
-        OpenWork(g);
+        if (_settings.PinnedTab is { } old) { if (!_settings.PinnedTabs.Contains(old)) _settings.PinnedTabs.Insert(0, old); _settings.PinnedTab = null; }
+        if (_settings.PinnedTabs.Count > MaxPins) _settings.PinnedTabs.RemoveRange(MaxPins, _settings.PinnedTabs.Count - MaxPins);
+        return _settings.PinnedTabs.Where(k => _windows.ContainsKey(k) || _contextTabs.ContainsKey(k) || NavGroups.Any(g => "group:" + g.Name == k)).ToList();
+    }
+
+    const int MaxPins = 2;
+
+    /// <summary>Goes to a tab (it opens again when it was closed); false when there is no such tab.</summary>
+    bool GoToTab(string key)
+    {
+        if (_contextTabs.TryGetValue(key, out var context)) { FocusContextTab(context); return true; }
+        if (NavGroups.FirstOrDefault(g => "group:" + g.Name == key) is { } g) { OpenWork(g); return true; }
+        if (_windows.TryGetValue(key, out var w) && !w.Side && w.Win is null) { ShowWork(key); return true; }
+        return false;
     }
 
     /// <summary>
-    /// Tab and Shift+Tab switch to the next / previous tab of the tab strip (Lesen, Dokumente, …), like in a browser, instead of moving the focus from
-    /// button to button. A text field, a list or a menu keeps Tab for itself; Ctrl+Tab does the old switch between reading and the last tab.
+    /// Tab: always between two places. Without a dot: between reading and the tab you were on last. One dot: between reading and that tab.
+    /// Two dots: between those two tabs, without reading.
+    /// </summary>
+    void SwitchReadTab()
+    {
+        var pins = PinnedTabs();
+        if (pins.Count == 2)
+        {
+            var to = _activeWork == pins[0] ? pins[1] : _activeWork == pins[1] ? pins[0] : pins.Contains(_lastWorkTab ?? "") ? _lastWorkTab! : pins[0];
+            if (GoToTab(to)) return;
+        }
+        if (_activeWork is not null) { ShowReader(); return; }
+        var target = pins.Count == 1 ? pins[0] : _lastWorkTab;
+        if (target is null || !GoToTab(target))
+            StatusText.Text = L("Noch kein anderer Reiter offen. Öffne einen Reiter oder setze den Punkt an einem Reiter, dann wechselt Tab dorthin.");
+    }
+
+    /// <summary>Ctrl+Tab and Ctrl+Shift+Tab: to the next / previous tab of the tab strip (Lesen, Dokumente, …), like in a browser.</summary>
+    void CycleTab(bool back)
+    {
+        var keys = new List<string?> { null };
+        keys.AddRange(_windows.Values.Where(w => !w.Side && w.Win is null).OrderBy(w => _settings.TabOrder.IndexOf(w.Key) is var i and >= 0 ? i : int.MaxValue).Select(w => (string?)w.Key));
+        if (keys.Count < 2) return;
+        var at = Math.Max(0, keys.IndexOf(_activeWork));
+        var next = keys[(at + (back ? keys.Count - 1 : 1)) % keys.Count];
+        if (next is null) ShowReader(); else ShowWork(next);
+    }
+
+    /// <summary>
+    /// Tab (and Shift+Tab) switch between two places (see <see cref="SwitchReadTab"/>) instead of moving the focus from button to button.
+    /// A text field, a list or a menu keeps Tab for itself, and so does the program while there is no other tab at all.
     /// </summary>
     void OnTabKey(object? sender, KeyEventArgs e)
     {
-        if (e.Handled || e.Key != Key.Tab || e.KeyModifiers is not (KeyModifiers.None or KeyModifiers.Shift) || _capturing is not null || Home.IsVisible) return;
+        if (e.Handled || e.Key != Key.Tab || e.KeyModifiers is not (KeyModifiers.None or KeyModifiers.Shift) || _capturing is not null) return;
         var focused = FocusedControl();
         if (focused is TextBox or ComboBox or ListBoxItem or ListBox or Slider or MenuItem or TabItem) return;
-        var keys = new List<string?> { null };
-        keys.AddRange(_windows.Values.Where(w => !w.Side && w.Win is null).OrderBy(w => _settings.TabOrder.IndexOf(w.Key) is var i and >= 0 ? i : int.MaxValue).Select(w => (string?)w.Key));
-        if (keys.Count < 2) return;   // only the reading tab: Tab keeps its usual job
+        if (_activeWork is null && _lastWorkTab is null && PinnedTabs().Count == 0) return;   // nothing to switch to: Tab keeps its usual job
         e.Handled = true;
-        var at = Math.Max(0, keys.IndexOf(_activeWork));
-        var next = keys[(at + (e.KeyModifiers == KeyModifiers.Shift ? keys.Count - 1 : 1)) % keys.Count];
-        if (next is null) ShowReader(); else ShowWork(next);
+        SwitchReadTab();
     }
 
     /// <summary>Ctrl+W: closes the tab you are on (the reader itself stays).</summary>
@@ -306,14 +337,27 @@ public partial class MainWindow
         ToolTip.SetTip(b, key is null ? L("Zurück zum Bibeltext") : windowed ? L("Liegt in einem eigenen Fenster – klicken holt es nach vorn") : L("Klicken wechselt hierher. Nach unten ziehen macht ein eigenes Fenster daraus."));
         if (closable && key is not null && !AppPlatform.IsMobile)
         {
-            // the dot: Ctrl+Tab always switches between reading and this tab (no dot anywhere: the tab you were on last)
-            var pinned = _settings.PinnedTab == key;
+            // the dot: Tab always switches between reading and this tab; with two dots between those two (no dot anywhere: the tab you were on last)
+            var pins = PinnedTabs();
+            var pinned = pins.Contains(key);
             var dot = new Button { Classes = { "tool" }, Width = 18, Height = 22, Padding = new(0), Opacity = pinned ? 1 : active ? 0.45 : 0,
                 Content = new Ellipse { Width = 8, Height = 8, StrokeThickness = 1.5 } };
             ((Ellipse)dot.Content).Bind(Shape.StrokeProperty, this.GetResourceObservable(pinned ? "BsAccent" : "BsMuted"));
             if (pinned) ((Ellipse)dot.Content).Bind(Shape.FillProperty, this.GetResourceObservable("BsAccent"));
-            ToolTip.SetTip(dot, pinned ? L("Strg+Tab wechselt immer zwischen Lesen und diesem Reiter. Klicken hebt das auf.") : L("Klicken: Strg+Tab wechselt dann immer zwischen Lesen und diesem Reiter."));
-            dot.Click += (_, e) => { e.Handled = true; _settings.PinnedTab = pinned ? null : key; SaveSettings(); RebuildTabStrip(); };
+            ToolTip.SetTip(dot, pinned
+                ? (pins.Count == 2 ? L("Tab wechselt zwischen den beiden Reitern mit Punkt. Klicken nimmt den Punkt weg.") : L("Tab wechselt immer zwischen Lesen und diesem Reiter. Klicken nimmt den Punkt weg."))
+                : pins.Count >= MaxPins ? L("Schon zwei Reiter haben einen Punkt. Nimm erst einen weg.")
+                : pins.Count == 1 ? L("Klicken: Tab wechselt dann zwischen diesem Reiter und dem anderen mit Punkt.") : L("Klicken: Tab wechselt dann immer zwischen Lesen und diesem Reiter."));
+            dot.Click += (_, e) =>
+            {
+                e.Handled = true;
+                var list = PinnedTabs();
+                if (list.Contains(key)) list.Remove(key);
+                else if (list.Count >= MaxPins) { StatusText.Text = L("Höchstens zwei Reiter können einen Punkt haben. Nimm erst einen Punkt weg."); return; }
+                else list.Add(key);
+                _settings.PinnedTabs = list;
+                SaveSettings(); RebuildTabStrip();
+            };
             row.Children.Insert(0, dot);
             // with ten tabs a dot and an ✕ on each looked restless: they show on the open tab and under the mouse (a set dot always)
             if (!pinned && !active) { b.PointerEntered += (_, _) => dot.Opacity = 0.45; b.PointerExited += (_, _) => dot.Opacity = 0; }

@@ -99,7 +99,7 @@
                             <Button x:Name="TransBtn" Classes="picker" MinWidth="110" ToolTip.Tip="Übersetzung wählen" />
                         </StackPanel>
                     </Border>
-                    <Border Classes="pill">
+                    <Border x:Name="BookPill" Classes="pill">
                         <StackPanel Orientation="Horizontal">
                             <Button x:Name="BookBtn" Classes="picker" MinWidth="100" ToolTip.Tip="Buch wählen: alle Bücher auf einen Blick" />
                             <Rectangle Classes="sep" />
@@ -547,6 +547,7 @@
                             <StackPanel DockPanel.Dock="Top" Spacing="10" Margin="0,0,0,8">
                                 <DockPanel>
                                     <Button x:Name="DocNewBtn" DockPanel.Dock="Right" Content="＋ Neu ▾" Classes="primary" VerticalAlignment="Center" />
+                                    <Button x:Name="DocTrashBtn" DockPanel.Dock="Right" Classes="ghost" Margin="0,0,8,0" VerticalAlignment="Center" ToolTip.Tip="Papierkorb: gelöschte Dokumente, Notizen, Markierungen und Ordner. Sie bleiben 30 Tage und lassen sich zurückholen." />
                                     <Button x:Name="DocFolderBtn" DockPanel.Dock="Right" Content="＋ Ordner" Margin="0,0,8,0" VerticalAlignment="Center" ToolTip.Tip="Neuen Ordner anlegen. Dokumente lassen sich per Ziehen in Ordner und auf Kategorien legen." />
                                     <StackPanel Spacing="2">
                                         <TextBlock Text="Deine Dokumente" FontSize="18" FontWeight="SemiBold" />

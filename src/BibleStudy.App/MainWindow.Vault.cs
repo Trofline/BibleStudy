@@ -203,7 +203,7 @@ public partial class MainWindow
             var t = _vault.TrashMark(m.Id);
             _markUndo[^1] = _markUndo[^1] with { Trash = [t] };
             CloseEditor(); RefreshCollection(); RefreshCells();
-            ShowUndoToast(L("Markierung „{0}“ gelöscht.", Shorten(MarkLabel(m), 40)), UndoMarksAsync);
+            ShowUndoToast(L("Markierung „{0}“ gelöscht.", Shorten(MarkLabel(m), 40)), UndoMarksAsync, trash: true);
         };
         MarkQueueBtn.Click += (_, _) => { if (_editMark is { } m) AddToQueue([m.Ref]); };
 

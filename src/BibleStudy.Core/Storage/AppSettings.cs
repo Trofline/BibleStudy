@@ -311,7 +311,8 @@ public sealed class AppSettings
     public Dictionary<string, string> AllowedPlugins { get; set; } = [];
     /// <summary>Order of the work tabs at the top (keys of the tabs), as the user dragged them.</summary>
     public List<string> TabOrder { get; set; } = [];
-    public string? PinnedTab { get; set; }                  // the tab the Tab key switches to from the reading tab (null = the last one)
+    public string? PinnedTab { get; set; }                  // older: one tab with a dot (now in PinnedTabs)
+    public List<string> PinnedTabs { get; set; } = [];      // tabs with a dot (at most two): Tab switches between reading and the one, or between the two
     /// <summary>The one-time note about where the data comes from has been read (version of the note).</summary>
     public string SourcesNoticeSeen { get; set; } = "";
     /// <summary>Show the STEPBible brief lexicon under the Strong entries.</summary>

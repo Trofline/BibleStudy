@@ -43,7 +43,8 @@ public partial class MainWindow
             new("docs", L("Dokumente öffnen"), "Ctrl+Shift+D", () => Sync(() => OpenWork(NavGroups.First(g => g.Name == "Dokumente"))), true),
             new("popout", L("Aktuelles Seitenfenster auslagern"), "Ctrl+Shift+O", () => Sync(() => PopOutTab(SideTabs.SelectedIndex)), true),
             new("closetab", L("Aktuellen Reiter schließen"), "Ctrl+W", () => Sync(CloseActiveTab), true),
-            new("tabswitch", L("Zwischen Lesen und dem gewählten Reiter wechseln"), "Ctrl+Tab", () => Sync(SwitchReadTab)),
+            new("tabnext", L("Nächster Reiter"), "Ctrl+Tab", () => Sync(() => CycleTab(false))),
+            new("tabprev", L("Voriger Reiter"), "Ctrl+Shift+Tab", () => Sync(() => CycleTab(true))),
         ];
         BuildKeysPanel();
         ResetKeysBtn.Click += (_, _) => { _settings.KeyBindings.Clear(); SaveSettings(); BuildKeysPanel(); };

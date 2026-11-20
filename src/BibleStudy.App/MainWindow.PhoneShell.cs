@@ -512,8 +512,9 @@ public partial class MainWindow
             DockPanel.SetDock(DocNewBtn, Avalonia.Controls.Dock.Bottom); DockPanel.SetDock(DocFolderBtn, Avalonia.Controls.Dock.Bottom);
             DocNewBtn.HorizontalAlignment = DocFolderBtn.HorizontalAlignment = HorizontalAlignment.Left;
             DocFolderBtn.Margin = new Thickness(0, 6, 0, 0); DocNewBtn.Margin = new Thickness(0, 6, 0, 0);
-            docHead.Children.Remove(DocNewBtn); docHead.Children.Remove(DocFolderBtn);
-            var row = new WrapPanel { ItemSpacing = 8, Children = { DocFolderBtn, DocNewBtn } };
+            docHead.Children.Remove(DocNewBtn); docHead.Children.Remove(DocFolderBtn); docHead.Children.Remove(DocTrashBtn);
+            DocTrashBtn.Margin = new Thickness(0, 6, 0, 0);
+            var row = new WrapPanel { ItemSpacing = 8, Children = { DocFolderBtn, DocNewBtn, DocTrashBtn } };
             DockPanel.SetDock(row, Avalonia.Controls.Dock.Bottom);
             docHead.Children.Insert(0, row);
         }

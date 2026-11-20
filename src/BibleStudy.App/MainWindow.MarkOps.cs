@@ -244,7 +244,7 @@ public partial class MainWindow
         ClearTextSelection(false);
         RefreshCollection(); RefreshCells();
         StatusText.Text = L("Markierung entfernt · Strg+Z macht es rückgängig");
-        ShowUndoToast(gone.Count > 1 ? L("{0} Markierungen entfernt.", gone.Count) : L("Markierung entfernt."), UndoMarksAsync);
+        ShowUndoToast(gone.Count > 1 ? L("{0} Markierungen entfernt.", gone.Count) : L("Markierung entfernt."), UndoMarksAsync, trash: gone.Count > 0);
         return Task.CompletedTask;
     }
 

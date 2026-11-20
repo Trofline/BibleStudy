@@ -78,12 +78,45 @@ public sealed partial class VaultStore
         return a + "\n\n" + b;
     }
 
+    /// <summary>
+    /// Two versions of a document, line by line: what both have stays once, what only one has is added where it stands. Both devices get the same
+    /// result (the order does not depend on which one is "mine"), so the next round finds them equal. Null when the texts are too big for that.
+    /// </summary>
+    public static string? MergeLines(string mine, string theirs, out bool conflict)
+    {
+        var plain = MergeText(mine, theirs, out conflict);
+        if (!conflict) return plain;
+        if (string.CompareOrdinal(mine, theirs) > 0) (mine, theirs) = (theirs, mine);
+        var a = mine.ReplaceLineEndings("\n").Split('\n'); var b = theirs.ReplaceLineEndings("\n").Split('\n');
+        int p = 0; while (p < a.Length && p < b.Length && a[p] == b[p]) p++;
+        int s = 0; while (s < a.Length - p && s < b.Length - p && a[a.Length - 1 - s] == b[b.Length - 1 - s]) s++;
+        int n = a.Length - p - s, m = b.Length - p - s;
+        if ((long)(n + 1) * (m + 1) > 4_000_000) return null;
+        var lcs = new int[n + 1, m + 1];
+        for (var i = n - 1; i >= 0; i--)
+            for (var j = m - 1; j >= 0; j--)
+                lcs[i, j] = a[p + i] == b[p + j] ? lcs[i + 1, j + 1] + 1 : Math.Max(lcs[i + 1, j], lcs[i, j + 1]);
+        var o = new List<string>(a.Length + m);
+        o.AddRange(a.Take(p));
+        int x = 0, y = 0;
+        while (x < n && y < m)
+        {
+            if (a[p + x] == b[p + y]) { o.Add(a[p + x]); x++; y++; }
+            else if (lcs[x + 1, y] >= lcs[x, y + 1]) o.Add(a[p + x++]);
+            else o.Add(b[p + y++]);
+        }
+        while (x < n) o.Add(a[p + x++]);
+        while (y < m) o.Add(b[p + y++]);
+        o.AddRange(a.Skip(a.Length - s));
+        return string.Join("\n", o);
+    }
+
     // links carry the number of a document of the other copy: without it they find the document by its title, and get their number here
     static string Unnumbered(string text) => Regex.Replace(text, @"\[\[#\d+:", "[[");
 
     /// <summary>
     /// Adds what another copy of a vault holds and this one does not. Nothing is deleted or overwritten here: where both differ, both are kept
-    /// (a note gets both texts, a document a second copy with <paramref name="copySuffix"/> in its title). What was deleted in the other copy stays here.
+    /// (a note gets both texts, a document the lines of both; only a document too big for that gets a second copy with <paramref name="copySuffix"/> in its title). What was deleted in the other copy stays here.
     /// </summary>
     public MergeResult MergeFrom(string otherDbPath, string copySuffix)
     {
@@ -153,12 +186,28 @@ public sealed partial class VaultStore
 
         // documents
         var mineDocs = GetDocuments();
+        var copyEnd = $" ({copySuffix})";
+        string Stem(string t) { while (t.EndsWith(copyEnd, StringComparison.OrdinalIgnoreCase)) t = t[..^copyEnd.Length]; return t; }
         foreach (var o in other.GetDocuments())
         {
             var body = Unnumbered(o.Body);
             bool Same(Document d) => Unnumbered(d.Body).Trim() == body.Trim();
             var hit = mineDocs.FirstOrDefault(d => string.Equals(d.Title, o.Title, StringComparison.OrdinalIgnoreCase));
             if (hit is not null && Same(hit)) continue;
+            // a copy made by an earlier round (or a copy of a copy) that is here already: nothing new; this made copies pile up before
+            var stem = Stem(o.Title);
+            if (mineDocs.Any(d => string.Equals(Stem(d.Title), stem, StringComparison.OrdinalIgnoreCase) && Same(d))) continue;
+            // the same document changed on both devices: one document with the lines of both, no second copy
+            if (hit is not null && MergeLines(Unnumbered(hit.Body), body, out var both) is { } joined)
+            {
+                if (joined.Trim() != Unnumbered(hit.Body).Trim())
+                {
+                    UpdateDocument(hit.Id, hit.Title, joined, hit.Path, hit.IsTemplate, hit.Tags.Union(o.Tags, StringComparer.OrdinalIgnoreCase), hit.FolderId);
+                    documents++;
+                }
+                if (both) { conflicts++; items.Add(new MergeConflict("doc", hit.Id, null, 0, hit.Title, hit.Body, body)); }
+                continue;
+            }
             var title = o.Title;
             if (hit is not null)
             {
@@ -271,8 +320,9 @@ public sealed partial class VaultStore
                 SetNote(c.Ref!.Value, text);
                 break;
             case "doc":
-                if (choice == 1 && GetDocuments().FirstOrDefault(d => d.Id == c.Id) is { } doc) UpdateDocument(doc.Id, doc.Title, text, doc.Path, doc.IsTemplate, doc.Tags, doc.FolderId);
-                DeleteDocument(c.CopyId);
+                // without a copy both versions were joined in the document itself: "Meins" / "Deins" puts that version back
+                if ((choice == 1 || c.CopyId == 0) && GetDocuments().FirstOrDefault(d => d.Id == c.Id) is { } doc) UpdateDocument(doc.Id, doc.Title, text, doc.Path, doc.IsTemplate, doc.Tags, doc.FolderId);
+                if (c.CopyId != 0) DeleteDocument(c.CopyId);
                 break;
         }
     }
