@@ -507,7 +507,7 @@ public partial class MainWindow : AppWindow
             // a column with a passage of its own cannot run verse by verse next to the others: it gets its own scroller
             _colPassage = [null, .. extraCols.Select(e => e.Own is { } o ? $"{BookName(o.Book)} {o.Chapter}" : null)];
             _independent = cols.Count > 1 && (!_settings.ParallelSync || extraCols.Any(e => e.Own is not null));
-            _colBoxes.Clear(); _colScrolls.Clear(); _colIds.Clear(); Avalonia.Threading.Dispatcher.UIThread.Post(UpdateOrientationLock, Avalonia.Threading.DispatcherPriority.Background); _colForeign.Clear(); _mirrorExpect.Clear(); _indepGrid = null;
+            _colBoxes.Clear(); _colScrolls.Clear(); _jumpCol = 0; _colIds.Clear(); Avalonia.Threading.Dispatcher.UIThread.Post(UpdateOrientationLock, Avalonia.Threading.DispatcherPriority.Background); _colForeign.Clear(); _mirrorExpect.Clear(); _indepGrid = null;
             ParallelHeader.IsVisible = false;
             FitReader();
             var kicker = new TextBlock { Text = b.CommonName.ToUpperInvariant(), FontSize = 13, FontWeight = FontWeight.SemiBold, LetterSpacing = 3, Margin = new(8, 0, 0, 0) };

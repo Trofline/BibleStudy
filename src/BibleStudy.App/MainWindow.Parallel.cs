@@ -155,6 +155,8 @@ public partial class MainWindow
             }
             var scroll = new ScrollViewer { Content = panel };
             _colScrolls.Add(scroll);
+            var tapped = i;
+            scroll.AddHandler(PointerPressedEvent, (object? _, PointerPressedEventArgs _) => _jumpCol = tapped, RoutingStrategies.Tunnel, handledEventsToo: true);   // a typed verse number goes to the column touched last
             _colIds.Add(cols[i].T.Id);
             var col = i;
             scroll.ScrollChanged += (_, _) => MirrorScroll(col);

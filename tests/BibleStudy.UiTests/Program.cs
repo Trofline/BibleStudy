@@ -651,6 +651,37 @@ Check("no sign where the mark is shown", !RunsOf((Control)F<System.Collections.I
     here.DeleteMark(m1);
     typeof(MainWindow).GetField("_exFolder", All)!.SetValue(win, null);
 }
+// side by side with a passage of its own in the right column: a verse number typed after touching that column scrolls that column, not the main text
+{
+    typeof(MainWindow).GetMethod("AddColumn", All)!.Invoke(win, [null]); Settle(400);
+    var extras = (System.Collections.IList)typeof(MainWindow).GetField("_extras", All)!.GetValue(win)!;
+    var added = extras[extras.Count - 1]!;
+    var jBook = (string)typeof(MainWindow).GetField("_curBook", All)!.GetValue(win)!; var jCh = (int)typeof(MainWindow).GetField("_curChapter", All)!.GetValue(win)!;
+    added.GetType().GetProperty("Own")!.SetValue(added, ((string, int)?)(jBook, jCh));
+    RunTask("RedrawChapterAsync"); Settle(800);
+    var scrolls = (List<ScrollViewer>)typeof(MainWindow).GetField("_colScrolls", All)!.GetValue(win)!;
+    Check("two columns, the right one with its own passage", scrolls.Count == 2 && (bool)typeof(MainWindow).GetMethod("IsForeign", All)!.Invoke(win, [1])!, $"columns={scrolls.Count}");
+    if (scrolls.Count == 2)
+    {
+        foreach (var s in scrolls) s.Offset = new Vector(0, 0);
+        Settle(200);
+        var right = scrolls[1];
+        Point FreeSpot(ScrollViewer s) { for (var y = s.Bounds.Height - 10; y > 10; y -= 15) for (var x = 20.0; x < s.Bounds.Width - 10; x += 30) { var p = s.TranslatePoint(new Point(x, y), win)!.Value; if ((win.InputHitTest(p) as Visual)?.GetSelfAndVisualAncestors().Contains(s) == true) return p; } return s.TranslatePoint(new Point(20, 20), win)!.Value; }
+        var at = FreeSpot(right);
+        win.MouseDown(at, MouseButton.Left); Pump(2); win.MouseUp(at, MouseButton.Left); Settle(300);
+        Thread.Sleep(1600);   // a new number after a pause
+        Call("JumpToTypedVerse", 1); Call("JumpToTypedVerse", 2); Settle(500);
+        Check("the touched right column scrolled to verse 12", right.Offset.Y > 20, $"right={right.Offset.Y:0}");
+        Check("the main text stayed where it was", scrolls[0].Offset.Y < 1, $"left={scrolls[0].Offset.Y:0}");
+        var left = scrolls[0];
+        var atLeft = FreeSpot(left);
+        win.MouseDown(atLeft, MouseButton.Left); Pump(2); win.MouseUp(atLeft, MouseButton.Left); Settle(300);
+        Thread.Sleep(1600);
+        Call("JumpToTypedVerse", 9); Settle(500);
+        Check("after touching the left column the number goes there again", left.Offset.Y > 20, $"left={left.Offset.Y:0}");
+    }
+    extras.Remove(added); RunTask("RedrawChapterAsync"); Settle(400);
+}
 Console.WriteLine(fails == 0 ? "ALL OK" : $"{fails} FAILED");
 Environment.Exit(fails == 0 ? 0 : 1);
 Environment.Exit(fails);

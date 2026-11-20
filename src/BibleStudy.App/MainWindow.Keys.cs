@@ -103,6 +103,7 @@ public partial class MainWindow
     // ---- keys of the reading tab: a number jumps to that verse, Page up / Page down scroll ------------------------------------------
 
     readonly BibleStudy.Core.TypedNumber _jumpNumber = new(); string _jumpChapter = "";
+    int _jumpCol;   // side by side: the column touched last (see JumpToTypedVerse)
 
     /// <summary>True when the keys belong to the text: the reading view is shown and nothing that takes keys itself (a text box, a list, an open menu) has the focus.</summary>
     bool ReadingKeysApply(KeyEventArgs e)
@@ -119,6 +120,25 @@ public partial class MainWindow
     /// <summary>Digits typed one after the other make the verse number: 1 jumps to verse 1, a 2 right after it to verse 12, if there is one. After a pause a new number starts.</summary>
     void JumpToTypedVerse(int digit)
     {
+        // the column touched last shows another passage (side by side, "eigene Stelle"): the number goes to that column, the main text stays where it is
+        if (_independent && IsForeign(_jumpCol) && _jumpCol - 1 < _colBoxes.Count && _jumpCol < _colScrolls.Count)
+        {
+            var boxes = _colBoxes[_jumpCol - 1];
+            if (boxes.Count == 0) return;
+            var key = $"col{_jumpCol} {_colPassage.ElementAtOrDefault(_jumpCol)}";
+            if (key != _jumpChapter) { _jumpChapter = key; _jumpNumber.Reset(); }
+            var max = boxes.Keys.Max();
+            if (_jumpNumber.Type(digit, Environment.TickCount64, x => x >= 1 && x <= max && boxes.ContainsKey(x)) is not int v) return;
+            var scroll = _colScrolls[_jumpCol];
+            Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+            {
+                if (boxes.TryGetValue(v, out var box) && scroll.Content is Control content && box.TranslatePoint(new Point(0, 0), content) is { } q)
+                    scroll.Offset = new Vector(0, Math.Max(0, q.Y - 40));
+            }, Avalonia.Threading.DispatcherPriority.Background);
+            StatusText.Text = L("Vers {0}", v);
+            _jumpNumber.Finished(Environment.TickCount64);
+            return;
+        }
         var last = _verseBoxes.Count == 0 ? 0 : _verseBoxes.Keys.Max();
         if (last == 0 && !_independent) return;
         if (_independent) last = Math.Max(last, 176);
