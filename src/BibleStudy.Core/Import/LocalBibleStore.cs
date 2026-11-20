@@ -40,14 +40,15 @@ public sealed class LocalBibleStore : SqliteDb, IBibleProvider
 
     /// <summary>
     /// The version of the import code that made a stored translation. 2 = since 1.6.12 (better PDF layout, no markers from HTML, headings). Older copies
-    /// (nothing stored) can be read again from their file for a better result.
+    /// (nothing stored) can be read again from their file for a better result. 3 = since 1.9.21: a PDF keeps the dash of a left-out part ("Schlacht- und Speisopfer");
+    /// only PDF copies of version 2 are worth reading again for that.
     /// </summary>
-    public const int CurrentImporter = 2;
+    public const int CurrentImporter = 3;
 
     /// <summary>A stored translation that was made by an older import.</summary>
     public sealed record Outdated(string Id, string Name, string Language, string? Source);
 
-    public List<Outdated> GetOutdated() => Query("SELECT id,name,language,source FROM translations WHERE COALESCE(importer,0) < $v ORDER BY name", c => c.Parameters.AddWithValue("$v", CurrentImporter),
+    public List<Outdated> GetOutdated() => Query("SELECT id,name,language,source FROM translations WHERE COALESCE(importer,0) < 2 OR (COALESCE(importer,0) < $v AND lower(COALESCE(source,'')) LIKE '%.pdf') ORDER BY name", c => c.Parameters.AddWithValue("$v", CurrentImporter),
         r => new Outdated(r.GetString(0), r.GetString(1), r.GetString(2), r.IsDBNull(3) ? null : r.GetString(3)));
 
     public static bool Owns(string translationId) => translationId.StartsWith(Prefix, StringComparison.Ordinal);

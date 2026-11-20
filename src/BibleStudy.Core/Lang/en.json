@@ -3443,5 +3443,7 @@
   "Schon zwei Reiter haben einen Punkt. Nimm erst einen weg.": "Two tabs already have a dot. Remove one first.",
   "Klicken: Tab wechselt dann zwischen diesem Reiter und dem anderen mit Punkt.": "Click: Tab then switches between this tab and the other one with a dot.",
   "Klicken: Tab wechselt dann immer zwischen Lesen und diesem Reiter.": "Click: Tab then always switches between reading and this tab.",
-  "Höchstens zwei Reiter können einen Punkt haben. Nimm erst einen Punkt weg.": "At most two tabs can have a dot. Remove a dot first."
+  "Höchstens zwei Reiter können einen Punkt haben. Nimm erst einen Punkt weg.": "At most two tabs can have a dot. Remove a dot first.",
+  "PDF-Bibel neu einlesen?": "Read the PDF Bible again?",
+  "Beim Einlesen aus PDF-Dateien wurden Wörter mit Ergänzungsstrich zusammengezogen: aus „Schlacht- und Speisopfer“ wurde „Schlachtund Speisopfer“. Das ist behoben. Betroffen: {0}. Soll das jetzt neu eingelesen werden? Deine Markierungen bleiben bei ihren Wörtern, vorher wird eine Sicherung angelegt.": "When reading PDF files, words with a dash for a left-out part were joined: \"Schlacht- und Speisopfer\" became \"Schlachtund Speisopfer\". This is fixed. Affected: {0}. Read it again now? Your marks stay with their words, and a backup is made first."
 }

@@ -60,6 +60,25 @@ public class PdfBibleLayoutTests
         Enumerable.Range(0, 301).Select(_ => Page([.. words])).ToList();
 
     [Fact]
+    public void ADashForALeftOutPartStays_ALineBreakDashGoes()
+    {
+        var words = new List<(string, double, double, double, bool, bool)>();
+        words.AddRange(Line(520, 150, "RUT 1.2", 10));
+        words.AddRange(Line(500, 22, "Es kam Hunger", 8));
+        words.AddRange(Line(490, 22, "Die Heimkehr", 8, italic: true));
+        words.AddRange(Line(480, 22, "Und Noomi", 8));
+        words.AddRange(Line(470, 22, "2", 7, bold: true)); words.AddRange(Line(470, 40, "er wird Schlacht- und Speisopfer und Brand-", 8));
+        words.AddRange(Line(460, 22, "oder Sündopfer bringen und Man-", 8));
+        words.AddRange(Line(450, 22, "ches mehr", 8));
+        var result = PdfBibleLayout.Read(Repeated(words), Book);
+        Assert.NotNull(result);
+        var v1 = result!.First(v => v.Verse == 2 && v.Text.Contains("Speisopfer")).Text;
+        Assert.Contains("Schlacht- und Speisopfer", v1);
+        Assert.Contains("Brand- oder Sündopfer", v1);
+        Assert.Contains("Manches mehr", v1);
+    }
+
+    [Fact]
     public void SmallCapitalsWithPunctuationBelongToTheWord()
     {
         var words = new List<(string, double, double, double, bool, bool)>();

@@ -3443,5 +3443,7 @@
   "Schon zwei Reiter haben einen Punkt. Nimm erst einen weg.": "Ya hay dos pestañas con punto. Quita uno primero.",
   "Klicken: Tab wechselt dann zwischen diesem Reiter und dem anderen mit Punkt.": "Clic: Tab cambiará entre esta pestaña y la otra con punto.",
   "Klicken: Tab wechselt dann immer zwischen Lesen und diesem Reiter.": "Clic: Tab cambiará siempre entre la lectura y esta pestaña.",
-  "Höchstens zwei Reiter können einen Punkt haben. Nimm erst einen Punkt weg.": "Como máximo dos pestañas pueden tener punto. Quita uno primero."
+  "Höchstens zwei Reiter können einen Punkt haben. Nimm erst einen Punkt weg.": "Como máximo dos pestañas pueden tener punto. Quita uno primero.",
+  "PDF-Bibel neu einlesen?": "¿Volver a leer la Biblia en PDF?",
+  "Beim Einlesen aus PDF-Dateien wurden Wörter mit Ergänzungsstrich zusammengezogen: aus „Schlacht- und Speisopfer“ wurde „Schlachtund Speisopfer“. Das ist behoben. Betroffen: {0}. Soll das jetzt neu eingelesen werden? Deine Markierungen bleiben bei ihren Wörtern, vorher wird eine Sicherung angelegt.": "Al leer archivos PDF se unían palabras con guion de parte omitida: «Schlacht- und Speisopfer» se convertía en «Schlachtund Speisopfer». Ya está corregido. Afectado: {0}. ¿Volver a leerlo ahora? Tus marcas se quedan con sus palabras y antes se hace una copia de seguridad."
 }

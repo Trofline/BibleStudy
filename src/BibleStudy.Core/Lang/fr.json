@@ -3443,5 +3443,7 @@
   "Schon zwei Reiter haben einen Punkt. Nimm erst einen weg.": "Deux onglets ont déjà un point. Retirez-en un d'abord.",
   "Klicken: Tab wechselt dann zwischen diesem Reiter und dem anderen mit Punkt.": "Cliquer : Tab basculera entre cet onglet et l'autre marqué d'un point.",
   "Klicken: Tab wechselt dann immer zwischen Lesen und diesem Reiter.": "Cliquer : Tab basculera toujours entre la lecture et cet onglet.",
-  "Höchstens zwei Reiter können einen Punkt haben. Nimm erst einen Punkt weg.": "Deux onglets au plus peuvent avoir un point. Retirez d'abord un point."
+  "Höchstens zwei Reiter können einen Punkt haben. Nimm erst einen Punkt weg.": "Deux onglets au plus peuvent avoir un point. Retirez d'abord un point.",
+  "PDF-Bibel neu einlesen?": "Relire la Bible PDF ?",
+  "Beim Einlesen aus PDF-Dateien wurden Wörter mit Ergänzungsstrich zusammengezogen: aus „Schlacht- und Speisopfer“ wurde „Schlachtund Speisopfer“. Das ist behoben. Betroffen: {0}. Soll das jetzt neu eingelesen werden? Deine Markierungen bleiben bei ihren Wörtern, vorher wird eine Sicherung angelegt.": "À la lecture des fichiers PDF, les mots avec un trait d'union de partie omise étaient soudés : « Schlacht- und Speisopfer » devenait « Schlachtund Speisopfer ». C'est corrigé. Concerné : {0}. Le relire maintenant ? Vos surlignages restent sur leurs mots, une sauvegarde est faite avant."
 }

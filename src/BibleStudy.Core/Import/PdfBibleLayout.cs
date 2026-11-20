@@ -130,7 +130,7 @@ public static class PdfBibleLayout
                         {
                             var before = tokens[^1].Text;
                             // a word hyphenated at the end of a line is one word again
-                            tokens[^1] = tokens[^1] with { Text = before.EndsWith('-') && before.Length > 1 && char.IsLetter(before[^2]) && word.Length > 0 && char.IsLower(word[0]) ? before[..^1] + word : (before + " " + word).Trim() };
+                            tokens[^1] = tokens[^1] with { Text = before.EndsWith('-') && before.Length > 1 && char.IsLetter(before[^2]) && word.Length > 0 && char.IsLower(word[0]) && !IsLinkWord(word) ? before[..^1] + word : (before + " " + word).Trim() };
                         }
                         else tokens.Add(new Token(Kind.Heading, word));
                         continue;
@@ -175,7 +175,7 @@ public static class PdfBibleLayout
             // "d" + "aß": the first letter of a word that the PDF set apart
             if (a.Text == "d" && b.Text.StartsWith("aß", StringComparison.Ordinal)) { tokens[i] = a with { Text = "d" + b.Text }; tokens.RemoveAt(i + 1); i--; continue; }
             if (!char.IsLower(b.Text[0])) continue;
-            if (a.Text.Length > 2 && a.Text.EndsWith('-') && char.IsLetter(a.Text[^2])) { tokens[i] = a with { Text = a.Text[..^1] + b.Text, Ligature = b.Ligature }; tokens.RemoveAt(i + 1); i--; }
+            if (a.Text.Length > 2 && a.Text.EndsWith('-') && char.IsLetter(a.Text[^2]) && !IsLinkWord(b.Text)) { tokens[i] = a with { Text = a.Text[..^1] + b.Text, Ligature = b.Ligature }; tokens.RemoveAt(i + 1); i--; }
             else if (a.Ligature && (a.Text.EndsWith("fl") || a.Text.EndsWith("fi") || a.Text.EndsWith("ff") || a.Text.EndsWith("ffi") || a.Text.EndsWith("ffl")) && (b.Text.Length > 1 || b.Text[0] is 'n' or 'e' or 's' or 'r')) { tokens[i] = a with { Text = a.Text + b.Text, Ligature = false }; tokens.RemoveAt(i + 1); i--; }
         }
 
@@ -229,6 +229,12 @@ public static class PdfBibleLayout
     }
 
     static string Core(string w) => w.Trim('.', ',', ';', ':', '!', '?', '»', '«', '›', '‹', '"', '“', '”', '„', '(', ')', '[', ']', '—');
+
+    /// <summary>
+    /// "und", "oder" … after a word that ends in a dash: that dash stands for a part left out ("Schlacht- und Speisopfer", "Brand- oder Sündopfer"),
+    /// it is no word broken at the end of a line, so the two stay apart. No German word is broken so that "und" or "oder" is left over.
+    /// </summary>
+    static bool IsLinkWord(string w) => Core(w).ToLowerInvariant() is "und" or "oder" or "bzw" or "sowie" or "and" or "or" or "nor";
 
     /// <summary>
     /// Letters that the print set apart from their word ("gin g en", "de r", "An stoßes") are joined again when the joined word occurs elsewhere in the same Bible

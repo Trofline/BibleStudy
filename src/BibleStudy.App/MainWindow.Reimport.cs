@@ -20,7 +20,12 @@ public partial class MainWindow
         for (var i = 0; i < 30 && (OwnedWindows.Count > 0 || SplashWindow.IsShowing); i++) await Task.Delay(2000);
         if (!IsVisible || OwnedWindows.Count > 0) return;   // next start
         var names = string.Join(", ", old.Select(o => "„" + o.Name + "“"));
-        var answer = await AskAsync(L("Importierte Bibeln neu einlesen?"),
+        // asked before (the big change of 1.6.12): now only PDF copies, for one thing
+        var answer = _settings.ImportRefreshAsked >= 2
+            ? await AskAsync(L("PDF-Bibel neu einlesen?"),
+                L("Beim Einlesen aus PDF-Dateien wurden Wörter mit Ergänzungsstrich zusammengezogen: aus „Schlacht- und Speisopfer“ wurde „Schlachtund Speisopfer“. Das ist behoben. Betroffen: {0}. Soll das jetzt neu eingelesen werden? Deine Markierungen bleiben bei ihren Wörtern, vorher wird eine Sicherung angelegt.", names),
+                L("Ja, neu einlesen"), L("Nein"))
+            : await AskAsync(L("Importierte Bibeln neu einlesen?"),
             L("Das Einlesen eigener Dateien ist in diesem Update deutlich besser geworden (PDF-Bibeln: fehlende Kapitel und Verse, doppelte Seiten, zerteilte Wörter; Webseiten: Nummern und Marker im Text; dazu Überschriften). Deine bisher importierten Bibeln sind noch nach der alten Art eingelesen: {0}. Sollen sie jetzt neu eingelesen werden? Du wählst dafür jeweils die Datei, aus der du sie damals importiert hast. Deine Markierungen bleiben bei ihren Wörtern, vor dem Neu-Einlesen wird eine Sicherung angelegt.", names),
             L("Ja, neu einlesen"), L("Nein"));
         if (answer != 0)

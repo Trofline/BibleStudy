@@ -3443,5 +3443,7 @@
   "Schon zwei Reiter haben einen Punkt. Nimm erst einen weg.": "Точка уже стоит на двух вкладках. Сначала уберите одну.",
   "Klicken: Tab wechselt dann zwischen diesem Reiter und dem anderen mit Punkt.": "Щелчок: Tab будет переключать между этой вкладкой и другой с точкой.",
   "Klicken: Tab wechselt dann immer zwischen Lesen und diesem Reiter.": "Щелчок: Tab будет всегда переключать между чтением и этой вкладкой.",
-  "Höchstens zwei Reiter können einen Punkt haben. Nimm erst einen Punkt weg.": "Точка может стоять не более чем на двух вкладках. Сначала уберите одну."
+  "Höchstens zwei Reiter können einen Punkt haben. Nimm erst einen Punkt weg.": "Точка может стоять не более чем на двух вкладках. Сначала уберите одну.",
+  "PDF-Bibel neu einlesen?": "Перечитать Библию из PDF?",
+  "Beim Einlesen aus PDF-Dateien wurden Wörter mit Ergänzungsstrich zusammengezogen: aus „Schlacht- und Speisopfer“ wurde „Schlachtund Speisopfer“. Das ist behoben. Betroffen: {0}. Soll das jetzt neu eingelesen werden? Deine Markierungen bleiben bei ihren Wörtern, vorher wird eine Sicherung angelegt.": "При чтении PDF-файлов слова с дефисом на месте пропущенной части склеивались: «Schlacht- und Speisopfer» становилось «Schlachtund Speisopfer». Это исправлено. Затронуто: {0}. Перечитать сейчас? Ваши выделения останутся на своих словах, перед этим будет сделана резервная копия."
 }
