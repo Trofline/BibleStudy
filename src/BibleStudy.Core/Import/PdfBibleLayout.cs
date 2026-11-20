@@ -17,7 +17,8 @@ public sealed record PdfPageWords(double Width, IReadOnlyList<PdfWord> Words);
 /// </summary>
 public static class PdfBibleLayout
 {
-    enum Kind { Text, Verse, Book, Heading, Para }
+    enum Kind { Text, Verse, Book, Heading, Para, Note, AltVerse }
+
 
     sealed record Token(Kind Kind, string Text, int Number = 0, string? Book = null, bool Ligature = false);
 
@@ -45,13 +46,22 @@ public static class PdfBibleLayout
     /// <summary>The text in book / chapter / verse order, or null when the pages do not look like a printed Bible.</summary>
     public static List<(string Book, int Chapter, int Verse, string Text)>? Read(IEnumerable<PdfPageWords> pages, Func<string, string?> bookFromName) => ReadFull(pages, bookFromName)?.Verses;
 
-    public sealed record Result(List<(string Book, int Chapter, int Verse, string Text)> Verses, List<(string Book, int Chapter, int Verse, string Text)> Headings);
+    public sealed record Result(List<(string Book, int Chapter, int Verse, string Text)> Verses, List<(string Book, int Chapter, int Verse, string Text)> Headings)
+    {
+        /// <summary>The footnotes of the print: the verse they belong to, the letter that marks them in the verse and their text.</summary>
+        public List<(string Book, int Chapter, int Verse, string Letter, string Text)> Notes { get; init; } = [];
+    }
+
+    /// <summary>How a footnote marker stands in the text of a verse (NoteOpen + "a" + NoteClose): the reader of the result turns it into a footnote.</summary>
+    public const char NoteOpen = '', NoteClose = '';
 
     /// <summary>The verses and the headings (the italic lines between the verses) of a printed Bible, or null when the pages do not look like one.</summary>
     public static Result? ReadFull(IEnumerable<PdfPageWords> pages, Func<string, string?> bookFromName)
     {
         var tokens = new List<Token>();
         string? lastBook = null; var pendingTitle = -1;
+        var notes = new List<(string Book, int Chapter, int Verse, string Letter, string Text)>();
+        bool afterNumber = false, italicVerse = false;   // a verse number was just read; the verse it began is in italics (a psalm title)
         var seenPages = new HashSet<string>();
         foreach (var page in pages)
         {
@@ -93,15 +103,42 @@ public static class PdfBibleLayout
                 else { pendingTitle = tokens.Count; tokens.Add(new Token(Kind.Book, "", 0, null)); lastBook = "\0title"; }
             }
 
-            var body = new List<PdfWord>();
+            // the footnotes at the foot of the page: below the last line of the text, in a smaller type, each beginning with its letter and its place ("a (102,1) …")
+            var textBottom = words.Where(w => w.Bottom < headY - 2 && Near(w.Size, bodySize) && !w.Bold).Select(w => w.Bottom).DefaultIfEmpty(0).Min();
+            var foot = words.Where(w => w.Bottom < textBottom - 1.5 && w.Size < bodySize - 1.2 && w.Size > bodySize - 4.5).ToList();
+            var footSet = foot.ToHashSet();
+            if (foot.Count > 0) ReadFootnotes(foot, page.Width, lastBook, notes);
+
+            var body = new List<PdfWord>(); var markers = new List<PdfWord>();
             foreach (var w in words)
             {
-                if (w.Bottom >= headY - 2) continue;                           // running head and page number
+                if (w.Bottom >= headY - 2 || footSet.Contains(w)) continue;      // running head, page number, footnotes
                 var isNumber = w.Text.All(char.IsAsciiDigit) && w.Text.Length <= 3;
-                if (w.Italic) { if (Near(w.Size, bodySize, 0.8)) body.Add(w); continue; }   // headings (italic, body size); footnote letters are smaller
-                if (w.Bold) { if (isNumber && w.Size >= bodySize - 1.6 && w.Size <= bodySize + 0.9) body.Add(w); continue; }   // a few pages set the numbers a little larger than the text
+                if (w.Italic)
+                {
+                    if (Near(w.Size, bodySize, 0.8)) body.Add(w);                   // headings and words the translators added (italic, body size)
+                    else if (IsNoteMarker(w, bodySize)) markers.Add(w);           // the small raised letter of a footnote
+                    continue;
+                }
+                if (w.Bold)
+                {
+                    if (isNumber && w.Size >= bodySize - 1.6 && w.Size <= bodySize + 0.9) body.Add(w);   // a few pages set the numbers a little larger than the text
+                    else if (AltNumber(w.Text) is not null && w.Size >= bodySize - 1.6) body.Add(w);     // "[8,23]": the number of the verse in the other count
+                    continue;
+                }
                 if (IsSmallCaps(w.Text, w.Size, bodySize)) { body.Add(w); continue; }   // "ERR", "ERRN," in "HERR", "HERRN,": small capitals, maybe with a punctuation mark behind
                 if (Near(w.Size, bodySize)) body.Add(w);                        // parallel passages, footnotes and titles are other sizes
+            }
+            // parallel passages a little smaller than the text ("Mt 4,12-17; Lk 1,31-33" in 7.5 beside 8): a line of their own, no part of a verse
+            var smallRefLines = body.GroupBy(b => Math.Round(b.Bottom / 3))
+                .Where(g => g.All(x => x.Size <= bodySize - 0.35 && !x.Bold) && System.Text.RegularExpressions.Regex.IsMatch(string.Join(' ', g.Select(x => x.Text)), @"\d+[,:]\d+"))
+                .SelectMany(g => g).ToHashSet();
+            if (smallRefLines.Count > 0) body.RemoveAll(smallRefLines.Contains);
+            // a raised letter sits a little above its line: it is put on that line, behind the word it follows
+            foreach (var m in markers)
+            {
+                var line = body.Where(b => b.Bottom <= m.Bottom + 0.5 && b.Bottom >= m.Bottom - 4.5 && b.Left < m.Left).OrderByDescending(b => b.Bottom).FirstOrDefault();
+                if (line is not null) body.Add(m with { Bottom = line.Bottom });
             }
             var split = Gutter(body, page.Width);
             // Italic words are a heading when they fill a line on their own; between the other words of a line they are words the translators added: part of the verse
@@ -111,10 +148,11 @@ public static class PdfBibleLayout
             foreach (var col in new[] { 0, 1 })
             {
                 var colWords = body.Where(b => (b.Left < split ? 0 : 1) == col).ToList();
-                var firstOfLine = colWords.GroupBy(b => Math.Round(b.Bottom / 3)).ToDictionary(g => g.Key, g => g.OrderBy(x => x.Left).First());
+                var lineWords = colWords.Where(x => !(x.Italic && IsNoteMarker(x, bodySize))).ToList();   // a raised footnote letter makes no line longer or shorter
+                var firstOfLine = lineWords.GroupBy(b => Math.Round(b.Bottom / 3)).ToDictionary(g => g.Key, g => g.OrderBy(x => x.Left).First());
                 var margin = firstOfLine.Count == 0 ? 0 : firstOfLine.Values.GroupBy(x => Math.Round(x.Left)).OrderByDescending(g => g.Count()).First().Key;
                 // a paragraph begins on an indented line that follows a line which stops short of the right edge (the text is justified, so only the last line of a paragraph does)
-                var lineEnd = colWords.GroupBy(b => Math.Round(b.Bottom / 3)).ToDictionary(g => g.Key, g => g.Max(x => x.Left + x.Text.Length * x.Size * 0.5));
+                var lineEnd = lineWords.GroupBy(b => Math.Round(b.Bottom / 3)).ToDictionary(g => g.Key, g => g.Max(x => x.Left + x.Text.Length * x.Size * 0.5));
                 var edge = lineEnd.Count == 0 ? 0 : lineEnd.Values.OrderByDescending(v => v).Skip(lineEnd.Count / 10).First();
                 var ordered = lineEnd.Keys.OrderByDescending(k => k).ToList();
                 var indentedLines = new HashSet<double>();
@@ -123,8 +161,12 @@ public static class PdfBibleLayout
                 foreach (var w in colWords.OrderByDescending(b => Math.Round(b.Bottom / 3)).ThenBy(b => b.Left))
                 {
                     if (indentedLines.Remove(Math.Round(w.Bottom / 3))) tokens.Add(new Token(Kind.Para, ""));
-                    if (w.Italic && headingLines.Contains((col, Math.Round(w.Bottom / 3))))
+                    if (w.Italic && IsNoteMarker(w, bodySize)) { tokens.Add(new Token(Kind.Note, w.Text)); continue; }
+                    if (w.Bold && AltNumber(w.Text) is { } alt) { tokens.Add(new Token(Kind.AltVerse, alt.Chapter.ToString(), alt.Verse)); afterNumber = true; continue; }
+                    // a verse that begins in italics (the title of a psalm) goes on in italics: its next lines are no heading, even though they are all italic
+                    if (w.Italic && headingLines.Contains((col, Math.Round(w.Bottom / 3))) && !italicVerse)
                     {
+                        afterNumber = false;
                         var word = Unligate(w.Text).Text;
                         if (tokens.Count > 0 && tokens[^1].Kind == Kind.Heading)
                         {
@@ -150,14 +192,24 @@ public static class PdfBibleLayout
                         // "8" in the regular font right in front of a bold "3" on the same line is the verse number 83
                         if (tokens.Count > 0 && tokens[^1] is { Kind: Kind.Text, Text.Length: 1 } digit && char.IsAsciiDigit(digit.Text[0]) && lastRight > 0 && Math.Abs(lastBottom - w.Bottom) < 1.5 && w.Left - lastRight < 2.5)
                         { number = digit.Text + number; tokens.RemoveAt(tokens.Count - 1); }
-                        tokens.Add(new Token(Kind.Verse, number, BibleImporters.Num(number)));
+                        tokens.Add(new Token(Kind.Verse, number, BibleImporters.Num(number))); afterNumber = true;
                         lastRight = 0; continue;
                     }
                     var (plain, lig) = Unligate(w.Text);
                     tokens.Add(new Token(Kind.Text, plain, 0, null, lig));
+                    if (afterNumber) { italicVerse = w.Italic; afterNumber = false; } else if (!w.Italic) italicVerse = false;
                     lastRight = w.Left + w.Text.Length * w.Size * 0.5; lastBottom = w.Bottom;
                 }
             }
+        }
+
+        // a footnote letter stands behind its word: a comma or full stop that follows it belongs to the word ("Eden,ᵃ"), and a word broken at the end
+        // of the line is first made whole ("Ret-ᵃ tung" is "Rettungᵃ")
+        for (var i = 1; i + 1 < tokens.Count; i++)
+        {
+            if (tokens[i].Kind != Kind.Note || tokens[i - 1] is not { Kind: Kind.Text } before || tokens[i + 1] is not { Kind: Kind.Text } after || after.Text.Length == 0) continue;
+            if (after.Text.All(c => ".,;:!?»«›‹’”)".Contains(c))) { tokens[i - 1] = before with { Text = before.Text + after.Text }; tokens.RemoveAt(i + 1); }
+            else if (before.Text.EndsWith('-') && char.IsLower(after.Text[0])) (tokens[i], tokens[i + 1]) = (after, tokens[i]);
         }
 
         // a word hyphenated at the end of a column goes on at the top of the next one: that line is no paragraph start
@@ -187,21 +239,40 @@ public static class PdfBibleLayout
         string? bookId = null; var chapter = 0; var verse = 0; var text = new StringBuilder(); var headingAt = -1; var paras = new List<int>();
         // the headings seen since the last verse number stand in front of the verse that begins now
         void PlaceHeadings() { foreach (var h in pending) if (bookId is not null && chapter > 0 && verse > 0 && h.Length > 0) headings.Add((bookId, chapter, verse, h)); pending.Clear(); }
-        void Flush() { if (bookId is not null && chapter > 0 && verse > 0 && text.Length > 0) result.Add((bookId, chapter, verse, text.ToString().Trim())); text.Clear(); headingAt = -1; paras.Clear(); }
+        var headAts = new List<int>(); var oneAt = -1;
+        void Flush() { if (bookId is not null && chapter > 0 && verse > 0 && text.Length > 0) result.Add((bookId, chapter, verse, text.ToString().Trim())); text.Clear(); headingAt = -1; paras.Clear(); headAts.Clear(); oneAt = -1; }
+        // where the first verse of the new chapter begins: at a printed "1" (psalms), else behind the first heading that has text after it
+        // (a chapter heading can be followed by a second heading inside the first verse, like "Salomo:" in the Song of Songs)
+        int ChapterStart(string all)
+        {
+            if (oneAt >= 0 && oneAt < all.Length) return oneAt;
+            for (var k = 0; k < headAts.Count; k++)
+            {
+                var end = k + 1 < headAts.Count ? headAts[k + 1] : all.Length;
+                if (headAts[k] < all.Length && all[headAts[k]..Math.Min(end, all.Length)].Trim().Length > 2) return headAts[k];
+            }
+            return -1;
+        }
         foreach (var t in tokens)
         {
             switch (t.Kind)
             {
                 case Kind.Book: Flush(); bookId = t.Book; chapter = 0; verse = 0; pending.Clear(); break;
                 case Kind.Para: if (bookId is not null && text.Length > 0) paras.Add(text.Length); break;
-                case Kind.Heading: if (bookId is not null) { headingAt = text.Length; pending.Add(t.Text); } break;
+                case Kind.Heading: if (bookId is not null) { headingAt = text.Length; headAts.Add(text.Length); pending.Add(t.Text); } break;
+                case Kind.Note when bookId is not null: text.Append(NoteOpen).Append(t.Text).Append(NoteClose); break;
+                // "[4:14]": the print gives the place itself (a verse that other Bibles count to the chapter before)
+                case Kind.AltVerse when bookId is not null && chapter > 0 && int.TryParse(t.Text, out var altChapter) && altChapter == chapter && t.Number > verse:
+                    Flush(); verse = t.Number; PlaceHeadings(); break;
+                case Kind.Verse when bookId is not null && t.Number == 1 && (verse > 1 || chapter == 0): oneAt = text.Length; break;
                 case Kind.Verse when bookId is not null && (t.Number == 2 && verse != 1 || t.Number == 3 && verse > 5 && headingAt >= 0):
                 {
                     // the count starts again: a new chapter. Its first verse is what follows the last heading; everything before belongs to the old verse.
                     // (A "3" counts the same when the "2" is missing in the print: after a heading the numbers cannot go from 20 back to 3 within a chapter.)
                     var all = text.ToString();
+                    var start = ChapterStart(all);
                     // in a book's first chapter the text before verse 2 is verse 1 (the headings stand in front of it, also when the page puts them behind it)
-                    var cut = chapter == 0 ? (headingAt >= 0 && headingAt < all.Length ? headingAt : (all.Length <= 600 ? 0 : -1)) : headingAt >= 0 && headingAt < all.Length - 2 ? headingAt : NewVerseOneStart(all, paras);   // a heading with no text behind it was set after its paragraph: the paragraph is found by its indent
+                    var cut = chapter == 0 ? (start >= 0 ? start : (all.Length <= 600 ? 0 : -1)) : start >= 0 && start < all.Length - 2 ? start : NewVerseOneStart(all, paras);   // a heading with no text behind it was set after its paragraph: the paragraph is found by its indent
                     var first = cut >= 0 && cut < all.Length ? all[cut..].Trim() : "";
                     text.Clear(); text.Append(cut >= 0 ? all[..cut] : "");
                     Flush();
@@ -216,7 +287,89 @@ public static class PdfBibleLayout
             }
         }
         Flush();
-        return result.Count >= 500 ? new Result(result, headings) : null;
+        return result.Count >= 500 ? new Result(result, headings) { Notes = notes } : null;
+    }
+
+    /// <summary>The small raised letter (a, b, …) behind a word that points to a footnote: italic and much smaller than the text.</summary>
+    static bool IsNoteMarker(PdfWord w, double bodySize) =>
+        w.Text.Length is >= 1 and <= 2 && w.Text.All(char.IsLower) && w.Size <= bodySize - 2.4 && w.Size >= bodySize - 4.6;
+
+    /// <summary>"[8,23]" or "[4:14]": a verse number in brackets, the place of the verse in the other count, which the print gives itself.</summary>
+    static (int Chapter, int Verse)? AltNumber(string text)
+    {
+        var m = System.Text.RegularExpressions.Regex.Match(text, @"^\[(\d{1,3})[,:](\d{1,3})\]$");
+        return m.Success ? (int.Parse(m.Groups[1].Value), int.Parse(m.Groups[2].Value)) : null;
+    }
+
+    /// <summary>
+    /// The footnotes at the foot of a page, in reading order (left column, then right): each begins with its italic letter and the place in brackets
+    /// ("a (102,1) In Hebr 1,10-12 …"); a note without a beginning goes on from the last note of the page before.
+    /// </summary>
+    static void ReadFootnotes(List<PdfWord> foot, double pageWidth, string? book, List<(string Book, int Chapter, int Verse, string Letter, string Text)> notes)
+    {
+        if (book is null || book.StartsWith('\0')) return;
+        var split = Gutter(foot, pageWidth);
+        var ordered = foot.OrderBy(w => w.Left < split ? 0 : 1).ThenByDescending(w => Math.Round(w.Bottom / 2)).ThenBy(w => w.Left).ToList();
+        var place = new System.Text.RegularExpressions.Regex(@"^\((\d{1,3})(?:[,:](\d{1,3}))?[^)]*\)$");
+        var sb = new StringBuilder(); string? letter = null; int chapter = 0, verse = 0;
+        void Done()
+        {
+            var t = sb.ToString().Trim(); sb.Clear();
+            if (t.Length == 0) return;
+            if (letter is null) { if (notes.Count > 0 && notes[^1].Book == book) notes[^1] = notes[^1] with { Text = JoinFootText(notes[^1].Text, t) }; return; }
+            notes.Add((book, chapter, verse, letter, t));
+        }
+        for (var i = 0; i < ordered.Count; i++)
+        {
+            var w = ordered[i];
+            if (w.Italic && w.Text.Length <= 2 && w.Text.All(char.IsLower) && i + 1 < ordered.Count && place.Match(ordered[i + 1].Text) is { Success: true } m)
+            {
+                Done();
+                letter = w.Text;
+                if (m.Groups[2].Success) { chapter = int.Parse(m.Groups[1].Value); verse = int.Parse(m.Groups[2].Value); }
+                else { chapter = 1; verse = int.Parse(m.Groups[1].Value); }   // a book of one chapter gives the verse alone
+                i++; continue;
+            }
+            sb.Append(sb.Length > 0 ? " " : "").Append(Unligate(w.Text).Text);
+        }
+        Done();
+    }
+
+    /// <summary>A footnote that goes on in the next column or page: a word hyphenated at the break is one word again.</summary>
+    static string JoinFootText(string a, string b) =>
+        a.EndsWith('-') && a.Length > 1 && char.IsLetter(a[^2]) && b.Length > 0 && char.IsLower(b[0]) && !IsLinkWord(b.Split(' ')[0]) ? a[..^1] + b : a + " " + b;
+
+    /// <summary>
+    /// Words of one line that the PDF keeps apart although they touch ("kön nen", "Ä ltesten"): the gap between them is far below the space between the words
+    /// of that line. They are one word again. Digits stay apart ("6 720"), and so do words in another font or size.
+    /// </summary>
+    public static List<PdfWord> JoinTightWords(List<(PdfWord Word, double GlyphLeft, double GlyphRight)> words)
+    {
+        var result = new List<PdfWord>(words.Count);
+        foreach (var line in words.GroupBy(w => Math.Round(w.Word.Bottom * 2) / 2))
+        {
+            var row = line.OrderBy(w => w.GlyphLeft).ToList();
+            // the space of this line: the gaps between its words (measured at the inked letters), without the strip between the columns
+            var gaps = new List<double>();
+            for (var i = 1; i < row.Count; i++) { var g = row[i].GlyphLeft - row[i - 1].GlyphRight; if (g < row[i].Word.Size * 1.5) gaps.Add(g); }
+            gaps.Sort();
+            var space = gaps.Count >= 3 ? gaps[(int)(gaps.Count * 0.75)] : row[0].Word.Size * 0.25;
+            var limit = Math.Min(0.8, space * 0.4);
+            var cur = row[0];
+            for (var i = 1; i < row.Count; i++)
+            {
+                var next = row[i];
+                var a = cur.Word; var b = next.Word;
+                var gap = next.GlyphLeft - cur.GlyphRight;
+                // the rest of a broken word begins with a small letter; a capital W or V reaches out to the left and only looks close
+                if (gap < limit && gap > -2 && char.IsLower(b.Text[0]) && a.Bold == b.Bold && a.Italic == b.Italic && Math.Abs(a.Size - b.Size) < 0.3
+                    && !(char.IsDigit(a.Text[^1]) && char.IsDigit(b.Text[0])) && !a.Text.EndsWith(']') && !b.Text.StartsWith('['))
+                    cur = (a with { Text = a.Text + b.Text }, cur.GlyphLeft, next.GlyphRight);
+                else { result.Add(cur.Word); cur = next; }
+            }
+            result.Add(cur.Word);
+        }
+        return result;
     }
 
 
@@ -270,6 +423,17 @@ public static class PdfBibleLayout
                      && !t.StartsWith('-') && (F(b2) <= 2 || F(a2) <= 2 && tokens[i - 1].Text == a2) && F(a2 + b2) >= 2 && char.IsLower(b2[0]) && (a2 + b2).Length >= 5 && t == b2 + t[b2.Length..])
             { tokens[i - 1] = tokens[i - 1] with { Text = tokens[i - 1].Text + t }; tokens.RemoveAt(i); i--; }
         }
+        // a word set apart in the middle ("Stifts hütte", "Aufer stehung", "Anfechtun gen"): the whole word is common in this Bible and one of the two pieces
+        // hardly ever stands alone
+        for (var i = 1; i < tokens.Count; i++)
+        {
+            if (tokens[i - 1] is not { Kind: Kind.Text } a || tokens[i] is not { Kind: Kind.Text } b) continue;
+            if (Core(a.Text) != a.Text || a.Text.Length < 2 || !a.Text.All(char.IsLetter) || b.Text.Length < 2 || !char.IsLower(b.Text[0])) continue;
+            var bCore = Core(b.Text);
+            if (!bCore.All(char.IsLetter) || !b.Text.StartsWith(bCore, StringComparison.Ordinal) || IsLinkWord(bCore)) continue;
+            if (F(a.Text + bCore) >= 3 && Math.Min(F(a.Text), F(bCore)) <= 1 && F(a.Text + bCore) > Math.Min(F(a.Text), F(bCore)) * 3)
+            { tokens[i - 1] = a with { Text = a.Text + b.Text }; tokens.RemoveAt(i); i--; }
+        }
     }
 
     static readonly HashSet<string> DivineNames = ["HERR", "HERRN", "GOTT", "GOTTES", "HERRN,", "HERR,", "JAH", "JHWH"];
@@ -316,7 +480,14 @@ public static class PdfBibleLayout
         if (para > 0) return para;
         var cut = -1;
         for (var i = 1; i + 2 < all.Length; i++)
-            if (all[i] == ' ' && (".!?".Contains(all[i - 1]) || "«»“”’›\"".Contains(all[i - 1]) && ".!?,".Contains(all[i - 2])) && i - 1 > 10 && (char.IsUpper(all[i + 1]) || all[i + 1] is '»' or '„' or '“') && all.Length - i > 25) cut = i + 1;
+        {
+            if (all[i] != ' ') continue;
+            // a footnote letter behind the end of the sentence ("werden!«ᵉ Brüder") does not hide that end
+            var j = i - 1;
+            if (all[j] == NoteClose) { var open = all.LastIndexOf(NoteOpen, j); if (open > 1) j = open - 1; }
+            if (j < 1) continue;
+            if ((".!?".Contains(all[j]) || "«»“”’›\"".Contains(all[j]) && ".!?,".Contains(all[j - 1])) && j > 10 && (char.IsUpper(all[i + 1]) || all[i + 1] is '»' or '„' or '“') && all.Length - i > 25) cut = i + 1;
+        }
         return cut > 0 ? cut : all.Length;
     }
 

@@ -285,18 +285,21 @@ public static partial class BibleImporters
             using var pdf = UglyToad.PdfPig.PdfDocument.Open(path);
             if (pdf.IsEncrypted) throw Protected();   // not opened even when it could be: that would be removing a protection
             // a printed Bible (columns, running heads, verse numbers in a bold small font) is read by its layout first
-            var layout = PdfBibleLayout.ReadFull(pdf.GetPages().Select(p => new PdfPageWords(p.Width, p.GetWords().Select(w =>
+            // words that touch although the PDF keeps them apart ("kön nen") are one word again before the layout is read
+            var layout = PdfBibleLayout.ReadFull(pdf.GetPages().Select(p => new PdfPageWords(p.Width, PdfBibleLayout.JoinTightWords(p.GetWords().Where(w => w.Letters.Count > 0).Select(w =>
             {
                 var f = w.Letters[0].FontName ?? "";
-                return new PdfWord(w.Text, w.BoundingBox.Left, w.BoundingBox.Bottom, w.Letters[0].PointSize,
+                return (new PdfWord(w.Text, w.BoundingBox.Left, w.BoundingBox.Bottom, w.Letters[0].PointSize,
                     f.Contains("Semibold", StringComparison.OrdinalIgnoreCase) || f.Contains("Bold", StringComparison.OrdinalIgnoreCase),
-                    f.Contains("Italic", StringComparison.OrdinalIgnoreCase) || f.Contains("Oblique", StringComparison.OrdinalIgnoreCase));
-            }).ToList())), BookFromName);
+                    f.Contains("Italic", StringComparison.OrdinalIgnoreCase) || f.Contains("Oblique", StringComparison.OrdinalIgnoreCase)),
+                    w.Letters.Min(l => l.GlyphRectangle.Left), w.Letters.Max(l => l.GlyphRectangle.Right));
+            }).ToList()))), BookFromName);
             if (layout is not null)
             {
                 var c = new Collector();
                 foreach (var (b, ch, v, t) in layout.Verses) c.Add(b, ch, v, t);
                 foreach (var (b, ch, v, t) in layout.Headings) c.Heading(b, ch, v, t);
+                foreach (var (b, ch, v, letter, t) in layout.Notes) c.Note(b, ch, v, letter, t);
                 return c.Done(Path.GetFileNameWithoutExtension(path), languageCode);
             }
             foreach (var page in pdf.GetPages())

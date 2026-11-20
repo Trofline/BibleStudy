@@ -149,8 +149,14 @@ public static partial class BibleImporters
 
             var start = html.IndexOf('>', m.Index + m.Length) + 1;                       // end of the verse number button's opening tag
             var next = i + 1 < matches.Count ? matches[i + 1].Index : Math.Min(html.Length, start + 20000);
-            var close = html.IndexOf("</p>", start, Math.Max(0, next - start), StringComparison.Ordinal);
-            var end = close >= 0 ? close : Math.Max(start, html.LastIndexOf("<span", Math.Max(start, next - 1), Math.Max(0, next - start)));
+            // a verse can go on in further paragraphs (poetry, a song, a list: "Da hob er seinen Spruch an und sprach:" and then the saying itself):
+            // everything up to the next verse belongs to it, but not the footnote list and the title of the next chapter
+            var end = Math.Max(start, html.LastIndexOf("<span", Math.Max(start, next - 1), Math.Max(0, next - start)));
+            foreach (var stop in new[] { "<div", "<h1", "<h2", "<h3", "<h4", "<ol" })
+            {
+                var at = html.IndexOf(stop, start, Math.Max(0, end - start), StringComparison.Ordinal);
+                if (at >= 0 && at < end) end = at;
+            }
             if (end <= start) continue;
             var key = (book, chapter);
             var segments = ParseCsvVerse(html.AsSpan(start, end - start).ToString(), text =>

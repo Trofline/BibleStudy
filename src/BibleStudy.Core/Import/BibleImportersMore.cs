@@ -37,11 +37,57 @@ public static partial class BibleImporters
             sb.Append(text);
         }
 
+        readonly List<(string Book, int Chapter, int Verse, string Letter, string Text)> _notes = [];
+
+        /// <summary>A footnote of the print; its letter marks the place in the verse (see <see cref="PdfBibleLayout.NoteOpen"/>).</summary>
+        public void Note(string book, int chapter, int verse, string letter, string text)
+        {
+            text = Whitespace().Replace(text, " ").Trim();
+            text = Regex.Replace(text, @"\b([HG]) (ERR|OTT)", "$1$2");   // "H ERR" in small capitals
+            // a word of the note hyphenated at the end of its line ("Gefangen- schaft") is one word again; "Brand- oder Sündopfer" keeps its dash
+            text = Regex.Replace(text, @"(\p{L})- (\p{Ll}+)", m => m.Groups[2].Value is "und" or "oder" or "bzw" or "sowie" ? m.Value : m.Groups[1].Value + m.Groups[2].Value);
+            if (text.Length > 0 && chapter >= 1 && verse >= 1) _notes.Add((book, chapter, verse, letter, text));
+        }
+
         public ParsedBible Done(string name, string languageCode)
         {
             if (_order.Count < 10) throw new InvalidDataException(L("In der Datei wurden kaum Verse gefunden. Ist es wirklich eine Bibelübersetzung in diesem Format?"));
-            var verses = _order.Select(k => new ParsedVerse(k.Item1, k.Item2, k.Item3, [new Segment(_by[k].ToString())])).ToList();
-            return new ParsedBible(name, name.Length > 12 ? name[..12].Trim() : name, languageCode, verses, [], _headings.Count > 0 ? _headings : null);
+            var footnotes = new List<(string Book, int Chapter, Footnote Note)>();
+            var counter = new Dictionary<(string, int), int>();
+            var open = _notes.GroupBy(n => (n.Book, n.Chapter, n.Verse)).ToDictionary(g => g.Key, g => g.ToList());
+            int Add(string book, int chapter, int verse, string text)
+            {
+                var id = counter.GetValueOrDefault((book, chapter)); counter[(book, chapter)] = id + 1;
+                footnotes.Add((book, chapter, new Footnote(id, verse, text)));
+                return id;
+            }
+            var verses = _order.Select(k =>
+            {
+                var raw = _by[k].ToString();
+                open.TryGetValue(k, out var mine);
+                if (!raw.Contains(PdfBibleLayout.NoteOpen) && mine is null) return new ParsedVerse(k.Item1, k.Item2, k.Item3, [new Segment(raw)]);
+                // the text with a footnote where its letter stands; a note whose letter is not in the verse comes at its end
+                var segments = new List<Segment>();
+                foreach (var part in Regex.Split(raw, $@"({PdfBibleLayout.NoteOpen}[a-z]{{1,2}}{PdfBibleLayout.NoteClose})"))
+                {
+                    if (part.Length == 0) continue;
+                    if (part[0] == PdfBibleLayout.NoteOpen)
+                    {
+                        var letter = part[1..^1];
+                        var note = mine?.FirstOrDefault(n => n.Letter == letter);
+                        if (note is { } found) { mine!.Remove(found); segments.Add(new Segment("", NoteId: Add(k.Item1, k.Item2, k.Item3, found.Text))); }
+                        continue;
+                    }
+                    segments.Add(new Segment(part));
+                }
+                if (mine is not null) foreach (var n in mine) segments.Add(new Segment("", NoteId: Add(k.Item1, k.Item2, k.Item3, n.Text)));
+                // a blank in front of a marker or doubled around it goes
+                for (var i = 0; i < segments.Count; i++)
+                    if (segments[i].NoteId is null) segments[i] = segments[i] with { Text = Whitespace().Replace(segments[i].Text, " ") };
+                if (segments.Count > 0 && segments[0].NoteId is null) segments[0] = segments[0] with { Text = segments[0].Text.TrimStart() };
+                return new ParsedVerse(k.Item1, k.Item2, k.Item3, segments.Where(s => s.NoteId is not null || s.Text.Length > 0).ToList());
+            }).ToList();
+            return new ParsedBible(name, name.Length > 12 ? name[..12].Trim() : name, languageCode, verses, footnotes, _headings.Count > 0 ? _headings : null);
         }
     }
 

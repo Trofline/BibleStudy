@@ -79,6 +79,69 @@ public class PdfBibleLayoutTests
     }
 
     [Fact]
+    public void FootnotesAreReadWithTheirVerseAndMarker()
+    {
+        var words = new List<(string, double, double, double, bool, bool)>();
+        words.AddRange(Line(520, 150, "RUT 1.2", 10));
+        words.AddRange(Line(500, 22, "Es kam Hunger", 8));
+        words.AddRange(Line(490, 22, "Die Heimkehr", 8, italic: true));
+        words.AddRange(Line(480, 22, "Und Noomi", 8));
+        words.AddRange(Line(470, 22, "2", 7, bold: true)); words.AddRange(Line(470, 40, "Ruth ging aufs Feld,", 8));
+        words.Add(("a", 89, 472.7, 4.7, false, true));                                   // the raised letter behind "Feld"
+        words.AddRange(Line(460, 22, "und las Ähren.", 8));
+        words.Add(("a", 22, 60, 5.0, false, true)); words.AddRange(Line(60, 30, "(2,2) d.h. das Feld des Boas.", 6));   // the note at the foot of the page
+        var full = PdfBibleLayout.ReadFull(Repeated(words), Book);
+        Assert.NotNull(full);
+        Assert.Contains(full!.Notes, n => n is { Book: "RUT", Chapter: 2, Verse: 2, Letter: "a", Text: "d.h. das Feld des Boas." });
+        var v = full.Verses.First(x => x is { Chapter: 2, Verse: 2 }).Text;
+        Assert.Contains($"Feld,{PdfBibleLayout.NoteOpen}a{PdfBibleLayout.NoteClose}", v);
+        Assert.DoesNotContain(full.Verses, x => x.Text.Contains("Boas"));
+    }
+
+    [Fact]
+    public void APsalmTitleInItalicsStaysOneVerse()
+    {
+        var words = new List<(string, double, double, double, bool, bool)>();
+        words.AddRange(Line(520, 150, "RUT 1.2", 10));
+        words.AddRange(Line(500, 22, "Es kam Hunger", 8));
+        words.AddRange(Line(490, 22, "Psalm 4", 8, italic: true));
+        words.AddRange(Line(480, 22, "1", 7, bold: true)); words.AddRange(Line(480, 40, "Dem Vorsänger. Mit Saitenspiel.", 8, italic: true));
+        words.AddRange(Line(470, 22, "Ein Psalm Davids.", 8, italic: true));
+        words.AddRange(Line(460, 22, "2", 7, bold: true)); words.AddRange(Line(460, 40, "Ruth ging", 8));
+        words.AddRange(Line(450, 22, "auf das Feld und las dort Ähren", 8));
+        var full = PdfBibleLayout.ReadFull(Repeated(words), Book);
+        Assert.NotNull(full);
+        Assert.Contains(full!.Verses, v => v is { Chapter: 2, Verse: 1, Text: "Dem Vorsänger. Mit Saitenspiel. Ein Psalm Davids." });
+        Assert.DoesNotContain(full.Headings, h => h.Text.Contains("Ein Psalm"));
+    }
+
+    [Fact]
+    public void ABracketedNumberGivesThePlaceOfTheVerse()
+    {
+        var words = new List<(string, double, double, double, bool, bool)>();
+        words.AddRange(Line(520, 150, "RUT 1.2", 10));
+        words.AddRange(Line(500, 22, "Es kam Hunger", 8));
+        words.AddRange(Line(490, 22, "2", 7, bold: true)); words.AddRange(Line(490, 40, "Der Mann", 8));
+        words.AddRange(Line(480, 22, "Die Heimkehr", 8, italic: true));
+        words.Add(("[1,5]", 22, 470, 7, true, false)); words.AddRange(Line(470, 50, "Noch ein Vers", 8));
+        words.AddRange(Line(460, 22, "1", 7, bold: true)); words.AddRange(Line(460, 40, "Und Noomi", 8));
+        words.AddRange(Line(450, 22, "2", 7, bold: true)); words.AddRange(Line(450, 40, "Ruth ging", 8));
+        var result = PdfBibleLayout.Read(Repeated(words), Book);
+        Assert.NotNull(result);
+        Assert.Contains(result!, v => v is { Chapter: 1, Verse: 5, Text: "Noch ein Vers" });
+        Assert.Contains(result!, v => v is { Chapter: 2, Verse: 1, Text: "Und Noomi" });
+    }
+
+    [Fact]
+    public void WordsThatTouchAreOneWord_WordsWithASpaceStayApart()
+    {
+        PdfWord W(string t, double x) => new(t, x, 100, 8, false, false);
+        // "kön nen" with 0.3 between, the other words of the line with 2 between; "der Welt": a capital that reaches to the left stays apart
+        var joined = PdfBibleLayout.JoinTightWords([(W("und", 10), 10, 22), (W("kön", 24), 24, 35), (W("nen.", 35.3), 35.3, 50), (W("der", 52), 52, 62), (W("Welt", 62.3), 62.3, 78), (W("6", 80), 80, 84), (W("720", 84.2), 84.2, 96)]);
+        Assert.Equal(["und", "können.", "der", "Welt", "6", "720"], joined.Select(w => w.Text).ToArray());
+    }
+
+    [Fact]
     public void SmallCapitalsWithPunctuationBelongToTheWord()
     {
         var words = new List<(string, double, double, double, bool, bool)>();

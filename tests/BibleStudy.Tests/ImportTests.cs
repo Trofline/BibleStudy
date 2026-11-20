@@ -29,6 +29,20 @@ public class ImportTests : IDisposable
     }
 
     [Fact]
+    public void CsvOfflineHtml_KeepsTheParagraphsAVerseGoesOnIn()
+    {
+        const string poem = """
+            <p class="vb-paragraph"><span class="bible-verse"><span class="btn-group btn-verse-button"><button type="button" class="btn" data-reference="4. Mo 23,{0}" data-url="u" data-player-start="0">{0}</button></span> <span class="bible-verse-text vb-verse-text">Da hob er seinen Spruch an und sprach:</span></span></p> <p class="vb-paragraph"><span class="bible-par cp-none"></span><span class="bible-verse"><span class="bible-verse-text vb-verse-text">Aus Aram hat Balak mich hergeführt!</span></span></p>
+            """;
+        var path = Path.Combine(_dir, "poem.html");
+        File.WriteAllText(path, "<html>" + string.Concat(Enumerable.Range(1, 1100).Select(i => string.Format(poem, (i % 30) + 1))) + "<div class=\"font-default bible-footnotes cp-none\"><ol><li>Eine Fußnote</li></ol></div><h1 class=\"page-title\">4. Mose 24</h1></html>");
+        var bible = BibleImporters.ReadCsvOfflineHtml(path);
+        var text = new Verse(bible.Verses[0].Verse, bible.Verses[0].Segments).Text;
+        Assert.Equal("Da hob er seinen Spruch an und sprach: Aus Aram hat Balak mich hergeführt!", text);
+        Assert.DoesNotContain(bible.Verses, v => new Verse(v.Verse, v.Segments).Text.Contains("Fußnote") || new Verse(v.Verse, v.Segments).Text.Contains("Mose 24"));
+    }
+
+    [Fact]
     public void LocalStore_RoundTripsSegmentsAndServesChapters()
     {
         var store = new LocalBibleStore(Path.Combine(_dir, "local.db"));
