@@ -114,9 +114,14 @@ public partial class MainWindow
         if (!OperatingSystem.IsWindows() && !AppPlatform.IsMobile) { StatusText.Text = L("Vorlesen ist derzeit nur unter Windows verfügbar."); SpeakBtn.IsChecked = false; return; }
         if (_speechMode) { StopSpeak(); return; }
         if (_curChapterData is null || TranslationBox.SelectedItem is not TranslationInfo t) { SpeakBtn.IsChecked = false; return; }
-        var verses = _selected is int v ? _curChapterData.Verses.Where(x => x.Number >= v) : _curChapterData.Verses;
+        await SpeakVersesAsync(_selected is int v ? [.. _curChapterData.Verses.Where(x => x.Number >= v)] : _curChapterData.Verses, t, mainText: true);
+    }
+
+    /// <summary>Reads verses aloud in the voice of their translation. <paramref name="mainText"/>: they are verses of the main text (the others in a Bible study see which one is read).</summary>
+    async Task SpeakVersesAsync(IReadOnlyList<Verse> verses, TranslationInfo t, bool mainText = false)
+    {
         var text = string.Join(" ", verses.Select(x => x.Text));
-        _speakVerses = verses.Select(x => (x.Number, x.Text.Length + 1)).ToList(); _speakStartedAt = DateTime.UtcNow; _speakAbs = 0;   // which verse is read now (studying together)
+        _speakVerses = mainText ? verses.Select(x => (x.Number, x.Text.Length + 1)).ToList() : []; _speakStartedAt = DateTime.UtcNow; _speakAbs = 0;   // which verse is read now (studying together)
         if (string.IsNullOrWhiteSpace(text)) { SpeakBtn.IsChecked = false; return; }
         StopAudio();
         var culture = CultureInfo.GetCultures(CultureTypes.NeutralCultures).FirstOrDefault(c => c.ThreeLetterISOLanguageName == t.Language || c.Name == t.Language);

@@ -506,8 +506,9 @@ public partial class MainWindow : AppWindow
             _singleColumn = cols.Count == 1;
             // a column with a passage of its own cannot run verse by verse next to the others: it gets its own scroller
             _colPassage = [null, .. extraCols.Select(e => e.Own is { } o ? $"{BookName(o.Book)} {o.Chapter}" : null)];
+            _colOwn = [null, .. extraCols.Select(e => e.Own)];
             _independent = cols.Count > 1 && (!_settings.ParallelSync || extraCols.Any(e => e.Own is not null));
-            _colBoxes.Clear(); _colScrolls.Clear(); _jumpCol = 0; _colIds.Clear(); Avalonia.Threading.Dispatcher.UIThread.Post(UpdateOrientationLock, Avalonia.Threading.DispatcherPriority.Background); _colForeign.Clear(); _mirrorExpect.Clear(); _indepGrid = null;
+            _colBoxes.Clear(); _colScrolls.Clear(); _jumpCol = 0; _colIds.Clear(); Avalonia.Threading.Dispatcher.UIThread.Post(UpdateOrientationLock, Avalonia.Threading.DispatcherPriority.Background); _colForeign.Clear(); _colData.Clear(); _colMarkCache.Clear(); _mirrorExpect.Clear(); _indepGrid = null;
             ParallelHeader.IsVisible = false;
             FitReader();
             var kicker = new TextBlock { Text = b.CommonName.ToUpperInvariant(), FontSize = 13, FontWeight = FontWeight.SemiBold, LetterSpacing = 3, Margin = new(8, 0, 0, 0) };
@@ -653,7 +654,7 @@ public partial class MainWindow : AppWindow
     List<CellMark> CellMarks(CellData d, string rawText)
     {
         var list = new List<CellMark>();
-        if (d.Foreign) return list;
+        if (d.Foreign) return ForeignCellMarks(d, rawText);   // a column with a passage of its own: the marks of that passage
         var core = _wholeMarks.ContainsKey(d.Number) || _otherWhole.ContainsKey(d.Number);
         foreach (var m in _chapterMarks.Concat(_otherChapterMarks))
         {
@@ -705,9 +706,10 @@ public partial class MainWindow : AppWindow
             pos += run.Text!.Length;
         }
         var numSize = _settings.VerseNumbers == "Normal" ? size * 0.8 : 14;
-        var star = _chapterBookmarks.Contains(number) ? "★" : "";   // on the Lesezeichen
-        var voice = d.Col == 0 && _chapterVoice.Contains(number) ? "♪" : "";   // a spoken note
-        var num = new Run(_settings.VerseNumbers == "Hidden" ? (d.HasNote ? "✎ " : "") + (voice.Length > 0 ? voice + " " : "") + (star.Length > 0 ? star + " " : "") : number + (d.HasNote ? "✎" : "") + voice + star + " ") { FontSize = numSize, FontWeight = FontWeight.Bold, BaselineAlignment = _settings.VerseNumbers == "Normal" ? BaselineAlignment.Baseline : BaselineAlignment.Top };
+        var star = (d.Foreign ? ColState(d.Col)?.Bookmarks.Contains(number) == true : _chapterBookmarks.Contains(number)) ? "★" : "";   // on the Lesezeichen
+        var voice = (d.Foreign ? ColState(d.Col)?.Voice.Contains(number) == true : d.Col == 0 && _chapterVoice.Contains(number)) ? "♪" : "";   // a spoken note
+        var hasNote = d.HasNote || (d.Foreign && ColState(d.Col)?.Notes.Contains(number) == true);
+        var num = new Run(_settings.VerseNumbers == "Hidden" ? (hasNote ? "✎ " : "") + (voice.Length > 0 ? voice + " " : "") + (star.Length > 0 ? star + " " : "") : number + (hasNote ? "✎" : "") + voice + star + " ") { FontSize = numSize, FontWeight = FontWeight.Bold, BaselineAlignment = _settings.VerseNumbers == "Normal" ? BaselineAlignment.Baseline : BaselineAlignment.Top };
         num.Bind(TextElement.ForegroundProperty, this.GetResourceObservable("BsVerseNumber"));
         Add(num);
         if (UnplacedMarks(d, rawText) is { Count: > 0 } unplaced)
@@ -986,6 +988,7 @@ public partial class MainWindow : AppWindow
             else box.ClearValue(Border.BackgroundProperty);
             box.BorderBrush = selected ? new SolidColorBrush(ink, 0.55) : whole is { } c2 ? new SolidColorBrush(c2) : Brushes.Transparent;
         }
+        PaintForeign();   // the columns with a passage of their own
         if (CollabOpen) { CollabSendSelection(); CollabSendChapterMarks(); if (_peopleChapter != $"{_curBook} {_curChapter}") { _peopleChapter = $"{_curBook} {_curChapter}"; ShowPeople(); } Avalonia.Threading.Dispatcher.UIThread.Post(RenderPeerLayer, Avalonia.Threading.DispatcherPriority.Background); }
     }
 

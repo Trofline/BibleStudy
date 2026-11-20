@@ -3429,5 +3429,12 @@
   "Verschieben": "Déplacer",
   "{0} in den Vault „{1}“ kopiert.": "{0} copié dans le vault « {1} ».",
   "{0} in den Vault „{1}“ verschoben.": "{0} déplacé dans le vault « {1} ».",
-  "{0} in „{1}“ verschoben": "{0} déplacé dans « {1} »"
+  "{0} in „{1}“ verschoben": "{0} déplacé dans « {1} »",
+  "Markiert: {0}": "Marqué : {0}",
+  "Markierten Text markieren": "Marquer le texte sélectionné",
+  "Markierung von {0} entfernt (im Papierkorb).": "Marque sur {0} supprimée (dans la corbeille).",
+  "Nicht mehr merken": "Ne plus garder",
+  "Vers markieren": "Marquer le verset",
+  "Vorlesen ab hier": "Lire à voix haute à partir d'ici",
+  "{0} als Haupttext öffnen": "Ouvrir {0} comme texte principal"
 }

@@ -270,6 +270,7 @@ public partial class MainWindow
     void RefreshCells()
     {
         if (_vault is null || _curBook == "" || _cells.Count == 0) return;
+        _colMarkCache.Clear();   // the columns with a passage of their own read their marks again
         var keep = ReaderScroll.Offset;
         var keepCols = _colScrolls.Select(s => s.Offset).ToList();
         LoadChapterMarks();

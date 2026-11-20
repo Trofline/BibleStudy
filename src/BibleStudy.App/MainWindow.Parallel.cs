@@ -122,13 +122,14 @@ public partial class MainWindow
         ParallelHeader.IsVisible = true;
     }
 
-    Border MakeVerseBox(Control content, int n, bool foreign = false)
+    Border MakeVerseBox(Control content, int n, bool foreign = false, int col = 0)
     {
         // the whole verse can be clicked and touched, also between its lines (text alone only counts where its letters are; a finger often lands between them)
         if (content is Panel inner && inner.Background is null) inner.Background = Brushes.Transparent;
         var box = new Border { Child = content, Padding = new(10, 3), CornerRadius = new(8), BorderThickness = new(3, 0, 0, 0), BorderBrush = Brushes.Transparent, Classes = { "verse" } };
         box.AddHandler(PointerPressedEvent, (object? _, PointerPressedEventArgs e) => OnVersePressed(n, e, foreign), RoutingStrategies.Tunnel, handledEventsToo: true);
         if (!foreign) box.AddHandler(PointerPressedEvent, (object? _, PointerPressedEventArgs e) => StartLongPress(n, box, e), RoutingStrategies.Tunnel, handledEventsToo: true);
+        else box.AddHandler(PointerPressedEvent, (object? _, PointerPressedEventArgs e) => OnForeignVersePressed(col, n, box, e), RoutingStrategies.Tunnel, handledEventsToo: true);   // a column with a passage of its own: chosen, marked and read on its own
         return box;
     }
 
@@ -143,13 +144,13 @@ public partial class MainWindow
             var boxes = i == 0 ? _verseBoxes : new Dictionary<int, Border>();
             if (i > 0) _colBoxes.Add(boxes);
             var color = ColumnColor(i);
-            var foreign = i > 0 && i < _colPassage.Count && _colPassage[i] is not null;   // another book or chapter than the main text: read-only reference
-            _colForeign.Add(foreign);
+            var foreign = i > 0 && i < _colPassage.Count && _colPassage[i] is not null;   // another book or chapter than the main text: chosen, marked and read on its own (MainWindow.ForeignColumn)
+            _colForeign.Add(foreign); _colData.Add(cols[i]);
             foreach (var v in cols[i].C?.Verses ?? [])
             {
                 var num = v.Number;
                 var cell = VerseCell(v, num, cols[i].T, size, i == 0 && noted.Contains(num), notes[i], i, foreign);
-                var box = MakeVerseBox(i == 0 && XrefChips(num, primary.Id) is { } chips ? new StackPanel { Children = { cell, chips } } : cell, num, foreign);
+                var box = MakeVerseBox(i == 0 && XrefChips(num, primary.Id) is { } chips ? new StackPanel { Children = { cell, chips } } : cell, num, foreign, i);
                 if (i == 0 && !foreign) AddHeadings(panel, num);
                 boxes[num] = box; panel.Children.Add(box);
             }

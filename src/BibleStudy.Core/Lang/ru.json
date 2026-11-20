@@ -3429,5 +3429,12 @@
   "Verschieben": "Переместить",
   "{0} in den Vault „{1}“ kopiert.": "{0} скопировано в хранилище «{1}».",
   "{0} in den Vault „{1}“ verschoben.": "{0} перемещено в хранилище «{1}».",
-  "{0} in „{1}“ verschoben": "{0} перемещено в «{1}»"
+  "{0} in „{1}“ verschoben": "{0} перемещено в «{1}»",
+  "Markiert: {0}": "Отмечено: {0}",
+  "Markierten Text markieren": "Отметить выделенный текст",
+  "Markierung von {0} entfernt (im Papierkorb).": "Отметка в {0} удалена (в корзине).",
+  "Nicht mehr merken": "Убрать закладку",
+  "Vers markieren": "Отметить стих",
+  "Vorlesen ab hier": "Читать вслух отсюда",
+  "{0} als Haupttext öffnen": "Открыть {0} как основной текст"
 }

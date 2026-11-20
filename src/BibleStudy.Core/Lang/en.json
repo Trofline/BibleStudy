@@ -3429,5 +3429,12 @@
   "Verschieben": "Move",
   "{0} in den Vault „{1}“ kopiert.": "{0} copied into the vault \"{1}\".",
   "{0} in den Vault „{1}“ verschoben.": "{0} moved into the vault \"{1}\".",
-  "{0} in „{1}“ verschoben": "{0} moved into \"{1}\""
+  "{0} in „{1}“ verschoben": "{0} moved into \"{1}\"",
+  "Markiert: {0}": "Marked: {0}",
+  "Markierten Text markieren": "Mark the selected text",
+  "Markierung von {0} entfernt (im Papierkorb).": "Mark on {0} removed (in the trash).",
+  "Nicht mehr merken": "Remove bookmark",
+  "Vers markieren": "Mark the verse",
+  "Vorlesen ab hier": "Read aloud from here",
+  "{0} als Haupttext öffnen": "Open {0} as the main text"
 }

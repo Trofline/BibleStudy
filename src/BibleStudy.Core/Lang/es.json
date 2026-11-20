@@ -3429,5 +3429,12 @@
   "Verschieben": "Mover",
   "{0} in den Vault „{1}“ kopiert.": "{0} copiado al vault «{1}».",
   "{0} in den Vault „{1}“ verschoben.": "{0} movido al vault «{1}».",
-  "{0} in „{1}“ verschoben": "{0} movido a «{1}»"
+  "{0} in „{1}“ verschoben": "{0} movido a «{1}»",
+  "Markiert: {0}": "Marcado: {0}",
+  "Markierten Text markieren": "Marcar el texto seleccionado",
+  "Markierung von {0} entfernt (im Papierkorb).": "Marca de {0} eliminada (en la papelera).",
+  "Nicht mehr merken": "Quitar marcador",
+  "Vers markieren": "Marcar el versículo",
+  "Vorlesen ab hier": "Leer en voz alta desde aquí",
+  "{0} als Haupttext öffnen": "Abrir {0} como texto principal"
 }

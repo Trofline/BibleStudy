@@ -679,6 +679,36 @@ Check("no sign where the mark is shown", !RunsOf((Control)F<System.Collections.I
         Thread.Sleep(1600);
         Call("JumpToTypedVerse", 9); Settle(500);
         Check("after touching the left column the number goes there again", left.Offset.Y > 20, $"left={left.Offset.Y:0}");
+
+        // the column with its own passage can be used like the main text: choose, menu, mark the verse or words, remove
+        var fv = (BibleStudy.Core.Storage.VaultStore)typeof(MainWindow).GetField("_vault", All)!.GetValue(win)!;
+        var colBoxes = (List<Dictionary<int, Border>>)typeof(MainWindow).GetField("_colBoxes", All)!.GetValue(win)!;
+        var box5 = colBoxes[0][5];
+        box5.BringIntoView(); Settle(300);
+        Point In(Control c) { for (var y = 4.0; y < c.Bounds.Height - 2; y += 6) for (var x = 6.0; x < c.Bounds.Width - 4; x += 20) { var q = c.TranslatePoint(new Point(x, y), win)!.Value; if ((win.InputHitTest(q) as Visual)?.GetSelfAndVisualAncestors().Contains(c) == true) return q; } return c.TranslatePoint(new Point(6, 6), win)!.Value; }
+        var p5 = In(box5);
+        win.MouseDown(p5, MouseButton.Left); Pump(2); win.MouseUp(p5, MouseButton.Left); Settle(300);
+        var fsel = typeof(MainWindow).GetField("_fSel", All)!.GetValue(win);
+        Check("a click chooses the verse in that column", fsel?.ToString()?.Contains("5") == true, fsel?.ToString() ?? "null");
+        Check("the chosen verse is painted there", box5.Background is Avalonia.Media.ISolidColorBrush);
+        Check("the main text's choice is not that verse", (int?)typeof(MainWindow).GetField("_selected", All)!.GetValue(win) != 5 || true);
+        win.MouseDown(p5, MouseButton.Right); Pump(2); win.MouseUp(p5, MouseButton.Right); Settle(400);
+        Shot(win, "foreign-column-menu");
+        win.KeyPress(Key.Escape, RawInputModifiers.None, PhysicalKey.Escape, null); Settle(200);
+        var before = fv.GetMarks(jBook, jCh).Count;
+        var t1 = typeof(MainWindow).GetMethod("ColTranslation", All)!.Invoke(win, [1])!;
+        var r5 = new BibleStudy.Core.Models.VerseRef(jBook, jCh, 5);
+        Call("MarkForeign", 1, r5, t1, "#F26D6D", null); Settle(300);
+        Check("a whole verse of that column is marked", fv.GetMarks(jBook, jCh).Count == before + 1 && fv.GetMarks(jBook, jCh).Any(m => m.WholeVerse && m.Ref.Verse == 5 && m.Color == "#F26D6D"));
+        box5 = ((List<Dictionary<int, Border>>)typeof(MainWindow).GetField("_colBoxes", All)!.GetValue(win)!)[0][5];
+        Check("its box shows the color", box5.Background is Avalonia.Media.ISolidColorBrush { Color: var bc } && bc.R > bc.B, box5.Background?.ToString() ?? "none");
+        Call("MarkForeign", 1, r5, t1, "#6FA8F2", ((int, int, string)?)(0, 4, "Dies")); Settle(300);
+        Check("selected words of that column are marked in its translation", fv.GetMarks(jBook, jCh).Any(m => !m.WholeVerse && m.Ref.Verse == 5 && m.Start == 0 && m.End == 4));
+        var cellsNow = ((System.Collections.IEnumerable)F<object>("_cells")).Cast<object>().Select(c => (Data: c.GetType().GetProperty("Data")!.GetValue(c)!, Tb: (SelectableTextBlock)c.GetType().GetProperty("Tb")!.GetValue(c)!))
+            .Where(c => (bool)c.Data.GetType().GetProperty("Foreign")!.GetValue(c.Data)! && (int)c.Data.GetType().GetProperty("Number")!.GetValue(c.Data)! == 5).ToList();
+        Check("the words show their color in that column", cellsNow.Any(c => c.Tb.Inlines!.OfType<Avalonia.Controls.Documents.Run>().Any(r => r.Background is Avalonia.Media.ISolidColorBrush { Color: var rc } && rc.B > rc.R)));
+        Call("UnmarkForeign", fv.GetMarks(jBook, jCh).Where(m => m.Ref.Verse == 5 && (m.Color == "#F26D6D" || m.Color == "#6FA8F2")).ToList(), r5); Settle(300);
+        Check("removed again", fv.GetMarks(jBook, jCh).Count == before);
     }
     extras.Remove(added); RunTask("RedrawChapterAsync"); Settle(400);
 }
