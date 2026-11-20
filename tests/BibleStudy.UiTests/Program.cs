@@ -605,6 +605,24 @@ Check("no sign where the mark is shown", !RunsOf((Control)F<System.Collections.I
         Check("cancel keeps the program open", win.IsVisible);
     }
 }
+// spoken notes: the ♪ at the verse number, the row in the verse overview, the recorder at the verse
+{
+    var vv = (BibleStudy.Core.Storage.VaultStore)typeof(MainWindow).GetField("_vault", All)!.GetValue(win)!;
+    var vBook = (string)typeof(MainWindow).GetField("_curBook", All)!.GetValue(win)!; var vCh = (int)typeof(MainWindow).GetField("_curChapter", All)!.GetValue(win)!;
+    var at = new BibleStudy.Core.Models.VerseRef(vBook, vCh, 2);
+    var pcm = Enumerable.Range(0, 16000).Select(i => (short)(Math.Sin(i / 10.0) * 8000)).ToArray();
+    var voiceId = vv.AddVoiceNote(at, BibleStudy.Core.Collab.Media.MuLaw.Encode(pcm), 1, "Testnotiz");
+    Call("RefreshCells"); Settle(300);
+    bool HasSign(int verse) => TbOf(verse).Inlines!.OfType<Avalonia.Controls.Documents.Run>().Any(r => r.Text?.Contains('♪') == true);
+    Check("a ♪ stands at the verse with a spoken note", HasSign(2));
+    Check("not at a verse without one", !HasSign(1));
+    var guideTask = (Task)typeof(MainWindow).GetMethod("ShowGuideAsync", All)!.Invoke(win, [at])!; Wait(() => guideTask.IsCompleted); Settle(200);
+    Check("the verse overview lists it", C<StackPanel>("GuidePanel").GetLogicalDescendants().OfType<TextBlock>().Any(t => t.Text?.Contains("Testnotiz") == true));
+    Call("ShowVoiceRecorder", at, (Control)TbOf(2)); Settle(400);
+    Shot(win, "voice-recorder");
+    vv.DeleteVoiceNote(voiceId); Call("RefreshCells"); Settle(200);
+    Check("deleted: the ♪ is gone", !HasSign(2));
+}
 Console.WriteLine(fails == 0 ? "ALL OK" : $"{fails} FAILED");
 Environment.Exit(fails == 0 ? 0 : 1);
 Environment.Exit(fails);

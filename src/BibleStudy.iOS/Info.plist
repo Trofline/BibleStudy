@@ -66,6 +66,8 @@
 	<array>
 		<string>audio</string>
 	</array>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>BibleStudy records a spoken note on a verse only when you start a recording.</string>
 	<key>NSLocalNetworkUsageDescription</key>
 	<string>BibleStudy uses the local network for the live Bible study and to sync your own devices.</string>
 	<key>NSBonjourServices</key>

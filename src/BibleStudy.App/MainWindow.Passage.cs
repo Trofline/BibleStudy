@@ -45,6 +45,7 @@ public partial class MainWindow
         Item(L("Vers mit Stelle kopieren (Strg+Umschalt+C)"), () => _ = CopyVerseAsync());
         Item(L("Markieren (Farbe wählen) …"), ShowColorFlyout);
         Item(L("Notiz schreiben"), () => { Open(2); NoteEditor.Focus(); });
+        foreach (var v in VoiceMenuItems(r, anchor, Make, Group)) menu.Items.Add(v);
         Item(HeadingBefore(verse) is null ? L("Überschrift davor einfügen …") : L("Überschrift davor bearbeiten …"), () => ShowHeadingEditor(r, HeadingBefore(verse), anchor));
         Item(L("Merken / nicht mehr merken"), ToggleBookmark);
         if (CommentariesOn) Item(L("Kommentar zu diesem Vers"), () => OpenCommentary(r));
@@ -159,6 +160,7 @@ public partial class MainWindow
             DockPanel.SetDock(dot, Dock.Left);
             mine.Children.Add(row);
         }
+        foreach (var n in VoiceNotesOf(r)) mine.Children.Add(VoiceRow(n));
         if (mine.Children.Count == 0) mine.Children.Add(Muted(L("Noch nichts. Rechtsklick auf einen Vers bietet Markieren, Notiz und Dokument an.")));
         GuidePanel.Children.Add(mine);
 

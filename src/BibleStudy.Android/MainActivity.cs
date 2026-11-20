@@ -49,6 +49,27 @@ public class MainActivity : AvaloniaMainActivity
         a.RunOnUiThread(() => { if (a.RequestedOrientation != want) a.RequestedOrientation = want; });
     }
 
+    static TaskCompletionSource<bool>? _permission;
+    const int PermissionRequest = 7;
+
+    /// <summary>Asks for a permission (the microphone for a spoken note) and waits for the answer; true when it is given.</summary>
+    public static Task<bool> AskPermissionAsync(string permission)
+    {
+        var a = Current;
+        if (a is null) return Task.FromResult(false);
+        if (a.CheckSelfPermission(permission) == Permission.Granted) return Task.FromResult(true);
+        _permission?.TrySetResult(false);
+        var ask = _permission = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+        a.RunOnUiThread(() => a.RequestPermissions([permission], PermissionRequest));
+        return ask.Task;
+    }
+
+    public override void OnRequestPermissionsResult(int requestCode, string[] permissions, [GeneratedEnum] Permission[] grantResults)
+    {
+        base.OnRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode == PermissionRequest) _permission?.TrySetResult(grantResults.Length > 0 && grantResults[0] == Permission.Granted);
+    }
+
     /// <summary>The app goes to the background: everything is saved as when the desktop window closes (Android may end it any time after this).</summary>
     protected override void OnStop()
     {

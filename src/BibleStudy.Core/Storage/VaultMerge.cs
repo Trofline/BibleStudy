@@ -42,7 +42,7 @@ public sealed partial class VaultStore
             marks.Where(m => !m.WholeVerse && m.TranslationId != Mark.AnyTranslation).Select(m => m.TranslationId).Distinct().Order().ToList());
     }
 
-    static readonly string[] ContentTables = ["notes", "read_chapters", "folders", "marks", "mark_tags", "mark_places", "queue", "documents", "doc_tags", "todos", "my_xrefs", "hidden_xrefs", "bookmarks", "prayers", "headings", "studies", "material_marks", "material_gone"];
+    static readonly string[] ContentTables = ["notes", "read_chapters", "folders", "marks", "mark_tags", "mark_places", "queue", "documents", "doc_tags", "todos", "my_xrefs", "hidden_xrefs", "bookmarks", "prayers", "headings", "studies", "material_marks", "material_gone", "voice_notes"];
 
     /// <summary>A fingerprint of what the user wrote in this vault. Reading (the last position) and the time stamps of a save without a change do not count.</summary>
     public string Fingerprint()
@@ -199,6 +199,17 @@ public sealed partial class VaultStore
                     {
                         using var cmd = con.CreateCommand();
                         cmd.CommandText = "INSERT OR IGNORE INTO main.images(id,mime,data) SELECT id,mime,data FROM g.images";
+                        others += cmd.ExecuteNonQuery();
+                    }
+                }
+                // the spoken notes (the uid is made from the sound: the same uid is the same note; vaults from before 1.9.21 have none)
+                using (var has = con.CreateCommand())
+                {
+                    has.CommandText = "SELECT 1 FROM g.sqlite_master WHERE type='table' AND name='voice_notes'";
+                    if (has.ExecuteScalar() is not null)
+                    {
+                        using var cmd = con.CreateCommand();
+                        cmd.CommandText = "INSERT OR IGNORE INTO main.voice_notes(uid,book,chapter,verse,secs,title,created,data) SELECT uid,book,chapter,verse,secs,title,created,data FROM g.voice_notes";
                         others += cmd.ExecuteNonQuery();
                     }
                 }

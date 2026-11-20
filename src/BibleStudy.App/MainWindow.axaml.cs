@@ -706,7 +706,8 @@ public partial class MainWindow : AppWindow
         }
         var numSize = _settings.VerseNumbers == "Normal" ? size * 0.8 : 14;
         var star = _chapterBookmarks.Contains(number) ? "★" : "";   // on the Lesezeichen
-        var num = new Run(_settings.VerseNumbers == "Hidden" ? (d.HasNote ? "✎ " : "") + (star.Length > 0 ? star + " " : "") : number + (d.HasNote ? "✎" : "") + star + " ") { FontSize = numSize, FontWeight = FontWeight.Bold, BaselineAlignment = _settings.VerseNumbers == "Normal" ? BaselineAlignment.Baseline : BaselineAlignment.Top };
+        var voice = d.Col == 0 && _chapterVoice.Contains(number) ? "♪" : "";   // a spoken note
+        var num = new Run(_settings.VerseNumbers == "Hidden" ? (d.HasNote ? "✎ " : "") + (voice.Length > 0 ? voice + " " : "") + (star.Length > 0 ? star + " " : "") : number + (d.HasNote ? "✎" : "") + voice + star + " ") { FontSize = numSize, FontWeight = FontWeight.Bold, BaselineAlignment = _settings.VerseNumbers == "Normal" ? BaselineAlignment.Baseline : BaselineAlignment.Top };
         num.Bind(TextElement.ForegroundProperty, this.GetResourceObservable("BsVerseNumber"));
         Add(num);
         if (UnplacedMarks(d, rawText) is { Count: > 0 } unplaced)

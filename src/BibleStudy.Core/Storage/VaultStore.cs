@@ -103,6 +103,7 @@ public sealed partial class VaultStore : SqliteDb
         Exec("CREATE TABLE IF NOT EXISTS mark_places(mark_id INT, translation TEXT, verse INT, start_off INT, end_off INT, PRIMARY KEY(mark_id, translation, verse))");   // a place corrected by hand
         Exec("CREATE TABLE IF NOT EXISTS doc_seq(high INTEGER NOT NULL)");
         InitImages();
+        InitVoice();
         Exec("CREATE TABLE IF NOT EXISTS studies(id INTEGER PRIMARY KEY, day TEXT NOT NULL, title TEXT NOT NULL, passages TEXT, notes TEXT, questions TEXT, created TEXT)");
         Exec("CREATE TABLE IF NOT EXISTS material_marks(id INTEGER PRIMARY KEY, path TEXT NOT NULL, name TEXT NOT NULL, block INT, start_off INT, text TEXT NOT NULL, color TEXT, note TEXT, created TEXT)");
         InitMaterialSync();
@@ -564,7 +565,7 @@ public sealed partial class VaultStore : SqliteDb
     /// </summary>
     public void Wipe()
     {
-        InTransaction(0, [.. new[] { "notes", "read_chapters", "folders", "marks", "mark_tags", "queue", "documents", "doc_tags", "todos", "my_xrefs", "hidden_xrefs", "prayers", "bookmarks", "last_position", "headings", "mark_places", "studies", "trash", "material_marks", "material_gone", "images" }
+        InTransaction(0, [.. new[] { "notes", "read_chapters", "folders", "marks", "mark_tags", "queue", "documents", "doc_tags", "todos", "my_xrefs", "hidden_xrefs", "prayers", "bookmarks", "last_position", "headings", "mark_places", "studies", "trash", "material_marks", "material_gone", "images", "voice_notes" }
             .Select(table => $"DELETE FROM {table}")]);
         SharedRead?.Clear();
     }

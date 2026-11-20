@@ -18,7 +18,7 @@ public partial class MainWindow
     /// <summary>Verses of the open chapter that are on the Merkliste (they get a star next to their number).</summary>
     HashSet<int> _chapterBookmarks = [];
 
-    void LoadChapterBookmarks() => _chapterBookmarks = _vault.GetBookmarkedVerses(_curBook, _curChapter);
+    void LoadChapterBookmarks() { _chapterBookmarks = _vault.GetBookmarkedVerses(_curBook, _curChapter); LoadChapterVoice(); }
 
     void ToggleBookmark()
     {
