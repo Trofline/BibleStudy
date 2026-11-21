@@ -179,7 +179,7 @@ public sealed class LocalBibleStore : SqliteDb, IBibleProvider
             ins.Parameters.AddWithValue("$t", id);
             var pb = ins.Parameters.Add("$b", SqliteType.Text); var pc = ins.Parameters.Add("$c", SqliteType.Integer); var pn = ins.Parameters.Add("$n", SqliteType.Integer);
             var pv = ins.Parameters.Add("$v", SqliteType.Integer); var px = ins.Parameters.Add("$x", SqliteType.Text);
-            foreach (var (book, chapter, note) in bible.Footnotes) { pb.Value = book; pc.Value = chapter; pn.Value = note.NoteId; pv.Value = note.Verse; px.Value = note.Text; ins.ExecuteNonQuery(); }
+            foreach (var (book, chapter, note) in bible.Footnotes) { pb.Value = book; pc.Value = chapter; pn.Value = note.NoteId; pv.Value = note.Verse; px.Value = note.Text ?? ""; ins.ExecuteNonQuery(); }
         }
         if (bible.Headings is { Count: > 0 })
         {

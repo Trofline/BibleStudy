@@ -74,8 +74,9 @@ public static partial class BibleImporters
                     if (part[0] == PdfBibleLayout.NoteOpen)
                     {
                         var letter = part[1..^1];
-                        var note = mine?.FirstOrDefault(n => n.Letter == letter);
-                        if (note is { } found) { mine!.Remove(found); segments.Add(new Segment("", NoteId: Add(k.Item1, k.Item2, k.Item3, found.Text))); }
+                        // a letter without its note (none printed at the page foot) is left out; FirstOrDefault would give an empty tuple here
+                        var at = mine?.FindIndex(n => n.Letter == letter) ?? -1;
+                        if (at >= 0) { var found = mine![at]; mine.RemoveAt(at); segments.Add(new Segment("", NoteId: Add(k.Item1, k.Item2, k.Item3, found.Text))); }
                         continue;
                     }
                     segments.Add(new Segment(part));
