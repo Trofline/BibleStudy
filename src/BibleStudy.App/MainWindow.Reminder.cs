@@ -51,7 +51,7 @@ public partial class MainWindow
         // brought forward and minimised again within a moment: that was not the user, the window comes back (a stray key release, the system menu of Alt)
         PropertyChanged += (_, e) =>
         {
-            if (e.Property == WindowStateProperty && WindowState == WindowState.Minimized && (DateTime.Now - _broughtForward).TotalMilliseconds < 1500)
+            if (e.Property.Name == "WindowState" && WindowState == WindowState.Minimized && (DateTime.Now - _broughtForward).TotalMilliseconds < 1500)
                 Dispatcher.UIThread.Post(() => { WindowState = WindowState.Normal; Activate(); });
         };
         ApplyHotkey(false);
