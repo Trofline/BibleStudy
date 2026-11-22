@@ -21,6 +21,16 @@ public partial class MainWindow
         return new VerseRef(b, c, v);
     }
 
+    /// <summary>
+    /// From the card on the start page: reads the verse of the day. It keeps its own faint tint (see Paint) and is not left selected: a selected
+    /// verse looks like the place where one stopped, and this one was only opened.
+    /// </summary>
+    async Task GoToDailyVerseAsync(VerseRef r)
+    {
+        await GoToAsync(r.Book, r.Chapter, r.Verse);
+        if (_selected == r.Verse && _curBook == r.Book && _curChapter == r.Chapter) { _selected = null; _selVerses.Clear(); _anchorVerse = null; ClearTextSelection(true); Paint(); ThreadPane.SelectedVerse = null; }
+    }
+
     // ---- autosave -----------------------------------------------------------------------------------------------------
 
     string? _docSnapshot;

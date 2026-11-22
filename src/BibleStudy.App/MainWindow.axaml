@@ -382,7 +382,7 @@
                 <TabItem ToolTip.Tip="Sammlung: Markierungen, Ordner, Tags">
                     <TabItem.Header><local:Icon Data="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.7-.9l-.8-1.2A2 2 0 0 0 7.9 3H4a2 2 0 0 0-2 2v13c0 1.1.9 2 2 2z" /></TabItem.Header>
                     <Grid RowDefinitions="Auto,Auto,Auto,*,Auto" Margin="16,14,12,12">
-                        <Grid Grid.Row="0" ColumnDefinitions="*,*,Auto,Auto,Auto" Margin="0,0,0,8">
+                        <Grid Grid.Row="0" ColumnDefinitions="*,*,Auto,Auto,Auto,Auto" Margin="0,0,0,8">
                             <Border Classes="pill" Margin="0,0,6,0"><ComboBox x:Name="FolderFilterBox" HorizontalAlignment="Stretch" /></Border>
                             <Border Classes="pill" Grid.Column="1" Margin="0,0,6,0"><ComboBox x:Name="TagFilterBox" HorizontalAlignment="Stretch" /></Border>
                             <ToggleButton x:Name="MarksDetailBtn" Grid.Column="2" Classes="tool" IsChecked="True" Margin="0,0,2,0" ToolTip.Tip="Verstexte und Notizen anzeigen oder nur die Stellen (Überblick)">
@@ -393,6 +393,9 @@
                             </Button>
                             <ToggleButton x:Name="MarksAllVaultsBtn" Grid.Column="4" Classes="tool" Margin="2,0,0,0" ToolTip.Tip="Markierungen aller Vaults gleichzeitig zeigen (aus: nur der aktive Vault)">
                                 <local:Icon Data="M3 7a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v2H3z M3 11h18v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" IconSize="18" />
+                            </ToggleButton>
+                            <ToggleButton x:Name="MarksByColorBtn" Grid.Column="5" Classes="tool" Margin="2,0,0,0" ToolTip.Tip="Nach Farbe ordnen: alle Verse einer Farbe zusammen, egal in welchem Ordner">
+                                <local:Icon Data="M12 3a9 9 0 1 0 0 18c1.1 0 2-.9 2-2 0-.5-.2-1-.5-1.3-.3-.3-.5-.8-.5-1.3 0-1.1.9-2 2-2h2.3a3.7 3.7 0 0 0 3.7-3.7C21 6.8 17 3 12 3z" IconSize="18" />
                             </ToggleButton>
                             <Button x:Name="DeleteFolderBtn" IsVisible="False" Width="0" Height="0" />
                         </Grid>
@@ -775,6 +778,10 @@
                                 <CheckBox x:Name="XrefTabCheck" Content="Klick auf einen Querverweis öffnet ihn im Zusammenhang in einem neuen Reiter" />
                                 <CheckBox x:Name="ShareMarksCheck" Content="Markierungen aus anderen Übersetzungen mitzeigen (gleiche Wörter oder gleiche Strong-Nummern)" />
                                 <CheckBox x:Name="SelectionPopupCheck" Content="Beim Auswählen von Text die Farben gleich über dem Text zeigen" />
+                                <StackPanel Orientation="Horizontal" Spacing="10">
+                                    <CheckBox x:Name="ReminderCheck" Content="Erinnerung zum Lesen, wenn heute noch nichts gelesen wurde, ab" ToolTip.Tip="Einmal am Tag ab dieser Uhrzeit, solange du heute kein Kapitel gelesen hast. Mit einem Knopf zum Weiterlesen. Am Computer erscheint ein kleines Fenster unten rechts, auch wenn das Programm im Infobereich liegt; auf dem Handy beim Öffnen der App." />
+                                    <Border Classes="pill"><ComboBox x:Name="ReminderTimeBox" Width="100" /></Border>
+                                </StackPanel>
                                 <TextBlock Text="Text markieren" Margin="0,4,0,0" />
                                 <Border Classes="pill" HorizontalAlignment="Left"><ComboBox x:Name="SelectModeBox" Width="260" SelectedIndex="0">
                                     <ComboBoxItem Content="Wort für Wort" />
@@ -835,6 +842,10 @@
                                 </StackPanel>
                                 <CheckBox x:Name="TrayCheck" Content="Symbol im Infobereich (System-Tray) anzeigen" />
                                 <CheckBox x:Name="CloseToTrayCheck" Content="Beim Schließen in den Infobereich minimieren (Beenden über Rechtsklick auf das Symbol)" />
+                                <StackPanel x:Name="HotkeyRow" Orientation="Horizontal" Spacing="10">
+                                    <CheckBox x:Name="HotkeyCheck" Content="BibleStudy von überall nach vorn holen mit" ToolTip.Tip="Ein Tastenkürzel, das auch dann wirkt, wenn ein anderes Programm vorn ist oder BibleStudy im Infobereich liegt." />
+                                    <Border Classes="pill"><ComboBox x:Name="HotkeyBox" Width="190" /></Border>
+                                </StackPanel>
                                 <CheckBox x:Name="RememberWindowCheck" Content="Fensterposition und -größe merken" />
                                 <CheckBox x:Name="RestoreWindowsCheck" Content="Geöffnete Fenster (Dokumente, Bücher …) beim Start wiederherstellen" />
                                 <CheckBox x:Name="TaskbarRevealCheck" Content="Maximiert: automatisch ausgeblendete Taskleiste mit der Maus am Bildschirmrand einblenden" />
@@ -936,6 +947,7 @@
                                     <Button x:Name="ImportBtn" Content="Importieren …" Margin="0,0,6,6" />
                                     <Button x:Name="MergeUndoBtn" Content="Einmischen rückgängig" IsVisible="False" Margin="0,0,6,6" ToolTip.Tip="Stellt die Vaults so wieder her, wie sie direkt vor dem letzten Einmischen waren" />
                                     <Button x:Name="GuestImportBtn" Content="Als Gast importieren …" Margin="0,0,6,6" ToolTip.Tip="Öffnet die ZIP eines anderen Computers nur für diese Sitzung: Beim Schließen des Programms ist alles wieder weg, deine eigenen Vaults und Einstellungen bleiben unberührt" />
+                                    <Button x:Name="MarkdownImportBtn" Content="Markdown-Ordner einlesen …" Margin="0,0,6,6" ToolTip.Tip="Liest einen Ordner mit Markdown-Dateien (einen Obsidian-Vault oder einen früheren Export) in diesen Vault: Dateien werden Dokumente, Ordner bleiben Ordner, Dateien des Exports mit Vers werden wieder Notizen. Was schon da ist, wird nie ersetzt: ein Dokument gleichen Titels wird Zeile für Zeile mit der Datei zusammengeführt. Vorher wird eine Sicherung angelegt." />
                                     <Button x:Name="ObsidianBtn" Content="Als Obsidian-Vault exportieren …" ToolTip.Tip="Schreibt den ganzen Vault als Markdown-Ordner: deine Ordner als Ordner, jede Notiz und jedes Dokument als eigene Datei, Bibelstellen als Links. Obsidian und andere Notiz-Programme öffnen ihn direkt." />
                                     <Button x:Name="EswordImportBtn" Content="Notizen aus e-Sword importieren …" Margin="0,0,6,6" ToolTip.Tip="Übernimmt deine Notizen und eigenen Kommentare aus e-Sword oder MySword (.notx, .cmtx, .topx, .mybible): Notizen zu Versen werden Notizen, Themen werden Dokumente." />
                                     <Button x:Name="LicensesBtn" Content="Quellen und Lizenzen …" ToolTip.Tip="Woher alle Texte und Daten stammen und unter welcher Lizenz sie stehen" />

@@ -171,6 +171,8 @@ public partial class MainWindow
         };
         MarksList.SelectionChanged += async (_, _) => await OnMarksListPickedAsync();
         MarksDetailBtn.IsCheckedChanged += (_, _) => ApplyCollectionFilter();
+        MarksByColorBtn.IsChecked = _settings.MarksByColor;
+        MarksByColorBtn.IsCheckedChanged += (_, _) => { _settings.MarksByColor = MarksByColorBtn.IsChecked == true; _foldersTouched = false; ApplyCollectionFilter(); };
         MarksAllVaultsBtn.IsChecked = MarksTopBtn.IsChecked = _settings.MarksAllVaults;   // the state is kept between starts
         // the same switch sits in the top bar, so it can be turned on and off without opening the marks panel
         DocAllVaultsCheck.IsChecked = _settings.MarksAllVaults;

@@ -4,7 +4,9 @@ using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Layout;
 using Avalonia.Media;
+using BibleStudy.Core;
 using BibleStudy.Core.Models;
+using BibleStudy.Core.Storage;
 
 namespace BibleStudy.App;
 
@@ -223,13 +225,16 @@ public partial class MainWindow
             if (_settings.ParallelSync) _settings.ParallelSyncIds.Clear();
             await RedrawChapterAsync();
         };
+        var diff = new CheckBox { Content = L("Unterschiede"), IsChecked = _settings.ShowDifferences, VerticalAlignment = VerticalAlignment.Center };
+        ToolTip.SetTip(diff, L("Wörter, die sich von der Nachbarspalte unterscheiden, werden getönt (nur bei Übersetzungen derselben Sprache)."));
+        diff.IsCheckedChanged += async (_, _) => { _settings.ShowDifferences = diff.IsChecked == true; await RedrawChapterAsync(); };
         var pick = new Button { Classes = { "tool" }, Width = 28, Height = 28, Content = new Icon { Data = Geometry.Parse("M4 6h16 M7 12h10 M10 18h4"), IconSize = 14 }, VerticalAlignment = VerticalAlignment.Center };
         ToolTip.SetTip(pick, L("Auswählen, welche Spalten zusammen scrollen"));
         pick.Click += (_, _) => ShowSyncChoice(pick, check);
         var colors = new Button { Classes = { "tool" }, Width = 28, Height = 28, Content = new Icon { Data = Geometry.Parse("M12 3a9 9 0 1 0 0 18c1.1 0 2-.9 2-2 0-.5-.2-1-.5-1.3-.3-.3-.5-.8-.5-1.3 0-1.1.9-2 2-2h2.3a3.7 3.7 0 0 0 3.7-3.7C21 6.8 17 3 12 3z"), IconSize = 14 }, VerticalAlignment = VerticalAlignment.Center };
         ToolTip.SetTip(colors, L("Farben der Spalten ändern"));
         colors.Click += (_, _) => ShowColumnColors(colors);
-        _syncPill = new Border { Classes = { "pill" }, Margin = new(16, 8, 0, 8), Padding = new(12, 0, 4, 0), Child = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 4, Children = { check, pick, colors } } };
+        _syncPill = new Border { Classes = { "pill" }, Margin = PillMargin, Padding = new(12, 0, 4, 0), Child = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 4, Children = { check, diff, pick, colors } } };
     }
 
     void ShowSyncChoice(Control anchor, CheckBox all)
@@ -280,10 +285,43 @@ public partial class MainWindow
         }, (L("Wie die Hauptspalte (folgt dem Text links)"), () => _ = Apply(null)));
     }
 
+    List<(TranslationInfo T, Chapter? C)> _diffCols = [];
+
+    /// <summary>
+    /// The words of this cell that differ from the neighbouring column (the main text is compared with the first extra column, an extra column with the main text),
+    /// when the switch is on and both are in one language: between two languages every word would differ.
+    /// </summary>
+    List<(int Start, int End)> DifferingRanges(CellData d, string rawText)
+    {
+        if (!_settings.ShowDifferences || d.Foreign || _diffCols.Count < 2 || d.Col >= _diffCols.Count) return [];
+        var other = d.Col == 0 ? 1 : 0;
+        if (IsForeign(other) || _diffCols[other].T.LanguageName != d.T.LanguageName || _diffCols[other].C?.Verses.FirstOrDefault(v => v.Number == d.Number) is not { } verse) return [];
+        return WordDiff.Differing(MarkLogic.RawText(verse.Segments), rawText);
+    }
+
+    /// <summary>The tint of a differing word: warm, mixed with the page colour once (see HighlightBrush), clear against the text but not a mark colour.</summary>
+    IBrush DifferenceBrush() => HighlightBrush("#E0A526", false);
+
+    /// <summary>Space around the pills of the bar of extra columns: on a phone every pixel of height is taken from the reading.</summary>
+    static Thickness PillMargin => AppPlatform.IsMobile ? new(8, 3, 0, 3) : new(16, 8, 0, 8);
+
+    /// <summary>
+    /// The controls of one extra column. On a computer: in a row, remove at the end. On a phone the row would be wider than the screen (the x ran off it):
+    /// remove sits right behind the colour dot, the controls wrap into a second line when they must, and the move arrows (the column is moved by dragging its
+    /// dot) are left out.
+    /// </summary>
+    static Panel ColumnPillContent(Border dot, Button moveLeft, Button moveRight, ComboBox lang, ComboBox trans, Button passage, Button remove)
+    {
+        if (!AppPlatform.IsMobile) return new StackPanel { Orientation = Avalonia.Layout.Orientation.Horizontal, Children = { dot, moveLeft, moveRight, lang, trans, passage, remove } };
+        lang.Width = 104; trans.Width = 150; passage.MaxWidth = 110;
+        remove.Margin = new(0, 0, 4, 0);
+        return new WrapPanel { Children = { dot, remove, lang, trans, passage } };
+    }
+
     void RecolorPills()
     {
         for (var i = 0; i < _extras.Count; i++)
-            if (_extras[i].Root is Border { Child: StackPanel { Children: [Border dot, ..] } })
+            if (_extras[i].Root is Border { Child: Panel { Children: [Border dot, ..] } })
                 dot.Background = new SolidColorBrush(ColumnColor(i + 1));
     }
 }

@@ -61,7 +61,7 @@ public partial class MainWindow
         var btn = new Button { Classes = { "tool" }, Width = double.NaN, Padding = new(10, 0), Height = 28, Content = L("Presets ▾"), VerticalAlignment = VerticalAlignment.Center };
         ToolTip.SetTip(btn, L("Anordnung der Spalten speichern und wieder laden"));
         btn.Click += (_, _) => ShowPresetMenu(btn);
-        _presetPill = new Border { Classes = { "pill" }, Margin = new(16, 8, 0, 8), Padding = new(4, 0), Child = btn };
+        _presetPill = new Border { Classes = { "pill" }, Margin = PillMargin, Padding = new(4, 0), Child = btn };
     }
 
     string PresetName() => string.Join(" + ", new[] { (TranslationBox.SelectedItem as TranslationInfo)?.ShortName }.Concat(_extras.Select(e => e.Translation?.ShortName)).Where(n => !string.IsNullOrEmpty(n)));

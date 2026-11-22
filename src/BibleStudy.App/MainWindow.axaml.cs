@@ -216,6 +216,7 @@ public partial class MainWindow : AppWindow
         InitLanguage();
         InitLibrary();
         ObsidianBtn.Click += async (_, _) => await ExportObsidianAsync();
+        MarkdownImportBtn.Click += async (_, _) => await ImportMarkdownFolderAsync();
         EswordImportBtn.Click += async (_, _) => await ImportEswordNotesAsync();
         SideTabs.SelectionChanged += (_, e) =>
         {
@@ -285,7 +286,7 @@ public partial class MainWindow : AppWindow
         var recent = new List<(string, string, string, Action)>();
         var votd = VerseOfTheDay();
         if (PlanTodayCard() is { } planCard) recent.Add((L("Heute dran"), planCard.Label, planCard.Hint, planCard.Go));   // the running reading plan comes first
-        recent.Add((L("Vers des Tages"), Label(votd), L("Klicken zum Lesen"), () => _ = GoToAsync(votd.Book, votd.Chapter, votd.Verse)));
+        recent.Add((L("Vers des Tages"), Label(votd), L("Klicken zum Lesen"), () => _ = GoToDailyVerseAsync(votd)));
         var dueCards = Memory.Ids.Count(i => Memory.IsDue(i, DateTime.Now));
         if (dueCards > 0) recent.Add((L("Auswendig lernen"), L("{0} Verse fällig", dueCards), L("Klicken zum Üben"), () => OpenWork(NavGroups.First(g => g.Name == "Planen"), MemoryTab)));
         foreach (var d in _vault.GetDocuments().OrderByDescending(d => d.Updated).Take(4))
@@ -480,6 +481,7 @@ public partial class MainWindow : AppWindow
             var ch = await primaryTask;
             var cols = new List<(TranslationInfo T, Chapter? C)> { (t, ch) };
             cols.AddRange(extraTs.Zip(await Task.WhenAll(extraTasks), (c, x) => (c, x)));
+            _diffCols = cols;
             if (generation != _showGeneration) return;
 
             var sameChapter = keepScroll && _curBook == b.Id && _curChapter == ch.Number;
@@ -695,6 +697,7 @@ public partial class MainWindow : AppWindow
         var v = d.V; var number = d.Number; var t = d.T; var size = d.Size;
         var rawText = MarkLogic.RawText(v.Segments);
         var marks = CellMarks(d, rawText);
+        var diffs = DifferingRanges(d, rawText);
         var study = StudyBtn.IsChecked == true;
         var spans = new List<WordSpan>();
         var runs = new List<RunMap>();
@@ -736,6 +739,7 @@ public partial class MainWindow : AppWindow
             var cuts = new SortedSet<int> { 0, s.Text.Length };
             foreach (var m in marks) { cuts.Add(Math.Clamp(m.Start - raw, 0, s.Text.Length)); cuts.Add(Math.Clamp(m.End - raw, 0, s.Text.Length)); }
             if (sel is { } sl) { cuts.Add(Math.Clamp(sl.Start - raw, 0, s.Text.Length)); cuts.Add(Math.Clamp(sl.End - raw, 0, s.Text.Length)); }
+            foreach (var df in diffs) { cuts.Add(Math.Clamp(df.Start - raw, 0, s.Text.Length)); cuts.Add(Math.Clamp(df.End - raw, 0, s.Text.Length)); }
             var points = cuts.ToList();
             for (var i = 0; i + 1 < points.Count; i++)
             {
@@ -764,6 +768,7 @@ public partial class MainWindow : AppWindow
                     if (mark.Core) run.FontWeight = FontWeight.SemiBold;
                     if (mark.Estimated && !study) run.TextDecorations = EstimatedUnderline;   // only a guess at the place: a click corrects it
                 }
+                else if (piece.Length > 0 && diffs.Any(x => x.Start <= from && x.End >= from + piece.Length)) run.Background = DifferenceBrush();
                 if (s.Strongs is { Count: > 0 })
                 {
                     spans.Add(new WordSpan(pos, pos + piece.Length, [.. s.Strongs], s.Text, null, run, run.Background));
@@ -944,8 +949,8 @@ public partial class MainWindow : AppWindow
         ToolTip.SetTip(moveLeft, L("Spalte nach links")); ToolTip.SetTip(moveRight, L("Spalte nach rechts"));
         var root = new Border
         {
-            Classes = { "pill" }, Margin = new(16, 8, 0, 8),
-            Child = new StackPanel { Orientation = Avalonia.Layout.Orientation.Horizontal, Children = { dot, moveLeft, moveRight, lang, trans, passage, remove } },
+            Classes = { "pill" }, Margin = PillMargin,
+            Child = ColumnPillContent(dot, moveLeft, moveRight, lang, trans, passage, remove),
         };
         var col = new ExtraColumn(lang, trans, root, passage);
         UpdatePassageButton(col); AttachColumnMove(col, dot, moveLeft, moveRight);
@@ -979,11 +984,16 @@ public partial class MainWindow : AppWindow
         // The clicked verse gets a veil and bar in the accent color of the program (or gray / blue by choice), not in a mark color:
         // a mark color means "saved with this color", so a selection must never look like one.
         var ink = SelectionInk();
+        var votd = VerseOfTheDay();
+        var votdHere = _curBook == votd.Book && _curChapter == votd.Chapter;
+        // the verse of the day: a quiet sand tone, not the accent colour, so it is not taken for a selection, a mark or "where I stopped"
+        var votdTint = new SolidColorBrush(Color.Parse(ActualThemeVariant == Avalonia.Styling.ThemeVariant.Dark ? "#D8B25A" : "#B8892B"), ActualThemeVariant == Avalonia.Styling.ThemeVariant.Dark ? 0.16 : 0.17);
         foreach (var (n, box) in _verseBoxes.Concat(_colBoxes.Where((_, k) => !IsForeign(k + 1)).SelectMany(d => d)))
         {
             var whole = _wholeMarks.TryGetValue(n, out var hex) || _otherWhole.TryGetValue(n, out hex) ? MarkColor(hex) : (Color?)null;
             var selected = _selVerses.Count > 0 ? _selVerses.Contains(n) : n == _selected;
             if (whole is { } c) box.Background = new SolidColorBrush(c, 0.14);
+            else if (votdHere && n == votd.Verse) { box.Background = votdTint; ToolTip.SetTip(box, L("Vers des Tages")); }
             else if (selected) box.Background = new SolidColorBrush(ink, 0.12);
             else box.ClearValue(Border.BackgroundProperty);
             box.BorderBrush = selected ? new SolidColorBrush(ink, 0.55) : whole is { } c2 ? new SolidColorBrush(c2) : Brushes.Transparent;

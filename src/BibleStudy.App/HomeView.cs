@@ -53,7 +53,13 @@ public sealed class HomeView : UserControl
     {
         Content = _scroll;
         _scroll.SizeChanged += (_, _) => Fit();
+        // The app starts: the page is built before it has a size (tiles of 148 in a panel of 200 = one column) and the size may arrive
+        // without a SizeChanged for this page; so the first layout passes with a width fit it too.
+        _scroll.LayoutUpdated += (_, _) => { if (_scroll.Bounds.Width > 0 && Math.Abs(_scroll.Bounds.Width - _fitWidth) > 0.5) Fit(); };
+        AttachedToVisualTree += (_, _) => Avalonia.Threading.Dispatcher.UIThread.Post(Fit, Avalonia.Threading.DispatcherPriority.Loaded);
     }
+
+    double _fitWidth;
 
     readonly List<Border> _tiles = [];
 
@@ -64,6 +70,9 @@ public sealed class HomeView : UserControl
     {
         if (_panel is null) return;
         var w = _scroll.Bounds.Width;
+        if (w <= 0) return;   // no size yet: nothing to fit to (the layout passes call this again)
+        _fitWidth = w;
+        _panel.Margin = w < 520 ? new(0, 16, 0, 40) : new(0, 40, 0, 70);
         _panel.Width = w < 520 ? Math.Max(200, w - 28) : Math.Clamp(w - 64, 400, 940);   // a phone is narrower than the smallest desktop page
         foreach (var t in _tiles) if (t.Width != TileWidth) t.Width = TileWidth;
     }

@@ -282,6 +282,18 @@ public sealed class AppSettings
     public bool FocusMode { get; set; }
     /// <summary>Parallel columns scroll together verse by verse (true) or each column on its own (false).</summary>
     public bool ParallelSync { get; set; } = true;
+    /// <summary>Parallel columns of one language: the words that differ from the neighbouring column are tinted.</summary>
+    public bool ShowDifferences { get; set; }
+    /// <summary>The list of marks is grouped by colour instead of by folder.</summary>
+    public bool MarksByColor { get; set; }
+    /// <summary>A reminder to read, once a day from this time on, when nothing was read yet that day.</summary>
+    public bool ReadingReminder { get; set; }
+    public string ReminderTime { get; set; } = "19:00";
+    /// <summary>The day the reminder was last shown ("yyyy-MM-dd"): it comes once a day.</summary>
+    public string ReminderShownOn { get; set; } = "";
+    /// <summary>Windows: a key combination that brings the program forward from anywhere (also out of the tray).</summary>
+    public bool GlobalHotkeyOn { get; set; }
+    public string GlobalHotkeyKeys { get; set; } = "CtrlAltB";
     /// <summary>With independent columns: the translations whose columns still scroll together (verse by verse). Empty = none.</summary>
     public List<string> ParallelSyncIds { get; set; } = [];
     /// <summary>Own color per parallel column position ("#RRGGBB"); empty or missing = the standard color.</summary>

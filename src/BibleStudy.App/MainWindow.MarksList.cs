@@ -23,6 +23,8 @@ public partial class MainWindow
     /// <summary>A folder is told apart over several vaults: vault number × span + folder id; vault headings count from <see cref="VaultKeyBase"/>.</summary>
     const long FolderKeySpan = 10_000_000;
     const long VaultKeyBase = 9_000_000_000;
+    /// <summary>Groups of colour (button "by colour") take their keys from here on, inside the number range of one vault.</summary>
+    const long ColorKeyOffset = 5_000_000;
 
     static int NaturalCompare(string a, string b)
     {
@@ -72,6 +74,7 @@ public partial class MainWindow
         var noFolder = !all && FolderFilterBox.SelectedIndex == 1;
         var tagFilter = TagFilterBox.SelectedIndex > 0 ? TagFilterBox.SelectedItem as string : null;
         var detail = MarksDetailBtn.IsChecked == true;
+        var byColor = MarksByColorBtn.IsChecked == true;
         var rows = new List<Entry>();
         var total = 0;
         // few folders: start expanded; many: collapsed (until the user decides)
@@ -104,13 +107,29 @@ public partial class MainWindow
             var cores = marks.Where(IsCore).ToList();
             var shown = marks.Where(m => !IsCore(m)).ToList();
 
-            foreach (var (id, name, depth) in folders.Select(f => (f.Id, f.Name, f.Depth)).Append((0L, L("Ohne Ordner"), 0)))
+            // the groups of the list: the folders, or (button "by colour") one group per colour, so every yellow verse is together whatever its folder
+            var groups = new List<(long Key, string Title, int Depth, List<Mark> Marks, string? Color)>();
+            if (byColor)
             {
-                var inFolder = shown.Where(m => (m.FolderId ?? 0) == id).OrderBy(m => BookOrder(m.Ref.Book)).ThenBy(m => m.Ref.Chapter).ThenBy(m => m.Ref.Verse).ToList();
+                var colors = shown.Select(m => m.Color.ToUpperInvariant()).Distinct().OrderBy(c => { var i = PresetColors.ToList().FindIndex(p => string.Equals(p, c, StringComparison.OrdinalIgnoreCase)); return i < 0 ? int.MaxValue : i; }).ThenBy(c => c).ToList();
+                for (var ci = 0; ci < colors.Count; ci++)
+                {
+                    var hex = colors[ci];
+                    var key = vnum * FolderKeySpan + ColorKeyOffset + ci;
+                    if (!_foldersTouched) _openFolders.Add(key);
+                    var list = shown.Where(m => string.Equals(m.Color, hex, StringComparison.OrdinalIgnoreCase)).ToList();
+                    groups.Add((key, (ColorName(hex) is { Length: > 0 } cn ? cn : hex), 0, list, hex));
+                }
+            }
+            else foreach (var (id, name, depth) in folders.Select(f => (f.Id, f.Name, f.Depth)).Append((0L, L("Ohne Ordner"), 0)))
+                groups.Add((vnum * FolderKeySpan + id, name, depth, shown.Where(m => (m.FolderId ?? 0) == id).ToList(), null));
+
+            foreach (var (key, name, depth, members, groupColor) in groups)
+            {
+                var inFolder = members.OrderBy(m => BookOrder(m.Ref.Book)).ThenBy(m => m.Ref.Chapter).ThenBy(m => m.Ref.Verse).ToList();
                 if (inFolder.Count == 0) continue;
-                var key = vnum * FolderKeySpan + id;
                 var open = _openFolders.Contains(key);
-                rows.Add(new Entry(default, $"{new string(' ', depth * 5)}{(open ? "▾" : "▸")}  {name}   ·   {L("{0} Verse", inFolder.Count)}", -1 - key, null));
+                rows.Add(new Entry(default, $"{new string(' ', depth * 5)}{(open ? "▾" : "▸")}  {(groupColor is null ? "" : "● ")}{name}   ·   {L("{0} Verse", inFolder.Count)}", -1 - key, groupColor));
                 if (!open) continue;
                 for (var i = 0; i < inFolder.Count; i++)
                 {

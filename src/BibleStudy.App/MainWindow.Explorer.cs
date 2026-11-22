@@ -166,6 +166,7 @@ public partial class MainWindow
             free.Items.Add(MenuAction(L("Hier einfügen (Strg+V)"), () => ExPaste(_exFolder), _exCut is not null));
             free.Items.Add(ExportMenu(_exFolder));
             free.Items.Add(MenuAction(L("Ganzen Vault als Markdown-Ordner exportieren …"), () => _ = ExportObsidianAsync()));
+            free.Items.Add(MenuAction(L("Markdown-Ordner einlesen …"), () => _ = ImportMarkdownFolderAsync()));
             free.Items.Add(MenuAction(_exUndo.Count > 0 ? L("Rückgängig: {0} (Strg+Z)", _exUndo[^1].Text) : L("Rückgängig (Strg+Z)"), ExUndoLast, _exUndo.Count > 0));
         };
         free.Items.Add(new MenuItem());   // a menu without items does not open

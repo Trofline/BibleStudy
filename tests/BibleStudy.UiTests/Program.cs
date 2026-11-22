@@ -772,6 +772,58 @@ Check("no sign where the mark is shown", !RunsOf((Control)F<System.Collections.I
     Call("ShowReader"); Settle(200);
 }
 
+
+// the list of marks grouped by colour: one heading per colour, every verse of that colour below it whatever its folder
+{
+    var vm = F<BibleStudy.Core.Storage.VaultStore>("_vault");
+    var folderId = vm.AddFolder("Farbtest-Ordner");
+    var m1 = vm.AddMark(tid, new BibleStudy.Core.Models.VerseRef("GEN", 1, 1), -1, -1, "", "#FFD54F", "", folderId, []);
+    var m2 = vm.AddMark(tid, new BibleStudy.Core.Models.VerseRef("GEN", 1, 2), -1, -1, "", "#FFD54F", "", null, []);
+    var m3 = vm.AddMark(tid, new BibleStudy.Core.Models.VerseRef("GEN", 1, 3), -1, -1, "", "#43A047", "", null, []);
+    var byColor = C<ToggleButton>("MarksByColorBtn");
+    byColor.IsChecked = true; Call("ApplyCollectionFilter"); Settle(300);
+    var colourRows = C<ListBox>("MarksList").ItemsSource!.Cast<Entry>().ToList();
+    var colourHeads = colourRows.Where(r => r.Id < 0).Select(r => r.Display).ToList();
+    Check("by colour: one heading per colour", colourHeads.Count(h => h.Contains("●")) >= 2, string.Join(" | ", colourHeads));
+    Check("by colour: the folder heading is gone", !colourHeads.Any(h => h.Contains("Farbtest-Ordner")), string.Join(" | ", colourHeads));
+    var iYellow = colourRows.FindIndex(r => r.Id == m1); var iYellow2 = colourRows.FindIndex(r => r.Id == m2); var iGreen = colourRows.FindIndex(r => r.Id == m3);
+    Check("by colour: both yellow verses lie together, the green one apart", iYellow >= 0 && iYellow2 > iYellow && colourRows.Skip(iYellow).Take(iYellow2 - iYellow).All(r => r.Id >= 0) && iGreen > iYellow2 + 1 && colourRows[iGreen - 1].Id < 0, $"{iYellow} {iYellow2} {iGreen}");
+    byColor.IsChecked = false; Call("ApplyCollectionFilter"); Settle(300);
+    Check("by folder again: the folder has its heading", C<ListBox>("MarksList").ItemsSource!.Cast<Entry>().Any(r => r.Id < 0 && r.Display.Contains("Farbtest-Ordner")));
+    vm.DeleteMark(m1); vm.DeleteMark(m2); vm.DeleteMark(m3); vm.DeleteFolder(folderId);
+}
+
+
+// parallel columns of one language: the words that differ from the neighbouring column are tinted, when the switch is on
+{
+    var verses2 = Enumerable.Range(1, 12).Select(n => new BibleStudy.Core.Import.ParsedVerse("GEN", 1, n, [new BibleStudy.Core.Models.Segment(n == 3
+        ? "Dies ist der Vers 3 der Testbibel und er hat reichlich Text, damit er eine Zeile füllt."
+        : $"Dies ist der Vers {n} der Testbibel und er hat genug Text, damit er eine Zeile füllt.")])).ToList();
+    var tid2 = local.Save(new BibleStudy.Core.Import.ParsedBible("Testbibel Zwei", "TB2", "de", verses2, []));
+    RunTask("ReloadTranslationsAsync", tid);
+    Settle(500);
+    var all = (IReadOnlyList<BibleStudy.Core.Models.TranslationInfo>)typeof(MainWindow).GetField("_all", All)!.GetValue(win)!;
+    var two = all.First(t => t.Id == tid2);
+    var extras2 = (System.Collections.IList)typeof(MainWindow).GetField("_extras", All)!.GetValue(win)!;
+    typeof(MainWindow).GetMethod("AddColumn", All)!.Invoke(win, [two]); Settle(500);
+    var settingsNow = (BibleStudy.Core.Storage.AppSettings)typeof(MainWindow).GetField("_settings", All)!.GetValue(win)!;
+    string[] Tinted(int col)
+    {
+        var cells = ((System.Collections.IEnumerable)typeof(MainWindow).GetField("_cells", All)!.GetValue(win)!).Cast<object>();
+        var cell = cells.First(c => { var d = c.GetType().GetProperty("Data")!.GetValue(c)!; return (int)d.GetType().GetProperty("Number")!.GetValue(d)! == 3 && (int)d.GetType().GetProperty("Col")!.GetValue(d)! == col; });
+        var tb = (TextBlock)cell.GetType().GetProperty("Tb")!.GetValue(cell)!;
+        return (tb.Inlines ?? []).OfType<Avalonia.Controls.Documents.Run>().Where(r => r.Background is not null).Select(r => r.Text!.Trim()).ToArray();
+    }
+    settingsNow.ShowDifferences = false; RunTask("RedrawChapterAsync"); Settle(600);
+    var base0 = Tinted(0); var base1 = Tinted(1);   // marks made by the tests before are tinted too
+    Check("differences off: only the earlier marks are tinted", !base0.Contains("genug") && !base1.Contains("reichlich"), string.Join("|", base1));
+    settingsNow.ShowDifferences = true; RunTask("RedrawChapterAsync"); Settle(600);
+    Check("differences on: the changed word is tinted in the column", Tinted(1).Except(base1).SequenceEqual(["reichlich"]), string.Join("|", Tinted(1)));
+    Check("differences on: and the word it replaced in the main text", Tinted(0).Except(base0).SequenceEqual(["genug"]), string.Join("|", Tinted(0)));
+    settingsNow.ShowDifferences = false;
+    extras2.Clear(); RunTask("RedrawChapterAsync"); Settle(400);
+}
+
 Console.WriteLine(fails == 0 ? "ALL OK" : $"{fails} FAILED");
 Environment.Exit(fails == 0 ? 0 : 1);
 Environment.Exit(fails);

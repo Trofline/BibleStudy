@@ -57,6 +57,7 @@ public partial class MainWindow
         RestoreWindowsCheck.IsCheckedChanged += (_, _) => { _settings.RestoreWindows = RestoreWindowsCheck.IsChecked == true; SaveSettings(); };
         StartModeBox.SelectionChanged += (_, _) => { _settings.StartMode = StartModeBox.SelectedIndex switch { 1 => "Maximized", 2 => "Minimized", _ => "Normal" }; SaveSettings(); };
         UpdateTray();
+        InitReminder();
 
         // custom title bar: drag, double click = maximize, own caption buttons
         TopBar.PointerPressed += (_, e) =>
@@ -166,6 +167,7 @@ public partial class MainWindow
         if (_settings.FocusMode && _preFocus is { } pre) _settings.LastLayout.SideOpen = pre.SideOpen;
         CloseAllDetached();
         SaveSettings();
+        _hotkey?.Dispose();
         _tray?.Dispose();
     }
 
