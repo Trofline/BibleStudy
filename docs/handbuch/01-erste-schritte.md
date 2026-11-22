@@ -14,7 +14,7 @@ BibleStudy ist ein kostenloses, quelloffenes Programm zum Bibelstudium für Wind
 - mit einer anderen Person direkt verbunden gemeinsam studieren,
 - auf Wunsch einen KI-Assistenten (Claude oder ein lokales Ollama-Modell) nutzen.
 
-Das Leitprinzip heißt **Scripture alone**: Der Bibeltext steht an erster Stelle. Kommentare sind Menschenwerk und deshalb standardmäßig ausgeblendet (siehe [Kapitel 13](13-einstellungen.md)).
+Das Leitprinzip heißt **Scripture alone**: Der Bibeltext steht an erster Stelle. BibleStudy bringt **keine Kommentare** mit; wer möchte, liest eigene ein (siehe [Kapitel 4.17](04-grundtext-wortstudie.md)).
 
 **Das Programm enthält keine Bibeltexte.** Übersetzungen, Wörterbücher und Daten werden erst von ihrer Originalquelle geladen, wenn du sie brauchst, und liegen dann im Zwischenspeicher auf deinem Computer. Lizenz und Herkunft siehst du in der Fußzeile und unter *Einstellungen → Quellen und Lizenzen*.
 

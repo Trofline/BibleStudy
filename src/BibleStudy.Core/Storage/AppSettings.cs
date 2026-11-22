@@ -291,9 +291,8 @@ public sealed class AppSettings
     public string ReminderTime { get; set; } = "19:00";
     /// <summary>The day the reminder was last shown ("yyyy-MM-dd"): it comes once a day.</summary>
     public string ReminderShownOn { get; set; } = "";
-    /// <summary>Windows: a key combination that brings the program forward from anywhere (also out of the tray).</summary>
-    public bool GlobalHotkeyOn { get; set; }
-    public string GlobalHotkeyKeys { get; set; } = "CtrlAltB";
+    /// <summary>Windows: the shortcut of the whole system that brings the program forward (the combination is in KeyBindings, "bringforward"). On from the start.</summary>
+    public bool GlobalHotkeyEnabled { get; set; } = true;
     /// <summary>With independent columns: the translations whose columns still scroll together (verse by verse). Empty = none.</summary>
     public List<string> ParallelSyncIds { get; set; } = [];
     /// <summary>Own color per parallel column position ("#RRGGBB"); empty or missing = the standard color.</summary>
@@ -317,7 +316,7 @@ public sealed class AppSettings
     public bool CategoriesSeeded { get; set; }
     /// <summary>Documents save themselves every few seconds while they are open (the toggle above the editor).</summary>
     public bool AutoSaveDocs { get; set; } = true;
-    public string Commentary { get; set; } = "matthew-henry";
+    public string Commentary { get; set; } = "";
     public Dictionary<string, string> KeyBindings { get; set; } = [];
     /// <summary>Plugins the user has allowed: plugin id → fingerprint of its plugin.json at the time (a changed plugin must be allowed again).</summary>
     public Dictionary<string, string> AllowedPlugins { get; set; } = [];

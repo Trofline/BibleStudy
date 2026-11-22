@@ -29,7 +29,7 @@ public partial class MainWindow
         void Line(string text) { stack.Children.Add(Muted(text)); md.Append(text).Append("\n\n"); }
         WrapPanel Chips() { var w = new WrapPanel(); stack.Children.Add(w); return w; }
 
-        var copy = new Button { Content = L("Als Markdown kopieren"), Classes = { "tool" }, Padding = new(10, 0), Height = 28, Margin = new(0, 0, 8, 0) };
+        var copy = new Button { Content = L("Als Markdown kopieren"), Classes = { "tool" }, Width = double.NaN, Padding = new(10, 0), Height = 28, Margin = new(0, 0, 8, 0) };
         copy.Click += async (_, _) =>
         {
             if (TopLevel.GetTopLevel(this)?.Clipboard is { } cb) { await cb.SetTextAsync(md.ToString()); StatusText.Text = L("Bericht kopiert."); }

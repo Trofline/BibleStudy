@@ -80,6 +80,7 @@ public partial class MainWindow : AppWindow
         var http = _http = new HttpClient();
         _hello = new HelloAoProvider(http, Path.Combine(_root, "cache"));
         _local = new LocalBibleStore(Path.Combine(_root, "local.db"));
+        _ownCommentaries = new LocalCommentaryStore(Path.Combine(_root, "commentaries.db"));
         CreatePlugins();
         _overlay = new StrongsOverlay(Path.Combine(_root, "strongs-overlay"));
         _provider = new CompositeProvider(_hello, _local, _pluginProvider) { Overlay = _overlay };
@@ -215,6 +216,7 @@ public partial class MainWindow : AppWindow
         InitLogo();
         InitLanguage();
         InitLibrary();
+        InitOwnCommentaries();
         ObsidianBtn.Click += async (_, _) => await ExportObsidianAsync();
         MarkdownImportBtn.Click += async (_, _) => await ImportMarkdownFolderAsync();
         EswordImportBtn.Click += async (_, _) => await ImportEswordNotesAsync();

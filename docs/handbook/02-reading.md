@@ -14,6 +14,7 @@ With ◀ ▶ (or Ctrl+← / Ctrl+→) you page through chapter by chapter, even 
 
 - The **Read** button (Ctrl+R) marks the chapter as read.
 - On the Home page, a bar for each book shows your progress. A section (for example "Gospels") can be marked as read or reset as a whole.
+- Under **Continue** the **verse of the day** is shown. A click opens it; in the text it lies on a **sand-coloured strip** that does not look like a selection or a mark. At the start the start page no longer shows the last book read in the top bar.
 - In the settings you can choose that a chapter counts as read automatically when you page on with ▶ or have scrolled to the end.
 
 Your reading progress belongs to the active **vault** (see [Chapter 15](15-backup-privacy.md)).
@@ -68,6 +69,9 @@ A bar appears above the text:
 - **Color button (palette):** changes the color of each column (see below).
 - **Presets ▾:** saves the arrangement of the columns and loads it again.
 - Per column: a **dot** (drag to move), **‹ ›** (column to the left/right), language, translation, a **passage button** and **✕** (remove column).
+- **Differences:** the box tints yellow the words that are different in the neighbouring column (the main text is compared with the first extra column, every extra column with the main text). Upper and lower case and punctuation do not count. This works only for translations in the **same language**; between two languages every word would differ.
+- **On a phone** the **✕** sits right behind the coloured dot, the choices wrap into a second line and the arrows ‹ › are left out (a column is moved by its dot). This leaves more room for reading.
+- **Using a column like the main text:** when a column has a passage of its own, click or tap a verse in it; right-click (long press on a phone) opens its menu: mark the verse or words, note, bookmark, voice note, copy, read aloud from here, projector, memorize, reading list, to-do, original text, cross references, commentary, open as main text. Marks, stars, notes and voice notes of that passage show in the column.
 
 ### A separate passage per column
 

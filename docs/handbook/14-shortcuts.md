@@ -41,8 +41,8 @@ Several of these shortcuts also work while you're typing in a text field (for ex
 | Ctrl+C | copy the selected text |
 | Ctrl+Z | undo the last highlight |
 | Alt+← / Alt+→ | back / forward through the passages you read last (so do the side buttons of the mouse) |
-| Tab / Shift+Tab | next / previous tab of the tab strip (Reading, Documents …) when no text field has the focus |
-| Ctrl+Tab | switch between reading and the last tab (the dot on the tab sets which one) |
+| Tab | switches between **two places**: reading and the last visited tab. If a tab has a **dot** (click the dot on the tab), Tab switches between reading and that tab; with **two dots** between those two tabs, without reading. More than two dots are not possible. Only when no text field has the focus |
+| Ctrl+Tab / Ctrl+Shift+Tab | through **all** tabs in turn, forward / back |
 | Middle mouse button | quick marking on/off |
 | In the Explorer: Ctrl+X, Ctrl+V, Del, Ctrl+Z, Ctrl+A | cut, paste, to the trash, undo, select all |
 | Esc | clear the selection |
@@ -107,3 +107,13 @@ The column colors of the Parallel view have no keyboard shortcut; they're found 
 | B | Black screen and back |
 | F11 or double click | Full screen on/off |
 | Esc | Close the projector view |
+
+
+## 14.7 Bring BibleStudy to the front from anywhere (Windows)
+
+A shortcut that works **in all of Windows**: it brings BibleStudy to the front even when another program is in front, the window is minimized or BibleStudy sits in the tray. It is at the very bottom of the **list of shortcuts** (*Settings → Windows and start → Shortcuts* or the *Shortcuts* button at the top) as **Bring BibleStudy to the front from anywhere**, **Ctrl+Alt+B** from the start.
+
+- **Changing it:** click the combination, then press the new keys, as with the other shortcuts. It needs **Ctrl or Alt** and a letter, digit, F or arrow key.
+- **On and off:** below the list the box *Switch on the shortcut for all of Windows* turns it on or off. It is **on** from the start.
+- **Taken:** if another program already has the combination, the status line at the bottom says so; then choose another one.
+- BibleStudy waits until you have let go of the keys and then comes to the front. Windows only; on a Mac, on Linux and on a phone the shortcut is not there.

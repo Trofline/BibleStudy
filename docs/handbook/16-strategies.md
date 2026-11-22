@@ -87,7 +87,7 @@ See [Chapter 8](08-sermon.md). Key points: central message in **one** sentence, 
 
 ## 16.11 Principles the Program Supports
 
-- **Scripture alone:** The Bible text first, commentaries only afterward (and shown only on request).
+- **Scripture alone:** The Bible text first; commentaries only afterward, and only your own that you read in yourself.
 - **Context before single verse.**
 - **Test instead of believe:** Check AI answers and word meanings against the text too.
 - **Record your own work:** What isn't written down is lost.

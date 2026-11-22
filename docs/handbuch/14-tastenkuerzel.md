@@ -41,8 +41,8 @@ Mehrere dieser Kürzel funktionieren auch, während du in einem Textfeld tippst 
 | Strg+C | ausgewählten Text kopieren |
 | Strg+Z | letzte Markierung rückgängig |
 | Alt+← / Alt+→ | zurück / vorwärts durch die zuletzt gelesenen Stellen (ebenso die Seitentasten der Maus) |
-| Tab / Umschalt+Tab | nächster / voriger Reiter der Reiterleiste (Lesen, Dokumente …), wenn kein Textfeld den Fokus hat |
-| Strg+Tab | zwischen Lesen und dem letzten Reiter wechseln (der Punkt am Reiter legt fest, zu welchem) |
+| Tab | wechselt zwischen **zwei Orten**: dem Lesen und dem zuletzt besuchten Reiter. Hat ein Reiter einen **Punkt** (auf den Punkt am Reiter klicken), wechselt Tab zwischen Lesen und diesem Reiter; bei **zwei Punkten** zwischen diesen beiden Reitern, ohne das Lesen. Mehr als zwei Punkte gibt es nicht. Nur wenn kein Textfeld den Fokus hat |
+| Strg+Tab / Strg+Umschalt+Tab | der Reihe nach durch **alle** Reiter, vor / zurück |
 | Mittlere Maustaste | Schnellmarkieren ein/aus |
 | Im Explorer: Strg+X, Strg+V, Entf, Strg+Z, Strg+A | ausschneiden, einfügen, in den Papierkorb, rückgängig, alles wählen |
 | Esc | Auswahl aufheben |
@@ -107,3 +107,13 @@ Die Spaltenfarben der Parallel-Ansicht haben kein Tastenkürzel; sie liegen am F
 | B | Schwarz schalten und wieder zeigen |
 | F11 oder Doppelklick | Vollbild an/aus |
 | Esc | Beamer-Ansicht schließen |
+
+
+## 14.7 BibleStudy von überall nach vorn holen (Windows)
+
+Ein Kürzel, das **in ganz Windows** gilt: Es holt BibleStudy nach vorn, auch wenn ein anderes Programm im Vordergrund ist, das Fenster minimiert ist oder BibleStudy im Infobereich liegt. Es steht ganz unten in der **Liste der Tastenkürzel** (*Einstellungen → Fenster und Start → Tastenkürzel* oder der Knopf *Tastenkürzel* oben) als **BibleStudy von überall nach vorn holen**, ab Werk **Strg+Alt+B**.
+
+- **Ändern:** Klick auf die Kombination, dann die neue Tastenkombination drücken, wie bei den anderen Kürzeln. Sie braucht **Strg oder Alt** und eine Buchstaben-, Zahlen-, F- oder Pfeiltaste.
+- **An und aus:** Unter der Liste schaltet das Kästchen *Tastenkürzel für ganz Windows einschalten* es an oder aus. Ab Werk ist es **an**.
+- **Belegt:** Hat schon ein anderes Programm die Kombination, steht das unten in der Statuszeile; dann eine andere wählen.
+- BibleStudy wartet, bis du die Tasten losgelassen hast, und kommt dann nach vorn. Nur Windows; auf dem Mac, unter Linux und auf dem Handy gibt es das Kürzel nicht.

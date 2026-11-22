@@ -824,6 +824,38 @@ Check("no sign where the mark is shown", !RunsOf((Control)F<System.Collections.I
     extras2.Clear(); RunTask("RedrawChapterAsync"); Settle(400);
 }
 
+// the shortcut that brings the program forward from anywhere: it is in the card of the shortcuts and registers with the system
+{
+    var hkCheck = C<CheckBox>("HotkeyCheck");
+    Check("shortcut from anywhere: sits in the card of the shortcuts", hkCheck.GetVisualAncestors().Any(a => a == C<StackPanel>("KeysPanel").Parent));
+    Check("shortcut from anywhere: and is in the list of shortcuts with Ctrl+Alt+B", ((System.Collections.IEnumerable)typeof(MainWindow).GetField("_keyActions", All)!.GetValue(win)!).Cast<object>().Any(a => (string)a.GetType().GetProperty("Id")!.GetValue(a)! == "bringforward" && (string)a.GetType().GetProperty("Default")!.GetValue(a)! == "Ctrl+Alt+B"));
+    var hkField = typeof(MainWindow).GetField("_hotkey", All)!;
+    hkCheck.IsChecked = false; Settle(200);
+    Check("shortcut from anywhere: off, nothing is registered", hkField.GetValue(win) is null);
+    hkCheck.IsChecked = true; Settle(400);
+    Check("shortcut from anywhere: on, it is registered with the system", hkField.GetValue(win) is not null, C<TextBlock>("StatusText").Text ?? "");
+    hkCheck.IsChecked = false; Settle(200);
+}
+
+// own commentaries: a commentary read in is listed and shows its notes at their chapter; none ship with the program
+{
+    var cstore = F<BibleStudy.Core.Import.LocalCommentaryStore>("_ownCommentaries");
+    Check("no commentary comes with the program", cstore.List().Count == 0, string.Join(", ", cstore.List().Select(c => c.Name)));
+    var cid = cstore.Save(BibleStudy.Core.Import.OwnCommentaries.ReadText("# Testkommentar\n\n## 1. Mose 1,1\nIm Anfang schuf Gott.\n\n## 1. Mose 1,2-3\nZweiter Eintrag.\n", "x"));
+    typeof(MainWindow).GetMethod("LoadCommentaryList", All)!.Invoke(win, [cid]);
+    RunTask("GoToAsync", "GEN", 1, (int?)null); Settle(500);
+    typeof(MainWindow).GetField("_shownCommentary", All)!.SetValue(win, null);
+    RunTask("ShowCommentaryAsync"); Settle(500);
+    var cards = C<StackPanel>("CommentaryPanel").Children.OfType<Border>().ToList();
+    Check("a commentary read in shows its two notes on the chapter", cards.Count == 2, $"cards={cards.Count} info={C<TextBlock>("CommentaryInfo").Text}");
+    Check("the box lists it", C<ComboBox>("CommentaryBox").ItemsSource!.Cast<BibleStudy.Core.Models.CommentaryInfo>().Any(c => c.Name == "Testkommentar"));
+    cstore.Remove(cid);
+    typeof(MainWindow).GetMethod("LoadCommentaryList", All)!.Invoke(win, [null]);
+    typeof(MainWindow).GetField("_shownCommentary", All)!.SetValue(win, null);
+    RunTask("ShowCommentaryAsync"); Settle(300);
+    Check("without a commentary the tab says so and offers no text of others", C<StackPanel>("CommentaryPanel").Children.Count == 0 && (C<TextBlock>("CommentaryInfo").Text ?? "").Contains("Kommentar"), C<TextBlock>("CommentaryInfo").Text ?? "");
+}
+
 Console.WriteLine(fails == 0 ? "ALL OK" : $"{fails} FAILED");
 Environment.Exit(fails == 0 ? 0 : 1);
 Environment.Exit(fails);

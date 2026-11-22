@@ -7,15 +7,13 @@ using BibleStudy.Core.Models;
 namespace BibleStudy.App;
 
 /// <summary>
-/// Full-text search in the chosen commentary. The commentary is read chapter by chapter once (kept in the cache folder, so later it
-/// works offline) and then searched in memory: every word of the search must occur in the note.
+/// Full-text search in the chosen commentary: it is read from the own store once and searched in memory; every word of the search must occur in the note.
 /// </summary>
 public partial class MainWindow
 {
     sealed record CommentaryHit(string Book, int Chapter, int Verse, string Text);
 
     readonly Dictionary<string, List<CommentaryHit>> _commentaryIndex = [];
-    bool _commentaryIndexing;
 
     void InitCommentarySearch()
     {
@@ -23,40 +21,15 @@ public partial class MainWindow
         CommentarySearchBtn.Click += async (_, _) => await SearchCommentaryAsync();
     }
 
+    /// <summary>All entries of the commentary in Bible order (read from the own store once and kept until the commentary is replaced or removed).</summary>
     async Task<List<CommentaryHit>?> CommentaryIndexAsync(CommentaryInfo c)
     {
         if (_commentaryIndex.TryGetValue(c.Id, out var ready)) return ready;
-        if (_commentaryIndexing) { CommentaryInfo.Text = L("Der Kommentar wird gerade eingelesen – bitte kurz warten."); return null; }
-        _commentaryIndexing = true;
-        try
-        {
-            var chapters = _books.SelectMany(b => Enumerable.Range(1, b.NumberOfChapters).Select(ch => (b.Id, ch))).ToList();
-            var hits = new List<CommentaryHit>(); var done = 0;
-            using var gate = new SemaphoreSlim(6);
-            await Task.WhenAll(chapters.Select(async x =>
-            {
-                await gate.WaitAsync();
-                try
-                {
-                    var chapter = await _hello.GetCommentaryAsync(c.Id, x.Id, x.ch);
-                    if (chapter is null) return;
-                    var local = new List<CommentaryHit>();
-                    if (chapter.Introduction.Length > 0) local.Add(new CommentaryHit(x.Id, x.ch, 0, chapter.Introduction));
-                    local.AddRange(chapter.Notes.Select(n => new CommentaryHit(x.Id, x.ch, n.Verse, n.Text)));
-                    lock (hits) hits.AddRange(local);
-                }
-                catch { /* a chapter that cannot be read is skipped */ }
-                finally
-                {
-                    gate.Release();
-                    if (Interlocked.Increment(ref done) % 25 == 0) Avalonia.Threading.Dispatcher.UIThread.Post(() => CommentaryInfo.Text = L("Einmalig: {0} wird eingelesen … {1}/{2} Kapitel", c.Name, done, chapters.Count));
-                }
-            }));
-            var order = _books.Select((b, i) => (b.Id, i)).ToDictionary(p => p.Id, p => p.i);
-            hits = hits.OrderBy(h => order.GetValueOrDefault(h.Book, 999)).ThenBy(h => h.Chapter).ThenBy(h => h.Verse).ToList();
-            return _commentaryIndex[c.Id] = hits;
-        }
-        finally { _commentaryIndexing = false; }
+        var all = await Task.Run(() => _ownCommentaries.All(c.Id));
+        var order = _books.Select((b, i) => (b.Id, i)).ToDictionary(p => p.Id, p => p.i);
+        var hits = all.Select(h => new CommentaryHit(h.Book, h.Chapter, h.Verse, h.Text))
+            .OrderBy(h => order.GetValueOrDefault(h.Book, 999)).ThenBy(h => h.Chapter).ThenBy(h => h.Verse).ToList();
+        return _commentaryIndex[c.Id] = hits;
     }
 
     async Task SearchCommentaryAsync()

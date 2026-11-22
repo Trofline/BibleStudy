@@ -87,7 +87,7 @@ Siehe [Kapitel 8](08-predigt.md). Kernpunkte: Kernaussage in **einem** Satz, Gli
 
 ## 16.11 Grundsätze, die das Programm unterstützt
 
-- **Scripture alone:** Der Bibeltext zuerst, Kommentare erst danach (und nur auf Wunsch eingeblendet).
+- **Scripture alone:** Der Bibeltext zuerst; Kommentare erst danach und nur eigene, die du selbst eingelesen hast.
 - **Kontext vor Einzelvers.**
 - **Prüfen statt glauben:** Auch KI-Antworten und Wortbedeutungen am Text prüfen.
 - **Eigene Arbeit festhalten:** Was nicht aufgeschrieben ist, geht verloren.

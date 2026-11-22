@@ -201,38 +201,9 @@ public sealed class HelloAoProvider(HttpClient http, string cacheDir) : IBiblePr
         if (pos < text.Length) yield return new Segment(text[pos..], jesus);
     }
 
-    // ---- library: commentaries and the Bible dictionary (Theographic, based on Easton's Bible Dictionary) ------------------
+    // ---- library: the Bible dictionary (Theographic, based on Easton's Bible Dictionary) ------------------
 
     public static string LexiconAttribution => L("Lexikon: Theographic Bible Metadata (CC BY-SA 4.0), Texte aus Easton's Bible Dictionary (1897, gemeinfrei)");
-
-    public async Task<IReadOnlyList<CommentaryInfo>> GetCommentariesAsync(CancellationToken ct = default)
-    {
-        using var doc = await GetJsonAsync("/api/available_commentaries.json", ct);
-        return doc.RootElement.GetProperty("commentaries").EnumerateArray()
-            .Select(c => new CommentaryInfo(Str(c, "id"), Str(c, "name"), Str(c, "licenseUrl"), Str(c, "languageName"))).ToList();
-    }
-
-    /// <summary>Comments of one chapter: introduction (book introduction for chapter 1) and the notes per verse. Null when the work has no notes here.</summary>
-    public async Task<CommentaryChapter?> GetCommentaryAsync(string commentaryId, string book, int chapter, CancellationToken ct = default)
-    {
-        JsonDocument doc;
-        try { doc = await GetJsonAsync($"/api/c/{commentaryId}/{book}/{chapter}.json", ct); }
-        catch (HttpRequestException) { return null; }
-        using (doc)
-        {
-            var ch = doc.RootElement.GetProperty("chapter");
-            var intro = Str(ch, "introduction");
-            if (chapter == 1 && doc.RootElement.TryGetProperty("book", out var b) && Str(b, "introduction") is { Length: > 0 } bookIntro) intro = (bookIntro + "\n\n" + intro).Trim();
-            var notes = new List<CommentaryNote>();
-            foreach (var item in ch.GetProperty("content").EnumerateArray())
-            {
-                if (Str(item, "type") != "verse" || !item.TryGetProperty("number", out var n)) continue;
-                var text = string.Join("\n\n", item.GetProperty("content").EnumerateArray().Where(x => x.ValueKind == JsonValueKind.String).Select(x => x.GetString()));
-                if (text.Length > 0) notes.Add(new CommentaryNote(n.GetInt32(), text));
-            }
-            return new CommentaryChapter(intro, notes);
-        }
-    }
 
     /// <summary>All people and places of the dictionary (names only; details are loaded per entry).</summary>
     public async Task<IReadOnlyList<LexiconItem>> GetLexiconIndexAsync(CancellationToken ct = default)

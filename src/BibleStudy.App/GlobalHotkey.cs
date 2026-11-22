@@ -15,6 +15,7 @@ sealed class GlobalHotkey : IDisposable
     [DllImport("user32.dll")] static extern bool UnregisterHotKey(IntPtr hWnd, int id);
     [DllImport("user32.dll")] static extern int GetMessage(out Msg msg, IntPtr hWnd, uint min, uint max);
     [DllImport("user32.dll")] static extern bool PostThreadMessage(uint threadId, uint msg, UIntPtr wParam, IntPtr lParam);
+    [DllImport("user32.dll")] static extern short GetAsyncKeyState(int vk);
     [DllImport("kernel32.dll")] static extern uint GetCurrentThreadId();
 
     const int Id = 0x4253;
@@ -35,11 +36,21 @@ sealed class GlobalHotkey : IDisposable
             Registered = RegisterHotKey(IntPtr.Zero, Id, modifiers | NoRepeat, key);
             _ready.Set();
             if (!Registered) return;
-            try { while (GetMessage(out var m, IntPtr.Zero, 0, 0) > 0) if (m.Message == WmHotkey) pressed(); }
+            try { while (GetMessage(out var m, IntPtr.Zero, 0, 0) > 0) if (m.Message == WmHotkey) { WaitForRelease(key); pressed(); } }
             finally { UnregisterHotKey(IntPtr.Zero, Id); }
         }) { IsBackground = true, Name = "BibleStudy hotkey" };
         thread.Start();
         _ready.Wait(2000);
+    }
+
+    /// <summary>
+    /// The window that comes forward while the keys are still down would get their release (Ctrl, Alt, B going up) as its own keys; so the program waits
+    /// until they are up (at most 1.5 seconds).
+    /// </summary>
+    static void WaitForRelease(uint key)
+    {
+        var until = Environment.TickCount64 + 1500;
+        while (Environment.TickCount64 < until && ((GetAsyncKeyState(0x11) | GetAsyncKeyState(0x12) | GetAsyncKeyState(0x10) | GetAsyncKeyState((int)key)) & 0x8000) != 0) Thread.Sleep(15);
     }
 
     public void Dispose()

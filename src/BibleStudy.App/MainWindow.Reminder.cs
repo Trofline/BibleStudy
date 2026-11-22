@@ -1,5 +1,6 @@
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Input;
 using Avalonia.Layout;
 using Avalonia.Media;
 using Avalonia.Threading;
@@ -17,14 +18,6 @@ public partial class MainWindow
     DateTime? _reminderPause;
     bool _reminderShowing;
     GlobalHotkey? _hotkey;
-
-    static readonly (string Id, string Label, uint Modifiers, uint Key)[] Hotkeys =
-    [
-        ("CtrlAltB", K("Strg + Alt + B"), GlobalHotkey.Control | GlobalHotkey.Alt, 0x42),
-        ("CtrlShiftB", K("Strg + Umschalt + B"), GlobalHotkey.Control | GlobalHotkey.Shift, 0x42),
-        ("CtrlAltL", K("Strg + Alt + L"), GlobalHotkey.Control | GlobalHotkey.Alt, 0x4C),
-        ("CtrlAltSpace", K("Strg + Alt + Leertaste"), GlobalHotkey.Control | GlobalHotkey.Alt, 0x20),
-    ];
 
     void InitReminder()
     {
@@ -50,34 +43,71 @@ public partial class MainWindow
         _reminderTimer.Start();
         DispatcherTimer.RunOnce(CheckReminder, TimeSpan.FromSeconds(25));   // an app opened after the time: reminded a little after the start page is there
 
-        // the key combination: Windows only
+
+        // the key combination: Windows only; the combination itself is in the list of shortcuts ("bringforward")
         HotkeyRow.IsVisible = OperatingSystem.IsWindows();
-        HotkeyBox.ItemsSource = Hotkeys.Select(h => L(h.Label)).ToList();
-        HotkeyBox.SelectedIndex = Math.Max(0, Array.FindIndex(Hotkeys, h => h.Id == _settings.GlobalHotkeyKeys));
-        HotkeyCheck.IsChecked = _settings.GlobalHotkeyOn;
-        HotkeyBox.IsEnabled = _settings.GlobalHotkeyOn;
-        HotkeyCheck.IsCheckedChanged += (_, _) => { _settings.GlobalHotkeyOn = HotkeyCheck.IsChecked == true; HotkeyBox.IsEnabled = _settings.GlobalHotkeyOn; SaveSettings(); ApplyHotkey(true); };
-        HotkeyBox.SelectionChanged += (_, _) =>
+        HotkeyCheck.IsChecked = _settings.GlobalHotkeyEnabled;
+        HotkeyCheck.IsCheckedChanged += (_, _) => { _settings.GlobalHotkeyEnabled = HotkeyCheck.IsChecked == true; SaveSettings(); ApplyHotkey(true); };
+        // brought forward and minimised again within a moment: that was not the user, the window comes back (a stray key release, the system menu of Alt)
+        PropertyChanged += (_, e) =>
         {
-            if (HotkeyBox.SelectedIndex < 0) return;
-            _settings.GlobalHotkeyKeys = Hotkeys[HotkeyBox.SelectedIndex].Id; SaveSettings(); ApplyHotkey(true);
+            if (e.Property == WindowStateProperty && WindowState == WindowState.Minimized && (DateTime.Now - _broughtForward).TotalMilliseconds < 1500)
+                Dispatcher.UIThread.Post(() => { WindowState = WindowState.Normal; Activate(); });
         };
         ApplyHotkey(false);
+    }
+
+    DateTime _broughtForward = DateTime.MinValue;
+
+    /// <summary>"Ctrl+Alt+B" → the modifiers and the key code of Windows; null when that cannot be a shortcut for the whole system (it needs Ctrl or Alt and a letter, digit, F, arrow or similar key).</summary>
+    static (uint Modifiers, uint Key)? HotkeyOf(string gesture)
+    {
+        uint mods = 0; Key? key = null;
+        foreach (var part in gesture.Split('+'))
+        {
+            switch (part)
+            {
+                case "Ctrl": mods |= GlobalHotkey.Control; break;
+                case "Alt": mods |= GlobalHotkey.Alt; break;
+                case "Shift": mods |= GlobalHotkey.Shift; break;
+                default: key = Enum.TryParse<Key>(part switch { "Plus" => "OemPlus", "Minus" => "OemMinus", _ => part }, out var k) ? k : null; break;
+            }
+        }
+        if (key is not { } kk || (mods & (GlobalHotkey.Control | GlobalHotkey.Alt)) == 0) return null;
+        uint? vk = kk switch
+        {
+            >= Key.A and <= Key.Z => 0x41u + (uint)(kk - Key.A),
+            >= Key.D0 and <= Key.D9 => 0x30u + (uint)(kk - Key.D0),
+            >= Key.F1 and <= Key.F12 => 0x70u + (uint)(kk - Key.F1),
+            Key.Space => 0x20, Key.Home => 0x24, Key.End => 0x23, Key.PageUp => 0x21, Key.PageDown => 0x22,
+            Key.Left => 0x25, Key.Up => 0x26, Key.Right => 0x27, Key.Down => 0x28, Key.Insert => 0x2D, Key.Delete => 0x2E,
+            Key.OemPlus => 0xBB, Key.OemMinus => 0xBD,
+            _ => null,
+        };
+        return vk is { } v ? (mods, v) : null;
     }
 
     void ApplyHotkey(bool report)
     {
         _hotkey?.Dispose(); _hotkey = null;
-        if (!OperatingSystem.IsWindows() || !_settings.GlobalHotkeyOn) return;
-        var h = Hotkeys.FirstOrDefault(x => x.Id == _settings.GlobalHotkeyKeys, Hotkeys[0]);
+        if (!OperatingSystem.IsWindows() || !_settings.GlobalHotkeyEnabled) return;
+        if (_keyActions.FirstOrDefault(a => a.Id == "bringforward") is not { } action) return;
+        var gesture = GestureOf(action);
+        if (gesture.Length == 0) { if (report) StatusText.Text = L("Für „BibleStudy von überall nach vorn holen“ ist keine Tastenkombination gewählt (Liste der Tastenkürzel)."); return; }
+        if (HotkeyOf(gesture) is not { } h)
+        {
+            StatusText.Text = L("Als Kürzel für ganz Windows geht nur eine Kombination mit Strg oder Alt und einer Buchstaben-, Zahlen-, F- oder Pfeiltaste.");
+            return;
+        }
         var made = new GlobalHotkey(h.Modifiers, h.Key, () => Dispatcher.UIThread.Post(BringForward));
-        if (made.Registered) { _hotkey = made; if (report) StatusText.Text = L("Tastenkürzel {0}: BibleStudy kommt jetzt von überall nach vorn.", L(h.Label)); }
-        else StatusText.Text = L("Das Tastenkürzel {0} ist schon von einem anderen Programm belegt. Wähle ein anderes.", L(h.Label));
+        if (made.Registered) { _hotkey = made; if (report) StatusText.Text = L("Tastenkürzel {0}: BibleStudy kommt jetzt von überall nach vorn.", Pretty(gesture)); }
+        else StatusText.Text = L("Das Tastenkürzel {0} ist schon von einem anderen Programm belegt. Wähle ein anderes.", Pretty(gesture));
     }
 
     /// <summary>Out of the tray, out of the taskbar, from behind other windows.</summary>
     void BringForward()
     {
+        _broughtForward = DateTime.Now;
         RestoreFromTray();
         Topmost = true; Topmost = false;   // a window that is only "activated" may stay behind others; this puts it on top once
         Activate();

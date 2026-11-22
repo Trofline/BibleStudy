@@ -35,7 +35,7 @@ public partial class MainWindow
     /// <summary>The commentary chosen last (or the first one), loading the list once.</summary>
     async Task<CommentaryInfo?> CurrentCommentaryAsync()
     {
-        if (_commentaries.Count == 0) _commentaries = await _hello.GetCommentariesAsync();
+        if (_commentaries.Count == 0) _commentaries = await Task.Run(() => _ownCommentaries.List());
         return _commentaries.FirstOrDefault(c => c.Id == _settings.Commentary) ?? _commentaries.FirstOrDefault();
     }
 
@@ -45,8 +45,17 @@ public partial class MainWindow
         try
         {
             var c = await CurrentCommentaryAsync();
-            if (c is null || version != _guideVersion) return;
-            var chapter = await _hello.GetCommentaryAsync(c.Id, r.Book, r.Chapter);
+            if (version != _guideVersion) return;
+            if (c is null)
+            {
+                into.Children.Clear();
+                into.Children.Add(Muted(L("Noch kein Kommentar eingelesen.")));
+                var import = new Button { Content = L("Eigenen Kommentar einlesen …"), HorizontalAlignment = HorizontalAlignment.Left, Margin = new(0, 4, 0, 0) };
+                import.Click += async (_, _) => await ImportCommentaryAsync();
+                into.Children.Add(import);
+                return;
+            }
+            var chapter = await Task.Run(() => _ownCommentaries.GetChapter(c.Id, r.Book, r.Chapter));
             if (version != _guideVersion) return;
             into.Children.Clear();
             var open = new Button { Content = L("Ganzen Kommentar öffnen"), HorizontalAlignment = HorizontalAlignment.Left, Margin = new(0, 4, 0, 0) };
@@ -58,7 +67,7 @@ public partial class MainWindow
                 return;
             }
             var last = r.Book == _curBook && r.Chapter == _curChapter && _verseBoxes.Count > 0 ? _verseBoxes.Keys.Max() : 0;
-            var ranges = CommentaryRanges.Of(c.Id, chapter.Notes, r.Chapter, last);
+            var ranges = chapter.Ranges is { } own ? own.Select(x => (x.From, To: last > 0 ? Math.Min(x.To, Math.Max(x.From, last)) : x.To)).ToList() : CommentaryRanges.Of(c.Id, chapter.Notes, r.Chapter, last);
             var i = ranges.FindLastIndex(x => x.From <= r.Verse && r.Verse <= x.To);
             if (i < 0)
             {

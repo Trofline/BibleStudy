@@ -23,7 +23,7 @@ Your language is missing? Save the **template with the AI instruction**, have an
 - **Selection color:** accent color (default), gray or blue.
 - **Hebrew:** show/hide vowel points and accent marks (cantillation).
 - **Translate word meanings into my language** (AI).
-- **Show commentaries** (human work, not the Bible text; takes effect after a restart).
+- **Show own commentaries** (BibleStudy ships none; you read in your own files, see [Chapter 4.17](04-original-text-word-study.md)) and the button **Read in own commentary …**.
 - **Animations:** sidebar, tabs, and chapters slide in smoothly; strength from *Subtle* to *Big*.
 - **Closing animation:** how the program says goodbye: *Soft* (zoom out), *Blur* (drift out of focus), *Subtle* (fade only), *Tube TV* or *None*.
 - **Large chapter header** (otherwise plain).
@@ -57,6 +57,8 @@ More options:
 - Minimize to the notification area when closing (quit via right-click on the icon),
 - Remember window position and size,
 - Restore open windows (documents, books …) at start.
+- **Bring BibleStudy to the front from anywhere** with a key combination (Ctrl+Alt+B and three more to choose from, Windows only; it is in the *Shortcuts* card, see [Chapter 14](14-shortcuts.md)),
+- **Reminder to read** from a time on, if nothing has been read today (under *Reading*, see [Chapter 7](07-planning.md)).
 
 ## 13.5 Keyboard shortcuts
 
@@ -105,6 +107,7 @@ Open plugin folder, **Reload**, allow plugins, guide for authors (see [Chapter 1
 - **Export …** writes the active vault (highlights, folders, tags, notes, documents, reading list, to-dos, reading progress) and your settings as a ZIP. **Import …** creates a new vault from it.
 - **Import as guest …** opens the ZIP for this session only, for example on someone else's computer: the guest vault is not backed up, not opened at the next start and disappears when the program closes. Existing vaults and settings stay untouched.
 - **Export as Obsidian vault …** (see [Chapter 6](06-documents-knowledge.md)).
+- **Read a Markdown folder …** (the counterpart of the export, see [Chapter 5](05-notes-highlights-bookmarks.md)).
 - **Import notes from e-Sword …** takes over notes and own commentaries from e-Sword or MySword (see [Chapter 6.15](06-documents-knowledge.md)).
 - **Automatic backup** of all data (ZIP): Off, Daily, Weekly, Monthly; **Choose backup folder …**; **Back up now**.
 - **Use a Syncthing folder …:** To share between several devices, you put the backups in a Syncthing folder. **Never sync the live data folder itself**; that can corrupt files.

@@ -179,13 +179,12 @@ Der Reiter **Synopse** (in der Leiste „Studium“) zeigt eine Begebenheit so, 
 
 Die Zuordnung der Parallelen ist für dieses Programm zusammengestellt und folgt der üblichen Einteilung in Abschnitte.
 
-## 4.17 Kirchenväter
+## 4.17 Eigene Kommentare
 
-Der Reiter **Kirchenväter** (in der Leiste „Bücher“) zeigt, was Augustinus, Johannes Chrysostomus, Hieronymus, Origenes und viele andere zum **angeklickten Vers** geschrieben haben, die ältesten zuerst. Er folgt dem Vers, den du anklickst.
+BibleStudy bringt **keine Kommentare mit** und lädt auch keine aus dem Netz: Was ein Kommentar lehrt, beurteilst du selbst. Du kannst aber **eigene Kommentare einlesen**, die du besitzt oder selbst geschrieben hast. Sie bleiben auf deinem Computer und werden nicht geprüft.
 
-- Die Sammlung („Historical Christian Faith“, gemeinfrei, auf Englisch) wird **einmal geladen** (etwa 180 MB) und liegt danach auf deinem Rechner, auch offline. **Sammlung vom Rechner löschen** gibt den Platz wieder frei.
-- **Nur Kirchenväter (bis zum Jahr 750)** ist voreingestellt. Ohne den Haken kommen spätere Ausleger dazu (Thomas von Aquin, Reformatoren …).
-- Lange Auszüge sind gekürzt; **Ganzer Text** zeigt alles. **Quelle** öffnet das Werk, aus dem der Auszug stammt.
-- Steht über einem Auszug „zu 3,14–17“, gilt er für einen Abschnitt, zu dem dein Vers gehört.
-
-Einige Auszüge späterer Autoren nimmt die Sammlung nach eigener Angabe unter „Fair Use“ auf; prüfe bei einer Veröffentlichung die Quelle.
+- **Einlesen:** *Einstellungen → Darstellung → Eigenen Kommentar einlesen …* oder im Reiter **Kommentare** (Leiste „Bücher“) der Knopf **Eigenen Kommentar einlesen …**. Das Einlesen schaltet die Anzeige der Kommentare ein.
+- **Formate:** e-Sword-Kommentare (`.cmtx`), MySword-Kommentare (`.cmt.mybible`) und **Markdown- oder Textdateien**. In einer solchen Datei beginnt eine Zeile, die nur eine Bibelstelle enthält (auch als Überschrift, fett oder mit Doppelpunkt, zum Beispiel `## Joh 3,16-18`), den Eintrag zu diesen Versen; die Zeilen darunter gehören dazu. Eine Überschrift mit Buch und Kapitel (`## Johannes 3`) ist die Einleitung des Kapitels. Eine erste Überschrift, die keine Bibelstelle ist, wird der Name des Kommentars.
+- **Lesen:** Der Reiter zeigt die Einträge des offenen Kapitels; der angeklickte Vers wird hervorgehoben. Die Vers-Übersicht zeigt den Eintrag zum Vers, **In Dokument zitieren** übernimmt ihn, das Suchfeld oben findet Wörter im ganzen Kommentar.
+- **Entfernen:** Der Knopf **Entfernen** nimmt den gewählten Kommentar aus BibleStudy; deine Datei bleibt. Liest du dieselbe Datei erneut ein, ersetzt sie den Kommentar gleichen Namens.
+- **Als Notizen:** *Notizen aus e-Sword importieren …* macht aus den Einträgen eines e-Sword- oder MySword-Kommentars stattdessen deine eigenen Notizen zu den Versen (siehe [Kapitel 6.15](06-dokumente-wissen.md)).

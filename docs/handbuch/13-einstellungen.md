@@ -23,7 +23,7 @@ Deine Sprache fehlt? Speichere die **Vorlage mit der KI-Anweisung**, lass sie vo
 - **Farbe der Auswahl:** Akzentfarbe (Standard), Grau oder Blau.
 - **Hebräisch:** Vokalzeichen und Akzentzeichen (Kantillation) ein-/ausblenden.
 - **Wortbedeutungen in meine Sprache übersetzen** (KI).
-- **Kommentare anzeigen** (Menschenwerk, nicht der Bibeltext; gilt nach Neustart).
+- **Eigene Kommentare anzeigen** (BibleStudy bringt keine mit; du liest eigene Dateien ein, siehe [Kapitel 4.17](04-grundtext-wortstudie.md)) und der Knopf **Eigenen Kommentar einlesen …**.
 - **Animationen:** Seitenleiste, Reiter und Kapitel gleiten sanft ein; Stärke *Dezent* bis *Groß*.
 - **Schließ-Animation:** wie sich das Programm verabschiedet: *Weich* (wegzoomen), *Unscharf* (verschwimmen), *Dezent* (nur ausblenden), *Röhrenfernseher* oder *Keine*.
 - **Großes Kapitel-Kopfstück** (sonst schlicht).
@@ -57,6 +57,8 @@ Weitere Optionen:
 - Beim Schließen in den Infobereich minimieren (Beenden über Rechtsklick auf das Symbol),
 - Fensterposition und -größe merken,
 - Geöffnete Fenster (Dokumente, Bücher …) beim Start wiederherstellen.
+- **BibleStudy von überall nach vorn holen** mit einer Tastenkombination (Strg+Alt+B und drei weitere zur Wahl, nur Windows; liegt in der Karte *Tastenkürzel*, siehe [Kapitel 14](14-tastenkuerzel.md)),
+- **Erinnerung zum Lesen** ab einer Uhrzeit, wenn heute noch nichts gelesen wurde (unter *Lesen*, siehe [Kapitel 7](07-planen.md)).
 
 ## 13.5 Tastenkürzel
 
@@ -105,6 +107,7 @@ Plugin-Ordner öffnen, **Neu einlesen**, Plugins erlauben, Anleitung für Autore
 - **Exportieren …** schreibt den aktiven Vault (Markierungen, Ordner, Tags, Notizen, Dokumente, Leseliste, To-dos, Lesefortschritt) und deine Einstellungen als ZIP. **Importieren …** legt daraus einen neuen Vault an.
 - **Als Gast importieren …** öffnet die ZIP nur für diese Sitzung, zum Beispiel am Computer von jemand anderem: Der Gast-Vault wird nicht gesichert, nicht beim nächsten Start geöffnet und verschwindet beim Schließen des Programms. Vorhandene Vaults und Einstellungen bleiben unberührt.
 - **Als Obsidian-Vault exportieren …** (siehe [Kapitel 6](06-dokumente-wissen.md)).
+- **Markdown-Ordner einlesen …** (Gegenstück zum Export, siehe [Kapitel 5](05-notizen-markierungen-lesezeichen.md)).
 - **Notizen aus e-Sword importieren …** übernimmt Notizen und eigene Kommentare aus e-Sword oder MySword (siehe [Kapitel 6.15](06-dokumente-wissen.md)).
 - **Automatische Sicherung** aller Daten (ZIP): Aus, Täglich, Wöchentlich, Monatlich; **Sicherungsordner wählen …**; **Jetzt sichern**.
 - **Syncthing-Ordner nutzen …:** Zwischen mehreren Geräten legst du die Sicherungen in einen Syncthing-Ordner. **Synchronisiere nie den laufenden Datenordner selbst**, das kann Dateien beschädigen.

@@ -18,6 +18,10 @@ Everything you write or mark yourself belongs to the **active vault** (your fold
 
 Verses with a note show a ✎ next to the verse number. Below, in the tab, you'll find all your notes; clicking one jumps to the passage.
 
+### Voice note on a verse
+
+In the verse menu (right-click, long press on a phone) you record a voice note with the **microphone** (computer, Android and iPhone; up to 5 minutes). Then you listen to it, give it a name and keep or discard it. A **♪** stands next to the verse number; playing and deleting work in the verse menu and in the verse overview. Voice notes are kept in the vault and therefore **synchronise**.
+
 ## 5.3 Highlights
 
 There are three kinds:
@@ -40,6 +44,10 @@ In the verse menu (right-click) you can put an **own heading** before a verse (n
 
 Under *Notes → Highlights* (the collection) you organize highlights into **folders** and give them **tags**. The button at the top right shows the highlights of **all vaults** at once (also in the reading text, to look at only) or only those of the active one; the state is kept. If you like, the program assigns the **book name as a tag** when saving (setting). Clicking an entry jumps to the passage.
 
+### Sort by colour
+
+In the **Marks** tab the button with the **palette** sorts the list by **colour** instead of by folder: all yellow verses together, all green ones, and so on, whatever folder they are in. The heading of a colour carries its name (see *name colours*) or the colour value; a click folds the group. The button remembers its state. The filters (folder, tags) and the *all vaults* view still apply.
+
 ### The Explorer
 
 In the **Explorer** tab (right sidebar) you see all highlights and notes like in a file explorer: with folders and sub-folders, a tree on the left, the path on top and a sortable list (click a column heading).
@@ -48,6 +56,8 @@ In the **Explorer** tab (right sidebar) you see all highlights and notes like in
 - **Typing jumps:** type “u” and you land on the first entry starting with “u”. Typing on narrows it down. The field above filters the folder.
 - **Several at once:** select, then right-click: **Change color …** and **Tags** (add or remove) for all selected highlights. This can be taken back as well.
 - **Trash:** what you delete goes to the **trash** (bottom of the tree). It stays there for **30 days**, also after a restart. **Double-click**, **Enter** or right-click → *Restore* brings it back; a deleted folder returns with its content. *Delete for good …* and *Empty trash …* ask first. Documents and highlights removed in the reading text land there too.
+- **Trash button:** above the list of documents and in the bar that appears after deleting, a button opens the trash with everything that lies there.
+- **Copy or move into another vault:** marks and notes can be copied or moved into another vault, with colour, note, tags and their folder. Long folder names end with "…" in the tree and the path.
 - **Undo in the reading text too:** when a highlight is removed in the text or in the *Highlights* tab, **Undo** appears briefly at the bottom.
 - **Exporting:** right-click a folder → as PDF / print or as a Markdown file.
 - **Linking notes:** Bible references in a note (for example John 3:16) become links below the note. The note on John 3:16 shows at the bottom which other notes refer to it.
@@ -74,3 +84,4 @@ Everything lives in the vault and is included in every backup. For sharing:
 
 - *Settings → Export …* writes the active vault, including settings, as a ZIP; *Import …* creates a **new** vault from it.
 - *Export as Obsidian vault …* (also by right-click in the Explorer) writes the whole vault as a Markdown folder: your folders as folders, every note and document as its own file, Bible references as links, plus highlights, bookmarks, reading list and to-dos. Obsidian and other note programs open it directly.
+- *Read a Markdown folder …* (*Settings → My data*, also in the Explorer menu) brings a folder of Markdown files into the **active** vault: an Obsidian vault or an earlier export. Each file becomes a **document** (title from the head, the first heading or the file name), folders stay **folders**, `tags:` in the head and `#keywords` in the text become tags, `[text](File.md)` and `[[Folder/Title]]` become links between documents. Files of the export with `verse:` in the head become **notes** of their verse again. **Nothing is replaced:** if a document or note with the same title already exists, both are **merged line by line** (what both have stays once). Whoever goes on writing in Obsidian and reads it back gets no copies. The program makes a **backup** first. Not read are pictures, the lists of the export (marks, reading list, bookmarks, to-dos, start) and folders whose name starts with a dot (.obsidian).

@@ -5,17 +5,15 @@ static class Licenses
 {
     public static readonly (string Name, string Use, string License)[] Sources =
     [
-        (L("Free Use Bible API (HelloAO)"), L("Übersetzungen, Kommentare, Datensätze"), L("Freie Nutzung; jede Übersetzung nennt ihre eigene Lizenz in der Fußzeile")),
+        (L("Free Use Bible API (HelloAO)"), L("Übersetzungen, Datensätze"), L("Freie Nutzung; jede Übersetzung nennt ihre eigene Lizenz in der Fußzeile")),
         (L("Berean Standard Bible und Interlinear"), L("Wort für Wort Hebräisch/Griechisch"), L("Gemeinfrei")),
         (L("Open Cross Reference (OpenBible.info)"), L("Querverweise"), L("CC BY 4.0")),
         (L("Theographic Bible Metadata"), L("Personen, Orte, Ereignisse, Zeitleiste"), L("CC BY-SA 4.0")),
         (L("MACULA Greek / Hebrew (Clear Bible)"), L("Morphologie und Syntax"), L("CC BY 4.0")),
         (L("Easton's Bible Dictionary"), L("Bibellexikon"), L("Gemeinfrei (1897)")),
         (L("STEPBible Lexikon (Tyndale House)"), L("Strong-Wörterbuch"), L("CC BY 4.0")),
-        (L("Kommentare (Matthew Henry, JFB, Keil-Delitzsch, Calvin, Tyndale u. a.)"), L("Kommentare"), L("je Kommentar angezeigt; meist gemeinfrei, Tyndale CC BY-SA 4.0")),
         ("OpenThesaurus", L("Deutsche Synonyme"), L("CC BY-SA 4.0 / LGPL")),
         ("SIPSorcery (WebRTC)", L("Direktverbindung beim gemeinsamen Studium"), "BSD-3-Clause"),
-        (L("Historical Christian Faith – Commentaries Database"), L("Kirchenväter"), L("Gemeinfrei (einige Auszüge laut Quelle unter Fair Use)")),
         (L("Natural Earth"), L("Weltkarte"), L("Gemeinfrei")),
         ("QRCoder", L("QR-Code für die Handys"), "MIT"),
         (L("Avalonia UI, Microsoft.Data.Sqlite, ModelContextProtocol"), L("Programmbibliotheken"), L("MIT / Apache-2.0")),

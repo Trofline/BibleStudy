@@ -72,7 +72,7 @@ All files are in the **[latest release](https://github.com/Trofline/BibleStudy/r
 </table>
 
 > [!NOTE]
-> The guiding principle is **Scripture alone**: the Bible text comes first. Commentaries (human writings) stay hidden unless you switch them on.
+> The guiding principle is **Scripture alone**: the Bible text comes first. BibleStudy ships no commentaries; if you like, you read in your own.
 
 ## ✨ What you can do
 

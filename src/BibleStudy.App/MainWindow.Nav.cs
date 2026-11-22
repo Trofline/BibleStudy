@@ -63,7 +63,6 @@ public partial class MainWindow
         new(K("Bücher"), "M4 19.5A2.5 2.5 0 0 1 6.5 17H20 M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z",
         [
             ..CommentaryTabs(),
-            new(FathersTab, K("Kirchenväter"), L("Was die Kirchenväter und Ausleger der Kirchengeschichte zum angeklickten Vers geschrieben haben (gemeinfreie Sammlung).")),
             new(LexiconTab, K("Lexikon"), L("Bibellexikon zu Personen und Orten (Easton's Bible Dictionary über Theographic). Oben stehen die Namen des aktuellen Kapitels.")),
         ], Windowed: true),
         new(K("Notizen"), "M12 20h9 M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z",

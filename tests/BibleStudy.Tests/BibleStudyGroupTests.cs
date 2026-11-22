@@ -205,40 +205,6 @@ public class BibleStudyGroupTests : IDisposable
         Assert.Equal("offnete", Synopsis.Fold("öffnete"));
     }
 
-    // ---- the church fathers -------------------------------------------------------------------------------------------------
-
-    [Fact]
-    public void The_fathers_on_a_verse_are_found_by_their_range_and_year()
-    {
-        var path = Path.Combine(_dir, "cache", "fathers", "commentaries.sqlite");
-        Directory.CreateDirectory(Path.GetDirectoryName(path)!);
-        using (var con = new SqliteConnection("Data Source=" + path))
-        {
-            con.Open();
-            using var cmd = con.CreateCommand();
-            cmd.CommandText = """
-                CREATE TABLE father_meta(name, default_year, wiki_url, father_category, condemned_by_council);
-                CREATE TABLE commentary(id, father_name, file_name, append_to_author_name, ts INTEGER, book, location_start INTEGER, location_end INTEGER, txt, source_url, source_title);
-                INSERT INTO father_meta VALUES('Augustine of Hippo', '430', '', 'Western', 0);
-                INSERT INTO commentary VALUES('1','Augustine of Hippo','John 3_16.toml','',430,'john',3000016,3000016,'God so loved','https://x/1','Tractate 12');
-                INSERT INTO commentary VALUES('2','John Chrysostom','John 3_14-17.toml','',407,'john',3000014,3000017,'Range','','');
-                INSERT INTO commentary VALUES('3','Thomas Aquinas','John 3_16.toml','',1274,'john',3000016,3000016,'Later','','');
-                INSERT INTO commentary VALUES('4','Origen','John 3_17.toml','',254,'john',3000017,3000017,'Other verse','','');
-                """;
-            cmd.ExecuteNonQuery();
-        }
-        SqliteConnection.ClearAllPools();
-        var fathers = new ChurchFathers(new HttpClient(), Path.Combine(_dir, "cache"));
-        Assert.True(fathers.IsLoaded);
-        var early = fathers.For("JHN", 3, 16, 750);
-        Assert.Equal(["John Chrysostom", "Augustine of Hippo"], early.Select(q => q.Father));   // the oldest first, the range 3:14-17 counts
-        Assert.Equal("3,14–17", early[0].Range);
-        Assert.Equal("Western", early[1].Category);
-        Assert.Equal(3, fathers.For("JHN", 3, 16).Count);
-        Assert.Empty(fathers.For("XYZ", 1, 1));
-        Assert.Equal("songofsolomon", ChurchFathers.BookKey("SNG"));
-    }
-
     // ---- Hebrew roots ---------------------------------------------------------------------------------------------------------
 
     [Fact]

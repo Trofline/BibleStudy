@@ -14,7 +14,7 @@ BibleStudy is a free, open-source Bible study program for Windows, Linux, and ma
 - study together with another person, connected directly,
 - use an AI assistant (Claude or a local Ollama model) if you like.
 
-The guiding principle is **Scripture alone**: the Bible text comes first. Commentaries are the work of people and are therefore hidden by default (see [Chapter 13](13-settings.md)).
+The guiding principle is **Scripture alone**: the Bible text comes first. BibleStudy brings **no commentaries**; if you like, you read in your own (see [Chapter 4.17](04-original-text-word-study.md)).
 
 **The program contains no Bible texts.** Translations, dictionaries, and data are downloaded from their original source only when you need them, and are then kept in the cache on your computer. You can see the license and origin in the footer and under *Settings → Sources and licenses*.
 

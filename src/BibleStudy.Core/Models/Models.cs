@@ -56,7 +56,7 @@ public sealed record StrongsOccurrence(string Strong, VerseRef Ref, string Word)
 
 public sealed record CommentaryInfo(string Id, string Name, string LicenseUrl, string Language);
 public sealed record CommentaryNote(int Verse, string Text);
-public sealed record CommentaryChapter(string Introduction, IReadOnlyList<CommentaryNote> Notes);
+public sealed record CommentaryChapter(string Introduction, IReadOnlyList<CommentaryNote> Notes, IReadOnlyList<(int From, int To)>? Ranges = null);
 public sealed record LexiconItem(string Kind, string Id, string Name, int References);
 public sealed record LexiconEntry(string Kind, string Id, string Name, IReadOnlyList<string> AlsoCalled, IReadOnlyList<string> Description,
     IReadOnlyList<VerseRef> References, IReadOnlyList<LexiconItem> Related, string FeatureType);

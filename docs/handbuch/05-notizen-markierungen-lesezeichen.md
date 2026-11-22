@@ -18,6 +18,10 @@ Alles, was du selbst schreibst oder markierst, gehört zum **aktiven Vault** (de
 
 Verse mit Notiz tragen ein ✎ neben der Versnummer. Darunter im Reiter stehen alle deine Notizen; ein Klick darauf springt zur Stelle.
 
+### Sprachnotiz zu einem Vers
+
+Im Vers-Menü (Rechtsklick, am Handy langes Drücken) nimmst du mit dem **Mikrofon** eine Sprachnotiz auf (Computer, Android und iPhone; bis zu 5 Minuten). Danach hörst du sie an, gibst ihr einen Namen und behältst oder verwirfst sie. Neben der Versnummer steht ein **♪**; abspielen und löschen geht im Vers-Menü und in der Vers-Übersicht. Sprachnotizen liegen im Vault und werden deshalb **mitsynchronisiert**.
+
 ## 5.3 Markierungen
 
 Es gibt drei Arten:
@@ -40,6 +44,10 @@ Im Vers-Menü (Rechtsklick) kannst du vor einem Vers eine **eigene Überschrift*
 
 Unter *Notizen → Markierungen* (die Sammlung) ordnest du Markierungen in **Ordner** und versiehst sie mit **Tags**. Der Knopf rechts oben zeigt die Markierungen **aller Vaults** gleichzeitig (auch im Lesetext, nur zum Ansehen) oder nur die des aktiven; der Zustand bleibt gespeichert. Auf Wunsch vergibt das Programm beim Speichern den **Buchnamen als Tag** (Einstellung). Ein Klick auf einen Eintrag springt zur Stelle.
 
+### Nach Farbe ordnen
+
+Im Reiter **Markierungen** ordnet der Knopf mit der **Palette** die Liste nach **Farbe** statt nach Ordner: alle gelben Verse stehen zusammen, alle grünen, und so weiter, egal in welchem Ordner sie liegen. Die Überschrift einer Farbe trägt ihren Namen (siehe *Farben benennen*) oder den Farbwert; ein Klick klappt die Gruppe zu. Der Knopf merkt sich seinen Zustand. Die Filter (Ordner, Tags) und die Ansicht *alle Vaults* gelten weiter.
+
 ### Der Explorer
 
 Im Reiter **Explorer** (rechte Leiste) siehst du alle Markierungen und Notizen wie im Datei-Explorer: mit Ordnern und Unterordnern, einem Baum links, dem Pfad oben und einer sortierbaren Liste (Klick auf eine Spaltenüberschrift).
@@ -48,6 +56,8 @@ Im Reiter **Explorer** (rechte Leiste) siehst du alle Markierungen und Notizen w
 - **Tippen springt:** Wer „u“ tippt, landet beim ersten Eintrag mit „u“. Schnell weitergetippt wird genauer gesucht. Das Feld darüber filtert den Ordner.
 - **Mehrere auf einmal:** Auswählen, dann Rechtsklick: **Farbe ändern …** und **Tags** (hinzufügen oder entfernen) für alle gewählten Markierungen. Auch das lässt sich zurücknehmen.
 - **Papierkorb:** Was du löschst, landet im **Papierkorb** (unten im Baum). Dort bleibt es **30 Tage**, auch nach einem Neustart. **Doppelklick**, **Enter** oder Rechtsklick → *Wiederherstellen* holt es zurück; ein gelöschter Ordner kommt mit seinem Inhalt. *Endgültig löschen …* und *Papierkorb leeren …* fragen vorher nach. Auch Dokumente und im Lesetext entfernte Markierungen landen dort.
+- **Papierkorb-Knopf:** Über der Dokumentenliste und in der Leiste, die nach dem Löschen erscheint, öffnet ein Knopf den Papierkorb mit allem, was dort liegt.
+- **In einen anderen Vault kopieren oder verschieben:** Markierungen und Notizen lassen sich in einen anderen Vault kopieren oder verschieben, mit Farbe, Notiz, Tags und ihrem Ordner. Lange Ordnernamen enden im Baum und im Pfad mit „…“.
 - **Rückgängig auch im Lesetext:** Wird eine Markierung im Text oder im Reiter *Markierungen* entfernt, erscheint unten kurz **Rückgängig**.
 - **Exportieren:** Rechtsklick auf einen Ordner → als PDF / Drucken oder als Markdown-Datei.
 - **Notizen verlinken:** Bibelstellen in einer Notiz (zum Beispiel Joh 3,16) werden unter der Notiz zu Links. Die Notiz zu Joh 3,16 zeigt unten, welche anderen Notizen auf sie verweisen.
@@ -74,3 +84,4 @@ Alles liegt im Vault und ist in jeder Sicherung enthalten. Zum Weitergeben:
 
 - *Einstellungen → Exportieren …* schreibt den aktiven Vault samt Einstellungen als ZIP; *Importieren …* legt daraus einen **neuen** Vault an.
 - *Als Obsidian-Vault exportieren …* (auch per Rechtsklick im Explorer) schreibt den ganzen Vault als Markdown-Ordner: deine Ordner als Ordner, jede Notiz und jedes Dokument als eigene Datei, Bibelstellen als Links, dazu Markierungen, Lesezeichen, Leseliste und To-dos. Obsidian und andere Notiz-Programme öffnen ihn direkt.
+- *Markdown-Ordner einlesen …* (*Einstellungen → Meine Daten*, auch im Explorer-Menü) holt einen Ordner mit Markdown-Dateien in den **aktiven** Vault: einen Obsidian-Vault oder einen früheren Export. Jede Datei wird ein **Dokument** (Titel aus dem Kopf, der ersten Überschrift oder dem Dateinamen), Ordner bleiben **Ordner**, `tags:` im Kopf und `#Schlagworte` im Text werden Tags, `[Text](Datei.md)` und `[[Ordner/Titel]]` werden Links zwischen Dokumenten. Dateien aus dem Export mit `verse:` im Kopf werden wieder **Notizen** zu ihrem Vers. **Nichts wird ersetzt:** Gibt es schon ein Dokument oder eine Notiz gleichen Titels, wird beides **Zeile für Zeile zusammengeführt** (was beide haben, steht einmal da). Wer in Obsidian weiterschreibt und zurückliest, bekommt so keine Kopien. Vorher legt das Programm eine **Sicherung** an. Nicht gelesen werden Bilder, die Listen des Exports (Markierungen, Leseliste, Lesezeichen, To-dos, Start) und Ordner, deren Name mit einem Punkt beginnt (.obsidian).

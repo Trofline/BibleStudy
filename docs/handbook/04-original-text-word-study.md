@@ -179,13 +179,12 @@ The **Synopsis** tab (in the "Study" rail) shows an event as Matthew, Mark, Luke
 
 The list of parallels was compiled for this program and follows the usual division into sections.
 
-## 4.17 Church fathers
+## 4.17 Own commentaries
 
-The **Church fathers** tab (in the "Books" rail) shows what Augustine, John Chrysostom, Jerome, Origen and many others wrote on the **verse clicked**, the oldest first. It follows the verse you click.
+BibleStudy brings **no commentaries** and loads none from the net: what a commentary teaches is for you to judge. But you can **read in commentaries of your own**, ones you own or wrote yourself. They stay on your computer and are not checked.
 
-- The collection ("Historical Christian Faith", public domain, in English) is **loaded once** (about 180 MB) and then stays on your computer, offline too. **Delete the collection from the computer** frees the space again.
-- **Church fathers only (up to the year 750)** is on by default. Without the tick, later interpreters are added (Thomas Aquinas, the Reformers …).
-- Long excerpts are shortened; **Whole text** shows everything. **Source** opens the work the excerpt comes from.
-- If an excerpt says "on 3,14–17", it is about a passage your verse belongs to.
-
-By its own account, the collection includes some excerpts of later authors under "fair use"; check the source before you publish anything.
+- **Reading in:** *Settings → Appearance → Read in own commentary …* or, in the **Commentaries** tab ("Books" rail), the button **Read in own commentary …**. Reading one in switches the commentaries on.
+- **Formats:** e-Sword commentaries (`.cmtx`), MySword commentaries (`.cmt.mybible`) and **Markdown or text files**. In such a file a line that holds only a Bible reference (also as a heading, bold or with a colon, for example `## John 3:16-18`) starts the entry for these verses; the lines below belong to it. A heading with a book and a chapter (`## John 3`) is the introduction of that chapter. A first heading that is no Bible reference becomes the name of the commentary.
+- **Reading:** The tab shows the entries of the open chapter; the verse clicked is highlighted. The verse overview shows the entry for the verse, **Quote in document** takes it over, and the search box above finds words in the whole commentary.
+- **Removing:** The **Remove** button takes the chosen commentary out of BibleStudy; your file stays. Reading the same file in again replaces the commentary of the same name.
+- **As notes:** *Import notes from e-Sword …* turns the entries of an e-Sword or MySword commentary into your own notes on the verses instead (see [Chapter 6.15](06-documents-knowledge.md)).

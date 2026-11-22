@@ -77,7 +77,7 @@ public partial class MainWindow
                     await ApplyColumnColorsAsync();
                 };
                 row.Children.Add(entry);
-                var reset = new Button { Classes = { "tool" }, Height = 26, Padding = new(8, 0), Content = L("Standard") };
+                var reset = new Button { Classes = { "tool" }, Width = double.NaN, Height = 26, Padding = new(8, 0), Content = L("Standard") };
                 reset.Click += async (_, _) => { SetColumnColor(col, null); Redraw(); await ApplyColumnColorsAsync(); };
                 row.Children.Add(reset);
                 panel.Children.Add(row);

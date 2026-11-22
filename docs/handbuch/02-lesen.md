@@ -14,6 +14,7 @@ Mit ◀ ▶ (oder Strg+← / Strg+→) blätterst du Kapitel für Kapitel, auch 
 
 - Der Knopf **Gelesen** (Strg+R) markiert das Kapitel als gelesen.
 - Auf der Startseite zeigt ein Balken je Buch den Fortschritt. Ein Abschnitt (zum Beispiel „Evangelien“) lässt sich im Ganzen als gelesen markieren oder zurücksetzen.
+- Unter **Weiterarbeiten** steht der **Vers des Tages**. Klick öffnet ihn; im Text liegt er auf einem **sandfarbenen Streifen**, der nicht wie eine Auswahl oder eine Markierung aussieht. Die Startseite zeigt beim Start nicht mehr das zuletzt gelesene Buch in der oberen Leiste.
 - In den Einstellungen kannst du wählen, dass ein Kapitel automatisch als gelesen gilt, wenn du mit ▶ weiterblätterst oder bis ans Ende gescrollt hast.
 
 Der Lesefortschritt gehört zum aktiven **Vault** (siehe [Kapitel 15](15-sicherung-datenschutz.md)).
@@ -68,6 +69,9 @@ Der Knopf **Parallel** fügt eine weitere Übersetzung als Spalte hinzu, bis zu 
 - **Farb-Knopf (Palette):** ändert die Farbe jeder Spalte (siehe unten).
 - **Presets ▾:** speichert die Anordnung der Spalten und lädt sie wieder.
 - Pro Spalte: ein **Punkt** (zum Verschieben ziehen), **‹ ›** (Spalte nach links/rechts), Sprache, Übersetzung, ein **Stellen-Knopf** und **✕** (Spalte entfernen).
+- **Unterschiede:** Das Kästchen tönt gelb die Wörter, die in der Nachbarspalte anders stehen (der Haupttext wird mit der ersten Zusatzspalte verglichen, jede Zusatzspalte mit dem Haupttext). Groß- und Kleinschreibung und Satzzeichen zählen nicht. Das geht nur bei Übersetzungen **derselben Sprache**; zwischen zwei Sprachen wäre jedes Wort anders.
+- **Auf dem Handy** steht das **✕** gleich hinter dem farbigen Punkt, die Auswahl bricht in eine zweite Zeile um, und die Pfeile ‹ › fehlen (die Spalte wird am Punkt verschoben). So bleibt mehr Platz zum Lesen.
+- **Eine Spalte wie den Haupttext benutzen:** Hat eine Spalte eine eigene Stelle, klickt oder tippst du darin einen Vers an; Rechtsklick (am Handy langes Drücken) öffnet sein Menü: Vers markieren oder Wörter markieren, Notiz, Lesezeichen, Sprachnotiz, kopieren, ab hier vorlesen, Beamer, auswendig lernen, Leseliste, To-do, Grundtext, Querverweise, Kommentar, als Haupttext öffnen. Markierungen, Sterne, Notizen und Sprachnotizen dieser Stelle erscheinen in der Spalte.
 
 ### Eine eigene Stelle pro Spalte
 

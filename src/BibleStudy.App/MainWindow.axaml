@@ -752,7 +752,8 @@
 
                                 <TextBlock Text="Ansicht und Bewegung" FontWeight="SemiBold" Margin="0,14,0,0" />
                                 <CheckBox x:Name="CompactLookCheck" Content="Kompakte Ansicht: alles rechts in der Leiste wie früher (gilt nach Neustart)" />
-                                <CheckBox x:Name="CommentariesCheck" Content="Kommentare anzeigen (Menschenwerk, nicht der Bibeltext; gilt nach Neustart)" />
+                                <CheckBox x:Name="CommentariesCheck" Content="Eigene Kommentare anzeigen (BibleStudy bringt keine mit; du liest eigene Dateien ein)" />
+                                <Button x:Name="CommentaryImportSettingsBtn" Content="Eigenen Kommentar einlesen …" HorizontalAlignment="Left" ToolTip.Tip="Liest einen Kommentar aus einer eigenen Datei ein: e-Sword (.cmtx), MySword (.cmt.mybible) oder eine Markdown- oder Textdatei, in der jede Bibelstelle (zum Beispiel ## Joh 3,16) eine eigene Zeile hat. Er bleibt auf deinem Computer." />
                                 <CheckBox x:Name="AnimationsCheck" Content="Animationen (Seitenleiste, Reiter, Kapitel gleiten sanft ein)" />
                                 <StackPanel Orientation="Horizontal" Spacing="10">
                                     <TextBlock Text="Stärke der Animationen" VerticalAlignment="Center" />
@@ -829,6 +830,9 @@
                                 <TextBlock Classes="caption" TextWrapping="Wrap" Text="Klicke auf eine Kombination und drücke die neue Taste. Entf löscht eine Belegung, Esc bricht ab." />
                                 <StackPanel x:Name="KeysPanel" />
                                 <Button x:Name="ResetKeysBtn" Content="Alle auf Standard zurücksetzen" HorizontalAlignment="Left" Margin="0,6,0,0" />
+                                <StackPanel x:Name="HotkeyRow" Orientation="Horizontal" Spacing="10" Margin="0,12,0,0">
+                                    <CheckBox x:Name="HotkeyCheck" Content="Tastenkürzel für ganz Windows einschalten (BibleStudy von überall nach vorn holen; die Kombination steht oben in der Liste)" ToolTip.Tip="Das Kürzel wirkt auch dann, wenn ein anderes Programm vorn ist oder BibleStudy im Infobereich liegt." />
+                                </StackPanel>
                             </StackPanel></Border>
 
                             <Border Classes="card"><StackPanel Spacing="8">
@@ -842,10 +846,6 @@
                                 </StackPanel>
                                 <CheckBox x:Name="TrayCheck" Content="Symbol im Infobereich (System-Tray) anzeigen" />
                                 <CheckBox x:Name="CloseToTrayCheck" Content="Beim Schließen in den Infobereich minimieren (Beenden über Rechtsklick auf das Symbol)" />
-                                <StackPanel x:Name="HotkeyRow" Orientation="Horizontal" Spacing="10">
-                                    <CheckBox x:Name="HotkeyCheck" Content="BibleStudy von überall nach vorn holen mit" ToolTip.Tip="Ein Tastenkürzel, das auch dann wirkt, wenn ein anderes Programm vorn ist oder BibleStudy im Infobereich liegt." />
-                                    <Border Classes="pill"><ComboBox x:Name="HotkeyBox" Width="190" /></Border>
-                                </StackPanel>
                                 <CheckBox x:Name="RememberWindowCheck" Content="Fensterposition und -größe merken" />
                                 <CheckBox x:Name="RestoreWindowsCheck" Content="Geöffnete Fenster (Dokumente, Bücher …) beim Start wiederherstellen" />
                                 <CheckBox x:Name="TaskbarRevealCheck" Content="Maximiert: automatisch ausgeblendete Taskleiste mit der Maus am Bildschirmrand einblenden" />
@@ -1158,6 +1158,10 @@
                         <StackPanel DockPanel.Dock="Top" Spacing="6" Margin="0,0,0,8">
                             <Border Classes="pill"><ComboBox x:Name="CommentaryBox" HorizontalAlignment="Stretch">
                             </ComboBox></Border>
+                            <WrapPanel>
+                                <Button x:Name="CommentaryImportBtn" Content="Eigenen Kommentar einlesen …" Margin="0,0,6,0" />
+                                <Button x:Name="CommentaryRemoveBtn" Content="Entfernen" ToolTip.Tip="Entfernt den gewählten Kommentar aus BibleStudy (deine Datei bleibt)" />
+                            </WrapPanel>
                             <Grid ColumnDefinitions="*,Auto">
                                 <TextBox x:Name="CommentarySearchBox" PlaceholderText="Im ganzen Kommentar suchen" />
                                 <Button x:Name="CommentarySearchBtn" Grid.Column="1" Content="Suchen" Margin="6,0,0,0" />
@@ -1227,9 +1231,6 @@
                 </TabItem>
                 <TabItem Header="Synopse">
                     <ScrollViewer><StackPanel x:Name="SynopsisPanel" Spacing="8" Margin="16,10,12,16" /></ScrollViewer>
-                </TabItem>
-                <TabItem Header="Kirchenväter">
-                    <ScrollViewer><StackPanel x:Name="FathersPanel" Spacing="8" Margin="16,10,12,16" /></ScrollViewer>
                 </TabItem>
             </TabControl>
             </DockPanel>

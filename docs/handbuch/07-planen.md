@@ -54,6 +54,10 @@ Vorhanden sind zum Beispiel:
 
 Pro Tag zeigt der Plan die Kapitel; ein Knopf markiert **alle Kapitel dieses Tages** als gelesen. Das Programm zählt den Fortschritt und die Serie (aufeinanderfolgende Tage).
 
+### Erinnerung zum Lesen
+
+Unter *Einstellungen → Lesen* schaltest du die **Erinnerung zum Lesen** ein und wählst eine Uhrzeit (in halben Stunden). **Einmal am Tag** ab dieser Zeit meldet sich BibleStudy, **wenn du heute noch kein Kapitel gelesen hast**. Ist das Programm vorn, erscheint die Leiste unten mit **Jetzt lesen**; liegt es im Infobereich, ist minimiert oder verdeckt, erscheint unten rechts ein kleines Fenster, das den Fokus nicht an sich reißt, mit **Jetzt lesen**, **In einer Stunde** und **Schließen** (nach einer Minute verschwindet es von selbst). *Jetzt lesen* öffnet die Kapitel von heute aus deinem Leseplan, sonst die Stelle, an der du aufgehört hast. Ist BibleStudy ganz beendet, kommt keine Erinnerung; auf dem Handy erscheint sie beim Öffnen der App.
+
 ## 7.5 Auswendig lernen
 
 1. Verse vormerken: Rechtsklick auf einen Vers → *Zum Auswendiglernen*, oder im Reiter *Auswendig lernen* hinzufügen.

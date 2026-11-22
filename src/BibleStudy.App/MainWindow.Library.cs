@@ -10,7 +10,7 @@ using BibleStudy.Core.Storage;
 
 namespace BibleStudy.App;
 
-/// <summary>Reference library: free commentaries (Matthew Henry, JFB, Keil-Delitzsch, Tyndale …) and the Bible dictionary of people and places.</summary>
+/// <summary>Reference library: the commentaries the user read in (none come with the program) and the Bible dictionary of people and places.</summary>
 public partial class MainWindow
 {
     const int CommentaryTab = 16, LexiconTab = 17;
@@ -39,7 +39,6 @@ public partial class MainWindow
     {
         if (TabActive(CommentaryTab)) _ = ShowCommentaryAsync();
         if (TabActive(LexiconTab)) _ = ShowLexiconAsync();
-        if (TabActive(FathersTab)) _ = ShowFathersAsync();
         if (TabActive(AnalysisTab)) BuildAnalysisUi();
     }
 
@@ -49,14 +48,12 @@ public partial class MainWindow
     {
         try
         {
+            if (_commentaries.Count == 0) LoadCommentaryList();
             if (_commentaries.Count == 0)
             {
-                CommentaryInfo.Text = L("Lade Kommentarliste …");
-                _commentaries = await _hello.GetCommentariesAsync();
-                _libraryLoading = true;
-                CommentaryBox.ItemsSource = _commentaries;
-                CommentaryBox.SelectedItem = _commentaries.FirstOrDefault(c => c.Id == _settings.Commentary) ?? _commentaries.FirstOrDefault();
-                _libraryLoading = false;
+                CommentaryPanel.Children.Clear(); _commentaryCards.Clear(); _shownCommentary = null;
+                CommentaryInfo.Text = L("Noch kein Kommentar eingelesen. BibleStudy bringt keine Kommentare mit: Mit „Eigenen Kommentar einlesen …“ holst du eine eigene Datei herein (e-Sword .cmtx, MySword .cmt.mybible oder eine Markdown- oder Textdatei).");
+                return;
             }
             if (CommentaryBox.SelectedItem is not CommentaryInfo c || _curBook == "") return;
             if (_shownCommentary != (c.Id, _curBook, _curChapter))
@@ -64,18 +61,19 @@ public partial class MainWindow
                 _shownCommentary = (c.Id, _curBook, _curChapter);
                 CommentaryPanel.Children.Clear(); _commentaryCards.Clear();
                 CommentaryInfo.Text = L("Lade {0} zu {1} {2} …", c.Name, BookName(_curBook), _curChapter);
-                var chapter = await _hello.GetCommentaryAsync(c.Id, _curBook, _curChapter);
+                var (bookNow, chapterNow) = (_curBook, _curChapter);
+                var chapter = await Task.Run(() => _ownCommentaries.GetChapter(c.Id, bookNow, chapterNow));
                 if (_shownCommentary != (c.Id, _curBook, _curChapter)) return;
                 CommentaryInfo.Text = chapter is null || (chapter.Notes.Count == 0 && chapter.Introduction.Length == 0)
                     ? L("{0} hat zu {1} {2} keine Anmerkungen. Wähle oben einen anderen Kommentar.", c.Name, BookName(_curBook), _curChapter)
-                    : L("{0} zu {1} {2} · {3} · Englisch", c.Name, BookName(_curBook), _curChapter, (c.LicenseUrl.Contains("publicdomain") ? L("gemeinfrei") : L("Lizenz ") + c.LicenseUrl));
+                    : L("{0} zu {1} {2} · eigener Import", c.Name, BookName(_curBook), _curChapter);
                 _commentaryInfo = CommentaryInfo.Text;
                 if (chapter is null) return;
                 if (chapter.Introduction.Length > 0)
                     CommentaryPanel.Children.Add(new Expander { Header = L("Einleitung"), HorizontalAlignment = HorizontalAlignment.Stretch, Content = new SelectableTextBlock { Text = chapter.Introduction, TextWrapping = TextWrapping.Wrap } });
                 // which verses each note is about (a section or one verse), so the label and the marking fit
                 var lastVerse = _verseBoxes.Count > 0 ? _verseBoxes.Keys.Max() : 0;
-                var ranges = CommentaryRanges.Of(c.Id, chapter.Notes, _curChapter, lastVerse);
+                var ranges = chapter.Ranges is { } own ? own.Select(r => (r.From, To: lastVerse > 0 ? Math.Min(r.To, Math.Max(r.From, lastVerse)) : r.To)).ToList() : CommentaryRanges.Of(c.Id, chapter.Notes, _curChapter, lastVerse);
                 for (var i = 0; i < chapter.Notes.Count; i++) CommentaryPanel.Children.Add(CommentaryCard(c, chapter.Notes[i], ranges[i].From, ranges[i].To));
                 _commentaryInfo = CommentaryInfo.Text;
             }

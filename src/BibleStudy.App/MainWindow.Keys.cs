@@ -46,8 +46,10 @@ public partial class MainWindow
             new("tabnext", L("Nächster Reiter"), "Ctrl+Tab", () => Sync(() => CycleTab(false))),
             new("tabprev", L("Voriger Reiter"), "Ctrl+Shift+Tab", () => Sync(() => CycleTab(true))),
         ];
+        // a shortcut of the whole system (it also works from the tray and behind other programs): the combination is chosen here like the others
+        if (OperatingSystem.IsWindows()) _keyActions.Add(new("bringforward", L("BibleStudy von überall nach vorn holen (ganz Windows, auch aus dem Infobereich)"), "Ctrl+Alt+B", () => Sync(BringForward), true));
         BuildKeysPanel();
-        ResetKeysBtn.Click += (_, _) => { _settings.KeyBindings.Clear(); SaveSettings(); BuildKeysPanel(); };
+        ResetKeysBtn.Click += (_, _) => { _settings.KeyBindings.Clear(); SaveSettings(); BuildKeysPanel(); ApplyHotkey(false); };
         KeysTopBtn.Click += (_, _) => ShowKeysWindow();
     }
 
@@ -89,9 +91,13 @@ public partial class MainWindow
             var action = a;
             var b = new Button { Content = Pretty(GestureOf(a)), MinWidth = 150, HorizontalContentAlignment = HorizontalAlignment.Center };
             ToolTip.SetTip(b, L("Klicken, dann die neue Tastenkombination drücken (Esc bricht ab, Entf löscht)"));
-            b.Click += (_, _) => { _capturing = action.Id; b.Content = L("Taste drücken …"); b.Focus(); };
+            b.Click += (_, _) =>
+            {
+                _capturing = action.Id; b.Content = L("Taste drücken …"); b.Focus();
+                if (action.Id == "bringforward") { _hotkey?.Dispose(); _hotkey = null; }   // the system would take the very combination that is to be recorded
+            };
             // clicking somewhere else ends the recording; otherwise the next key typed anywhere (even in a text field) became the new shortcut
-            b.LostFocus += (_, _) => { if (_capturing == action.Id) { _capturing = null; b.Content = Pretty(GestureOf(action)); } };
+            b.LostFocus += (_, _) => { if (_capturing == action.Id) { _capturing = null; b.Content = Pretty(GestureOf(action)); if (action.Id == "bringforward") ApplyHotkey(false); } };
             _keyButtons[a.Id] = b;
             var row = new DockPanel { Margin = new(0, 2) };
             DockPanel.SetDock(b, Dock.Right);
@@ -174,7 +180,7 @@ public partial class MainWindow
             e.Handled = true;
             var action = _keyActions.First(a => a.Id == id);
             _capturing = null;
-            if (e.Key == Key.Escape) { BuildKeysPanel(); return; }
+            if (e.Key == Key.Escape) { BuildKeysPanel(); if (id == "bringforward") ApplyHotkey(false); return; }
             if (e.Key == Key.Delete) _settings.KeyBindings[id] = "";
             else
             {
@@ -183,7 +189,7 @@ public partial class MainWindow
                 _settings.KeyBindings[id] = gesture;
             }
             if (_settings.KeyBindings.TryGetValue(id, out var g) && g == action.Default) _settings.KeyBindings.Remove(id);
-            SaveSettings(); BuildKeysPanel();
+            SaveSettings(); BuildKeysPanel(); if (id == "bringforward") ApplyHotkey(true);
             return;
         }
 
@@ -205,7 +211,7 @@ public partial class MainWindow
         if (_keysWindow is not null) { _keysWindow.Activate(); return; }
         var panel = new StackPanel { Spacing = 0 };
         var reset = new Button { Content = L("Alle auf Standard zurücksetzen"), Margin = new(0, 12, 0, 0), HorizontalAlignment = HorizontalAlignment.Left };
-        reset.Click += (_, _) => { _settings.KeyBindings.Clear(); SaveSettings(); BuildKeysPanel(); };
+        reset.Click += (_, _) => { _settings.KeyBindings.Clear(); SaveSettings(); BuildKeysPanel(); ApplyHotkey(false); };
         var content = new StackPanel
         {
             Margin = new(22, 18),

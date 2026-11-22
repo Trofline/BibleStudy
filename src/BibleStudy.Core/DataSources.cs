@@ -36,15 +36,13 @@ public static class DataSources
             "Natural Earth", L("gemeinfrei"), "https://www.naturalearthdata.com"),
         new(L("Synonyme"), L("Verwandte Wörter für das Themen-Netz und die Themensuche (deutsch)."),
             "OpenThesaurus", L("Lizenz: siehe die Webseite"), "https://www.openthesaurus.de"),
-        new(L("Kommentare"), L("Freie Bibelkommentare, nur wenn du sie in den Einstellungen einschaltest (Kommentare sind Auslegung von Menschen, nicht Schrift)."),
-            "Free Use Bible API und die Autoren der Werke", L("je Werk: siehe Lizenz-Link in der Bücherliste"), "https://bible.helloao.org"),
         new(L("Hörbibel"), L("Gesprochene Aufnahme der Bibel, Kapitel für Kapitel, auf Englisch. Sie wird erst geladen, wenn du „Hören“ drückst, und bleibt danach zum Hören ohne Netz auf deinem Computer (höchstens 400 MB; die ältesten Kapitel werden gelöscht)."),
             "eBible.org, read by Winfred W. Henson", L("gemeinfrei"), AudioBible.SourceUrl, L("World English Bible; Text und Aufnahme sind gemeinfrei (Public Domain)")),
         new(L("Piper (Stimmen zum Vorlesen)"), L("Programm MIT; Stimmen (CC0, gemeinfrei, Unlicense, Apache-2.0 oder CC BY 4.0): Thorsten, LJ Speech, Cori, Bryce, John, Norman, Alba, Kristin, Joe, Sam, DaveFX, Claude, Ald, SIWIS, Gilles, Denis, Dmitri. Wird erst geladen, wenn du die natürliche Stimme wählst."),
             "Piper (rhasspy) und die Sprecher der Stimmen, u. a. Thorsten Müller, Keith Ito, SIWIS (Univ. Edinburgh)", "MIT, CC0, CC BY 4.0, Apache-2.0", NaturalVoice.SourceUrl),
         new(L("Übersetzte Wörterbuchtexte"), L("Die Texte von Strong und Interlinear gibt es nur englisch. Wenn du Claude Code hast, übersetzt es kurze Einträge in deine Sprache. Das ist eine KI-Übersetzung und wird so gekennzeichnet; sie bleibt auf deinem Computer."),
             L("dein eigenes Claude Code"), L("keine fremden Daten"), "https://claude.com/claude-code"),
-        new(L("Eigene Importe"), L("Bibeldateien, die du selbst besitzt und einliest, und Texte von Plugins, die du erlaubst. Sie bleiben auf deinem Computer, werden nie weitergegeben und nicht geprüft."),
+        new(L("Eigene Importe"), L("Bibeldateien und Kommentare, die du selbst besitzt und einliest, und Texte von Plugins, die du erlaubst. Sie bleiben auf deinem Computer, werden nie weitergegeben und nicht geprüft."),
             L("du"), L("deine eigenen Rechte"), ""),
     ];
 

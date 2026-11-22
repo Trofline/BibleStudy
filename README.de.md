@@ -74,7 +74,7 @@ Alle Dateien liegen im **[neuesten Release](https://github.com/Trofline/BibleStu
 <sub>Die Bilder zeigen die englische Oberfläche; das Programm gibt es auch auf Deutsch.</sub>
 
 > [!NOTE]
-> Leitgedanke ist **allein die Schrift**: Der Bibeltext steht an erster Stelle. Kommentare (Menschenworte) bleiben verborgen, bis du sie einschaltest.
+> Leitgedanke ist **allein die Schrift**: Der Bibeltext steht an erster Stelle. BibleStudy bringt keine Kommentare mit; wer möchte, liest eigene Kommentare ein.
 
 ## ✨ Was du damit machen kannst
 
@@ -97,7 +97,7 @@ Alle Dateien liegen im **[neuesten Release](https://github.com/Trofline/BibleStu
 
 - **Lesen und vergleichen:** viele freie Übersetzungen, Parallelspalten, Unterschiede zwischen Übersetzungen farbig markiert, dazu eine **Hörbibel** (gesprochene World English Bible, gemeinfrei, spielt Kapitel für Kapitel und läuft nach dem Laden auch offline)
 - **Suche:** Wörter, Wendungen, Grundformen, Strong-Nummern, Bibelstellen, **Personen und Orte** (`Person:Abraham`), **AT/NT-Bezüge** (`Bezug:"Jer 31"`), **nur Worte Jesu**, Suchbaukasten, gespeicherte Suchen, viele Graph-Ansichten, Reisen auf der Karte, griechisch-hebräische Tastatur, Satzsuche nach Satzgliedern und eine **Themensuche** mit verwandten Wörtern
-- **Studium:** Wort-für-Wort-Grundtext, Strong-Wörterbuch, Querverweise (Graph, Netzwerk, Bogen), Kommentare, Bibellexikon
+- **Studium:** Wort-für-Wort-Grundtext, Strong-Wörterbuch, Querverweise (Graph, Netzwerk, Bogen), eigene Kommentare (zum Einlesen), Bibellexikon
 - **Morphologie und Syntax** des Urtextes (Griechisch und Hebräisch): Zeit, Fall, Person …, Syntax mit Subjekt, Verb, Objekt …
 - **Analyse-Werkzeuge:** Schlüsselwörter und einmalige Wörter je Kapitel, verwandte Wörter, Verteilung eines Wortes über die Bibel
 - **Satzdiagramm und Perikopen-Analyse:** der Satz eines Verses als klassisches Satzdiagramm (Reed–Kellogg, Griechisch und Hebräisch, Export als PNG/SVG) und ein Abschnitt in Bildern: Wortarten, Verbformen, Schlüsselwörter und wo sie vorkommen, Rhythmus der Verse, Satzbau und Verbindungen

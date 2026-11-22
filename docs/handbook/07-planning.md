@@ -54,6 +54,10 @@ Available plans include:
 
 For each day, the plan shows the chapters; one button marks **all chapters of that day** as read. The program tracks your progress and your streak (consecutive days).
 
+### Reminder to read
+
+Under *Settings → Reading* you switch on the **reminder to read** and choose a time (in half hours). **Once a day** from that time BibleStudy speaks up **if you have not read a chapter today**. If the program is in front, the bar at the bottom appears with **Read now**; if it is in the tray, minimized or covered, a small window appears at the bottom right that does not grab the focus, with **Read now**, **In an hour** and **Close** (after a minute it goes away by itself). *Read now* opens today's chapters of your reading plan, otherwise the place where you stopped. When BibleStudy is quit completely no reminder comes; on a phone it appears when the app is opened.
+
 ## 7.5 Memorize
 
 1. Mark verses: right-click a verse → *For memorizing*, or add them in the *Memorize* tab.
