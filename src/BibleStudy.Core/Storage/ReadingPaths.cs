@@ -6,7 +6,9 @@ namespace BibleStudy.Core.Storage;
 /// A reading path: verses (or marked verses) in the order in which they are best read, one building on the other. Each step is a verse or a
 /// few verses of one chapter (<see cref="StudyPassage"/> with From &gt; 0); the same verse may come twice.
 /// </summary>
-public sealed record ReadingPath(long Id, string Name, string Color, IReadOnlyList<StudyPassage> Steps)
+/// <remarks><paramref name="Folder"/> is the folder of the explorer the path belongs to, as the names from the top down (see <see cref="VaultStore.FolderKey"/>):
+/// folder numbers differ from device to device, the names do not. Empty = no folder.</remarks>
+public sealed record ReadingPath(long Id, string Name, string Color, IReadOnlyList<StudyPassage> Steps, string Folder = "")
 {
     /// <summary>The steps that lie in this chapter, with their number in the path (1 is the first).</summary>
     public IEnumerable<(int Number, StudyPassage Step)> StepsIn(string book, int chapter) =>
@@ -47,18 +49,76 @@ public static class PathArrows
 
 public sealed partial class VaultStore
 {
-    void InitReadingPaths() =>
-        Exec("CREATE TABLE IF NOT EXISTS reading_paths(id INTEGER PRIMARY KEY, name TEXT NOT NULL, color TEXT, steps TEXT, created TEXT, updated TEXT)");
+    void InitReadingPaths()
+    {
+        Exec("CREATE TABLE IF NOT EXISTS reading_paths(id INTEGER PRIMARY KEY, name TEXT NOT NULL, color TEXT, steps TEXT, folder TEXT, created TEXT, updated TEXT)");
+        // the folder of the explorer came with 1.9.26 (paths made before belong to none)
+        if (Query("SELECT 1 FROM pragma_table_info('reading_paths') WHERE name='folder'", _ => { }, _ => 1).Count == 0)
+            Exec("ALTER TABLE reading_paths ADD COLUMN folder TEXT");
+    }
+
+    const string PathColumns = "id,name,color,steps,folder";
 
     static ReadingPath ReadPath(Microsoft.Data.Sqlite.SqliteDataReader r) => new(
         r.GetInt64(0), r.GetString(1), r.IsDBNull(2) ? "" : r.GetString(2),
-        StudyPassage.ParseList(r.IsDBNull(3) ? "" : r.GetString(3)).Where(p => p.From > 0).ToList());
+        StudyPassage.ParseList(r.IsDBNull(3) ? "" : r.GetString(3)).Where(p => p.From > 0).ToList(),
+        r.IsDBNull(4) ? "" : r.GetString(4));
 
     public List<ReadingPath> GetReadingPaths() =>
-        Query("SELECT id,name,color,steps FROM reading_paths ORDER BY name COLLATE NOCASE, id", _ => { }, ReadPath);
+        Query($"SELECT {PathColumns} FROM reading_paths ORDER BY name COLLATE NOCASE, id", _ => { }, ReadPath);
 
     public ReadingPath? GetReadingPath(long id) =>
-        Query("SELECT id,name,color,steps FROM reading_paths WHERE id=$i", c => c.Parameters.AddWithValue("$i", id), ReadPath).FirstOrDefault();
+        Query($"SELECT {PathColumns} FROM reading_paths WHERE id=$i", c => c.Parameters.AddWithValue("$i", id), ReadPath).FirstOrDefault();
+
+    /// <summary>The path that was made or changed last (for "add to the last path" with one tap).</summary>
+    public ReadingPath? GetLastReadingPath() =>
+        Query($"SELECT {PathColumns} FROM reading_paths ORDER BY IFNULL(updated, created) DESC, id DESC LIMIT 1", _ => { }, ReadPath).FirstOrDefault();
+
+    /// <summary>The paths that belong to this folder of the explorer.</summary>
+    public List<ReadingPath> GetReadingPathsIn(long folder)
+    {
+        var key = FolderKey(folder);
+        return key.Length == 0 ? [] : GetReadingPaths().Where(p => p.Folder == key).ToList();
+    }
+
+    /// <summary>Puts a path into a folder of the explorer (null = into none).</summary>
+    public void SetReadingPathFolder(long id, long? folder) =>
+        Exec("UPDATE reading_paths SET folder=$f, updated=$t WHERE id=$i", c =>
+        {
+            c.Parameters.AddWithValue("$f", folder is long f ? FolderKey(f) : "");
+            c.Parameters.AddWithValue("$t", DateTime.UtcNow.ToString("o", CultureInfo.InvariantCulture));
+            c.Parameters.AddWithValue("$i", id);
+        });
+
+    /// <summary>A folder as the names from the top down (a sign no one types between them); empty when there is no such folder.</summary>
+    public string FolderKey(long folder) => FolderKeys(GetFolders()).GetValueOrDefault(folder, "");
+
+    static Dictionary<long, string> FolderKeys(List<Folder> folders)
+    {
+        var byId = folders.ToDictionary(f => f.Id);
+        var keys = new Dictionary<long, string>();
+        foreach (var f in folders)
+        {
+            var names = new List<string>();
+            for (Folder? at = f; at is not null && names.Count < 50; at = at.ParentId is long p ? byId.GetValueOrDefault(p) : null) names.Insert(0, at.Name.Trim());
+            keys[f.Id] = string.Join('\u001f', names);
+        }
+        return keys;
+    }
+
+    /// <summary>A folder renamed, moved or deleted: the paths in it (and in the folders below) go along; those of a deleted folder belong to none.</summary>
+    void KeepPathFolders(Action change)
+    {
+        var before = FolderKeys(GetFolders());
+        change();
+        var after = FolderKeys(GetFolders());
+        foreach (var (id, old) in before)
+        {
+            var now = after.GetValueOrDefault(id, "");
+            if (now != old)
+                Exec("UPDATE reading_paths SET folder=$n WHERE folder=$o", c => { c.Parameters.AddWithValue("$n", now); c.Parameters.AddWithValue("$o", old); });
+        }
+    }
 
     public long AddReadingPath(string name, string color, IEnumerable<StudyPassage> steps)
     {

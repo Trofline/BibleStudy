@@ -218,7 +218,7 @@ public sealed partial class VaultStore : SqliteDb
             var parents = GetFolders().ToDictionary(f => f.Id, f => f.ParentId);
             for (long? at = p; at is long a; at = parents.GetValueOrDefault(a)) if (a == id) return false;
         }
-        Exec("UPDATE folders SET parent_id=$p WHERE id=$i", c => { c.Parameters.AddWithValue("$p", (object?)parentId ?? DBNull.Value); c.Parameters.AddWithValue("$i", id); });
+        KeepPathFolders(() => Exec("UPDATE folders SET parent_id=$p WHERE id=$i", c => { c.Parameters.AddWithValue("$p", (object?)parentId ?? DBNull.Value); c.Parameters.AddWithValue("$i", id); }));
         return true;
     }
 
@@ -246,18 +246,18 @@ public sealed partial class VaultStore : SqliteDb
         return id;
     }
 
-    public void RenameFolder(long id, string name) =>
-        Exec("UPDATE folders SET name=$n WHERE id=$i", c => { c.Parameters.AddWithValue("$n", name.Trim()); c.Parameters.AddWithValue("$i", id); });
+    public void RenameFolder(long id, string name) => KeepPathFolders(() =>
+        Exec("UPDATE folders SET name=$n WHERE id=$i", c => { c.Parameters.AddWithValue("$n", name.Trim()); c.Parameters.AddWithValue("$i", id); }));
 
     /// <summary>Moves a document into a folder (null = out of every folder) without touching anything else.</summary>
     public void SetDocumentFolder(long documentId, long? folderId) =>
         Exec("UPDATE documents SET folder_id=$f WHERE id=$i", c => { c.Parameters.AddWithValue("$f", (object?)folderId ?? DBNull.Value); c.Parameters.AddWithValue("$i", documentId); });
 
     /// <summary>Deletes the folder; its marks and documents are kept (without folder), its sub-folders move up one level.</summary>
-    public void DeleteFolder(long id) => InTransaction(id,
+    public void DeleteFolder(long id) => KeepPathFolders(() => InTransaction(id,
         "UPDATE folders SET parent_id=(SELECT parent_id FROM folders WHERE id=$i) WHERE parent_id=$i",
         "UPDATE marks SET folder_id=NULL WHERE folder_id=$i", "UPDATE documents SET folder_id=NULL WHERE folder_id=$i",
-        "UPDATE notes SET folder_id=NULL WHERE folder_id=$i", "DELETE FROM folders WHERE id=$i");
+        "UPDATE notes SET folder_id=NULL WHERE folder_id=$i", "DELETE FROM folders WHERE id=$i"));
 
     /// <summary>Several statements about one id, all or none (a crash in between must not leave half of a change).</summary>
     void InTransaction(long id, params string[] statements)

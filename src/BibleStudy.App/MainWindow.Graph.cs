@@ -168,11 +168,23 @@ public partial class MainWindow
             await RedrawChapterAsync();
         };
         var votes = new NumericUpDown { Minimum = 0, Maximum = 1000, Increment = 10, FormatString = "0", Value = _settings.XrefMinVotes, Width = 130 };
-        var before = _settings.XrefMinVotes;
+        var before = (_settings.XrefMinVotes, _settings.XrefSource, _settings.XrefOwnWeight);
         votes.ValueChanged += (_, _) => { _settings.XrefMinVotes = (int)(votes.Value ?? 0); SaveSettings(); };
-        flyout.Closed += async (_, _) => { if (_settings.XrefMinVotes != before) await RedrawChapterAsync(); };   // redraw once, not at every click
+        // which ones: printed and your own, only your own, only the printed ones (for the program, not for one vault)
+        var sources = new[] { ("both", L("Gedruckte und eigene")), ("own", L("Nur eigene")), ("printed", L("Nur gedruckte")) };
+        var source = new ComboBox { MinWidth = 220, ItemsSource = sources.Select(s => s.Item2).ToList(), SelectedIndex = Math.Max(0, Array.FindIndex(sources, s => s.Item1 == _settings.XrefSource)) };
+        var weight = new NumericUpDown { Minimum = 1, Maximum = 5000, Increment = 50, FormatString = "0", Value = _settings.XrefOwnWeight, Width = 130 };
+        weight.ValueChanged += (_, _) => { _settings.XrefOwnWeight = (int)(weight.Value ?? 200); SaveSettings(); };
+        var votesRow = new StackPanel { Spacing = 8, Children = { new TextBlock { Text = L("Mindestens Stimmen:"), Margin = new(0, 6, 0, 0) }, votes } };
+        var weightRow = new StackPanel { Spacing = 8, Children = { new TextBlock { Text = L("Eigene zählen wie so viele Stimmen:"), Margin = new(0, 6, 0, 0) }, weight } };
+        void Show() { votesRow.IsVisible = _settings.XrefSource != "own"; weightRow.IsVisible = _settings.XrefSource != "printed"; }
+        source.SelectionChanged += (_, _) => { if (source.SelectedIndex >= 0) { _settings.XrefSource = sources[source.SelectedIndex].Item1; SaveSettings(); Show(); } };
+        Show();
+        flyout.Closed += async (_, _) => { if ((_settings.XrefMinVotes, _settings.XrefSource, _settings.XrefOwnWeight) != before) await RedrawChapterAsync(); };   // redraw once, not at every click
         var votesHelp = new TextBlock { Text = L("Nur Querverweise mit mindestens so vielen Stimmen im Text zeigen (0 = alle, 100 = nur die wichtigsten). Die Liste im Seitenfeld bleibt vollständig."), Classes = { "caption" }, TextWrapping = TextWrapping.Wrap, MaxWidth = 300 };
-        flyout.Content = new StackPanel { Spacing = 8, Children = { inText, thread, new TextBlock { Text = L("Mindestens Stimmen:"), Margin = new(0, 6, 0, 0) }, votes, votesHelp } };
+        var sourceHelp = new TextBlock { Text = L("Deine eigenen Querverweise aus allen Vaults zählen im Graph neben dem Text mit, so schwer wie die Zahl darunter. Gilt für das ganze Programm, nicht nur für diesen Vault."), Classes = { "caption" }, TextWrapping = TextWrapping.Wrap, MaxWidth = 300 };
+        votesRow.Children.Add(votesHelp);
+        flyout.Content = new StackPanel { Spacing = 8, Children = { inText, thread, new TextBlock { Text = L("Welche Querverweise:"), Margin = new(0, 6, 0, 0) }, source, sourceHelp, votesRow, weightRow } };
         flyout.ShowAt(Anchor(ViewBtn));
     }
 
@@ -181,8 +193,10 @@ public partial class MainWindow
     /// <summary>Loads the cross references of the chapter when a view needs them (cached on disk, so usually instant).</summary>
     async Task LoadChapterRefsAsync(string book, int chapter)
     {
-        _chapterRefs = null;
+        _chapterRefs = null; _ownChapterRefs = null;
         if (!_xrefInText && !_threadOn) return;
+        _ownChapterRefs = _settings.XrefSource == "printed" ? [] : OwnChapterRefs(book, chapter);
+        if (_settings.XrefSource == "own") { _chapterRefs = []; return; }
         try
         {
             var all = await _hello.GetChapterCrossRefsAsync(book, chapter);
@@ -191,9 +205,40 @@ public partial class MainWindow
             _chapterRefs = all.ToDictionary(p => p.Key, p => VisibleXrefs(new VerseRef(book, chapter, p.Key), p.Value)
                 .Where(x => x.Score >= _settings.XrefMinVotes).OrderByDescending(x => x.Score).ToList());
         }
-        // offline, too slow or a broken answer: the views simply stay empty, the chapter itself is shown anyway
-        catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException or System.Text.Json.JsonException or IOException) { }
+        // offline, too slow or a broken answer: the views simply stay empty (your own still show), the chapter itself is shown anyway
+        catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException or System.Text.Json.JsonException or IOException) { _chapterRefs = []; }
     }
+
+    /// <summary>Your own cross references of this chapter from every vault, by verse, each counting as <see cref="AppSettings.XrefOwnWeight"/> votes
+    /// (one that leads here shows the way back). For the graph beside the text; the golden chips under the verse stay those of the open vault.</summary>
+    Dictionary<int, List<CrossRef>> OwnChapterRefs(string book, int chapter)
+    {
+        var weight = Math.Max(1, _settings.XrefOwnWeight);
+        var result = new Dictionary<int, List<CrossRef>>();
+        void Add(int verse, VerseRef target, int end)
+        {
+            var list = result.TryGetValue(verse, out var l) ? l : result[verse] = [];
+            if (!list.Any(x => x.Target == target && x.EndVerse == end)) list.Add(new CrossRef(target, end, weight));
+        }
+        foreach (var name in VaultNames().Where(n => !IsGuestVault(n)))
+            try
+            {
+                var store = name == _vault.Name ? _vault : StoreOf(name);
+                foreach (var x in store.GetMyXrefs(book, chapter))
+                {
+                    if (x.From.Book == book && x.From.Chapter == chapter) Add(x.From.Verse, x.To, Math.Max(x.To.Verse, x.EndVerse));
+                    if (x.To.Book == book && x.To.Chapter == chapter) Add(x.To.Verse, x.From, x.From.Verse);
+                }
+            }
+            catch { /* a vault that cannot be read gives nothing */ }
+        return result;
+    }
+
+    Dictionary<int, List<CrossRef>>? _ownChapterRefs;
+
+    /// <summary>For the graph beside the text: the printed ones of the verse with your own, the heaviest first.</summary>
+    List<CrossRef> GraphRefsAt(int verse) =>
+        [.. (_chapterRefs?.GetValueOrDefault(verse) ?? []).Concat(_ownChapterRefs?.GetValueOrDefault(verse) ?? []).OrderByDescending(x => x.Score)];
 
     Control? XrefChips(int verse, string translationId)
     {
@@ -244,10 +289,11 @@ public partial class MainWindow
     {
         if (!ThreadPane.IsVisible) return;
         var anchors = new List<ThreadGraph.Anchor>();
-        if (_chapterRefs is not null)
+        if (_chapterRefs is not null || _ownChapterRefs is not null)
             foreach (var (verse, box) in _verseBoxes)
             {
-                if (!_chapterRefs.TryGetValue(verse, out var refs) || refs.Count == 0) continue;
+                var refs = GraphRefsAt(verse);
+                if (refs.Count == 0) continue;
                 if (box.TranslatePoint(new Point(0, box.Bounds.Height / 2), ThreadPane) is not { } p) continue;
                 if (p.Y < -4 || p.Y > ThreadPane.Bounds.Height + 4) continue;
                 anchors.Add(new ThreadGraph.Anchor(p.Y, verse, refs));

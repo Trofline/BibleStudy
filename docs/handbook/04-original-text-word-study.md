@@ -89,6 +89,12 @@ The tab *Verse → Cross-references* shows verses that are related to the clicke
 - **hide a cross reference permanently** (and show it again under *Settings → Hidden cross references …*),
 - add an **own cross reference** (right-click the verse → *Add own cross reference …*): enter a passage and a short note. It appears as a golden chip with ★ below the verse and as a way back below the target verse; right-clicking the chip deletes it. Own cross references belong to the vault and are included in the backup.
 
+**What shows in the text and in the graph beside it** you set at the top under *View* (this applies to the whole program, not to one vault):
+
+- **Which cross references:** *Printed and your own*, *Only mine* or *Printed only*.
+- **Minimum votes:** printed cross references with fewer votes are left out (for example 100: only the most important ones).
+- **Your own count as this many votes:** how heavy your own cross references are in the graph (thicker line, higher up). Your own cross references **from all vaults** count, whichever one is open.
+
 Cross-references can also be viewed as a graph (see [Chapter 9](09-graphs-map.md)).
 
 ## 4.12 The Verse overview

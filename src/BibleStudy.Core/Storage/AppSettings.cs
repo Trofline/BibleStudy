@@ -198,6 +198,11 @@ public sealed class AppSettings
     public bool XrefInText { get; set; }
     /// <summary>Cross references with fewer votes are not shown in the text and in the graph beside it (0 = all). The list in the side panel stays complete.</summary>
     public int XrefMinVotes { get; set; }
+    /// <summary>Which cross references show in the text and in the graph beside it: "both" (printed and your own), "own" (only your own), "printed" (only the printed ones).
+    /// Your own come from every vault (not from guest vaults): the setting belongs to the program, not to a vault.</summary>
+    public string XrefSource { get; set; } = "both";
+    /// <summary>How many votes one of your own cross references counts as (its weight in the graph, and in the order).</summary>
+    public int XrefOwnWeight { get; set; } = 200;
     public double SideWidth { get; set; } = 430;
     public bool SideOpen { get; set; } = true;
     public bool ThreadGraph { get; set; }

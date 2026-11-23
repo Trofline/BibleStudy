@@ -266,6 +266,12 @@ public partial class MainWindow
                     }
                 }
                 catch { /* a vault that cannot be read just does not show */ }
+        // the marks of a reading path that was only read in to look at: they tint the verses, saved is nothing (see MainWindow.PathFiles)
+        foreach (var m in LookMarksIn(_curBook, _curChapter))
+        {
+            _otherChapterMarks.Add(m);
+            if (m.WholeVerse) for (var v = m.Ref.Verse; v <= m.LastVerse; v++) _otherWhole.TryAdd(v, m.Color);
+        }
     }
 
     List<Mark> _otherChapterMarks = [];

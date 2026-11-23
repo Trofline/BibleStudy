@@ -21,7 +21,7 @@ public partial class MainWindow
 
     enum ExKind { Folder, Mark, Note, Doc }
 
-    sealed record ExItem(ExKind Kind, long Id, string Title, string Place, string? Color, long? FolderId, VerseRef? Ref = null, IReadOnlyList<(string Text, string Color)>? Cores = null);
+    sealed record ExItem(ExKind Kind, long Id, string Title, string Place, string? Color, long? FolderId, VerseRef? Ref = null, IReadOnlyList<(string Text, string Color)>? Cores = null, int Last = 0);
 
     sealed record ExTarget(Control Control, long? Folder, Action<bool> Highlight);
 
@@ -146,10 +146,13 @@ public partial class MainWindow
         var head = _exHead = new Grid { ColumnDefinitions = new(ExColumns), Margin = new(8, 6, 12, 4) };
         _exList = new StackPanel { Margin = new(6, 0, 6, 12) };
         _exEmpty = new TextBlock { Classes = { "caption" }, TextWrapping = TextWrapping.Wrap, Margin = new(14, 10), IsVisible = false };
-        var listScroll = new ScrollViewer { Content = new StackPanel { Children = { _exList, _exEmpty } }, Background = Brushes.Transparent };
+        _exGutter = new PathGutter();   // the arrows of the reading paths of this folder, from entry to entry (see MainWindow.ExplorerPaths)
+        _exPathBar = new StackPanel { Spacing = 4, Margin = new(10, 0, 10, 4), IsVisible = false };
+        var listScroll = new ScrollViewer { Content = new StackPanel { Children = { new Panel { Children = { _exList, _exGutter } }, _exEmpty } }, Background = Brushes.Transparent };
+        _exList.LayoutUpdated += (_, _) => { if (_exGutter.HasContent) _exGutter.InvalidateVisual(); };
         var listDock = new DockPanel();
-        DockPanel.SetDock(head, Dock.Top);
-        listDock.Children.Add(head); listDock.Children.Add(listScroll);
+        DockPanel.SetDock(head, Dock.Top); DockPanel.SetDock(_exPathBar, Dock.Top);
+        listDock.Children.Add(head); listDock.Children.Add(_exPathBar); listDock.Children.Add(listScroll);
         var listBox = new Border { CornerRadius = new(12), BorderThickness = new(1), Child = listDock, Margin = new(0) };
         listBox.Bind(Border.BackgroundProperty, this.GetResourceObservable("BsSurface"));
         listBox.Bind(Border.BorderBrushProperty, this.GetResourceObservable("BsBorder"));
@@ -166,6 +169,8 @@ public partial class MainWindow
             }
             free.Items.Add(MenuAction(L("Neuer Ordner hier …"), () => newFolder.RaiseEvent(new Avalonia.Interactivity.RoutedEventArgs(Button.ClickEvent))));
             free.Items.Add(MenuAction(L("Hier einfügen (Strg+V)"), () => ExPaste(_exFolder), _exCut is not null));
+            if (_exFolder is long here && !_exFlat) free.Items.Add(FolderPathsMenu(here, listScroll));
+            free.Items.Add(MenuAction(L("Lesepfade importieren …"), () => _ = ImportPathsAsync()));
             free.Items.Add(ExportMenu(_exFolder));
             free.Items.Add(MenuAction(L("Ganzen Vault als Markdown-Ordner exportieren …"), () => _ = ExportObsidianAsync()));
             free.Items.Add(MenuAction(L("Markdown-Ordner einlesen …"), () => _ = ImportMarkdownFolderAsync()));
@@ -407,7 +412,7 @@ public partial class MainWindow
             var title = (hasNote ? m.Note : m.Text).ReplaceLineEndings(" ").Trim();   // the whole text: a long verse wraps instead of being cut off
             var parts = hasNote || !m.WholeVerse ? null
                 : cores[(m.Ref.Book, m.Ref.Chapter)].Where(c => c.Ref.Verse >= m.Ref.Verse && c.LastVerse <= m.LastVerse && c.Text.Trim().Length > 0).Select(c => (c.Text.Trim(), c.Color)).ToList();
-            items.Add(new ExItem(ExKind.Mark, m.Id, title.Length > 0 ? title : place, place, m.Color, Known(m.FolderId), m.Ref, parts));
+            items.Add(new ExItem(ExKind.Mark, m.Id, title.Length > 0 ? title : place, place, m.Color, Known(m.FolderId), m.Ref, parts, m.LastVerse));
         }
         foreach (var n in _vault.GetNotes())
             items.Add(new ExItem(ExKind.Note, NoteKey(n.Ref), n.Text.ReplaceLineEndings(" ").Trim(), Label(n.Ref), null, Known(n.FolderId), n.Ref));
@@ -555,7 +560,7 @@ public partial class MainWindow
     void FillExplorerList()
     {
         if (!_exBuilt) return;
-        if (_exInTrash) { FillTrashList(); return; }
+        if (_exInTrash) { UpdateExplorerPaths([]); FillTrashList(); return; }
         _exTargets.RemoveAll(t => t.Control.Parent == _exList);
         _exList.Children.Clear();
         var query = (_exSearch.Text ?? "").Trim();
@@ -599,6 +604,7 @@ public partial class MainWindow
         FillExplorerHead();
         _exSel.RemoveAll(s => !rows.Any(r => SameItem(r, s)));
         foreach (var r in rows) _exList.Children.Add(ListRow(r, all));
+        UpdateExplorerPaths(rows);
         _exEmpty.IsVisible = rows.Count == 0;
         _exEmpty.Text = _exFlat && words.Length == 0 ? L("Noch keine Markierungen oder Notizen.") : words.Length > 0 ? L("Nichts gefunden.") : L("Dieser Ordner ist leer. Ziehe Markierungen, Notizen oder Ordner hierher, oder lege mit „＋ Neuer Ordner“ einen Unterordner an.");
         ExUpdateInfo();
@@ -731,6 +737,7 @@ public partial class MainWindow
             })),
             MenuAction(L("Umbenennen …"), () => ExRename(folder, anchor)),
             MoveMenu([folder]),
+            FolderPathsMenu(folder.Id, anchor),
             new Separator(),
             ExportMenu(folder.Id),
             MenuAction(L("Ausschneiden (Strg+X)"), () => { ExSelectFor(folder); ExCut(); }),
@@ -762,6 +769,7 @@ public partial class MainWindow
                 OtherVaultMenu(targets),
                 ColorMenu(targets, anchor),
                 TagMenu(targets, anchor),
+                ItemPathMenu(item, targets, anchor),
                 new Separator(),
                 MenuAction(targets.Count > 1 ? L("{0} Einträge löschen", targets.Count) : item.Kind == ExKind.Note ? L("Notiz löschen") : L("Markierung löschen"), () => ExDelete(targets)),
             },

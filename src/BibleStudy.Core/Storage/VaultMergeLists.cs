@@ -19,8 +19,8 @@ public sealed partial class VaultStore
         new("my_xrefs", "t.fbook||'|'||t.fchapter||'|'||IFNULL(t.fverse,'')||'>'||t.tbook||'|'||t.tchapter||'|'||IFNULL(t.tverse,'')", ["tend", "note"]),
         new("hidden_xrefs", "t.fbook||'|'||t.fchapter||'|'||IFNULL(t.fverse,'')||'>'||t.tbook||'|'||t.tchapter||'|'||IFNULL(t.tverse,'')", ["hidden"]),
         new("studies", "t.day||char(1)||t.title", ["passages", "notes", "questions"]),
-        // a reading path is its name; its colour and its steps can change
-        new("reading_paths", "t.name", ["color", "steps"]),
+        // a reading path is its name; its colour, its steps and the folder of the explorer it belongs to can change
+        new("reading_paths", "t.name", ["color", "steps", "folder"]),
         // a spoken note is its sound; its name and its verse can change
         new("voice_notes", "t.uid", ["title", "book", "chapter", "verse"]),
     ];

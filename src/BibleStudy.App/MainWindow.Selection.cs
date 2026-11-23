@@ -513,6 +513,8 @@ public partial class MainWindow
             if (wholeVerse is null && InsideMarkedVerse()) { _normalMarking = true; ShowSelectionPopup(); }
             else ShowColorFlyout();
         };
+        // whole verses chosen: one tap hangs them on the reading path used last
+        if (wholeVerse is int pv && QuickPathButton(pv, HideSelectionPopup) is { } quickPath) { colors.Children.Add(quickPath); choices.Add((quickPath, () => quickPath.RaiseEvent(new Avalonia.Interactivity.RoutedEventArgs(Button.ClickEvent)))); }
         colors.Children.Add(more);
         choices.Add((more, () => more.RaiseEvent(new Avalonia.Interactivity.RoutedEventArgs(Button.ClickEvent))));
         // the arrow keys walk through the colors, Enter or Space takes one (see VerseKeys); start on the color the verse has, else on the first color

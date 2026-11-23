@@ -633,7 +633,7 @@ Check("no sign where the mark is shown", !RunsOf((Control)F<System.Collections.I
     typeof(MainWindow).GetField("_exFolder", All)!.SetValue(win, (long?)longFolder);
     Call("RefreshExplorer"); Settle(300);
     var exItem = typeof(MainWindow).GetNestedType("ExItem", All)!; var exKind = typeof(MainWindow).GetNestedType("ExKind", All)!;
-    object Item(long id, string title) => Activator.CreateInstance(exItem, Enum.Parse(exKind, "Mark"), id, title, "", "#E5484D", (long?)longFolder, null, null)!;
+    object Item(long id, string title) => Activator.CreateInstance(exItem, Enum.Parse(exKind, "Mark"), id, title, "", "#E5484D", (long?)longFolder, null, null, 0)!;
     System.Collections.IList List(params object[] xs) { var l = (System.Collections.IList)Activator.CreateInstance(typeof(List<>).MakeGenericType(exItem))!; foreach (var x in xs) l.Add(x); return l; }
     Call("CopyToVault", List(Item(m1, "Kopierte Markierung")), "Zweiter Vault", false); Settle(400);
     Check("copied: the mark is in the other vault", other.GetMarks().Any(m => m.Text == "Kopierte Markierung"));
@@ -948,13 +948,92 @@ Check("no sign where the mark is shown", !RunsOf((Control)F<System.Collections.I
     var items = typeof(MainWindow).GetField("_exSel", All)!.GetValue(win)!;
     var listType = items.GetType();
     var copy = Activator.CreateInstance(listType, items)!;
-    typeof(MainWindow).GetMethod("NewPath", All)!.Invoke(win, ["Aus der Auswahl", ((System.Collections.IEnumerable)copy).Cast<object>().Select(r => { var rf = (BibleStudy.Core.Models.VerseRef)r.GetType().GetProperty("Ref")!.GetValue(r)!; return new BibleStudy.Core.Storage.StudyPassage(rf.Book, rf.Chapter, rf.Verse, rf.Verse); }).ToList()]);
+    typeof(MainWindow).GetMethod("NewPath", All)!.Invoke(win, ["Aus der Auswahl", ((System.Collections.IEnumerable)copy).Cast<object>().Select(r => { var rf = (BibleStudy.Core.Models.VerseRef)r.GetType().GetProperty("Ref")!.GetValue(r)!; return new BibleStudy.Core.Storage.StudyPassage(rf.Book, rf.Chapter, rf.Verse, rf.Verse); }).ToList(), null]);
     var made = ve.GetReadingPaths().Single(p => p.Name == "Aus der Auswahl");
     Check("choosing: a reading path in the order of tapping", made.Steps.Select(s => s.From).SequenceEqual([3, 10]), string.Join(",", made.Steps.Select(s => s.From)));
     ve.DeleteReadingPath(made.Id);
     Call("SetExPick", false, null); Settle(200);
     Check("choosing: done, the bar goes away", !bar.IsVisible);
     ve.DeleteMark(a); ve.DeleteMark(b);
+    Call("ShowReader"); Settle(200);
+}
+
+// a reading path in a folder of the explorer: above the list the path with "Lesen", beside it arrows from entry to entry in the order of the path
+{
+    var ve = F<BibleStudy.Core.Storage.VaultStore>("_vault");
+    var folder = ve.AddFolder("Engel des Herrn");
+    long M(string book, int c, int v, string text) => ve.AddMark(BibleStudy.Core.Storage.Mark.AnyTranslation, new BibleStudy.Core.Models.VerseRef(book, c, v), -1, -1, text, "#E57373", "", folder, []);
+    var m1 = M("GEN", 16, 11, "Weiter sprach der Engel des HERRN zu ihr"); var m2 = M("GEN", 16, 13, "Und sie nannte den Namen des HERRN");
+    var m3 = M("GEN", 22, 11, "Da rief ihm der Engel des HERRN vom Himmel"); var m4 = M("EXO", 3, 2, "der Engel des HERRN erschien ihm in einer Feuerflamme");
+    BibleStudy.Core.Storage.StudyPassage P(string b, int c, int v) => new(b, c, v, v);
+    var pid = ve.AddReadingPath("Engel des Herrn", "#E07A3A", [P("GEN", 16, 11), P("GEN", 22, 11), P("GEN", 16, 13), P("EXO", 3, 2)]);
+    ve.SetReadingPathFolder(pid, folder);
+    Call("BuildExplorer"); Call("RevealSideTab", 30); Call("ExNavigate", folder); Settle(500);
+    var exGutter = F<BibleStudy.App.PathGutter>("_exGutter");
+    List<(int, int)> ExArrows() => ((System.Collections.IEnumerable)typeof(BibleStudy.App.PathGutter).GetField("_arrows", All)!.GetValue(exGutter)!).Cast<BibleStudy.App.PathGutter.Arrow>().Select(x => (x.From, x.To)).ToList();
+    int ExBadges() => ((System.Collections.IList)typeof(BibleStudy.App.PathGutter).GetField("_badges", All)!.GetValue(exGutter)!).Count;
+    // the list in Bible order: 16:11 (row 0), 16:13 (1), 22:11 (2), Ex 3:2 (3)
+    Check("explorer path: a number beside each entry of the path", ExBadges() == 4, ExBadges().ToString());
+    Check("explorer path: arrows in the order of the path (0→2, 2→1, 1→3)", ExArrows().SequenceEqual([(0, 2), (2, 1), (1, 3)]), string.Join(" ", ExArrows().Select(x => $"{x.Item1}>{x.Item2}")));
+    var pathBar = F<StackPanel>("_exPathBar");
+    Check("explorer path: above the list the path with a button to read it", pathBar.IsVisible && pathBar.GetLogicalDescendants().OfType<Button>().Any(btn => (btn.Content as string ?? "").Contains("Lesen")));
+    Check("explorer path: the list makes room for the arrows", F<StackPanel>("_exList").Margin.Left > 20, F<StackPanel>("_exList").Margin.ToString());
+    foreach (var op in openPopups.ToList()) op.IsOpen = false; Settle(200);
+    Shot(win, "explorer-path");
+    // a new order of the steps: the arrows are drawn anew
+    var p0 = ve.GetReadingPath(pid)!;
+    ve.UpdateReadingPath(p0 with { Steps = [P("EXO", 3, 2), P("GEN", 16, 11), P("GEN", 16, 13), P("GEN", 22, 11)] });
+    Call("AfterPathChange", (string?)null); Settle(300);
+    Check("explorer path: a new order draws new arrows (3→0, 0→1, 1→2)", ExArrows().SequenceEqual([(3, 0), (0, 1), (1, 2)]), string.Join(" ", ExArrows().Select(x => $"{x.Item1}>{x.Item2}")));
+    // the folder renamed: the path stays with it
+    ve.RenameFolder(folder, "Der Engel"); Call("RefreshExplorer"); Settle(300);
+    Check("explorer path: a renamed folder keeps its path", ExBadges() == 4);
+    // the quick way: onto the path used last
+    Check("explorer path: the verse menu offers the path used last", typeof(MainWindow).GetMethod("QuickPathItem", All)!.Invoke(win, [1]) is MenuItem qi && (qi.Header as string ?? "").Contains("Engel des Herrn"));
+    // at the top (no folder) nothing shows
+    Call("ExNavigate", (long?)null); Settle(300);
+    Check("explorer path: elsewhere no arrows and no bar", ExBadges() == 0 && !pathBar.IsVisible);
+
+    // given to someone else: the file with the marks, read in "only to look at" with the verses tinted: nothing is saved
+    var json = BibleStudy.Core.Storage.ReadingPathFile.Write(ve, [ve.GetReadingPath(pid)!], true);
+    var found = BibleStudy.Core.Storage.ReadingPathFile.Read(json);
+    var pathsBefore = ve.GetReadingPaths().Count; var marksBefore = ve.GetMarks().Count;
+    foreach (var m in new[] { m1, m2, m3, m4 }) ve.DeleteMark(m);   // the other person does not have these marks
+    var marksOther = ve.GetMarks().Count;
+    RunTask("ImportPathsAsync", found, (int?)1, (int?)0); Settle(800);
+    Check("path file: looked at, it is in the list of paths but not in the vault", ve.GetReadingPaths().Count == pathsBefore
+        && ((System.Collections.IEnumerable)typeof(MainWindow).GetMethod("ReadingPaths", All)!.Invoke(win, [])!).Cast<BibleStudy.Core.Storage.ReadingPath>().Any(p => p.Id < 0 && p.Name == "Engel des Herrn"));
+    Check("path file: tinted only, no mark is saved", ve.GetMarks().Count == marksOther);
+    // the test Bible has no Exodus: the marks are checked in Genesis 16 (the chapter of the text is set by hand, the marks are read as for drawing it)
+    var (bookWas, chapterWas) = (F<string>("_curBook"), (int)typeof(MainWindow).GetField("_curChapter", All)!.GetValue(win)!);
+    typeof(MainWindow).GetField("_curBook", All)!.SetValue(win, "GEN"); typeof(MainWindow).GetField("_curChapter", All)!.SetValue(win, 16);
+    Call("LoadChapterMarks");
+    Check("path file: the verses of the path are tinted (Gen 16:11 and 16:13)", F<Dictionary<int, string>>("_otherWhole").ContainsKey(11) && F<Dictionary<int, string>>("_otherWhole").ContainsKey(13),
+        string.Join(",", F<Dictionary<int, string>>("_otherWhole").Keys));
+    typeof(MainWindow).GetField("_curBook", All)!.SetValue(win, bookWas); typeof(MainWindow).GetField("_curChapter", All)!.SetValue(win, chapterWas);
+    Call("LoadChapterMarks");
+    // read in again to keep, with the marks taken over
+    RunTask("ImportPathsAsync", found, (int?)0, (int?)1); Settle(600);
+    Check("path file: kept, the path and the marks are in the vault", ve.GetReadingPaths().Count == pathsBefore + 1 && ve.GetMarks().Count == marksOther + 4);
+    foreach (var p in ve.GetReadingPaths().Where(p => p.Id != pid && p.Name.StartsWith("Engel des Herrn"))) ve.DeleteReadingPath(p.Id);
+    foreach (var m in ve.GetMarks().Where(m => m.Ref.Book is "GEN" or "EXO" && m.Text.Contains("HERRN"))) ve.DeleteMark(m.Id);
+    F<System.Collections.IList>("_lookPaths").Clear(); F<System.Collections.IList>("_lookMarks").Clear();
+
+    // the graph beside the text: "only your own" leaves the printed ones out, your own count with their weight
+    var settingsX = (BibleStudy.Core.Storage.AppSettings)typeof(MainWindow).GetField("_settings", All)!.GetValue(win)!;
+    ve.AddMyXref(new BibleStudy.Core.Models.VerseRef("JHN", 1, 1), new BibleStudy.Core.Models.VerseRef("GEN", 1, 1), 1, "");
+    var own = (System.Collections.IDictionary)typeof(MainWindow).GetMethod("OwnChapterRefs", All)!.Invoke(win, ["JHN", 1])!;
+    Check("cross refs: your own count with the weight set", own.Contains(1) && ((System.Collections.IEnumerable)own[1]!).Cast<BibleStudy.Core.Models.CrossRef>().Any(x => x.Target.Book == "GEN" && x.Score == settingsX.XrefOwnWeight));
+    settingsX.XrefSource = "own"; settingsX.XrefInText = true; typeof(MainWindow).GetField("_xrefInText", All)!.SetValue(win, true);
+    RunTask("LoadChapterRefsAsync", "JHN", 1); Settle(200);
+    var printed = F<System.Collections.IDictionary>("_chapterRefs");
+    Check("cross refs: only your own, no printed ones", printed.Count == 0);
+    Check("cross refs: the graph gets your own", ((System.Collections.ICollection)typeof(MainWindow).GetMethod("GraphRefsAt", All)!.Invoke(win, [1])!).Count == 1);
+    settingsX.XrefSource = "both";
+    foreach (var x in ve.GetMyXrefs("JHN", 1)) ve.DeleteMyXref(x.Id);
+    ve.DeleteReadingPath(pid);
+    foreach (var m in new[] { m1, m2, m3, m4 }) ve.DeleteMark(m);
+    ve.DeleteFolder(folder);
     Call("ShowReader"); Settle(200);
 }
 

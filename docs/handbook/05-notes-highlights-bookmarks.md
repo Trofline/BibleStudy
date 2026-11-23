@@ -71,8 +71,13 @@ A **reading path** links verses (highlighted or not) in the order in which they 
 - **In the text:** in the left margin every step shows its **number** in the color of the path. From step to step in the same chapter an **arrow** runs along the margin, like the jumps beside the code in a disassembler (such as IDA). Each arrow has its own lane so nothing overlaps; an arrow going up (back) is dashed.
 - **Read on:** below every step a small bar shows the step before, the name and the number (e.g. “2/5”) and the next step, also in another chapter or book. A click goes there.
 - **Order:** *Reading path → Order reading paths …* (or a click on the name below the verse): move steps up and down, take them out, rename, change the color, delete. You can also switch off the arrows in the margin there.
+- **Add quickly:** at the very top of the verse menu stands *＋ Add to “…”*: it adds the verse (or the chosen verses) to the reading path you used last. If you chose verses on the phone by their number, the same button sits in the color bar above the verses.
+- **In the Explorer:** a reading path can belong to a **folder**: right-click the folder (or the free space of the list) → **Reading paths** and tick the path, or click **Folder …** in the window *Order reading paths*. *New reading path from this folder …* makes a path of all entries of the folder, in the order of the Bible. When you open the folder, the path stands above the list with **▶ Read** (to the first step) and **Arrange …**, and in the left margin arrows lead from entry to entry in the order of the path. When you change the order of the steps or sort the list differently, the arrows are drawn anew. Right-click an entry → **Reading path** moves it earlier or later, takes it out or adds it to a path. Renaming or moving the folder keeps the path with it.
+- **Share:** in the window *Order reading paths*, **Export …** saves one path or all of them as a file (`.bspath`), if you like **with the marks** on these verses (exactly which passages, in which color). **Import …** (also in the verse menu under *Reading path* and in the Explorer) reads such a file. You decide:
+  - **Keep** (the path goes into your vault) or **Only look** (it lasts until you close the program; **Keep** in the window *Order reading paths* saves it after all).
+  - If the file brings marks: **Tint only** (the verses show in their colors, nothing is saved, your own marks stay untouched), **Take over and save** (the marks go into your vault; what is there already does not come twice) or **Without marks**.
 
-Reading paths belong to the vault; they are backed up and synchronised.
+Reading paths belong to the vault; they are backed up and synchronised (also which folder they belong to).
 
 ## 5.4 Bookmarks
 

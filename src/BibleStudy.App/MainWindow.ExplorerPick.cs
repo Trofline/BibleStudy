@@ -43,7 +43,15 @@ public partial class MainWindow
         _exPickMove = Action(L("Verschieben"), L("In einen Ordner verschieben"));
         _exPickMove.Click += (_, _) => ShowAsMenu(_exPickMove, MoveMenu(_exSel.ToList()));
         _exPickPath = Action(L("Lesepfad"), L("Die gewählten Verse in der Reihenfolge, in der du sie angetippt hast, zu einem Lesepfad machen"));
-        _exPickPath.Click += (_, _) => PathFromExplorer(_exSel.ToList(), _exPickPath);
+        _exPickPath.Click += (_, _) =>
+        {
+            // no path yet: a new one at once; else onto the path used last, onto another, or a new one
+            var items = _exSel.ToList();
+            if (ReadingPaths().Count == 0) { PathFromExplorer(items, _exPickPath); return; }
+            var fly = new MenuFlyout();
+            FillItemPathMenu(fly.Items, items.Count == 1 ? items[0] : null, items, _exPickPath);
+            fly.ShowAt(_exPickPath);
+        };
         _exPickMore = Action(L("Mehr …"), L("Farbe, Tags, in einen anderen Vault"));
         _exPickMore.Click += (_, _) =>
         {

@@ -89,6 +89,12 @@ Der Reiter *Vers → Querverweise* zeigt Verse, die mit dem angeklickten Vers zu
 - einen Querverweis **dauerhaft ausblenden** (und unter *Einstellungen → Ausgeblendete Querverweise …* wieder einblenden),
 - einen **eigenen Querverweis** setzen (Rechtsklick auf den Vers → *Eigenen Querverweis setzen …*): Stelle und kurze Notiz eingeben. Er erscheint als goldener Chip mit ★ unter dem Vers und als Rückweg unter dem Zielvers; Rechtsklick auf den Chip löscht ihn. Eigene Querverweise gehören zum Vault und sind in der Sicherung enthalten.
 
+**Was im Text und im Graph neben dem Text erscheint**, stellst du oben bei *Ansicht* ein (das gilt für das ganze Programm, nicht für einen einzelnen Vault):
+
+- **Welche Querverweise:** *Gedruckte und eigene*, *Nur eigene* oder *Nur gedruckte*.
+- **Mindestens Stimmen:** Gedruckte Querverweise mit weniger Stimmen bleiben weg (zum Beispiel 100: nur die wichtigsten).
+- **Eigene zählen wie so viele Stimmen:** So schwer wiegen deine eigenen Querverweise im Graph (dicker Strich, weiter oben). Es zählen die eigenen Querverweise **aus allen Vaults**, egal welcher gerade offen ist.
+
 Die Querverweise lassen sich auch als Graph ansehen (siehe [Kapitel 9](09-graphen-karte.md)).
 
 ## 4.12 Die Vers-Übersicht

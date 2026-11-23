@@ -22,7 +22,7 @@ public partial class MainWindow
 
     List<ReadingPath> ReadingPaths()
     {
-        try { return _vault.GetReadingPaths(); } catch (Exception ex) when (ex is not OutOfMemoryException) { return []; }
+        try { return [.. _vault.GetReadingPaths(), .. _lookPaths]; } catch (Exception ex) when (ex is not OutOfMemoryException) { return [.. _lookPaths]; }
     }
 
     static Color PathColor(ReadingPath p) => Color.TryParse(p.Color, out var c) ? c : Color.Parse(PathColors[(int)(Math.Abs(p.Id) % PathColors.Length)]);
@@ -130,7 +130,43 @@ public partial class MainWindow
             menu.Items.Add(MenuAction(L("Aus „{0}“ nehmen (Schritt {1})", Shorten(p.Name, 30), i + 1), () => RemoveStep(path, index)));
         }
         if (paths.Count > 0) menu.Items.Add(MenuAction(L("Lesepfade ordnen …"), () => _ = ShowPathsAsync(inPaths.FirstOrDefault().p?.Id)));
+        menu.Items.Add(MenuAction(L("Lesepfade importieren …"), () => _ = ImportPathsAsync()));
         return menu;
+    }
+
+    // ---- one tap: onto the path used last ----------------------------------------------------------------------------
+
+    ReadingPath? LastPath()
+    {
+        try { return _vault.GetLastReadingPath(); } catch (Exception ex) when (ex is not OutOfMemoryException) { return null; }
+    }
+
+    /// <summary>In the verse menu, above "Lesepfad": hang the verse (or the chosen verses) on the path used last.</summary>
+    MenuItem? QuickPathItem(int verse)
+    {
+        if (LastPath() is not { } p) return null;
+        var steps = StepsFor(verse);
+        var item = MenuAction(L("＋ An „{0}“ anhängen (Schritt {1})", Shorten(p.Name, 30), p.Steps.Count + 1), () => AddSteps(p, steps));
+        item.Icon = new Border { Width = 10, Height = 10, CornerRadius = new(5), Background = new SolidColorBrush(PathColor(p)) };
+        return item;
+    }
+
+    /// <summary>In the colors over chosen verses: a button with the color of the path used last that hangs them on it.</summary>
+    Button? QuickPathButton(int verse, Action close)
+    {
+        if (LastPath() is not { } p) return null;
+        var b = new Button
+        {
+            Classes = { "tool" }, Width = double.NaN, Height = 28, Padding = new(8, 0), Margin = new(0, -2, 6, 0),
+            Content = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 5, Children =
+            {
+                new Border { Width = 12, Height = 12, CornerRadius = new(6), Background = new SolidColorBrush(PathColor(p)), VerticalAlignment = VerticalAlignment.Center },
+                new TextBlock { Text = "＋ " + Shorten(p.Name, IsPhone ? 10 : 16), FontSize = 12, VerticalAlignment = VerticalAlignment.Center },
+            } },
+        };
+        ToolTip.SetTip(b, L("An den Lesepfad „{0}“ anhängen (Schritt {1})", p.Name, p.Steps.Count + 1));
+        b.Click += (_, _) => { var steps = StepsFor(verse); close(); AddSteps(p, steps); };
+        return b;
     }
 
     void AskPathName(Control anchor, string start, Action<string> done)
@@ -151,25 +187,26 @@ public partial class MainWindow
         fly.ShowAt(anchor);
     }
 
-    long NewPath(string name, IReadOnlyList<StudyPassage> steps)
+    long NewPath(string name, IReadOnlyList<StudyPassage> steps, long? folder = null)
     {
         var used = ReadingPaths().Select(p => p.Color).ToHashSet(StringComparer.OrdinalIgnoreCase);
         var color = PathColors.FirstOrDefault(c => !used.Contains(c)) ?? PathColors[used.Count % PathColors.Length];
         var id = _vault.AddReadingPath(name, color, steps);
+        if (folder is long f) _vault.SetReadingPathFolder(id, f);
         AfterPathChange(L("Lesepfad „{0}“ angelegt. Hänge weitere Verse über das Vers-Menü an.", name.Trim()));
         return id;
     }
 
     void AddSteps(ReadingPath p, IReadOnlyList<StudyPassage> steps)
     {
-        _vault.UpdateReadingPath(p with { Steps = [.. p.Steps, .. steps] });
+        StorePath(p with { Steps = [.. p.Steps, .. steps] });
         AfterPathChange(L("An „{0}“ angehängt: jetzt {1} Schritte.", p.Name, p.Steps.Count + steps.Count));
     }
 
     void RemoveStep(ReadingPath p, int index)
     {
         var list = p.Steps.ToList(); list.RemoveAt(index);
-        _vault.UpdateReadingPath(p with { Steps = list });
+        StorePath(p with { Steps = list });
         AfterPathChange(L("Schritt {0} aus „{1}“ genommen.", index + 1, p.Name));
     }
 
@@ -177,6 +214,7 @@ public partial class MainWindow
     {
         if (note is not null) StatusText.Text = note;
         if (ReaderHost.IsVisible && _curBook != "") _ = RedrawChapterAsync();
+        if (_exBuilt && !_exInTrash) FillExplorerList();   // the arrows in the explorer follow a new order of the steps
     }
 
     // ---- ordering the paths ---------------------------------------------------------------------------------------------
@@ -191,6 +229,14 @@ public partial class MainWindow
         var rename = new Button { Content = L("Umbenennen …") };
         var recolor = new Button { Content = L("Farbe …"), Margin = new(6, 0, 0, 0) };
         var delete = new Button { Content = L("Löschen"), Margin = new(6, 0, 0, 0) };
+        var folderBtn = new Button { Content = L("Ordner …"), Margin = new(6, 0, 0, 0) };
+        ToolTip.SetTip(folderBtn, L("Einem Ordner im Explorer zuweisen: dort zeigen Pfeile den Weg von Eintrag zu Eintrag."));
+        var folderText = new TextBlock { Classes = { "caption" }, TextWrapping = TextWrapping.Wrap };
+        var export = new Button { Content = L("Exportieren …"), Margin = new(6, 0, 0, 0) };
+        ToolTip.SetTip(export, L("Als Datei speichern, damit andere den Lesepfad einlesen können"));
+        var import = new Button { Content = L("Importieren …"), Margin = new(6, 0, 0, 0) };
+        var keepLooked = new Button { Content = L("Behalten"), Classes = { "primary" }, Margin = new(6, 0, 0, 0) };
+        ToolTip.SetTip(keepLooked, L("Diesen Lesepfad, der nur zum Ansehen geöffnet ist, in diesem Vault speichern"));
         var arrows = new CheckBox { Content = L("Pfeile und Nummern am Rand des Textes zeigen"), IsChecked = _settings.PathArrows, Margin = new(0, 6, 0, 0) };
         arrows.IsCheckedChanged += (_, _) => { _settings.PathArrows = arrows.IsChecked == true; SaveSettings(); };
         var changed = false;
@@ -202,18 +248,24 @@ public partial class MainWindow
             all = ReadingPaths();
             pick.Items.Clear();
             foreach (var p in all)
-                pick.Items.Add(new ComboBoxItem { Tag = p.Id, Content = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 8, Children = { new Border { Width = 12, Height = 12, CornerRadius = new(6), Background = new SolidColorBrush(PathColor(p)), VerticalAlignment = VerticalAlignment.Center }, new TextBlock { Text = $"{p.Name}  ({p.Steps.Count})" } } } });
+                pick.Items.Add(new ComboBoxItem { Tag = p.Id, Content = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 8, Children = { new Border { Width = 12, Height = 12, CornerRadius = new(6), Background = new SolidColorBrush(PathColor(p)), VerticalAlignment = VerticalAlignment.Center }, new TextBlock { Text = $"{p.Name}  ({p.Steps.Count})" + (LookedAt(p) ? "  · " + L("nur angesehen") : "") } } } });
             pick.SelectedItem = pick.Items.OfType<ComboBoxItem>().FirstOrDefault(i => i.Tag is long id && id == keep) ?? pick.Items.OfType<ComboBoxItem>().FirstOrDefault();
             empty.IsVisible = all.Count == 0;
-            rename.IsEnabled = recolor.IsEnabled = delete.IsEnabled = pick.IsEnabled = all.Count > 0;
+            rename.IsEnabled = recolor.IsEnabled = delete.IsEnabled = folderBtn.IsEnabled = pick.IsEnabled = all.Count > 0;
+            if (all.Count == 0) { keepLooked.IsVisible = false; export.IsEnabled = false; }
             FillSteps();
         }
 
-        void Save(ReadingPath p) { _vault.UpdateReadingPath(p); changed = true; Load(p.Id); }
+        void Save(ReadingPath p) { StorePath(p); changed = true; Load(p.Id); }
 
         void FillSteps()
         {
             steps.Children.Clear();
+            folderText.Text = Current() is { Folder.Length: > 0 } fp ? L("Im Explorer im Ordner „{0}“.", FolderLabel(fp.Folder)) : "";
+            folderText.IsVisible = folderText.Text.Length > 0;
+            keepLooked.IsVisible = Current() is { } lp && LookedAt(lp);
+            folderBtn.IsEnabled = Current() is { } fpp && !LookedAt(fpp);
+            export.IsEnabled = all.Count > 0;
             if (Current() is not { } p) return;
             if (p.Steps.Count == 0) steps.Children.Add(new TextBlock { Classes = { "caption" }, Text = L("Dieser Lesepfad hat noch keine Schritte.") });
             for (var i = 0; i < p.Steps.Count; i++)
@@ -251,10 +303,25 @@ public partial class MainWindow
             foreach (var hex in PathColors.Concat(PresetColors)) wrap.Children.Add(Swatch(hex, h => { fly.Hide(); Save(p with { Color = h }); }, string.Equals(hex, p.Color, StringComparison.OrdinalIgnoreCase)));
             fly.Content = wrap; fly.ShowAt(recolor);
         };
+        folderBtn.Click += (_, _) =>
+        {
+            if (Current() is not { } p) return;
+            var menu = new ContextMenu();
+            foreach (var item in PathFolderItems(p, () => { changed = true; Load(p.Id); })) menu.Items.Add(item);
+            menu.Open(folderBtn);
+        };
+        export.Click += (_, _) => AskExportPaths(export, Current());
+        import.Click += async (_, _) => { win.Close(); await ImportPathsAsync(); };
+        keepLooked.Click += (_, _) =>
+        {
+            if (Current() is not { } p || !LookedAt(p)) return;
+            var id = KeepLookedPath(p); changed = true; Load(id);
+            StatusText.Text = L("Lesepfad „{0}“ gespeichert.", p.Name);
+        };
         delete.Click += (_, _) =>
         {
             if (Current() is not { } p) return;
-            _vault.DeleteReadingPath(p.Id); changed = true; Load(null);
+            DropPath(p.Id); changed = true; Load(null);
             StatusText.Text = L("Lesepfad „{0}“ gelöscht.", p.Name);
         };
         var close = new Button { Content = L("Schließen"), Classes = { "primary" }, HorizontalAlignment = HorizontalAlignment.Right, Margin = new(0, 12, 0, 0) };
@@ -264,7 +331,9 @@ public partial class MainWindow
             new TextBlock { Text = L("Lesepfade"), FontSize = 20, FontWeight = FontWeight.SemiBold },
             new TextBlock { Classes = { "caption" }, TextWrapping = TextWrapping.Wrap, Text = L("Verse in der Reihenfolge, in der sie aufeinander aufbauen. Im Text zeigt eine Nummer am Rand den Schritt, ein Pfeil führt zum nächsten Schritt im selben Kapitel; unter dem Vers geht es zum Schritt davor und danach.") },
             empty, pick,
-            new WrapPanel { Children = { rename, recolor, delete } },
+            new WrapPanel { Children = { rename, recolor, folderBtn, delete } },
+            new WrapPanel { Children = { keepLooked, export, import } },
+            folderText,
             arrows,
         } };
         DockPanel.SetDock(head, Dock.Top); DockPanel.SetDock(close, Dock.Bottom);
@@ -278,18 +347,50 @@ public partial class MainWindow
     /// <summary>The marks (or notes) chosen in the explorer become a reading path, in the order in which they were chosen.</summary>
     void PathFromExplorer(List<ExItem> items, Control anchor)
     {
-        var marks = _vault.GetMarks().ToDictionary(m => m.Id);
-        var steps = new List<StudyPassage>();
-        foreach (var i in items)
-        {
-            if (i.Kind == ExKind.Mark && marks.TryGetValue(i.Id, out var m)) steps.Add(new StudyPassage(m.Ref.Book, m.Ref.Chapter, m.Ref.Verse, Math.Max(m.Ref.Verse, m.LastVerse)));
-            else if (i.Kind == ExKind.Note && i.Ref is { } r) steps.Add(new StudyPassage(r.Book, r.Chapter, r.Verse, r.Verse));
-        }
+        var steps = items.Select(ExStep).OfType<StudyPassage>().ToList();
         if (steps.Count == 0) { ExNote(L("Wähle Markierungen oder Notizen; ein Lesepfad führt durch Verse."), false); return; }
-        AskPathName(anchor, "", name =>
+        var folder = _exFlat ? null : _exFolder;   // made inside a folder: the path belongs to it, its arrows show there
+        AskPathName(anchor, folder is long f && FolderById(f) is { } fo ? fo.Name : "", name =>
         {
-            NewPath(name, steps);
+            NewPath(name, steps, folder);
             ExNote(L("Lesepfad „{0}“ mit {1} Schritten angelegt, in der Reihenfolge, in der du gewählt hast.", name, steps.Count), false);
         });
+    }
+
+    /// <summary>The step an entry of the explorer stands for (a mark: its verses; a note: its verse; nothing for folders and documents).</summary>
+    static StudyPassage? ExStep(ExItem i) =>
+        i.Kind is ExKind.Mark or ExKind.Note && i.Ref is { } r ? new StudyPassage(r.Book, r.Chapter, r.Verse, Math.Max(r.Verse, i.Last)) : null;
+
+    static string FolderLabel(string key) => key.Replace("\u001f", " › ");
+
+    /// <summary>The folders a path can belong to (as a tree, indented), and "no folder"; the one it has is ticked.</summary>
+    List<Control> PathFolderItems(ReadingPath p, Action done)
+    {
+        var folders = _vault.GetFolders();
+        var items = new List<Control>();
+        MenuItem Choice(string text, long? folder, bool on)
+        {
+            var item = MenuAction((on ? "✓  " : "     ") + text, () =>
+            {
+                _vault.SetReadingPathFolder(p.Id, folder);
+                StatusText.Text = folder is null ? L("„{0}“ gehört zu keinem Ordner mehr.", p.Name) : L("„{0}“ gehört jetzt zum Ordner „{1}“; im Explorer zeigen Pfeile den Weg.", p.Name, text.Trim());
+                done();
+                AfterPathChange();
+            });
+            return item;
+        }
+        items.Add(Choice(L("Keinem Ordner"), null, p.Folder.Length == 0));
+        items.Add(new Separator());
+        void Add(long? parent, int depth)
+        {
+            foreach (var f in folders.Where(f => f.ParentId == parent && f.Id != parent).OrderBy(f => f.Name, Comparer<string>.Create(NaturalCompare)))
+            {
+                items.Add(Choice(new string(' ', depth * 4) + f.Name, f.Id, _vault.FolderKey(f.Id) == p.Folder));
+                if (depth < 8) Add(f.Id, depth + 1);
+            }
+        }
+        Add(null, 0);
+        if (folders.Count == 0) items.Add(MenuAction(L("Noch keine Ordner: lege im Explorer einen an."), () => { }, enabled: false));
+        return items;
     }
 }

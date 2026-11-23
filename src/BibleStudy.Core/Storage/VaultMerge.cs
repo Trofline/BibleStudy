@@ -280,7 +280,10 @@ public sealed partial class VaultStore
                     if (has.ExecuteScalar() is not null)
                     {
                         using var cmd = con.CreateCommand();
-                        cmd.CommandText = "INSERT INTO main.reading_paths(name,color,steps,created,updated) SELECT name,color,steps,created,updated FROM g.reading_paths o WHERE NOT EXISTS(SELECT 1 FROM main.reading_paths m WHERE m.name IS o.name)";
+                        using var col = con.CreateCommand();
+                        col.CommandText = "SELECT 1 FROM pragma_table_info('reading_paths','g') WHERE name='folder'";
+                        var folder = col.ExecuteScalar() is not null ? "folder" : "''";   // the folder of the explorer came with 1.9.26
+                        cmd.CommandText = $"INSERT INTO main.reading_paths(name,color,steps,folder,created,updated) SELECT name,color,steps,{folder},created,updated FROM g.reading_paths o WHERE NOT EXISTS(SELECT 1 FROM main.reading_paths m WHERE m.name IS o.name)";
                         others += cmd.ExecuteNonQuery();
                     }
                 }
