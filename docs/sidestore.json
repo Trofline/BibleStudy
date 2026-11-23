@@ -18,6 +18,15 @@
       "category": "other",
       "versions": [
         {
+          "version": "1.9.27",
+          "buildVersion": "46",
+          "date": "2026-11-23",
+          "localizedDescription": "## New in 1.9.27\n**Kind of update:** Fix\n- **[Fix]** Syncing with a device that still runs an older version (one without reading paths) no longer deletes the reading paths on this one. The same holds for every other list an older copy does not have.\n\n**iPhone:** update in SideStore (Sources → pull down → My Apps → Update). **Android:** the app updates itself.",
+          "downloadURL": "https://github.com/Trofline/BibleStudy/releases/download/v1.9.27/BibleStudy-iOS-1.9.27.ipa",
+          "size": 60707880,
+          "minOSVersion": "15.0"
+        },
+        {
           "version": "1.9.26",
           "buildVersion": "45",
           "date": "2026-11-23",
