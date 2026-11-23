@@ -67,10 +67,10 @@ public partial class MainWindow
 
     async Task ExportPathsAsync(Control from, List<ReadingPath> paths, bool withMarks)
     {
-        var top = TopLevel.GetTopLevel(from) ?? this;
+        var provider = TopLevel.GetTopLevel(from)?.StorageProvider ?? StorageProvider;   // the window of the paths on the PC; the phone has one screen
         var stem = paths.Count == 1 ? paths[0].Name : L("Lesepfade");
         foreach (var c in Path.GetInvalidFileNameChars()) stem = stem.Replace(c, '_');
-        var file = await top.StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
+        var file = await provider.SaveFilePickerAsync(new FilePickerSaveOptions
         {
             Title = L("Lesepfade exportieren"), SuggestedFileName = stem + ReadingPathFile.Extension,
             FileTypeChoices = [new FilePickerFileType(L("Lesepfade")) { Patterns = ["*" + ReadingPathFile.Extension] }],
