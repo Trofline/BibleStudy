@@ -286,6 +286,8 @@ public sealed class AppSettings
     public bool ShowDifferences { get; set; }
     /// <summary>The list of marks is grouped by colour instead of by folder.</summary>
     public bool MarksByColor { get; set; }
+    /// <summary>Reading paths: the numbers of the steps and the arrows between them in the margin of the text.</summary>
+    public bool PathArrows { get; set; } = true;
     /// <summary>A reminder to read, once a day from this time on, when nothing was read yet that day.</summary>
     public bool ReadingReminder { get; set; }
     public string ReminderTime { get; set; } = "19:00";

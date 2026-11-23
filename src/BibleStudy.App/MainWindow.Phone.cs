@@ -184,11 +184,31 @@ public partial class MainWindow
         {
             Cancel();
             if (Math.Abs(ReaderScroll.Offset.Y - offset.Y) > 8) return;   // the page was scrolled
+            if (TryStartVerseDrag(start, pointer, verse, box)) return;
             if (TryStartWordDrag(start, pointer, verse, box)) return;
             if (!_selVerses.Contains(verse)) SelectVerse(verse);
             ShowVerseMenu(verse, box);
         };
         timer.Start();
+    }
+
+    /// <summary>
+    /// A long press on a verse number chooses that verse; moving the finger down (or up) without lifting chooses all verses up to the one under it,
+    /// lifting shows the colors for all of them. Lifting at once opens the verse menu, as before.
+    /// </summary>
+    bool TryStartVerseDrag(Point at, Avalonia.Input.IPointer pointer, int verse, Border box)
+    {
+        var cref = _cells.FirstOrDefault(c => c.Data.Number == verse && !c.Data.Foreign && c.Data.Col == 0 && c.Tb.IsEffectivelyVisible);
+        if (cref?.Tb.Tag is not CellInfo info || info.Runs.Count == 0 || this.TranslatePoint(at, cref.Tb) is not { } p) return false;
+        // the number and a little room around it (a finger is wide): before the first word of the verse, or left of the text
+        var firstWord = cref.Tb.TextLayout.HitTestTextPosition(info.Runs[0].Tb);
+        var onNumber = p.X < 0 || (p.Y < firstWord.Bottom && p.X < firstWord.X + 6);
+        if (!onNumber) return false;
+        ClearTextSelection(true);
+        if (!_selVerses.Contains(verse) || _selVerses.Count > 1) SelectVerse(verse);
+        _drag = new DragState { Anchor = cref, Start = at, Last = at, Cells = ColCells(cref), Scroller = ReaderScroll, VerseRange = true, Verse = verse, Box = box };
+        pointer.Capture(ReaderScroll);   // the finger now chooses verses; the page does not scroll under it
+        return true;
     }
 
     /// <summary>

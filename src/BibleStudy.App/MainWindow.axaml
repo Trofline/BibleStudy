@@ -1243,7 +1243,11 @@
             <Grid x:Name="ReaderHost" ColumnDefinitions="*,Auto" RowDefinitions="Auto,*">
                 <Grid x:Name="ParallelHeader" IsVisible="False" Margin="42,10,42,2" />
                 <ScrollViewer x:Name="ReaderScroll" Grid.Row="1">
-                    <StackPanel x:Name="ReaderPanel" Margin="0,36,0,80" HorizontalAlignment="Center" Spacing="2" />
+                    <Panel>
+                        <StackPanel x:Name="ReaderPanel" Margin="0,36,0,80" HorizontalAlignment="Center" Spacing="2" />
+                        <!-- the arrows of the reading paths in the margin (MainWindow.Paths) -->
+                        <local:PathGutter x:Name="PathMargin" />
+                    </Panel>
                 </ScrollViewer>
                 <local:ThreadGraph x:Name="ThreadPane" Grid.Column="1" Grid.RowSpan="2" IsVisible="False" Margin="0,0,8,0" />
             </Grid>

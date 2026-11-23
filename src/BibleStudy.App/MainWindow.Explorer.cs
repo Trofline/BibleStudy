@@ -106,6 +106,7 @@ public partial class MainWindow
         _exAllVaultsBtn = new ToggleButton { Content = L("Alle Vaults"), Margin = new(8, 0, 0, 0), VerticalAlignment = VerticalAlignment.Center, IsChecked = _settings.MarksAllVaults };
         ToolTip.SetTip(_exAllVaultsBtn, L("Auch die Einträge der anderen Vaults zeigen (zum Ansehen; ändern geht im jeweiligen Vault)."));
         _exAllVaultsBtn.IsCheckedChanged += (_, _) => SetShowAllVaults(_exAllVaultsBtn.IsChecked == true);
+        BuildExplorerPick();
         Control bar;
         var nav = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 2, Children = { _exBackBtn, _exUpBtn } };
         DockPanel.SetDock(nav, Dock.Left);
@@ -123,14 +124,15 @@ public partial class MainWindow
             view.Flyout = new Flyout { Placement = PlacementMode.BottomEdgeAlignedRight, Content = new StackPanel { Spacing = 6, MinWidth = 180, Children = { _exFlatBtn, _exAllVaultsBtn } } };
             void ViewMark() => view.Classes.Set("primary", _exFlatBtn.IsChecked == true || _exAllVaultsBtn.IsChecked == true);   // something is switched on: the button says so
             _exFlatBtn.IsCheckedChanged += (_, _) => ViewMark(); _exAllVaultsBtn.IsCheckedChanged += (_, _) => ViewMark(); ViewMark();
-            DockPanel.SetDock(newFolder, Dock.Right); DockPanel.SetDock(view, Dock.Right);
+            _exPickBtn.Margin = new(6, 0, 0, 0); _exPickBtn.Height = 34; _exPickBtn.Padding = new(10, 0); _exPickBtn.VerticalContentAlignment = VerticalAlignment.Center;
+            DockPanel.SetDock(newFolder, Dock.Right); DockPanel.SetDock(view, Dock.Right); DockPanel.SetDock(_exPickBtn, Dock.Right);
             pathBox.Margin = new(0, 0, 0, 6);
-            bar = new StackPanel { Margin = new(10, 8, 10, 6), Children = { pathBox, new DockPanel { Children = { nav, newFolder, view, _exSearch } } } };
+            bar = new StackPanel { Margin = new(10, 8, 10, 6), Children = { pathBox, new DockPanel { Children = { nav, newFolder, view, _exPickBtn, _exSearch } } } };
         }
         else
         {
             var dock = new DockPanel { Margin = new(14, 12, 14, 8) };
-            var right = new StackPanel { Orientation = Orientation.Horizontal, Children = { _exSearch, _exFlatBtn, _exAllVaultsBtn, newFolder } };
+            var right = new StackPanel { Orientation = Orientation.Horizontal, Children = { _exSearch, _exFlatBtn, _exAllVaultsBtn, _exPickBtn, newFolder } };
             DockPanel.SetDock(right, Dock.Right);
             dock.Children.Add(nav); dock.Children.Add(right); dock.Children.Add(pathBox);
             bar = dock;
@@ -192,8 +194,8 @@ public partial class MainWindow
         _exToast.Bind(Border.BackgroundProperty, this.GetResourceObservable("BsSurface2"));
         _exToast.Bind(Border.BorderBrushProperty, this.GetResourceObservable("BsAccent"));
         var root = new DockPanel();
-        DockPanel.SetDock(bar, Dock.Top); DockPanel.SetDock(_exInfo, Dock.Bottom); DockPanel.SetDock(_exToast, Dock.Bottom);
-        root.Children.Add(bar); root.Children.Add(_exInfo); root.Children.Add(_exToast); root.Children.Add(body);
+        DockPanel.SetDock(bar, Dock.Top); DockPanel.SetDock(_exInfo, Dock.Bottom); DockPanel.SetDock(_exToast, Dock.Bottom); DockPanel.SetDock(_exPickBar, Dock.Bottom);
+        root.Children.Add(bar); root.Children.Add(_exInfo); root.Children.Add(_exToast); root.Children.Add(_exPickBar); root.Children.Add(body);
 
         _exGhostText = new TextBlock { FontWeight = FontWeight.SemiBold };
         _exGhost = new Border { CornerRadius = new(8), Padding = new(10, 6), Child = _exGhostText, IsVisible = false, IsHitTestVisible = false, BorderThickness = new(1), Opacity = 0.95 };
@@ -235,6 +237,7 @@ public partial class MainWindow
             case Key.Delete when _exSel.Count > 0: ExDelete(_exSel.ToList()); break;
             case Key.F2 when _exSel is [{ Kind: ExKind.Folder } one]: ExRename(one, ExRowControl(one) ?? ExplorerHost); break;
             case Key.Back when _exFolder is long g: ExNavigate(FolderById(g)?.ParentId); break;
+            case Key.Escape when _exPick: SetExPick(false); break;
             case Key.Escape when _exCut is not null || _exSel.Count > 0: _exCut = null; _exSel.Clear(); FillExplorerList(); break;
             default: handled = false; break;
         }
@@ -651,6 +654,8 @@ public partial class MainWindow
             ExKind.Doc => new Icon { Data = Geometry.Parse(DocIcon), IconSize = 15 },
             _ => new Border { Width = 12, Height = 12, CornerRadius = new(6), Background = new SolidColorBrush(MarkColor(item.Color ?? "")) },
         };
+        Border? pickBox = null;
+        if (_exPick) lead = pickBox = PickBox(item);   // choosing: a box to tick instead of the sign of the kind
         lead.VerticalAlignment = VerticalAlignment.Center; lead.HorizontalAlignment = HorizontalAlignment.Left;
         if (item.Kind == ExKind.Folder) lead.Bind(Avalonia.Controls.Documents.TextElement.ForegroundProperty, this.GetResourceObservable("BsAccent"));
         var title = item.Kind == ExKind.Folder
@@ -665,7 +670,7 @@ public partial class MainWindow
         grid.Children.Add(lead); grid.Children.Add(name); grid.Children.Add(place); grid.Children.Add(kind);
         var row = new Border { Padding = new(8, 7), CornerRadius = new(8), Child = grid, Margin = new(0, 1), Cursor = new Cursor(StandardCursorType.Hand), Opacity = _exCut?.Any(c => SameItem(c, item)) == true ? 0.45 : 1 };
         void Paint(bool hover) => row.Background = _exSel.Any(s => s.Kind == item.Kind && s.Id == item.Id) ? Res("BsAccentSoft") ?? Brushes.Transparent : hover ? Res("BsHover") ?? Brushes.Transparent : Brushes.Transparent;
-        row.Tag = (Action)(() => Paint(row.IsPointerOver && !_exDragging));   // a new choice only paints the rows again (see ExShowSelection)
+        row.Tag = (Action)(() => { Paint(row.IsPointerOver && !_exDragging); (pickBox?.Tag as Action)?.Invoke(); });   // a new choice only paints the rows again (see ExShowSelection)
         Paint(false);
         row.PointerEntered += (_, _) => { if (!_exDragging) Paint(true); };
         row.PointerExited += (_, _) => { if (!_exDragging) Paint(false); };
@@ -925,6 +930,8 @@ public partial class MainWindow
             }
             if (!props.IsLeftButtonPressed) return;
             ExplorerHost.Focusable = true; ExplorerHost.Focus();
+            if (_exPick) { e.Handled = true; if (e.Pointer.Type == PointerType.Touch) ExPickOnLift(row, item, e); else ExPickToggle(item); return; }   // choosing: a tap ticks, nothing opens or moves
+            if (e.Pointer.Type == PointerType.Touch) ExLongPressToPick(row, item, e);
             if (e.ClickCount == 2) { e.Handled = true; ExOpen(item); return; }
             var ctrl = e.KeyModifiers.HasFlag(Mods.Ctrl);
             var chosen = _exSel.Any(s => s.Kind == item.Kind && s.Id == item.Id);
@@ -979,6 +986,7 @@ public partial class MainWindow
     {
         var folders = _exRows.Count(r => r.Kind == ExKind.Folder);
         _exInfo.Text = L("{0} Ordner, {1} Einträge", folders, _exRows.Count - folders) + (_exSel.Count > 0 ? "  ·  " + L("{0} ausgewählt", _exSel.Count) : "");
+        UpdateExPickBar();
         // the keys stood here as one long line all the time; they are one hover away now
         ToolTip.SetTip(_exInfo, L("Doppelklick oder Enter öffnet · Ziehen oder Strg+X / Strg+V ordnet ein · Pfeiltasten wählen, mit Umschalt mehrere · Entf löscht · Strg+Z macht rückgängig · F2 benennt um"));
     }

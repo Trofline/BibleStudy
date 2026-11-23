@@ -214,7 +214,15 @@ public partial class MainWindow
     Task RemoveMarksAsync()
     {
         var gone = new List<Mark>();   // marks that went as a whole (a mark cut in two is no loss)
-        if (_sel is { Parts.Count: > 0 } sel)
+        HashSet<int>? wholeVerses = null;
+        if (_sel is { Parts.Count: > 0 } sel0)
+        {
+            var first0 = sel0.Parts[0]; var last0 = sel0.Parts[^1];
+            var partial = _chapterMarks.Any(m => !m.WholeVerse && m.Ref.Verse <= last0.Verse && m.LastVerse >= first0.Verse && (m.TranslationId == sel0.TranslationId || CellMarksTouch(m, sel0)));
+            // a word chosen in a marked verse (a long press on the phone) and no mark under it but the verse's own: "no color" means the verse mark
+            if (!partial && sel0.Parts.All(p => _wholeMarks.ContainsKey(p.Verse))) wholeVerses = sel0.Parts.Select(p => p.Verse).ToHashSet();
+        }
+        if (wholeVerses is null && _sel is { Parts.Count: > 0 } sel)
         {
             var first = sel.Parts[0]; var last = sel.Parts[^1];
             var cut = sel.Parts.Select(p => new MarkLogic.Piece(p.Verse, p.Start, p.End)).ToList();
@@ -231,7 +239,10 @@ public partial class MainWindow
         }
         else
         {
-            var verses = _selVerses.Count > 0 ? _selVerses.ToHashSet() : _selected is int v ? [v] : [];
+            var verses = wholeVerses ?? (_selVerses.Count > 0 ? _selVerses.ToHashSet() : _selected is int v ? [v] : []);
+            // the number of a marked verse was tapped: the mark of the verses beside it in the same color goes with it, as a new color would go to all of them
+            if (verses.Count == 1 && (_recolorGroup || wholeVerses is not null)) verses = MarkedGroupAround(verses.First());
+            _recolorGroup = false;
             var touching = _chapterMarks.Where(m => Enumerable.Range(m.Ref.Verse, m.LastVerse - m.Ref.Verse + 1).Any(verses.Contains)).ToList();
             if (touching.Count == 0) { StatusText.Text = L("Nichts zum Entfernen ausgewählt."); return Task.CompletedTask; }
             PushUndo();
@@ -242,6 +253,8 @@ public partial class MainWindow
         // what went as a whole waits in the trash as well (taking the step back throws those entries away again)
         if (gone.Count > 0 && _markUndo.Count > 0) _markUndo[^1] = _markUndo[^1] with { Trash = gone.Select(_vault.KeepInTrash).ToList() };
         ClearTextSelection(false);
+        // the verse is no longer chosen either: its veil in the accent color looked as if the color had stayed
+        _selVerses.Clear(); _selected = null; _anchorVerse = null; ThreadPane.SelectedVerse = null;
         RefreshCollection(); RefreshCells();
         StatusText.Text = L("Markierung entfernt · Strg+Z macht es rückgängig");
         ShowUndoToast(gone.Count > 1 ? L("{0} Markierungen entfernt.", gone.Count) : L("Markierung entfernt."), UndoMarksAsync, trash: gone.Count > 0);

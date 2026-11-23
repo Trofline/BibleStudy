@@ -27,10 +27,10 @@ In the verse menu (right-click, long press on a phone) you record a voice note w
 There are three kinds:
 
 - **Word or piece of text:** drag with the mouse, also across several verses (from the middle of verse 1 to the middle of verse 2). The colors appear right above the text (can be turned off). Double-click selects a word, triple-click the verse. The selection snaps to **whole words** (can be turned off), and the verse number cannot be marked. Blanks at the start and end are cut off.
-- **Whole verse:** click the **verse number**; the colors appear over the verse. **Ctrl+click** chooses single verses, **Shift+click** a range of whole verses.
+- **Whole verse:** click the **verse number**; the colors appear over the verse. **Ctrl+click** chooses single verses, **Shift+click** a range of whole verses. On a **phone** you hold your finger on the verse number and move it down (or up): every verse up to there is chosen, and when you lift your finger the colors appear for all of them.
 - **Sub-highlight:** inside an already highlighted verse you mark the most important part. There is only one option there, **Sub-highlight**, in the accent color or a color of your choice (Settings, own colors too); **…** gives a normal highlight instead. In the collection it is shown highlighted inside the verse, not as an entry of its own.
 
-A **✕** on the far left above the text always removes the highlight. A **plain click** on highlighted words (no dragging) opens the colors for that highlight so you can recolor or delete it without marking the words again. A click on the verse number of a highlighted verse shows its current color.
+A **✕** on the far left above the text always removes the highlight. After a click on the number of a highlighted verse it removes the whole highlight, also when it spans several verses. A **plain click** on highlighted words (no dragging) opens the colors for that highlight so you can recolor or delete it without marking the words again. A click on the verse number of a highlighted verse shows its current color.
 
 With **Quick** (switch in the bar) whatever you select is highlighted at once in the quick color; a click on the verse number highlights the whole verse, another click removes it. **Ctrl+Z** undoes the last highlights.
 
@@ -55,12 +55,24 @@ In the **Explorer** tab (right sidebar) you see all highlights and notes like in
 - **Arranging:** put items and folders into a folder by dragging, or with **Ctrl+X** / **Ctrl+V**. **Double-click** or **Enter** opens, **Del** deletes, **Ctrl+Z** undoes deleting, moving and renaming. Arrow keys select, with Shift several, **Ctrl+A** everything.
 - **Typing jumps:** type “u” and you land on the first entry starting with “u”. Typing on narrows it down. The field above filters the folder.
 - **Several at once:** select, then right-click: **Change color …** and **Tags** (add or remove) for all selected highlights. This can be taken back as well.
+- **Select as in a photo gallery:** the **Select** button (on a phone also a long press on an entry) turns every row into a box to tick. A tap ticks or unticks it; nothing opens. A bar below shows how many are chosen and does something with all of them: **All**, **Move**, **Reading path** (in the order you tapped them), **More …** (color, tags, other vault) and **Delete**. **Done** ends selecting.
 - **Trash:** what you delete goes to the **trash** (bottom of the tree). It stays there for **30 days**, also after a restart. **Double-click**, **Enter** or right-click → *Restore* brings it back; a deleted folder returns with its content. *Delete for good …* and *Empty trash …* ask first. Documents and highlights removed in the reading text land there too.
 - **Trash button:** above the list of documents and in the bar that appears after deleting, a button opens the trash with everything that lies there.
 - **Copy or move into another vault:** marks and notes can be copied or moved into another vault, with colour, note, tags and their folder. Long folder names end with "…" in the tree and the path.
 - **Undo in the reading text too:** when a highlight is removed in the text or in the *Highlights* tab, **Undo** appears briefly at the bottom.
 - **Exporting:** right-click a folder → as PDF / print or as a Markdown file.
 - **Linking notes:** Bible references in a note (for example John 3:16) become links below the note. The note on John 3:16 shows at the bottom which other notes refer to it.
+
+### Reading paths
+
+A **reading path** links verses (highlighted or not) in the order in which they build on each other, for example “Justification”: Rom 3:23 → Rom 6:23 → Rom 5:8 → Eph 2:8–9.
+
+- **Create:** right-click a verse (on a phone: long press) → **Reading path** → *New reading path from here …*. Add more verses with *Add to “…”*. When several verses are chosen, all of them go in. In the Explorer, **Select** and **Reading path** make a path from the chosen highlights.
+- **In the text:** in the left margin every step shows its **number** in the color of the path. From step to step in the same chapter an **arrow** runs along the margin, like the jumps beside the code in a disassembler (such as IDA). Each arrow has its own lane so nothing overlaps; an arrow going up (back) is dashed.
+- **Read on:** below every step a small bar shows the step before, the name and the number (e.g. “2/5”) and the next step, also in another chapter or book. A click goes there.
+- **Order:** *Reading path → Order reading paths …* (or a click on the name below the verse): move steps up and down, take them out, rename, change the color, delete. You can also switch off the arrows in the margin there.
+
+Reading paths belong to the vault; they are backed up and synchronised.
 
 ## 5.4 Bookmarks
 

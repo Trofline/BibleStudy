@@ -4,9 +4,11 @@ BibleStudy läuft auch auf dem Handy, mit denselben Vaults, Markierungen, Notize
 
 ## 19.1 iPhone installieren (ohne bezahlten Apple-Account)
 
-Das geht mit **SideStore**. Es signiert die App mit deiner eigenen, kostenlosen Apple-ID und erneuert sie danach von selbst. Du brauchst **einmalig** einen Computer (Windows oder Mac) und ein Kabel. Insgesamt dauert es etwa 10 Minuten.
+Das geht mit **SideStore**. Es signiert die App mit deiner eigenen, kostenlosen Apple-ID und erneuert sie danach von selbst. Du brauchst **einmalig** einen Computer (Windows oder Mac) und ein Kabel. Insgesamt dauert es etwa 15 Minuten.
 
-1. **SideStore aufs iPhone bringen (ca. 4 Min.).** Unter Windows *Apple-Geräte* (Microsoft Store) oder iTunes installieren (am Mac nicht nötig), dann das Programm *iloader* öffnen und das iPhone per Kabel anschließen. Fragt das iPhone **„Diesem Computer vertrauen?“**: **Vertrauen** tippen und den Code eingeben. In iloader mit der Apple-ID anmelden und **SideStore** installieren. Meldet SideStore später, dass die Pairing-Datei fehlt: in iloader unten auf **Manage Pairing File** klicken und sie für SideStore einsetzen.
+> **Keine Sorge:** Der **Entwicklermodus** ist ein offizieller Schalter von Apple. Er erlaubt nur, dass Apps laufen, die du selbst installiert hast. Code-Sperre, Face ID, „Wo ist?“ und iOS-Updates bleiben an, das iPhone wird nicht „gejailbreakt“, und du kannst ihn jederzeit wieder ausschalten. „Der eigenen Apple-ID vertrauen“ heißt, du vertraust dir selbst. LocalDevVPN läuft nur auf dem iPhone und schickt keine Daten ins Internet.
+
+1. **SideStore aufs iPhone bringen (ca. 4 Min.).** Unter Windows *Apple-Geräte* (Microsoft Store) oder iTunes installieren (am Mac nicht nötig), dann das Programm *iloader* öffnen und das iPhone per Kabel anschließen. Fragt das iPhone **„Diesem Computer vertrauen?“**: **Vertrauen** tippen und den Code eingeben. In iloader mit der Apple-ID anmelden, in der Liste etwas nach unten scrollen und **SideStore** in der **normalen Version** (nicht Nightly oder Beta) installieren. Meldet SideStore später, dass die Pairing-Datei fehlt: in iloader unten auf **Manage Pairing File** klicken und sie für SideStore einsetzen.
 2. **Der eigenen Apple-ID vertrauen (1 Min.).** Sonst startet SideStore nicht („Nicht vertrauenswürdiger Entwickler“). **Einstellungen → Allgemein → VPN und Geräteverwaltung** → unter *Entwickler-App* deine Apple-ID (E-Mail-Adresse) antippen → **„… vertrauen“** → **Vertrauen**.
 3. **Entwicklermodus einschalten (2 Min.).** Der Schalter erscheint erst, nachdem SideStore installiert ist.
    1. **Einstellungen → Datenschutz & Sicherheit** → ganz nach unten → **Entwicklermodus** → Schalter ein.
@@ -16,7 +18,8 @@ Das geht mit **SideStore**. Es signiert die App mit deiner eigenen, kostenlosen 
    Fehlt der Punkt: SideStore einmal antippen, dann erscheint er. Sonst war Schritt 1 nicht fertig.
 4. **LocalDevVPN installieren (1 Min.).** Aus dem App Store laden, einmal öffnen und die VPN-Konfiguration **erlauben**. Es ist ein VPN auf dem Handy selbst, über das SideStore mit dem Handy spricht; es schickt keine Daten irgendwohin.
 5. **BibleStudy installieren (2 Min.).** In SideStore anmelden, dann diesen Link auf dem iPhone antippen: `sidestore://source?url=https://trofline.github.io/BibleStudy/sidestore.json`. Oder in SideStore → **Sources → +** → `https://trofline.github.io/BibleStudy/sidestore.json`. Dann BibleStudy → **Installieren**. Die `.ipa`-Datei musst du nicht selbst laden, SideStore holt sie über die Quelle aus dem neuesten Release. Nur falls die Quelle nicht klappt: die `.ipa` aus dem Release laden und in SideStore unter **My Apps** → **+** wählen.
-6. **Den fertigen Kurzbefehl übernehmen (1 Min.).** Er schaltet das VPN für SideStore an und aus und signiert BibleStudy alle 6 Tage neu. Siehe **19.4**.
+   **Anmeldung in SideStore klappt nicht?** Das ist im Moment ein bekannter Fehler von SideStore. In SideStore → **Settings** → bei **User Customization** den Schalter **On-Device Anisette** ausschalten → **Anisette Client Configuration** → **Raw JSON**. Im Textfeld **nichts löschen und nichts anderes ändern**, nur `macos;` durch `Mac OS X;` ersetzen. Speichern und neu anmelden.
+6. **Den fertigen Kurzbefehl übernehmen (3 Min.).** Er schaltet das VPN für SideStore an und aus und signiert BibleStudy alle 6 Tage neu. Siehe **19.4**, auch für die kurze Prüfung danach.
 
 **Falls die App doch einmal abgelaufen ist:** SideStore öffnen und bei BibleStudy auf **Erneuern** tippen. Deine Daten bleiben erhalten.
 
@@ -33,6 +36,8 @@ Das geht mit **SideStore**. Es signiert die App mit deiner eigenen, kostenlosen 
 ## 19.2 Bedienung auf dem Handy
 
 - **Antippen** wählt einen Vers, **langes Drücken** öffnet das Menü (am PC: Rechtsklick).
+- **Mehrere ganze Verse:** Finger auf eine Versnummer halten und nach unten ziehen; beim Loslassen erscheinen die Farben für alle gewählten Verse.
+- **Mehrere Einträge im Explorer:** lange auf einen Eintrag drücken (oder **Auswählen**), die anderen antippen und dann über die Leiste unten für alle etwas tun.
 - Unter der Kopfzeile klappt ein **Pfeil** Reiter und Werkzeugleiste ein, damit mehr Platz für den Text bleibt.
 - **Geteilte Ansicht** und mehrere Übersetzungen nebeneinander drehen das Handy automatisch quer (Android).
 - **Exportieren** öffnet das Teilen-Menü: in Dateien sichern, per Messenger senden, in einer anderen App öffnen.
@@ -59,9 +64,18 @@ Selbst bauen musst du nichts. Ein fertiger Kurzbefehl erledigt alles: Das VPN ge
 
 1. Auf dem iPhone in Safari öffnen: `https://trofline.github.io/BibleStudy/BibleStudy.shortcut` → **Laden**.
 2. Oben rechts den Download-Pfeil antippen → die Datei antippen. Sie öffnet sich in **Kurzbefehle**.
-3. **Kurzbefehl hinzufügen**. Fertig.
+3. **Kurzbefehl hinzufügen**.
 
 Fragt iOS beim ersten Lauf, ob der Kurzbefehl das VPN nutzen darf: **Immer erlauben**. Voraussetzung ist **LocalDevVPN** (19.1, Schritt 4).
+
+**Danach einmal prüfen** (Kurzbefehle → BibleStudy lange drücken → **Bearbeiten**):
+
+1. **App neu auswählen:** in den Aktionen (und im ersten Auslöser) auf **SideStore** tippen → nach SideStore suchen → antippen. Nach dem Laden weiß das iPhone nicht sicher, welche App gemeint ist.
+2. **Erster Auslöser** „Wenn SideStore geöffnet oder geschlossen ist“: mit dem Pfeil ⌄ aufklappen → **Automation** ein.
+3. **Zweiter Auslöser** „Um 18:00“: aufklappen → Ereignis **Tageszeit**, Wiederholen **Alle 6 Tage** → **Automation** ein.
+4. **Fehlt ein Auslöser**, oben einen neuen hinzufügen: **App** → **SideStore** → *Geöffnet* und *Geschlossen*; oder **Tageszeit** → 18:00 (eine Zeit, zu der das iPhone meist an ist) → **Alle 6 Tage**. Dann aufklappen und **Automation** einschalten.
+
+Am Ende stehen beide Auslöser mit **Automation** an (Bild in der README).
 
 **Freiwillig, synchronisieren beim Heimkommen:** **Kurzbefehle → Automation → +** → **WLAN** → dein WLAN wählen, **Verbindet** ankreuzen → **Sofort ausführen** → Aktion **App öffnen** → **BibleStudy**. Die App öffnet sich kurz und synchronisiert mit dem PC (19.3).
 

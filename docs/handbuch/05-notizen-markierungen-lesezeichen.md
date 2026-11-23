@@ -27,10 +27,10 @@ Im Vers-Menü (Rechtsklick, am Handy langes Drücken) nimmst du mit dem **Mikrof
 Es gibt drei Arten:
 
 - **Wort oder Textstück:** Text mit der Maus ziehen, auch über mehrere Verse (mitten in Vers 1 bis mitten in Vers 2). Die Farben erscheinen direkt über dem Text (abschaltbar). Doppelklick wählt ein Wort, Dreifachklick den Vers. Die Auswahl rastet auf **ganze Wörter** ein (abschaltbar), und die Versnummer lässt sich nicht mitmarkieren. Leerzeichen am Anfang und Ende werden abgeschnitten.
-- **ganzer Vers:** Auf die **Versnummer** klicken; die Farben erscheinen über dem Vers. **Strg+Klick** wählt einzelne Verse, **Umschalt+Klick** einen Bereich ganzer Verse.
+- **ganzer Vers:** Auf die **Versnummer** klicken; die Farben erscheinen über dem Vers. **Strg+Klick** wählt einzelne Verse, **Umschalt+Klick** einen Bereich ganzer Verse. Am **Handy** hältst du den Finger auf der Versnummer und ziehst ihn nach unten (oder oben): Alle Verse bis dahin werden gewählt, beim Loslassen erscheinen die Farben für alle.
 - **Untermarkierung:** In einem schon markierten Vers markierst du den wichtigsten Teil. Dort gibt es nur die Option **Untermarkierung** in der Akzentfarbe oder einer Farbe deiner Wahl (Einstellungen, auch eigene Farben); mit **…** geht auch eine normale Markierung. In der Sammlung steht sie im Vers hervorgehoben, nicht als eigener Eintrag.
 
-Über dem Text steht immer ganz links ein **✕**: Es nimmt die Markierung weg. Ein **einfacher Klick** auf markierte Wörter (ohne zu ziehen) öffnet die Farben für diese Markierung, damit du sie umfärben oder löschen kannst, ohne sie neu zu markieren. Ein Klick auf die Versnummer eines markierten Verses zeigt seine aktuelle Farbe.
+Über dem Text steht immer ganz links ein **✕**: Es nimmt die Markierung weg. Nach einem Klick auf die Versnummer eines markierten Verses nimmt es die ganze Markierung weg, auch wenn sie über mehrere Verse geht. Ein **einfacher Klick** auf markierte Wörter (ohne zu ziehen) öffnet die Farben für diese Markierung, damit du sie umfärben oder löschen kannst, ohne sie neu zu markieren. Ein Klick auf die Versnummer eines markierten Verses zeigt seine aktuelle Farbe.
 
 Mit **Schnell** (Schalter in der Leiste) wird alles, was du auswählst, sofort in der Schnellfarbe markiert; ein Klick auf die Versnummer markiert den ganzen Vers, ein weiterer nimmt es wieder weg. **Strg+Z** macht die letzten Markierungen rückgängig.
 
@@ -55,12 +55,24 @@ Im Reiter **Explorer** (rechte Leiste) siehst du alle Markierungen und Notizen w
 - **Ordnen:** Einträge und Ordner per Ziehen in einen Ordner legen, oder **Strg+X** / **Strg+V**. **Doppelklick** oder **Enter** öffnet, **Entf** löscht, **Strg+Z** macht Löschen, Verschieben und Umbenennen rückgängig. Pfeiltasten wählen, mit Umschalt mehrere, **Strg+A** alles.
 - **Tippen springt:** Wer „u“ tippt, landet beim ersten Eintrag mit „u“. Schnell weitergetippt wird genauer gesucht. Das Feld darüber filtert den Ordner.
 - **Mehrere auf einmal:** Auswählen, dann Rechtsklick: **Farbe ändern …** und **Tags** (hinzufügen oder entfernen) für alle gewählten Markierungen. Auch das lässt sich zurücknehmen.
+- **Auswählen wie in der Galerie:** Der Knopf **Auswählen** (am Handy auch langes Drücken auf einen Eintrag) macht aus jeder Zeile ein Kästchen zum Abhaken. Antippen hakt an oder ab, nichts öffnet sich. Unten zeigt eine Leiste, wie viele gewählt sind, und macht etwas mit allen: **Alle**, **Verschieben**, **Lesepfad** (in der Reihenfolge, in der du angetippt hast), **Mehr …** (Farbe, Tags, anderer Vault) und **Löschen**. **Fertig** beendet das Auswählen.
 - **Papierkorb:** Was du löschst, landet im **Papierkorb** (unten im Baum). Dort bleibt es **30 Tage**, auch nach einem Neustart. **Doppelklick**, **Enter** oder Rechtsklick → *Wiederherstellen* holt es zurück; ein gelöschter Ordner kommt mit seinem Inhalt. *Endgültig löschen …* und *Papierkorb leeren …* fragen vorher nach. Auch Dokumente und im Lesetext entfernte Markierungen landen dort.
 - **Papierkorb-Knopf:** Über der Dokumentenliste und in der Leiste, die nach dem Löschen erscheint, öffnet ein Knopf den Papierkorb mit allem, was dort liegt.
 - **In einen anderen Vault kopieren oder verschieben:** Markierungen und Notizen lassen sich in einen anderen Vault kopieren oder verschieben, mit Farbe, Notiz, Tags und ihrem Ordner. Lange Ordnernamen enden im Baum und im Pfad mit „…“.
 - **Rückgängig auch im Lesetext:** Wird eine Markierung im Text oder im Reiter *Markierungen* entfernt, erscheint unten kurz **Rückgängig**.
 - **Exportieren:** Rechtsklick auf einen Ordner → als PDF / Drucken oder als Markdown-Datei.
 - **Notizen verlinken:** Bibelstellen in einer Notiz (zum Beispiel Joh 3,16) werden unter der Notiz zu Links. Die Notiz zu Joh 3,16 zeigt unten, welche anderen Notizen auf sie verweisen.
+
+### Lesepfade
+
+Ein **Lesepfad** verbindet Verse (markiert oder nicht) in der Reihenfolge, in der sie aufeinander aufbauen, etwa „Rechtfertigung“: Röm 3,23 → Röm 6,23 → Röm 5,8 → Eph 2,8–9.
+
+- **Anlegen:** Rechtsklick auf einen Vers (am Handy langes Drücken) → **Lesepfad** → *Neuer Lesepfad ab hier …*. Weitere Verse hängst du mit *An „…“ anhängen* an. Sind mehrere Verse gewählt, kommen sie alle hinein. Im Explorer machen **Auswählen** und **Lesepfad** aus gewählten Markierungen einen Pfad.
+- **Im Text:** Am linken Rand steht bei jedem Schritt seine **Nummer** in der Farbe des Pfads. Von Schritt zu Schritt im selben Kapitel führt ein **Pfeil** am Rand entlang, wie die Sprünge neben dem Code in einem Disassembler (etwa IDA). Jeder Pfeil hat seine eigene Spur, damit sich nichts überdeckt. Ein Pfeil nach oben (zurück) ist gestrichelt.
+- **Weiterlesen:** Unter jedem Schritt steht eine kleine Leiste: der Schritt davor, Name und Nummer (zum Beispiel „2/5“) und der nächste Schritt, auch in einem anderen Kapitel oder Buch. Ein Klick geht dorthin.
+- **Ordnen:** *Lesepfad → Lesepfade ordnen …* (oder ein Klick auf den Namen unter dem Vers): Schritte nach oben und unten schieben, herausnehmen, umbenennen, Farbe ändern, löschen. Dort schaltest du auch die Pfeile am Rand ab.
+
+Lesepfade gehören zum Vault, werden mitgesichert und mitsynchronisiert.
 
 ## 5.4 Lesezeichen
 

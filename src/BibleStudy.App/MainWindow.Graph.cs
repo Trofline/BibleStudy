@@ -199,8 +199,10 @@ public partial class MainWindow
     {
         var mine = MyXrefsAt(verse);
         IReadOnlyList<CrossRef> refs = _xrefInText && _chapterRefs is not null && _chapterRefs.TryGetValue(verse, out var found) ? found : [];
-        if (mine.Count == 0 && refs.Count == 0) return null;
+        var paths = PathChips(verse).ToList();   // the reading paths that have a step here
+        if (mine.Count == 0 && refs.Count == 0 && paths.Count == 0) return null;
         var wrap = new WrapPanel { Margin = new(_phone ? 6 : 30, 0, 0, 6) };
+        foreach (var p in paths) wrap.Children.Add(p);
         foreach (var x in mine) wrap.Children.Add(MyXrefChip(x, verse, translationId));   // your own come first and stand out
         foreach (var r in refs.Take(6))
         {

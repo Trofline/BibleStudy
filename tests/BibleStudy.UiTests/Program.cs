@@ -833,7 +833,7 @@ Check("no sign where the mark is shown", !RunsOf((Control)F<System.Collections.I
     hkCheck.IsChecked = false; Settle(200);
     Check("shortcut from anywhere: off, nothing is registered", hkField.GetValue(win) is null);
     hkCheck.IsChecked = true; Settle(400);
-    Check("shortcut from anywhere: on, it is registered with the system", hkField.GetValue(win) is not null, C<TextBlock>("StatusText").Text ?? "");
+    Check("shortcut from anywhere: on, it is registered with the system", hkField.GetValue(win) is not null || (C<TextBlock>("StatusText").Text ?? "").Contains("anderen Programm"), C<TextBlock>("StatusText").Text ?? "");
     hkCheck.IsChecked = false; Settle(200);
 }
 
@@ -854,6 +854,138 @@ Check("no sign where the mark is shown", !RunsOf((Control)F<System.Collections.I
     typeof(MainWindow).GetField("_shownCommentary", All)!.SetValue(win, null);
     RunTask("ShowCommentaryAsync"); Settle(300);
     Check("without a commentary the tab says so and offers no text of others", C<StackPanel>("CommentaryPanel").Children.Count == 0 && (C<TextBlock>("CommentaryInfo").Text ?? "").Contains("Kommentar"), C<TextBlock>("CommentaryInfo").Text ?? "");
+}
+
+// removing a mark of three verses from the number of one of them (the phone): all three go, and nothing stays tinted
+{
+    var vr = F<BibleStudy.Core.Storage.VaultStore>("_vault");
+    foreach (var m in vr.GetMarks("GEN", 1)) vr.DeleteMark(m.Id);
+    RunTask("GoToAsync", "GEN", 1, (int?)null); Settle(500);
+    vr.AddMark(BibleStudy.Core.Storage.Mark.AnyTranslation, new BibleStudy.Core.Models.VerseRef("GEN", 1, 4), -1, -1, "", "#7ACB7A", "", null, [], 6);
+    RunTask("RedrawChapterAsync"); Settle(400);
+    var vboxes = F<Dictionary<int, Border>>("_verseBoxes");
+    Check("removing: the three verses are tinted before", vboxes[4].Background is not null && vboxes[5].Background is not null && vboxes[6].Background is not null, $"whole={string.Join(",", F<Dictionary<int, string>>("_wholeMarks").Keys)} marks={vr.GetMarks("GEN", 1).Count} bg={vboxes[4].Background} base={vboxes[4].GetBaseValue(Border.BackgroundProperty)} attached={vboxes[4].IsAttachedToVisualTree()} trans={vboxes[4].Transitions?.Count} same={ReferenceEquals(vboxes, F<Dictionary<int, Border>>("_verseBoxes"))} inPanel={C<StackPanel>("ReaderPanel").Children.Contains(vboxes[4])} home={C<Control>("ReaderHost").IsVisible} at={F<string>("_curBook")} {typeof(MainWindow).GetField("_curChapter", All)!.GetValue(win)}");
+    Call("SelectVerse", 5); typeof(MainWindow).GetField("_recolorGroup", All)!.SetValue(win, true);   // what a tap on the number of a marked verse does
+    RunTask("RemoveMarksAsync"); Settle(400);
+    Check("removing from one number: the mark of all three verses is gone", !vr.GetMarks("GEN", 1).Any(), string.Join(", ", vr.GetMarks("GEN", 1).Select(m => m.Ref.Verse + "-" + m.LastVerse)));
+    Check("removing: no verse keeps a tint, the verse is not chosen any more", vboxes[4].Background is null && vboxes[5].Background is null && vboxes[6].Background is null && F<HashSet<int>>("_selVerses").Count == 0,
+        $"{vboxes[4].Background} {vboxes[5].Background} {vboxes[6].Background} sel={F<HashSet<int>>("_selVerses").Count}");
+
+    // a word chosen with a long press in a marked verse, then "no color": the verse mark goes (before nothing happened)
+    vr.AddMark(BibleStudy.Core.Storage.Mark.AnyTranslation, new BibleStudy.Core.Models.VerseRef("GEN", 1, 8), -1, -1, "", "#7ACB7A", "", null, [], 8);
+    RunTask("RedrawChapterAsync"); Settle(400);
+    var cells = ((System.Collections.IEnumerable)F<object>("_cells")).Cast<object>().ToList();
+    var cell8 = cells.First(c => { var d = c.GetType().GetProperty("Data")!.GetValue(c)!; return (int)d.GetType().GetProperty("Number")!.GetValue(d)! == 8 && (int)d.GetType().GetProperty("Col")!.GetValue(d)! == 0; });
+    var col = typeof(MainWindow).GetMethod("ColCells", All)!.Invoke(win, [cell8]);
+    typeof(MainWindow).GetMethod("SetSelectionFrom", All)!.Invoke(win, [cell8, 0, cell8, 4, col]);
+    RunTask("RemoveMarksAsync"); Settle(400);
+    Check("a word chosen in a marked verse: 'no color' takes the verse mark away", !vr.GetMarks("GEN", 1).Any() && F<Dictionary<int, Border>>("_verseBoxes")[8].Background is null, $"marks={string.Join(";", vr.GetMarks("GEN", 1).Select(m => m.Ref.Verse + "-" + m.LastVerse + " s" + m.Start))} bg={F<Dictionary<int, Border>>("_verseBoxes")[8].Background}");
+}
+
+// whole verses chosen by holding the number and moving the finger down: they are chosen together and get one color
+{
+    var vr = F<BibleStudy.Core.Storage.VaultStore>("_vault");
+    Call("SelectVerse", 3);
+    Call("ChooseVerseRange", 3, 6); Settle(200);
+    Check("holding a number and moving down chooses the verses in between", F<HashSet<int>>("_selVerses").SetEquals([3, 4, 5, 6]), string.Join(",", F<HashSet<int>>("_selVerses")));
+    Call("ChooseVerseRange", 3, 2); Settle(100);
+    Check("moving back up chooses upwards from the first verse", F<HashSet<int>>("_selVerses").SetEquals([2, 3]));
+    Call("ChooseVerseRange", 3, 7); Settle(100);
+    RunTask("ApplyColorAsync", "#6FA8F2"); Settle(300);
+    var made = vr.GetMarks("GEN", 1).Where(m => m.WholeVerse).ToList();
+    Check("the chosen verses are marked as one", made.Count == 1 && made[0].Ref.Verse == 3 && made[0].LastVerse == 7, string.Join(", ", made.Select(m => m.Ref.Verse + "-" + m.LastVerse)));
+    foreach (var m in made) vr.DeleteMark(m.Id);
+    RunTask("RedrawChapterAsync"); Settle(300);
+}
+
+// reading paths: numbers in the margin, arrows between the steps of the chapter in lanes of their own, a bar under the verse to the next step
+{
+    var vp = F<BibleStudy.Core.Storage.VaultStore>("_vault");
+    BibleStudy.Core.Storage.StudyPassage P(int c, int v) => new("GEN", c, v, v);
+    var pid = vp.AddReadingPath("Testpfad", "#E07A3A", [P(1, 2), P(1, 9), P(1, 5), P(2, 1), P(1, 11)]);
+    RunTask("GoToAsync", "GEN", 1, (int?)null); Settle(600);
+    var gutter = C<BibleStudy.App.PathGutter>("PathMargin");
+    var badges = (System.Collections.IList)typeof(BibleStudy.App.PathGutter).GetField("_badges", All)!.GetValue(gutter)!;
+    var arrows = ((System.Collections.IEnumerable)typeof(BibleStudy.App.PathGutter).GetField("_arrows", All)!.GetValue(gutter)!).Cast<BibleStudy.App.PathGutter.Arrow>().ToList();
+    Check("paths: a number in the margin for each step of this chapter", badges.Count == 4, badges.Count.ToString());
+    Check("paths: an arrow from step to step inside the chapter (2→9, 9→5; not into chapter 2)", arrows.Select(a => (a.From, a.To)).SequenceEqual([(2, 9), (9, 5)]), string.Join(" ", arrows.Select(a => $"{a.From}>{a.To}")));
+    Check("paths: two arrows that meet at verse 9 run in different lanes", arrows.Count == 2 && arrows[0].Lane != arrows[1].Lane);
+    Check("paths: the text makes room for the margin", C<StackPanel>("ReaderPanel").Margin.Left > 20, C<StackPanel>("ReaderPanel").Margin.ToString());
+    var bar = F<Dictionary<int, Border>>("_verseBoxes")[9].GetLogicalDescendants().OfType<TextBlock>().Select(t => t.Text ?? "").ToList();
+    Check("paths: under the step the path and its neighbours", bar.Any(t => t.Contains("Testpfad · 2/5")) && bar.Any(t => t.StartsWith("‹ 1")) && bar.Any(t => t.Contains("· 3 ›")), string.Join(" | ", bar.Where(t => t.Length < 60)));
+    foreach (var op in openPopups.ToList()) op.IsOpen = false;
+    C<ScrollViewer>("ReaderScroll").Offset = new Vector(0, 330); Settle(400);
+    Shot(win, "reading-path");
+    var settingsP = (BibleStudy.Core.Storage.AppSettings)typeof(MainWindow).GetField("_settings", All)!.GetValue(win)!;
+    settingsP.PathArrows = false; RunTask("RedrawChapterAsync"); Settle(400);
+    Check("paths: switched off, the margin is gone again", ((System.Collections.IList)typeof(BibleStudy.App.PathGutter).GetField("_badges", All)!.GetValue(gutter)!).Count == 0 && C<StackPanel>("ReaderPanel").Margin.Left < 1);
+    settingsP.PathArrows = true;
+    vp.DeleteReadingPath(pid);
+    RunTask("RedrawChapterAsync"); Settle(300);
+}
+
+// choosing in the explorer as in a phone gallery: "Auswählen", a tap ticks (in that order), the bar acts on all
+{
+    var ve = F<BibleStudy.Core.Storage.VaultStore>("_vault");
+    var a = ve.AddMark(BibleStudy.Core.Storage.Mark.AnyTranslation, new BibleStudy.Core.Models.VerseRef("GEN", 1, 10), -1, -1, "Auswahl A", "#FFD54F", "", null, []);
+    var b = ve.AddMark(BibleStudy.Core.Storage.Mark.AnyTranslation, new BibleStudy.Core.Models.VerseRef("GEN", 1, 3), -1, -1, "Auswahl B", "#FFD54F", "", null, []);
+    typeof(MainWindow).GetField("_exFolder", All)!.SetValue(win, null);
+    Call("BuildExplorer"); Call("RefreshExplorer"); Settle(300);
+    Call("SetExPick", true, null); Settle(200);
+    var bar = F<Border>("_exPickBar");
+    Check("choosing: the bar shows", bar.IsVisible);
+    object Row(long id) => ((System.Collections.IEnumerable)typeof(MainWindow).GetField("_exRows", All)!.GetValue(win)!).Cast<object>().First(r => (long)r.GetType().GetProperty("Id")!.GetValue(r)! == id && r.GetType().GetProperty("Kind")!.GetValue(r)!.ToString() == "Mark");
+    Call("ExPickToggle", Row(a)); Call("ExPickToggle", Row(b)); Settle(200);
+    var sel = ((System.Collections.IEnumerable)F<object>("_exSel")).Cast<object>().Select(r => (long)r.GetType().GetProperty("Id")!.GetValue(r)!).ToList();
+    Check("choosing: two ticked, in the order of tapping", sel.SequenceEqual([a, b]), string.Join(",", sel));
+    Check("choosing: the bar counts them", F<TextBlock>("_exPickCount").Text?.Contains('2') == true, F<TextBlock>("_exPickCount").Text ?? "");
+    Call("ExPickToggle", Row(a)); Settle(100);
+    Check("choosing: a second tap unticks", ((System.Collections.IEnumerable)F<object>("_exSel")).Cast<object>().Count() == 1);
+    Call("ExPickToggle", Row(a)); Settle(100);
+    Call("RevealSideTab", 30); Settle(500); foreach (var op in openPopups.ToList()) op.IsOpen = false; Settle(200);
+    Shot(win, "explorer-pick");
+    // made into a reading path: the order of tapping (b, then a) is the order of the steps
+    var items = typeof(MainWindow).GetField("_exSel", All)!.GetValue(win)!;
+    var listType = items.GetType();
+    var copy = Activator.CreateInstance(listType, items)!;
+    typeof(MainWindow).GetMethod("NewPath", All)!.Invoke(win, ["Aus der Auswahl", ((System.Collections.IEnumerable)copy).Cast<object>().Select(r => { var rf = (BibleStudy.Core.Models.VerseRef)r.GetType().GetProperty("Ref")!.GetValue(r)!; return new BibleStudy.Core.Storage.StudyPassage(rf.Book, rf.Chapter, rf.Verse, rf.Verse); }).ToList()]);
+    var made = ve.GetReadingPaths().Single(p => p.Name == "Aus der Auswahl");
+    Check("choosing: a reading path in the order of tapping", made.Steps.Select(s => s.From).SequenceEqual([3, 10]), string.Join(",", made.Steps.Select(s => s.From)));
+    ve.DeleteReadingPath(made.Id);
+    Call("SetExPick", false, null); Settle(200);
+    Check("choosing: done, the bar goes away", !bar.IsVisible);
+    ve.DeleteMark(a); ve.DeleteMark(b);
+    Call("ShowReader"); Settle(200);
+}
+
+// "Dokumente aller Vaults zeigen": the documents of another vault show under its name, and a click there switches to it and opens the document
+{
+    var startVault = F<BibleStudy.Core.Storage.VaultStore>("_vault").Name;
+    var other = (BibleStudy.Core.Storage.VaultStore)Call("StoreOf", "Zweiter Vault")!;
+    var docId = other.AddDocument("Fremdes Dokument", "Text im anderen Vault", null, false, []);
+    Call("ShowReader"); Call("RevealSideTab", 10); Call("RefreshDocs"); Settle(300);
+    var allDocs = C<CheckBox>("DocAllVaultsCheck");
+    allDocs.IsChecked = false; Settle(200);
+    allDocs.IsChecked = true; Settle(400);
+    var docTree = C<StackPanel>("DocTree");
+    var heading = docTree.Children.OfType<TextBlock>().FirstOrDefault(t => (t.Text ?? "").Contains("Zweiter Vault"));
+    Check("all vaults: the other vault's documents show under its name", heading is not null, string.Join(" | ", docTree.Children.OfType<TextBlock>().Select(t => t.Text)));
+    var foreignRow = docTree.Children.OfType<Border>().FirstOrDefault(b => b.GetLogicalDescendants().OfType<TextBlock>().Any(t => t.Text == "Fremdes Dokument"));
+    Check("all vaults: the document is listed", foreignRow is not null);
+    if (foreignRow is not null)
+    {
+        // the test window is low (520): the list under the filters gets only a few pixels, so it is made taller for the click
+        var oldHeight = win.Height; win.Height = 1000; Settle(400);
+        foreignRow.BringIntoView(); Settle(300);
+        Shot(win, "docs-all-vaults");
+        Click(foreignRow); Wait(() => F<BibleStudy.Core.Storage.VaultStore>("_vault").Name == "Zweiter Vault", 10); Settle(600);
+        Check("all vaults: a click switches to that vault and opens the document", F<BibleStudy.Core.Storage.VaultStore>("_vault").Name == "Zweiter Vault" && (typeof(MainWindow).GetField("_doc", All)!.GetValue(win) as BibleStudy.Core.Storage.Document)?.Id == docId,
+            F<BibleStudy.Core.Storage.VaultStore>("_vault").Name);
+        win.Height = oldHeight; Settle(300);
+    }
+    allDocs.IsChecked = false; Settle(200);
+    other.DeleteDocument(docId);
+    RunTask("SwitchVaultAsync", startVault, false); Settle(600);
 }
 
 Console.WriteLine(fails == 0 ? "ALL OK" : $"{fails} FAILED");

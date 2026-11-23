@@ -42,6 +42,7 @@ A click on a verse **selects it**. Everything that relates to a verse relates to
 | For memorizing | queues the verse up for training |
 | Highlight (choose color) … | colors the verse |
 | Bookmark / remove bookmark | bookmark |
+| Reading path › … | puts verses into a reading order, see [Reading paths](05-notes-highlights-bookmarks.md#reading-paths) |
 | Write note | jumps to the note field |
 | New document from this verse | starts a document with the verse |
 | Insert into open document | inserts the verse as a quote |

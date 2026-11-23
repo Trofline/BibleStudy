@@ -48,6 +48,7 @@ public partial class MainWindow
         foreach (var v in VoiceMenuItems(r, anchor, Make, Group)) menu.Items.Add(v);
         Item(HeadingBefore(verse) is null ? L("Überschrift davor einfügen …") : L("Überschrift davor bearbeiten …"), () => ShowHeadingEditor(r, HeadingBefore(verse), anchor));
         Item(L("Merken / nicht mehr merken"), ToggleBookmark);
+        menu.Items.Add(PathMenu(verse, anchor));
         if (CommentariesOn) Item(L("Kommentar zu diesem Vers"), () => OpenCommentary(r));
         menu.Items.Add(new Separator());
 

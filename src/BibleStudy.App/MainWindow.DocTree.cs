@@ -78,15 +78,22 @@ public partial class MainWindow
                 ToolTip.SetTip(row, L("Wechselt in den Vault „{0}“ und öffnet das Dokument.", vault));
                 row.PointerEntered += (_, _) => row.Background = Res("BsSurface2") ?? Brushes.Transparent;
                 row.PointerExited += (_, _) => row.Background = Brushes.Transparent;
-                row.PointerReleased += async (_, e) =>
+                // a tap that lifts where it went down (a finger: the list scrolls and takes the finger, so the row itself never heard it lift)
+                row.OnPress(async (_, e) =>
                 {
-                    if (e.InitialPressMouseButton != MouseButton.Left) return;
-                    await SwitchVaultAsync(vault);
-                    if (_vault.GetDocuments().FirstOrDefault(x => x.Id == doc.Id) is { } fresh) OpenDocument(fresh);
-                };
+                    if (e.Pointer.Type != PointerType.Touch && !e.GetCurrentPoint(row).Properties.IsLeftButtonPressed) return;
+                    await OpenForeignDocumentAsync(vault, doc.Id);
+                });
                 DocTree.Children.Add(row);
             }
         }
+    }
+
+    /// <summary>A document of another vault: that vault becomes the active one, then the document opens.</summary>
+    async Task OpenForeignDocumentAsync(string vault, long id)
+    {
+        await SwitchVaultAsync(vault);
+        if (_vault.Name == vault && _vault.GetDocuments().FirstOrDefault(x => x.Id == id) is { } fresh) OpenDocument(fresh);
     }
 
     void BuildDocTree(List<Document> docs, bool flat)
@@ -133,12 +140,13 @@ public partial class MainWindow
             },
         };
         var box = new Border { Padding = new(8, 8), CornerRadius = new(8), Background = Brushes.Transparent, Child = line, Cursor = new Cursor(StandardCursorType.Hand), Margin = new(depth * 16, 4, 0, 0) };
-        box.PointerReleased += (_, e) =>
+        // on the lift of a tap (a finger: the list scrolls and takes the finger, so the release never came to this row)
+        box.OnPress((_, e) =>
         {
-            if (_dragging || e.InitialPressMouseButton != MouseButton.Left) return;
+            if (_dragging || (e.Pointer.Type != PointerType.Touch && !e.GetCurrentPoint(box).Properties.IsLeftButtonPressed)) return;
             if (!_closedDocFolders.Add(id)) _closedDocFolders.Remove(id);
             RefreshDocs();
-        };
+        });
         void Light(bool on) => box.Background = on ? Res("BsAccentSoft") ?? Brushes.Transparent : Brushes.Transparent;
         box.PointerEntered += (_, _) => { if (!_dragging) box.Background = Res("BsSurface2") ?? Brushes.Transparent; };
         box.PointerExited += (_, _) => { if (!_dragging) box.Background = Brushes.Transparent; };

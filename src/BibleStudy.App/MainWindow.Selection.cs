@@ -38,6 +38,8 @@ public partial class MainWindow
         public bool Moved;
         /// <summary>Started by a long press of a finger on a word (see <c>TryStartWordDrag</c>): lifting without moving opens the verse menu for the word.</summary>
         public bool TouchWord;
+        /// <summary>Started by a long press of a finger on a verse number (see <c>TryStartVerseDrag</c>): moving on chooses whole verses, from that one to the one under the finger.</summary>
+        public bool VerseRange;
         public int Verse;
         public Border? Box;
         public List<CellRef> Cells = [];
@@ -80,6 +82,18 @@ public partial class MainWindow
             FinishVerseChoice(verse);
         }
         else SelectVerse(verse);
+    }
+
+    /// <summary>All verses from <paramref name="anchor"/> to <paramref name="head"/> (either way) are chosen; the colors then go to all of them.</summary>
+    void ChooseVerseRange(int anchor, int head)
+    {
+        var (a, b) = (Math.Min(anchor, head), Math.Max(anchor, head));
+        var numbers = _verseBoxes.Keys.Where(n => n >= a && n <= b).ToHashSet();
+        if (numbers.SetEquals(_selVerses)) return;
+        _selVerses.Clear(); foreach (var n in numbers) _selVerses.Add(n);
+        _selected = head; _anchorVerse = anchor; _recolorGroup = false;
+        Paint();
+        StatusText.Text = _selVerses.Count > 1 ? L("{0} Verse gewählt", _selVerses.Count) : "";
     }
 
     void FinishVerseChoice(int verse)
@@ -203,6 +217,14 @@ public partial class MainWindow
         _drag = null;
         d.Timer?.Stop();
         try { ((IInputElement?)ReaderScroll).Focus(); } catch { /* no focus change needed */ }
+        if (d.VerseRange)
+        {
+            if (!finished) return;   // the verses stay chosen
+            if (!d.Moved || _selVerses.Count < 2) { if (d.Box is { } b0) ShowVerseMenu(d.Verse, b0); }
+            else if (_settings.SelectionPopup) ShowSelectionPopup(_selVerses.Min());
+            else if (_verseBoxes.TryGetValue(_selVerses.Min(), out var b1)) ShowVerseMenu(_selVerses.Min(), b1);
+            return;
+        }
         if (d.TouchWord)
         {
             if (!finished) return;
@@ -309,6 +331,7 @@ public partial class MainWindow
     void UpdateDragSelection(DragState d)
     {
         if (HeadAt(d.Last, d) is not { } head) return;
+        if (d.VerseRange) { ChooseVerseRange(d.Verse, head.Cell.Data.Number); return; }
         SetSelectionFrom(d.Anchor, d.AnchorRaw, head.Cell, head.Raw, d.Cells);
     }
 

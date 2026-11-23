@@ -42,6 +42,7 @@ Ein Klick auf einen Vers **wählt ihn aus**. Alles, was sich auf einen Vers bezi
 | Zum Auswendiglernen | merkt den Vers für das Training vor |
 | Markieren (Farbe wählen) … | färbt den Vers ein |
 | Merken / nicht mehr merken | Lesezeichen |
+| Lesepfad › … | Verse in eine Lesereihenfolge bringen, siehe [Lesepfade](05-notizen-markierungen-lesezeichen.md#lesepfade) |
 | Notiz schreiben | springt in das Notizfeld |
 | Neues Dokument aus diesem Vers | startet ein Dokument mit dem Vers |
 | In offenes Dokument einfügen | fügt den Vers als Zitat ein |

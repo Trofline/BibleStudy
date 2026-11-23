@@ -488,10 +488,10 @@
             </Setter>
         </Style>
         <Style Selector="Border.tile:pointerover"><Setter Property="RenderTransform" Value="scale(1.025)" /></Style>
+        <!-- no transition of the background: one from "no color" to a color or back (a mark taken away) could stay on the old color for good -->
         <Style Selector="Border.verse">
             <Setter Property="Transitions">
                 <Transitions>
-                    <BrushTransition Property="Background" Duration="0:0:0.18" />
                     <BrushTransition Property="BorderBrush" Duration="0:0:0.18" />
                 </Transitions>
             </Setter>

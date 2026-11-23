@@ -42,7 +42,7 @@ public sealed partial class VaultStore
             marks.Where(m => !m.WholeVerse && m.TranslationId != Mark.AnyTranslation).Select(m => m.TranslationId).Distinct().Order().ToList());
     }
 
-    static readonly string[] ContentTables = ["notes", "read_chapters", "folders", "marks", "mark_tags", "mark_places", "queue", "documents", "doc_tags", "todos", "my_xrefs", "hidden_xrefs", "bookmarks", "prayers", "headings", "studies", "material_marks", "material_gone", "voice_notes"];
+    static readonly string[] ContentTables = ["notes", "read_chapters", "folders", "marks", "mark_tags", "mark_places", "queue", "documents", "doc_tags", "todos", "my_xrefs", "hidden_xrefs", "bookmarks", "prayers", "headings", "studies", "reading_paths", "material_marks", "material_gone", "voice_notes"];
 
     /// <summary>A fingerprint of what the user wrote in this vault. Reading (the last position) and the time stamps of a save without a change do not count.</summary>
     public string Fingerprint()
@@ -270,6 +270,17 @@ public sealed partial class VaultStore
                     {
                         using var cmd = con.CreateCommand();
                         cmd.CommandText = "INSERT INTO main.studies(day,title,passages,notes,questions,created) SELECT day,title,passages,notes,questions,created FROM g.studies o WHERE NOT EXISTS(SELECT 1 FROM main.studies m WHERE m.day IS o.day AND m.title IS o.title)";
+                        others += cmd.ExecuteNonQuery();
+                    }
+                }
+                // the reading paths (vaults from before 1.9.25 have none); a path of the same name is the same path
+                using (var has = con.CreateCommand())
+                {
+                    has.CommandText = "SELECT 1 FROM g.sqlite_master WHERE type='table' AND name='reading_paths'";
+                    if (has.ExecuteScalar() is not null)
+                    {
+                        using var cmd = con.CreateCommand();
+                        cmd.CommandText = "INSERT INTO main.reading_paths(name,color,steps,created,updated) SELECT name,color,steps,created,updated FROM g.reading_paths o WHERE NOT EXISTS(SELECT 1 FROM main.reading_paths m WHERE m.name IS o.name)";
                         others += cmd.ExecuteNonQuery();
                     }
                 }
