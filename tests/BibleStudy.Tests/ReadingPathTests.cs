@@ -142,6 +142,25 @@ public class ReadingPathTests
     }
 
     [Fact]
+    public void A_copy_from_an_older_version_that_has_no_paths_at_all_does_not_delete_them()
+    {
+        // the phone still ran a version from before the reading paths: its copy has no such list. Opening the copy makes an empty one, which looked
+        // like "deleted over there" to the comparison, and the path made on the PC (and kept in the state of the last comparison) vanished.
+        var pc = new VaultStore(Path.Combine(_dir, "pco.db"), "pc");
+        pc.AddReadingPath("Engel des Herrn", "#E07A3A", [S("GEN", 16, 11), S("EXO", 3, 2)]);
+        var basePath = Path.Combine(_dir, "baseo.db"); pc.BackupTo(basePath);   // the last comparison already had it
+        var oldPath = Path.Combine(_dir, "old.db"); pc.BackupTo(oldPath);
+        using (var con = new Microsoft.Data.Sqlite.SqliteConnection($"Data Source={oldPath};Pooling=False"))
+        {
+            con.Open(); using var cmd = con.CreateCommand(); cmd.CommandText = "DROP TABLE reading_paths"; cmd.ExecuteNonQuery();
+        }
+        var result = pc.MergeFrom(oldPath, "Handy", basePath);
+        var kept = Assert.Single(pc.GetReadingPaths());
+        Assert.Equal(2, kept.Steps.Count);
+        Assert.Equal(0, result.Deleted);
+    }
+
+    [Fact]
     public void A_wiped_vault_has_no_paths()
     {
         var v = new VaultStore(Path.Combine(_dir, "w.db"), "w");

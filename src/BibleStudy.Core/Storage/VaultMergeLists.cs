@@ -43,6 +43,32 @@ public sealed partial class VaultStore
         return rows;
     }
 
+    /// <summary>
+    /// The lists that a copy does not hold (completely): a copy of an older version has no such table, or lacks a column. This must be looked at in the file
+    /// BEFORE a <see cref="VaultStore"/> opens it, because opening creates what is missing, empty, and an empty list looks like "everything deleted over there".
+    /// That is how a reading path made on the PC vanished when the phone still ran a version without reading paths.
+    /// </summary>
+    internal static HashSet<string> ListsMissingIn(string? path)
+    {
+        var missing = new HashSet<string>();
+        if (path is null || !File.Exists(path)) return missing;
+        try
+        {
+            using var con = new Microsoft.Data.Sqlite.SqliteConnection(new Microsoft.Data.Sqlite.SqliteConnectionStringBuilder { DataSource = path, Mode = Microsoft.Data.Sqlite.SqliteOpenMode.ReadOnly, Pooling = false }.ToString());
+            con.Open();
+            foreach (var spec in Lists)
+            {
+                using var cmd = con.CreateCommand();
+                cmd.CommandText = $"SELECT name FROM pragma_table_info('{spec.Table}')";   // the names are ours, not from outside
+                var columns = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+                using (var r = cmd.ExecuteReader()) while (r.Read()) columns.Add(r.GetString(0));
+                if (spec.Columns.Any(c => !columns.Contains(c))) missing.Add(spec.Table);
+            }
+        }
+        catch (Microsoft.Data.Sqlite.SqliteException) { foreach (var spec in Lists) missing.Add(spec.Table); }   // not readable: compare nothing
+        return missing;
+    }
+
     void SetListRow(ListSpec spec, long id, object?[] values) =>
         Exec($"UPDATE {spec.Table} SET {string.Join(",", spec.Columns.Select((c, i) => $"{c}=$v{i}"))} WHERE id=$id", c =>
         {
@@ -57,11 +83,13 @@ public sealed partial class VaultStore
     /// is deleted here (through <paramref name="deletions"/>, which may be held back), changed or deleted only here is set in the other copy so that the
     /// plain merge afterwards does not bring the old state back. Returns how many entries there were here (for the guard against mass deletions).
     /// </summary>
-    int MergeLists(VaultStore other, VaultStore bas, List<Action> deletions, ref int taken)
+    int MergeLists(VaultStore other, VaultStore bas, List<Action> deletions, ref int taken, ISet<string>? skip = null)
     {
         var total = 0;
         foreach (var spec in Lists)
         {
+            // a copy from an older version has no such list: nothing to compare, so nothing is deleted or set (see ListsMissingIn)
+            if (skip?.Contains(spec.Table) == true) { total += ListRows(spec).Count; continue; }
             var mine = ListRows(spec); var theirs = other.ListRows(spec);
             total += mine.Count;
             foreach (var (key, b) in bas.ListRows(spec))

@@ -18,6 +18,8 @@ public sealed partial class VaultStore
     public ThreeWayResult MergeFrom(string otherDbPath, string copySuffix, string? basePath)
     {
         if (basePath is null || !File.Exists(basePath)) return new ThreeWayResult(MergeFrom(otherDbPath, copySuffix), 0, 0, 0);
+        // before the copies are opened (opening makes the lists they lack): which lists does an older version's copy or the old state not have at all?
+        var skipLists = ListsMissingIn(otherDbPath); skipLists.UnionWith(ListsMissingIn(basePath));
         var bas = new VaultStore(basePath, "base");
         var other = new VaultStore(otherDbPath, "other");
         int taken = 0;
@@ -65,7 +67,7 @@ public sealed partial class VaultStore
         }
 
         // the plain lists: to-dos, bookmarks, the reading queue, prayers, own headings and cross references, the archive of the Bible studies
-        var listCount = MergeLists(other, bas, deletions, ref taken);
+        var listCount = MergeLists(other, bas, deletions, ref taken, skipLists);
 
         var total = mineMarks.Count + mineNotes.Count + mineDocs.Count + listCount;
         var held = 0;
