@@ -1,0 +1,25 @@
+# yaml-language-server: $schema=https://aka.ms/winget-manifest.installer.1.9.0.schema.json
+PackageIdentifier: Trofline.BibleStudy
+PackageVersion: 1.8.0
+InstallerType: exe
+Scope: user
+InstallModes:
+  - interactive
+  - silent
+  - silentWithProgress
+InstallerSwitches:
+  Silent: --silent --no-launch
+  SilentWithProgress: --silent --no-launch
+  InstallLocation: --dir "<INSTALLPATH>"
+UpgradeBehavior: install
+ReleaseDate: 2026-11-13
+AppsAndFeaturesEntries:
+  - DisplayName: BibleStudy
+    Publisher: Trofline
+    ProductCode: BibleStudy
+Installers:
+  - Architecture: x64
+    InstallerUrl: https://github.com/Trofline/BibleStudy/releases/download/v1.8.0/BibleStudy-Setup-1.8.0.exe
+    InstallerSha256: 74D9C64EAB963434A71AF698743429E06428D82DF127F71518001B82EADA8C31
+ManifestType: installer
+ManifestVersion: 1.9.0

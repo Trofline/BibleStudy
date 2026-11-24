@@ -3566,5 +3566,6 @@
   "{0} Stellen erkannt": "{0} passages reconnus",
   "Nicht erkannt: {0}": "Non reconnu : {0}",
   "Keine Verse gefunden.": "Aucun verset trouvé.",
-  "Nicht in dieser Übersetzung: {0}": "Pas dans cette traduction : {0}"
+  "Nicht in dieser Übersetzung: {0}": "Pas dans cette traduction : {0}",
+  "Den gewählten Vers im Text öffnen (auch: Doppelklick)": "Ouvrir le verset choisi dans le texte (ou double clic)"
 }

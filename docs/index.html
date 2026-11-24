@@ -82,6 +82,7 @@ h1 em{font-style:italic;font-weight:400;color:var(--accent);background:linear-gr
 .shots{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:22px;margin-top:28px}
 .shots figure{margin:0;border:1px solid var(--line);border-radius:14px;overflow:hidden;background:var(--surface)}
 .shots img{display:block;width:100%;height:auto}
+.shots.even img{aspect-ratio:16/10;object-fit:cover;object-position:top}
 .shots figcaption{padding:10px 14px;color:var(--muted);font-size:.92rem}
 .why{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:18px;margin-top:28px}
 .why div{padding:18px 20px;border:1px solid var(--line);border-radius:14px;background:var(--surface);color:var(--muted)}
@@ -200,7 +201,7 @@ footer a{text-decoration:none}footer a:hover{color:var(--text)}
   <div class="wrap">
     <a class="brand" href="#top"><img src="img/app.png" alt="">BibleStudy</a>
     <div class="links">
-      <a href="#read">Read</a><a href="#original">Original text</a><a href="#vault">Your vault</a><a href="#together">Together</a><a href="#language">Your language</a><a href="#trust">Trust</a>
+      <a href="#biblestudy">Bible study</a><a href="#read">Read</a><a href="#original">Original text</a><a href="#vault">Your vault</a><a href="#together">Together</a><a href="#language">Your language</a><a href="#trust">Trust</a>
       <a class="btn main" href="https://github.com/Trofline/BibleStudy/releases/latest" style="padding:9px 18px">Download</a>
       <button class="btn theme" id="theme" aria-label="Switch light / dark">
         <svg class="moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
@@ -237,6 +238,7 @@ footer a{text-decoration:none}footer a:hover{color:var(--text)}
     <div><b>Your study, your files</b>Notes, highlights, documents and sermons stay on your computer. Back them up like any folder.</div>
     <div><b>Works offline</b>Download translations once, then study anywhere, with or without internet.</div>
     <div><b>Study together</b>Connect with one other person, encrypted, with no server and no account.</div>
+    <div><b>Made for Bible studies</b>Your papers, handouts, a projector view and a timer for the evening, all in one place.</div>
   </div>
 </section>
 
@@ -248,6 +250,26 @@ footer a{text-decoration:none}footer a:hover{color:var(--text)}
     <figure><img loading="lazy" src="img/arc.png" width="1920" height="1080" alt="Arc diagram of the cross-references across all books of the Bible"><figcaption>Cross-references across the whole Bible</figcaption></figure>
     <figure><img loading="lazy" src="img/network.png" width="1920" height="1080" alt="Network of passages connected to Genesis 1"><figcaption>The network around a chapter</figcaption></figure>
     <figure><img loading="lazy" src="img/family-tree.png" width="1920" height="1080" alt="Family tree around Abraham"><figcaption>Family tree of Bible people</figcaption></figure>
+  </div>
+</section>
+
+<section id="biblestudy" class="wrap">
+  <div class="rv"><div class="kicker">Lead a Bible study</div><h2>From your papers to the projector.</h2><p class="sub">Prepare and hold a Bible study in one program: your own materials open inside it, the passage stands beside them, the handout comes out designed and the verses go up on the screen.</p></div>
+  <div class="stage rv" style="margin-top:34px">
+    <div class="win"><img loading="lazy" src="img/split-view.png" width="1920" height="1080" alt="Split view: John 10 on the left, study notes on the right with clickable Bible references and a mark with a note"></div>
+  </div>
+  <div class="why rv">
+    <div><b>Your materials inside</b>Word, PDF, PowerPoint, OpenDocument, Markdown and more open in the Materials tab. Bible references in them are clickable.</div>
+    <div><b>See the verse at once</b>Rest the mouse on a reference to read the verse, or search all your files for a word.</div>
+    <div><b>Mark without changing</b>Highlight and add notes to your papers. The files themselves stay untouched.</div>
+    <div><b>Handouts in eight looks</b>Classic, modern, newspaper, large print and more, with the verses as an appendix and room for notes.</div>
+    <div><b>Projector view</b>Verses or parts of your notes, large and calm on a second screen. Arrow keys go on, B makes it black.</div>
+    <div><b>A program for the evening</b>Song, prayer, Bible study: each part with its time, and a short tone when the next one begins.</div>
+  </div>
+  <div class="shots even rv">
+    <figure><img loading="lazy" src="img/materials.png" width="1920" height="1080" alt="The materials tab with a verse preview and a mark with a note"><figcaption>Your study notes, with a verse preview</figcaption></figure>
+    <figure><img loading="lazy" src="img/handout-looks.png" width="780" height="878" alt="The export window with eight looks for the handout"><figcaption>Eight looks for the handout</figcaption></figure>
+    <figure><img loading="lazy" src="img/projector.png" width="1600" height="900" alt="John 10:11 large on a dark projector screen"><figcaption>A verse on the projector</figcaption></figure>
   </div>
 </section>
 

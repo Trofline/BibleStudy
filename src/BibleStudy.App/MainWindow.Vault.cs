@@ -230,9 +230,12 @@ public partial class MainWindow
         QueueList.SelectionChanged += async (_, _) =>
         {
             if (QueueList.SelectedItem is not Entry e) return;
+            // only while the list is being read does a click go to the verse; otherwise it just chooses it (to remove it, for example): "Öffnen" or a double click goes there
             if (_queueRun is not null && e.Id is long id) await QueueRunGoToAsync(id);
-            else await GoToAsync(e.Ref.Book, e.Ref.Chapter, e.Ref.Verse);
         };
+        async Task OpenQueued() { if (QueueList.SelectedItem is Entry e) await GoToAsync(e.Ref.Book, e.Ref.Chapter, e.Ref.Verse); }
+        QueueList.DoubleTapped += async (_, _) => await OpenQueued();
+        QueueOpenBtn.Click += async (_, _) => await OpenQueued();
         XrefQueueBtn.Click += (_, _) => { if (_xrefs.Count > 0) AddToQueue(_xrefs.Select(x => x.Target)); };
         TodoBox.KeyDown += (_, e) => { if (e.Key == Key.Enter) AddTodo(); };
         InitTodos();
