@@ -18,6 +18,15 @@
       "category": "other",
       "versions": [
         {
+          "version": "1.9.28",
+          "buildVersion": "47",
+          "date": "2026-11-24",
+          "localizedDescription": "## New in 1.9.28\n**Kind of update:** Feature\n- **[New]** Reading list: **Paste list …** takes a list of passages copied from a web page or an e-mail (one per line, with bullets or the verse text after them) and adds them verse by verse.\n- **[New]** Marks of whole verses that follow each other can be merged into one mark, and a mark over several verses can be split into single verses again (Explorer and verse menu).\n- **[New]** Marking text right behind or over a mark of the same colour (the forgotten \"!\") extends that mark instead of adding a second one.\n- **[New]** A reading path made from a ",
+          "downloadURL": "https://github.com/Trofline/BibleStudy/releases/download/v1.9.28/BibleStudy-iOS-1.9.28.ipa",
+          "size": 60800910,
+          "minOSVersion": "15.0"
+        },
+        {
           "version": "1.9.27",
           "buildVersion": "46",
           "date": "2026-11-23",
