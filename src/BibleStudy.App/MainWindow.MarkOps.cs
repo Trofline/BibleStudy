@@ -155,17 +155,33 @@ public partial class MainWindow
         if (same is not null) _vault.UpdateMark(same.Id, hex, same.Note, same.FolderId, same.Tags);   // marked again in another color: note and tags stay
         else
         {
+            // marked right behind (or before, or over) a mark of the same colour: that mark grows, it does not get a neighbour; note, tags and folder stay
+            var grown = MarkLogic.Extend(_chapterMarks, tid, hex, new MarkLogic.Pos(first.Verse, first.Start), new MarkLogic.Pos(last.Verse, last.End), v => RawVerse(tid, v));
+            var (fv, fs, lv, le) = (first.Verse, first.Start, last.Verse, last.End);
+            string note = ""; long? folder = null; IEnumerable<string> tags = AutoTags(r);
+            if (grown is { } g)
+            {
+                (fv, fs, lv, le) = (g.Start.Verse, g.Start.Offset, g.End.Verse, g.End.Offset);
+                var firstOld = g.Absorbed.OrderBy(m => m.Ref.Verse).ThenBy(m => m.Start).First();
+                note = string.Join("\n\n", g.Absorbed.OrderBy(m => m.Ref.Verse).ThenBy(m => m.Start).Select(m => m.Note.Trim()).Where(n => n.Length > 0).Distinct());
+                folder = firstOld.FolderId;
+                tags = g.Absorbed.SelectMany(m => m.Tags).Distinct(StringComparer.OrdinalIgnoreCase).ToList();
+                if (g.Absorbed.Count == 1 && g.Absorbed[0].Ref.Verse == fv && g.Absorbed[0].Start == fs && g.Absorbed[0].LastVerse == lv && g.Absorbed[0].End == le)
+                    return Loc.Quote(Shorten(SelectedText(), 40));   // already marked like this: nothing to extend
+                foreach (var old in g.Absorbed) _vault.DeleteMark(old.Id);
+                touching = [.. touching.Where(m => !g.Absorbed.Any(a => a.Id == m.Id))];
+            }
             // what lies under the new mark is cut out of the older marks; the rest of them stays
             var cut = new List<MarkLogic.Piece>();
-            for (var v = first.Verse; v <= last.Verse; v++)
+            for (var v = fv; v <= lv; v++)
             {
                 var len = RawVerse(tid, v).Length;
-                var s = v == first.Verse ? first.Start : 0; var e = v == last.Verse ? last.End : len;
+                var s = v == fv ? fs : 0; var e = v == lv ? le : len;
                 cut.Add(new MarkLogic.Piece(v, s, e));
             }
             foreach (var m in touching) KeepRemnants(m, MarkLogic.CarveText(m, cut, LengthIn(tid)));
-            var text = RangeText(tid, first.Verse, first.Start, last.Verse, last.End);
-            _vault.AddMark(tid, r, first.Start, last.End, text, hex, "", null, AutoTags(r), last.Verse);
+            var text = RangeText(tid, fv, fs, lv, le);
+            _vault.AddMark(tid, new VerseRef(_curBook, _curChapter, fv), fs, le, text, hex, note, folder, tags, lv);
         }
         return Loc.Quote(Shorten(SelectedText(), 40));
     }

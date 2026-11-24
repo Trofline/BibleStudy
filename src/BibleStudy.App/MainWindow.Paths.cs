@@ -35,7 +35,7 @@ public partial class MainWindow
     /// <summary>The circles and arrows in the margin (the margin is only as wide as they need).</summary>
     void UpdatePathMargin()
     {
-        HookPathMargin();
+        HookPathMargin(); HookPathBadgeClicks();
         var badges = new List<PathGutter.Badge>();
         var raw = new List<(int From, int To, Color Color)>();
         if (_settings.PathArrows && !_independent)
@@ -43,7 +43,7 @@ public partial class MainWindow
             {
                 var color = PathColor(p);
                 foreach (var (n, s) in p.StepsIn(_curBook, _curChapter))
-                    if (_verseBoxes.ContainsKey(s.From)) badges.Add(new(s.From, n, color, $"{p.Name} · {n}/{p.Steps.Count}"));
+                    if (_verseBoxes.ContainsKey(s.From)) badges.Add(new(s.From, n, color, $"{p.Name} · {n}/{p.Steps.Count}", p.Id));
                 foreach (var (_, from, to) in p.ArrowsIn(_curBook, _curChapter))
                     if (_verseBoxes.ContainsKey(from) && _verseBoxes.ContainsKey(to)) raw.Add((from, to, color));
             }
@@ -88,7 +88,7 @@ public partial class MainWindow
                     return b;
                 }
                 if (index > 0) bar.Children.Add(Piece("‹ " + (index) + " · " + StepLabel(p.Steps[index - 1]), () => GoToStep(path, index - 1), L("Zum Schritt davor")));
-                bar.Children.Add(Piece($"{p.Name} · {index + 1}/{p.Steps.Count}", () => _ = ShowPathsAsync(path.Id), L("Lesepfad ansehen und ordnen"), true));
+                bar.Children.Add(Piece($"{p.Name} · {index + 1}/{p.Steps.Count}", () => _ = ShowPathsAsync(path.Id), L("Lesepfad ansehen und bearbeiten"), true));
                 if (index + 1 < p.Steps.Count) bar.Children.Add(Piece(StepLabel(p.Steps[index + 1]) + " · " + (index + 2) + " ›", () => GoToStep(path, index + 1), L("Zum nächsten Schritt")));
                 yield return bar;
             }
@@ -129,7 +129,7 @@ public partial class MainWindow
             var path = p; var index = i;
             menu.Items.Add(MenuAction(L("Aus „{0}“ nehmen (Schritt {1})", Shorten(p.Name, 30), i + 1), () => RemoveStep(path, index)));
         }
-        if (paths.Count > 0) menu.Items.Add(MenuAction(L("Lesepfade ordnen …"), () => _ = ShowPathsAsync(inPaths.FirstOrDefault().p?.Id)));
+        if (paths.Count > 0) menu.Items.Add(MenuAction(L("Lesepfade bearbeiten …"), () => _ = ShowPathsAsync(inPaths.FirstOrDefault().p?.Id)));
         menu.Items.Add(MenuAction(L("Lesepfade importieren …"), () => _ = ImportPathsAsync()));
         return menu;
     }
@@ -199,6 +199,7 @@ public partial class MainWindow
 
     void AddSteps(ReadingPath p, IReadOnlyList<StudyPassage> steps)
     {
+        steps = StudyPassage.Merged(steps);
         StorePath(p with { Steps = [.. p.Steps, .. steps] });
         AfterPathChange(L("An „{0}“ angehängt: jetzt {1} Schritte.", p.Name, p.Steps.Count + steps.Count));
     }

@@ -98,7 +98,7 @@ public partial class MainWindow
 
     Border BuildPhoneBar()
     {
-        _pBack = IconButton("M19 12H5 M12 19l-7-7 7-7", L("Zurück"), () => { if (!OnPhoneBack()) _ = GoBackAsync(); });
+        _pBack = IconButton("M3 12a9 9 0 1 0 3-6.7 M3 4v5h5 M12 7v5l3 2", L("Zuletzt gelesen"), () => { if (!OnPhoneBack()) _ = GoBackAsync(); });
         _pTitleText = new TextBlock { FontSize = 18, FontWeight = FontWeight.SemiBold, VerticalAlignment = VerticalAlignment.Center, TextTrimming = TextTrimming.CharacterEllipsis };
         _pTitle = new Button
         {

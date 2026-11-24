@@ -490,6 +490,7 @@
                             <WrapPanel>
                                 <Button x:Name="QueueStartBtn" Content="Starten" Classes="primary" Margin="0,0,6,6" ToolTip.Tip="Geht die Leseliste von oben durch; unten erscheint eine Leiste zum Weitergehen" />
                                 <Button x:Name="QueueAddBtn" Content="Vers hinzufügen" Margin="0,0,6,6" />
+                                <Button x:Name="QueuePasteBtn" Content="Liste einfügen …" Margin="0,0,6,6" ToolTip.Tip="Eine Liste von Bibelstellen hineinkopieren (aus dem Internet, einer E-Mail, einer Predigt)" />
                                 <Button x:Name="QueueRemoveBtn" Content="Entfernen" Margin="0,0,6,6" />
                                 <Button x:Name="QueueClearBtn" Content="Leeren" Margin="0,0,6,6" />
                             </WrapPanel>

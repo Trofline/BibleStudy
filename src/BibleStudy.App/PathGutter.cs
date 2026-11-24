@@ -12,7 +12,7 @@ namespace BibleStudy.App;
 /// </summary>
 public sealed class PathGutter : Control
 {
-    public sealed record Badge(int Verse, int Number, Color Color, string Tip);
+    public sealed record Badge(int Verse, int Number, Color Color, string Tip, long PathId = 0);
     public sealed record Arrow(int From, int To, int Lane, Color Color);
 
     public const double BadgeSize = 17, LaneGap = 7, MaxLanes = 5;
@@ -40,8 +40,14 @@ public sealed class PathGutter : Control
     (double X, double Y, double H)? Place(int verse) =>
         BoxOf(verse) is { } box && box.IsEffectivelyVisible && box.TranslatePoint(default, this) is { } p ? (p.X, p.Y, box.Bounds.Height) : null;
 
+    readonly List<(Rect Area, Badge Badge)> _hits = [];
+
+    /// <summary>The circle under a point of this control (the control itself takes no clicks: the window asks, before the text gets the click).</summary>
+    public Badge? BadgeAt(Point p) => _hits.LastOrDefault(h => h.Area.Contains(p)).Badge;
+
     public override void Render(DrawingContext ctx)
     {
+        _hits.Clear();
         if (_badges.Count == 0) return;
         double? edge = null;   // the left edge of the text (the same for every verse)
         foreach (var b in _badges) if (Place(b.Verse) is { } p) { edge = p.X; break; }
@@ -90,6 +96,7 @@ public sealed class PathGutter : Control
                 ctx.DrawEllipse(new SolidColorBrush(b.Color), new Pen(Brushes.White, i > 0 ? 1 : 0), new Point(cx, cy), BadgeSize / 2, BadgeSize / 2);
                 var text = new FormattedText(b.Number.ToString(CultureInfo.InvariantCulture), CultureInfo.InvariantCulture, FlowDirection.LeftToRight, new Typeface("Segoe UI, Inter, sans-serif", FontStyle.Normal, FontWeight.Bold), b.Number > 99 ? 8 : 10, Ink(b.Color));
                 ctx.DrawText(text, new Point(cx - text.Width / 2, cy - text.Height / 2));
+                _hits.Add((new Rect(cx - BadgeSize / 2, cy - BadgeSize / 2, BadgeSize, BadgeSize), b));
                 i++;
             }
         }

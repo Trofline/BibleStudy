@@ -759,7 +759,7 @@ public partial class MainWindow
         var targets = _exSel.Any(s => s.Kind == item.Kind && s.Id == item.Id) && _exSel.Count > 1 ? _exSel.Where(i => !Foreign(i)).ToList() : [item];
         if (item.Kind == ExKind.Doc)
             return new ContextMenu { Items = { MenuAction(L("Dokument öffnen"), () => ExOpen(item)), MenuAction(L("Ausschneiden (Strg+X)"), () => { ExSelectFor(item); ExCut(); }), MoveMenu(targets), new Separator(), MenuAction(targets.Count > 1 ? L("{0} Einträge löschen", targets.Count) : L("Dokument löschen"), () => ExDelete(targets)) } };
-        return new ContextMenu
+        var menu = new ContextMenu
         {
             Items =
             {
@@ -774,6 +774,8 @@ public partial class MainWindow
                 MenuAction(targets.Count > 1 ? L("{0} Einträge löschen", targets.Count) : item.Kind == ExKind.Note ? L("Notiz löschen") : L("Markierung löschen"), () => ExDelete(targets)),
             },
         };
+        if (item.Kind == ExKind.Mark) AddMarkMergeItems(menu, targets);
+        return menu;
     }
 
     /// <summary>"Verschieben nach" with every folder, as a tree (indented), for anyone who does not drag.</summary>

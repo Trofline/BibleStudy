@@ -169,3 +169,13 @@ public class ReadingPathTests
         Assert.Empty(v.GetReadingPaths());
     }
 }
+
+public class ReadingPathMergeTests
+{
+    [Fact]
+    public void Several_marks_in_one_verse_make_one_step()
+    {
+        var steps = StudyPassage.Merged([new("LEV", 11, 4, 4), new("LEV", 11, 4, 4), new("LEV", 11, 4, 4), new("LEV", 11, 5, 5), new("LEV", 11, 5, 5), new("LEV", 11, 1, 3), new("LEV", 11, 2, 2)]);
+        Assert.Equal(["LEV 11:4", "LEV 11:5", "LEV 11:1-3"], steps.Select(s => s.ToString()));
+    }
+}

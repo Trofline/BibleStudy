@@ -32,7 +32,10 @@ public partial class MainWindow
         var fresh = !File.Exists(path);
         // "read" is one list for all vaults; a guest vault keeps its own (it is thrown away afterwards and must not touch the list of this computer)
         var vault = new VaultStore(path, name) { SharedRead = IsGuestVault(name) ? null : _readStore };
-        if (fresh && name == "Standard") { vault.ImportLegacy(Path.Combine(_root, "user.db"), PresetColors[0]); _readStore.MergeFrom(path); }
+        // the old single database comes in only on the very first start of the vault system: a "Standard" vault that was deleted and is made again
+        // (by a list that still asked for it) must not get the old marks back
+        var firstStart = !Directory.Exists(Path.Combine(_root, "vaults")) || !Directory.GetDirectories(Path.Combine(_root, "vaults")).Any(d => !string.Equals(Path.GetFileName(d), name, StringComparison.OrdinalIgnoreCase));
+        if (fresh && name == "Standard" && firstStart) { vault.ImportLegacy(Path.Combine(_root, "user.db"), PresetColors[0]); _readStore.MergeFrom(path); }
         return vault;
     }
 
@@ -214,6 +217,7 @@ public partial class MainWindow
         {
             if (_selected is int v) AddToQueue([new VerseRef(_curBook, _curChapter, v)]); else StatusText.Text = L("Erst einen Vers anklicken.");
         };
+        QueuePasteBtn.Click += (_, _) => ShowQueuePaste(QueuePasteBtn);
         QueueRemoveBtn.Click += (_, _) => { if (QueueList.SelectedItem is Entry { Id: long id }) { _vault.RemoveFromQueue(id); RefreshQueue(); } };
         QueueClearBtn.Click += (_, _) =>
         {

@@ -137,8 +137,9 @@ public partial class MainWindow
     {
         var sameBook = (BookBox.SelectedItem as BookInfo)?.Id == book.Id;
         var chapter = sameBook ? (int)(ChapterBox.Value ?? 1) : 1;
-        BookBox.SelectedItem = book;   // shows chapter 1 already; the chapter list below only refines it
-        if (book.NumberOfChapters > 1) ShowChapterPicker(chapterAnchor ?? ChapterBtn, book, chapter, c => ChapterBox.Value = c);
+        // a book with several chapters is only entered once a chapter is chosen: picking the book alone must not jump to chapter 1 (that would replace the most recent place)
+        if (book.NumberOfChapters > 1) ShowChapterPicker(chapterAnchor ?? ChapterBtn, book, chapter, c => { if (sameBook) ChapterBox.Value = c; else _ = GoToAsync(book.Id, c); });
+        else BookBox.SelectedItem = book;
     });
 
     /// <summary>Book grid under any button. <paramref name="reset"/> adds a first tile (for a column that may follow the main text again).</summary>

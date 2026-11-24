@@ -8,6 +8,20 @@ public sealed record StudyPassage(string Book, int Chapter, int From = 0, int To
 {
     public bool Covers(string book, int chapter) => Book == book && Chapter == chapter;
 
+    /// <summary>
+    /// Several marks in one verse are one step, not several: a step that lies inside one of the steps before it (same chapter) is left out, in the order given.
+    /// </summary>
+    public static List<StudyPassage> Merged(IEnumerable<StudyPassage> steps)
+    {
+        var kept = new List<StudyPassage>();
+        foreach (var s in steps)
+        {
+            var inside = kept.Any(k => k.Book == s.Book && k.Chapter == s.Chapter && (k.From <= 0 || (s.From > 0 && k.From <= s.From && Math.Max(k.To, k.From) >= Math.Max(s.To, s.From))));
+            if (!inside) kept.Add(s);
+        }
+        return kept;
+    }
+
     public override string ToString() => From <= 0 ? $"{Book} {Chapter}" : To > From ? $"{Book} {Chapter}:{From}-{To}" : $"{Book} {Chapter}:{From}";
 
     /// <summary>"JHN 10:1-18;PSA 23" → the passages; what cannot be read is left out.</summary>

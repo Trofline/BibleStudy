@@ -47,4 +47,37 @@ public static partial class PassageParser
 
     [GeneratedRegex(@"^(?<b>(?:[1-5]\s?\.?\s?)?\p{L}{1,20}\.?)?\s*(?<c>[0-9]{1,3})(?:\s*[,:]\s*(?<v1>[0-9]{1,3})(?:\s*[-–]\s*(?:(?<c2>[0-9]{1,3})\s*[,:]\s*)?(?<v2>[0-9]{1,3}))?|\s*[-–]\s*(?<cend>[0-9]{1,3}))?$")]
     private static partial Regex Segment();
+
+    /// <summary>
+    /// Reads passages out of a pasted text, as it comes from a web page or an e-mail: one passage per line or separated by semicolons, with bullets or numbers in front,
+    /// in brackets, or followed by the text of the verse ("Joh 3,16 – Denn so sehr …"). <paramref name="unknown"/> gets the lines in which no passage was found.
+    /// </summary>
+    public static List<PassageRef> Extract(string text, out List<string> unknown)
+    {
+        unknown = [];
+        var found = new List<PassageRef>();
+        foreach (var line in text.Replace(' ', ' ').Split(['\r', '\n', ';'], StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+        {
+            var piece = line.Trim().Trim('(', ')', '[', ']', '„', '“', '"', '*').Trim();
+            if (piece.Length == 0) continue;
+            var stripped = Bullet().Replace(piece, "").Trim().Trim('(', ')', '[', ']').Trim();
+            IReadOnlyList<PassageRef>? parsed = Parse(piece, out _) ?? (stripped.Length > 0 ? Parse(stripped, out _) : null);
+            if (parsed is null)
+            {
+                var list = new List<PassageRef>();
+                foreach (Match m in Inline().Matches(piece))
+                    if (Parse(m.Value, out _) is { Count: > 0 } one) list.AddRange(one);
+                parsed = list.Count > 0 ? list : null;
+            }
+            if (parsed is null) { unknown.Add(piece.Length > 40 ? piece[..40] + "…" : piece); continue; }
+            foreach (var p in parsed) if (!found.Contains(p)) found.Add(p);
+        }
+        return found;
+    }
+
+    [GeneratedRegex(@"^\s*(?:[-–—•*·▪●○]|\d{1,3}[.)])\s+")]
+    private static partial Regex Bullet();
+
+    [GeneratedRegex(@"(?<![\p{L}\p{N}])(?:[1-5]\s?\.?\s?)?\p{L}{2,20}\.?\s*[0-9]{1,3}(?:\s*[,:]\s*[0-9]{1,3}(?:\s*[-–]\s*(?:[0-9]{1,3}\s*[,:]\s*)?[0-9]{1,3})?|\s*[-–]\s*[0-9]{1,3})?")]
+    private static partial Regex Inline();
 }

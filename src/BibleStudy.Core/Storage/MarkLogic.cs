@@ -187,6 +187,48 @@ public static class MarkLogic
         return (tw[from].Start, tw[to].End);
     }
 
+    // ---- extending a mark -------------------------------------------------------------------------------------------
+
+    /// <summary>A place in the text of a chapter: a verse and a character offset in it.</summary>
+    public readonly record struct Pos(int Verse, int Offset) : IComparable<Pos>
+    {
+        public int CompareTo(Pos o) => Verse != o.Verse ? Verse.CompareTo(o.Verse) : Offset.CompareTo(o.Offset);
+    }
+
+    /// <summary>True when only blanks (or nothing) lie between the two places, so that two stretches there are really one that goes on.</summary>
+    static bool OnlyBlanksBetween(Pos from, Pos to, Func<int, string> raw)
+    {
+        if (to.CompareTo(from) <= 0) return true;   // they overlap or meet
+        string Part(int verse, int s, int e) { var t = raw(verse); s = Math.Clamp(s, 0, t.Length); e = Math.Clamp(e, s, t.Length); return t[s..e]; }
+        if (from.Verse == to.Verse) return string.IsNullOrWhiteSpace(Part(from.Verse, from.Offset, to.Offset));
+        if (to.Verse != from.Verse + 1) return false;
+        return string.IsNullOrWhiteSpace(Part(from.Verse, from.Offset, int.MaxValue)) && string.IsNullOrWhiteSpace(Part(to.Verse, 0, to.Offset));
+    }
+
+    /// <summary>
+    /// A new mark that touches, overlaps or directly continues old text marks of the same colour (for example the "!" after a marked sentence that was forgotten)
+    /// extends them instead of standing beside them: returns the whole stretch and the old marks it takes in, or null when there is nothing to extend.
+    /// </summary>
+    public static (Pos Start, Pos End, List<Mark> Absorbed)? Extend(IReadOnlyList<Mark> marks, string translationId, string color, Pos start, Pos end, Func<int, string> raw)
+    {
+        var pool = marks.Where(m => !m.WholeVerse && m.TranslationId == translationId && string.Equals(m.Color, color, StringComparison.OrdinalIgnoreCase)).ToList();
+        var absorbed = new List<Mark>();
+        bool grew;
+        do
+        {
+            grew = false;
+            foreach (var m in pool.Where(m => !absorbed.Contains(m)).ToList())
+            {
+                var ms = new Pos(m.Ref.Verse, m.Start); var me = new Pos(m.LastVerse, m.End);
+                if (!(OnlyBlanksBetween(me, start, raw) && OnlyBlanksBetween(end, ms, raw))) continue;   // neither before nor behind, nor inside
+                absorbed.Add(m); grew = true;
+                if (ms.CompareTo(start) < 0) start = ms;
+                if (me.CompareTo(end) > 0) end = me;
+            }
+        } while (grew);
+        return absorbed.Count == 0 ? null : (start, end, absorbed);
+    }
+
     // ---- cutting a part out of existing marks -----------------------------------------------------------------------
 
     /// <summary>A stretch of text of one verse: the part of a mark, or a part to cut out of it.</summary>

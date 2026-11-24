@@ -50,7 +50,7 @@ public partial class MainWindow
                 for (var i = 0; i < p.Steps.Count; i++)
                 {
                     if (RowOfStep(rows, p.Steps[i]) is not int row) continue;   // a step that is not in this folder: the arrow goes on to the next one that is
-                    badges.Add(new(row, i + 1, color, $"{p.Name} · {i + 1}/{p.Steps.Count}"));
+                    badges.Add(new(row, i + 1, color, $"{p.Name} · {i + 1}/{p.Steps.Count}", p.Id));
                     if (before is int b && b != row) raw.Add((b, row, color));
                     before = row;
                 }
@@ -82,7 +82,7 @@ public partial class MainWindow
             var read = new Button { Content = L("▶ Lesen"), Classes = { "primary" }, Padding = new(10, 2), Height = 28, VerticalContentAlignment = VerticalAlignment.Center, IsEnabled = p.Steps.Count > 0 };
             ToolTip.SetTip(read, L("Zum ersten Schritt; unter jedem Vers geht es zum nächsten."));
             read.Click += (_, _) => GoToStep(path, 0);
-            var order = new Button { Content = L("Ordnen …"), Padding = new(10, 2), Height = 28, Margin = new(6, 0, 0, 0), VerticalContentAlignment = VerticalAlignment.Center };
+            var order = new Button { Content = L("Bearbeiten …"), Padding = new(10, 2), Height = 28, Margin = new(6, 0, 0, 0), VerticalContentAlignment = VerticalAlignment.Center };
             order.Click += (_, _) => _ = ShowPathsAsync(path.Id);
             var dot = new Border { Width = 12, Height = 12, CornerRadius = new(6), Background = new SolidColorBrush(color), Margin = new(0, 0, 8, 0), VerticalAlignment = VerticalAlignment.Center };
             var buttons = new StackPanel { Orientation = Orientation.Horizontal, Margin = new(8, 0, 0, 0), Children = { read, order } };
@@ -125,14 +125,15 @@ public partial class MainWindow
             // the entries of the folder in the order of the Bible (the order is changed afterwards in "Ordnen")
             var steps = ExAllItems().Where(i => i.FolderId == folder).OrderBy(i => i.Ref is { } r ? BookOrder(r.Book) : int.MaxValue).ThenBy(i => i.Ref?.Chapter).ThenBy(i => i.Ref?.Verse)
                 .Select(ExStep).OfType<StudyPassage>().ToList();
+            steps = StudyPassage.Merged(steps);   // several marks in one verse are one step
             if (steps.Count == 0) { ExNote(L("In diesem Ordner liegen keine Markierungen oder Notizen."), false); return; }
             AskPathName(anchor, FolderById(folder)?.Name ?? "", name =>
             {
                 NewPath(name, steps, folder);
-                ExNote(L("Lesepfad „{0}“ mit {1} Schritten angelegt, in der Reihenfolge der Bibel. Die Reihenfolge änderst du unter „Ordnen“.", name, steps.Count), false);
+                ExNote(L("Lesepfad „{0}“ mit {1} Schritten angelegt, in der Reihenfolge der Bibel. Die Reihenfolge änderst du unter „Bearbeiten“.", name, steps.Count), false);
             });
         }));
-        menu.Items.Add(MenuAction(L("Lesepfade ordnen …"), () => _ = ShowPathsAsync(PathsOfFolder(folder).FirstOrDefault()?.Id)));
+        menu.Items.Add(MenuAction(L("Lesepfade bearbeiten …"), () => _ = ShowPathsAsync(PathsOfFolder(folder).FirstOrDefault()?.Id)));
     });
 
     /// <summary>On a mark or note: onto the path used last, earlier or later in a path of the folder, out of it, onto another path, or a new path.</summary>
@@ -167,6 +168,27 @@ public partial class MainWindow
             menu.Add(MenuAction(L("An „{0}“ anhängen (Schritt {1})", Shorten(p.Name, 30), p.Steps.Count + 1), () => AddSteps(path, steps)));
         }
         menu.Add(MenuAction(L("Neuer Lesepfad aus der Auswahl …"), () => PathFromExplorer(targets, anchor)));
-        if (paths.Count > 0) menu.Add(MenuAction(L("Lesepfade ordnen …"), () => _ = ShowPathsAsync()));
+        if (paths.Count > 0) menu.Add(MenuAction(L("Lesepfade bearbeiten …"), () => _ = ShowPathsAsync()));
+    }
+}
+
+public partial class MainWindow
+{
+    bool _badgeClicksHooked;
+
+    /// <summary>A click on the number of a step in the margin (text or explorer) opens the window of that path. The margin lies over the text and takes no clicks itself, so it is asked first.</summary>
+    void HookPathBadgeClicks()
+    {
+        if (_badgeClicksHooked) return;
+        _badgeClicksHooked = true;
+        AddHandler(PointerPressedEvent, (_, e) =>
+        {
+            if (!e.GetCurrentPoint(this).Properties.IsLeftButtonPressed) return;
+            foreach (var gutter in new[] { PathMargin, _exGutter })
+            {
+                if (gutter is null || !gutter.IsEffectivelyVisible || !gutter.HasContent) continue;
+                if (gutter.BadgeAt(e.GetPosition(gutter)) is { PathId: not 0 } hit) { e.Handled = true; _ = ShowPathsAsync(hit.PathId); return; }
+            }
+        }, Avalonia.Interactivity.RoutingStrategies.Tunnel);
     }
 }
