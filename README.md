@@ -281,6 +281,7 @@ BibleStudy **tells you** when a new version is out (a small notice in the app). 
 - **The source cannot be added:** download `BibleStudy-iOS-x.y.z.ipa` from the [latest release](https://github.com/Trofline/BibleStudy/releases/latest) on the iPhone, then in SideStore under **My Apps** tap **+** at the top left and pick the file.
 - **The app expired anyway:** open SideStore and tap **Refresh** at BibleStudy. Your data stays.
 - **SideStore says the pairing file is missing:** open iloader again with the iPhone connected, click **Manage Pairing File** at the bottom and place it for SideStore.
+- **Widgets:** BibleStudy comes with a lock-screen button (under the clock, starts the app) and a "Verse of the day" widget with today's reading from your plan (iOS 17 or later). They live in an extension that **counts as an app of its own** with a free Apple ID: SideStore + BibleStudy + widgets take all 3 slots. If you need the slot, leave the extension out when SideStore asks during installation. The widget fills once you have opened BibleStudy.
 - **Limits:** a free Apple ID allows at most 3 self-signed apps at once (SideStore counts as one). After a long time switched off or a big iOS update a manual refresh may be needed once. Apple may restrict this method one day. SideStore changes now and then: if a step looks different, [docs.sidestore.io](https://docs.sidestore.io) is the reference.
 - **PC only:** Claude Code, Ollama and the MCP server. The live Bible study runs only while the app is open.
 

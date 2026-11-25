@@ -8,7 +8,7 @@ on:
   workflow_dispatch:
     inputs:
       tag:
-        description: "Release tag the IPA is attached to (the program of this tag is built), e.g. ios-beta-1.9.2"
+        description: "Release tag the IPA is attached to (the program of this tag is built), e.g. ios-beta-1.9.2. \"test\" = a trial build of the branch in ref: the IPA stays with the run (Artifacts), no release is touched"
         required: true
       ref:
         description: "Branch or tag to build (empty = the tag above). For trying a fix before the tag is moved."
@@ -18,6 +18,9 @@ on:
         required: false
       fast:
         description: "true = test build: the program is interpreted instead of compiled ahead of time (much faster to build, a bit slower on the phone)"
+        required: false
+      widget:
+        description: "false = without the widget extension (lock screen and home screen widgets); it takes one more app of the 3 that a free Apple ID allows"
         required: false
 
 permissions:
@@ -80,16 +83,45 @@ jobs:
           FASTIN: ${{ github.event.inputs.fast }}
         run: |
           FAST=""; [ "$FASTIN" = "true" ] && FAST="-p:UseInterpreter=true -p:MtouchInterpreter=all"
-          VERSION="${TAG##*-}"; VERSION="${VERSION#v}"
+          VERSION="${TAG##*-}"; VERSION="${VERSION#v}"; [ "$TAG" = "test" ] && VERSION=$(sed -n 's:.*<ApplicationDisplayVersion>\(.*\)</ApplicationDisplayVersion>.*:\1:p' src/BibleStudy.iOS/BibleStudy.iOS.csproj | head -1)
           dotnet build src/BibleStudy.iOS/BibleStudy.iOS.csproj -c Release -r ios-arm64 \
             -p:EnableCodeSigning=false -p:ApplicationDisplayVersion=$VERSION -p:Version=$VERSION $FAST -v:n
           APP=$(find src/BibleStudy.iOS/bin/Release -name "*.app" -maxdepth 6 -type d | head -1)
           echo "App folder: $APP"
           test -n "$APP"
 
+      - name: Build the widget extension
+        # WidgetKit widgets need an extension written in Swift: it is compiled here with swiftc and put into the app (PlugIns/BibleStudyWidget.appex).
+        # Both get an ad-hoc signature carrying their entitlements (the shared app group): SideStore reads the entitlements from there when it
+        # signs the app with the Apple ID, and registers the group for it.
+        if: github.event.inputs.widget != 'false'
+        run: |
+          APP=$(find src/BibleStudy.iOS/bin/Release -name "*.app" -maxdepth 6 -type d | head -1)
+          SRC=src/BibleStudy.iOS/Widget
+          EXT="$APP/PlugIns/BibleStudyWidget.appex"
+          rm -rf "$EXT" && mkdir -p "$EXT"
+          SDK=$(xcrun --sdk iphoneos --show-sdk-path)
+          xcrun --sdk iphoneos swiftc -target arm64-apple-ios17.0 -sdk "$SDK" -swift-version 5 -O \
+            -parse-as-library -application-extension -module-name BibleStudyWidget \
+            -framework WidgetKit -framework SwiftUI \
+            "$SRC"/*.swift -o "$EXT/BibleStudyWidget"
+          cp "$SRC/Info.plist" "$EXT/Info.plist"
+          # the extension carries the version numbers of the app
+          SHORT=$(/usr/libexec/PlistBuddy -c "Print :CFBundleShortVersionString" "$APP/Info.plist")
+          BUILD=$(/usr/libexec/PlistBuddy -c "Print :CFBundleVersion" "$APP/Info.plist")
+          /usr/libexec/PlistBuddy -c "Set :CFBundleShortVersionString $SHORT" -c "Set :CFBundleVersion $BUILD" "$EXT/Info.plist"
+          plutil -lint "$EXT/Info.plist"
+          # sign from the inside out: everything ad hoc, then the extension and the app again with their entitlements
+          codesign --force --deep --sign - "$APP"
+          codesign --force --sign - --entitlements "$SRC/Widget.entitlements" --generate-entitlement-der "$EXT"
+          codesign --force --sign - --entitlements "$SRC/App.entitlements" --generate-entitlement-der "$APP"
+          codesign -d --entitlements - "$EXT"
+          codesign -d --entitlements - "$APP"
+          ls -la "$EXT"
+
       - name: Pack the IPA
         run: |
-          VERSION="${TAG##*-}"; VERSION="${VERSION#v}"
+          VERSION="${TAG##*-}"; VERSION="${VERSION#v}"; [ "$TAG" = "test" ] && VERSION=$(sed -n 's:.*<ApplicationDisplayVersion>\(.*\)</ApplicationDisplayVersion>.*:\1:p' src/BibleStudy.iOS/BibleStudy.iOS.csproj | head -1)
           APP=$(find src/BibleStudy.iOS/bin/Release -name "*.app" -maxdepth 6 -type d | head -1)
           rm -rf ipa && mkdir -p ipa/Payload
           cp -R "$APP" ipa/Payload/BibleStudy.app
@@ -97,5 +129,13 @@ jobs:
           shasum -a 256 "BibleStudy-iOS-$VERSION.ipa" | tee "BibleStudy-iOS-$VERSION.ipa.sha256"
           ls -la BibleStudy-iOS-*.ipa
 
+      - name: Keep the trial IPA with the run
+        if: github.event.inputs.tag == 'test'
+        uses: actions/upload-artifact@v4
+        with:
+          name: BibleStudy-iOS-test
+          path: BibleStudy-iOS-*.ipa
+
       - name: Attach to the release
+        if: github.event.inputs.tag != 'test'
         run: gh release upload "$TAG" BibleStudy-iOS-*.ipa BibleStudy-iOS-*.ipa.sha256 --clobber

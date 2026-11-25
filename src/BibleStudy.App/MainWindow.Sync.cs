@@ -115,6 +115,7 @@ public partial class MainWindow
         }
 #if MOBILE
         if (App.TakePendingPair() is { } link) DispatcherTimer.RunOnce(() => JoinWithCode(link), TimeSpan.FromSeconds(1));
+        if (App.TakePendingWidget() is { } widget) DispatcherTimer.RunOnce(() => OpenFromWidget(widget), TimeSpan.FromSeconds(1));   // the app was started by a tap on a widget
 #endif
     }
 

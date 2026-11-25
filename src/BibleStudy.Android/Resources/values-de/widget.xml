@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="widget_today_name">Vers des Tages</string>
+    <string name="widget_today_description">Der Vers des Tages und die heutige Lesung aus deinem Leseplan</string>
+    <string name="widget_open_app">Öffne BibleStudy einmal, damit das Widget gefüllt wird.</string>
+</resources>

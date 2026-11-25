@@ -26,12 +26,24 @@ public class MainActivity : AvaloniaMainActivity
         Current = this;
         base.OnCreate(savedInstanceState);
         Pair(Intent);
+        Widget(Intent);
     }
 
     protected override void OnNewIntent(global::Android.Content.Intent? intent)
     {
         base.OnNewIntent(intent);
         Pair(intent);
+        Widget(intent);
+    }
+
+    /// <summary>A tap on the widget of the home screen: the app opens the verse of the day or the reading of the plan.</summary>
+    static void Widget(global::Android.Content.Intent? intent)
+    {
+        if (intent?.GetStringExtra(TodayWidget.Extra) is { Length: > 0 } target)
+        {
+            intent.RemoveExtra(TodayWidget.Extra);   // turning the phone or coming back must not open it again
+            BibleStudy.App.App.OfferWidgetTap(target);
+        }
     }
 
     /// <summary>A QR code of the comparison, scanned with the camera app, opens the app with its pairing address.</summary>
