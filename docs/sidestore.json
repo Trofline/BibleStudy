@@ -18,6 +18,15 @@
       "category": "other",
       "versions": [
         {
+          "version": "1.9.30",
+          "buildVersion": "49",
+          "date": "2026-11-25",
+          "localizedDescription": "## New in 1.9.30\n**Kind of update:** New feature, Mini feature, Fix\n- **[Fix]** **iPhone widgets:** the BibleStudy button under the clock and \"Verse of the day\" did not show up in the widget gallery. The widget extension is now built with Xcode, so iOS finds it. When SideStore asks about the extension during the update, choose \"Keep App Extensions (for Each Extension)\"; \"Use Main Profile\" leaves the widgets empty.\n- **[New feature]** **Earlier versions:** documents (menu \"⋯\") and notes (button \"Earlier versions\") keep what their text was before, at most one version every 10 minutes and the last 50. View them and bring one back with a click; the current text is kept as a version. Versions stay on each device.\n- **[Mini feature]** **Cross reference star:** nodes can be dragged, \"Second ring\" shows the links between the neighbours, \"Reset layout\" puts them back in a circle.\n- **[Mini feature]** **Syntax tree as SVG:** \"Save as SVG\" next to \"Save as picture\", sharp at any size for slides and handouts.\n\n**iPhone:** update in SideStore (Sources → pull down → My Apps → Update). **Android:** the app updates itself.",
+          "downloadURL": "https://github.com/Trofline/BibleStudy/releases/download/v1.9.30/BibleStudy-iOS-1.9.30.ipa",
+          "size": 61729839,
+          "minOSVersion": "15.0"
+        },
+        {
           "version": "1.9.29",
           "buildVersion": "48",
           "date": "2026-11-25",
