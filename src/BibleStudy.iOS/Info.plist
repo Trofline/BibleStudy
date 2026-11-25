@@ -90,6 +90,14 @@
 				<string>biblestudy-sync</string>
 			</array>
 		</dict>
+		<dict>
+			<key>CFBundleURLName</key>
+			<string>de.trofline.biblestudy.widget</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>biblestudy-widget</string>
+			</array>
+		</dict>
 	</array>
 	<key>LSApplicationQueriesSchemes</key>
 	<array>

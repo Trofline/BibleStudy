@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- TodayWidget: 4 × 2 cells to begin with, can be made smaller or larger. Every 30 minutes Android asks it again (the verse changes at midnight);
+     the app updates it at once when something changes. -->
+<appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
+    android:minWidth="180dp"
+    android:minHeight="110dp"
+    android:minResizeWidth="110dp"
+    android:minResizeHeight="80dp"
+    android:targetCellWidth="4"
+    android:targetCellHeight="2"
+    android:resizeMode="horizontal|vertical"
+    android:updatePeriodMillis="1800000"
+    android:initialLayout="@layout/widget_today"
+    android:previewLayout="@layout/widget_today"
+    android:description="@string/widget_today_description"
+    android:widgetCategory="home_screen" />
