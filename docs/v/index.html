@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bibelstelle in BibleStudy öffnen</title>
+<meta name="robots" content="noindex">
+<meta name="color-scheme" content="light dark">
+<link rel="icon" href="../img/app.png">
+<style>
+:root{--bg:#F6F1E6;--surface:#FFFCF6;--line:#E2D9C5;--text:#24201A;--muted:#6B6354;--accent:#8A4F0F;--accent-fg:#FFFCF6}
+@media (prefers-color-scheme:dark){:root{--bg:#0F1216;--surface:#161A20;--line:#262D37;--text:#ECE7DA;--muted:#9AA2AD;--accent:#E3B65F;--accent-fg:#161A20}}
+*{box-sizing:border-box;margin:0}
+body{background:var(--bg);color:var(--text);font:17px/1.6 system-ui,"Segoe UI",Roboto,sans-serif;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px 16px}
+main{max-width:460px;width:100%;background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:28px 24px;text-align:center}
+img{width:64px;height:64px}
+h1{font:600 30px/1.2 Georgia,serif;margin:14px 0 6px;overflow-wrap:anywhere}
+p{color:var(--muted);margin:8px 0}
+a.button{display:inline-block;margin-top:16px;padding:12px 22px;border-radius:12px;background:var(--accent);color:var(--accent-fg);font-weight:600;text-decoration:none}
+a.small{color:var(--accent)}
+</style>
+</head>
+<body>
+<main>
+<img src="../img/app.png" alt="">
+<h1 id="ref">BibleStudy</h1>
+<p id="lead"></p>
+<a class="button" id="open" href="#"></a>
+<p id="missing"></p>
+</main>
+<script>
+// A link to a Bible passage, as BibleStudy copies it: https://trofline.github.io/BibleStudy/v/?JHN.3.16
+// The page names the passage and opens it in BibleStudy (biblestudy://open/JHN.3.16); nothing is sent anywhere.
+const BOOKS = {"GEN": ["1. Mose", "Genesis"], "EXO": ["2. Mose", "Exodus"], "LEV": ["3. Mose", "Leviticus"], "NUM": ["4. Mose", "Numbers"], "DEU": ["5. Mose", "Deuteronomy"], "JOS": ["Josua", "Joshua"], "JDG": ["Richter", "Judges"], "RUT": ["Rut", "Ruth"], "1SA": ["1. Samuel", "1 Samuel"], "2SA": ["2. Samuel", "2 Samuel"], "1KI": ["1. Könige", "1 Kings"], "2KI": ["2. Könige", "2 Kings"], "1CH": ["1. Chronika", "1 Chronicles"], "2CH": ["2. Chronika", "2 Chronicles"], "EZR": ["Esra", "Ezra"], "NEH": ["Nehemia", "Nehemiah"], "EST": ["Esther", "Esther"], "JOB": ["Hiob", "Job"], "PSA": ["Psalm", "Psalms"], "PRO": ["Sprüche", "Proverbs"], "ECC": ["Prediger", "Ecclesiastes"], "SNG": ["Hoheslied", "Song of Solomon"], "ISA": ["Jesaja", "Isaiah"], "JER": ["Jeremia", "Jeremiah"], "LAM": ["Klagelieder", "Lamentations"], "EZK": ["Hesekiel", "Ezekiel"], "DAN": ["Daniel", "Daniel"], "HOS": ["Hosea", "Hosea"], "JOL": ["Joel", "Joel"], "AMO": ["Amos", "Amos"], "OBA": ["Obadja", "Obadiah"], "JON": ["Jona", "Jonah"], "MIC": ["Micha", "Micah"], "NAM": ["Nahum", "Nahum"], "HAB": ["Habakuk", "Habakkuk"], "ZEP": ["Zephanja", "Zephaniah"], "HAG": ["Haggai", "Haggai"], "ZEC": ["Sacharja", "Zechariah"], "MAL": ["Maleachi", "Malachi"], "MAT": ["Matthäus", "Matthew"], "MRK": ["Markus", "Mark"], "LUK": ["Lukas", "Luke"], "JHN": ["Johannes", "John"], "ACT": ["Apostelgeschichte", "Acts"], "ROM": ["Römer", "Romans"], "1CO": ["1. Korinther", "1 Corinthians"], "2CO": ["2. Korinther", "2 Corinthians"], "GAL": ["Galater", "Galatians"], "EPH": ["Epheser", "Ephesians"], "PHP": ["Philipper", "Philippians"], "COL": ["Kolosser", "Colossians"], "1TH": ["1. Thessalonicher", "1 Thessalonians"], "2TH": ["2. Thessalonicher", "2 Thessalonians"], "1TI": ["1. Timotheus", "1 Timothy"], "2TI": ["2. Timotheus", "2 Timothy"], "TIT": ["Titus", "Titus"], "PHM": ["Philemon", "Philemon"], "HEB": ["Hebräer", "Hebrews"], "JAS": ["Jakobus", "James"], "1PE": ["1. Petrus", "1 Peter"], "2PE": ["2. Petrus", "2 Peter"], "1JN": ["1. Johannes", "1 John"], "2JN": ["2. Johannes", "2 John"], "3JN": ["3. Johannes", "3 John"], "JUD": ["Judas", "Jude"], "REV": ["Offenbarung", "Revelation"]};
+const de = (navigator.language || "de").toLowerCase().startsWith("de");
+const T = de
+  ? { lead: "Diese Stelle öffnet sich in BibleStudy.", open: "In BibleStudy öffnen", missing: "Noch kein BibleStudy? <a class=small href=\"https://github.com/Trofline/BibleStudy/releases/latest\">Hier kostenlos laden</a> (PC, Mac, Linux, Android, iPhone).", bad: "Dieser Link nennt keine Bibelstelle." }
+  : { lead: "This passage opens in BibleStudy.", open: "Open in BibleStudy", missing: "No BibleStudy yet? <a class=small href=\"https://github.com/Trofline/BibleStudy/releases/latest\">Get it free</a> (PC, Mac, Linux, Android, iPhone).", bad: "This link does not name a Bible passage." };
+document.documentElement.lang = de ? "de" : "en";
+let code = (location.search || location.hash).replace(/^[?#]/, "").replace(/^r=/i, "");
+try { code = decodeURIComponent(code.replace(/\+/g, " ")); } catch (e) { code = ""; }
+code = code.split("&")[0].trim();
+const part = /^([1-3]?[A-Za-z]{2,3})\.(\d{1,3})(?:\.(\d{1,3}))?(?:-(?:(\d{1,3})\.)?(\d{1,3}))?$/;
+function label(p) {
+  const m = part.exec(p.trim());
+  if (!m || !BOOKS[m[1].toUpperCase()]) return null;
+  let s = BOOKS[m[1].toUpperCase()][de ? 0 : 1] + " " + m[2];
+  const sep = de ? "," : ":";
+  if (m[3]) { s += sep + m[3]; if (m[4]) s += "–" + m[4] + sep + m[5]; else if (m[5]) s += "–" + m[5]; }
+  else if (m[5]) s += "–" + m[5];
+  return s;
+}
+const names = code ? code.split(";").map(label) : [null];
+const ok = names.length > 0 && names.every(n => n);
+document.getElementById("missing").innerHTML = T.missing;
+if (ok) {
+  const app = "biblestudy://open/" + encodeURIComponent(code).replace(/%3B/gi, ";");
+  document.title = names.join("; ") + " · BibleStudy";
+  document.getElementById("ref").textContent = names.join("; ");
+  document.getElementById("lead").textContent = T.lead;
+  const a = document.getElementById("open");
+  a.textContent = T.open; a.href = app;
+  setTimeout(() => { location.href = app; }, 350);   // straight into the program when it is there; the page stays when it is not
+} else {
+  document.getElementById("lead").textContent = T.bad;
+  document.getElementById("open").style.display = "none";
+}
+</script>
+</body>
+</html>

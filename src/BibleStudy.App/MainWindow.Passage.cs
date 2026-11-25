@@ -43,6 +43,7 @@ public partial class MainWindow
         var marked = MarkedTextOf(anchor);
         Item(L("Nur die Stelle kopieren (Strg+C)"), () => _ = CopyPlaceAsync());
         Item(L("Vers mit Stelle kopieren (Strg+Umschalt+C)"), () => _ = CopyVerseAsync());
+        Item(L("Link zur Stelle kopieren"), () => _ = CopyLinkAsync());
         Item(L("Markieren (Farbe wählen) …"), ShowColorFlyout);
         Item(L("Notiz schreiben"), () => { Open(2); NoteEditor.Focus(); });
         foreach (var v in VoiceMenuItems(r, anchor, Make, Group)) menu.Items.Add(v);
@@ -146,6 +147,7 @@ public partial class MainWindow
         Action(L("Dokument"), () => { SideTabs.SelectedIndex = KnowledgeTab; NewDocumentFromVerse(); });
         Action(L("Stelle kopieren"), () => _ = CopyPlaceAsync());
         Action(L("Vers kopieren"), () => _ = CopyVerseAsync());
+        Action(L("Link"), () => _ = CopyLinkAsync());
         Action(L("Leseliste"), () => AddToQueue([r]));
         GuidePanel.Children.Add(actions);
 

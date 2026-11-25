@@ -13,6 +13,9 @@ public class AndroidApp(IntPtr handle, JniHandleOwnership transfer) : AvaloniaAn
 }
 
 [IntentFilter(new[] { global::Android.Content.Intent.ActionView }, Categories = new[] { global::Android.Content.Intent.CategoryDefault, global::Android.Content.Intent.CategoryBrowsable }, DataScheme = "biblestudy-sync")]
+// links to Bible passages (biblestudy://open/JHN.3.16), and "Share → BibleStudy" for a text with passages in it
+[IntentFilter(new[] { global::Android.Content.Intent.ActionView }, Categories = new[] { global::Android.Content.Intent.CategoryDefault, global::Android.Content.Intent.CategoryBrowsable }, DataScheme = "biblestudy")]
+[IntentFilter(new[] { global::Android.Content.Intent.ActionSend }, Categories = new[] { global::Android.Content.Intent.CategoryDefault }, DataMimeType = "text/plain")]
 [Activity(Label = "BibleStudy", Theme = "@style/MyTheme.NoActionBar", MainLauncher = true, Icon = "@mipmap/appicon",
     LaunchMode = LaunchMode.SingleTask,
     WindowSoftInputMode = global::Android.Views.SoftInput.AdjustResize,
@@ -25,20 +28,31 @@ public class MainActivity : AvaloniaMainActivity
     {
         Current = this;
         base.OnCreate(savedInstanceState);
-        Pair(Intent);
+        Take(Intent);
     }
 
     protected override void OnNewIntent(global::Android.Content.Intent? intent)
     {
         base.OnNewIntent(intent);
-        Pair(intent);
+        Take(intent);
     }
 
-    /// <summary>A QR code of the comparison, scanned with the camera app, opens the app with its pairing address.</summary>
-    static void Pair(global::Android.Content.Intent? intent)
+    /// <summary>
+    /// What the app was opened with: a QR code of the comparison (its pairing address), a link to a passage, or a text that another app shared.
+    /// An intent is taken once: Android hands the same one again when the app is brought back from the list of recent apps.
+    /// </summary>
+    static void Take(global::Android.Content.Intent? intent)
     {
-        if (intent?.DataString is { } url && url.StartsWith("biblestudy-sync:", StringComparison.Ordinal)) BibleStudy.App.App.OfferPairLink(url);
+        if (intent is null || intent.GetBooleanExtra(TakenExtra, false)) return;
+        if (intent.DataString is { } url && url.StartsWith("biblestudy-sync:", StringComparison.Ordinal)) BibleStudy.App.App.OfferPairLink(url);
+        else if (intent.DataString is { } link && BibleStudy.Core.Search.BibleLinks.IsLink(link)) BibleStudy.App.App.OfferLink(link);
+        else if (intent.Action == global::Android.Content.Intent.ActionSend && intent.GetStringExtra(global::Android.Content.Intent.ExtraText) is { Length: > 0 } text)
+            BibleStudy.App.App.OfferLink(text);
+        else return;
+        intent.PutExtra(TakenExtra, true);
     }
+
+    const string TakenExtra = "de.trofline.biblestudy.taken";
 
     /// <summary>The split view and parallel translations need a wide screen: a phone is turned across while they are open and may turn back afterwards.</summary>
     public static void Landscape(bool on)

@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- the colors of the app (dark) for the "Today" widget -->
+<resources>
+  <color name="widget_surface">#161A20</color>
+  <color name="widget_line">#262D37</color>
+  <color name="widget_text">#ECE7DA</color>
+  <color name="widget_muted">#9AA2AD</color>
+  <color name="widget_accent">#E3B65F</color>
+</resources>

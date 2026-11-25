@@ -101,7 +101,7 @@ public partial class MainWindow
         DocPathText.Text = d.Path is null ? "" : L("Verknüpfte Datei: ") + d.Path;
         _miOpenFile.IsVisible = d.Path is not null;
         _miFromTemplate.IsVisible = d.IsTemplate && d.Id > 0;
-        _miDelete.IsVisible = _miCopy.IsVisible = d.Id > 0;
+        _miDelete.IsVisible = _miCopy.IsVisible = _miVersions.IsVisible = d.Id > 0;
         DocMoreBtn.IsVisible = d.Id > 0 || d.Path is not null;   // a document that is not saved yet has nothing in this menu
         DocListPanel.IsVisible = false; DocEditorPanel.IsVisible = true;
         if (!sameDocument)   // saving keeps the mode; a document that exists opens in the finished view (read, click links), a new one in writing mode

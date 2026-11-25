@@ -91,6 +91,7 @@ sealed class UninstallWindow : Window
                 Registry.CurrentUser.DeleteSubKeyTree(UninstallKey, false);
                 using var run = Registry.CurrentUser.OpenSubKey(RunKey, true);
                 run?.DeleteValue("BibleStudy", false);
+                LinkForwarder.UnregisterScheme(AppPaths.ProgramDir);   // links to passages no longer lead to a program that is gone
             }
         }
         catch { /* leftovers are harmless */ }

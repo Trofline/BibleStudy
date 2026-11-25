@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- the colors of the app (light) for the "Today" widget -->
+<resources>
+  <color name="widget_surface">#FFFCF6</color>
+  <color name="widget_line">#E2D9C5</color>
+  <color name="widget_text">#24201A</color>
+  <color name="widget_muted">#6B6354</color>
+  <color name="widget_accent">#8A4F0F</color>
+  <string name="widget_today_description">Verse of the day and today\'s reading / Vers des Tages und die Lesung von heute</string>
+</resources>
