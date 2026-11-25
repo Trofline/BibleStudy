@@ -62,9 +62,7 @@ public partial class MainWindow
 
     /// <summary>What was there when the step began: a task counts only for what changes afterwards.</summary>
     DeepBase TakeDeepBase() => new(_chapterShows, _selectCount, _searchCount, _studyCount, ConcTitle.Text ?? "", DemoMark(), DemoXrefIds(),
-        _typedJumps, _tabSwitches, _extras.Count, CurrentTranslationId(), _chapterMarks.Select(m => m.Id).ToHashSet());
-
-    string CurrentTranslationId() => TranslationBox.SelectedItem is TranslationInfo t ? t.Id : "";
+        _typedJumps, _tabSwitches, _extras.Count, CurrentTranslationId, _chapterMarks.Select(m => m.Id).ToHashSet());
 
     DeepStep[] DeepTourSteps()
     {
@@ -102,7 +100,7 @@ public partial class MainWindow
             new("translation", read, K("Übersetzung wechseln"),
                 K("Viele Übersetzungen sind frei dabei, in vielen Sprachen. Für die Wortstudie brauchst du eine mit Strong-Nummern (z. B. KJV); hat die gewählte keine, bietet dir das Programm eine passende an."),
                 () => _phone ? _pTrans : TransBtn, K("Wähle eine andere Übersetzung."),
-                () => CurrentTranslationId() != _deepBase.Translation, Prepare: EnsureDemoChapterAsync),
+                () => CurrentTranslationId != _deepBase.Translation, Prepare: EnsureDemoChapterAsync),
             new("parallel", read, K("Übersetzungen vergleichen"),
                 K("„Parallel“ stellt eine weitere Übersetzung als Spalte daneben, bis zu drei. Vergleiche Joh 3,16 in zwei Übersetzungen: Wo unterscheiden sie sich?"),
                 () => ParallelBtn, K("Füge eine Spalte hinzu."),
