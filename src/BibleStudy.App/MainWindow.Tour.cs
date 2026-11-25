@@ -29,9 +29,12 @@ public partial class MainWindow
         SettingsHandbookBtn.Click += (_, _) => OpenWork(NavGroups.First(g => g.Name == "Hilfe"), HandbookTab);
         SettingsDeepTourBtn.Click += (_, _) => StartDeepTour();
         SettingsQuizBtn.Click += (_, _) => ShowQuiz();
+        HelpTabToursBtn.Click += (_, _) => ResetTabTours();
         InitHelpPage();
         // a while after the start, when the splash screen and the notice about sources are gone
         DispatcherTimer.RunOnce(() => OfferTour(), TimeSpan.FromSeconds(6));
+        // the tabs of the last session come back at the start: their tours wait until the person opens a tab
+        DispatcherTimer.RunOnce(() => _tabToursReady = true, TimeSpan.FromSeconds(12));
     }
 
     async Task RunSetupThenTourAsync()
@@ -71,6 +74,7 @@ public partial class MainWindow
     {
         if (_touring) return;
         if (DeepTouring) CloseDeepTour(finished: false);
+        CloseTabTour(seen: false);
         _palette.IsOpen = false; Focus();   // the command list must be gone: two popups at the same time confuse the renderer
         ShowReader();
         _touring = true;

@@ -312,6 +312,7 @@ public partial class MainWindow
     {
         if (_touring) return;
         _palette.IsOpen = false; Focus();
+        CloseTabTour(seen: false);
         var steps = DeepTourSteps();
         var start = at ?? _settings.DeepTourStep;
         if (start < 0 || start >= steps.Length) start = 0;

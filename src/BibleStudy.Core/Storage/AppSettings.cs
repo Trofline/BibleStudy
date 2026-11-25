@@ -380,6 +380,9 @@ public sealed class AppSettings
     public bool DeepTourDone { get; set; }
     /// <summary>The best result in the quiz about the program (right answers).</summary>
     public int QuizBest { get; set; }
+    /// <summary>The tabs (by index) whose short tour was seen, and whether these tours are off altogether.</summary>
+    public List<string> TabToursSeen { get; set; } = [];
+    public bool TabToursOff { get; set; }
     public string? PlanId { get; set; }
     public string? PlanStart { get; set; }
     public List<string> PlanDoneDays { get; set; } = [];

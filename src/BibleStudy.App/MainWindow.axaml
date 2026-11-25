@@ -1087,6 +1087,7 @@
                             <Button x:Name="HelpDeepTourBtn" Content="Tiefen-Rundgang: das Programm an einem Beispiel gründlich kennenlernen" HorizontalAlignment="Left" />
                             <Button x:Name="HelpQuizBtn" Content="Quiz: Kennst du BibleStudy?" HorizontalAlignment="Left" />
                             <Button x:Name="HelpMessagesBtn" Content="Mitteilungen und Vorschläge" HorizontalAlignment="Left" />
+                            <Button x:Name="HelpTabToursBtn" Content="Reiter-Rundgänge wieder zeigen" HorizontalAlignment="Left" ToolTip.Tip="Jeder Reiter erklärt sich beim nächsten Öffnen wieder in einem kurzen Rundgang." />
                             <TextBlock FontWeight="SemiBold" Text="Lesen und Navigieren" />
                             <TextBlock TextWrapping="Wrap" Text="Haus-Symbol: Startseite mit allen Büchern. Pfeil links: zurück zur vorherigen Stelle. Buch, Kapitel und Übersetzung wählst du oben; ◀ ▶ blättert Kapitel. Das Häkchen „Gelesen“ markiert ein Kapitel; auf der Startseite zeigt ein Balken den Fortschritt je Buch." />
                             <TextBlock FontWeight="SemiBold" Text="Schnell zu allem (Strg+K)" />
