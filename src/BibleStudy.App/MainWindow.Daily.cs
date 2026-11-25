@@ -7,7 +7,19 @@ namespace BibleStudy.App;
 /// <summary>Small everyday helpers: verse of the day and automatic saving of documents while writing.</summary>
 public partial class MainWindow
 {
-    static VerseRef VerseOfTheDay() => BibleStudy.Core.DailyVerses.Of(DateTime.Today);
+    static readonly (string Book, int Chapter, int Verse)[] DailyVerses =
+    [
+        ("JHN", 3, 16), ("PSA", 23, 1), ("ROM", 8, 28), ("PHP", 4, 13), ("PRO", 3, 5), ("ISA", 41, 10), ("JER", 29, 11), ("MAT", 11, 28), ("PSA", 46, 1), ("JOS", 1, 9),
+        ("ROM", 12, 2), ("GAL", 2, 20), ("2TI", 3, 16), ("HEB", 11, 1), ("PSA", 119, 105), ("MAT", 6, 33), ("1CO", 13, 4), ("EPH", 2, 8), ("JHN", 14, 6), ("ROM", 5, 8),
+        ("PSA", 27, 1), ("ISA", 40, 31), ("MAT", 28, 19), ("1JN", 1, 9), ("PRO", 22, 6), ("PSA", 91, 1), ("JAS", 1, 5), ("1PE", 5, 7), ("REV", 3, 20), ("DEU", 31, 6),
+        ("MIC", 6, 8), ("LAM", 3, 22), ("JHN", 1, 1), ("GEN", 1, 1), ("PSA", 1, 1), ("ECC", 3, 1), ("ROM", 6, 23), ("COL", 3, 23), ("1TH", 5, 16), ("JHN", 15, 5), ("REV", 21, 4),
+    ];
+
+    static VerseRef VerseOfTheDay()
+    {
+        var (b, c, v) = DailyVerses[DateTime.Today.DayOfYear % DailyVerses.Length];
+        return new VerseRef(b, c, v);
+    }
 
     /// <summary>
     /// From the card on the start page: reads the verse of the day. It keeps its own faint tint (see Paint) and is not left selected: a selected

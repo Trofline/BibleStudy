@@ -180,9 +180,6 @@ public partial class MainWindow
     {
         try { AutoSaveDocument(); SaveNoteDraft(); } catch (Exception ex) { ErrorLog.Write(ex); }
         try { _settings.LastLayout = CaptureLayout(); SaveSettings(); } catch (Exception ex) { ErrorLog.Write(ex); }
-#if ANDROID
-        _ = RefreshTodayWidgetAsync();   // the widget on the home screen shows what is read and planned now
-#endif
         if (_lan is not { } lan || _syncCfg.Key is null) return Task.CompletedTask;
         return Task.WhenAny(Task.Run(lan.SyncKnownAsync), Task.Delay(TimeSpan.FromSeconds(25)));
     }

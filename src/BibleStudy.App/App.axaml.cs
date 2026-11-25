@@ -23,44 +23,15 @@ public partial class App : Application
     /// </summary>
     void ListenForLinks()
     {
-#if !ANDROID
-        // iPhone and Mac: links opened while the program runs (or that started it) come as an activation; Windows and Linux start a new
-        // process with the link as its argument instead (see Program), Android through its activity
+#if IOS
         if (_listening || this.TryGetFeature<Avalonia.Controls.ApplicationLifetimes.IActivatableLifetime>() is not { } life) return;
         _listening = true;
         life.Activated += (_, e) =>
         {
-            if (e is not Avalonia.Controls.ApplicationLifetimes.ProtocolActivatedEventArgs { Uri: { } uri }) return;
-#if IOS
-            if (uri.Scheme == "biblestudy-sync") { OfferPairLink(uri.OriginalString); return; }
-#endif
-            if (uri.Scheme == BibleStudy.Core.Search.BibleLinks.Scheme) OfferLink(uri.OriginalString);
+            if (e is Avalonia.Controls.ApplicationLifetimes.ProtocolActivatedEventArgs { Uri: { } uri } && uri.Scheme == "biblestudy-sync") OfferPairLink(uri.OriginalString);
         };
 #endif
     }
-
-    static string? _pendingLink;
-    static MainWindow? _linkTarget;
-
-    /// <summary>
-    /// A link to a passage (biblestudy://open/JHN.3.16) or a text shared from another app: opened at once when the program is ready,
-    /// otherwise as soon as it is (the main window asks for it with <see cref="TakePendingLink"/>).
-    /// </summary>
-    public static void OfferLink(string text)
-    {
-        _pendingLink = text;
-        Avalonia.Threading.Dispatcher.UIThread.Post(() => { if (_linkTarget is { } w && TakePendingLink() is { } t) _ = w.OpenLinkTextAsync(t); });
-    }
-
-    /// <summary>Keeps the link for later without trying to open it now.</summary>
-    public static void KeepLink(string text) => _pendingLink = text;
-
-    public static bool HasPendingLink => _pendingLink is not null;
-
-    public static string? TakePendingLink() { var t = _pendingLink; _pendingLink = null; return t; }
-
-    /// <summary>The main window is ready for links (from now on they are opened at once).</summary>
-    internal static void LinksGoTo(MainWindow w) => _linkTarget = w;
 
     public override void OnFrameworkInitializationCompleted()
     {
@@ -73,7 +44,6 @@ public partial class App : Application
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
             var args = Environment.GetCommandLineArgs();
-            if (args.Skip(1).FirstOrDefault(BibleStudy.Core.Search.BibleLinks.IsLink) is { } link) _pendingLink = link;   // started by a link (Windows, Linux)
             var path = Path.Combine(AppPaths.Root, "settings.json");
             try { Loc.Use(AppSettings.Load(path).Language); } catch { Loc.Use(null); }
             if (args.Contains("--uninstall")) desktop.MainWindow = new UninstallWindow(args);

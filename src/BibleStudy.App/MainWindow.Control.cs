@@ -150,10 +150,6 @@ public partial class MainWindow
             }
             case "hide_window": Hide(); return new { ok = true, visible = IsVisible };
 
-            case "open_link":   // a second start of the program with a link hands it over to this one (LinkForwarder)
-                if (ArgStr(a, "link") is not { Length: > 0 } link) return Err("link is required");
-                await OpenLinkTextAsync(link);
-                return new { ok = true };
             case "navigate":
             {
                 var (_, book, err) = await ResolveAsync(a);

@@ -226,11 +226,6 @@ public partial class MainWindow : AppWindow
             if (e.Source == SideTabs && SideTabs.SelectedIndex == GuideTab) _ = ShowGuideAsync(_selected is int v ? new VerseRef(_curBook, _curChapter, v) : default);
         };
         StartControl();
-        App.LinksGoTo(this);
-        OpenLinkFromStart();
-#if !MOBILE
-        _ = Task.Run(LinkForwarder.RegisterScheme);   // Windows: "biblestudy:" links open this program
-#endif
         var initialised = false;
         SplashWindow.Report(0.5, L("Bereite Werkzeuge vor …"));
         Opened += async (_, _) => { if (initialised) return; initialised = true; await InitAsync(); };

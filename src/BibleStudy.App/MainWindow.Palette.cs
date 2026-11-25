@@ -122,7 +122,6 @@ public partial class MainWindow
         yield return C(L("Design wechseln (hell/dunkel)"), () => { ThemeBtn.RaiseEvent(new Avalonia.Interactivity.RoutedEventArgs(Button.ClickEvent)); return Task.CompletedTask; });
         yield return C(L("Fokus-Modus (nur Text)"), () => { ToggleFocusMode(); return Task.CompletedTask; });
         yield return C(L("Vers mit Stelle kopieren"), CopyVerseAsync);
-        yield return C(L("Link zur Stelle kopieren"), CopyLinkAsync);
         foreach (var name in BuiltInLayouts)
         {
             var n = name;

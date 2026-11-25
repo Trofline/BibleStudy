@@ -58,12 +58,11 @@ public class AppDelegate : AvaloniaAppDelegate<BibleStudy.App.App>
         BibleStudy.App.App.SaveForBackground().ContinueWith(_ => app.InvokeOnMainThread(() => { if (task != 0) app.EndBackgroundTask(task); task = 0; }));
     }
 
-    /// <summary>The address of a pairing QR code (biblestudy-sync://pair?k=…), opened from the camera app, or a link to a passage (biblestudy://open/JHN.3.16).</summary>
+    /// <summary>The address of a pairing QR code (biblestudy-sync://pair?k=…), opened from the camera app.</summary>
     [Export("application:openURL:options:")]
     public bool OpenUrl(UIApplication app, NSUrl url, NSDictionary options)
     {
         if (url.AbsoluteString is { } s && s.StartsWith("biblestudy-sync:", StringComparison.Ordinal)) { BibleStudy.App.App.OfferPairLink(s); return true; }
-        if (url.AbsoluteString is { } link && BibleStudy.Core.Search.BibleLinks.IsLink(link)) { BibleStudy.App.App.OfferLink(link); return true; }   // a link to a passage
         return false;
     }
 }
