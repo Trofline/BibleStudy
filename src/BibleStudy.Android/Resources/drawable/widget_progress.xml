@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- the bar of the reading plan: a soft track, filled in the accent colour -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:id="@android:id/background">
+        <shape><solid android:color="@color/widget_track" /><corners android:radius="2dp" /></shape>
+    </item>
+    <item android:id="@android:id/progress">
+        <clip><shape><solid android:color="@color/widget_accent" /><corners android:radius="2dp" /></shape></clip>
+    </item>
+</layer-list>

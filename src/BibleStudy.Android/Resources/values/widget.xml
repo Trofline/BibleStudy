@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The widget on the home screen: the colours of the app (light), the names in the list of widgets. -->
+<resources>
+    <color name="widget_background">#FFFCF6</color>
+    <color name="widget_surface">#F6F1E6</color>
+    <color name="widget_track">#E2D9C5</color>
+    <color name="widget_text">#24201A</color>
+    <color name="widget_muted">#6B6354</color>
+    <color name="widget_accent">#8A4F0F</color>
+    <string name="widget_today_name">Verse of the day</string>
+    <string name="widget_today_description">The verse of the day and today\'s reading in your plan</string>
+    <string name="widget_open_app">Open BibleStudy once to fill the widget.</string>
+</resources>

@@ -304,6 +304,7 @@ public partial class MainWindow : AppWindow
         Home.Recent = recent;
         Home.Show(_books, _read, Home.OpenBook);
         Home.IsVisible = true; ReaderHost.IsVisible = false; GraphPane.IsVisible = false; MapPane.IsVisible = false; TimelinePane.IsVisible = false; FamilyPane.IsVisible = false; KnowledgePane.IsVisible = false;
+        _ = RefreshWidgetsAsync();   // the widgets on the phone show what this page shows
     }
 
     void ShowReader() { ClosePanelOnPhone(); if (_activeWork is not null) ShowWork(null); EnsureReaderPane(); UpdateReadBar(); Home.IsVisible = false; GraphPane.IsVisible = false; MapPane.IsVisible = false; TimelinePane.IsVisible = false; FamilyPane.IsVisible = false; KnowledgePane.IsVisible = false; ReaderHost.IsVisible = true; OnReaderShown(); }
@@ -409,6 +410,7 @@ public partial class MainWindow : AppWindow
         _vault.SetRead(book, chapters, read);
         _read = _vault.GetReadChapters();
         if (Home.IsVisible) Home.Show(_books, _read, Home.OpenBook);
+        _ = RefreshWidgetsAsync();
         ReadBtn.IsChecked = _read.Contains((_curBook, _curChapter));
     }
 

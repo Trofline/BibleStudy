@@ -180,6 +180,7 @@ public partial class MainWindow
     {
         try { AutoSaveDocument(); SaveNoteDraft(); } catch (Exception ex) { ErrorLog.Write(ex); }
         try { _settings.LastLayout = CaptureLayout(); SaveSettings(); } catch (Exception ex) { ErrorLog.Write(ex); }
+        _ = RefreshWidgetsAsync();   // a plan chosen or a chapter read meanwhile: the widget shows it when the person is back on the home screen
         if (_lan is not { } lan || _syncCfg.Key is null) return Task.CompletedTask;
         return Task.WhenAny(Task.Run(lan.SyncKnownAsync), Task.Delay(TimeSpan.FromSeconds(25)));
     }

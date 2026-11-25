@@ -55,6 +55,11 @@
     <BundleResource Include="Icons/*.png" LogicalName="%(Filename)%(Extension)" />
   </ItemGroup>
 
+  <!-- the widget extension (Swift) is built and put into the app by the IPA workflow, not by this project -->
+  <ItemGroup>
+    <None Remove="Widget/**" />
+  </ItemGroup>
+
   <ItemGroup>
     <Using Include="BibleStudy.Core.Loc" Static="true" />
     <Using Include="BibleStudy.Core.Loc" Alias="Loc" />

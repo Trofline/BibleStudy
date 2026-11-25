@@ -19,6 +19,9 @@ on:
       fast:
         description: "true = test build: the program is interpreted instead of compiled ahead of time (much faster to build, a bit slower on the phone)"
         required: false
+      widget:
+        description: "false = without the widget extension (lock screen and home screen widgets); it takes one more app of the 3 that a free Apple ID allows"
+        required: false
 
 permissions:
   contents: write   # needed only to attach the file to the release
@@ -86,6 +89,35 @@ jobs:
           APP=$(find src/BibleStudy.iOS/bin/Release -name "*.app" -maxdepth 6 -type d | head -1)
           echo "App folder: $APP"
           test -n "$APP"
+
+      - name: Build the widget extension
+        # WidgetKit widgets need an extension written in Swift: it is compiled here with swiftc and put into the app (PlugIns/BibleStudyWidget.appex).
+        # Both get an ad-hoc signature carrying their entitlements (the shared app group): SideStore reads the entitlements from there when it
+        # signs the app with the Apple ID, and registers the group for it.
+        if: github.event.inputs.widget != 'false'
+        run: |
+          APP=$(find src/BibleStudy.iOS/bin/Release -name "*.app" -maxdepth 6 -type d | head -1)
+          SRC=src/BibleStudy.iOS/Widget
+          EXT="$APP/PlugIns/BibleStudyWidget.appex"
+          rm -rf "$EXT" && mkdir -p "$EXT"
+          SDK=$(xcrun --sdk iphoneos --show-sdk-path)
+          xcrun --sdk iphoneos swiftc -target arm64-apple-ios17.0 -sdk "$SDK" -swift-version 5 -O \
+            -parse-as-library -application-extension -module-name BibleStudyWidget \
+            -framework WidgetKit -framework SwiftUI \
+            "$SRC"/*.swift -o "$EXT/BibleStudyWidget"
+          cp "$SRC/Info.plist" "$EXT/Info.plist"
+          # the extension carries the version numbers of the app
+          SHORT=$(/usr/libexec/PlistBuddy -c "Print :CFBundleShortVersionString" "$APP/Info.plist")
+          BUILD=$(/usr/libexec/PlistBuddy -c "Print :CFBundleVersion" "$APP/Info.plist")
+          /usr/libexec/PlistBuddy -c "Set :CFBundleShortVersionString $SHORT" -c "Set :CFBundleVersion $BUILD" "$EXT/Info.plist"
+          plutil -lint "$EXT/Info.plist"
+          # sign from the inside out: everything ad hoc, then the extension and the app again with their entitlements
+          codesign --force --deep --sign - "$APP"
+          codesign --force --sign - --entitlements "$SRC/Widget.entitlements" --generate-entitlement-der "$EXT"
+          codesign --force --sign - --entitlements "$SRC/App.entitlements" --generate-entitlement-der "$APP"
+          codesign -d --entitlements - "$EXT"
+          codesign -d --entitlements - "$APP"
+          ls -la "$EXT"
 
       - name: Pack the IPA
         run: |

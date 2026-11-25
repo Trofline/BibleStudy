@@ -15,9 +15,10 @@ public partial class MainWindow
         ("MIC", 6, 8), ("LAM", 3, 22), ("JHN", 1, 1), ("GEN", 1, 1), ("PSA", 1, 1), ("ECC", 3, 1), ("ROM", 6, 23), ("COL", 3, 23), ("1TH", 5, 16), ("JHN", 15, 5), ("REV", 21, 4),
     ];
 
-    static VerseRef VerseOfTheDay()
+    /// <summary>The verse of a day (today when none is given); the widgets on the home screen take the coming days from here as well.</summary>
+    static VerseRef VerseOfTheDay(DateTime? day = null)
     {
-        var (b, c, v) = DailyVerses[DateTime.Today.DayOfYear % DailyVerses.Length];
+        var (b, c, v) = DailyVerses[(day ?? DateTime.Today).DayOfYear % DailyVerses.Length];
         return new VerseRef(b, c, v);
     }
 

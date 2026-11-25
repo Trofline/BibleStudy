@@ -29,6 +29,8 @@ public partial class App : Application
         life.Activated += (_, e) =>
         {
             if (e is Avalonia.Controls.ApplicationLifetimes.ProtocolActivatedEventArgs { Uri: { } uri } && uri.Scheme == "biblestudy-sync") OfferPairLink(uri.OriginalString);
+            // a tap on a widget of the home or lock screen: biblestudy-widget://verse, …://plan or …://open
+            else if (e is Avalonia.Controls.ApplicationLifetimes.ProtocolActivatedEventArgs { Uri: { } w } && w.Scheme == "biblestudy-widget") OfferWidgetTap(w.Host);
         };
 #endif
     }
@@ -178,6 +180,17 @@ public partial class App : Application
     }
 
     public static string? TakePendingPair() { var u = _pendingPair; _pendingPair = null; return u; }
+
+    static string? _pendingWidget;
+
+    /// <summary>A tap on a widget of the home or lock screen ("verse", "plan" or "open"): carried out at once, or when the program is ready.</summary>
+    public static void OfferWidgetTap(string target)
+    {
+        _pendingWidget = target;
+        Avalonia.Threading.Dispatcher.UIThread.Post(() => { if (_main is not null && TakePendingWidget() is { } t) _main.OpenFromWidget(t); });
+    }
+
+    public static string? TakePendingWidget() { var t = _pendingWidget; _pendingWidget = null; return t; }
 
     /// <summary>The activity stops (the app goes to the background): save what would be saved when the window closes.</summary>
     public static Task SaveForBackground() => _main?.SaveForBackground() ?? Task.CompletedTask;

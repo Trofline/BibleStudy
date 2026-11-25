@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- the colours of the app in its dark look -->
+<resources>
+    <color name="widget_background">#161A20</color>
+    <color name="widget_surface">#1F252D</color>
+    <color name="widget_track">#2A323D</color>
+    <color name="widget_text">#ECE7DA</color>
+    <color name="widget_muted">#9AA2AD</color>
+    <color name="widget_accent">#E3B65F</color>
+</resources>
