@@ -91,7 +91,7 @@ jobs:
           test -n "$APP"
 
       - name: Build the widget extension
-        # WidgetKit widgets need an extension written in Swift: it is compiled here with swiftc and put into the app (PlugIns/BibleStudyWidget.appex).
+        # WidgetKit widgets need an extension written in Swift: it is built here with Xcode and put into the app (PlugIns/BibleStudyWidget.appex).
         # Both get an ad-hoc signature carrying their entitlements (the shared app group): SideStore reads the entitlements from there when it
         # signs the app with the Apple ID, and registers the group for it.
         if: github.event.inputs.widget != 'false'
@@ -100,17 +100,21 @@ jobs:
           SRC=src/BibleStudy.iOS/Widget
           EXT="$APP/PlugIns/BibleStudyWidget.appex"
           rm -rf "$EXT" && mkdir -p "$EXT"
-          SDK=$(xcrun --sdk iphoneos --show-sdk-path)
-          xcrun --sdk iphoneos swiftc -target arm64-apple-ios17.0 -sdk "$SDK" -swift-version 5 -O \
-            -parse-as-library -application-extension -module-name BibleStudyWidget \
-            -framework WidgetKit -framework SwiftUI \
-            "$SRC"/*.swift -o "$EXT/BibleStudyWidget"
-          cp "$SRC/Info.plist" "$EXT/Info.plist"
+          # a real Xcode build of the extension (XcodeGen writes the project from Widget/project.yml)
+          brew list xcodegen >/dev/null 2>&1 || brew install xcodegen
+          xcodegen generate --spec "$SRC/project.yml" --project "$SRC"
+          xcodebuild -project "$SRC/BibleStudyWidget.xcodeproj" -target BibleStudyWidget -configuration Release -sdk iphoneos \
+            CODE_SIGNING_ALLOWED=NO SYMROOT="$PWD/widget-build" build
+          BUILT="$PWD/widget-build/Release-iphoneos/BibleStudyWidget.appex"
+          test -d "$BUILT"
+          rm -rf "$EXT" && cp -R "$BUILT" "$EXT"
           # the extension carries the version numbers of the app
           SHORT=$(/usr/libexec/PlistBuddy -c "Print :CFBundleShortVersionString" "$APP/Info.plist")
           BUILD=$(/usr/libexec/PlistBuddy -c "Print :CFBundleVersion" "$APP/Info.plist")
           /usr/libexec/PlistBuddy -c "Set :CFBundleShortVersionString $SHORT" -c "Set :CFBundleVersion $BUILD" "$EXT/Info.plist"
           plutil -lint "$EXT/Info.plist"
+          plutil -p "$EXT/Info.plist"
+          otool -l "$EXT/BibleStudyWidget" | grep -A4 -E "LC_BUILD_VERSION|LC_MAIN" || true
           # sign from the inside out: everything ad hoc, then the extension and the app again with their entitlements
           codesign --force --deep --sign - "$APP"
           codesign --force --sign - --entitlements "$SRC/Widget.entitlements" --generate-entitlement-der "$EXT"

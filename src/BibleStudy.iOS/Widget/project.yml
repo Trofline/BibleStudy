@@ -1,0 +1,27 @@
+# The widget extension as a small Xcode project, generated with XcodeGen by the IPA workflow and built with xcodebuild.
+# Xcode builds an app extension the way iOS expects it (entry point, linker flags, the DT… keys in Info.plist); a plain swiftc build
+# was installed but never offered in the widget gallery.
+name: BibleStudyWidget
+options:
+  bundleIdPrefix: de.trofline.biblestudy
+  deploymentTarget:
+    iOS: "17.0"
+targets:
+  BibleStudyWidget:
+    type: app-extension
+    platform: iOS
+    sources:
+      - path: BibleStudyWidgets.swift
+    settings:
+      base:
+        PRODUCT_NAME: BibleStudyWidget
+        PRODUCT_BUNDLE_IDENTIFIER: de.trofline.biblestudy.widget
+        INFOPLIST_FILE: Info.plist
+        GENERATE_INFOPLIST_FILE: NO
+        SWIFT_VERSION: "5.0"
+        TARGETED_DEVICE_FAMILY: "1,2"
+        APPLICATION_EXTENSION_API_ONLY: YES
+        SKIP_INSTALL: YES
+        CODE_SIGNING_ALLOWED: NO
+        CODE_SIGNING_REQUIRED: NO
+        CODE_SIGN_IDENTITY: ""
