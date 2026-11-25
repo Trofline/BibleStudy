@@ -229,6 +229,7 @@ Ohne ihn öffnet iOS keine selbst installierten Apps. iOS warnt dabei, dass die 
 1. SideStore öffnen und mit der Apple-ID anmelden.
 2. Auf dem iPhone **[diesen Link](sidestore://source?url=https://trofline.github.io/BibleStudy/sidestore.json)** antippen.<br><sub>Oder in SideStore: **Sources** → **+** → `https://trofline.github.io/BibleStudy/sidestore.json`</sub>
 3. **BibleStudy** in der Liste öffnen → **Installieren**.
+4. SideStore fragt jetzt **„App Contains Extensions“** mit mehreren Knöpfen. Tippe den **zweiten von oben: „Keep App Extensions (Register App ID for Each Extension)“**. Mehr dazu gleich unten.
 
 <sub>Die `.ipa`-Datei musst du **nicht** selbst laden: SideStore holt sie über diese Quelle direkt aus dem neuesten Release, auch bei jedem Update.</sub>
 
@@ -238,6 +239,23 @@ Ohne ihn öffnet iOS keine selbst installierten Apps. iOS warnt dabei, dass die 
 > 2. Darunter **Anisette Client Configuration** öffnen → **Raw JSON** wählen.
 > 3. Im Textfeld steht ein langer Text. **Nichts löschen und nichts anderes ändern!** Nur die Stelle `macos;` suchen und durch `Mac OS X;` ersetzen (mit Leerzeichen, großem M, O und S, Semikolon bleibt).
 > 4. Speichern und noch einmal mit der Apple-ID anmelden. Jetzt sollte es gehen.
+
+> [!IMPORTANT]
+> **SideStore fragt „App Contains Extensions“: welcher Knopf?**
+>
+> **Warum die Frage kommt:** BibleStudy bringt **Widgets** mit (einen Knopf auf dem Sperrbildschirm unter der Uhr und „Vers des Tages“ auf dem Home-Bildschirm). iOS steckt Widgets in einen kleinen Zusatzteil der App, eine *App-Erweiterung* (Extension). Bei einer kostenlosen Apple-ID zählt Apple so eine Erweiterung wie eine eigene App, deshalb fragt SideStore, was damit passieren soll. Die Meldung ist auf Englisch und lautet etwa: *„Non-developer Apple IDs are limited to 3 active apps and app extensions …“* oder *„… limited to creating 10 App IDs per week …“*.
+>
+> | Knopf (in dieser Reihenfolge) | Was passiert | |
+> |---|---|---|
+> | Keep App Extensions **(Use Main Profile)** | Das Widget wird mit der ID der App signiert statt mit einer eigenen. iOS übergeht es dann stillschweigend: **keine Widgets**. | ❌ |
+> | Keep App Extensions **(Register App ID for Each Extension)** | Das Widget bekommt eine eigene ID und funktioniert. Kostet 1 deiner 10 App-IDs pro Woche und einen App-Platz (siehe unten). | ✅ **diesen tippen** |
+> | Remove App Extensions | BibleStudy wird **ohne Widgets** installiert. Nimm das, wenn du den App-Platz für eine andere App brauchst. | ➖ |
+> | Choose App Extensions | Erweiterungen einzeln auswählen. Nicht nötig. | |
+> | Cancel | Es wird nichts installiert. | |
+>
+> **Nach der Installation:** BibleStudy einmal öffnen, damit das Widget etwas anzeigen kann. Dann den Finger auf dem Sperrbildschirm (oder Home-Bildschirm) halten → **Anpassen** / **Bearbeiten** → **Widgets hinzufügen** → **BibleStudy**. Steht BibleStudy noch nicht in der Liste, ein paar Minuten warten oder das iPhone neu starten: iOS bemerkt ein neues Widget manchmal erst nach einer Weile.
+>
+> <sub>**Zum Zählen:** Eine kostenlose Apple-ID erlaubt 3 aktive Apps, und die Widget-Erweiterung zählt als eine davon: SideStore + BibleStudy + Widgets = 3. Sagt SideStore, dass kein Platz frei ist, entferne entweder eine andere selbst signierte App oder wähle **Remove App Extensions** (BibleStudy läuft dann ohne Widgets). Bei Updates kann SideStore wieder fragen: dann denselben Knopf tippen. Die Knöpfe sind immer englisch, auch auf einem deutschen iPhone.</sub>
 
 </td></tr>
 <tr><td>
@@ -284,7 +302,7 @@ BibleStudy **sagt dir Bescheid**, wenn eine neue Version da ist (eine kleine Mel
 - **Die Quelle lässt sich nicht hinzufügen:** `BibleStudy-iOS-x.y.z.ipa` aus dem [neuesten Release](https://github.com/Trofline/BibleStudy/releases/latest) auf dem iPhone laden, dann in SideStore unter **My Apps** oben links auf **+** tippen und die Datei wählen.
 - **Die App ist doch abgelaufen:** SideStore öffnen und bei BibleStudy **Erneuern** tippen. Deine Daten bleiben.
 - **SideStore meldet, die Pairing-Datei fehlt:** iloader mit angeschlossenem iPhone erneut öffnen, unten auf **Manage Pairing File** klicken und sie für SideStore einsetzen.
-- **Widgets:** BibleStudy bringt einen Knopf für den Sperrbildschirm (unter der Uhr, startet die App) und ein Widget „Vers des Tages“ mit der heutigen Lesung aus dem Leseplan mit (iOS 17 oder neuer). Sie stecken in einer Erweiterung, die bei einer kostenlosen Apple-ID **als eigene App mitzählt**: SideStore + BibleStudy + Widgets sind dann alle 3 Plätze. Brauchst du den Platz, lass die Erweiterung weg, wenn SideStore beim Installieren danach fragt. Das Widget füllt sich, sobald du BibleStudy einmal geöffnet hast.
+- **Widgets:** BibleStudy bringt einen Knopf für den Sperrbildschirm (unter der Uhr, startet die App) und ein Widget „Vers des Tages“ mit der heutigen Lesung aus dem Leseplan mit (iOS 17 oder neuer). Sie stecken in einer Erweiterung, die bei einer kostenlosen Apple-ID **als eigene App mitzählt**: SideStore + BibleStudy + Widgets sind dann alle 3 Plätze. Welchen Knopf du tippst, wenn SideStore beim Installieren danach fragt, steht in [Schritt ⑤](#installation-auf-dem-iphone). Brauchst du den Platz, wähle dort **Remove App Extensions**. Das Widget füllt sich, sobald du BibleStudy einmal geöffnet hast.
 - **Grenzen:** Eine kostenlose Apple-ID erlaubt höchstens 3 selbst signierte Apps gleichzeitig (SideStore zählt mit). Nach langem Ausschalten oder einem großen iOS-Update kann einmal manuelles Erneuern nötig sein. Apple könnte die Methode irgendwann einschränken. SideStore ändert sich ab und zu: Sieht ein Schritt anders aus, gilt [docs.sidestore.io](https://docs.sidestore.io).
 - **Nur am PC:** Claude Code, Ollama und der MCP-Server. Die Live-Bibelstunde läuft nur bei geöffneter App.
 
