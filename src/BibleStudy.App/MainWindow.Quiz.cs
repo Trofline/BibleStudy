@@ -41,7 +41,7 @@ public partial class MainWindow
                 [L("Eine Mappe für ein Studienprojekt: Notizen, Markierungen, Querverweise und Dokumente"), L("Eine weitere Bibelübersetzung"), L("Ein Ordner nur für Sicherungen")], null,
                 L("Du kannst mehrere Vaults haben, z. B. einen für eine Predigtreihe und einen privaten.")),
             new(L("Wo schaltest du die gelegentlichen Vorschläge aus?"),
-                [L("Einstellungen › „Mitteilungen und Vorschläge“"), L("Gar nicht, sie kommen immer"), L("In den Windows-Einstellungen")], null,
+                [L("Einstellungen › „Hilfe, Feedback, Updates“ › „Mitteilungen und Vorschläge“"), L("Gar nicht, sie kommen immer"), L("In den Windows-Einstellungen")], null,
                 L("Dort kannst du jeden Vorschlag einzeln an- und ausschalten oder alle auf einmal.")),
         };
 

@@ -241,6 +241,7 @@ public partial class MainWindow
     /// </summary>
     void SwitchReadTab()
     {
+        _tabSwitches++;
         var pins = PinnedTabs();
         if (pins.Count == 2)
         {

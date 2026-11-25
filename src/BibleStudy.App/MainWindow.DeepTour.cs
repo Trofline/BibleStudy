@@ -30,9 +30,10 @@ public partial class MainWindow
     /// Counters of what the person did (chapters shown, verses chosen, searches, words looked up): the deep tour takes them at the start of a step
     /// and ticks a task off only when something happened after that, not because the state was already there.
     /// </summary>
-    int _studyCount, _chapterShows, _selectCount, _searchCount;
-    sealed record DeepBase(int Chapters, int Selects, int Searches, int Studies, string Conc, string? Mark, HashSet<long> Xrefs);
-    DeepBase _deepBase = new(0, 0, 0, 0, "", null, []);
+    int _studyCount, _chapterShows, _selectCount, _searchCount, _typedJumps, _tabSwitches;
+    sealed record DeepBase(int Chapters, int Selects, int Searches, int Studies, string Conc, string? Mark, HashSet<long> Xrefs,
+        int Typed, int TabSwitches, int Extras, string Translation, HashSet<long> MarkIds);
+    DeepBase _deepBase = new(0, 0, 0, 0, "", null, [], 0, 0, 0, "", []);
 
     bool OnDemoChapter => _curBook == DemoBook && _curChapter == DemoChapter;
 
@@ -60,13 +61,21 @@ public partial class MainWindow
     string? DemoMark() => OnDemoChapter && _wholeMarks.TryGetValue(DemoVerse, out var c) ? c : null;
 
     /// <summary>What was there when the step began: a task counts only for what changes afterwards.</summary>
-    DeepBase TakeDeepBase() => new(_chapterShows, _selectCount, _searchCount, _studyCount, ConcTitle.Text ?? "", DemoMark(), DemoXrefIds());
+    DeepBase TakeDeepBase() => new(_chapterShows, _selectCount, _searchCount, _studyCount, ConcTitle.Text ?? "", DemoMark(), DemoXrefIds(),
+        _typedJumps, _tabSwitches, _extras.Count, CurrentTranslationId(), _chapterMarks.Select(m => m.Id).ToHashSet());
+
+    string CurrentTranslationId() => TranslationBox.SelectedItem is TranslationInfo t ? t.Id : "";
 
     DeepStep[] DeepTourSteps()
     {
-        var read = K("Lesen"); var verse = K("Vers und Markieren"); var words = K("Wortstudie"); var refs = K("Querverweise"); var search = K("Suchen"); var order = K("Ordnen und Planen");
+        var read = K("Lesen"); var verse = K("Vers und Markieren"); var words = K("Wortstudie"); var refs = K("Querverweise"); var study = K("Studium");
+        var views = K("Ansichten"); var search = K("Suchen"); var tabs = K("Reiter und Fenster"); var order = K("Ordnen und Planen");
+        var together = K("Zusammen und Geräte"); var help = K("Hilfe");
+        var desk = () => !_phone;
+        async Task OpenSettingAt(Control target) { OpenWork(GroupOf(SettingsTab)!, SettingsTab); await Task.Delay(50); RevealSetting(target); }
         DeepStep[] all =
         [
+            // ---- reading ----
             new("intro", read, K("Willkommen zum Tiefen-Rundgang"),
                 K("Wir lernen das Programm an einem echten Beispiel kennen: Johannes 3,16. Bei vielen Schritten gibt es eine kleine Aufgabe, die du direkt im Programm erledigst; dieses Kärtchen bleibt dabei offen und hakt sie ab. „Zeig’s mir“ erledigt sie für dich. Unter „Schritte“ springst du zu jedem Schritt, und das Programm merkt sich, wo du aufgehört hast.")),
             new("goto", read, K("Zu einer Bibelstelle springen"),
@@ -77,36 +86,68 @@ public partial class MainWindow
                 async () => { ShowReader(); if (OnDemoChapter) await GoToAsync("PSA", 23, 1); }),
             new("book", read, K("Buch und Kapitel"),
                 K("Hier siehst du alle Bücher auf einen Blick; nach dem Buch kommt gleich die Kapitelliste. Mit ◀ ▶ oder den Pfeiltasten blätterst du Kapitel, der Pfeil ganz links bringt dich zur vorigen Stelle zurück."),
-                () => BookBtn, Fits: () => !_phone),
+                () => BookBtn, Fits: desk),
+            new("arrows", read, K("Mit den Pfeiltasten blättern"),
+                K("← und → blättern ein Kapitel zurück und weiter. ↑ und ↓ scrollen den Text; ist ein Vers gewählt, springen sie zum Vers darüber oder darunter. Bild↑ und Bild↓ blättern eine ganze Seite."),
+                null, K("Geh mit → ein Kapitel weiter und mit ← wieder zurück zu Johannes 3."),
+                () => _chapterShows >= _deepBase.Chapters + 2 && OnDemoChapter,
+                async () => { await GoToAsync(DemoBook, DemoChapter + 1); await Task.Delay(500); await GoToAsync(DemoBook, DemoChapter); },
+                async () => { await EnsureDemoChapterAsync(); Focus(); }, desk),
+            new("typed", read, K("Versnummer tippen"),
+                K("Tipp einfach die Nummer eines Verses auf der Tastatur, ohne vorher in ein Feld zu klicken: 1 und gleich danach 6 springt zu Vers 16 und wählt ihn. Nach einer kurzen Pause beginnt eine neue Zahl."),
+                null, K("Spring mit der Tastatur zu Vers 16."),
+                () => _typedJumps > _deepBase.Typed && OnDemoChapter && _selected == DemoVerse,
+                () => { JumpToTypedVerse(1); JumpToTypedVerse(6); return Task.CompletedTask; },
+                async () => { await EnsureDemoChapterAsync(); SelectVerse(1); ScrollToVerse(1); Focus(); }, desk),
             new("translation", read, K("Übersetzung wechseln"),
-                K("Viele Übersetzungen sind frei dabei. Für die Wortstudie brauchst du eine mit Strong-Nummern; hat die gewählte keine, bietet dir das Programm eine passende an."),
-                () => _phone ? _pTrans : TransBtn),
+                K("Viele Übersetzungen sind frei dabei, in vielen Sprachen. Für die Wortstudie brauchst du eine mit Strong-Nummern (z. B. KJV); hat die gewählte keine, bietet dir das Programm eine passende an."),
+                () => _phone ? _pTrans : TransBtn, K("Wähle eine andere Übersetzung."),
+                () => CurrentTranslationId() != _deepBase.Translation, Prepare: EnsureDemoChapterAsync),
             new("parallel", read, K("Übersetzungen vergleichen"),
-                K("„Parallel“ stellt eine weitere Übersetzung als Spalte daneben. Vergleiche Joh 3,16 in zwei Übersetzungen: Wo unterscheiden sie sich? Jede Spalte kann auch eine andere Stelle zeigen."),
-                () => ParallelBtn, Fits: () => !_phone),
+                K("„Parallel“ stellt eine weitere Übersetzung als Spalte daneben, bis zu drei. Vergleiche Joh 3,16 in zwei Übersetzungen: Wo unterscheiden sie sich?"),
+                () => ParallelBtn, K("Füge eine Spalte hinzu."),
+                () => _extras.Count > _deepBase.Extras, () => { AddColumn(); return Task.CompletedTask; }, EnsureDemoChapterAsync, desk),
+            new("parallel-sync", read, K("Spalten synchron oder für sich"),
+                K("Über den Spalten steht „Synchron scrollen“: An, laufen alle Spalten zusammen; aus, scrollt jede für sich. Mit dem Symbol daneben wählst du, welche Spalten zusammen laufen. Der Knopf mit der Bibelstelle im Kopf einer Spalte lässt sie eine ganz andere Stelle zeigen, z. B. 1. Mose 1 neben Johannes 1. Mit ✕ entfernst du eine Spalte wieder."),
+                Prepare: EnsureDemoChapterAsync, Fits: desk),
 
+            // ---- verses and marking ----
             new("verse", verse, K("Einen Vers wählen"),
-                K("Klick auf Vers 16 (am Handy antippen). Notiz, Lesezeichen und die Querverweise rechts beziehen sich dann auf diesen Vers. Mit Umschalt+Klick wählst du mehrere Verse."),
+                K("Klick auf Vers 16 (am Handy antippen). Notiz, Lesezeichen und die Querverweise rechts beziehen sich dann auf diesen Vers."),
                 DemoVerseBox, K("Wähle Johannes 3,16."),
                 () => _selectCount > _deepBase.Selects && OnDemoChapter && _selected == DemoVerse,
                 async () => { await EnsureDemoChapterAsync(); SelectVerse(DemoVerse); }, EnsureDemoChapterAsync),
-            new("mark", verse, K("Markieren"),
-                K("Mit dem Stift färbst du den gewählten Vers oder einen markierten Teil des Textes ein. Per Tastatur geht es mit der Leertaste. Alle Markierungen findest du unter „Sammlung“ wieder, nach Farben und Ordnern."),
+            new("multi", verse, K("Mehrere Verse wählen"),
+                K("Halte Umschalt gedrückt und klick auf einen anderen Vers: Alle Verse dazwischen sind gewählt. Mit Strg+Klick nimmst du einzelne Verse dazu oder weg, mit Umschalt+↑/↓ geht es per Tastatur. Am Handy drückst du lange auf eine Versnummer und ziehst den Finger nach unten. Färben, Kopieren und „In Dokument einfügen“ gelten dann für alle."),
+                DemoVerseBox, K("Wähle die Verse 16 bis 18."),
+                () => OnDemoChapter && _selVerses.Count >= 2,
+                () => { ChooseVerseRange(DemoVerse, DemoVerse + 2); return Task.CompletedTask; },
+                async () => { await EnsureDemoChapterAsync(); SelectVerse(DemoVerse); }),
+            new("mark", verse, K("Einen Vers markieren"),
+                K("Mit dem Stift färbst du die gewählten Verse ein. Schneller geht es mit einem Klick auf die Versnummer: Er färbt den ganzen Vers in der Schnellfarbe. Per Tastatur öffnet die Leertaste die Farben, die Pfeiltasten wählen eine und Enter übernimmt sie."),
                 () => _phone ? DemoVerseBox() : MarkBtn, K("Färbe Vers 16 in einer Farbe deiner Wahl ein."),
                 () => DemoMark() is { } now && now != _deepBase.Mark, Prepare: EnsureDemoChapterAsync),
+            new("word-mark", verse, K("Nur ein Wort markieren"),
+                K("Du musst nicht immer den ganzen Vers färben. Zieh mit der Maus über ein einzelnes Wort, zum Beispiel „Welt“, und wähl dann mit dem Stift oben eine Farbe (oder drück die Leertaste). Am Handy drückst du lange auf das Wort. Auch so eine Markierung kann eine eigene Notiz bekommen und in einen Ordner kommen."),
+                DemoVerseBox, K("Markiere ein einzelnes Wort."),
+                () => OnDemoChapter && _chapterMarks.Any(m => !m.WholeVerse && !_deepBase.MarkIds.Contains(m.Id)), Prepare: EnsureDemoChapterAsync),
             new("bookmark", verse, K("Lesezeichen"),
-                K("„Merken“ (Strg+D) setzt ein Lesezeichen auf den Vers, zum späteren Zurückspringen. Unter „Merken“ findest du alle wieder."),
-                () => BookmarkBtn, Fits: () => !_phone),
+                K("„Merken“ (Strg+D) setzt ein Lesezeichen auf den Vers, zum späteren Zurückspringen. Unter „Merken“ in der Leiste rechts findest du alle wieder."),
+                () => BookmarkBtn, Fits: desk),
             new("note", verse, K("Eine Notiz zum Vers"),
-                K("Rechts unter „Notizen“ schreibst du zum gewählten Vers, was dir auffällt. Bibelstellen wie „Röm 5,8“ werden darunter von selbst zu Links. Notizen werden beim Wechseln automatisch gespeichert."),
+                K("Rechts unter „Notizen“ schreibst du zum gewählten Vers, was dir auffällt. Bibelstellen wie „Röm 5,8“ werden darunter von selbst zu Links. Notizen werden beim Wechseln automatisch gespeichert. Unter „Markierungen“ daneben stehen alle deine Farben, nach Farben und Ordnern."),
                 () => NoteEditor, Prepare: async () => { await EnsureDemoChapterAsync(); if (_selected != DemoVerse) SelectVerse(DemoVerse); RevealSideTab(2); }),
+            new("side-verse", verse, K("Alles zum Vers auf einen Blick"),
+                K("Rechts in der Leiste unter „Vers“ › „Übersicht“ steht alles zum gewählten Vers: deine Notizen und Dokumente, der Vers in anderen Übersetzungen, die Querverweise und wo er in deinen Materialien vorkommt. Daneben liegen „Grundtext“, „Wort“, „Querverweise“ und „Vorkommen“."),
+                null, Prepare: async () => { await EnsureDemoChapterAsync(); if (_selected != DemoVerse) SelectVerse(DemoVerse); RevealSideTab(GuideTab); }),
 
+            // ---- word study ----
             new("study-on", words, K("Wortstudie einschalten"),
                 K("Mit diesem Schalter werden die Wörter unterstrichen, hinter denen ein hebräisches oder griechisches Grundwort mit Strong-Nummer steht."),
                 () => StudyBtn, K("Schalte die Wortstudie ein."),
                 () => StudyBtn.IsChecked == true, async () => { await EnsureDemoChapterAsync(); StudyBtn.IsChecked = true; },
                 // it is on already: off first, so the step shows the switch at work
-                async () => { await EnsureDemoChapterAsync(); if (StudyBtn.IsChecked == true) StudyBtn.IsChecked = false; }, () => !_phone),
+                async () => { await EnsureDemoChapterAsync(); if (StudyBtn.IsChecked == true) StudyBtn.IsChecked = false; }, desk),
             new("study-word", words, K("Ein Wort antippen"),
                 K("Tippe in Vers 16 auf „geliebt“ (je nach Übersetzung „liebte“). Rechts erscheint das griechische Grundwort agapaō (G25): Bedeutung, Aussprache und wie es übersetzt wird."),
                 DemoVerseBox, K("Tippe ein unterstrichenes Wort an."),
@@ -123,10 +164,22 @@ public partial class MainWindow
                 () => DemoVerseBox(), null, null,
                 async () => { await EnsureDemoChapterAsync(); RevealSideTab(GrundtextTab); await ShowGrundtextAsync(new VerseRef(DemoBook, DemoChapter, DemoVerse)); },
                 EnsureDemoChapterAsync),
+            new("lexicon", words, K("Strong-Wörterbuch und Sprachen"),
+                K("Unter „Lernen“ schlägst du jedes Wort des Grundtextes direkt nach: Nummer (G26), griechisches oder hebräisches Wort, Umschrift oder deutsche Bedeutung. „Sprachen“ daneben bringt dir das griechische und hebräische Alphabet und die wichtigsten Vokabeln bei, mit Wiederholung."),
+                () => StrongSearchBox, null, null,
+                async () => { StrongSearchBox.Text = "G26"; await SearchStrongAsync(); },
+                () => { RevealSideTab(StrongTab); return Task.CompletedTask; }),
 
+            // ---- cross references ----
             new("xrefs", refs, K("Querverweise"),
                 K("Rechts unter „Querverweise“ stehen die gedruckten Querverweise zum gewählten Vers. Ein Klick führt hin, der Pfeil oben links bringt dich zurück."),
                 null, Prepare: async () => { await EnsureDemoChapterAsync(); if (_selected != DemoVerse) SelectVerse(DemoVerse); RevealSideTab(4); }),
+            new("xref-intext", refs, K("Querverweise im Text"),
+                K("Unter „Ansicht“ über dem Text schaltest du „Querverweise im Text“ ein: Dann stehen die Verweise direkt bei jedem Vers, ein Klick führt hin. „Mindestens Stimmen“ zeigt nur die wichtigsten, und „Graph neben dem Text“ zeichnet sie als Linien in einer Spalte daneben."),
+                () => ViewBtn, K("Schalte „Querverweise im Text“ ein."),
+                () => _settings.XrefInText,
+                async () => { _xrefInText = true; _settings.XrefInText = true; SaveSettings(); await RedrawChapterAsync(); },
+                async () => { await EnsureDemoChapterAsync(); if (_settings.XrefInText) { _xrefInText = false; _settings.XrefInText = false; SaveSettings(); await RedrawChapterAsync(); } }, desk),
             new("myxref-add", refs, K("Eigenen Querverweis anlegen"),
                 K("Röm 5,8 sagt etwas sehr Ähnliches: „Gott aber erweist seine Liebe zu uns darin, dass Christus für uns gestorben ist.“ Verknüpfe die beiden: Rechtsklick auf Vers 16 (am Handy lange tippen) › „Studium“ › „Eigenen Querverweis setzen …“, als Ziel „Röm 5,8“ eintippen und speichern."),
                 DemoVerseBox, K("Lege den Querverweis Joh 3,16 → Röm 5,8 an."),
@@ -148,27 +201,107 @@ public partial class MainWindow
                 },
                 EnsureDemoChapterAsync),
 
+            // ---- the study tab ----
+            new("pericope", study, K("Perikope"),
+                K("Der Reiter „Studium“ hat Werkzeuge für einen ganzen Abschnitt. „Perikope“ zeigt Johannes 3 in Bildern: Wortarten, Verbformen, Schlüsselwörter und wo sie vorkommen, den Rhythmus der Verse und wie die Sätze verbunden sind."),
+                null, Prepare: async () => { await EnsureDemoChapterAsync(); if (_selected != DemoVerse) SelectVerse(DemoVerse); RevealSideTab(PericopeTab); }),
+            new("sentence", study, K("Satzdiagramm"),
+                K("Das Satzdiagramm zeigt den Satz des gewählten Verses wie im Grammatikunterricht: Subjekt, Verb und Objekt auf der Linie, alles andere darunter. Es entsteht aus den Syntaxdaten des griechischen und hebräischen Textes."),
+                null, Prepare: async () => { await EnsureDemoChapterAsync(); if (_selected != DemoVerse) SelectVerse(DemoVerse); RevealSideTab(SentenceTab); }),
+            new("analysis", study, K("Analyse"),
+                K("„Analyse“ findet Schlüsselwörter, Wörter, die nur einmal vorkommen, verwandte Wörter und die Verteilung eines Wortes über die Bibel. Im Neuen Testament gibt es dazu eine Grammatiksuche, z. B. nach allen Aorist-Passiv-Partizipien."),
+                null, Prepare: async () => { await EnsureDemoChapterAsync(); RevealSideTab(AnalysisTab); }),
+            new("synopsis", study, K("Synopse"),
+                K("Die Synopse stellt die Evangelien nebeneinander: dieselbe Begebenheit bei Matthäus, Markus, Lukas und Johannes, die Unterschiede farbig. Probier es mit der Speisung der Fünftausend (Johannes 6)."),
+                null, Prepare: () => { RevealSideTab(SynopsisTab); return Task.CompletedTask; }),
+
+            // ---- views ----
+            new("graph", views, K("Graph"),
+                K("Unter „Ansichten“ über dem Text liegen große Darstellungen. „Graph“ zeigt das Kapitel mit seinen Querverweisen als Netz (Doppelklick auf einen Knoten lädt mehr), die ganze Bibel als Bogen, AT und NT, Wort- und Personen-Netze. Knoten lassen sich ziehen, das Mausrad zoomt."),
+                () => ViewsBtn, K("Öffne den Graph."),
+                () => GraphPane.IsVisible, async () => await ShowGraphAsync(), EnsureDemoChapterAsync, () => !_settings.EasyMode),
+            new("map", views, K("Karte"),
+                K("„Karte“ zeigt die Orte des Kapitels oder Buches. Ein Klick auf einen Ort zeigt seine Verse; bei einer Person zeigt „Reiseweg zeigen“ die Orte, die bei ihr genannt werden, in der Reihenfolge der Bibel."),
+                () => ViewsBtn, K("Öffne die Karte."),
+                () => MapPane.IsVisible, async () => await ShowMapAsync(), EnsureDemoChapterAsync),
+            new("timeline", views, K("Zeitleiste"),
+                K("Die Zeitleiste stellt die Ereignisse der Bibel auf einer Zeitachse dar, mit Karte. Ein Klick auf ein Ereignis zeigt, wo es steht, und öffnet die Stelle."),
+                () => ViewsBtn, null, null,
+                () => { TimelineBtn.RaiseEvent(new Avalonia.Interactivity.RoutedEventArgs(Button.ClickEvent)); return Task.CompletedTask; }, EnsureDemoChapterAsync),
+            new("family", views, K("Stammbaum"),
+                K("Der Stammbaum zeigt eine Person mit Eltern, Geschwistern und Kindern, zum Beispiel die Linie von Abraham bis David. Ein Klick auf einen Namen geht im Baum weiter."),
+                () => ViewsBtn, K("Öffne den Stammbaum."),
+                () => FamilyPane.IsVisible,
+                () => { FamilyBtn.RaiseEvent(new Avalonia.Interactivity.RoutedEventArgs(Button.ClickEvent)); return Task.CompletedTask; }, EnsureDemoChapterAsync),
+
+            // ---- search ----
             new("search", search, K("Suchen"),
                 K("Rechts unter „Suche“ findest du Wörter und Wendungen in der ganzen Bibel, nach Büchern gruppiert. „In Anführungszeichen“ sucht genau diese Wendung, „G25“ sucht nach der Strong-Nummer, also nach dem Grundwort unabhängig von der Übersetzung."),
                 () => SearchBox, K("Suche nach „Liebe“."),
                 () => _searchCount > _deepBase.Searches && (SearchBox.Text ?? "").Contains(L("Liebe"), StringComparison.OrdinalIgnoreCase),
                 async () => { RevealSideTab(0); SearchBox.Text = L("Liebe"); await SearchAsync(); },
                 () => { ShowReader(); RevealSideTab(0); return Task.CompletedTask; }),
+            new("search-more", search, K("Suche verfeinern"),
+                K("„Mehr Optionen“ grenzt ein: nur das Alte Testament oder die Paulusbriefe, Wortanfang oder ganzes Wort, im Grundtext suchen. „Suche bauen“ setzt eine Suche Zeile für Zeile aus einer Liste zusammen, „Suchhilfe“ zeigt alle Beispiele. Person:Abraham findet jeden Vers über Abraham, auch wo er noch Abram heißt; Ort:Jerusalem dasselbe für Orte."),
+                () => SearchOptionsBtn, Prepare: () => { ShowReader(); RevealSideTab(0); return Task.CompletedTask; }),
 
+            // ---- tabs and windows ----
+            new("tabs", tabs, K("Reiter und die Tab-Taste"),
+                K("Was du öffnest (Dokumente, Explorer, Studium …), bekommt oben einen Reiter wie im Browser; „Lesen“ ist immer der erste. Die Tab-Taste springt zwischen „Lesen“ und dem zuletzt offenen Reiter hin und her, Strg+Tab geht der Reihe nach durch alle. Klickst du den kleinen Kreis in einem Reiter an, bekommt er einen Punkt: Haben zwei Reiter einen Punkt, wechselt Tab immer genau zwischen diesen beiden."),
+                () => TabStrip, K("Drück die Tab-Taste zweimal."),
+                () => _tabSwitches >= _deepBase.TabSwitches + 2,
+                async () => { SwitchReadTab(); await Task.Delay(700); SwitchReadTab(); },
+                async () => { RevealSideTab(ExplorerTab); await Task.Delay(100); ShowReader(); Focus(); }, desk),
+            new("split", tabs, K("Geteilte Ansicht"),
+                K("Dieser Knopf zeigt bis zu vier Bereiche nebeneinander, z. B. links den Bibeltext und rechts den Explorer oder ein Dokument. Zieh einen Reiter auf die Mitte eines Bereichs, ersetzt er ihn; auf seinen Rand, kommt er als neuer Bereich daneben; aus dem Fenster heraus, wird er ein eigenes Fenster. Die Linien dazwischen lassen sich ziehen. Derselbe Knopf schaltet wieder zurück."),
+                () => SplitTopBtn, K("Schalte die geteilte Ansicht ein, mit dem Bibeltext und einem zweiten Reiter."),
+                () => _settings.SplitView && Panes.Count >= 2,
+                async () => { RevealSideTab(ExplorerTab); await Task.Delay(100); SplitTopBtn.IsChecked = true; },
+                () => { if (SplitTopBtn.IsChecked == true) SplitTopBtn.IsChecked = false; ShowReader(); return Task.CompletedTask; }, desk),
+            new("sidebar", tabs, K("Die Leiste rechts"),
+                K("Rechts liegt die Seitenleiste: Suchen, Vers, Notizen, Merken, Zusammen und die großen Bereiche. Strg+B blendet sie ein und aus, ihren Rand ziehst du breiter. Ziehst du ein Symbol aus der Leiste heraus, wird es ein eigenes Fenster, z. B. für einen zweiten Bildschirm."),
+                () => Rail, Prepare: () => { ShowReader(); SetPanelOpen(true); return Task.CompletedTask; }, Fits: desk),
+
+            // ---- order and plan ----
             new("vault", order, K("Vaults"),
                 K("Alles, was du anlegst (Markierungen, Notizen, Querverweise, Dokumente), gehört zu einem Vault. Lege zum Beispiel einen für eine Predigtreihe an und einen für dich privat; oben wechselst du zwischen ihnen."),
-                () => VaultTopBtn, Fits: () => !_phone),
+                () => VaultTopBtn, Fits: desk),
+            new("explorer", order, K("Explorer"),
+                K("Der Explorer zeigt alle Markierungen und Notizen wie im Datei-Explorer: Ordner und Unterordner anlegen, Verse per Ziehen einordnen, ein Doppelklick öffnet die Stelle. Hier findest du auch deine Markierung von Johannes 3,16 wieder."),
+                null, Prepare: () => { RevealSideTab(ExplorerTab); return Task.CompletedTask; }),
             new("docs", order, K("Dokumente"),
                 K("Unter „Dokumente“ schreibst du längere Texte: Studien, Andachten, Predigten. Einen Vers fügst du per Rechtsklick › „In offenes Dokument einfügen“ ein, Bibelstellen werden zu Links."),
                 null, Prepare: () => { OpenWork(NavGroups.First(g => g.Name == "Dokumente"), KnowledgeTab); return Task.CompletedTask; }),
-            new("plans", order, K("Lesepläne und mehr"),
-                K("Unter „Planen“ liegen Lesepläne mit Fortschritt, To-dos, Gebete und das Auswendiglernen von Versen."),
+            new("material", order, K("Materialien und Live"),
+                K("Unter „Material“ öffnest du die Unterlagen einer Bibelstunde direkt im Programm: Word, PDF, PowerPoint und Bilder. Bibelstellen darin werden zu Links, und Text lässt sich farbig markieren, ohne die Datei zu ändern. „Live“ zeigt die Bibelstunde auf den Handys der Gruppe (QR-Code scannen, ohne App), „Archiv“ hält fest, welche Stelle wann dran war."),
+                null, Prepare: () => { RevealSideTab(MaterialsTab); return Task.CompletedTask; }),
+            new("sermon", order, K("Predigt"),
+                K("Der Predigt-Editor hilft beim Vorbereiten: Text, Kernaussage, Gliederung mit Versen, Notizen und Zeitplan; daraus wird ein Handout zum Drucken."),
+                null, Prepare: () => { RevealSideTab(SermonTab); return Task.CompletedTask; }),
+            new("plans", order, K("Planen"),
+                K("Unter „Planen“ liegen Lesepläne mit Fortschritt (z. B. die Bibel in einem Jahr), die Leseliste, To-dos, Gebete mit Datum und Vers, das Auswendiglernen mit wachsenden Lücken und eine Statistik, wie viel du gelesen hast."),
                 null, Prepare: () => { if (GroupOf(PlanTab) is { } g) OpenWork(g, PlanTab); return Task.CompletedTask; }),
-            new("center", order, K("Mitteilungen und Vorschläge"),
-                K("Ab und zu zeigt dir das Programm unten in der Ecke einen Vorschlag. Unter Einstellungen › „Mitteilungen und Vorschläge“ siehst du alle, schaltest sie an oder aus und findest, was neu ist."),
-                null, null, null, () => { ShowMessageCenter(); return Task.CompletedTask; }, () => { ShowReader(); return Task.CompletedTask; }),
-            new("end", order, K("Geschafft!"),
-                K("Du kennst jetzt die wichtigsten Werkzeuge. Teste dich mit dem kleinen Quiz: ein paar Fragen und zwei Aufgaben, die du im Programm nachschlägst. Den Tiefen-Rundgang findest du jederzeit unter Hilfe wieder."),
+
+            // ---- together and devices ----
+            new("collab", together, K("Zusammen studieren"),
+                K("Unter „Zusammen“ verbindest du dich direkt mit einer anderen Person: chatten, Verse und Dokumente teilen und der Bibelstelle der anderen folgen. Am einfachsten im selben WLAN, dort seht ihr euch mit Namen. Seid ihr weit voneinander entfernt, tretet beide demselben kostenlosen ZeroTier- oder Tailscale-Netzwerk bei; dann klappt es wie im selben WLAN. Sonst tauscht ihr einen Einladungscode per Messenger aus."),
+                null, Prepare: () => { ShowReader(); RevealSideTab(CollabTab); return Task.CompletedTask; }),
+            new("sync", together, K("Handy und PC synchronisieren"),
+                K("Deine Vaults gleichen sich zwischen deinen eigenen Geräten ab, ohne Konto und ohne Server. Unter Einstellungen › „Synchronisieren“ zeigt „Synchronisation einrichten“ einen QR-Code, den du mit dem Handy scannst. Danach finden sich die Geräte im selben WLAN von selbst, und eine Änderung ist nach wenigen Sekunden auf dem anderen."),
+                () => SyncSetupBtn, Prepare: () => OpenSettingAt(SyncSetupBtn)),
+            new("ai", together, K("KI-Assistent"),
+                K("Unter „KI“ beantwortet dein lokales Claude Fragen zur Bibel und schlägt dabei mit den Werkzeugen dieses Programms nach. Mehrere Gespräche laufen nebeneinander."),
+                null, Prepare: () => { RevealSideTab(AiTab); return Task.CompletedTask; }, Fits: () => !_phone && NavGroups.Any(g => g.Name == "KI")),
+
+            // ---- help ----
+            new("help", help, K("Der Hilfe-Bereich"),
+                K("Unter „Hilfe“ (das Fragezeichen in der Leiste rechts, oder Einstellungen › „Hilfe, Feedback, Updates“ › „Hilfe öffnen“) findest du beide Rundgänge, das Quiz und eine kurze Erklärung jeder Funktion. „Dokumentation“ ist das ausführliche Handbuch mit Suche, „Maße & Info“ erklärt biblische Maße, Gewichte und Zeiten."),
+                () => TourBtn, Prepare: () => { RevealSideTab(13); return Task.CompletedTask; }),
+            new("center", help, K("Mitteilungen und Vorschläge"),
+                K("Ab und zu zeigt dir das Programm unten in der Ecke einen Vorschlag. Alle findest du unter Einstellungen › Kachel „Hilfe, Feedback, Updates“ › Karte „Updates und Programm“ › „Mitteilungen und Vorschläge“, und ebenso im Hilfe-Bereich. Dort schaltest du jeden Vorschlag an oder aus, zeigst ihn noch einmal und liest, was neu ist."),
+                () => MessagesBtn, null, null, () => { ShowMessageCenter(); return Task.CompletedTask; }, () => OpenSettingAt(MessagesBtn)),
+            new("end", help, K("Geschafft!"),
+                K("Du kennst jetzt das ganze Programm. Teste dich mit dem kleinen Quiz: ein paar Fragen und zwei Aufgaben, die du im Programm nachschlägst. Den Tiefen-Rundgang findest du jederzeit unter Hilfe wieder."),
                 null, null, null, () => { ShowQuiz(); return Task.CompletedTask; }, () => { ShowReader(); return Task.CompletedTask; }, DemoLabel: K("Quiz starten")),
         ];
         return all.Where(s => s.Fits?.Invoke() ?? true).ToArray();
