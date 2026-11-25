@@ -63,7 +63,9 @@ public partial class MainWindow
         WidthSlider.ValueChanged += (_, e) => { _settings.ReaderWidth = (int)e.NewValue; WidthLabel.Text = L("Textbreite: {0}", _settings.ReaderWidth); if (_qolReady) { FitReader(); SaveSettings(); } };
         HeadingModeBox.SelectionChanged += (_, _) => { _settings.HeadingMode = HeadingModes[Math.Max(0, HeadingModeBox.SelectedIndex)]; Redraw(); };
         VerseNumberBox.SelectionChanged += (_, _) => { _settings.VerseNumbers = VerseNumberModes[Math.Max(0, VerseNumberBox.SelectedIndex)]; Redraw(); };
-        JesusRedCheck.IsCheckedChanged += (_, _) => { _settings.JesusRed = JesusRedCheck.IsChecked == true; Redraw(); };
+        JesusRedCheck.IsCheckedChanged += (_, _) => { _settings.JesusRed = JesusRedCheck.IsChecked == true; JesusFromKjvCheck.IsEnabled = _settings.JesusRed; Redraw(); };
+        JesusFromKjvCheck.IsChecked = _settings.JesusFromKjv; JesusFromKjvCheck.IsEnabled = _settings.JesusRed;
+        JesusFromKjvCheck.IsCheckedChanged += (_, _) => { _settings.JesusFromKjv = JesusFromKjvCheck.IsChecked == true; Redraw(); };
         // own color for the words of Jesus: fixed choices, the first one ("" ) is the program default that follows the theme
         void BuildJesusColors()
         {

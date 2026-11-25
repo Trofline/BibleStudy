@@ -19,6 +19,7 @@ Deine Sprache fehlt? Speichere die **Vorlage mit der KI-Anweisung**, lass sie vo
 - **Schrift:** Größe, Zeilenabstand, Blocksatz, leichter lesbare Schrift (zum Beispiel bei Legasthenie), hoher Kontrast.
 - **Versnummern:** klein hochgestellt, normal im Text, ausblenden.
 - **Worte Jesu** farbig hervorheben, mit eigener Farbe (unabhängig vom Farbschema; eigene Farben mit **+**).
+- **Worte Jesu ergänzen**: Bei Übersetzungen, die die Worte Jesu nicht selbst kennzeichnen (viele importierte Bibeln), werden sie aus der KJV geschätzt. Ganz rote Verse werden ganz rot, bei teilweise roten Versen zählt der Text in Anführungszeichen. Das ist eine Schätzung und kann an den Rändern danebenliegen. Kennzeichnet die importierte Datei die Worte Jesu selbst (OSIS, USFM, USX, Zefania, e-Sword, MySword, EPUB, Word, Webseiten), wird ihre Markierung genommen.
 - **Dunkler Hintergrund:** Nachtblau, Schwarz, Grau, Warm, Wald oder Violett (gilt im dunklen Design).
 - **Farbe der Auswahl:** Akzentfarbe (Standard), Grau oder Blau.
 - **Hebräisch:** Vokalzeichen und Akzentzeichen (Kantillation) ein-/ausblenden.
