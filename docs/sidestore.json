@@ -18,6 +18,15 @@
       "category": "other",
       "versions": [
         {
+          "version": "1.9.29",
+          "buildVersion": "48",
+          "date": "2026-11-25",
+          "localizedDescription": "## New in 1.9.29\n**Kind of update:** Feature\n- **[New]** Android: a widget for the home screen shows the verse of the day and today's reading from your plan with its progress. A tap on the verse opens it, a tap on the plan opens the reading.\n- **[New]** iPhone: a button for the lock screen, under the clock, that starts BibleStudy, and a \"Verse of the day\" widget with your reading plan for the home and lock screen (iOS 17 or later). The widgets come as an extension that counts as one more app with a free Apple ID; leave it out when SideStore asks if you need the slot.\n- **[New]** The widgets change to the next verse at midnight, also when the app has not been opened; they fill once you have opened BibleStudy after the update.\n\n**iPhone:** update in SideStore (Sources → pull down → My Apps → Update). **Android:** the app updates itself; add the widget by holding a free spot on the home screen → Widgets → BibleStudy.",
+          "downloadURL": "https://github.com/Trofline/BibleStudy/releases/download/v1.9.29/BibleStudy-iOS-1.9.29.ipa",
+          "size": 60800910,
+          "minOSVersion": "15.0"
+        },
+        {
           "version": "1.9.28",
           "buildVersion": "47",
           "date": "2026-11-24",
