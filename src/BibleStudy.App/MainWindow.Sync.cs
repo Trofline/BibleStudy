@@ -215,6 +215,7 @@ public partial class MainWindow
     }
 
     bool _phoneWaiting, _phoneWaitStop;
+    Border? _phoneWaitNotice;
     DateTime _phoneWaitSince;
 
     /// <summary>
@@ -229,7 +230,7 @@ public partial class MainWindow
         if (_phoneWaiting)
         {
             if (DateTime.UtcNow - _phoneWaitSince < TimeSpan.FromSeconds(2)) { e.Cancel = true; return true; }
-            _phoneWaiting = false; _phoneWaitStop = true; HideNotice();
+            _phoneWaiting = false; _phoneWaitStop = true; HideNotice(_phoneWaitNotice);
             return false;
         }
         if (_syncedAtClose || _lan is not { } lan || _syncCfg.Key is null) return false;
@@ -271,7 +272,7 @@ public partial class MainWindow
     {
         try { AutoSaveDocument(); SaveNoteDraft(); } catch (Exception ex) { ErrorLog.Write(ex); }
         var before = _lastSyncOkUtc;
-        Notify(L("Warte auf dein Handy …"), L("Öffne kurz BibleStudy auf dem Handy, damit es den neuesten Stand bekommt. Danach schließt sich das Programm von selbst."),
+        _phoneWaitNotice = Notify(L("Warte auf dein Handy …"), L("Öffne kurz BibleStudy auf dem Handy, damit es den neuesten Stand bekommt. Danach schließt sich das Programm von selbst."),
             actionLabel: L("Jetzt schließen"), action: () => _phoneWaitStop = true, stay: TimeSpan.FromMinutes(2));
         var until = DateTime.UtcNow.AddMinutes(2);
         while (!_phoneWaitStop && DateTime.UtcNow < until && _lastSyncOkUtc == before)
@@ -282,7 +283,7 @@ public partial class MainWindow
         if (!_phoneWaiting) return;   // X was clicked again: the window is closing already
         if (_lastSyncOkUtc != before) await Task.Delay(TimeSpan.FromSeconds(2));   // "Synced with …" is seen before the window goes
         _phoneWaiting = false;
-        HideNotice();
+        HideNotice(_phoneWaitNotice);
         Close();
     }
 
@@ -387,82 +388,6 @@ public partial class MainWindow
         // on the PC a reminder: the phone is mostly closed while one works here, so it gets the newest state only when it is opened before the PC stops
         Notify(L("Verbunden mit {0}", peer), _phone ? "" : L("Tipp: Bevor du am PC aufhörst, öffne kurz BibleStudy auf dem Handy, damit es den neuesten Stand bekommt."), good: true);
     }
-
-    Border? _notice;
-    IDisposable? _noticeTimer;
-    DateTime _noticeShownAt;
-
-    /// <summary>
-    /// A small notice (phone: above the bar at the bottom, desktop: bottom right) that goes again after a few seconds. It covers nothing else that can be
-    /// used: a tap or a swipe to the side takes it away at once.
-    /// </summary>
-    void Notify(string title, string text, bool good = false, string? actionLabel = null, Action? action = null, TimeSpan? stay = null)
-    {
-        if (_notice is null)
-        {
-            // the notice lies in a grid over the whole content (the content is wrapped once)
-            if (TopBar.Parent is not DockPanel dock) return;
-            Panel host;
-            if (dock.Parent is Grid g) host = g;
-            else
-            {
-                host = new Grid();
-                if (dock.Parent is Panel p) { var at = p.Children.IndexOf(dock); p.Children.RemoveAt(at); host.Children.Add(dock); p.Children.Insert(at, host); }
-                else if (dock.Parent is ContentControl cc) { cc.Content = null; host.Children.Add(dock); cc.Content = host; }
-                else return;
-            }
-            _notice = new Border
-            {
-                CornerRadius = new Avalonia.CornerRadius(10), Padding = new Avalonia.Thickness(12, 8), BoxShadow = Avalonia.Media.BoxShadows.Parse("0 2 10 0 #38000000"),
-                MaxWidth = 340, IsVisible = false, ZIndex = 1000, RenderTransform = new Avalonia.Media.TranslateTransform(),
-            };
-            // a swipe to the side moves it with the finger and takes it away; a tap takes it away too
-            double startX = 0; var down = false;
-            _notice.PointerPressed += (_, e) => { down = true; startX = e.GetPosition(host).X; e.Pointer.Capture(_notice); e.Handled = true; };
-            _notice.PointerMoved += (_, e) =>
-            {
-                if (!down || _notice.RenderTransform is not Avalonia.Media.TranslateTransform t) return;
-                t.X = e.GetPosition(host).X - startX;
-                _notice.Opacity = Math.Max(0.2, 1 - Math.Abs(t.X) / 200);
-            };
-            _notice.PointerReleased += (_, e) =>
-            {
-                if (!down) return;
-                down = false; e.Pointer.Capture(null);
-                var dx = e.GetPosition(host).X - startX;
-                if (Math.Abs(dx) is < 8 or > 50) HideNotice();
-                else { if (_notice.RenderTransform is Avalonia.Media.TranslateTransform t) t.X = 0; _notice.Opacity = 1; }
-            };
-            host.Children.Add(_notice);
-        }
-        _notice.HorizontalAlignment = _phone ? Avalonia.Layout.HorizontalAlignment.Center : Avalonia.Layout.HorizontalAlignment.Right;
-        _notice.VerticalAlignment = Avalonia.Layout.VerticalAlignment.Bottom;
-        _notice.Margin = _phone ? new Avalonia.Thickness(16, 0, 16, 78) : new Avalonia.Thickness(0, 0, 16, 36);
-        _notice.Background = new Avalonia.Media.SolidColorBrush(Avalonia.Media.Color.Parse(good ? "#2F7D4F" : "#3B5BDB"));
-        var body = new StackPanel { Spacing = 2 };
-        body.Children.Add(new TextBlock { Text = (good ? "✓  " : "") + title, FontWeight = Avalonia.Media.FontWeight.SemiBold, FontSize = 13, Foreground = Avalonia.Media.Brushes.White, TextWrapping = Avalonia.Media.TextWrapping.Wrap });
-        if (text.Length > 0) body.Children.Add(new TextBlock { Text = text, FontSize = 12, Foreground = new Avalonia.Media.SolidColorBrush(Avalonia.Media.Color.Parse("#E8FFFFFF")), TextWrapping = Avalonia.Media.TextWrapping.Wrap });
-        if (actionLabel is not null && action is not null)
-        {
-            // a notice that asks for a step (open SideStore …) has its button; it stays longer, so there is time to read and tap
-            var b = new Button
-            {
-                Content = actionLabel, Margin = new Avalonia.Thickness(0, 6, 0, 0), HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Left,
-                Background = Avalonia.Media.Brushes.White, Foreground = Avalonia.Media.Brushes.Black, Padding = new Avalonia.Thickness(12, 6), MinHeight = 36, FontSize = 13,
-            };
-            b.Click += (_, _) => { HideNotice(); action(); };
-            body.Children.Add(b);
-        }
-        _notice.Child = body;
-        if (_notice.RenderTransform is Avalonia.Media.TranslateTransform tt) tt.X = 0;
-        _notice.Opacity = 1;
-        _notice.IsVisible = true;
-        _noticeShownAt = DateTime.UtcNow;
-        _noticeTimer?.Dispose();
-        _noticeTimer = DispatcherTimer.RunOnce(HideNotice, stay ?? TimeSpan.FromSeconds(action is not null ? 30 : text.Length > 60 ? 7 : 4));
-    }
-
-    void HideNotice() { if (_notice is not null) _notice.IsVisible = false; }
 
     /// <summary>Something new arrived in a vault: what is shown is read again (without closing what the person is writing).</summary>
     void OnSyncChanged(IReadOnlyList<string> names)

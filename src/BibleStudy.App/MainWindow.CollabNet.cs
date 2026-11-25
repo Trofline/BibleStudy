@@ -214,12 +214,13 @@ public partial class MainWindow
                     new WrapPanel { Children = { yes, no } },
                 },
             });
-            void Done(bool ok) { if (answer.TrySetResult(ok)) HideNotice(); Detach(card); }
+            Border? notice = null;
+            void Done(bool ok) { if (answer.TrySetResult(ok)) HideNotice(notice); Detach(card); }
             yes.Click += (_, _) => Done(true);
             no.Click += (_, _) => Done(false);
             // in a running group the question comes on top of the chat, where it is seen; else on the card of the network
             if (CollabOpen) _collabLog.Children.Insert(0, card); else _netAsk.Children.Add(card);
-            Notify(L("Zusammen studieren"), text, true, L("Annehmen"), () => Done(true), TimeSpan.FromSeconds(30));
+            notice = Notify(L("Zusammen studieren"), text, true, L("Annehmen"), () => Done(true), TimeSpan.FromSeconds(30));
             DispatcherTimer.RunOnce(() => Done(false), TimeSpan.FromSeconds(30));
         });
         return answer.Task;

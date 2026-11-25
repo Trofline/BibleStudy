@@ -1057,6 +1057,7 @@
                                     <Button x:Name="CheckUpdateBtn" Content="Jetzt nach Updates suchen" Margin="0,0,6,6" />
                                     <Button x:Name="PatchNotesBtn" Content="Patch Notes (was ist neu)" Margin="0,0,6,6" />
                                     <Button x:Name="GitHubBtn" Content="Projekt auf GitHub" Margin="0,0,6,6" />
+                                    <Button x:Name="MessagesBtn" Content="Mitteilungen und Vorschläge" Margin="0,0,6,6" ToolTip.Tip="Alle Vorschläge an- und ausschalten oder noch einmal ansehen, was ist neu, und die Mitteilungen seit dem Start." />
                                     <Button x:Name="RestartBtn" Content="Programm neu starten" Margin="0,0,6,6" ToolTip.Tip="Beendet BibleStudy und startet es sofort neu; du landest wieder hier in den Einstellungen." />
                                     <Button x:Name="RemoveAppBtn" Content="Programm entfernen …" Margin="0,0,6,6" IsVisible="False" />
                                 </WrapPanel>
@@ -1072,6 +1073,7 @@
                     <ScrollViewer Margin="16,14,4,12">
                         <StackPanel Spacing="10" Margin="0,0,12,0">
                             <Button x:Name="TourBtn" Content="Rundgang starten: die wichtigsten Knöpfe in zwei Minuten" HorizontalAlignment="Left" Classes="primary" />
+                            <Button x:Name="HelpMessagesBtn" Content="Mitteilungen und Vorschläge" HorizontalAlignment="Left" />
                             <TextBlock FontWeight="SemiBold" Text="Lesen und Navigieren" />
                             <TextBlock TextWrapping="Wrap" Text="Haus-Symbol: Startseite mit allen Büchern. Pfeil links: zurück zur vorherigen Stelle. Buch, Kapitel und Übersetzung wählst du oben; ◀ ▶ blättert Kapitel. Das Häkchen „Gelesen“ markiert ein Kapitel; auf der Startseite zeigt ein Balken den Fortschritt je Buch." />
                             <TextBlock FontWeight="SemiBold" Text="Schnell zu allem (Strg+K)" />

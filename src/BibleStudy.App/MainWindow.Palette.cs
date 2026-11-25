@@ -91,6 +91,7 @@ public partial class MainWindow
         yield return C(L("Kapitel-Bericht"), ShowChapterReportAsync);
         yield return C(L("Graph oder Ansicht als Bild in eigenem Fenster"), () => { PopOutCurrentView(); return Task.CompletedTask; });
         yield return C(L("Patch Notes"), ShowPatchNotesAsync);
+        yield return C(L("Mitteilungen und Vorschläge"), () => { ShowMessageCenter(); return Task.CompletedTask; });
         yield return C(L("Projekt auf GitHub öffnen"), () => { OpenUrl(ProjectUrl); return Task.CompletedTask; });
         yield return C(L("Einstellungen"), () => Work("Mehr", SettingsTab));
         yield return C(L("Neue Notiz"), () => { OpenWork(NavGroups.First(g => g.Name == "Dokumente"), KnowledgeTab); OpenDocument(new Document(0, "", "", null, false, DateTime.Now, [])); return Task.CompletedTask; });

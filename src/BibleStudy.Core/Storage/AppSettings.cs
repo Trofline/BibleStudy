@@ -365,6 +365,14 @@ public sealed class AppSettings
     public bool BackupAsked { get; set; }
     /// <summary>The last "new shortcuts" hint that was shown (so each one appears only once).</summary>
     public string? TipShown { get; set; }
+    /// <summary>Now and then a suggestion of the program in the corner (the message center): at most one a day, one per start.</summary>
+    public bool Suggestions { get; set; } = true;
+    /// <summary>The suggestions that were shown already (each one comes by itself only once; in the message center it can be shown again).</summary>
+    public List<string> SuggestionsSeen { get; set; } = [];
+    /// <summary>The suggestions the person turned off one by one.</summary>
+    public List<string> SuggestionsOff { get; set; } = [];
+    /// <summary>The day (yyyy-MM-dd) the last suggestion came by itself.</summary>
+    public string? LastSuggestionDay { get; set; }
     public string? PlanId { get; set; }
     public string? PlanStart { get; set; }
     public List<string> PlanDoneDays { get; set; } = [];

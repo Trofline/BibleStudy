@@ -21,6 +21,8 @@ public partial class MainWindow
     void InitTour()
     {
         TourBtn.Click += (_, _) => StartTour();
+        MessagesBtn.Click += (_, _) => ShowMessageCenter();
+        HelpMessagesBtn.Click += (_, _) => ShowMessageCenter();
         InitHelpPage();
         // a while after the start, when the splash screen and the notice about sources are gone
         DispatcherTimer.RunOnce(() => OfferTour(), TimeSpan.FromSeconds(6));
@@ -44,6 +46,7 @@ public partial class MainWindow
         _ = ShowPatchNotesIfNewAsync();
         _ = OfferReimportAsync();
         DispatcherTimer.RunOnce(ShowNewKeysTip, TimeSpan.FromSeconds(4));
+        PlanSuggestion();
     }
 
     /// <summary>Asked once: whoever had the program before and has no backup yet. The answer is kept either way.</summary>
