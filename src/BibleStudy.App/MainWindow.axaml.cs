@@ -882,6 +882,7 @@ public partial class MainWindow : AppWindow
 
     async Task ShowStudyAsync(WordSpan span)
     {
+        _studyCount++;
         RevealSideTab(3);
         StudyPanel.Children.Clear();
         StudyPanel.Children.Add(new TextBlock { Text = Loc.Quote(span.Word.Trim()), FontSize = 20, FontWeight = FontWeight.SemiBold, TextWrapping = TextWrapping.Wrap });

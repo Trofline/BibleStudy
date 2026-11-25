@@ -1073,6 +1073,8 @@
                     <ScrollViewer Margin="16,14,4,12">
                         <StackPanel Spacing="10" Margin="0,0,12,0">
                             <Button x:Name="TourBtn" Content="Rundgang starten: die wichtigsten Knöpfe in zwei Minuten" HorizontalAlignment="Left" Classes="primary" />
+                            <Button x:Name="HelpDeepTourBtn" Content="Tiefen-Rundgang: das Programm an einem Beispiel gründlich kennenlernen" HorizontalAlignment="Left" />
+                            <Button x:Name="HelpQuizBtn" Content="Quiz: Kennst du BibleStudy?" HorizontalAlignment="Left" />
                             <Button x:Name="HelpMessagesBtn" Content="Mitteilungen und Vorschläge" HorizontalAlignment="Left" />
                             <TextBlock FontWeight="SemiBold" Text="Lesen und Navigieren" />
                             <TextBlock TextWrapping="Wrap" Text="Haus-Symbol: Startseite mit allen Büchern. Pfeil links: zurück zur vorherigen Stelle. Buch, Kapitel und Übersetzung wählst du oben; ◀ ▶ blättert Kapitel. Das Häkchen „Gelesen“ markiert ein Kapitel; auf der Startseite zeigt ein Balken den Fortschritt je Buch." />

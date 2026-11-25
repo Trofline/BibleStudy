@@ -22,6 +22,8 @@ public partial class MainWindow
     {
         TourBtn.Click += (_, _) => StartTour();
         MessagesBtn.Click += (_, _) => ShowMessageCenter();
+        HelpDeepTourBtn.Click += (_, _) => StartDeepTour();
+        HelpQuizBtn.Click += (_, _) => ShowQuiz();
         HelpMessagesBtn.Click += (_, _) => ShowMessageCenter();
         InitHelpPage();
         // a while after the start, when the splash screen and the notice about sources are gone
@@ -64,6 +66,7 @@ public partial class MainWindow
     void StartTour()
     {
         if (_touring) return;
+        if (DeepTouring) CloseDeepTour(finished: false);
         _palette.IsOpen = false; Focus();   // the command list must be gone: two popups at the same time confuse the renderer
         ShowReader();
         _touring = true;
@@ -134,7 +137,7 @@ public partial class MainWindow
             return;
         }
         while (i < steps.Length && steps[i].Anchor() is { IsEffectivelyVisible: false } or { Bounds.Width: 0 }) i++;   // a button that is not there (hidden panel, other layout) is skipped
-        if (i >= steps.Length) { FinishTour(); return; }
+        if (i >= steps.Length) { FinishTour(completed: true); return; }
         var step = steps[i]; var last = i == steps.Length - 1;
         var moved = false;
 
@@ -156,7 +159,7 @@ public partial class MainWindow
         void Go(Action then) { moved = true; flyout.Hide(); DispatcherTimer.RunOnce(then, TimeSpan.FromMilliseconds(150)); }   // the old bubble must be gone first
         next.Click += (_, _) => Go(() => ShowTourStep(steps, i + 1));
         back.Click += (_, _) => Go(() => ShowTourStep(steps, i - 1));
-        skip.Click += (_, _) => Go(FinishTour);
+        skip.Click += (_, _) => Go(() => FinishTour());
         flyout.Closed += (_, _) => { HideTourRing(); if (!moved) FinishTour(); };   // a click somewhere else ends the tour
         ShowTourRing(step.Anchor());
         flyout.ShowAt(step.Anchor());
@@ -180,9 +183,11 @@ public partial class MainWindow
         _tourRing = null;
     }
 
-    void FinishTour()
+    void FinishTour(bool completed = false)
     {
         _touring = false; HideTourRing();
+        // the whole short tour was gone through: next comes the offer of the deep tour (once)
+        if (completed) DispatcherTimer.RunOnce(() => _ = OfferDeepTourAsync(), TimeSpan.FromMilliseconds(600));
         if (_activeWork is not null) ShowReader();   // the tour may have ended inside the settings
         DispatcherTimer.RunOnce(() => { _palette.IsOpen = false; if (QuickJumpBox.IsFocused) Focus(); }, TimeSpan.FromMilliseconds(250));
         if (!_settings.TourPending) return;

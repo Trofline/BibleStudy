@@ -373,6 +373,13 @@ public sealed class AppSettings
     public List<string> SuggestionsOff { get; set; } = [];
     /// <summary>The day (yyyy-MM-dd) the last suggestion came by itself.</summary>
     public string? LastSuggestionDay { get; set; }
+    /// <summary>The deep tour: the step where it was left, the steps seen, whether it was offered after the short tour and whether it was finished.</summary>
+    public int DeepTourStep { get; set; }
+    public List<string> DeepTourSeen { get; set; } = [];
+    public bool DeepTourOffered { get; set; }
+    public bool DeepTourDone { get; set; }
+    /// <summary>The best result in the quiz about the program (right answers).</summary>
+    public int QuizBest { get; set; }
     public string? PlanId { get; set; }
     public string? PlanStart { get; set; }
     public List<string> PlanDoneDays { get; set; } = [];

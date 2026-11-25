@@ -20,6 +20,12 @@ public partial class MainWindow
 
     Suggestion[] AllSuggestions() =>
     [
+        new("deep-tour", K("Tiefen-Rundgang"),
+            K("Lerne das Programm an einem echten Beispiel gründlich kennen: Wortstudie, eigene Querverweise, Suche, Notizen und mehr. Du machst jeden Schritt selbst und kannst jederzeit pausieren."),
+            K("Starten"), () => StartDeepTour(), () => !_settings.DeepTourDone),
+        new("quiz", K("Quiz: Kennst du BibleStudy?"),
+            K("Ein paar Fragen und kleine Aufgaben, die du direkt im Programm nachschlägst, zum Beispiel wie oft ein griechisches Wort im Johannesevangelium vorkommt."),
+            K("Starten"), ShowQuiz, () => _settings.DeepTourDone),
         new("quickjump", K("Gehe zu … (Strg+K)"),
             K("Ein Feld für alles: Bibelstellen („Röm 8,28“), Wörter, Befehle, Dokumente und Strong-Nummern. Tippen, mit den Pfeilen wählen, Enter."),
             K("Ausprobieren"), () => { ShowReader(); QuickJumpBox.Focus(); }, () => !_phone),
@@ -74,7 +80,7 @@ public partial class MainWindow
         var today = DateTime.Now.ToString("yyyy-MM-dd");
         if (!_settings.Suggestions || _settings.LastSuggestionDay == today || _settings.TourPending) return;
         // the person is busy (tour, a question, another notice on screen): a little later, a few times at most
-        if (_touring || !IsVisible || OwnedWindows.Count > 0 || _notices?.Children.Count > 0)
+        if (_touring || DeepTouring || !IsVisible || OwnedWindows.Count > 0 || _notices?.Children.Count > 0)
         {
             if (++_suggestTries < 10) DispatcherTimer.RunOnce(MaybeSuggest, TimeSpan.FromMinutes(1));
             return;

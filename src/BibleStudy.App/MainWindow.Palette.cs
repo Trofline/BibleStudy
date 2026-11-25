@@ -87,7 +87,9 @@ public partial class MainWindow
         Task Work(string group, int? tab = null) { OpenWork(NavGroups.First(g => g.Name == group), tab); return Task.CompletedTask; }
         Task Side(int tab) { SetPanelOpen(true); SideTabs.SelectedIndex = tab; return Task.CompletedTask; }
         yield return C(L("Startseite"), () => { ShowHome(); return Task.CompletedTask; });
-        yield return C(L("Rundgang starten"), () => { DispatcherTimer.RunOnce(StartTour, TimeSpan.FromMilliseconds(350)); return Task.CompletedTask; });   // after the command list has closed: two popups at once confuse the renderer
+        yield return C(L("Rundgang starten"), () => { DispatcherTimer.RunOnce(StartTour, TimeSpan.FromMilliseconds(350)); return Task.CompletedTask; });
+        yield return C(L("Quiz"), () => { ShowQuiz(); return Task.CompletedTask; });
+        yield return C(L("Tiefen-Rundgang"), () => { DispatcherTimer.RunOnce(() => StartDeepTour(), TimeSpan.FromMilliseconds(350)); return Task.CompletedTask; });   // after the command list has closed: two popups at once confuse the renderer
         yield return C(L("Kapitel-Bericht"), ShowChapterReportAsync);
         yield return C(L("Graph oder Ansicht als Bild in eigenem Fenster"), () => { PopOutCurrentView(); return Task.CompletedTask; });
         yield return C(L("Patch Notes"), ShowPatchNotesAsync);
