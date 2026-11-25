@@ -25,6 +25,10 @@ public partial class MainWindow
         HelpDeepTourBtn.Click += (_, _) => StartDeepTour();
         HelpQuizBtn.Click += (_, _) => ShowQuiz();
         HelpMessagesBtn.Click += (_, _) => ShowMessageCenter();
+        SettingsHelpBtn.Click += (_, _) => OpenWork(NavGroups.First(g => g.Name == "Hilfe"), 13);
+        SettingsHandbookBtn.Click += (_, _) => OpenWork(NavGroups.First(g => g.Name == "Hilfe"), HandbookTab);
+        SettingsDeepTourBtn.Click += (_, _) => StartDeepTour();
+        SettingsQuizBtn.Click += (_, _) => ShowQuiz();
         InitHelpPage();
         // a while after the start, when the splash screen and the notice about sources are gone
         DispatcherTimer.RunOnce(() => OfferTour(), TimeSpan.FromSeconds(6));

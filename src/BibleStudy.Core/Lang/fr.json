@@ -3140,7 +3140,6 @@
   "Layouts, Tastenkürzel, Start": "Dispositions, raccourcis, démarrage",
   "Claude, Ollama": "Claude, Ollama",
   "Hilfe und Updates": "Aide et mises à jour",
-  "Feedback, Version, Updates": "Retours, version, mises à jour",
   "Mit ZeroTier oder Tailscale unter Windows: Das neue Netzwerk gilt dort oft als „Öffentlich“, und die Firewall lässt dann nichts durch. Stelle es unter Einstellungen → Netzwerk und Internet → Eigenschaften auf „Privat“.": "Avec ZeroTier ou Tailscale sous Windows : le nouveau réseau y est souvent « Public », et le pare-feu ne laisse alors rien passer. Passe-le en « Privé » dans Paramètres → Réseau et Internet → Propriétés.",
   "Diese Einladung wurde schon benutzt. Erstelle oben eine neue Einladung und tauscht die Codes noch einmal aus.": "Cette invitation a déjà été utilisée. Crée une nouvelle invitation ci-dessus et échangez à nouveau les codes.",
   "Studiere die Bibel mit einer anderen Person, direkt von Programm zu Programm: verschlüsselt, ohne Server, ohne Konto und kostenlos.": "Étudie la Bible avec une autre personne, directement d’application à application : chiffré, sans serveur, sans compte et gratuit.",
@@ -3743,5 +3742,11 @@
   "Weitermachen": "Continuer",
   "Von vorn beginnen": "Recommencer du début",
   "Gezeigt. Probier es ruhig auch selbst.": "Montré. Essaie aussi toi-même.",
-  "Noch offen. Leg den Querverweis erst im Schritt davor an.": "Pas encore fait. Crée d'abord le renvoi à l'étape précédente."
+  "Noch offen. Leg den Querverweis erst im Schritt davor an.": "Pas encore fait. Crée d'abord le renvoi à l'étape précédente.",
+  "HILFE": "AIDE",
+  "Rundgänge, das Quiz und Erklärungen zu jeder Funktion findest du im Hilfe-Bereich.": "Les parcours, le quiz et les explications de chaque fonction se trouvent dans la section d’aide.",
+  "Hilfe öffnen": "Ouvrir l’aide",
+  "Öffnet den Hilfe-Bereich mit Rundgang, Tiefen-Rundgang, Quiz und Erklärungen.": "Ouvre la section d’aide avec le parcours, la visite approfondie, le quiz et les explications.",
+  "Handbuch öffnen": "Ouvrir le manuel",
+  "Hilfe, Feedback, Updates": "Aide, commentaires, mises à jour"
 }

@@ -3140,7 +3140,6 @@
   "Layouts, Tastenkürzel, Start": "Layouts, shortcuts, start",
   "Claude, Ollama": "Claude, Ollama",
   "Hilfe und Updates": "Help and updates",
-  "Feedback, Version, Updates": "Feedback, version, updates",
   "Mit ZeroTier oder Tailscale unter Windows: Das neue Netzwerk gilt dort oft als „Öffentlich“, und die Firewall lässt dann nichts durch. Stelle es unter Einstellungen → Netzwerk und Internet → Eigenschaften auf „Privat“.": "With ZeroTier or Tailscale on Windows: the new network often counts as “Public” there, and the firewall then lets nothing through. Set it to “Private” under Settings → Network and internet → Properties.",
   "Diese Einladung wurde schon benutzt. Erstelle oben eine neue Einladung und tauscht die Codes noch einmal aus.": "This invitation was already used. Create a new invitation above and swap the codes again.",
   "Studiere die Bibel mit einer anderen Person, direkt von Programm zu Programm: verschlüsselt, ohne Server, ohne Konto und kostenlos.": "Study the Bible with another person, directly from app to app: encrypted, without a server, without an account and free.",
@@ -3743,5 +3742,11 @@
   "Weitermachen": "Continue",
   "Von vorn beginnen": "Start from the beginning",
   "Gezeigt. Probier es ruhig auch selbst.": "Shown. Feel free to try it yourself too.",
-  "Noch offen. Leg den Querverweis erst im Schritt davor an.": "Not done yet. Add the cross reference in the step before first."
+  "Noch offen. Leg den Querverweis erst im Schritt davor an.": "Not done yet. Add the cross reference in the step before first.",
+  "HILFE": "HELP",
+  "Rundgänge, das Quiz und Erklärungen zu jeder Funktion findest du im Hilfe-Bereich.": "Tours, the quiz and explanations of every feature are in the help section.",
+  "Hilfe öffnen": "Open help",
+  "Öffnet den Hilfe-Bereich mit Rundgang, Tiefen-Rundgang, Quiz und Erklärungen.": "Opens the help section with the tour, the deep tour, the quiz and explanations.",
+  "Handbuch öffnen": "Open handbook",
+  "Hilfe, Feedback, Updates": "Help, feedback, updates"
 }

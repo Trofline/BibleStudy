@@ -1063,6 +1063,17 @@
                                 </WrapPanel>
                                 <TextBlock x:Name="UpdateStatus" Classes="caption" TextWrapping="Wrap" />
                             </StackPanel></Border>
+
+                            <Border Classes="card"><StackPanel Spacing="8">
+                                <TextBlock Classes="eyebrow" Text="HILFE" />
+                                <TextBlock Classes="caption" TextWrapping="Wrap" Text="Rundgänge, das Quiz und Erklärungen zu jeder Funktion findest du im Hilfe-Bereich." />
+                                <WrapPanel>
+                                    <Button x:Name="SettingsHelpBtn" Content="Hilfe öffnen" Classes="primary" Margin="0,0,6,6" ToolTip.Tip="Öffnet den Hilfe-Bereich mit Rundgang, Tiefen-Rundgang, Quiz und Erklärungen." />
+                                    <Button x:Name="SettingsHandbookBtn" Content="Handbuch öffnen" Margin="0,0,6,6" />
+                                    <Button x:Name="SettingsDeepTourBtn" Content="Tiefen-Rundgang" Margin="0,0,6,6" />
+                                    <Button x:Name="SettingsQuizBtn" Content="Quiz" Margin="0,0,6,6" />
+                                </WrapPanel>
+                            </StackPanel></Border>
                         </StackPanel>
                     </ScrollViewer>
                     <StackPanel x:Name="SettingsJump" Grid.Column="1" Spacing="2" Margin="0,0,8,0" />

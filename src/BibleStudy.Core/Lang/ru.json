@@ -3140,7 +3140,6 @@
   "Layouts, Tastenkürzel, Start": "Макеты, сочетания клавиш, запуск",
   "Claude, Ollama": "Claude, Ollama",
   "Hilfe und Updates": "Помощь и обновления",
-  "Feedback, Version, Updates": "Отзывы, версия, обновления",
   "Mit ZeroTier oder Tailscale unter Windows: Das neue Netzwerk gilt dort oft als „Öffentlich“, und die Firewall lässt dann nichts durch. Stelle es unter Einstellungen → Netzwerk und Internet → Eigenschaften auf „Privat“.": "С ZeroTier или Tailscale в Windows: новая сеть там часто считается «Общедоступной», и брандмауэр ничего не пропускает. Переключите её на «Частную» в Параметры → Сеть и Интернет → Свойства.",
   "Diese Einladung wurde schon benutzt. Erstelle oben eine neue Einladung und tauscht die Codes noch einmal aus.": "Это приглашение уже использовано. Создайте выше новое приглашение и обменяйтесь кодами ещё раз.",
   "Studiere die Bibel mit einer anderen Person, direkt von Programm zu Programm: verschlüsselt, ohne Server, ohne Konto und kostenlos.": "Изучай Библию вместе с другим человеком, напрямую от программы к программе: зашифровано, без сервера, без учётной записи и бесплатно.",
@@ -3743,5 +3742,11 @@
   "Weitermachen": "Продолжить",
   "Von vorn beginnen": "Начать сначала",
   "Gezeigt. Probier es ruhig auch selbst.": "Показано. Попробуй и сам.",
-  "Noch offen. Leg den Querverweis erst im Schritt davor an.": "Ещё не сделано. Сначала добавь перекрёстную ссылку на предыдущем шаге."
+  "Noch offen. Leg den Querverweis erst im Schritt davor an.": "Ещё не сделано. Сначала добавь перекрёстную ссылку на предыдущем шаге.",
+  "HILFE": "СПРАВКА",
+  "Rundgänge, das Quiz und Erklärungen zu jeder Funktion findest du im Hilfe-Bereich.": "Обзор, экскурсия, викторина и объяснения всех функций находятся в разделе справки.",
+  "Hilfe öffnen": "Открыть справку",
+  "Öffnet den Hilfe-Bereich mit Rundgang, Tiefen-Rundgang, Quiz und Erklärungen.": "Открывает раздел справки с обзором, подробной экскурсией, викториной и объяснениями.",
+  "Handbuch öffnen": "Открыть руководство",
+  "Hilfe, Feedback, Updates": "Справка, отзывы, обновления"
 }

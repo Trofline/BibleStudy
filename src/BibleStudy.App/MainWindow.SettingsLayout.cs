@@ -16,7 +16,7 @@ public partial class MainWindow
 {
     /// <summary>
     /// The areas with the cards they hold, by their position on the page (0 Display, 1 Reading, 2 Windows and layouts, 3 Shortcuts, 4 Program and start,
-    /// 5 Vault, 6 Own translation, 7 Download manager, 8 Offline, 9 Sources, 10 Plugins, 11 Feedback, 12 Backup, 13 Sync, 14 AI, 15 Updates).
+    /// 5 Vault, 6 Own translation, 7 Download manager, 8 Offline, 9 Sources, 10 Plugins, 11 Feedback, 12 Backup, 13 Sync, 14 AI, 15 Updates, 16 Help).
     /// </summary>
     static readonly (string Name, string Hint, string Icon, int[] Cards)[] SettingsAreas =
     [
@@ -27,7 +27,7 @@ public partial class MainWindow
         (K("Synchronisieren"), K("PC und Handy"), "M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8 M3 3v5h5 M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16 M16 16h5v5", [13]),
         (K("Fenster und Start"), K("Layouts, Tastenkürzel, Start"), "M4 4h16a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z M2 9h20 M6 6.5h.01 M9 6.5h.01", [4, 2, 3]),
         (K("KI"), K("Claude, Ollama"), "M12 3l1.9 5.8L20 11l-6.1 2.2L12 19l-1.9-5.8L4 11l6.1-2.2z M19 3v4 M21 5h-4", [14]),
-        (K("Hilfe und Updates"), K("Feedback, Version, Updates"), "M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20z M12 16v-4 M12 8h.01", [15, 11]),
+        (K("Hilfe und Updates"), K("Hilfe, Feedback, Updates"), "M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20z M12 16v-4 M12 8h.01", [16, 15, 11]),
     ];
 
     readonly List<Border> _settingCards = [];
