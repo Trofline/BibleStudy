@@ -3,7 +3,6 @@ using Avalonia.Controls;
 using Avalonia.Layout;
 using Avalonia.Media;
 using Avalonia.Threading;
-using Avalonia.VisualTree;
 using BibleStudy.Core.Models;
 
 namespace BibleStudy.App;
@@ -199,7 +198,7 @@ public partial class MainWindow
         Control? anchor = null;
         try { anchor = step.Anchor?.Invoke(); } catch (Exception ex) when (ex is InvalidOperationException or NullReferenceException or KeyNotFoundException) { }
         if (anchor is null || !anchor.IsEffectivelyVisible || anchor.Bounds.Width == 0) return;
-        if (anchor.GetVisualRoot() is null) return;
+        if (TopLevel.GetTopLevel(anchor) is null) return;
         try { RevealSetting(anchor); anchor.BringIntoView(); } catch (InvalidOperationException) { }
         ShowTourRing(anchor);
     }
