@@ -15,7 +15,7 @@ namespace BibleStudy.App;
 
 /// <summary>
 /// Studying together: direct encrypted connections to other people (no server, no account, no cost), in the same network by name, across
-/// networks with two codes. Several people form a group: each program passes on what it gets (see <see cref="CollabGroup"/>).
+/// networks with a short room code through a relay that only passes on sealed messages. Several people form a group: each program passes on what it gets (see <see cref="CollabGroup"/>).
 /// Only what a person sends on purpose arrives: their place in the Bible (if they switch that on), chat lines, verses, highlights, documents.
 /// Everything received is treated as untrusted text: nothing is run, saved or opened without a click (following the place is opt-in).
 /// </summary>
@@ -43,7 +43,7 @@ public partial class MainWindow
     }
 
     CollabGroup? _group;
-    CollabPeer? _pendingCode;      // the code connection while the codes are swapped
+    RelayLink? _pendingCode;       // the room across networks while waiting for the other person
     readonly Dictionary<string, CollabPerson> _people = [];
     CollabPerson? _from;           // who wrote the message being handled
     int _inkNext;
@@ -90,7 +90,7 @@ public partial class MainWindow
     {
         CollabPanel.Children.Add(new TextBlock
         {
-            Text = L("Studiere die Bibel mit einer anderen Person, direkt von Programm zu Programm: verschlüsselt, ohne Server, ohne Konto und kostenlos."),
+            Text = L("Studiere die Bibel mit einer anderen Person, von Programm zu Programm: verschlüsselt, ohne Konto und kostenlos."),
             Classes = { "caption" }, TextWrapping = TextWrapping.Wrap,
         });
         CollabPanel.Children.Add(Card(new StackPanel
@@ -99,7 +99,7 @@ public partial class MainWindow
             Children =
             {
                 new TextBlock { Text = L("Was geteilt wird"), FontWeight = FontWeight.SemiBold },
-                new TextBlock { Text = L("Nur, was du hier ausdrücklich sendest: Chat, einzelne Verse und Kopien von Dokumenten, auf Wunsch deine aktuelle Bibelstelle. Dein Vault bleibt bei dir. Die andere Person sieht deine Internetadresse (wie bei jeder Direktverbindung), deshalb verbinde dich nur mit Menschen, denen du vertraust."), Classes = { "caption" }, TextWrapping = TextWrapping.Wrap },
+                new TextBlock { Text = L("Nur, was du hier ausdrücklich sendest: Chat, einzelne Verse und Kopien von Dokumenten, auf Wunsch deine aktuelle Bibelstelle. Dein Vault bleibt bei dir. Im selben Netzwerk sieht die andere Person deine Internetadresse. Verbinde dich nur mit Menschen, denen du vertraust."), Classes = { "caption" }, TextWrapping = TextWrapping.Wrap },
             },
         }));
 
@@ -109,47 +109,49 @@ public partial class MainWindow
         CollabPanel.Children.Add(BuildNetCard());
 
         var area = new StackPanel { Spacing = 8 };
-        var host = new Button { Content = L("Einladung erstellen"), Classes = { "primary" }, Margin = new(0, 0, 8, 0) };
-        var join = new Button { Content = L("Einladung annehmen") };
-        host.Click += async (_, _) => { if (CollabNameOk(name)) await HostFlowAsync(area); };
-        join.Click += (_, _) => { if (CollabNameOk(name)) JoinFlow(area); };
-        // the codes are for two people in different networks: they swap two codes, e.g. by messenger
+        var host = new Button { Content = L("Raum erstellen"), Classes = { "primary" }, Margin = new(0, 0, 8, 0) };
+        var join = new Button { Content = L("Raum beitreten") };
+        host.Click += async (_, _) => { if (CollabNameOk(name)) await HostRoomAsync(area); };
+        join.Click += (_, _) => { if (CollabNameOk(name)) JoinRoomFlow(area); };
+        // for two people in different networks: both programs meet at a small relay server, which passes on only sealed messages
         CollabPanel.Children.Add(new Expander
         {
-            Header = L("Mit Codes (Beta, andere Netze)"), Margin = new(0, 8, 0, 0),
+            Header = L("Über das Internet (andere Netze, Beta)"), Margin = new(0, 8, 0, 0),
             Content = new StackPanel
             {
                 Spacing = 8, Margin = new(0, 6, 0, 0),
                 Children =
                 {
-                    new TextBlock { Text = L("Seid ihr nicht im selben Netzwerk, tauscht ihr zwei kurze Codes aus, zum Beispiel per Messenger."), Classes = { "caption" }, TextWrapping = TextWrapping.Wrap },
-                    new TextBlock { Text = L("Beta: Über verschiedene Netzwerke klappt die Verbindung nicht immer. Getestet und zuverlässig ist der Weg im selben Netzwerk. Seid ihr weit voneinander entfernt, tretet beide demselben ZeroTier-Netzwerk bei (kostenlos) und verbindet euch oben unter „Im selben Netzwerk“."), Classes = { "caption" }, TextWrapping = TextWrapping.Wrap, Foreground = new SolidColorBrush(Color.Parse("#B54708")) },
+                    new TextBlock { Text = L("Seid ihr nicht im selben Netzwerk, erstellt eine Person einen Raum und schickt den anderen den kurzen Raum-Code, zum Beispiel per Messenger. Die anderen tippen ihn ein, fertig. Bis zu fünf Personen passen in einen Raum."), Classes = { "caption" }, TextWrapping = TextWrapping.Wrap },
+                    new TextBlock { Text = L("Die Verbindung läuft über einen kleinen Vermittler-Server im Internet. Er reicht nur verschlüsselte Nachrichten weiter: Der Schlüssel entsteht aus dem Raum-Code auf euren Geräten, der Server kann nichts lesen und sieht den Code nicht. Ein Konto braucht ihr nicht."), Classes = { "caption" }, TextWrapping = TextWrapping.Wrap },
                     new WrapPanel { Children = { host, join } },
                     area,
-                    BuildRelayBox(),
+                    BuildServerBox(),
                 },
             },
         });
     }
 
-    /// <summary>The optional own relay server (TURN): used when no direct connection is possible. Collapsed, because most people never need it.</summary>
-    Control BuildRelayBox()
+    /// <summary>The relay server the program uses unless the person chose an own one (see relay/ in the repository).</summary>
+    const string DefaultCollabServer = "wss://biblestudy-relay.trofline.workers.dev";
+
+    string CollabServer => _settings.CollabServer.Trim() is { Length: > 0 } own ? own : DefaultCollabServer;
+
+    /// <summary>An own relay server instead of the built-in one. Collapsed, because almost nobody needs it.</summary>
+    Control BuildServerBox()
     {
-        var url = new TextBox { PlaceholderText = L("Adresse, z. B. turn:server.example:3478"), Text = _settings.RelayUrl, MaxLength = 200 };
-        var user = new TextBox { PlaceholderText = L("Benutzername"), Text = _settings.RelayUser, MaxLength = 100 };
-        var pass = new TextBox { PlaceholderText = L("Passwort"), Text = _settings.RelayPassword, MaxLength = 200, PasswordChar = '•' };
-        void Save() { _settings.RelayUrl = (url.Text ?? "").Trim(); _settings.RelayUser = (user.Text ?? "").Trim(); _settings.RelayPassword = pass.Text ?? ""; SaveSettings(); }
-        url.LostFocus += (_, _) => Save(); user.LostFocus += (_, _) => Save(); pass.LostFocus += (_, _) => Save();
+        var url = new TextBox { PlaceholderText = DefaultCollabServer, Text = _settings.CollabServer, MaxLength = 200 };
+        url.LostFocus += (_, _) => { _settings.CollabServer = (url.Text ?? "").Trim(); SaveSettings(); };
         return new Expander
         {
-            Header = L("Eigener Relay-Server (optional)"), Margin = new(0, 8, 0, 0), IsExpanded = _settings.RelayUrl.Length > 0,
+            Header = L("Eigener Vermittler-Server (optional)"), Margin = new(0, 8, 0, 0), IsExpanded = _settings.CollabServer.Length > 0,
             Content = new StackPanel
             {
                 Spacing = 6, Margin = new(0, 6, 0, 0),
                 Children =
                 {
-                    new TextBlock { Text = L("Nur nötig, wenn die direkte Verbindung nicht klappt. Du brauchst dafür einen eigenen TURN-Server (zum Beispiel coturn) oder einen Zugang bei einem Anbieter. Die Daten bleiben verschlüsselt, der Server leitet sie nur weiter. Am besten tragen beide Seiten dasselbe ein. Das Passwort wird unverschlüsselt in den Einstellungen gespeichert."), Classes = { "caption" }, TextWrapping = TextWrapping.Wrap },
-                    url, user, pass,
+                    new TextBlock { Text = L("Leer lassen, dann wird der eingebaute benutzt. Wer einen eigenen betreiben möchte, findet ihn im Quelltext unter „relay“. Beide Seiten müssen denselben Server eintragen."), Classes = { "caption" }, TextWrapping = TextWrapping.Wrap },
+                    url,
                 },
             },
         };
@@ -164,13 +166,13 @@ public partial class MainWindow
         return false;
     }
 
-    CollabPeer NewPeer()
+    RelayLink NewRoom(string? code)
     {
         _pendingCode?.Dispose();
-        var peer = new CollabPeer(RelayServer.Parse(_settings.RelayUrl, _settings.RelayUser, _settings.RelayPassword));
-        _pendingCode = peer;
-        Wire(peer);
-        return peer;
+        var room = code is null ? RelayLink.Create(CollabServer) : RelayLink.Join(CollabServer, code);
+        _pendingCode = room;
+        Wire(room);
+        return room;
     }
 
     /// <summary>Adds a connection to the group once it stands (codes or same network alike); more people can join the same way.</summary>
@@ -179,7 +181,7 @@ public partial class MainWindow
         var wasOpen = false;
         link.Connected += () => OnUi(() =>
         {
-            if (link is CollabPeer && _pendingCode != link) return;
+            if (link is RelayLink && _pendingCode != link) return;
             if (_pendingCode == link) _pendingCode = null;
             wasOpen = true;
             var first = !CollabOpen;
@@ -189,8 +191,9 @@ public partial class MainWindow
             SendHello();
             BuildCollabUi();
         });
-        // Only a connection that really stood ends anything. Before that the library reports "failed/closed" on its own (e.g. while the
-        // other person still has to paste the code); rebuilding the page then wiped the half-finished invitation after ~15 seconds.
+        // someone more came into the room: they learn who is here and what is shared (the others answer their hello the same way)
+        if (link is RelayLink room) room.PeerJoined += () => OnUi(() => { if (_group?.Links.Contains(link) == true) { SendHello(); ShowPeople(); } });
+        // Only a connection that really stood ends anything: a room that closes while still waiting is handled by the waiting page itself.
         link.Closed += _ => OnUi(() =>
         {
             if (!wasOpen) return;
@@ -249,6 +252,16 @@ public partial class MainWindow
         DockPanel.SetDock(leave, Dock.Right);
         top.Children.Add(leave); top.Children.Add(head);
         CollabPanel.Children.Add(top);
+        if (_group?.Links.OfType<RelayLink>().FirstOrDefault() is { } room)
+        {
+            var copy = new Button { Content = L("Code kopieren"), Classes = { "tool" }, Width = double.NaN, Padding = new(8, 0), VerticalAlignment = VerticalAlignment.Center };
+            copy.Click += async (_, _) => { if (TopLevel.GetTopLevel(this)?.Clipboard is { } clipboard) { await clipboard.SetTextAsync(room.Code); copy.Content = L("Kopiert ✓"); } };
+            var line = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 8 };
+            line.Children.Add(new TextBlock { Text = L("Raum-Code: {0}", room.Code), FontWeight = FontWeight.SemiBold, VerticalAlignment = VerticalAlignment.Center });
+            line.Children.Add(copy);
+            CollabPanel.Children.Add(line);
+            CollabPanel.Children.Add(new TextBlock { Text = L("Mit diesem Code können bis zu {0} Personen in den Raum kommen.", RelayLink.MaxPeople), Classes = { "caption" }, TextWrapping = TextWrapping.Wrap });
+        }
         Detach(_peopleBox);
         CollabPanel.Children.Add(_peopleBox);
         ShowPeople();
@@ -361,6 +374,7 @@ public partial class MainWindow
                 }
                 row.Children.Add(new TextBlock { Text = L("Prüfzahl: {0}", nl.CheckCode), Classes = { "caption" } });
             }
+            else if (p.Via is RelayLink rl) row.Children.Add(new TextBlock { Text = L("Prüfzahl: {0}", rl.CheckCode), Classes = { "caption" } });
             if (buttons.Children.Count > 0) row.Children.Add(buttons);
             _peopleBox.Children.Add(new Border { BorderBrush = new SolidColorBrush(p.Ink, 0.5), BorderThickness = new(3, 0, 0, 0), Padding = new(8, 2, 0, 2), Child = row });
         }
@@ -399,7 +413,7 @@ public partial class MainWindow
 
     Control CodeBox(string code)
     {
-        var box = new TextBox { Text = code, IsReadOnly = true, TextWrapping = TextWrapping.Wrap, MaxHeight = 110, FontSize = 11 };
+        var box = new TextBox { Text = code, IsReadOnly = true, FontSize = 26, FontWeight = FontWeight.SemiBold, HorizontalAlignment = HorizontalAlignment.Left, MinWidth = 200, HorizontalContentAlignment = HorizontalAlignment.Center };
         var copy = new Button { Content = L("Code kopieren"), HorizontalAlignment = HorizontalAlignment.Left };
         copy.Click += async (_, _) =>
         {
@@ -408,86 +422,78 @@ public partial class MainWindow
         return new StackPanel { Spacing = 6, Children = { box, copy } };
     }
 
-    async Task HostFlowAsync(StackPanel area)
+    async Task HostRoomAsync(StackPanel area)
     {
         area.Children.Clear();
-        var status = new TextBlock { Text = L("Einladung wird erstellt … (kann einige Sekunden dauern)"), Classes = { "caption" }, TextWrapping = TextWrapping.Wrap };
+        var status = new TextBlock { Text = L("Raum wird erstellt …"), Classes = { "caption" }, TextWrapping = TextWrapping.Wrap };
         area.Children.Add(status);
-        var peer = NewPeer();
-        try
-        {
-            var code = await peer.CreateInvitationAsync();
-            area.Children.Clear();
-            area.Children.Add(new TextBlock { Text = L("1. Schicke diesen Code der anderen Person:"), FontWeight = FontWeight.SemiBold });
-            area.Children.Add(CodeBox(code));
-            area.Children.Add(new TextBlock { Text = L("2. Füge hier ihren Antwortcode ein:"), FontWeight = FontWeight.SemiBold, Margin = new(0, 6, 0, 0) });
-            var answer = new TextBox { PlaceholderText = "BS1-…", TextWrapping = TextWrapping.Wrap, MaxHeight = 110, FontSize = 11 };
-            var connect = new Button { Content = L("Verbinden"), Classes = { "primary" }, HorizontalAlignment = HorizontalAlignment.Left };
-            var info = new TextBlock { Classes = { "caption" }, TextWrapping = TextWrapping.Wrap };
-            connect.Click += async (_, _) =>
-            {
-                try
-                {
-                    peer.CompleteWithAnswer(answer.Text ?? "");
-                    connect.IsEnabled = false; info.Text = L("Verbinde … ");
-                    await WaitConnectedAsync(peer, info);
-                    connect.IsEnabled = true;
-                }
-                catch (InvalidOperationException ex) when (ex.Message == "used") { info.Text = L("Diese Einladung wurde schon benutzt. Erstelle oben eine neue Einladung und tauscht die Codes noch einmal aus."); connect.IsEnabled = true; }
-                catch { info.Text = L("Dieser Code passt nicht. Es muss der Antwortcode sein, der mit „BS1-“ beginnt."); connect.IsEnabled = true; }
-            };
-            area.Children.Add(answer); area.Children.Add(connect); area.Children.Add(info);
-        }
-        catch (Exception ex) { status.Text = L("Fehler: ") + ex.Message; }
+        RelayLink room;
+        try { room = NewRoom(null); await room.StartAsync(); }
+        catch (Exception ex) { status.Text = RoomFailed(ex); return; }
+        area.Children.Clear();
+        area.Children.Add(new TextBlock { Text = L("Schicke diesen Raum-Code den anderen:"), FontWeight = FontWeight.SemiBold });
+        area.Children.Add(CodeBox(room.Code));
+        var info = new TextBlock { Classes = { "caption" }, TextWrapping = TextWrapping.Wrap };
+        area.Children.Add(info);
+        var cancel = new Button { Content = L("Abbrechen"), Classes = { "tool" }, Width = double.NaN, Padding = new(10, 0), HorizontalAlignment = HorizontalAlignment.Left };
+        cancel.Click += (_, _) => { if (_pendingCode == room) { _pendingCode = null; room.Dispose(); } area.Children.Clear(); };
+        area.Children.Add(cancel);
+        await WaitRoomAsync(room, info, TimeSpan.FromMinutes(30));
     }
 
-    void JoinFlow(StackPanel area)
+    void JoinRoomFlow(StackPanel area)
     {
         area.Children.Clear();
-        area.Children.Add(new TextBlock { Text = L("1. Füge hier den Einladungscode ein, den du bekommen hast:"), FontWeight = FontWeight.SemiBold });
-        var invitation = new TextBox { PlaceholderText = "BS1-…", TextWrapping = TextWrapping.Wrap, MaxHeight = 110, FontSize = 11 };
-        var next = new Button { Content = L("Weiter"), Classes = { "primary" }, HorizontalAlignment = HorizontalAlignment.Left };
-        var result = new StackPanel { Spacing = 8 };
-        next.Click += async (_, _) =>
+        area.Children.Add(new TextBlock { Text = L("Gib den Raum-Code ein, den du bekommen hast:"), FontWeight = FontWeight.SemiBold });
+        var code = new TextBox { PlaceholderText = "ABCD-EFGH", MaxLength = 20, FontSize = 18, HorizontalAlignment = HorizontalAlignment.Left, MinWidth = 200 };
+        var go = new Button { Content = L("Beitreten"), Classes = { "primary" }, HorizontalAlignment = HorizontalAlignment.Left };
+        var info = new TextBlock { Classes = { "caption" }, TextWrapping = TextWrapping.Wrap };
+        async Task Join()
         {
-            result.Children.Clear();
-            var info = new TextBlock { Text = L("Antwort wird erstellt … (kann einige Sekunden dauern)"), Classes = { "caption" }, TextWrapping = TextWrapping.Wrap };
-            result.Children.Add(info);
-            var peer = NewPeer();
+            if (RelayLink.Normalize(code.Text) is null) { info.Text = L("Dieser Code passt nicht. Ein Raum-Code hat 8 Zeichen, zum Beispiel K7F2-QXM9."); return; }
+            go.IsEnabled = false; info.Text = L("Verbinde …");
             try
             {
-                var code = await peer.AcceptInvitationAsync(invitation.Text ?? "");
-                result.Children.Clear();
-                result.Children.Add(new TextBlock { Text = L("2. Schicke diesen Antwortcode zurück:"), FontWeight = FontWeight.SemiBold });
-                result.Children.Add(CodeBox(code));
-                var waiting = new TextBlock { Text = L("Sobald die andere Person ihn eingefügt hat, seid ihr verbunden."), Classes = { "caption" }, TextWrapping = TextWrapping.Wrap };
-                result.Children.Add(waiting);
-                _ = WaitConnectedAsync(peer, waiting, 120);
+                var room = NewRoom(code.Text);
+                await room.StartAsync();
+                await WaitRoomAsync(room, info, TimeSpan.FromMinutes(2));
             }
-            catch (FormatException) { info.Text = L("Dieser Code passt nicht. Es muss der Einladungscode sein, der mit „BS1-“ beginnt."); }
-            catch (Exception ex) { info.Text = L("Fehler: ") + ex.Message; }
-        };
-        area.Children.Add(invitation); area.Children.Add(next); area.Children.Add(result);
+            catch (Exception ex) { info.Text = RoomFailed(ex); }
+            go.IsEnabled = true;
+        }
+        go.Click += async (_, _) => await Join();
+        code.KeyDown += async (_, e) => { if (e.Key == Key.Enter) await Join(); };
+        area.Children.Add(code); area.Children.Add(go); area.Children.Add(info);
     }
 
-    /// <summary>Waits for the connection and shows the state every second, so it is clear that something happens; on failure it says why it may be.</summary>
-    async Task WaitConnectedAsync(CollabPeer peer, TextBlock info, int seconds = 45)
+    string RoomFailed(Exception ex) =>
+        L("Der Vermittler-Server ist gerade nicht erreichbar. Prüfe die Internetverbindung und versuche es gleich noch einmal.")
+        + "\n" + L("Technische Angaben: {0}", ex.Message);
+
+    /// <summary>Waits until the other person is in the room and the key is agreed, and says what happens meanwhile.</summary>
+    async Task WaitRoomAsync(RelayLink room, TextBlock info, TimeSpan wait)
     {
         var clock = System.Diagnostics.Stopwatch.StartNew();
-        while (!peer.IsOpen && clock.Elapsed.TotalSeconds < seconds)
+        while (!room.IsOpen && clock.Elapsed < wait && room.Status != "closed")
         {
-            if (_pendingCode != peer && !peer.IsOpen) return;
-            info.Text = L("Verbinde … {0} s (Status: {1})", (int)clock.Elapsed.TotalSeconds, peer.Status);
+            if (_pendingCode != room) return;
+            info.Text = room.Status switch
+            {
+                "waiting" => L("Warte auf die anderen … ({0})", $"{(int)clock.Elapsed.TotalMinutes}:{clock.Elapsed.Seconds:00}"),
+                "keys" => L("Jemand ist da. Verschlüsselung wird vereinbart …"),
+                _ => L("Verbinde …"),
+            };
             await Task.Delay(500);
         }
-        if (_pendingCode == peer && !peer.IsOpen)
-            info.Text = L("Die Verbindung kam nicht zustande. Häufige Gründe: ein VPN, eine strenge Firewall oder ein Firmennetz. Versucht es im Heimnetz oder ohne VPN noch einmal.")
-                + "\n" + L("Unter Windows beim ersten Start „Zugriff zulassen“ für private Netzwerke wählen; am Mac unter Systemeinstellungen → Datenschutz & Sicherheit → Lokales Netzwerk die App erlauben.")
-                + "\n" + L("Klappt es nicht? Beide Seiten müssen im selben Netzwerk sein. Sonst hilft ein kostenloses privates Netzwerk wie ZeroTier oder Tailscale (beide installieren und beitreten, dann neue Codes erstellen) oder ein eigener Relay-Server.")
-                + (OperatingSystem.IsWindows() ? "\n" + L("Mit ZeroTier oder Tailscale unter Windows: Das neue Netzwerk gilt dort oft als „Öffentlich“, und die Firewall lässt dann nichts durch. Stelle es unter Einstellungen → Netzwerk und Internet → Eigenschaften auf „Privat“.") : "")
-                + "\n" + L("Technische Angaben: {0}", peer.Diagnose());
+        if (room.IsOpen || _pendingCode != room) return;
+        info.Text = room.CloseReason switch
+        {
+            "full" => L("In diesem Raum sind schon fünf Personen. Lass dir einen neuen Raum-Code geben."),
+            "wrong code" => L("Die Verschlüsselung passte nicht zusammen. Prüft den Raum-Code und versucht es mit einem neuen Raum."),
+            _ => L("Es ist niemand gekommen. Prüft den Raum-Code (beide müssen ihn gleichzeitig offen haben) und versucht es noch einmal."),
+        };
+        if (_pendingCode == room) { _pendingCode = null; room.Dispose(); }
     }
-
 
     void ShareSelectedVerse()
     {

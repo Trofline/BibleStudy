@@ -89,7 +89,7 @@ Alle Dateien liegen im **[neuesten Release](https://github.com/Trofline/BibleStu
 | 📅 **Planen** | Lesepläne mit Fortschritt, Leseliste, Aufgaben, Gebetsliste |
 | 🎓 **Lernen** | Griechisches und hebräisches Alphabet, Vokabeltrainer, Verse auswendig lernen |
 | 🗺️ **Entdecken** | Zeitleiste mit Karte, Reisen, Stammbaum |
-| 🔄 **Synchronisieren und teilen** | PC und Handy synchronisieren, mit einer anderen Person zusammen studieren (verschlüsselt, ohne Server), Sicherungen |
+| 🔄 **Synchronisieren und teilen** | PC und Handy synchronisieren, mit anderen zusammen studieren (verschlüsselt, ohne Konto), Sicherungen |
 | 🧩 **Erweitern** | Plugins, fünf Sprachen (Deutsch, Englisch, Spanisch, Französisch, Russisch), optionale KI-Anbindung (MCP-Server für Claude) |
 
 <details>
@@ -109,7 +109,7 @@ Alle Dateien liegen im **[neuesten Release](https://github.com/Trofline/BibleStu
 - **Bibelstunde:** Materialordner (Word, PDF, PowerPoint, OpenDocument, Markdown …) mit anklickbaren Bibelstellen, Vers-Vorschau beim Darüberfahren, Suche über alle Dateien, Markierungen und Notizen, ohne die Dateien zu verändern; geteilte Ansicht; Handouts in acht Designs; Beamer-Ansicht; Uhr, Timer und Ablauf für den Abend
 - **Reiter wie im Explorer**, Layouts (Desktops), frei belegbare Tastenkürzel
 - **Mehrsprachig:** Oberfläche auf Deutsch, Englisch, Spanisch, Französisch und Russisch (KI-erstellte Übersetzungen, Korrekturen willkommen; weitere Sprachen als JSON-Datei im Ordner `lang` ergänzbar)
-- **Zusammen studieren:** direkt mit einer anderen Person verbunden (verschlüsselt, kein Server, kein Konto, kostenlos): Chat, Verse und Dokumente teilen, der Stelle der anderen folgen; eingerichtet durch den Austausch von zwei kurzen Codes. Klappt am besten im selben Netzwerk; über verschiedene Netzwerke kann ein privates Netzwerk wie ZeroTier oder Tailscale oder ein eigener Relay-Server helfen (siehe Handbuch)
+- **Zusammen studieren:** mit bis zu fünf Personen (verschlüsselt, kein Konto, kostenlos): Chat, Verse und Dokumente teilen, der Stelle der anderen folgen, am Computer miteinander sprechen und sich sehen. Im selben Netzwerk finden sich die Programme über den Namen; über verschiedene Netzwerke trefft ihr euch in einem Raum mit kurzem Raum-Code, über einen kleinen Vermittler-Server, der nur Ende-zu-Ende-verschlüsselte Nachrichten weiterreicht (siehe Handbuch)
 - **Geräte synchronisieren:** PC, Android und iPhone halten sich gegenseitig auf dem Stand, im selben WLAN oder über einen Cloud-Ordner (OneDrive, Google Drive, Dropbox …)
 - **Sicherungen:** von Hand oder geplant, in einen Ordner deiner Wahl
 - **KI-Anbindung (optional):** MCP-Server, damit Claude das Programm bedienen kann

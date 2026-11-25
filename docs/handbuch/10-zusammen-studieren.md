@@ -1,6 +1,6 @@
 # 10. Zusammen studieren
 
-Mit einer anderen Person **direkt verbunden** studieren: Chat, Verse und Dokumente teilen, die Bibelstelle mitlesen. Die Verbindung ist **verschlüsselt, braucht keinen Server, kein Konto und ist kostenlos** (Technik: im selben Netzwerk eine direkte, mit ECDH und AES-GCM verschlüsselte Verbindung; über verschiedene Netzwerke WebRTC).
+Mit anderen Personen **verbunden** studieren: Chat, Verse und Dokumente teilen, die Bibelstelle mitlesen. Die Verbindung ist **verschlüsselt, braucht kein Konto und ist kostenlos** (Technik: im selben Netzwerk eine direkte, mit ECDH und AES-GCM verschlüsselte Verbindung ohne Server; über verschiedene Netzwerke ein Raum auf einem kleinen Vermittler-Server, Ende-zu-Ende verschlüsselt).
 
 ## 10.1 Verbindung aufbauen
 
@@ -25,17 +25,20 @@ Ihr könnt beliebig viele sein. Wer schon verbunden ist, holt unter **Weitere Pe
 
 Bei einer Person im selben Netzwerk erscheint **Als Freund merken**. Danach steht sie unter **Freunde**, und ein Tipp verbindet euch, auch wenn sie gerade nicht in der Liste auftaucht (dann über die zuletzt benutzte Adresse). Mit **Automatisch annehmen** wirst du bei diesem Freund nicht mehr gefragt. Erkannt wird ein Freund an einem gemeinsamen Geheimnis, das beim Merken ausgetauscht wird, nicht nur am Namen.
 
-### In verschiedenen Netzwerken (mit Codes, Beta)
+### In verschiedenen Netzwerken (mit Raum-Code, Beta)
 
-Über verschiedene Netzwerke klappt die Verbindung nicht immer. Getestet und zuverlässig ist der Weg im selben Netzwerk: Seid ihr weit voneinander entfernt, tretet beide demselben ZeroTier-Netzwerk bei (kostenlos) und verbindet euch wie oben beschrieben.
+Seid ihr nicht im selben Netzwerk (zum Beispiel jeder bei sich zu Hause, oder einer im Mobilfunk), trefft ihr euch in einem **Raum**. Bis zu **fünf Personen** passen in einen Raum.
 
-Unter **Mit Codes (Beta, andere Netze)**:
+Unter **Über das Internet (andere Netze, Beta)**:
 
-1. Person A wählt **Einladung erstellen**. Es erscheint ein Code.
-2. Person A schickt den Code per Messenger an Person B.
-3. Person B wählt **Einladung annehmen**, fügt den Code ein und bekommt einen **Antwortcode**.
-4. Person B schickt den Antwortcode zurück; Person A fügt ihn ein.
-5. Jetzt seid ihr direkt und verschlüsselt verbunden.
+1. Eine Person wählt **Raum erstellen**. Es erscheint ein kurzer **Raum-Code** wie `K7F2-QXM9`.
+2. Sie schickt den Code per Messenger an die anderen (oder liest ihn am Telefon vor).
+3. Die anderen wählen **Raum beitreten**, tippen den Code ein und tippen auf **Beitreten**.
+4. Nach ein, zwei Sekunden seid ihr verbunden. Der Raum-Code bleibt oben auf der Seite stehen, damit noch jemand dazukommen kann.
+
+Alle sehen eine **Prüfzahl**. Ist sie bei allen gleich, sitzt niemand dazwischen.
+
+**Wie das funktioniert:** Die Programme verbinden sich nicht direkt miteinander (das scheitert bei vielen Anschlüssen), sondern jedes für sich mit einem kleinen **Vermittler-Server** im Internet, so wie ein Browser eine Webseite öffnet. Der Vermittler reicht die Nachrichten nur weiter. Alles ist **Ende-zu-Ende verschlüsselt**: Der Schlüssel entsteht auf euren Geräten aus dem Raum-Code; der Vermittler kennt den Code nicht (nur eine Prüfsumme davon als Raumname) und kann nichts lesen. Er speichert nichts. Ihr braucht kein Konto und müsst nichts einrichten.
 
 ## 10.2 Was ihr tun könnt
 
@@ -72,27 +75,32 @@ Nichts wird aufgezeichnet, außer einer Sprachnachricht, die du selbst sendest. 
 ## 10.3 Datenschutz
 
 - Übertragen wird nur, was ihr sendet.
-- Die andere Person sieht **deine Internetadresse** (das liegt an der direkten Verbindung).
+- Im selben Netzwerk sieht die andere Person **deine Internetadresse** (das liegt an der direkten Verbindung).
+- Über das Internet (Raum-Code) sieht der Vermittler-Server deine Internetadresse, wie jede Webseite, die du öffnest. Inhalte kann er nicht lesen, und er speichert nichts. Er läuft bei Cloudflare; sein Programmcode liegt offen im Ordner `relay` des Quelltexts.
 - Texte von Plugin-Übersetzungen werden **nie** an andere gesendet.
 - Vor dem ersten Gebrauch fragt das Programm um Einverständnis.
 
 ## 10.4 Wenn es nicht klappt
 
+**Im selben Netzwerk:**
+
 - Beide müssen **gleichzeitig online** sein.
-- Die Verbindung geht **direkt von Computer zu Computer**, ohne Server dazwischen. Das klappt zuverlässig, wenn ihr **im selben Netzwerk** seid (zum Beispiel im selben WLAN). Über verschiedene Netzwerke hinweg klappt es nur, wenn eure Anschlüsse es zulassen. Bei Mobilfunk, Firmen-, Schul- und Hotelnetzen sowie bei manchen Providern (CGNAT) scheitert es oft.
 - Ein **VPN** oder eine **strenge Firewall** kann die Verbindung verhindern. Unter Windows beim ersten Start „Zugriff zulassen“ wählen; am Mac die Freigabe „Lokales Netzwerk“ erteilen.
-- Die Codes sind lang; kopiere sie vollständig und ohne Leerzeichen am Rand.
-- Versucht es mit einer neuen Einladung.
+- Klappt es im selben Netzwerk nicht, nehmt einfach den Weg mit Raum-Code.
 
-### Wenn ihr nicht im selben Netzwerk seid
+**Mit Raum-Code:**
 
-Es gibt zwei Wege, die nicht in BibleStudy eingebaut sind:
+- Alle müssen den Raum **gleichzeitig offen** haben. Wer den Raum erstellt hat, lässt die Seite offen, bis die anderen da sind.
+- „Es ist niemand gekommen“: Prüft den Code. Er hat 8 Zeichen; Groß- und Kleinschreibung und der Bindestrich sind egal.
+- „In diesem Raum sind schon fünf Personen“: Lasst euch einen neuen Code geben.
+- „Der Vermittler-Server ist gerade nicht erreichbar“: Prüfe die Internetverbindung. Im kostenlosen Tarif hat der Vermittler ein Tageslimit; ist es erreicht, geht es am nächsten Tag wieder.
 
-- **Ein privates Netzwerk wie ZeroTier oder Tailscale** (beide haben ein kostenloses Angebot für Privatpersonen, brauchen aber ein Konto). Beide installieren das Programm und treten demselben Netzwerk bei. Danach verhalten sich die Computer, als wären sie im selben WLAN, und ihr verbindet euch wie oben unter *Im selben Netzwerk*, ohne Codes. Diese Programme sind eigenständige Produkte mit eigenen Lizenzen und Bedingungen; BibleStudy liefert sie nicht mit und ist nicht damit verbunden.
-- **Ein eigener Relay-Server (TURN)**, der den Verkehr weiterleitet. Das ist für Fortgeschrittene und kostet in der Regel Geld oder eigenen Aufwand. Die Daten bleiben dabei verschlüsselt. In BibleStudy trägst du ihn im Reiter *Zusammen studieren* unter **Eigener Relay-Server (optional)** ein: Adresse (zum Beispiel `turn:server.example:3478`), Benutzername und Passwort. Am besten tragen beide dasselbe ein, und ihr erstellt danach neue Codes. Das Passwort wird unverschlüsselt in den Einstellungen gespeichert. Mit einem Relay-Server haben wir die Verbindung noch nicht getestet.
+### Eigener Vermittler-Server
+
+Wer möchte, kann den Vermittler selbst betreiben (kostenlos bei Cloudflare, Anleitung in `relay/README.md` im Quelltext) und ihn im Reiter *Zusammen studieren* unter **Eigener Vermittler-Server (optional)** eintragen. Alle im Raum müssen dann denselben eintragen.
 
 ## 10.5 Strategien für Gruppen
 
-- **Hauskreis online:** Eine Person liest den Text vor und teilt ihre Stelle; die andere folgt.
+- **Hauskreis online:** Eine Person erstellt einen Raum, leitet (**Ich leite**) und liest den Text vor; die anderen folgen.
 - **Zu zweit lernen:** Gemeinsam ein Dokument nach der Vorlage *Abschnittsstudie* ausfüllen und die Kopien vergleichen.
 - **Mentoring:** Fragen als Dokument senden, Antworten als Dokument zurück.

@@ -1,6 +1,6 @@
 # 10. Studying together
 
-Study **directly connected** with another person: chat, share verses and documents, and read along in the same Bible passage. The connection is **encrypted, needs no server, no account, and is free** (technology: in the same network a direct connection encrypted with ECDH and AES-GCM; across different networks WebRTC).
+Study **connected** with other people: chat, share verses and documents, and read along in the same Bible passage. The connection is **encrypted, needs no account, and is free** (technology: in the same network a direct connection encrypted with ECDH and AES-GCM, with no server; across different networks a room on a small relay server, end-to-end encrypted).
 
 ## 10.1 Setting up the connection
 
@@ -25,17 +25,20 @@ You can be as many as you like. Whoever is connected already adds someone under 
 
 For a person in the same network, **Remember as friend** appears. Afterwards they are listed under **Friends**, and one tap connects you, even when they do not show up in the list (then by the address used last). With **Accept automatically** you are no longer asked for this friend. A friend is recognised by a shared secret swapped when remembering, not only by the name.
 
-### In different networks (with codes, beta)
+### In different networks (with a room code, beta)
 
-Across different networks the connection does not always work. Tested and reliable is the way in the same network: if you are far apart, both join the same ZeroTier network (free) and connect as described above.
+If you are not in the same network (for example each at home, or one on mobile data), you meet in a **room**. Up to **five people** fit in one room.
 
-Under **With codes (beta, other networks)**:
+Under **Over the internet (other networks, beta)**:
 
-1. Person A chooses **Create an invitation**. A code appears.
-2. Person A sends the code to person B by messenger.
-3. Person B chooses **Accept an invitation**, pastes in the code, and receives a **reply code**.
-4. Person B sends the reply code back; person A pastes it in.
-5. Now you are directly and securely connected.
+1. One person chooses **Create a room**. A short **room code** like `K7F2-QXM9` appears.
+2. They send the code to the others by messenger (or read it out on the phone).
+3. The others choose **Join a room**, type in the code and tap **Join**.
+4. After a second or two you are connected. The room code stays at the top of the page so that someone else can still join.
+
+Everybody sees a **check number**. If it is the same for all of you, nobody is in between.
+
+**How it works:** The programs do not connect to each other directly (that fails with many internet connections) but each one to a small **relay server** on the internet, the way a browser opens a website. The relay only passes the messages on. Everything is **end-to-end encrypted**: the key is made on your devices from the room code; the relay does not know the code (only a hash of it as the room name) and cannot read anything. It stores nothing. You need no account and nothing to set up.
 
 ## 10.2 What you can do
 
@@ -72,27 +75,32 @@ Nothing is recorded, except a voice message you send yourself. Sound and picture
 ## 10.3 Privacy
 
 - Only what you send is transmitted.
-- The other person sees **your internet address** (this is a consequence of the direct connection).
+- In the same network the other person sees **your internet address** (this is a consequence of the direct connection).
+- Over the internet (room code) the relay server sees your internet address, like every website you open. It cannot read any content and stores nothing. It runs at Cloudflare; its program code is open in the `relay` folder of the source code.
 - Texts from plugin translations are **never** sent to others.
 - Before you use it for the first time, the program asks for your consent.
 
 ## 10.4 If it doesn't work
 
+**In the same network:**
+
 - Both of you must be **online at the same time**.
-- The connection goes **directly from computer to computer**, with no server in between. This works reliably when you are **in the same network** (for example the same Wi-Fi). Across different networks it only works if your connections allow it. It often fails on mobile data, company, school and hotel networks, and with some providers (CGNAT).
 - A **VPN** or a **strict firewall** can prevent the connection. On Windows choose “Allow access” at the first start; on a Mac grant the “Local Network” permission.
-- The codes are long; copy them completely and without spaces at the beginning or end.
-- Try again with a new invitation.
+- If it does not work in the same network, simply use the room code instead.
 
-### If you are not in the same network
+**With a room code:**
 
-There are two ways that are not built into BibleStudy:
+- Everybody must have the room **open at the same time**. Whoever created the room keeps the page open until the others are there.
+- “Nobody came”: check the code. It has 8 characters; upper or lower case and the dash do not matter.
+- “There are already five people in this room”: ask for a new code.
+- “The relay server cannot be reached right now”: check the internet connection. On the free plan the relay has a daily limit; when it is reached, it works again the next day.
 
-- **A private network such as ZeroTier or Tailscale** (both offer a free plan for individuals, but need an account). Both of you install the program and join the same network. Afterwards the computers behave as if they were on the same Wi-Fi, and you connect as described above under *In the same network*, without codes. These programs are independent products with their own licences and terms; BibleStudy does not ship them and is not affiliated with them.
-- **Your own relay server (TURN)** that forwards the traffic. This is for advanced users and usually costs money or effort of your own. The data stays encrypted. In BibleStudy you enter it in the *Study together* tab under **Own relay server (optional)**: address (for example `turn:server.example:3478`), user name and password. Best if both of you enter the same, and then create new codes. The password is stored unencrypted in the settings. We have not yet tested the connection with a relay server.
+### Your own relay server
+
+If you like, you can run the relay yourself (free at Cloudflare, instructions in `relay/README.md` in the source code) and enter it in the *Study together* tab under **Own relay server (optional)**. Everybody in the room must then enter the same one.
 
 ## 10.5 Strategies for groups
 
-- **Online home group:** One person reads the text aloud and shares their passage; the other follows along.
+- **Online home group:** One person creates a room, leads (**I lead**) and reads the text aloud; the others follow along.
 - **Learning as a pair:** Fill out a document together using the *Section study* template and compare the copies.
 - **Mentoring:** Send questions as a document, and send answers back as a document.

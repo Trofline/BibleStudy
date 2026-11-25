@@ -87,7 +87,7 @@ All files are in the **[latest release](https://github.com/Trofline/BibleStudy/r
 | 📅 **Plan** | Reading plans with progress, reading list, tasks, prayer list |
 | 🎓 **Learn** | Greek and Hebrew alphabets, vocabulary trainer, verses by heart |
 | 🗺️ **Explore** | Timeline with map, journeys, family tree |
-| 🔄 **Sync and share** | Sync PC and phone, study together with another person (encrypted, no server), backups |
+| 🔄 **Sync and share** | Sync PC and phone, study together with others (encrypted, no account), backups |
 | 🧩 **Extend** | Plugins, five languages (English, German, Spanish, French, Russian), optional AI integration (MCP server for Claude) |
 
 <details>
@@ -106,7 +106,7 @@ All files are in the **[latest release](https://github.com/Trofline/BibleStudy/r
 - **Bible study:** materials folder (Word, PDF, PowerPoint, OpenDocument, Markdown …) with clickable references, a verse preview when you rest the mouse on one, search across all files, marks and notes without changing the files; split view; handouts in eight looks; projector view; clock, timer and a program for the evening
 - **Tabs like in a file explorer**, layouts (including a dashboard), custom keyboard shortcuts, animations
 - **Multilingual:** English, German, Spanish, French and Russian (AI-made translations, corrections welcome; more languages can be added as a JSON file in the `lang` folder)
-- **Study together:** connect directly with one other person (encrypted, no server, no account, free): chat, share verses and documents, follow each other's place; set up by swapping two short codes. It works best in the same network; across networks a private network such as ZeroTier or Tailscale, or your own relay server, can help (see the handbook)
+- **Study together:** study with up to five people (encrypted, no account, free): chat, share verses and documents, follow each other's place, talk and see each other on the computer. In the same network the programs find each other by name; across networks you meet in a room with a short room code, through a small relay server that only passes on end-to-end encrypted messages (see the handbook)
 - **Sync your devices:** PC, Android and iPhone keep each other up to date in the same Wi-Fi, or through a cloud folder (OneDrive, Google Drive, Dropbox …)
 - **Backups:** manual or scheduled, to a folder of your choice
 - **AI integration (optional):** MCP server so that Claude can operate the program
