@@ -196,6 +196,7 @@ public partial class MainWindow : AppWindow
         InitStrongSearch();
         InitImport();
         InitKnowledge();
+        InitVersions();
         InitQol();
         InitNav();
         InitPickers();

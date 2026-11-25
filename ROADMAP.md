@@ -84,8 +84,8 @@ Regeln für die Abarbeitung:
 - [x] Querverweis-Stern (Vers in der Mitte, stärkste Querverweise außen; Knopf „Als Stern zeigen“ in der Vers-Übersicht) zusätzlich zu den bestehenden Graphen
 - [x] Neue Beenden-Animation (hochgleiten, verkleinern, verwischen, auflösen)
 - [x] Beenden-Animation und Einstiegs-Animation in den Einstellungen wählbar (aus / dezent / groß) — Stand: Einstellung „Stärke der Animationen“ (Dezent / Groß), aus bleibt aus; Einstiegs-Animation nur dezent verkleinert
-- [x] Stern-Ansicht: zweite Ebene (Verbindungen zwischen den Nachbarn), Ziehen der Knoten, Export als Bild — Stand: Export als Bild ist da (Knopf im Fenster); zweite Ebene und Ziehen fehlen
-- [x] Syntaxbaum: Export als Bild/SVG, Farben je Satzrolle, Zoomen — Stand: PNG-Export, Rahmenfarbe je Rolle, Strg+Mausrad-Zoom (SVG nicht)
+- [x] Stern-Ansicht: zweite Ebene (Verbindungen zwischen den Nachbarn), Ziehen der Knoten, Export als Bild — Stand: Export als Bild ist da (Knopf im Fenster); seit 1.9.30 auch zweite Ebene (Schalter) und Ziehen der Knoten
+- [x] Syntaxbaum: Export als Bild/SVG, Farben je Satzrolle, Zoomen — Stand: PNG-Export, Rahmenfarbe je Rolle, Strg+Mausrad-Zoom; SVG-Export seit 1.9.30
 - [x] Sprachpakete teilen: Ordner `lang/` im Repo für Community-Sprachen (Pull Requests), Auswahl „Sprachen aus dem Internet laden“ in den Einstellungen
 - [x] Sprachdateien: Prüfung auf Vollständigkeit mit Fortschrittsanzeige („87 % übersetzt“), fehlende Texte als neue Vorlage exportieren (nur das Fehlende an die KI geben) — Stand: Prozentanzeige in den Einstellungen, „Nur fehlende Texte exportieren“, Import fügt zu vorhandenen Texten hinzu
 - [x] Pages: echte Screenshots statt Zeichnungen, Deutsch/Englisch-Umschalter, Seite „Neuigkeiten“ aus den Release-Texten
@@ -109,3 +109,6 @@ Regeln für die Abarbeitung:
 - [x] HTML-Import (Elberfelder): Strong-Nummern und Textvarianten-Marker („G6137 NA/G1782 TR“) landen im Verstext → beim Import erkennen und entfernen bzw. als Strong-Daten behalten
 - [x] Import: Überschriften der Übersetzung (z. B. Schlachter 2000) mit importieren und anzeigen
 - [x] Import-Prüfung mit KI: Regeln einlesen und mit der Übersetzung an die KI schicken; die KI korrigiert die Datei, der Nutzer lädt die korrigierte Fassung herunter und importiert sie (umgesetzt als Prüfbericht: Nach dem Import erkennt BibleStudy typische Fehler und speichert eine Markdown-Datei mit Regeln und Fundstellen für eine KI; die korrigierte USFM-Datei kann samt Überschriften (\s1) wieder importiert werden. Die KI selbst wird nicht aus dem Programm angesprochen.)
+
+## Ideen vom 25. November 2026
+- [x] Frühere Fassungen von Dokumenten und Notizen (höchstens alle 10 Minuten, die letzten 50, nur auf dem Gerät; v1.9.30)

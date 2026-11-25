@@ -1,3 +1,4 @@
+using BibleStudy.Core.Diagram;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Shapes;
@@ -116,18 +117,51 @@ public partial class MainWindow
         };
         var save = new Button { Content = L("Als Bild speichern"), HorizontalAlignment = HorizontalAlignment.Left, Margin = new(0, 0, 0, 6) };
         save.Click += (_, _) => ExportControlImage(canvas, L("Syntaxbaum") + "_" + Label(new VerseRef(_curBook, _curChapter, _selected ?? 1)));
+        // the same tree as a vector graphic (SVG): sharp at any size, for slides and handouts
+        var svgBoxes = new List<TreeBox>(); var svgEdges = new List<(int, int)>();
+        int Collect(TreeNode n)
+        {
+            var clause = n.Line.Kind == "clause";
+            var label = clause ? L("Satz") + (n.Line.Role is { Length: > 0 } ? " · " + RoleLabel(n.Line.Role) : "") : RoleLabel(n.Line.Role);
+            var i = svgBoxes.Count;
+            svgBoxes.Add(new TreeBox(n.X + 4, n.Level * levelH + 4, boxW, boxH, label, hebrew ? Heb(n.Line.Text) : n.Line.Text, Mean(n.Line.Gloss), clause,
+                !clause && n.Line.Role is { Length: > 0 } role ? RoleHex(role) : null, hebrew));
+            foreach (var k in n.Kids) svgEdges.Add((i, Collect(k)));
+            return i;
+        }
+        foreach (var r in roots) Collect(r);
+        var verseLabel = Label(new VerseRef(_curBook, _curChapter, _selected ?? 1));
+        var saveSvg = new Button { Content = L("Als SVG speichern"), HorizontalAlignment = HorizontalAlignment.Left, Margin = new(0, 0, 0, 6) };
+        ToolTip.SetTip(saveSvg, L("Als Vektorgrafik: bleibt in jeder Größe scharf, gut für Folien und Handouts"));
+        saveSvg.Click += (_, _) =>
+        {
+            try
+            {
+                var dark = Avalonia.Application.Current?.ActualThemeVariant == Avalonia.Styling.ThemeVariant.Dark;
+                var svg = TreeSvg.Write(svgBoxes, svgEdges, canvas.Width + 8, canvas.Height + 8, dark, L("Syntaxbaum") + " · " + verseLabel);
+                var name = string.Concat((L("Syntaxbaum") + "_" + verseLabel).Select(ch => char.IsLetterOrDigit(ch) ? ch : '_'));
+                Directory.CreateDirectory(ExportFolder);
+                var path = System.IO.Path.Combine(ExportFolder, name + ".svg");
+                File.WriteAllText(path, svg, new System.Text.UTF8Encoding(false));
+                StatusText.Text = L("Bild gespeichert: {0}", path);
+                try { Shell.Open(path); } catch { /* the path is in the status line */ }
+            }
+            catch (Exception ex) { StatusText.Text = L("Fehler: ") + ex.Message; }
+        };
         _syntaxView.Children.Add(new TextBlock { Text = L("Strg + Mausrad: zoomen. Farbe des Rahmens = Satzrolle."), Classes = { "caption" } });
-        _syntaxView.Children.Add(new WrapPanel { Children = { save, new Border { Width = 8 }, PopOutButton(() => canvas, () => L("Syntaxbaum") + " · " + Label(new VerseRef(_curBook, _curChapter, _selected ?? 1))) } });
+        _syntaxView.Children.Add(new WrapPanel { Children = { save, new Border { Width = 8 }, saveSvg, new Border { Width = 8 }, PopOutButton(() => canvas, () => L("Syntaxbaum") + " · " + Label(new VerseRef(_curBook, _curChapter, _selected ?? 1))) } });
         _syntaxView.Children.Add(scroller);
     }
 
     static readonly string[] RolePalette = ["#4C9F70", "#D9822B", "#5B7FD1", "#C45A8E", "#8A6BC4", "#2FA1A8", "#B8A11F", "#C9514A"];
 
     /// <summary>The same role always gets the same color (so the tree can be read at a glance).</summary>
-    static IBrush RoleBrush(string role)
+    static IBrush RoleBrush(string role) => new SolidColorBrush(Color.Parse(RoleHex(role)));
+
+    static string RoleHex(string role)
     {
         var sum = 0; foreach (var ch in role) sum = (sum * 31 + ch) & 0xFFFF;
-        return new SolidColorBrush(Color.Parse(RolePalette[sum % RolePalette.Length]));
+        return RolePalette[sum % RolePalette.Length];
     }
 
     /// <summary>
@@ -227,7 +261,10 @@ public partial class MainWindow
 
     Window? _starWindow;
 
-    /// <summary>The verse in the middle, its strongest cross references around it; the thicker the line, the stronger the reference. A click goes there.</summary>
+    /// <summary>
+    /// The verse in the middle, its strongest cross references around it; the thicker the line, the stronger the reference. A click goes there.
+    /// The knots can be dragged (the lines follow); "Second ring" draws the references between the verses around the middle as well.
+    /// </summary>
     async Task ShowXrefStarAsync(VerseRef r)
     {
         IReadOnlyList<CrossRef> refs;
@@ -236,51 +273,138 @@ public partial class MainWindow
         if (refs.Count == 0) { StatusText.Text = L("Keine Querverweise gefunden."); return; }
 
         const double size = 640, cx = size / 2, cy = size / 2, radius = 235;
-        var canvas = new Canvas { Width = size, Height = size };
+        var canvas = new Canvas { Width = size, Height = size, ClipToBounds = true };
         var top = Math.Max(1, refs.Max(x => x.Score));
-        var hub = new Point(cx, cy);
-        var spots = refs.Select((x, i) =>
+        // the knots: 0 … n-1 around the middle, n is the middle
+        var pos = refs.Select((_, i) =>
         {
             var angle = -Math.PI / 2 + 2 * Math.PI * i / refs.Count;
-            return (x, p: new Point(cx + radius * Math.Cos(angle), cy + radius * Math.Sin(angle)));
-        }).ToList();
-        foreach (var (x, p) in spots)
+            return new Point(cx + radius * Math.Cos(angle), cy + radius * Math.Sin(angle));
+        }).Append(new Point(cx, cy)).ToList();
+        var hub = refs.Count;
+        var lines = new List<(int A, int B, Line Line)>();
+        var ringLayer = new Canvas();   // the lines of the second ring lie under the lines to the middle
+        var spokeLayer = new Canvas();
+        canvas.Children.Add(ringLayer); canvas.Children.Add(spokeLayer);
+        for (var i = 0; i < refs.Count; i++)
         {
-            var share = (double)x.Score / top;
-            var line = new Line { StartPoint = hub, EndPoint = p, StrokeThickness = 1.2 + 4 * share, Opacity = 0.35 + 0.6 * share };
+            var share = (double)refs[i].Score / top;
+            var line = new Line { StartPoint = pos[hub], EndPoint = pos[i], StrokeThickness = 1.2 + 4 * share, Opacity = 0.35 + 0.6 * share };
             line.Bind(Shape.StrokeProperty, this.GetResourceObservable("BsAccent"));
-            canvas.Children.Add(line);
+            spokeLayer.Children.Add(line);
+            lines.Add((hub, i, line));
         }
-        foreach (var (x, p) in spots)
+
+        var knots = new Border[refs.Count + 1];
+        void Place(int i)
         {
-            var target = x.Target;
-            var node = new Border { Padding = new(10, 5), CornerRadius = new(14), BorderThickness = new(1.5), Cursor = new Cursor(StandardCursorType.Hand), Child = new TextBlock { Text = Label(target) + (x.EndVerse > target.Verse ? "–" + x.EndVerse : ""), FontSize = 12, FontWeight = FontWeight.SemiBold } };
+            var k = knots[i];
+            Canvas.SetLeft(k, pos[i].X - k.DesiredSize.Width / 2); Canvas.SetTop(k, pos[i].Y - k.DesiredSize.Height / 2);
+            foreach (var (a, b, line) in lines)
+            {
+                if (a == i) line.StartPoint = pos[i];
+                if (b == i) line.EndPoint = pos[i];
+            }
+        }
+        // press and move: drag the knot; press and let go without moving: go to the verse
+        void Draggable(int i, Func<Task>? go)
+        {
+            var k = knots[i];
+            Point? grab = null; var moved = false;
+            k.PointerPressed += (_, e) =>
+            {
+                if (!e.GetCurrentPoint(k).Properties.IsLeftButtonPressed) return;
+                grab = e.GetPosition(canvas); moved = false;
+                e.Pointer.Capture(k); e.Handled = true;
+            };
+            k.PointerMoved += (_, e) =>
+            {
+                if (grab is not { } g) return;
+                var p = e.GetPosition(canvas);
+                if (!moved && Math.Abs(p.X - g.X) + Math.Abs(p.Y - g.Y) < 6) return;
+                moved = true;
+                pos[i] = new Point(Math.Clamp(p.X, 20, size - 20), Math.Clamp(p.Y, 14, size - 14));
+                Place(i);
+            };
+            k.PointerReleased += async (_, e) =>
+            {
+                if (grab is null) return;
+                grab = null; e.Pointer.Capture(null);
+                if (!moved && go is not null) await go();
+            };
+        }
+        for (var i = 0; i < refs.Count; i++)
+        {
+            var target = refs[i].Target;
+            var node = new Border { Padding = new(10, 5), CornerRadius = new(14), BorderThickness = new(1.5), Cursor = new Cursor(StandardCursorType.Hand), Child = new TextBlock { Text = Label(target) + (refs[i].EndVerse > target.Verse ? "–" + refs[i].EndVerse : ""), FontSize = 12, FontWeight = FontWeight.SemiBold } };
             node.Bind(Border.BackgroundProperty, this.GetResourceObservable("BsSurface"));
             node.Bind(Border.BorderBrushProperty, this.GetResourceObservable("BsAccent"));
+            ToolTip.SetTip(node, L("Klicken: hingehen · Ziehen: verschieben"));
             node.Measure(Size.Infinity);
-            Canvas.SetLeft(node, p.X - node.DesiredSize.Width / 2); Canvas.SetTop(node, p.Y - node.DesiredSize.Height / 2);
-            node.OnPress(async (_, _) => { _starWindow?.Close(); await GoToAsync(target.Book, target.Chapter, target.Verse); });
+            knots[i] = node;
             canvas.Children.Add(node);
+            Place(i);
+            Draggable(i, async () => { _starWindow?.Close(); await GoToAsync(target.Book, target.Chapter, target.Verse); });
         }
-        var center = new Border { Padding = new(16, 10), CornerRadius = new(20), Child = new TextBlock { Text = Label(r), FontWeight = FontWeight.Bold, FontSize = 15 } };
+        var center = new Border { Padding = new(16, 10), CornerRadius = new(20), Cursor = new Cursor(StandardCursorType.SizeAll), Child = new TextBlock { Text = Label(r), FontWeight = FontWeight.Bold, FontSize = 15 } };
         center.Bind(Border.BackgroundProperty, this.GetResourceObservable("BsAccent"));
         ((TextBlock)center.Child).Bind(TextBlock.ForegroundProperty, this.GetResourceObservable("BsAccentFg"));
         center.Measure(Size.Infinity);
-        Canvas.SetLeft(center, cx - center.DesiredSize.Width / 2); Canvas.SetTop(center, cy - center.DesiredSize.Height / 2);
+        knots[hub] = center;
         canvas.Children.Add(center);
+        Place(hub);
+        Draggable(hub, null);
+
+        // the second ring: the references among the verses around the middle (loaded on request: one look-up per verse)
+        var ring = new CheckBox { Content = L("Zweite Ebene: Verbindungen zwischen den Nachbarn"), Margin = new(0, 0, 0, 8) };
+        var ringInfo = new TextBlock { Classes = { "caption" }, VerticalAlignment = VerticalAlignment.Center, Margin = new(10, 0, 0, 8) };
+        List<(int A, int B, int Score)>? between = null;
+        ring.IsCheckedChanged += async (_, _) =>
+        {
+            if (ring.IsChecked != true) { ringLayer.IsVisible = false; ringInfo.Text = ""; return; }
+            ringLayer.IsVisible = true;
+            if (between is not null) { ringInfo.Text = L("{0} Verbindungen", between.Count); return; }
+            ringInfo.Text = L("Lade …");
+            var found = await Task.WhenAll(refs.Select(async x =>
+            {
+                try { return await _hello.GetCrossReferencesAsync(x.Target.Book, x.Target.Chapter, x.Target.Verse); }
+                catch { return (IReadOnlyList<CrossRef>?)null; }
+            }));
+            between = StarLinks.Between(refs, i => found[i]);
+            var strongest = Math.Max(1, between.Count > 0 ? between.Max(x => x.Score) : 1);
+            foreach (var (a, b, score) in between)
+            {
+                var share = (double)score / strongest;
+                var line = new Line { StartPoint = pos[a], EndPoint = pos[b], StrokeThickness = 0.8 + 2 * share, Opacity = 0.3 + 0.45 * share, StrokeDashArray = [4, 3] };
+                line.Bind(Shape.StrokeProperty, this.GetResourceObservable("BsMuted"));
+                ringLayer.Children.Add(line);
+                lines.Add((a, b, line));
+            }
+            ringInfo.Text = between.Count == 0 ? L("Die Nachbarn verweisen nicht aufeinander.") : L("{0} Verbindungen", between.Count);
+        };
 
         _starWindow?.Close();
-        var hint = new TextBlock { Text = L("Stern aus den wichtigsten Querverweisen. Klick auf einen Knoten: hingehen."), Classes = { "caption" }, TextWrapping = TextWrapping.Wrap, Margin = new(0, 0, 0, 8) };
+        var hint = new TextBlock { Text = L("Stern aus den wichtigsten Querverweisen. Klick auf einen Knoten: hingehen. Ziehen: Knoten verschieben."), Classes = { "caption" }, TextWrapping = TextWrapping.Wrap, Margin = new(0, 0, 0, 8) };
         var dock = new DockPanel { Margin = new(16) };
-        DockPanel.SetDock(hint, Dock.Top);
         var saveStar = new Button { Content = L("Als Bild speichern"), HorizontalAlignment = HorizontalAlignment.Left, Margin = new(0, 0, 0, 8) };
         saveStar.Click += (_, _) => ExportControlImage(canvas, L("Querverweis-Stern") + "_" + Label(r));
-        DockPanel.SetDock(saveStar, Dock.Top);
+        var reset = new Button { Content = L("Anordnung zurücksetzen"), HorizontalAlignment = HorizontalAlignment.Left, Margin = new(8, 0, 0, 8) };
+        reset.Click += (_, _) =>
+        {
+            for (var i = 0; i < refs.Count; i++)
+            {
+                var angle = -Math.PI / 2 + 2 * Math.PI * i / refs.Count;
+                pos[i] = new Point(cx + radius * Math.Cos(angle), cy + radius * Math.Sin(angle));
+            }
+            pos[hub] = new Point(cx, cy);
+            for (var i = 0; i <= refs.Count; i++) Place(i);
+        };
+        var buttons = new WrapPanel { Children = { saveStar, reset } };
+        var ringRow = new WrapPanel { Children = { ring, ringInfo } };
+        foreach (var c in new Control[] { hint, buttons, ringRow }) { DockPanel.SetDock(c, Dock.Top); dock.Children.Add(c); }
         canvas.Background = Res("BsBackground");
-        dock.Children.Add(hint);
-        dock.Children.Add(saveStar);
         dock.Children.Add(new Viewbox { Child = canvas, Stretch = Stretch.Uniform });
-        var win = new Window { Title = L("Querverweis-Stern") + " · " + Label(r), Width = 720, Height = 760, MinWidth = 380, MinHeight = 400, Background = Res("BsBackground"), Icon = Icon, WindowStartupLocation = WindowStartupLocation.CenterOwner, Content = dock };
+        var win = new Window { Title = L("Querverweis-Stern") + " · " + Label(r), Width = 720, Height = 800, MinWidth = 380, MinHeight = 420, Background = Res("BsBackground"), Icon = Icon, WindowStartupLocation = WindowStartupLocation.CenterOwner, Content = dock };
         win.Closed += (_, _) => _starWindow = null;
         _starWindow = win;
         win.Show(this);

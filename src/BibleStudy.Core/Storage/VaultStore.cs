@@ -100,6 +100,7 @@ public sealed partial class VaultStore : SqliteDb
             if (Query($"SELECT 1 FROM pragma_table_info('todos') WHERE name='{column}'", _ => { }, _ => 1).Count == 0)
                 Exec($"ALTER TABLE todos ADD COLUMN {column} {type}");
         InitTrash();
+        InitVersions();   // after the trash: versions of documents that left the trash go too
         Exec("CREATE TABLE IF NOT EXISTS mark_places(mark_id INT, translation TEXT, verse INT, start_off INT, end_off INT, PRIMARY KEY(mark_id, translation, verse))");   // a place corrected by hand
         Exec("CREATE TABLE IF NOT EXISTS doc_seq(high INTEGER NOT NULL)");
         InitImages();
@@ -193,6 +194,7 @@ public sealed partial class VaultStore : SqliteDb
     public void SetNote(VerseRef v, string text)
     {
         void P(SqliteCommand c) { c.Parameters.AddWithValue("$b", v.Book); c.Parameters.AddWithValue("$c", v.Chapter); c.Parameters.AddWithValue("$v", v.Verse); }
+        KeepNoteVersion(v, text);   // the note as it was, before it is overwritten or deleted
         if (string.IsNullOrWhiteSpace(text)) { Exec("DELETE FROM notes WHERE book=$b AND chapter=$c AND verse=$v", P); return; }
         Exec("INSERT INTO notes(book,chapter,verse,text,updated) VALUES($b,$c,$v,$x,$t) ON CONFLICT(book,chapter,verse) DO UPDATE SET text=excluded.text, updated=excluded.updated",
             c => { P(c); c.Parameters.AddWithValue("$x", text); c.Parameters.AddWithValue("$t", DateTime.UtcNow.ToString("o")); });
@@ -713,6 +715,7 @@ public sealed partial class VaultStore : SqliteDb
         using var tx = con.BeginTransaction();
         // first with the old title, so a link that only has that title gets the number before the title goes
         NumberAllLinks(con);
+        KeepDocumentVersion(con, id, title, body);   // the text as it was, before it is overwritten
         using (var cmd = con.CreateCommand())
         {
             cmd.CommandText = "UPDATE documents SET title=$t, body=$b, path=$p, template=$m, updated=$n, folder_id=$f WHERE id=$i";
