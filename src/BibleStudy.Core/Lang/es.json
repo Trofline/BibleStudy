@@ -3563,7 +3563,6 @@
   "Keine Bibelstelle erkannt.": "No se reconoció ningún pasaje.",
   "{0} Stellen erkannt": "{0} pasajes reconocidos",
   "Nicht erkannt: {0}": "No reconocido: {0}",
-  "Keine Verse gefunden.": "No se encontraron versículos.",
   "Nicht in dieser Übersetzung: {0}": "No está en esta traducción: {0}",
   "Kein Leseplan – tippen, um einen zu wählen": "Sin plan de lectura – toca para elegir uno",
   "{0} Verbindungen": "{0} conexiones",
@@ -3899,5 +3898,15 @@
   "„Alle Vorkommen“ zeigt jede Stelle mit diesem Grundwort, „Vorkommen als Diagramm“ die Verteilung über die Bibel.": "«Todas las apariciones» muestra cada lugar con esta palabra original; «Apariciones como gráfico», su distribución en la Biblia.",
   "„Dokumentation“ ist das ausführliche Handbuch mit Suche. Die Rundgänge für einzelne Reiter holst du hier mit „Reiter-Rundgänge wieder zeigen“ zurück.": "«Documentación» es el manual completo con búsqueda. Los recorridos de cada pestaña los recuperas aquí con «Volver a mostrar los recorridos de pestañas».",
   "„Joh 3,16“ im Text wird zum Link auf den Vers, [[Titel]] zum Link auf ein anderes Dokument. Mit „＋ Vers“ fügst du einen Vers als Zitat ein.": "«Jn 3:16» en el texto se convierte en enlace al versículo, [[Título]] en enlace a otro documento. Con «＋ Versículo» insertas un versículo como cita.",
-  "„Mehr Optionen“ grenzt den Bereich ein (z. B. nur NT) und sucht auf Wunsch im Grundtext. „Suche bauen“ stellt eine Suche aus Listen zusammen, „Suchhilfe“ zeigt alle Beispiele zum Anklicken. Mit ☆ merkst du dir eine Suche.": "«Más opciones» acota el ámbito (p. ej. solo NT) y si quieres busca en el texto original. «Montar una búsqueda» compone una búsqueda desde listas, «Ayuda de búsqueda» muestra todos los ejemplos para pulsar. Con ☆ guardas una búsqueda."
+  "„Mehr Optionen“ grenzt den Bereich ein (z. B. nur NT) und sucht auf Wunsch im Grundtext. „Suche bauen“ stellt eine Suche aus Listen zusammen, „Suchhilfe“ zeigt alle Beispiele zum Anklicken. Mit ☆ merkst du dir eine Suche.": "«Más opciones» acota el ámbito (p. ej. solo NT) y si quieres busca en el texto original. «Montar una búsqueda» compone una búsqueda desde listas, «Ayuda de búsqueda» muestra todos los ejemplos para pulsar. Con ☆ guardas una búsqueda.",
+  "Rundgänge zur Bedienung?": "¿Recorridos sobre el manejo?",
+  "Soll BibleStudy dir zeigen, wie es geht? Dann kommt jetzt ein kurzer Rundgang, und jeder Reiter erklärt sich beim ersten Öffnen in ein paar Sätzen, nur dieser eine Reiter. Kennst du dich schon aus, wähle „Nein“: Dann kommt nichts davon. Unter Einstellungen › Hilfe kannst du es jederzeit ändern.": "¿Quieres que BibleStudy te muestre cómo funciona? Entonces ahora viene un breve recorrido, y cada pestaña se explica en unas pocas frases la primera vez que la abres, solo esa pestaña. Si ya lo conoces, elige «No»: entonces no aparecerá nada de esto. Puedes cambiarlo cuando quieras en Configuración › Ayuda.",
+  "Ja, zeigen": "Sí, mostrar",
+  "Nein, ich kenne mich aus": "No, ya lo conozco",
+  "Reiter-Rundgänge?": "¿Recorridos de pestañas?",
+  "Neu: Jeder Reiter kann sich beim ersten Öffnen in ein paar Sätzen selbst erklären, nur dieser eine Reiter. Möchtest du das? Unter Einstellungen › Hilfe kannst du es jederzeit ändern.": "Nuevo: cada pestaña puede explicarse en unas pocas frases la primera vez que la abres, solo esa pestaña. ¿Te gustaría? Puedes cambiarlo cuando quieras en Configuración › Ayuda.",
+  "Ja, gern": "Sí, por favor",
+  "Reiter-Rundgänge: Jeder Reiter erklärt sich beim ersten Öffnen kurz": "Recorridos de pestañas: cada pestaña se explica brevemente la primera vez que se abre",
+  "Nur der Reiter, den du gerade öffnest, und nur einmal. Der Tiefen-Rundgang löst sie nicht aus.": "Solo la pestaña que abres, y solo una vez. El recorrido a fondo no los inicia.",
+  "Reiter-Rundgänge zurücksetzen": "Restablecer recorridos de pestañas"
 }

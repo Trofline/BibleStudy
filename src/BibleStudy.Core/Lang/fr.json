@@ -3563,7 +3563,6 @@
   "Keine Bibelstelle erkannt.": "Aucun passage reconnu.",
   "{0} Stellen erkannt": "{0} passages reconnus",
   "Nicht erkannt: {0}": "Non reconnu : {0}",
-  "Keine Verse gefunden.": "Aucun verset trouvé.",
   "Nicht in dieser Übersetzung: {0}": "Pas dans cette traduction : {0}",
   "Kein Leseplan – tippen, um einen zu wählen": "Aucun plan de lecture – touchez pour en choisir un",
   "{0} Verbindungen": "{0} liens",
@@ -3899,5 +3898,15 @@
   "„Alle Vorkommen“ zeigt jede Stelle mit diesem Grundwort, „Vorkommen als Diagramm“ die Verteilung über die Bibel.": "« Toutes les occurrences » montre chaque passage avec ce mot original, « Occurrences en diagramme » sa répartition dans la Bible.",
   "„Dokumentation“ ist das ausführliche Handbuch mit Suche. Die Rundgänge für einzelne Reiter holst du hier mit „Reiter-Rundgänge wieder zeigen“ zurück.": "« Documentation » est le manuel complet avec recherche. Tu réactives ici les visites de chaque onglet avec « Revoir les visites des onglets ».",
   "„Joh 3,16“ im Text wird zum Link auf den Vers, [[Titel]] zum Link auf ein anderes Dokument. Mit „＋ Vers“ fügst du einen Vers als Zitat ein.": "« Jn 3,16 » dans le texte devient un lien vers le verset, [[Titre]] un lien vers un autre document. « ＋ Verset » insère un verset en citation.",
-  "„Mehr Optionen“ grenzt den Bereich ein (z. B. nur NT) und sucht auf Wunsch im Grundtext. „Suche bauen“ stellt eine Suche aus Listen zusammen, „Suchhilfe“ zeigt alle Beispiele zum Anklicken. Mit ☆ merkst du dir eine Suche.": "« Plus d'options » restreint la portée (par ex. NT seulement) et cherche si besoin dans le texte original. « Composer une recherche » assemble une recherche à partir de listes, « Aide à la recherche » montre tous les exemples à cliquer. ☆ mémorise une recherche."
+  "„Mehr Optionen“ grenzt den Bereich ein (z. B. nur NT) und sucht auf Wunsch im Grundtext. „Suche bauen“ stellt eine Suche aus Listen zusammen, „Suchhilfe“ zeigt alle Beispiele zum Anklicken. Mit ☆ merkst du dir eine Suche.": "« Plus d'options » restreint la portée (par ex. NT seulement) et cherche si besoin dans le texte original. « Composer une recherche » assemble une recherche à partir de listes, « Aide à la recherche » montre tous les exemples à cliquer. ☆ mémorise une recherche.",
+  "Rundgänge zur Bedienung?": "Visites guidées de l’utilisation ?",
+  "Soll BibleStudy dir zeigen, wie es geht? Dann kommt jetzt ein kurzer Rundgang, und jeder Reiter erklärt sich beim ersten Öffnen in ein paar Sätzen, nur dieser eine Reiter. Kennst du dich schon aus, wähle „Nein“: Dann kommt nichts davon. Unter Einstellungen › Hilfe kannst du es jederzeit ändern.": "BibleStudy doit-il te montrer comment il fonctionne ? Une courte visite commence alors maintenant, et chaque onglet s’explique en quelques phrases la première fois que tu l’ouvres, seulement cet onglet. Si tu connais déjà le programme, choisis « Non » : rien de tout cela n’apparaîtra. Tu peux le changer à tout moment sous Paramètres › Aide.",
+  "Ja, zeigen": "Oui, montrer",
+  "Nein, ich kenne mich aus": "Non, je connais déjà",
+  "Reiter-Rundgänge?": "Visites des onglets ?",
+  "Neu: Jeder Reiter kann sich beim ersten Öffnen in ein paar Sätzen selbst erklären, nur dieser eine Reiter. Möchtest du das? Unter Einstellungen › Hilfe kannst du es jederzeit ändern.": "Nouveau : chaque onglet peut s’expliquer en quelques phrases la première fois que tu l’ouvres, seulement cet onglet. Le souhaites-tu ? Tu peux le changer à tout moment sous Paramètres › Aide.",
+  "Ja, gern": "Oui, volontiers",
+  "Reiter-Rundgänge: Jeder Reiter erklärt sich beim ersten Öffnen kurz": "Visites des onglets : chaque onglet s’explique brièvement à sa première ouverture",
+  "Nur der Reiter, den du gerade öffnest, und nur einmal. Der Tiefen-Rundgang löst sie nicht aus.": "Seulement l’onglet que tu ouvres, et une seule fois. La visite approfondie ne les déclenche pas.",
+  "Reiter-Rundgänge zurücksetzen": "Réinitialiser les visites des onglets"
 }

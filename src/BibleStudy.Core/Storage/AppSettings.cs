@@ -383,6 +383,8 @@ public sealed class AppSettings
     /// <summary>The tabs (by index) whose short tour was seen, and whether these tours are off altogether.</summary>
     public List<string> TabToursSeen { get; set; } = [];
     public bool TabToursOff { get; set; }
+    /// <summary>The person was asked (on the first start, or once after the update that brought them) whether the tab tours should come.</summary>
+    public bool TabToursAsked { get; set; }
     public string? PlanId { get; set; }
     public string? PlanStart { get; set; }
     public List<string> PlanDoneDays { get; set; } = [];

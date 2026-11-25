@@ -92,7 +92,7 @@ public partial class MainWindow
     /// <summary>A tab was shown: its tour comes, the first time and when nothing else is going on.</summary>
     void MaybeTabTour(int index)
     {
-        if (!_tabToursReady || _settings.TabToursOff || _settings.TabToursSeen.Contains(index.ToString()) || TabTourSteps(index) is null) return;
+        if (!_tabToursReady || !_settings.TabToursAsked || _settings.TabToursOff || _settings.TabToursSeen.Contains(index.ToString()) || TabTourSteps(index) is null) return;
         // a moment later: the tab has its place, and a tour that opened it has its card (the deep tour opens tabs in its steps)
         DispatcherTimer.RunOnce(() =>
         {
@@ -151,7 +151,7 @@ public partial class MainWindow
 
         var off = new Button { Content = L("Alle aus"), Classes = { "ghost" } };
         ToolTip.SetTip(off, L("Keine Rundgänge mehr beim ersten Öffnen eines Reiters. Unter Hilfe holst du sie zurück."));
-        off.Click += (_, _) => { _settings.TabToursOff = true; SaveSettings(); CloseTabTour(seen: true); Notify(L("Reiter-Rundgänge aus"), L("Unter Hilfe › „Reiter-Rundgänge wieder zeigen“ schaltest du sie wieder ein.")); };
+        off.Click += (_, _) => { _settings.TabToursOff = true; SaveSettings(); SyncTabToursCheck(); CloseTabTour(seen: true); Notify(L("Reiter-Rundgänge aus"), L("Unter Hilfe › „Reiter-Rundgänge wieder zeigen“ schaltest du sie wieder ein.")); };
         var back = new Button { Content = L("Zurück"), IsVisible = i > 0 };
         back.Click += (_, _) => ShowTabTour(index, i - 1);
         var last = i == steps.Length - 1;
@@ -186,7 +186,8 @@ public partial class MainWindow
     /// <summary>All tab tours come again (each once more, the first time its tab is opened).</summary>
     void ResetTabTours()
     {
-        _settings.TabToursSeen.Clear(); _settings.TabToursOff = false; SaveSettings();
+        _settings.TabToursSeen.Clear(); _settings.TabToursOff = false; _settings.TabToursAsked = true; SaveSettings();
+        SyncTabToursCheck();
         Notify(L("Reiter-Rundgänge an"), L("Jeder Reiter erklärt sich wieder, wenn du ihn das nächste Mal öffnest."), good: true);
     }
 
@@ -195,5 +196,51 @@ public partial class MainWindow
     {
         if (FrontTab() is int index && TabTourSteps(index) is not null) { CloseTabTour(seen: false); ShowTabTour(index, 0); }
         else StatusText.Text = L("Öffne zuerst einen Reiter, z. B. Dokumente oder Suche.");
+    }
+
+    bool _syncingTabToursCheck;
+
+    /// <summary>The switch and the reset button in Settings › Help.</summary>
+    void InitTabToursSettings()
+    {
+        SyncTabToursCheck();
+        TabToursCheck.IsCheckedChanged += (_, _) =>
+        {
+            if (_syncingTabToursCheck) return;
+            _settings.TabToursOff = TabToursCheck.IsChecked != true;
+            _settings.TabToursAsked = true;   // decided here: the question at the start does not come any more
+            SaveSettings();
+            if (_settings.TabToursOff) CloseTabTour(seen: false);
+        };
+        TabToursResetBtn.Click += (_, _) => ResetTabTours();
+    }
+
+    void SyncTabToursCheck()
+    {
+        _syncingTabToursCheck = true;
+        TabToursCheck.IsChecked = _settings.TabToursAsked && !_settings.TabToursOff;
+        _syncingTabToursCheck = false;
+    }
+
+    /// <summary>
+    /// The question whether the tours about using the program should come. On the first start it covers the short tour of the program
+    /// and the tab tours; whoever had the program before (and saw the short tour) is asked once about the tab tours alone.
+    /// "No" means none of it comes; the settings (Help) turn it on again.
+    /// </summary>
+    async Task<bool> AskTabToursAsync(bool firstStart)
+    {
+        var answer = firstStart
+            ? await AskAsync(L("Rundgänge zur Bedienung?"),
+                L("Soll BibleStudy dir zeigen, wie es geht? Dann kommt jetzt ein kurzer Rundgang, und jeder Reiter erklärt sich beim ersten Öffnen in ein paar Sätzen, nur dieser eine Reiter. Kennst du dich schon aus, wähle „Nein“: Dann kommt nichts davon. Unter Einstellungen › Hilfe kannst du es jederzeit ändern."),
+                L("Ja, zeigen"), L("Nein, ich kenne mich aus"))
+            : await AskAsync(L("Reiter-Rundgänge?"),
+                L("Neu: Jeder Reiter kann sich beim ersten Öffnen in ein paar Sätzen selbst erklären, nur dieser eine Reiter. Möchtest du das? Unter Einstellungen › Hilfe kannst du es jederzeit ändern."),
+                L("Ja, gern"), L("Nein, danke"));
+        var yes = answer == 0;
+        _settings.TabToursAsked = true;
+        _settings.TabToursOff = !yes;
+        SaveSettings();
+        SyncTabToursCheck();
+        return yes;
     }
 }

@@ -30,6 +30,7 @@ public partial class MainWindow
         SettingsDeepTourBtn.Click += (_, _) => StartDeepTour();
         SettingsQuizBtn.Click += (_, _) => ShowQuiz();
         HelpTabToursBtn.Click += (_, _) => ResetTabTours();
+        InitTabToursSettings();
         InitHelpPage();
         // a while after the start, when the splash screen and the notice about sources are gone
         DispatcherTimer.RunOnce(() => OfferTour(), TimeSpan.FromSeconds(6));
@@ -50,12 +51,27 @@ public partial class MainWindow
         // another window (notice, update question) is open: try again a little later
         if (OwnedWindows.Count > 0 || SplashWindow.IsShowing) { DispatcherTimer.RunOnce(() => OfferTour(), TimeSpan.FromSeconds(5)); return; }
         if (_settings.TourPending && !_settings.SetupDone) { _ = RunSetupThenTourAsync(); return; }
-        if (_settings.TourPending) { _settings.LastSeenVersion = AppPaths.Version; StartTour(); return; }   // a new installation has nothing "new" to read
+        if (_settings.TourPending) { _settings.LastSeenVersion = AppPaths.Version; _ = FirstStartToursAsync(); return; }   // a new installation has nothing "new" to read
         if (!_settings.BackupAsked && _settings.BackupSchedule == "off") { _ = AskForBackupAsync(); return; }
+        if (!_settings.TabToursAsked) { _ = AskTabToursThenGoOnAsync(); return; }
         _ = ShowPatchNotesIfNewAsync();
         _ = OfferReimportAsync();
         DispatcherTimer.RunOnce(ShowNewKeysTip, TimeSpan.FromSeconds(4));
         PlanSuggestion();
+    }
+
+    /// <summary>The first start: ask whether the tours should come; yes starts the short tour, no ends the first start without any tour.</summary>
+    async Task FirstStartToursAsync()
+    {
+        if (await AskTabToursAsync(firstStart: true)) StartTour();
+        else FinishTour();
+    }
+
+    /// <summary>Whoever had the program before: asked once about the tab tours, then the start goes on as usual (patch notes and so on).</summary>
+    async Task AskTabToursThenGoOnAsync()
+    {
+        await AskTabToursAsync(firstStart: false);
+        if (!_exiting) OfferTour();
     }
 
     /// <summary>Asked once: whoever had the program before and has no backup yet. The answer is kept either way.</summary>

@@ -3563,7 +3563,6 @@
   "Keine Bibelstelle erkannt.": "No passage recognised.",
   "{0} Stellen erkannt": "{0} passages recognised",
   "Nicht erkannt: {0}": "Not recognised: {0}",
-  "Keine Verse gefunden.": "No verses found.",
   "Nicht in dieser Übersetzung: {0}": "Not in this translation: {0}",
   "Kein Leseplan – tippen, um einen zu wählen": "No reading plan – tap to choose one",
   "{0} Verbindungen": "{0} links",
@@ -3899,5 +3898,15 @@
   "„Alle Vorkommen“ zeigt jede Stelle mit diesem Grundwort, „Vorkommen als Diagramm“ die Verteilung über die Bibel.": "“All occurrences” shows every place with this original word, “Occurrences as a chart” how it is spread across the Bible.",
   "„Dokumentation“ ist das ausführliche Handbuch mit Suche. Die Rundgänge für einzelne Reiter holst du hier mit „Reiter-Rundgänge wieder zeigen“ zurück.": "“Documentation” is the full handbook with search. You bring back the tours of the single tabs here with “Show tab tours again”.",
   "„Joh 3,16“ im Text wird zum Link auf den Vers, [[Titel]] zum Link auf ein anderes Dokument. Mit „＋ Vers“ fügst du einen Vers als Zitat ein.": "“John 3:16” in the text becomes a link to the verse, [[Title]] a link to another document. “＋ Verse” inserts a verse as a quotation.",
-  "„Mehr Optionen“ grenzt den Bereich ein (z. B. nur NT) und sucht auf Wunsch im Grundtext. „Suche bauen“ stellt eine Suche aus Listen zusammen, „Suchhilfe“ zeigt alle Beispiele zum Anklicken. Mit ☆ merkst du dir eine Suche.": "“More options” narrows the range (e.g. NT only) and can search in the original text. “Build a search” puts a search together from lists, “Search help” shows all examples to click. ☆ saves a search."
+  "„Mehr Optionen“ grenzt den Bereich ein (z. B. nur NT) und sucht auf Wunsch im Grundtext. „Suche bauen“ stellt eine Suche aus Listen zusammen, „Suchhilfe“ zeigt alle Beispiele zum Anklicken. Mit ☆ merkst du dir eine Suche.": "“More options” narrows the range (e.g. NT only) and can search in the original text. “Build a search” puts a search together from lists, “Search help” shows all examples to click. ☆ saves a search.",
+  "Rundgänge zur Bedienung?": "Tours of how it works?",
+  "Soll BibleStudy dir zeigen, wie es geht? Dann kommt jetzt ein kurzer Rundgang, und jeder Reiter erklärt sich beim ersten Öffnen in ein paar Sätzen, nur dieser eine Reiter. Kennst du dich schon aus, wähle „Nein“: Dann kommt nichts davon. Unter Einstellungen › Hilfe kannst du es jederzeit ändern.": "Should BibleStudy show you how it works? Then a short tour comes now, and every tab explains itself in a few sentences the first time you open it, only that one tab. If you already know your way around, choose “No”: then none of this comes. You can change it any time under Settings › Help.",
+  "Ja, zeigen": "Yes, show me",
+  "Nein, ich kenne mich aus": "No, I know my way around",
+  "Reiter-Rundgänge?": "Tab tours?",
+  "Neu: Jeder Reiter kann sich beim ersten Öffnen in ein paar Sätzen selbst erklären, nur dieser eine Reiter. Möchtest du das? Unter Einstellungen › Hilfe kannst du es jederzeit ändern.": "New: every tab can explain itself in a few sentences the first time you open it, only that one tab. Would you like that? You can change it any time under Settings › Help.",
+  "Ja, gern": "Yes, please",
+  "Reiter-Rundgänge: Jeder Reiter erklärt sich beim ersten Öffnen kurz": "Tab tours: every tab briefly explains itself the first time it is opened",
+  "Nur der Reiter, den du gerade öffnest, und nur einmal. Der Tiefen-Rundgang löst sie nicht aus.": "Only the tab you are opening, and only once. The deep tour does not start them.",
+  "Reiter-Rundgänge zurücksetzen": "Reset tab tours"
 }

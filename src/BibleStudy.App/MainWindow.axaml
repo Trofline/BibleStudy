@@ -1073,6 +1073,10 @@
                                     <Button x:Name="SettingsDeepTourBtn" Content="Tiefen-Rundgang" Margin="0,0,6,6" />
                                     <Button x:Name="SettingsQuizBtn" Content="Quiz" Margin="0,0,6,6" />
                                 </WrapPanel>
+                                <CheckBox x:Name="TabToursCheck" Content="Reiter-Rundgänge: Jeder Reiter erklärt sich beim ersten Öffnen kurz" ToolTip.Tip="Nur der Reiter, den du gerade öffnest, und nur einmal. Der Tiefen-Rundgang löst sie nicht aus." />
+                                <WrapPanel>
+                                    <Button x:Name="TabToursResetBtn" Content="Reiter-Rundgänge zurücksetzen" Margin="0,0,6,6" ToolTip.Tip="Jeder Reiter erklärt sich beim nächsten Öffnen wieder in einem kurzen Rundgang." />
+                                </WrapPanel>
                             </StackPanel></Border>
                         </StackPanel>
                     </ScrollViewer>

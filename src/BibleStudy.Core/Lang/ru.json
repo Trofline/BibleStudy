@@ -3563,7 +3563,6 @@
   "Keine Bibelstelle erkannt.": "Место не распознано.",
   "{0} Stellen erkannt": "Распознано мест: {0}",
   "Nicht erkannt: {0}": "Не распознано: {0}",
-  "Keine Verse gefunden.": "Стихи не найдены.",
   "Nicht in dieser Übersetzung: {0}": "Нет в этом переводе: {0}",
   "Kein Leseplan – tippen, um einen zu wählen": "Нет плана чтения – нажмите, чтобы выбрать",
   "{0} Verbindungen": "Связей: {0}",
@@ -3899,5 +3898,15 @@
   "„Alle Vorkommen“ zeigt jede Stelle mit diesem Grundwort, „Vorkommen als Diagramm“ die Verteilung über die Bibel.": "«Все вхождения» показывает каждое место с этим исходным словом, «Вхождения диаграммой» — распределение по Библии.",
   "„Dokumentation“ ist das ausführliche Handbuch mit Suche. Die Rundgänge für einzelne Reiter holst du hier mit „Reiter-Rundgänge wieder zeigen“ zurück.": "«Документация» — подробное руководство с поиском. Обзоры отдельных вкладок возвращаются здесь кнопкой «Снова показывать обзоры вкладок».",
   "„Joh 3,16“ im Text wird zum Link auf den Vers, [[Titel]] zum Link auf ein anderes Dokument. Mit „＋ Vers“ fügst du einen Vers als Zitat ein.": "«Ин 3:16» в тексте становится ссылкой на стих, [[Заголовок]] — ссылкой на другой документ. «＋ Стих» вставляет стих цитатой.",
-  "„Mehr Optionen“ grenzt den Bereich ein (z. B. nur NT) und sucht auf Wunsch im Grundtext. „Suche bauen“ stellt eine Suche aus Listen zusammen, „Suchhilfe“ zeigt alle Beispiele zum Anklicken. Mit ☆ merkst du dir eine Suche.": "«Ещё параметры» сужают область (например, только НЗ) и при желании ищут в оригинале. «Составить поиск» собирает запрос из списков, «Справка по поиску» показывает все примеры, на которые можно нажать. ☆ сохраняет поиск."
+  "„Mehr Optionen“ grenzt den Bereich ein (z. B. nur NT) und sucht auf Wunsch im Grundtext. „Suche bauen“ stellt eine Suche aus Listen zusammen, „Suchhilfe“ zeigt alle Beispiele zum Anklicken. Mit ☆ merkst du dir eine Suche.": "«Ещё параметры» сужают область (например, только НЗ) и при желании ищут в оригинале. «Составить поиск» собирает запрос из списков, «Справка по поиску» показывает все примеры, на которые можно нажать. ☆ сохраняет поиск.",
+  "Rundgänge zur Bedienung?": "Экскурсии по программе?",
+  "Soll BibleStudy dir zeigen, wie es geht? Dann kommt jetzt ein kurzer Rundgang, und jeder Reiter erklärt sich beim ersten Öffnen in ein paar Sätzen, nur dieser eine Reiter. Kennst du dich schon aus, wähle „Nein“: Dann kommt nichts davon. Unter Einstellungen › Hilfe kannst du es jederzeit ändern.": "Показать, как работает BibleStudy? Тогда сейчас начнётся короткая экскурсия, а каждая вкладка при первом открытии объяснит себя в нескольких предложениях, только эта вкладка. Если вы уже знаете программу, выберите «Нет»: тогда ничего из этого не появится. Изменить это можно в любой момент в разделе Настройки › Справка.",
+  "Ja, zeigen": "Да, показать",
+  "Nein, ich kenne mich aus": "Нет, я уже разбираюсь",
+  "Reiter-Rundgänge?": "Экскурсии по вкладкам?",
+  "Neu: Jeder Reiter kann sich beim ersten Öffnen in ein paar Sätzen selbst erklären, nur dieser eine Reiter. Möchtest du das? Unter Einstellungen › Hilfe kannst du es jederzeit ändern.": "Новое: каждая вкладка может при первом открытии объяснить себя в нескольких предложениях, только эта вкладка. Хотите? Изменить это можно в любой момент в разделе Настройки › Справка.",
+  "Ja, gern": "Да, конечно",
+  "Reiter-Rundgänge: Jeder Reiter erklärt sich beim ersten Öffnen kurz": "Экскурсии по вкладкам: каждая вкладка кратко объясняет себя при первом открытии",
+  "Nur der Reiter, den du gerade öffnest, und nur einmal. Der Tiefen-Rundgang löst sie nicht aus.": "Только вкладка, которую вы открываете, и только один раз. Подробная экскурсия их не запускает.",
+  "Reiter-Rundgänge zurücksetzen": "Сбросить экскурсии по вкладкам"
 }
