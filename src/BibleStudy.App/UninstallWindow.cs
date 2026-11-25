@@ -91,6 +91,7 @@ sealed class UninstallWindow : Window
                 Registry.CurrentUser.DeleteSubKeyTree(UninstallKey, false);
                 using var run = Registry.CurrentUser.OpenSubKey(RunKey, true);
                 run?.DeleteValue("BibleStudy", false);
+                LinkInbox.UnregisterScheme();
             }
         }
         catch { /* leftovers are harmless */ }

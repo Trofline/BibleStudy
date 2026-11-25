@@ -3566,5 +3566,9 @@
   "{0} Stellen erkannt": "{0} passages reconnus",
   "Nicht erkannt: {0}": "Non reconnu : {0}",
   "Keine Verse gefunden.": "Aucun verset trouvé.",
-  "Nicht in dieser Übersetzung: {0}": "Pas dans cette traduction : {0}"
+  "Nicht in dieser Übersetzung: {0}": "Pas dans cette traduction : {0}",
+  "Dieser Link nennt keine Bibelstelle.": "Ce lien n'indique aucun passage biblique.",
+  "Im geteilten Text wurde keine Bibelstelle gefunden.": "Aucun passage biblique n'a été trouvé dans le texte partagé.",
+  "Link zur Stelle kopieren (öffnet BibleStudy)": "Copier le lien vers le passage (ouvre BibleStudy)",
+  "Link kopiert: {0}": "Lien copié : {0}"
 }

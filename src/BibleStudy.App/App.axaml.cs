@@ -18,18 +18,51 @@ public partial class App : Application
     bool _listening;
 
     /// <summary>
-    /// iPhone: a pairing QR code opened from the camera app reaches the app as an activation of its scene, not through the app delegate
-    /// (Avalonia 12 runs the app in a scene): the link is taken from there. As early as possible, so the link that started the app is not missed.
+    /// iPhone: a pairing QR code opened from the camera app, or a link biblestudy://Joh3,16, reaches the app as an activation of its scene, not through
+    /// the app delegate (Avalonia 12 runs the app in a scene): the link is taken from there. A Mac hands over links the same way.
+    /// As early as possible, so the link that started the app is not missed.
     /// </summary>
     void ListenForLinks()
     {
-#if IOS
+#if IOS || !MOBILE
+        if (!OperatingSystem.IsIOS() && !OperatingSystem.IsMacOS()) return;
         if (_listening || this.TryGetFeature<Avalonia.Controls.ApplicationLifetimes.IActivatableLifetime>() is not { } life) return;
         _listening = true;
         life.Activated += (_, e) =>
         {
-            if (e is Avalonia.Controls.ApplicationLifetimes.ProtocolActivatedEventArgs { Uri: { } uri } && uri.Scheme == "biblestudy-sync") OfferPairLink(uri.OriginalString);
+            if (e is Avalonia.Controls.ApplicationLifetimes.ProtocolActivatedEventArgs { Uri: { } uri }) OfferLink(uri.OriginalString);
         };
+#endif
+    }
+
+    /// <summary>An address that opened the app: a pairing link (biblestudy-sync://…) or a Bible passage (biblestudy://Joh3,16).</summary>
+    public static void OfferLink(string url)
+    {
+#if MOBILE
+        if (url.StartsWith("biblestudy-sync:", StringComparison.OrdinalIgnoreCase)) { OfferPairLink(url); return; }
+#endif
+        if (BibleStudy.Core.Search.VerseLink.IsVerseLink(url)) OfferPassage(url);
+    }
+
+    static string? _pendingPassage;
+
+    /// <summary>A Bible passage that a link (biblestudy://Joh3,16) or a shared text named: opened at once, or as soon as the program is ready.</summary>
+    public static void OfferPassage(string text)
+    {
+        if (string.IsNullOrWhiteSpace(text)) return;
+        _pendingPassage = text;
+        Avalonia.Threading.Dispatcher.UIThread.Post(() => OpenMain()?.OpenPendingPassage());
+    }
+
+    public static string? TakePendingPassage() { var t = _pendingPassage; _pendingPassage = null; return t; }
+
+    /// <summary>The program's main view, once it is there (not while the terms are still asked).</summary>
+    static MainWindow? OpenMain()
+    {
+#if MOBILE
+        return _main;
+#else
+        return (Current?.ApplicationLifetime as IClassicDesktopStyleApplicationLifetime)?.MainWindow as MainWindow;
 #endif
     }
 
@@ -44,6 +77,7 @@ public partial class App : Application
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
             var args = Environment.GetCommandLineArgs();
+            if (LinkInbox.FromArgs(args) is { } link) OfferPassage(link);   // started by a click on biblestudy://Joh3,16
             var path = Path.Combine(AppPaths.Root, "settings.json");
             try { Loc.Use(AppSettings.Load(path).Language); } catch { Loc.Use(null); }
             if (args.Contains("--uninstall")) desktop.MainWindow = new UninstallWindow(args);

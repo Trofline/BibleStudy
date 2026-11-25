@@ -3566,5 +3566,9 @@
   "{0} Stellen erkannt": "{0} pasajes reconocidos",
   "Nicht erkannt: {0}": "No reconocido: {0}",
   "Keine Verse gefunden.": "No se encontraron versículos.",
-  "Nicht in dieser Übersetzung: {0}": "No está en esta traducción: {0}"
+  "Nicht in dieser Übersetzung: {0}": "No está en esta traducción: {0}",
+  "Dieser Link nennt keine Bibelstelle.": "Este enlace no indica ningún pasaje bíblico.",
+  "Im geteilten Text wurde keine Bibelstelle gefunden.": "No se encontró ningún pasaje bíblico en el texto compartido.",
+  "Link zur Stelle kopieren (öffnet BibleStudy)": "Copiar enlace al pasaje (abre BibleStudy)",
+  "Link kopiert: {0}": "Enlace copiado: {0}"
 }

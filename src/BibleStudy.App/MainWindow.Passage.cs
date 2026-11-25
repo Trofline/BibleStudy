@@ -42,6 +42,7 @@ public partial class MainWindow
         if (picked.Length > 0) Item(L("Markierten Text kopieren"), async () => { if (TopLevel.GetTopLevel(this)?.Clipboard is { } cb) await cb.SetTextAsync(picked); });
         var marked = MarkedTextOf(anchor);
         Item(L("Nur die Stelle kopieren (Strg+C)"), () => _ = CopyPlaceAsync());
+        Item(L("Link zur Stelle kopieren (öffnet BibleStudy)"), () => _ = CopyLinkAsync());
         Item(L("Vers mit Stelle kopieren (Strg+Umschalt+C)"), () => _ = CopyVerseAsync());
         Item(L("Markieren (Farbe wählen) …"), ShowColorFlyout);
         Item(L("Notiz schreiben"), () => { Open(2); NoteEditor.Focus(); });

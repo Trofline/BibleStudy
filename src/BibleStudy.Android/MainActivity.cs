@@ -13,6 +13,10 @@ public class AndroidApp(IntPtr handle, JniHandleOwnership transfer) : AvaloniaAn
 }
 
 [IntentFilter(new[] { global::Android.Content.Intent.ActionView }, Categories = new[] { global::Android.Content.Intent.CategoryDefault, global::Android.Content.Intent.CategoryBrowsable }, DataScheme = "biblestudy-sync")]
+// Bible passages: a link biblestudy://Joh3,16 (WhatsApp, e-mail, Obsidian …), text shared with the app, and "BibleStudy" in the menu of a text selection
+[IntentFilter(new[] { global::Android.Content.Intent.ActionView }, Categories = new[] { global::Android.Content.Intent.CategoryDefault, global::Android.Content.Intent.CategoryBrowsable }, DataScheme = "biblestudy")]
+[IntentFilter(new[] { global::Android.Content.Intent.ActionSend }, Categories = new[] { global::Android.Content.Intent.CategoryDefault }, DataMimeType = "text/plain")]
+[IntentFilter(new[] { "android.intent.action.PROCESS_TEXT" }, Categories = new[] { global::Android.Content.Intent.CategoryDefault }, DataMimeType = "text/plain")]
 [Activity(Label = "BibleStudy", Theme = "@style/MyTheme.NoActionBar", MainLauncher = true, Icon = "@mipmap/appicon",
     LaunchMode = LaunchMode.SingleTask,
     WindowSoftInputMode = global::Android.Views.SoftInput.AdjustResize,
@@ -25,19 +29,34 @@ public class MainActivity : AvaloniaMainActivity
     {
         Current = this;
         base.OnCreate(savedInstanceState);
-        Pair(Intent);
+        // (opened again from the list of recent apps, Android hands over the old intent once more: a link or a shared text is not opened twice)
+        if (Intent is { } start && (start.Flags & global::Android.Content.ActivityFlags.LaunchedFromHistory) == 0) Take(start);
     }
 
     protected override void OnNewIntent(global::Android.Content.Intent? intent)
     {
         base.OnNewIntent(intent);
-        Pair(intent);
+        Take(intent);
     }
 
-    /// <summary>A QR code of the comparison, scanned with the camera app, opens the app with its pairing address.</summary>
-    static void Pair(global::Android.Content.Intent? intent)
+    /// <summary>
+    /// What opened the app: a QR code of the comparison scanned with the camera app (its pairing address), a link to a Bible passage (biblestudy://Joh3,16),
+    /// a text shared with the app, or a text selection given to it with "BibleStudy" in its menu.
+    /// </summary>
+    static void Take(global::Android.Content.Intent? intent)
     {
-        if (intent?.DataString is { } url && url.StartsWith("biblestudy-sync:", StringComparison.Ordinal)) BibleStudy.App.App.OfferPairLink(url);
+        switch (intent?.Action)
+        {
+            case global::Android.Content.Intent.ActionView when intent.DataString is { } url:
+                BibleStudy.App.App.OfferLink(url);
+                break;
+            case global::Android.Content.Intent.ActionSend when intent.GetStringExtra(global::Android.Content.Intent.ExtraText) is { } text:
+                BibleStudy.App.App.OfferPassage(text);
+                break;
+            case "android.intent.action.PROCESS_TEXT" when intent.GetCharSequenceExtra("android.intent.extra.PROCESS_TEXT")?.ToString() is { } selected:
+                BibleStudy.App.App.OfferPassage(selected);
+                break;
+        }
     }
 
     /// <summary>The split view and parallel translations need a wide screen: a phone is turned across while they are open and may turn back afterwards.</summary>

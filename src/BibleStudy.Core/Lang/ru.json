@@ -3566,5 +3566,9 @@
   "{0} Stellen erkannt": "Распознано мест: {0}",
   "Nicht erkannt: {0}": "Не распознано: {0}",
   "Keine Verse gefunden.": "Стихи не найдены.",
-  "Nicht in dieser Übersetzung: {0}": "Нет в этом переводе: {0}"
+  "Nicht in dieser Übersetzung: {0}": "Нет в этом переводе: {0}",
+  "Dieser Link nennt keine Bibelstelle.": "Эта ссылка не указывает на место из Библии.",
+  "Im geteilten Text wurde keine Bibelstelle gefunden.": "В отправленном тексте не найдено ни одного места из Библии.",
+  "Link zur Stelle kopieren (öffnet BibleStudy)": "Копировать ссылку на место (открывает BibleStudy)",
+  "Link kopiert: {0}": "Ссылка скопирована: {0}"
 }
