@@ -3738,5 +3738,10 @@
   "Gut gemacht! Was noch unsicher ist, zeigt dir der Tiefen-Rundgang.": "Хорошо! Что ещё неясно, покажет подробная экскурсия.",
   "Der Tiefen-Rundgang zeigt dir alles Schritt für Schritt; danach klappt das Quiz bestimmt.": "Подробная экскурсия покажет всё шаг за шагом; после неё викторина точно получится.",
   "Dein bestes Ergebnis: {0}": "Твой лучший результат: {0}",
-  "Nochmal": "Ещё раз"
+  "Nochmal": "Ещё раз",
+  "Du warst bei Schritt {0} von {1} („{2}“). Möchtest du dort weitermachen oder noch einmal von vorn beginnen?": "Ты остановился на шаге {0} из {1} («{2}»). Продолжить с этого места или начать сначала?",
+  "Weitermachen": "Продолжить",
+  "Von vorn beginnen": "Начать сначала",
+  "Gezeigt. Probier es ruhig auch selbst.": "Показано. Попробуй и сам.",
+  "Noch offen. Leg den Querverweis erst im Schritt davor an.": "Ещё не сделано. Сначала добавь перекрёстную ссылку на предыдущем шаге."
 }

@@ -3738,5 +3738,10 @@
   "Gut gemacht! Was noch unsicher ist, zeigt dir der Tiefen-Rundgang.": "Bien joué ! Ce qui reste flou, la visite approfondie te le montre.",
   "Der Tiefen-Rundgang zeigt dir alles Schritt für Schritt; danach klappt das Quiz bestimmt.": "La visite approfondie te montre tout étape par étape ; après, le quiz ira sûrement mieux.",
   "Dein bestes Ergebnis: {0}": "Ton meilleur résultat : {0}",
-  "Nochmal": "Encore"
+  "Nochmal": "Encore",
+  "Du warst bei Schritt {0} von {1} („{2}“). Möchtest du dort weitermachen oder noch einmal von vorn beginnen?": "Tu étais à l'étape {0} sur {1} (« {2} »). Veux-tu continuer là ou recommencer depuis le début ?",
+  "Weitermachen": "Continuer",
+  "Von vorn beginnen": "Recommencer du début",
+  "Gezeigt. Probier es ruhig auch selbst.": "Montré. Essaie aussi toi-même.",
+  "Noch offen. Leg den Querverweis erst im Schritt davor an.": "Pas encore fait. Crée d'abord le renvoi à l'étape précédente."
 }

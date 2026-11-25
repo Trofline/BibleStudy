@@ -25,11 +25,16 @@ public partial class MainWindow
     int _deepIndex;
     Border? _deepCard;
     DispatcherTimer? _deepTimer;
-    bool _deepXrefMade;
-    string? _deepConcStart;
-    int _deepStudyStart;
-    /// <summary>How many words were looked up in the word study (the deep tour sees from it that a word was tapped).</summary>
-    int _studyCount;
+    bool _deepDemoUsed;
+    /// <summary>
+    /// Counters of what the person did (chapters shown, verses chosen, searches, words looked up): the deep tour takes them at the start of a step
+    /// and ticks a task off only when something happened after that, not because the state was already there.
+    /// </summary>
+    int _studyCount, _chapterShows, _selectCount, _searchCount;
+    sealed record DeepBase(int Chapters, int Selects, int Searches, int Studies, string Conc, string? Mark, HashSet<long> Xrefs);
+    DeepBase _deepBase = new(0, 0, 0, 0, "", null, []);
+
+    bool OnDemoChapter => _curBook == DemoBook && _curChapter == DemoChapter;
 
     bool DeepTouring => _deepCard is not null;
 
@@ -41,15 +46,21 @@ public partial class MainWindow
         if (_curBook != DemoBook || _curChapter != DemoChapter) await GoToAsync(DemoBook, DemoChapter, DemoVerse);
     }
 
-    bool HasDemoXref()
+    /// <summary>The ids of the cross references John 3:16 → Rom 5:8 in the vault (the one of the tour, and any the person had before).</summary>
+    HashSet<long> DemoXrefIds()
     {
         try
         {
-            return _vault.GetMyXrefs(DemoBook, DemoChapter).Any(x => x.From.Book == DemoBook && x.From.Chapter == DemoChapter && x.From.Verse == DemoVerse
-                && x.To.Book == DemoTarget && x.To.Chapter == DemoTargetChapter && x.To.Verse == DemoTargetVerse);
+            return _vault.GetMyXrefs(DemoBook, DemoChapter).Where(x => x.From.Book == DemoBook && x.From.Chapter == DemoChapter && x.From.Verse == DemoVerse
+                && x.To.Book == DemoTarget && x.To.Chapter == DemoTargetChapter && x.To.Verse == DemoTargetVerse).Select(x => (long)x.Id).ToHashSet();
         }
-        catch (Microsoft.Data.Sqlite.SqliteException) { return false; }
+        catch (Microsoft.Data.Sqlite.SqliteException) { return []; }
     }
+
+    string? DemoMark() => OnDemoChapter && _wholeMarks.TryGetValue(DemoVerse, out var c) ? c : null;
+
+    /// <summary>What was there when the step began: a task counts only for what changes afterwards.</summary>
+    DeepBase TakeDeepBase() => new(_chapterShows, _selectCount, _searchCount, _studyCount, ConcTitle.Text ?? "", DemoMark(), DemoXrefIds());
 
     DeepStep[] DeepTourSteps()
     {
@@ -61,7 +72,9 @@ public partial class MainWindow
             new("goto", read, K("Zu einer Bibelstelle springen"),
                 K("Klick oben in das Feld „Gehe zu …“ (oder drück Strg+K), tippe „Joh 3,16“ und Enter. Dasselbe Feld findet auch Bücher, Wörter, Befehle und deine Dokumente. Am Handy tippst du dafür auf den Titel oben."),
                 () => _phone ? _pTitle : QuickJumpBox, K("Öffne Johannes 3."),
-                () => _curBook == DemoBook && _curChapter == DemoChapter, EnsureDemoChapterAsync),
+                () => _chapterShows > _deepBase.Chapters && OnDemoChapter, EnsureDemoChapterAsync,
+                // already at John 3: the tour starts somewhere else, so there is a way to go
+                async () => { ShowReader(); if (OnDemoChapter) await GoToAsync("PSA", 23, 1); }),
             new("book", read, K("Buch und Kapitel"),
                 K("Hier siehst du alle Bücher auf einen Blick; nach dem Buch kommt gleich die Kapitelliste. Mit ◀ ▶ oder den Pfeiltasten blätterst du Kapitel, der Pfeil ganz links bringt dich zur vorigen Stelle zurück."),
                 () => BookBtn, Fits: () => !_phone),
@@ -75,12 +88,12 @@ public partial class MainWindow
             new("verse", verse, K("Einen Vers wählen"),
                 K("Klick auf Vers 16 (am Handy antippen). Notiz, Lesezeichen und die Querverweise rechts beziehen sich dann auf diesen Vers. Mit Umschalt+Klick wählst du mehrere Verse."),
                 DemoVerseBox, K("Wähle Johannes 3,16."),
-                () => _curBook == DemoBook && _curChapter == DemoChapter && _selected == DemoVerse,
+                () => _selectCount > _deepBase.Selects && OnDemoChapter && _selected == DemoVerse,
                 async () => { await EnsureDemoChapterAsync(); SelectVerse(DemoVerse); }, EnsureDemoChapterAsync),
             new("mark", verse, K("Markieren"),
                 K("Mit dem Stift färbst du den gewählten Vers oder einen markierten Teil des Textes ein. Per Tastatur geht es mit der Leertaste. Alle Markierungen findest du unter „Sammlung“ wieder, nach Farben und Ordnern."),
                 () => _phone ? DemoVerseBox() : MarkBtn, K("Färbe Vers 16 in einer Farbe deiner Wahl ein."),
-                () => _curBook == DemoBook && _curChapter == DemoChapter && _wholeMarks.ContainsKey(DemoVerse), Prepare: EnsureDemoChapterAsync),
+                () => DemoMark() is { } now && now != _deepBase.Mark, Prepare: EnsureDemoChapterAsync),
             new("bookmark", verse, K("Lesezeichen"),
                 K("„Merken“ (Strg+D) setzt ein Lesezeichen auf den Vers, zum späteren Zurückspringen. Unter „Merken“ findest du alle wieder."),
                 () => BookmarkBtn, Fits: () => !_phone),
@@ -91,19 +104,20 @@ public partial class MainWindow
             new("study-on", words, K("Wortstudie einschalten"),
                 K("Mit diesem Schalter werden die Wörter unterstrichen, hinter denen ein hebräisches oder griechisches Grundwort mit Strong-Nummer steht."),
                 () => StudyBtn, K("Schalte die Wortstudie ein."),
-                () => StudyBtn.IsChecked == true, async () => { await EnsureDemoChapterAsync(); StudyBtn.IsChecked = true; }, EnsureDemoChapterAsync, () => !_phone),
+                () => StudyBtn.IsChecked == true, async () => { await EnsureDemoChapterAsync(); StudyBtn.IsChecked = true; },
+                // it is on already: off first, so the step shows the switch at work
+                async () => { await EnsureDemoChapterAsync(); if (StudyBtn.IsChecked == true) StudyBtn.IsChecked = false; }, () => !_phone),
             new("study-word", words, K("Ein Wort antippen"),
                 K("Tippe in Vers 16 auf „geliebt“ (je nach Übersetzung „liebte“). Rechts erscheint das griechische Grundwort agapaō (G25): Bedeutung, Aussprache und wie es übersetzt wird."),
                 DemoVerseBox, K("Tippe ein unterstrichenes Wort an."),
-                () => _studyCount > _deepStudyStart,
+                () => _studyCount > _deepBase.Studies,
                 async () => { await EnsureDemoChapterAsync(); RevealSideTab(StrongTab); StrongSearchBox.Text = "G25"; await SearchStrongAsync(); },
-                async () => { await EnsureDemoChapterAsync(); _deepStudyStart = _studyCount; }),
+                EnsureDemoChapterAsync),
             new("occurrences", words, K("Alle Vorkommen"),
                 K("Unter dem Wort führt „Alle Vorkommen“ zur Konkordanz: jede Stelle, an der agapaō steht, nach Büchern geordnet. So siehst du, wie Johannes das Wort sonst gebraucht, und „Vorkommen als Diagramm“ zeigt die Verteilung über die Bibel."),
                 null, K("Öffne die Vorkommen eines Wortes."),
-                () => (ConcTitle.Text ?? "") is { Length: > 0 } t && t != _deepConcStart,
-                async () => await ShowConcordanceAsync("G25", "G25  ἀγαπάω"),
-                () => { _deepConcStart = ConcTitle.Text ?? ""; return Task.CompletedTask; }),
+                () => (ConcTitle.Text ?? "") is { Length: > 0 } t && t != _deepBase.Conc,
+                async () => await ShowConcordanceAsync("G25", "G25  ἀγαπάω")),
             new("grundtext", words, K("Grundtext Wort für Wort"),
                 K("Rechtsklick auf den Vers › „Studium“ › „Grundtext Wort für Wort“ zeigt den ganzen Vers im Griechischen: Umschrift, Grammatik und Bedeutung jedes Wortes. Ein Klick auf ein Wort öffnet das Wörterbuch."),
                 () => DemoVerseBox(), null, null,
@@ -116,7 +130,7 @@ public partial class MainWindow
             new("myxref-add", refs, K("Eigenen Querverweis anlegen"),
                 K("Röm 5,8 sagt etwas sehr Ähnliches: „Gott aber erweist seine Liebe zu uns darin, dass Christus für uns gestorben ist.“ Verknüpfe die beiden: Rechtsklick auf Vers 16 (am Handy lange tippen) › „Studium“ › „Eigenen Querverweis setzen …“, als Ziel „Röm 5,8“ eintippen und speichern."),
                 DemoVerseBox, K("Lege den Querverweis Joh 3,16 → Röm 5,8 an."),
-                () => { var has = HasDemoXref(); if (has) _deepXrefMade = true; return has; },
+                () => DemoXrefIds().Any(id => !_deepBase.Xrefs.Contains(id)),
                 async () => { await EnsureDemoChapterAsync(); if (DemoVerseBox() is { } box) ShowMyXrefEditor(new VerseRef(DemoBook, DemoChapter, DemoVerse), box, "Röm 5,8"); },
                 EnsureDemoChapterAsync),
             new("myxref-chip", refs, K("Der goldene Chip"),
@@ -125,19 +139,19 @@ public partial class MainWindow
             new("myxref-del", refs, K("Querverweis wieder löschen"),
                 K("Rechtsklick auf den goldenen Chip (am Handy lange tippen) › „Eigenen Querverweis löschen“. Danach ist er auf beiden Seiten verschwunden."),
                 DemoVerseBox, K("Lösche den Querverweis Joh 3,16 → Röm 5,8 wieder."),
-                () => _deepXrefMade && !HasDemoXref(),
+                () => _deepBase.Xrefs.Count > 0 && _deepBase.Xrefs.Any(id => !DemoXrefIds().Contains(id)),
                 async () =>
                 {
                     foreach (var x in _vault.GetMyXrefs(DemoBook, DemoChapter).Where(x => x.From.Verse == DemoVerse && x.To.Book == DemoTarget && x.To.Chapter == DemoTargetChapter && x.To.Verse == DemoTargetVerse))
                         _vault.DeleteMyXref(x.Id);
                     _myXrefKey = null; await RedrawChapterAsync();
                 },
-                async () => { await EnsureDemoChapterAsync(); if (HasDemoXref()) _deepXrefMade = true; }),
+                EnsureDemoChapterAsync),
 
             new("search", search, K("Suchen"),
                 K("Rechts unter „Suche“ findest du Wörter und Wendungen in der ganzen Bibel, nach Büchern gruppiert. „In Anführungszeichen“ sucht genau diese Wendung, „G25“ sucht nach der Strong-Nummer, also nach dem Grundwort unabhängig von der Übersetzung."),
                 () => SearchBox, K("Suche nach „Liebe“."),
-                () => (SearchBox.Text ?? "").Contains(L("Liebe"), StringComparison.OrdinalIgnoreCase),
+                () => _searchCount > _deepBase.Searches && (SearchBox.Text ?? "").Contains(L("Liebe"), StringComparison.OrdinalIgnoreCase),
                 async () => { RevealSideTab(0); SearchBox.Text = L("Liebe"); await SearchAsync(); },
                 () => { ShowReader(); RevealSideTab(0); return Task.CompletedTask; }),
 
@@ -160,15 +174,26 @@ public partial class MainWindow
         return all.Where(s => s.Fits?.Invoke() ?? true).ToArray();
     }
 
-    /// <summary>Starts the deep tour where it was left (or at the beginning).</summary>
-    void StartDeepTour(int? at = null)
+    /// <summary>Starts the deep tour. Was it left in the middle, the person chooses: go on there, or start again from the beginning.</summary>
+    void StartDeepTour(int? at = null) => _ = StartDeepTourAsync(at);
+
+    async Task StartDeepTourAsync(int? at)
     {
         if (_touring) return;
         _palette.IsOpen = false; Focus();
-        _deepSteps = DeepTourSteps();
+        var steps = DeepTourSteps();
         var start = at ?? _settings.DeepTourStep;
-        if (start < 0 || start >= _deepSteps.Length) start = 0;
-        _ = ShowDeepStepAsync(start);
+        if (start < 0 || start >= steps.Length) start = 0;
+        if (at is null && start > 0 && !DeepTouring)
+        {
+            var answer = await AskAsync(L("Tiefen-Rundgang"),
+                L("Du warst bei Schritt {0} von {1} („{2}“). Möchtest du dort weitermachen oder noch einmal von vorn beginnen?", start + 1, steps.Length, L(steps[start].Title)),
+                L("Weitermachen"), L("Von vorn beginnen"));
+            if (answer < 0) return;
+            if (answer == 1) { start = 0; _settings.DeepTourSeen.Clear(); SaveSettings(); }
+        }
+        _deepSteps = steps;
+        await ShowDeepStepAsync(start);
     }
 
     async Task ShowDeepStepAsync(int i)
@@ -187,6 +212,7 @@ public partial class MainWindow
             else if (_activeWork is not null) ShowReader();
         }
         catch (Exception ex) { ErrorLog.Write(ex); }
+        _deepBase = TakeDeepBase(); _deepDemoUsed = false;
         BuildDeepCard(step, i, steps.Length);
         // the frame goes on the control once the page has its place (a tab that just opened, a chapter that just loaded)
         DispatcherTimer.RunOnce(() => { if (_deepIndex == i && DeepTouring) RingDeepAnchor(step); }, TimeSpan.FromMilliseconds(400));
@@ -256,6 +282,7 @@ public partial class MainWindow
             demo = new Button { Content = step.DemoLabel is { } label ? L(label) : step.Task is null ? L("Zeigen") : L("Zeig’s mir") };
             demo.Click += async (_, _) =>
             {
+                _deepDemoUsed = true;
                 try { await run(); } catch (Exception ex) { ErrorLog.Write(ex); StatusText.Text = ex.Message; }
                 DispatcherTimer.RunOnce(() => { if (_deepIndex == i && DeepTouring) RingDeepAnchor(step); }, TimeSpan.FromMilliseconds(400));
             };
@@ -275,7 +302,8 @@ public partial class MainWindow
             {
                 bool ok;
                 try { ok = done(); } catch (Exception ex) when (ex is InvalidOperationException or NullReferenceException or Microsoft.Data.Sqlite.SqliteException) { ok = false; }
-                taskState.Text = ok ? "✓ " + L("Geschafft! Weiter geht’s.") : L("Noch offen.");
+                taskState.Text = ok ? "✓ " + (_deepDemoUsed ? L("Gezeigt. Probier es ruhig auch selbst.") : L("Geschafft! Weiter geht’s."))
+                    : step.Id == "myxref-del" && _deepBase.Xrefs.Count == 0 ? L("Noch offen. Leg den Querverweis erst im Schritt davor an.") : L("Noch offen.");
                 taskState.Foreground = new SolidColorBrush(Color.Parse(ok ? NoticeGood : "#8A8A8A"));
             }
             Check();
@@ -305,6 +333,9 @@ public partial class MainWindow
             b.Click += (_, _) => { fly.Hide(); _ = ShowDeepStepAsync(index); };
             list.Children.Add(b);
         }
+        var restart = new Button { Content = L("Von vorn beginnen"), Margin = new(0, 10, 0, 0) };
+        restart.Click += (_, _) => { fly.Hide(); _settings.DeepTourSeen.Clear(); SaveSettings(); _ = ShowDeepStepAsync(0); };
+        list.Children.Add(restart);
         fly.Content = new ScrollViewer { MaxHeight = 420, Width = PW(300), Content = list };
         fly.ShowAt(anchor);
     }

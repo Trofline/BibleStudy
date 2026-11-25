@@ -3738,5 +3738,10 @@
   "Gut gemacht! Was noch unsicher ist, zeigt dir der Tiefen-Rundgang.": "¡Bien hecho! Lo que aún no tengas claro te lo muestra el recorrido a fondo.",
   "Der Tiefen-Rundgang zeigt dir alles Schritt für Schritt; danach klappt das Quiz bestimmt.": "El recorrido a fondo te lo muestra todo paso a paso; después el quiz seguro que sale bien.",
   "Dein bestes Ergebnis: {0}": "Tu mejor resultado: {0}",
-  "Nochmal": "Otra vez"
+  "Nochmal": "Otra vez",
+  "Du warst bei Schritt {0} von {1} („{2}“). Möchtest du dort weitermachen oder noch einmal von vorn beginnen?": "Estabas en el paso {0} de {1} («{2}»). ¿Quieres seguir ahí o empezar de nuevo desde el principio?",
+  "Weitermachen": "Continuar",
+  "Von vorn beginnen": "Empezar desde el principio",
+  "Gezeigt. Probier es ruhig auch selbst.": "Mostrado. Pruébalo también tú.",
+  "Noch offen. Leg den Querverweis erst im Schritt davor an.": "Todavía pendiente. Crea primero la referencia cruzada en el paso anterior."
 }

@@ -3738,5 +3738,10 @@
   "Gut gemacht! Was noch unsicher ist, zeigt dir der Tiefen-Rundgang.": "Well done! The deep tour shows you whatever is still unclear.",
   "Der Tiefen-Rundgang zeigt dir alles Schritt für Schritt; danach klappt das Quiz bestimmt.": "The deep tour shows you everything step by step; after that the quiz will surely go well.",
   "Dein bestes Ergebnis: {0}": "Your best result: {0}",
-  "Nochmal": "Again"
+  "Nochmal": "Again",
+  "Du warst bei Schritt {0} von {1} („{2}“). Möchtest du dort weitermachen oder noch einmal von vorn beginnen?": "You were at step {0} of {1} (\"{2}\"). Do you want to continue there or start again from the beginning?",
+  "Weitermachen": "Continue",
+  "Von vorn beginnen": "Start from the beginning",
+  "Gezeigt. Probier es ruhig auch selbst.": "Shown. Feel free to try it yourself too.",
+  "Noch offen. Leg den Querverweis erst im Schritt davor an.": "Not done yet. Add the cross reference in the step before first."
 }
