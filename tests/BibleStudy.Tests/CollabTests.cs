@@ -125,6 +125,28 @@ public class CollabTests
         Assert.True(relay.Seen.Max(b => b.Length) <= 256 * 1024, "every piece fits the relay");
     }
 
+    /// <summary>Against the real relay (relay/src/index.js), when BIBLESTUDY_RELAY_URL names one (for example ws://127.0.0.1:8787 from "npx wrangler dev"); skipped otherwise.</summary>
+    [Fact]
+    public async Task Three_people_meet_on_the_real_relay()
+    {
+        if (Environment.GetEnvironmentVariable("BIBLESTUDY_RELAY_URL") is not { Length: > 0 } url) return;
+        using var a = RelayLink.Create(url);
+        await a.StartAsync();
+        using var b = RelayLink.Join(url, a.Code);
+        using var c = RelayLink.Join(url, a.Code);
+        var got = new ConcurrentQueue<string>();
+        c.Received += got.Enqueue;
+        await b.StartAsync(); await c.StartAsync();
+        await Until(() => a.Others == 2 && b.Others == 2 && c.Others == 2, 20);
+        Assert.Single(new[] { a.CheckCode, b.CheckCode, c.CheckCode }.Distinct());
+        var big = "{\"t\":\"doc\",\"body\":\"" + new string('x', 500_000) + "\"}";
+        a.Send("{\"t\":\"chat\",\"text\":\"Hallo\"}");
+        b.Send(big);
+        await Until(() => got.Count == 2, 20);
+        Assert.Contains("{\"t\":\"chat\",\"text\":\"Hallo\"}", got);
+        Assert.Contains(big, got);
+    }
+
     [Theory]
     [InlineData("k7f2-qxm9", "K7F2QXM9")]
     [InlineData(" K7F2 QXM9 ", "K7F2QXM9")]
