@@ -3584,5 +3584,6 @@
   "Noch keine früheren Fassungen. Sobald du den Text änderst, merkt sich BibleStudy, wie er vorher war (höchstens alle {0} Minuten eine Fassung).": "No earlier versions yet. As soon as you change the text, BibleStudy keeps what it was before (at most one version every {0} minutes).",
   "seitdem +{0} / −{1} Zeilen": "since then +{0} / −{1} lines",
   "Stern aus den wichtigsten Querverweisen. Klick auf einen Knoten: hingehen. Ziehen: Knoten verschieben.": "Star of the strongest cross references. Click a node: go there. Drag: move the node.",
-  "Zweite Ebene: Verbindungen zwischen den Nachbarn": "Second ring: links between the neighbours"
+  "Zweite Ebene: Verbindungen zwischen den Nachbarn": "Second ring: links between the neighbours",
+  "Nach einem Update die Patch Notes (was ist neu) automatisch anzeigen": "Show the patch notes (what's new) automatically after an update"
 }

@@ -3584,5 +3584,6 @@
   "Noch keine früheren Fassungen. Sobald du den Text änderst, merkt sich BibleStudy, wie er vorher war (höchstens alle {0} Minuten eine Fassung).": "Pas encore de versions précédentes. Dès que vous modifiez le texte, BibleStudy garde l’état d’avant (au plus une version toutes les {0} minutes).",
   "seitdem +{0} / −{1} Zeilen": "depuis +{0} / −{1} lignes",
   "Stern aus den wichtigsten Querverweisen. Klick auf einen Knoten: hingehen. Ziehen: Knoten verschieben.": "Étoile des renvois les plus forts. Clic sur un nœud : y aller. Glisser : déplacer le nœud.",
-  "Zweite Ebene: Verbindungen zwischen den Nachbarn": "Second niveau : liens entre les voisins"
+  "Zweite Ebene: Verbindungen zwischen den Nachbarn": "Second niveau : liens entre les voisins",
+  "Nach einem Update die Patch Notes (was ist neu) automatisch anzeigen": "Afficher automatiquement les notes de version (quoi de neuf) après une mise à jour"
 }

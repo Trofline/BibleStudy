@@ -3584,5 +3584,6 @@
   "Noch keine früheren Fassungen. Sobald du den Text änderst, merkt sich BibleStudy, wie er vorher war (höchstens alle {0} Minuten eine Fassung).": "Прежних версий пока нет. Как только вы измените текст, BibleStudy сохранит прежний вариант (не чаще одной версии в {0} мин.).",
   "seitdem +{0} / −{1} Zeilen": "с тех пор +{0} / −{1} строк",
   "Stern aus den wichtigsten Querverweisen. Klick auf einen Knoten: hingehen. Ziehen: Knoten verschieben.": "Звезда из самых сильных перекрёстных ссылок. Щелчок по узлу: перейти. Перетаскивание: переместить узел.",
-  "Zweite Ebene: Verbindungen zwischen den Nachbarn": "Второй уровень: связи между соседями"
+  "Zweite Ebene: Verbindungen zwischen den Nachbarn": "Второй уровень: связи между соседями",
+  "Nach einem Update die Patch Notes (was ist neu) automatisch anzeigen": "Автоматически показывать список изменений (что нового) после обновления"
 }

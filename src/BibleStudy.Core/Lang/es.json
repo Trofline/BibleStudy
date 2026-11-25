@@ -3584,5 +3584,6 @@
   "Noch keine früheren Fassungen. Sobald du den Text änderst, merkt sich BibleStudy, wie er vorher war (höchstens alle {0} Minuten eine Fassung).": "Aún no hay versiones anteriores. En cuanto cambies el texto, BibleStudy guarda cómo era antes (como mucho una versión cada {0} minutos).",
   "seitdem +{0} / −{1} Zeilen": "desde entonces +{0} / −{1} líneas",
   "Stern aus den wichtigsten Querverweisen. Klick auf einen Knoten: hingehen. Ziehen: Knoten verschieben.": "Estrella de las referencias más fuertes. Clic en un nodo: ir allí. Arrastrar: mover el nodo.",
-  "Zweite Ebene: Verbindungen zwischen den Nachbarn": "Segundo nivel: conexiones entre los vecinos"
+  "Zweite Ebene: Verbindungen zwischen den Nachbarn": "Segundo nivel: conexiones entre los vecinos",
+  "Nach einem Update die Patch Notes (was ist neu) automatisch anzeigen": "Mostrar automáticamente las notas de la versión (novedades) después de una actualización"
 }
