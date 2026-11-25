@@ -5,6 +5,9 @@ using Android.Appwidget;
 using Android.Content;
 using Android.Widget;
 
+// the Android project builds into the namespace BibleStudy.App, so its generated Resource class lives there
+using Resource = BibleStudy.App.Resource;
+
 namespace BibleStudy.Droid;
 
 /// <summary>
