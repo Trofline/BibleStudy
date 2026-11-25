@@ -8,7 +8,7 @@ on:
   workflow_dispatch:
     inputs:
       tag:
-        description: "Release tag the IPA is attached to (the program of this tag is built), e.g. ios-beta-1.9.2"
+        description: "Release tag the IPA is attached to (the program of this tag is built), e.g. ios-beta-1.9.2. \"test\" = a trial build of the branch in ref: the IPA stays with the run (Artifacts), no release is touched"
         required: true
       ref:
         description: "Branch or tag to build (empty = the tag above). For trying a fix before the tag is moved."
@@ -83,7 +83,7 @@ jobs:
           FASTIN: ${{ github.event.inputs.fast }}
         run: |
           FAST=""; [ "$FASTIN" = "true" ] && FAST="-p:UseInterpreter=true -p:MtouchInterpreter=all"
-          VERSION="${TAG##*-}"; VERSION="${VERSION#v}"
+          VERSION="${TAG##*-}"; VERSION="${VERSION#v}"; [ "$TAG" = "test" ] && VERSION=$(sed -n 's:.*<ApplicationDisplayVersion>\(.*\)</ApplicationDisplayVersion>.*:\1:p' src/BibleStudy.iOS/BibleStudy.iOS.csproj | head -1)
           dotnet build src/BibleStudy.iOS/BibleStudy.iOS.csproj -c Release -r ios-arm64 \
             -p:EnableCodeSigning=false -p:ApplicationDisplayVersion=$VERSION -p:Version=$VERSION $FAST -v:n
           APP=$(find src/BibleStudy.iOS/bin/Release -name "*.app" -maxdepth 6 -type d | head -1)
@@ -121,7 +121,7 @@ jobs:
 
       - name: Pack the IPA
         run: |
-          VERSION="${TAG##*-}"; VERSION="${VERSION#v}"
+          VERSION="${TAG##*-}"; VERSION="${VERSION#v}"; [ "$TAG" = "test" ] && VERSION=$(sed -n 's:.*<ApplicationDisplayVersion>\(.*\)</ApplicationDisplayVersion>.*:\1:p' src/BibleStudy.iOS/BibleStudy.iOS.csproj | head -1)
           APP=$(find src/BibleStudy.iOS/bin/Release -name "*.app" -maxdepth 6 -type d | head -1)
           rm -rf ipa && mkdir -p ipa/Payload
           cp -R "$APP" ipa/Payload/BibleStudy.app
@@ -129,5 +129,13 @@ jobs:
           shasum -a 256 "BibleStudy-iOS-$VERSION.ipa" | tee "BibleStudy-iOS-$VERSION.ipa.sha256"
           ls -la BibleStudy-iOS-*.ipa
 
+      - name: Keep the trial IPA with the run
+        if: github.event.inputs.tag == 'test'
+        uses: actions/upload-artifact@v4
+        with:
+          name: BibleStudy-iOS-test
+          path: BibleStudy-iOS-*.ipa
+
       - name: Attach to the release
+        if: github.event.inputs.tag != 'test'
         run: gh release upload "$TAG" BibleStudy-iOS-*.ipa BibleStudy-iOS-*.ipa.sha256 --clobber
