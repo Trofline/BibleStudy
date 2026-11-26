@@ -11,14 +11,14 @@ namespace BibleStudy.App;
 /// </summary>
 public partial class MainWindow
 {
-    const string CollabConsentVersion = "1";
+    const string CollabConsentVersion = "2";   // 2: the relay server for studying across networks
 
     bool CollabConsented => _settings.CollabConsent.StartsWith(CollabConsentVersion + "|", StringComparison.Ordinal);
 
     static readonly string[] ConsentPoints =
     [
-        L("Es gibt keinen Server der Entwickler. Die Entwickler erhalten, speichern und sehen keine Daten aus dieser Verbindung."),
-        L("Die andere Person sieht deinen Namen, deine Internetadresse (IP-Adresse) und alles, was du ausdrücklich sendest. Beim Verbindungsaufbau erfährt außerdem ein öffentlicher Hilfsdienst (STUN von Google bzw. Cloudflare) deine IP-Adresse; Inhalte laufen dort nicht durch."),
+        L("Im selben Netzwerk verbinden sich die Programme direkt, ohne Server. Über das Internet (mit Raum-Code) läuft die Verbindung über einen Vermittler-Server der Entwickler. Er reicht nur Ende-zu-Ende-verschlüsselte Nachrichten weiter und speichert nichts; die Entwickler können keine Inhalte lesen."),
+        L("Die andere Person sieht deinen Namen und alles, was du ausdrücklich sendest, im selben Netzwerk auch deine Internetadresse (IP-Adresse). Über das Internet sieht der Vermittler-Server (betrieben bei Cloudflare) deine IP-Adresse, wie jede Webseite, die du aufrufst; Inhalte kann er nicht lesen."),
         L("Du entscheidest selbst, mit wem du dich verbindest und was du teilst. Verbinde dich nur mit Personen, denen du vertraust, und gib die Codes nur an sie weiter."),
         L("Teile nur Inhalte, an denen du die Rechte hast oder deren Weitergabe erlaubt ist. Importierte Bibeltexte (nur private Nutzung) verschickt dieses Programm nicht; Texte, die du in eigenen Dokumenten zitierst, prüfst du selbst."),
         L("Nutze die Funktion nicht für rechtswidrige, beleidigende oder belästigende Inhalte. Für das, was du sendest, bist du verantwortlich; was du empfängst, ist ungeprüft."),
@@ -31,7 +31,7 @@ public partial class MainWindow
     {
         var stack = new StackPanel { Spacing = 8 };
         stack.Children.Add(new TextBlock { Text = L("Bevor du zusammen studierst"), FontWeight = FontWeight.SemiBold, FontSize = 16 });
-        stack.Children.Add(new TextBlock { Text = L("Diese Funktion verbindet dein Programm direkt mit dem Programm einer anderen Person. Bitte lies und bestätige:"), TextWrapping = TextWrapping.Wrap, Classes = { "caption" } });
+        stack.Children.Add(new TextBlock { Text = L("Diese Funktion verbindet dein Programm mit dem Programm einer anderen Person. Bitte lies und bestätige:"), TextWrapping = TextWrapping.Wrap, Classes = { "caption" } });
         for (var i = 0; i < ConsentPoints.Length; i++)
         {
             var row = new Grid { ColumnDefinitions = new("22,*") };

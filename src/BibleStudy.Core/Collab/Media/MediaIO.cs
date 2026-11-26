@@ -29,10 +29,22 @@ public static class MediaIO
         return new FfmpegWriter(Ffmpeg.StartSpeaker(), next);
     }
 
-    public static IDisposable StartCamera(MediaDevice cam, Action<byte[]> onPicture)
+    /// <summary>Starts the camera; <paramref name="onPicture"/> gets every JPEG picture (on a background thread). A camera that cannot give the
+    /// asked size or kind is opened again more simply (see <see cref="Ffmpeg.CameraAttempts"/>).</summary>
+    public static async Task<IDisposable> StartCameraAsync(MediaDevice cam, CameraQuality quality, Action<byte[]> onPicture)
     {
-        var split = new MjpegSplitter();
-        return new FfmpegReader(Ffmpeg.StartCamera(cam), 64 * 1024, bytes => { foreach (var f in split.Push(bytes)) onPicture(f); }, exact: false);
+        for (var attempt = 0; ; attempt++)
+        {
+            var split = new MjpegSplitter();
+            var first = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+            var p = Ffmpeg.StartCamera(cam, quality, attempt);
+            var exited = p.WaitForExitAsync();
+            var reader = new FfmpegReader(p, 256 * 1024, bytes => { foreach (var f in split.Push(bytes)) { first.TrySetResult(); onPicture(f); } }, exact: false);
+            if (attempt >= Ffmpeg.CameraAttempts - 1) return reader;
+            var done = await Task.WhenAny(first.Task, exited, Task.Delay(8000));
+            if (done != exited) return reader;   // pictures come (or it is slow to start, but running)
+            reader.Dispose();                     // the camera does not offer this: ask more simply
+        }
     }
 
     /// <summary>Reads what an FFmpeg process writes: sound in exact pieces, pictures as they come.</summary>

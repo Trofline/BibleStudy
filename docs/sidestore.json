@@ -18,6 +18,15 @@
       "category": "other",
       "versions": [
         {
+          "version": "1.9.31",
+          "buildVersion": "50",
+          "date": "2026-11-26",
+          "localizedDescription": "## New in 1.9.31\n**Kind of update:** New feature, Mini feature, Fix\n- **[New feature]** **Bible passages as links:** a link like `biblestudy://Joh3,16` (in WhatsApp, e-mail, Obsidian or on a web page) opens the passage right in BibleStudy; several passages become a list. The verse menu has \"Copy link to the passage (opens BibleStudy)\". On Android, \"Share → BibleStudy\" and \"BibleStudy\" in the menu of a text selection work too.\n- **[New feature]** **Words of Jesus (red letters) for imported Bibles:** importing takes over the red-letter words a file marks (OSIS, USFM, USX, Zefania, e-Sword, MySword, web pages, EPUB, Word). Translations without their own marks get them estimated verse by verse from the KJV; can be switched off in the settings.\n- **[New feature]** **Install update file:** under Settings › Updates and program you can install a test version you received as a file (`.bsupdate`). Your data is backed up first, and if anything goes wrong the previous version comes back by itself.\n- **[Mini feature]** **Patch notes after an update:** they open by themselves after the restart; a switch under Updates and program turns this off.\n- **[Mini feature]** **iPhone widgets:** the round button on the lock screen shows the BibleStudy symbol, and \"Due today\" stays readable on the tinted home screen.\n- **[Fix]** **iPhone:** the start page shows two columns of books again after the app starts.\n\n**iPhone:** update in SideStore (Sources → pull down → My Apps → Update). **Android:** the app updates itself.",
+          "downloadURL": "https://github.com/Trofline/BibleStudy/releases/download/v1.9.31/BibleStudy-iOS-1.9.31.ipa",
+          "size": 61799530,
+          "minOSVersion": "15.0"
+        },
+        {
           "version": "1.9.30",
           "buildVersion": "49",
           "date": "2026-11-25",

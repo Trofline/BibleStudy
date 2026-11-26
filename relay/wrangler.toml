@@ -1,0 +1,13 @@
+# The relay for "Studying together" across networks. Deploy with:  npx wrangler deploy   (see README.md)
+name = "biblestudy-relay"
+main = "src/index.js"
+compatibility_date = "2025-06-01"
+
+[[durable_objects.bindings]]
+name = "ROOMS"
+class_name = "Room"
+
+# SQLite-backed Durable Objects are part of the free Workers plan
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["Room"]
