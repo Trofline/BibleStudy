@@ -323,7 +323,7 @@ public partial class MainWindow
         ToolTip.SetTip(pathsBtn, L("Die anderen bekommen eine Anfrage und können den Lesepfad annehmen; er kommt dann als neuer Pfad dazu."));
         pathsBtn.Click += (_, _) => ShowSendPathsMenu(pathsBtn);
         var fileBtn = new Button { Content = L("Datei senden …"), Margin = new(0, 0, 8, 6) };
-        ToolTip.SetTip(fileBtn, L("Eine Datei von deinem Gerät (z. B. ein Word-Dokument), bis 50 MB. Die anderen können sie annehmen und speichern oder ablehnen."));
+        ToolTip.SetTip(fileBtn, L("Eine Datei von deinem Gerät (z. B. ein Word-Dokument), bis {0}. Die anderen können sie annehmen und speichern oder ablehnen.", SizeText(MaxSentFile)));
         fileBtn.Click += async (_, _) => await PickAndSendFileAsync();
         foreach (var b in new[] { verse, come, react, marksBtn, notesBtn, pathsBtn, doc, fileBtn, vaultBtn }) actions.Children.Add(b);
         CollabPanel.Children.Add(actions);

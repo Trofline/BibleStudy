@@ -6,12 +6,14 @@ using Avalonia.Platform.Storage;
 namespace BibleStudy.App;
 
 /// <summary>
-/// Studying together: a file from the own computer (a Word document, a PDF, a picture …) sent to the others, at most 50 MB. It goes sealed end to
+/// Studying together: a file from the own computer (a Word document, a PDF, a picture …) sent to the others, at most 50 MB on a phone and 100 MB on a PC. It goes sealed end to
 /// end like everything else. The receiver sees a card and decides: save it where they want, or decline. Nothing is opened or saved by itself.
 /// </summary>
 public partial class MainWindow
 {
-    const long MaxSentFile = 50L * 1024 * 1024;
+    /// <summary>The largest file a phone sends or takes (it holds the file in memory while it travels); a PC goes further.</summary>
+    const long MaxPhoneFile = 50L * 1024 * 1024, MaxPcFile = 100L * 1024 * 1024;
+    long MaxSentFile => IsPhone ? MaxPhoneFile : MaxPcFile;
 
     async Task PickAndSendFileAsync()
     {

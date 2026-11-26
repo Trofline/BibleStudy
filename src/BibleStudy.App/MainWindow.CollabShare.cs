@@ -182,7 +182,12 @@ public partial class MainWindow
                 if (id.Length == 0 || kind is not ("vault" or "marks" or "notes" or "voice" or "image" or "paths" or "file") || size < 1 || size > MaxBlob || parts < 1 || parts != (size + PieceBytes - 1) / PieceBytes) return true;
                 if (kind == "image" && size > MaxSharedImage) return true;
                 if (kind == "paths" && size > MaxSentPathBytes) return true;
-                if (kind == "file" && size > MaxSentFile) return true;
+                if (kind == "file" && size > MaxPcFile) return true;
+                if (kind == "file" && size > MaxSentFile)
+                {
+                    AddCollabLog(L("{0} wollte dir die Datei „{1}“ schicken ({2}). Auf dem Handy lassen sich Dateien bis {3} empfangen; am PC geht mehr.", PeerWho, SafeIncomingFileName(Str("name", 100)), SizeText(size), SizeText(MaxSentFile)), system: true);
+                    return true;
+                }
                 if (_incoming.Count >= 3) return true;
                 var progress = new TextBlock { Classes = { "caption" }, TextWrapping = TextWrapping.Wrap, Text = L("{0} sendet etwas …", PeerWho) };
                 if (kind != "image") AddCollabItem(progress);   // the pictures of a document come quietly
