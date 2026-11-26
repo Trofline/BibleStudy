@@ -81,7 +81,7 @@ public class MediaTests
         try
         {
             var pictures = 0; var pieces = 0;
-            using (MediaIO.StartCamera(new MediaDevice("Testbild", "fake", true), _ => Interlocked.Increment(ref pictures)))
+            using (await MediaIO.StartCameraAsync(new MediaDevice("Testbild", "fake", true), CameraQuality.Medium, _ => Interlocked.Increment(ref pictures)))
             using (MediaIO.StartMicrophone(null, p => { if (p.Length == AudioFormat.FrameSamples && MuLaw.Level(p) > 0.1) Interlocked.Increment(ref pieces); }))
                 await Task.Delay(2500);
             Assert.True(pictures >= 5, $"pictures {pictures}");

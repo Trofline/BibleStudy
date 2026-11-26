@@ -82,18 +82,6 @@ public class ReviewFindingsTests : IDisposable
     }
 
     [Fact]
-    public void RelayPassword_IsNotReadableInTheSettingsFile()
-    {
-        var path = Path.Combine(_dir, "settings.json");
-        new AppSettings { RelayPassword = "geheim123" }.Save(path);
-        if (OperatingSystem.IsWindows()) Assert.DoesNotContain("geheim123", File.ReadAllText(path));
-        Assert.Equal("geheim123", AppSettings.Load(path).RelayPassword);
-        // a file of an older version holds it as plain text
-        File.WriteAllText(path, "{\"RelayPassword\":\"alt\"}");
-        Assert.Equal("alt", AppSettings.Load(path).RelayPassword);
-    }
-
-    [Fact]
     public void Plugin_MustBeAllowedAgain_WhenItsProgramChanges()
     {
         var dir = Path.Combine(_dir, "plugins", "demo");
