@@ -319,7 +319,13 @@ public partial class MainWindow
         var vaultBtn = new Button { Content = L("Vault senden ▾"), Margin = new(0, 0, 8, 6) };
         ToolTip.SetTip(vaultBtn, L("Sendet eine Kopie des ganzen Vaults. Die andere Person kann ihn als Gast ansehen oder als neuen Vault speichern."));
         vaultBtn.Click += (_, _) => ShowSendVaultMenu(vaultBtn);
-        foreach (var b in new[] { verse, come, react, marksBtn, notesBtn, doc, vaultBtn }) actions.Children.Add(b);
+        var pathsBtn = new Button { Content = L("Lesepfad senden ▾"), Margin = new(0, 0, 8, 6) };
+        ToolTip.SetTip(pathsBtn, L("Die anderen bekommen eine Anfrage und können den Lesepfad annehmen; er kommt dann als neuer Pfad dazu."));
+        pathsBtn.Click += (_, _) => ShowSendPathsMenu(pathsBtn);
+        var fileBtn = new Button { Content = L("Datei senden …"), Margin = new(0, 0, 8, 6) };
+        ToolTip.SetTip(fileBtn, L("Eine Datei von deinem Gerät (z. B. ein Word-Dokument), bis 50 MB. Die anderen können sie annehmen und speichern oder ablehnen."));
+        fileBtn.Click += async (_, _) => await PickAndSendFileAsync();
+        foreach (var b in new[] { verse, come, react, marksBtn, notesBtn, pathsBtn, doc, fileBtn, vaultBtn }) actions.Children.Add(b);
         CollabPanel.Children.Add(actions);
         CollabPanel.Children.Add(BuildMediaBox());
 

@@ -179,8 +179,10 @@ public partial class MainWindow
             case "blob":
             {
                 var id = Str("id", 16); var kind = Str("kind", 10); var size = Long("size"); var parts = (int)Long("parts");
-                if (id.Length == 0 || kind is not ("vault" or "marks" or "notes" or "voice" or "image") || size < 1 || size > MaxBlob || parts < 1 || parts != (size + PieceBytes - 1) / PieceBytes) return true;
+                if (id.Length == 0 || kind is not ("vault" or "marks" or "notes" or "voice" or "image" or "paths" or "file") || size < 1 || size > MaxBlob || parts < 1 || parts != (size + PieceBytes - 1) / PieceBytes) return true;
                 if (kind == "image" && size > MaxSharedImage) return true;
+                if (kind == "paths" && size > MaxSentPathBytes) return true;
+                if (kind == "file" && size > MaxSentFile) return true;
                 if (_incoming.Count >= 3) return true;
                 var progress = new TextBlock { Classes = { "caption" }, TextWrapping = TextWrapping.Wrap, Text = L("{0} sendet etwas …", PeerWho) };
                 if (kind != "image") AddCollabItem(progress);   // the pictures of a document come quietly
@@ -212,6 +214,8 @@ public partial class MainWindow
                         case "notes": ShowReceivedNotes(b.Name, data); break;
                         case "voice": ShowVoiceMessage(PeerWho, b.Name, data, false); break;
                         case "image": ReceiveImage(b.Name, data); break;
+                        case "paths": ShowReceivedPaths(data); break;
+                        case "file": ShowReceivedFile(b.Name, data); break;
                     }
                 }
                 return true;
