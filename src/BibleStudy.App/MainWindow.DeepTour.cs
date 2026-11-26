@@ -26,6 +26,8 @@ public partial class MainWindow
     Border? _deepCard;
     DispatcherTimer? _deepTimer;
     bool _deepDemoUsed;
+    /// <summary>The width of the side panel when the step about its edge began: the task is done once it was dragged away from it.</summary>
+    double _deepSideWidth;
     /// <summary>
     /// Counters of what the person did (chapters shown, verses chosen, searches, words looked up): the deep tour takes them at the start of a step
     /// and ticks a task off only when something happened after that, not because the state was already there.
@@ -259,6 +261,21 @@ public partial class MainWindow
             new("sidebar", tabs, K("Die Leiste rechts"),
                 K("Rechts liegt die Seitenleiste: Suchen, Vers, Notizen, Merken, Zusammen und die großen Bereiche. Strg+B blendet sie ein und aus, ihren Rand ziehst du breiter. Ziehst du ein Symbol aus der Leiste heraus, wird es ein eigenes Fenster, z. B. für einen zweiten Bildschirm."),
                 () => Rail, Prepare: () => { ShowReader(); SetPanelOpen(true); return Task.CompletedTask; }, Fits: desk),
+            new("sidebar-width", tabs, K("Leiste breiter oder schmaler"),
+                K("Am linken Rand der Leiste sitzt ein kleiner Griff. Zieh ihn nach links, wird die Leiste breiter, z. B. für lange Notizen oder den Grundtext; nach rechts wird sie schmaler und der Bibeltext bekommt mehr Platz. Die Breite bleibt gespeichert."),
+                () => SideSplitter, K("Zieh die Leiste breiter oder schmaler."),
+                () => Math.Abs(SidePanel.Width - _deepSideWidth) >= 20,
+                async () =>
+                {
+                    // wider in small steps, so it can be seen what happens, and back to where it was
+                    var from = SidePanel.Width; var to = Math.Min(from + 120, Math.Max(300, Bounds.Width - 420));
+                    if (to - from < 40) to = Math.Max(300, from - 120);
+                    for (var n = 1; n <= 8; n++) { SidePanel.Width = from + (to - from) * n / 8; await Task.Delay(30); }
+                    await Task.Delay(700);
+                    for (var n = 7; n >= 0; n--) { SidePanel.Width = from + (to - from) * n / 8; await Task.Delay(30); }
+                    _deepSideWidth = from - 100;   // the demo counts as done; trying it oneself still works
+                },
+                () => { ShowReader(); SetPanelOpen(true); _deepSideWidth = SidePanel.Width; return Task.CompletedTask; }, desk),
 
             // ---- order and plan ----
             new("vault", order, K("Vaults"),

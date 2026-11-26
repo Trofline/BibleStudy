@@ -3930,5 +3930,10 @@
   "Dieser Link nennt keine Bibelstelle.": "Эта ссылка не указывает на место из Библии.",
   "Im geteilten Text wurde keine Bibelstelle gefunden.": "В отправленном тексте не найдено ни одного места из Библии.",
   "Link zur Stelle kopieren (öffnet BibleStudy)": "Копировать ссылку на место (открывает BibleStudy)",
-  "Link kopiert: {0}": "Ссылка скопирована: {0}"
+  "Link kopiert: {0}": "Ссылка скопирована: {0}",
+  "Ziehen: Leiste breiter oder schmaler": "Потяните: панель шире или уже",
+  "Leiste breiter oder schmaler": "Панель шире или уже",
+  "Am linken Rand der Leiste sitzt ein kleiner Griff. Zieh ihn nach links, wird die Leiste breiter, nach rechts schmaler. Probier es ruhig gleich aus; die Breite bleibt gespeichert.": "На левом краю панели есть небольшой захват. Потяните его влево — панель станет шире, вправо — уже. Попробуйте прямо сейчас; ширина сохраняется.",
+  "Am linken Rand der Leiste sitzt ein kleiner Griff. Zieh ihn nach links, wird die Leiste breiter, z. B. für lange Notizen oder den Grundtext; nach rechts wird sie schmaler und der Bibeltext bekommt mehr Platz. Die Breite bleibt gespeichert.": "На левом краю панели есть небольшой захват. Потяните его влево — панель станет шире, например для длинных заметок или текста оригинала; вправо — уже, и библейскому тексту достанется больше места. Ширина сохраняется.",
+  "Zieh die Leiste breiter oder schmaler.": "Сделайте панель шире или уже."
 }

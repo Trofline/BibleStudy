@@ -1259,7 +1259,10 @@
             </TabControl>
             </DockPanel>
         </Border>
-        <Border x:Name="SideSplitter" DockPanel.Dock="Right" Width="8" Background="Transparent" Cursor="SizeWestEast" />
+        <Border x:Name="SideSplitter" DockPanel.Dock="Right" Width="8" Background="Transparent" Cursor="SizeWestEast" ToolTip.Tip="Ziehen: Leiste breiter oder schmaler">
+            <!-- a small grip, so it can be seen that the side panel can be made wider or narrower here -->
+            <Border x:Name="SideGrip" Width="4" Height="44" CornerRadius="2" HorizontalAlignment="Center" VerticalAlignment="Center" Background="{DynamicResource BsBorder}" IsHitTestVisible="False" />
+        </Border>
 
         <!-- Reader; in the split view a second tab sits on the right, the line between them can be dragged -->
         <Grid x:Name="MainArea">

@@ -3930,5 +3930,10 @@
   "Dieser Link nennt keine Bibelstelle.": "Ce lien n'indique aucun passage biblique.",
   "Im geteilten Text wurde keine Bibelstelle gefunden.": "Aucun passage biblique n'a été trouvé dans le texte partagé.",
   "Link zur Stelle kopieren (öffnet BibleStudy)": "Copier le lien vers le passage (ouvre BibleStudy)",
-  "Link kopiert: {0}": "Lien copié : {0}"
+  "Link kopiert: {0}": "Lien copié : {0}",
+  "Ziehen: Leiste breiter oder schmaler": "Faire glisser : panneau plus large ou plus étroit",
+  "Leiste breiter oder schmaler": "Panneau plus large ou plus étroit",
+  "Am linken Rand der Leiste sitzt ein kleiner Griff. Zieh ihn nach links, wird die Leiste breiter, nach rechts schmaler. Probier es ruhig gleich aus; die Breite bleibt gespeichert.": "Sur le bord gauche du panneau se trouve une petite poignée. Fais-la glisser vers la gauche pour élargir le panneau, vers la droite pour le rétrécir. Essaie tout de suite ; la largeur est enregistrée.",
+  "Am linken Rand der Leiste sitzt ein kleiner Griff. Zieh ihn nach links, wird die Leiste breiter, z. B. für lange Notizen oder den Grundtext; nach rechts wird sie schmaler und der Bibeltext bekommt mehr Platz. Die Breite bleibt gespeichert.": "Sur le bord gauche du panneau se trouve une petite poignée. Fais-la glisser vers la gauche pour élargir le panneau, par exemple pour de longues notes ou le texte original ; vers la droite il se rétrécit et le texte biblique a plus de place. La largeur est enregistrée.",
+  "Zieh die Leiste breiter oder schmaler.": "Rends le panneau plus large ou plus étroit."
 }

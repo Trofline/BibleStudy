@@ -109,6 +109,7 @@ public partial class MainWindow
             new(() => ParallelBtn, PlacementMode.Bottom, L("Parallel"), L("Weitere Übersetzungen als Spalten daneben. Jede Spalte kann auch eine andere Bibelstelle zeigen, z. B. 1. Mose neben Daniel.")),
             new(() => BookmarkBtn, PlacementMode.Bottom, L("Merken"), L("Setzt ein Lesezeichen auf den Vers (Strg+D), zum späteren Zurückspringen. Unter „Merken“ rechts in der Leiste findest du sie wieder.")),
             new(() => Rail, PlacementMode.Left, L("Die Leiste rechts"), L("Suchen, Vers (Querverweise, Grundtext), Notizen, Dokumente, Predigt, Planen (Lesepläne, To-dos, Gebete, Auswendiglernen), Zusammen und KI. Ziehst du ein Symbol aus der Leiste, wird es ein eigenes Fenster.")),
+            new(() => SideSplitter, PlacementMode.Left, L("Leiste breiter oder schmaler"), L("Am linken Rand der Leiste sitzt ein kleiner Griff. Zieh ihn nach links, wird die Leiste breiter, nach rechts schmaler. Probier es ruhig gleich aus; die Breite bleibt gespeichert.")),
             new(() => QuickJumpBox, PlacementMode.Bottom, L("Gehe zu … (Strg+K)"), L("Ein Feld für alles: eine Bibelstelle („Röm 8,28“), ein Wort, ein Befehl, ein Dokument. Tippen, mit den Pfeilen wählen, Enter.")),
             new(() => TodoTopBtn, PlacementMode.Bottom, L("To-dos"), L("Eine freie Liste zum Abhaken, von überall erreichbar.")),
             new(() => VaultTopBtn, PlacementMode.Bottom, L("Vault"), L("Ein Vault ist deine Mappe für ein Studienprojekt (z. B. „Predigt“ und „Privat“). Notizen, Markierungen und Dokumente gehören immer zu einem Vault.")),
@@ -180,11 +181,27 @@ public partial class MainWindow
         panel.Children.Add(buttons);
 
         var flyout = new Flyout { Content = panel, Placement = step.Placement };
+        // at the edge of the side panel the person may try the drag right away: the press goes through, and the bubble comes back afterwards
+        var atEdge = ReferenceEquals(step.Anchor(), SideSplitter);
+        if (atEdge) flyout.OverlayDismissEventPassThrough = true;
         void Go(Action then) { moved = true; flyout.Hide(); DispatcherTimer.RunOnce(then, TimeSpan.FromMilliseconds(150)); }   // the old bubble must be gone first
         next.Click += (_, _) => Go(() => ShowTourStep(steps, i + 1));
         back.Click += (_, _) => Go(() => ShowTourStep(steps, i - 1));
         skip.Click += (_, _) => Go(() => FinishTour());
-        flyout.Closed += (_, _) => { HideTourRing(); if (!moved) FinishTour(); };   // a click somewhere else ends the tour
+        flyout.Closed += (_, _) =>
+        {
+            HideTourRing();
+            if (moved) return;
+            if (!atEdge) { FinishTour(); return; }   // a click somewhere else ends the tour
+            // the press may reach the edge just after the bubble closed: look a moment later whether it was the drag
+            DispatcherTimer.RunOnce(() =>
+            {
+                if (!_touring) return;
+                if (_sideDragging) _afterSideDrag = () => { if (_touring) ShowTourStep(steps, i, true); };
+                else if (DateTime.UtcNow - _sideDragAt < TimeSpan.FromMilliseconds(600)) ShowTourStep(steps, i, true);
+                else FinishTour();
+            }, TimeSpan.FromMilliseconds(120));
+        };
         ShowTourRing(step.Anchor());
         flyout.ShowAt(step.Anchor());
     }
