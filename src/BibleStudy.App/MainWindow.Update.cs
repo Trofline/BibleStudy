@@ -26,6 +26,8 @@ public partial class MainWindow
         VersionText.Text = L("Version {0} · ", AppPaths.Version) + (AppPaths.IsPortable ? L("Portable (Daten in {0})", AppPaths.Root) : AppPaths.IsStore ? L("Microsoft Store") : AppPaths.IsInstalled ? L("installiert") : L("Entwicklungsversion")) + L(" · Daten: {0}", AppPaths.Root);
         AutoUpdateCheck.IsChecked = _settings.AutoUpdate;
         AutoUpdateCheck.IsCheckedChanged += (_, _) => { _settings.AutoUpdate = AutoUpdateCheck.IsChecked == true; SaveSettings(); };
+        PatchNotesAutoCheck.IsChecked = _settings.ShowPatchNotesAfterUpdate;
+        PatchNotesAutoCheck.IsCheckedChanged += (_, _) => { _settings.ShowPatchNotesAfterUpdate = PatchNotesAutoCheck.IsChecked == true; SaveSettings(); };
         SigningWarnCheck.IsVisible = OperatingSystem.IsIOS();
         SigningWarnCheck.IsChecked = _settings.WarnSigningEnds;
         SigningWarnCheck.IsCheckedChanged += (_, _) => { _settings.WarnSigningEnds = SigningWarnCheck.IsChecked == true; SaveSettings(); };

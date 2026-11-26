@@ -363,6 +363,8 @@ public sealed class AppSettings
 
     /// <summary>The version whose patch notes were shown last (after an update they are shown once).</summary>
     public string? LastSeenVersion { get; set; }
+    /// <summary>After an update the patch notes of the new version open by themselves (off: only a short note with a button to open them).</summary>
+    public bool ShowPatchNotesAfterUpdate { get; set; } = true;
     /// <summary>Whether the question about a weekly backup was asked already (it is asked once, when backups are off).</summary>
     public bool BackupAsked { get; set; }
     /// <summary>The last "new shortcuts" hint that was shown (so each one appears only once).</summary>

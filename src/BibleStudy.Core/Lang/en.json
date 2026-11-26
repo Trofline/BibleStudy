@@ -3565,7 +3565,6 @@
   "Keine Bibelstelle erkannt.": "No passage recognised.",
   "{0} Stellen erkannt": "{0} passages recognised",
   "Nicht erkannt: {0}": "Not recognised: {0}",
-  "Keine Verse gefunden.": "No verses found.",
   "Nicht in dieser Übersetzung: {0}": "Not in this translation: {0}",
   "Kein Leseplan – tippen, um einen zu wählen": "No reading plan – tap to choose one",
   "{0} Verbindungen": "{0} links",
@@ -3601,5 +3600,6 @@
   "Achtung: Das ist eine ältere Version als die, die du hast.": "Note: this is an older version than the one you have.",
   "Einige Dateien ({0:0.0} MB) kommen aus den veröffentlichten Versionen auf GitHub: Dafür braucht es eine Internetverbindung.": "Some files ({0:0.0} MB) come from the published versions on GitHub: this needs an internet connection.",
   "Testversion {0} installieren?": "Install test version {0}?",
-  "Die Update-Datei ließ sich nicht lesen: ": "The update file could not be read: "
+  "Die Update-Datei ließ sich nicht lesen: ": "The update file could not be read: ",
+  "Nach einem Update die Patch Notes (was ist neu) automatisch anzeigen": "Show the patch notes (what's new) automatically after an update"
 }

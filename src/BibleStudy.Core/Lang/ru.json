@@ -3565,7 +3565,6 @@
   "Keine Bibelstelle erkannt.": "Место не распознано.",
   "{0} Stellen erkannt": "Распознано мест: {0}",
   "Nicht erkannt: {0}": "Не распознано: {0}",
-  "Keine Verse gefunden.": "Стихи не найдены.",
   "Nicht in dieser Übersetzung: {0}": "Нет в этом переводе: {0}",
   "Kein Leseplan – tippen, um einen zu wählen": "Нет плана чтения – нажмите, чтобы выбрать",
   "{0} Verbindungen": "Связей: {0}",
@@ -3601,5 +3600,6 @@
   "Achtung: Das ist eine ältere Version als die, die du hast.": "Внимание: это более старая версия, чем у тебя.",
   "Einige Dateien ({0:0.0} MB) kommen aus den veröffentlichten Versionen auf GitHub: Dafür braucht es eine Internetverbindung.": "Некоторые файлы ({0:0.0} МБ) загружаются из опубликованных версий на GitHub: для этого нужно подключение к интернету.",
   "Testversion {0} installieren?": "Установить тестовую версию {0}?",
-  "Die Update-Datei ließ sich nicht lesen: ": "Не удалось прочитать файл обновления: "
+  "Die Update-Datei ließ sich nicht lesen: ": "Не удалось прочитать файл обновления: ",
+  "Nach einem Update die Patch Notes (was ist neu) automatisch anzeigen": "Автоматически показывать список изменений (что нового) после обновления"
 }

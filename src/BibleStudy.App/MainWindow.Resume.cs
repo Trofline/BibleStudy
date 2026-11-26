@@ -56,8 +56,7 @@ public partial class MainWindow
             _forward.Clear(); _forward.AddRange(r.Forward.Select(FromResume));
             UpdateHistoryButtons();
         }
-        // instead of the window with the patch notes, which would break the blink
-        _settings.LastSeenVersion = AppPaths.Version; SaveSettings();
-        ShowUndoToast(L("Aktualisiert auf Version {0}.", AppPaths.Version), () => { _ = ShowPatchNotesAsync(); return Task.CompletedTask; }, L("Was ist neu?"));
+        // the patch notes of the new version open a moment after the reader is back (switched off in the settings: only a short note)
+        DispatcherTimer.RunOnce(() => _ = ShowPatchNotesIfNewAsync(), TimeSpan.FromSeconds(1.5));
     }
 }

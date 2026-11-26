@@ -1054,6 +1054,7 @@
                                 <TextBlock x:Name="VersionText" Classes="caption" TextWrapping="Wrap" />
                                 <CheckBox x:Name="SigningWarnCheck" IsVisible="False" Content="Warnen, bevor die App abläuft (nur nötig, wenn der Kurzbefehl sie nicht automatisch neu signiert)" />
                                 <CheckBox x:Name="AutoUpdateCheck" Content="Bei jedem Start nach Updates suchen (eine Anfrage an GitHub, es werden keine Daten gesendet). Installiert wird nie ohne deine Zustimmung." />
+                                <CheckBox x:Name="PatchNotesAutoCheck" Content="Nach einem Update die Patch Notes (was ist neu) automatisch anzeigen" />
                                 <WrapPanel>
                                     <Button x:Name="CheckUpdateBtn" Content="Jetzt nach Updates suchen" Margin="0,0,6,6" />
                                     <Button x:Name="InstallUpdateFileBtn" Content="Update-Datei installieren …" Margin="0,0,6,6" IsVisible="False" ToolTip.Tip="Für Testversionen (Beta), die du als Datei (.bsupdate) bekommen hast. Vorher wird eine Sicherung deiner Daten angelegt." />

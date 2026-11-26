@@ -3,6 +3,7 @@ using Avalonia.Controls;
 using Avalonia.Controls.Documents;
 using Avalonia.Layout;
 using Avalonia.Media;
+using Avalonia.Threading;
 using BibleStudy.Core;
 
 namespace BibleStudy.App;
@@ -38,8 +39,10 @@ public partial class MainWindow
         };
     }
 
-    /// <summary>After an update (or the first start with this feature) the notes of the running version appear once.</summary>
-    async Task ShowPatchNotesIfNewAsync()
+    bool _patchNotesChecking;   // the check after an update runs once at a time (after a quick update and from the start offers)
+
+    /// <summary>After an update (or the first start with this feature) the notes of the running version appear once, unless switched off in the settings.</summary>
+    async Task ShowPatchNotesIfNewAsync(int attempt = 0)
     {
         // only a version newer than the last one seen counts: two copies of the program (installed and portable, or a test build) sharing the
         // data used to overwrite each other's "last seen" and showed the notes again at every change between them
@@ -47,15 +50,32 @@ public partial class MainWindow
         var seen = Updater.Parse(_settings.LastSeenVersion ?? "");
         if (current is not null && seen is not null && current <= seen) return;
         if (current is null && _settings.LastSeenVersion == AppPaths.Version) return;
+        if (!_settings.ShowPatchNotesAfterUpdate)
+        {
+            // switched off: no window, only a short note with a button; the version counts as seen
+            var updated = _settings.LastSeenVersion is not null;
+            _settings.LastSeenVersion = AppPaths.Version; SaveSettings();
+            if (updated) ShowUndoToast(L("Aktualisiert auf Version {0}.", AppPaths.Version), () => { _ = ShowPatchNotesAsync(); return Task.CompletedTask; }, L("Was ist neu?"));
+            return;
+        }
+        if (_patchNotesChecking) return;
+        _patchNotesChecking = true;
         try
         {
             _updater ??= new Updater(_http);
             var list = await _updater.ListAsync(AppPaths.Version);
             if (!list.Any(r => r.Version == AppPaths.Version)) return;   // a test build of a version that is not published: nothing to show, nothing to remember
+            if (!IsVisible || OwnedWindows.Count > 0 || SplashWindow.IsShowing || _touring)
+            {
+                // another window (a question, the tour) is open: try again a little later, the version is only remembered once its notes were on screen
+                if (attempt < 24) DispatcherTimer.RunOnce(() => _ = ShowPatchNotesIfNewAsync(attempt + 1), TimeSpan.FromSeconds(5));
+                return;
+            }
             _settings.LastSeenVersion = AppPaths.Version; SaveSettings();
-            if (IsVisible && OwnedWindows.Count == 0) ShowPatchNotes(list, seen);   // every version since the last one seen is open, not only the newest
+            ShowPatchNotes(list, seen);   // every version since the last one seen is open, not only the newest
         }
         catch { /* offline: next start */ }
+        finally { _patchNotesChecking = false; }
     }
 
     async Task ShowPatchNotesAsync()

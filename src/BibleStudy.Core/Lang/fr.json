@@ -3565,7 +3565,6 @@
   "Keine Bibelstelle erkannt.": "Aucun passage reconnu.",
   "{0} Stellen erkannt": "{0} passages reconnus",
   "Nicht erkannt: {0}": "Non reconnu : {0}",
-  "Keine Verse gefunden.": "Aucun verset trouvé.",
   "Nicht in dieser Übersetzung: {0}": "Pas dans cette traduction : {0}",
   "Kein Leseplan – tippen, um einen zu wählen": "Aucun plan de lecture – touchez pour en choisir un",
   "{0} Verbindungen": "{0} liens",
@@ -3601,5 +3600,6 @@
   "Achtung: Das ist eine ältere Version als die, die du hast.": "Attention : c'est une version plus ancienne que celle que tu as.",
   "Einige Dateien ({0:0.0} MB) kommen aus den veröffentlichten Versionen auf GitHub: Dafür braucht es eine Internetverbindung.": "Certains fichiers ({0:0.0} Mo) proviennent des versions publiées sur GitHub : une connexion internet est nécessaire.",
   "Testversion {0} installieren?": "Installer la version de test {0} ?",
-  "Die Update-Datei ließ sich nicht lesen: ": "Impossible de lire le fichier de mise à jour : "
+  "Die Update-Datei ließ sich nicht lesen: ": "Impossible de lire le fichier de mise à jour : ",
+  "Nach einem Update die Patch Notes (was ist neu) automatisch anzeigen": "Afficher automatiquement les notes de version (quoi de neuf) après une mise à jour"
 }
