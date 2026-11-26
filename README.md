@@ -226,6 +226,7 @@ Get **LocalDevVPN** from the App Store, open it once and tap **Allow** for the V
 1. Open SideStore and sign in with your Apple ID.
 2. On the iPhone tap **[this link](sidestore://source?url=https://trofline.github.io/BibleStudy/sidestore.json)**.<br><sub>Or in SideStore: **Sources** → **+** → `https://trofline.github.io/BibleStudy/sidestore.json`</sub>
 3. Open **BibleStudy** in the list → **Install**.
+4. SideStore now asks **"App Contains Extensions"** with several buttons. Tap the **second one from the top: "Keep App Extensions (Register App ID for Each Extension)"**. More on this right below.
 
 <sub>You do **not** download the `.ipa` file yourself: through this source SideStore fetches it straight from the latest release, for every update too.</sub>
 
@@ -235,6 +236,23 @@ Get **LocalDevVPN** from the App Store, open it once and tap **Allow** for the V
 > 2. Below it open **Anisette Client Configuration** → choose **Raw JSON**.
 > 3. The text field holds a long text. **Do not delete or change anything else!** Only find `macos;` and replace it with `Mac OS X;` (with the spaces, capital M, O and S; the semicolon stays).
 > 4. Save and sign in with your Apple ID again. Now it should work.
+
+> [!IMPORTANT]
+> **SideStore asks "App Contains Extensions": which button?**
+>
+> **Why it asks:** BibleStudy comes with **widgets** (a button on the lock screen under the clock, and "Verse of the day" on the home screen). iOS keeps widgets in a small extra part of the app, an *app extension*. With a free Apple ID, Apple counts such an extension as an app of its own, so SideStore asks what to do with it. The message reads something like: *"Non-developer Apple IDs are limited to 3 active apps and app extensions …"* or *"… limited to creating 10 App IDs per week …"*.
+>
+> | Button (in this order) | What happens | |
+> |---|---|---|
+> | Keep App Extensions **(Use Main Profile)** | The widget is signed with the app's ID, not its own. iOS then quietly ignores it: **no widgets**. | ❌ |
+> | Keep App Extensions **(Register App ID for Each Extension)** | The widget gets its own ID and works. Uses 1 of your 10 App IDs per week and one app slot (see below). | ✅ **tap this one** |
+> | Remove App Extensions | BibleStudy is installed **without widgets**. Pick this if you need the app slot for another app. | ➖ |
+> | Choose App Extensions | Pick extensions one by one. Not needed. | |
+> | Cancel | Nothing is installed. | |
+>
+> **After installing:** open BibleStudy once so the widget has something to show. Then hold your finger on the lock screen (or the home screen) → **Customize** / **Edit** → **Add Widgets** → **BibleStudy**. If BibleStudy is not in the list yet, wait a few minutes or restart the iPhone: iOS sometimes takes a while to notice a new widget.
+>
+> <sub>**Counting:** a free Apple ID allows 3 active apps, and the widget extension counts as one of them: SideStore + BibleStudy + widgets = 3. If SideStore says no slot is free, either remove another self-signed app or choose **Remove App Extensions** (BibleStudy then works without widgets). SideStore may ask again on updates: tap the same button. The buttons are always in English, also on a German iPhone.</sub>
 
 </td></tr>
 <tr><td>
@@ -249,16 +267,14 @@ The shortcut does two things by itself: it switches the VPN on when SideStore op
 
 **Then check it once, otherwise it may not run:** in the **Shortcuts** app open the **BibleStudy** shortcut (long press → **Edit**). Its two triggers are at the top, the actions below them.
 
-<img src="images/ios-shortcut-triggers.png" alt="The two triggers of the shortcut: SideStore opened or closed, and at 18:00 every 6 days, each with Automation on" width="300" align="right">
-
 4. **Choose the app again:** in the **actions** (and in the first trigger) tap the word **SideStore** → search for **SideStore** → tap it. After the download the iPhone cannot be sure which app is meant; this way it is really yours.
 5. **First trigger** *"When SideStore is opened or closed"*: tap the small **arrow ⌄** next to it to unfold it → switch **Automation** on. *Notify* may stay off.
 6. **Second trigger** *"At 18:00"*: unfold it the same way → **Event: Time of Day**, **Repeat: Every 6 Days** → switch **Automation** on.
 7. **A trigger is missing** (this sometimes happens after the download): add it again. At the top, by the triggers, add another one → for the first choose **App** → **SideStore** → tick **Is Opened** and **Is Closed**; for the second choose **Time of Day** → **18:00** (or another time when the iPhone is usually on) → **Repeat: Every 6 Days**. Then unfold it as above and switch **Automation** on.
 
-This is how it should look in the end (picture on the right): both triggers with **Automation** on.
+This is how it should look in the end: both triggers with **Automation** on. <sub>(The screenshot is from a German iPhone; the English words are next to it.)</sub>
 
-<br clear="right">
+<p align="center"><img src="images/ios-shortcut-triggers-en.png" alt="The two triggers of the shortcut: 'When SideStore is opened or closed' with Automation on and Notify off, or 'At 18:00' with Event: Time of Day, Repeat: Every 6 Days, Automation on and Notify off" width="560"></p>
 
 **Done.** From now on the VPN goes on when SideStore opens and off when it closes, and every 6 days the iPhone re-signs BibleStudy by itself, so the app never expires.
 
@@ -281,7 +297,7 @@ BibleStudy **tells you** when a new version is out (a small notice in the app). 
 - **The source cannot be added:** download `BibleStudy-iOS-x.y.z.ipa` from the [latest release](https://github.com/Trofline/BibleStudy/releases/latest) on the iPhone, then in SideStore under **My Apps** tap **+** at the top left and pick the file.
 - **The app expired anyway:** open SideStore and tap **Refresh** at BibleStudy. Your data stays.
 - **SideStore says the pairing file is missing:** open iloader again with the iPhone connected, click **Manage Pairing File** at the bottom and place it for SideStore.
-- **Widgets:** BibleStudy comes with a lock-screen button (under the clock, starts the app) and a "Verse of the day" widget with today's reading from your plan (iOS 17 or later). They live in an extension that **counts as an app of its own** with a free Apple ID: SideStore + BibleStudy + widgets take all 3 slots. If you need the slot, leave the extension out when SideStore asks during installation. The widget fills once you have opened BibleStudy.
+- **Widgets:** BibleStudy comes with a lock-screen button (under the clock, starts the app) and a "Verse of the day" widget with today's reading from your plan (iOS 17 or later). They live in an extension that **counts as an app of its own** with a free Apple ID: SideStore + BibleStudy + widgets take all 3 slots. Which button to tap when SideStore asks about them during installation: see [step ⑤](#install-on-iphone). If you need the slot, choose **Remove App Extensions** there. The widget fills once you have opened BibleStudy.
 - **Limits:** a free Apple ID allows at most 3 self-signed apps at once (SideStore counts as one). After a long time switched off or a big iOS update a manual refresh may be needed once. Apple may restrict this method one day. SideStore changes now and then: if a step looks different, [docs.sidestore.io](https://docs.sidestore.io) is the reference.
 - **PC only:** Claude Code, Ollama and the MCP server. The live Bible study runs only while the app is open.
 

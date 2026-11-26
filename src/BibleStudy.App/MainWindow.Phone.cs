@@ -131,8 +131,12 @@ public partial class MainWindow
         var cap = _phone ? Math.Max(120, Bounds.Width - 64) : double.PositiveInfinity;
         foreach (var c in _capped.ToList()) { c.MaxWidth = cap; if (double.IsInfinity(cap)) _capped.Remove(c); }
         if (!_phone) return;
+        // The start page fits itself to its own width (HomeView.Fit). It is skipped: at the start of the app its page is built while it is
+        // still hidden, with the desktop width of 940; capped then to the screen less 64, the page stayed narrower than its two tiles per row
+        // and showed the books in one column until it was built again (a tap on Startseite or another tab and back).
         foreach (var c in Avalonia.LogicalTree.LogicalExtensions.GetLogicalDescendants(this).OfType<Control>())
-            if (c != SidePanel && c != ReaderPanel && !double.IsNaN(c.Width) && c.Width > cap && !_capped.Contains(c) && double.IsInfinity(c.MaxWidth)) { c.MaxWidth = cap; _capped.Add(c); }
+            if (c != SidePanel && c != ReaderPanel && !double.IsNaN(c.Width) && c.Width > cap && !_capped.Contains(c) && double.IsInfinity(c.MaxWidth)
+                && !Avalonia.LogicalTree.LogicalExtensions.IsLogicalAncestorOf(Home, c)) { c.MaxWidth = cap; _capped.Add(c); }
     }
 
 

@@ -19,6 +19,7 @@ Deine Sprache fehlt? Speichere die **Vorlage mit der KI-Anweisung**, lass sie vo
 - **Schrift:** Größe, Zeilenabstand, Blocksatz, leichter lesbare Schrift (zum Beispiel bei Legasthenie), hoher Kontrast.
 - **Versnummern:** klein hochgestellt, normal im Text, ausblenden.
 - **Worte Jesu** farbig hervorheben, mit eigener Farbe (unabhängig vom Farbschema; eigene Farben mit **+**).
+- **Worte Jesu ergänzen**: Bei Übersetzungen, die die Worte Jesu nicht selbst kennzeichnen (viele importierte Bibeln), werden sie aus der KJV geschätzt. Ganz rote Verse werden ganz rot, bei teilweise roten Versen zählt der Text in Anführungszeichen. Das ist eine Schätzung und kann an den Rändern danebenliegen. Kennzeichnet die importierte Datei die Worte Jesu selbst (OSIS, USFM, USX, Zefania, e-Sword, MySword, EPUB, Word, Webseiten), wird ihre Markierung genommen.
 - **Dunkler Hintergrund:** Nachtblau, Schwarz, Grau, Warm, Wald oder Violett (gilt im dunklen Design).
 - **Farbe der Auswahl:** Akzentfarbe (Standard), Grau oder Blau.
 - **Hebräisch:** Vokalzeichen und Akzentzeichen (Kantillation) ein-/ausblenden.
@@ -121,6 +122,7 @@ Claude Code (mit Bibel-Werkzeugen) oder Ollama; die Anweisung für Claude; der M
 ## 13.15 Updates und Programm
 
 - **Jetzt nach Updates suchen.** Ab Version 1.6.7 lädt ein Update nur die geänderten Dateien (meist wenige MB), auf Windows, Linux und macOS. Startet die neue Version nicht, kommt die alte automatisch zurück. *Jetzt installieren* startet kurz neu und du liest genau dort weiter, wo du warst. *Beim Schließen installieren* lädt im Hintergrund und spielt das Update beim nächsten Beenden ein.
+- **Update-Datei installieren …** Für Testversionen (Beta), die du als Datei `BibleStudy-Beta-….bsupdate` bekommen hast, ohne dass sie öffentlich erschienen sind. Vorher wird deine Arbeit gesichert, danach startet das Programm neu; klappt etwas nicht, kommt die bisherige Version von selbst zurück. Die nächste normale Version kommt danach wie gewohnt als Update. Auf Android installierst du eine Testversion als APK-Datei, auf dem iPhone über SideStore.
 - **Patch Notes** (was ist neu).
 - **Projekt auf GitHub.**
 - **Programm neu starten.**

@@ -2,6 +2,13 @@ using BibleStudy.Core;
 
 // Used by release.ps1: lists a finished program folder and makes the pack with its new files.
 //   BibleStudy.UpdatePack <folder> <rid> <version> <output folder> [manifest of the previous release]
+//   BibleStudy.UpdatePack bundle <release folder> <version> <file.bsupdate>   one local update file of all systems (release.ps1 -Beta)
+if (args.Length == 4 && args[0] == "bundle")
+{
+    var rids = DeltaUpdate.BundleLocal(args[1], args[2], args[3]);
+    Console.WriteLine($"{Path.GetFileName(args[3])}: {string.Join(", ", rids)}, {new FileInfo(args[3]).Length / 1048576.0:0.0} MB");
+    return 0;
+}
 if (args.Length < 4) { Console.Error.WriteLine("usage: <folder> <rid> <version> <output folder> [previous manifest]"); return 2; }
 var (folder, rid, version, output) = (args[0], args[1], args[2], args[3]);
 var previous = args.Length > 4 && File.Exists(args[4]) ? DeltaUpdate.ParseManifest(File.ReadAllText(args[4])) : null;

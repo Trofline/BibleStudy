@@ -245,6 +245,8 @@ public sealed class AppSettings
     public int ReaderWidth { get; set; } = 760;
     public string VerseNumbers { get; set; } = "Small";   // Small | Normal | Hidden
     public bool JesusRed { get; set; } = true;
+    /// <summary>Words of Jesus for translations that do not mark them, estimated from the KJV.</summary>
+    public bool JesusFromKjv { get; set; } = true;
     /// <summary>Own color of the words of Jesus as #RRGGBB; empty = the program default.</summary>
     public string JesusColor { get; set; } = "";
     public List<string> CustomJesusColors { get; set; } = [];   // own colors for the words of Jesus, chosen with the "+" in the settings
@@ -341,6 +343,8 @@ public sealed class AppSettings
 
     /// <summary>The version whose patch notes were shown last (after an update they are shown once).</summary>
     public string? LastSeenVersion { get; set; }
+    /// <summary>After an update the patch notes of the new version open by themselves (off: only a short note with a button to open them).</summary>
+    public bool ShowPatchNotesAfterUpdate { get; set; } = true;
     /// <summary>Whether the question about a weekly backup was asked already (it is asked once, when backups are off).</summary>
     public bool BackupAsked { get; set; }
     /// <summary>The last "new shortcuts" hint that was shown (so each one appears only once).</summary>
