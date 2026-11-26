@@ -3601,5 +3601,9 @@
   "Einige Dateien ({0:0.0} MB) kommen aus den veröffentlichten Versionen auf GitHub: Dafür braucht es eine Internetverbindung.": "Some files ({0:0.0} MB) come from the published versions on GitHub: this needs an internet connection.",
   "Testversion {0} installieren?": "Install test version {0}?",
   "Die Update-Datei ließ sich nicht lesen: ": "The update file could not be read: ",
-  "Nach einem Update die Patch Notes (was ist neu) automatisch anzeigen": "Show the patch notes (what's new) automatically after an update"
+  "Nach einem Update die Patch Notes (was ist neu) automatisch anzeigen": "Show the patch notes (what's new) automatically after an update",
+  "Dieser Link nennt keine Bibelstelle.": "This link does not name a Bible passage.",
+  "Im geteilten Text wurde keine Bibelstelle gefunden.": "No Bible passage was found in the shared text.",
+  "Link zur Stelle kopieren (öffnet BibleStudy)": "Copy link to the passage (opens BibleStudy)",
+  "Link kopiert: {0}": "Link copied: {0}"
 }

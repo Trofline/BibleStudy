@@ -259,6 +259,7 @@ public partial class MainWindow : AppWindow
         }
         // after "Restart program" the user is taken back to the settings page
         if (Environment.GetCommandLineArgs().Contains("--open-settings")) OpenWork(NavGroups.First(g => g.Name == "Mehr"), SettingsTab);
+        StartLinks();   // a passage that a link (biblestudy://Joh3,16) asked for
     }
 
     void FillTranslations()

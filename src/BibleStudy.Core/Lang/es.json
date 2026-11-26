@@ -3601,5 +3601,9 @@
   "Einige Dateien ({0:0.0} MB) kommen aus den veröffentlichten Versionen auf GitHub: Dafür braucht es eine Internetverbindung.": "Algunos archivos ({0:0.0} MB) vienen de las versiones publicadas en GitHub: para ello hace falta conexión a internet.",
   "Testversion {0} installieren?": "¿Instalar la versión de prueba {0}?",
   "Die Update-Datei ließ sich nicht lesen: ": "No se pudo leer el archivo de actualización: ",
-  "Nach einem Update die Patch Notes (was ist neu) automatisch anzeigen": "Mostrar automáticamente las notas de la versión (novedades) después de una actualización"
+  "Nach einem Update die Patch Notes (was ist neu) automatisch anzeigen": "Mostrar automáticamente las notas de la versión (novedades) después de una actualización",
+  "Dieser Link nennt keine Bibelstelle.": "Este enlace no indica ningún pasaje bíblico.",
+  "Im geteilten Text wurde keine Bibelstelle gefunden.": "No se encontró ningún pasaje bíblico en el texto compartido.",
+  "Link zur Stelle kopieren (öffnet BibleStudy)": "Copiar enlace al pasaje (abre BibleStudy)",
+  "Link kopiert: {0}": "Enlace copiado: {0}"
 }

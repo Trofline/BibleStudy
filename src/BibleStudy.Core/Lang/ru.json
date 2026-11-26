@@ -3601,5 +3601,9 @@
   "Einige Dateien ({0:0.0} MB) kommen aus den veröffentlichten Versionen auf GitHub: Dafür braucht es eine Internetverbindung.": "Некоторые файлы ({0:0.0} МБ) загружаются из опубликованных версий на GitHub: для этого нужно подключение к интернету.",
   "Testversion {0} installieren?": "Установить тестовую версию {0}?",
   "Die Update-Datei ließ sich nicht lesen: ": "Не удалось прочитать файл обновления: ",
-  "Nach einem Update die Patch Notes (was ist neu) automatisch anzeigen": "Автоматически показывать список изменений (что нового) после обновления"
+  "Nach einem Update die Patch Notes (was ist neu) automatisch anzeigen": "Автоматически показывать список изменений (что нового) после обновления",
+  "Dieser Link nennt keine Bibelstelle.": "Эта ссылка не указывает на место из Библии.",
+  "Im geteilten Text wurde keine Bibelstelle gefunden.": "В отправленном тексте не найдено ни одного места из Библии.",
+  "Link zur Stelle kopieren (öffnet BibleStudy)": "Копировать ссылку на место (открывает BibleStudy)",
+  "Link kopiert: {0}": "Ссылка скопирована: {0}"
 }
