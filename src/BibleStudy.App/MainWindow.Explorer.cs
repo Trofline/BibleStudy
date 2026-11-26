@@ -125,9 +125,12 @@ public partial class MainWindow
             void ViewMark() => view.Classes.Set("primary", _exFlatBtn.IsChecked == true || _exAllVaultsBtn.IsChecked == true);   // something is switched on: the button says so
             _exFlatBtn.IsCheckedChanged += (_, _) => ViewMark(); _exAllVaultsBtn.IsCheckedChanged += (_, _) => ViewMark(); ViewMark();
             _exPickBtn.Margin = new(6, 0, 0, 0); _exPickBtn.Height = 34; _exPickBtn.Padding = new(10, 0); _exPickBtn.VerticalContentAlignment = VerticalAlignment.Center;
+            // above: back / up, the path, the view and the new folder; below: the search as wide as the screen and "Auswählen"
+            // (the search stood between six buttons and showed "Su …")
             DockPanel.SetDock(newFolder, Dock.Right); DockPanel.SetDock(view, Dock.Right); DockPanel.SetDock(_exPickBtn, Dock.Right);
-            pathBox.Margin = new(0, 0, 0, 6);
-            bar = new StackPanel { Margin = new(10, 8, 10, 6), Children = { pathBox, new DockPanel { Children = { nav, newFolder, view, _exPickBtn, _exSearch } } } };
+            pathBox.Margin = new(6, 0, 0, 0);
+            _exSearch.Margin = new(0);
+            bar = new StackPanel { Margin = new(8, 6, 8, 4), Spacing = 6, Children = { new DockPanel { Children = { nav, newFolder, view, pathBox } }, new DockPanel { Children = { _exPickBtn, _exSearch } } } };
         }
         else
         {

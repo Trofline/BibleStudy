@@ -26,6 +26,7 @@ public partial class MainWindow
         // the work tabs scroll sideways on a computer too: with many of them the last one and the "+" ran off the right edge
         if (!AppPlatform.IsMobile && TabBar.Child == TabStrip) { TabBar.Child = null; TabBar.Child = MakeTabScroller(); }
         if (!AppPlatform.IsMobile) return;
+        MinWidth = MinHeight = 0;   // the smallest desktop window (850 wide) is wider than a phone
         // a phone has no window to minimize, maximize or close
         MinBtn.IsVisible = MaxBtn.IsVisible = CloseBtn.IsVisible = false;
         WrapDocumentBar();
@@ -33,6 +34,7 @@ public partial class MainWindow
         // what needs a computer: the Windows start menu, a Syncthing folder, opening a folder in the file manager
         StartMenuBtn.IsVisible = StartMenuInfo.IsVisible = BackupSyncBtn.IsVisible = SourcesCacheBtn.IsVisible = false;
         if (OperatingSystem.IsIOS()) RestartBtn.IsVisible = false;   // an iPhone app cannot start itself again
+        if (AppPaths.IsPortable && RemoveAppBtn is not null) RemoveAppBtn.IsVisible = false;   // the portable folder of a PC (only the PC trial of the phone layout has one)
         // the list of sections beside the settings is longer than a low screen: it scrolls on its own
         if (SettingsScroll.Parent is Grid sg && sg.Children.FirstOrDefault(c => Grid.GetColumn(c) == 1) is Control toc and not ScrollViewer)
         {
@@ -123,6 +125,7 @@ public partial class MainWindow
             SideSplitter.IsVisible = !phone && SidePanel.IsVisible;
             // the panel lies over the text and the tools: always on top, and what is below it never draws over it
             SidePanel.ZIndex = phone ? 10 : 0;
+            SidePanel.BorderThickness = phone ? default : new Thickness(1, 0, 0, 0);   // the line beside the panel of a desktop: on a phone it is the left edge of the screen
             FitExplorerToScreen();
             // the work tabs: on a phone they do not fit side by side, the row scrolls sideways with the finger
             if (phone && TabBar.Child == TabStrip)

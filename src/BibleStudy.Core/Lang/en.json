@@ -3605,5 +3605,8 @@
   "Dieser Link nennt keine Bibelstelle.": "This link does not name a Bible passage.",
   "Im geteilten Text wurde keine Bibelstelle gefunden.": "No Bible passage was found in the shared text.",
   "Link zur Stelle kopieren (öffnet BibleStudy)": "Copy link to the passage (opens BibleStudy)",
-  "Link kopiert: {0}": "Link copied: {0}"
+  "Link kopiert: {0}": "Link copied: {0}",
+  "Mehr Optionen, Suche bauen, Suchhilfe, gemerkte Suchen …": "More options, build a search, search help, saved searches …",
+  "Tippe im Bibeltext auf einen Vers. Hier erscheint dann alles, was du und die Werkzeuge zu diesem Vers haben.": "Tap a verse in the Bible text. Everything you and the tools have on that verse then appears here.",
+  "{0} Wörter · {1} Zeichen": "{0} words · {1} characters"
 }

@@ -112,7 +112,17 @@ public partial class MainWindow
         foreach (var it in items) { it.Item1.Content = null; it.Item3.Child = it.Item2; host.Children.Add(it.Item3); }
 
         var panel = new DockPanel();
-        if (items.Count > 1) { DockPanel.SetDock(pills, Dock.Top); panel.Children.Add(pills); DockPanel.SetDock(hint, Dock.Top); panel.Children.Add(hint); }
+        // on a phone the tabs are one row that scrolls sideways (they took two rows), and the sentence under them goes: the area itself
+        // says the same in its heading, and the room belongs to the content
+        Control pillRow = pills;
+        if (IsPhone)
+        {
+            pills.Margin = new(8, 6, 8, 2);
+            pillRow = new ScrollViewer { Content = pills, HorizontalScrollBarVisibility = ScrollBarVisibility.Hidden, VerticalScrollBarVisibility = ScrollBarVisibility.Disabled };
+        }
+        if (items.Count > 1) { DockPanel.SetDock(pillRow, Dock.Top); panel.Children.Add(pillRow); DockPanel.SetDock(hint, Dock.Top); panel.Children.Add(hint); }
+        host.ClipToBounds = true;   // content taller than the room must not be drawn over the bars below it
+        if (IsPhone) foreach (var it in items) HideTopEyebrow(it.Item2);
         panel.Children.Add(host);
 
         var d = new Detached { Items = items, Key = key, Title = title, Panel = panel, Host = host, Indices = indices, Side = side };
@@ -125,7 +135,8 @@ public partial class MainWindow
             for (var k = 0; k < items.Count; k++) items[k].Item3.IsVisible = indices[k] == index;
             foreach (var b in pills.Children.OfType<Button>()) b.Classes.Set("active", (int)b.Tag! == index);
             hint.Text = group?.Tabs.FirstOrDefault(t => t.Index == index)?.Hint ?? "";
-            pills.IsVisible = hint.IsVisible = !(index == MaterialsTab && _settings.MaterialsCompact);   // the materials can fold their heading away
+            pillRow.IsVisible = hint.IsVisible = !(index == MaterialsTab && _settings.MaterialsCompact);   // the materials can fold their heading away
+            if (IsPhone) hint.IsVisible = false;
             TabShown(index);
             if (d.Win is null && _activeWork == key) SideForSettings();
         }
@@ -151,6 +162,34 @@ public partial class MainWindow
         }
         Select(indices.Contains(startIndex) ? startIndex : indices[0]);
         return d;
+    }
+
+    /// <summary>
+    /// On a phone the heading in capitals at the top of an area ("LESEPLÄNE", "ARCHIV DER BIBELSTUNDEN") only repeats the tab that is
+    /// lit above it, and costs a line: it goes. Headings further down (sections inside the area) stay.
+    /// </summary>
+    static void HideTopEyebrow(Control content)
+    {
+        var c = content;
+        for (var depth = 0; depth < 6 && c is not null; depth++)
+        {
+            if (c is StackPanel sp)
+            {
+                foreach (var k in sp.Children.Take(2))
+                    if (k is TextBlock { Classes: var cls } tb && cls.Contains("eyebrow")) { tb.IsVisible = false; return; }
+                c = sp.Children.FirstOrDefault() as Control;
+                continue;
+            }
+            c = c switch
+            {
+                ScrollViewer sv => sv.Content as Control,
+                Decorator d => d.Child,
+                ContentControl cc => cc.Content as Control,
+                DockPanel dp => dp.Children.LastOrDefault() as Control,
+                Panel p when p.Children.Count == 1 => p.Children[0],
+                _ => null,
+            };
+        }
     }
 
     /// <summary>Puts the content back into its (hidden) tab items and forgets the work area.</summary>

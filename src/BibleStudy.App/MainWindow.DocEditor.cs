@@ -443,7 +443,7 @@ public partial class MainWindow
     {
         var text = DocBodyBox.Text ?? "";
         var words = text.Length == 0 ? 0 : Regex.Matches(text, @"\S+").Count;
-        DocStatus.Text = L("{0} Wörter · {1} Zeichen · Strg+S speichert, Strg+E wechselt zur Ansicht", words, text.Length);
+        DocStatus.Text = AppPlatform.IsMobile ? L("{0} Wörter · {1} Zeichen", words, text.Length) : L("{0} Wörter · {1} Zeichen · Strg+S speichert, Strg+E wechselt zur Ansicht", words, text.Length);   // a phone has no keys
     }
 
     // ---- finished view ---------------------------------------------------------------------------------------------------

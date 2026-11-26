@@ -141,16 +141,18 @@ public sealed class HomeView : UserControl
             else DockPanel.SetDock(go, Dock.Right);
             hero.Children.Add(go);
         }
-        var heroText = new StackPanel { Children = { Heading(L("Bibel"), 46, "BsAccent"), Caption(L("{0} von {1} Kapiteln gelesen · {2} %", read, total, (total == 0 ? 0 : 100 * read / total)), 13) } };
+        var heroText = new StackPanel { Children = { Heading(L("Bibel"), AppPlatform.IsMobile ? 30 : 46, "BsAccent"), Caption(L("{0} von {1} Kapiteln gelesen · {2} %", read, total, (total == 0 ? 0 : 100 * read / total)), 13) } };
         if (ReadingLine is { } line) { var c = Caption(line, 13); c.FontWeight = FontWeight.SemiBold; c.Margin = new(0, 2, 0, 0); heroText.Children.Add(c); }
         hero.Children.Add(heroText);
         panel.Children.Add(hero);
         panel.Children.Add(new Border { Margin = new(0, 6, 0, 0), Child = Bar(total == 0 ? 0 : (double)read / total, accent, 6) });
         if (Recent.Count > 0)
         {
-            panel.Children.Add(new Border { Height = 18 });
-            panel.Children.Add(Heading(L("Weiterarbeiten"), 22));
-            var wrap = new WrapPanel { Margin = new(0, 8, 0, 0) };
+            panel.Children.Add(new Border { Height = AppPlatform.IsMobile ? 10 : 18 });
+            panel.Children.Add(Heading(L("Weiterarbeiten"), AppPlatform.IsMobile ? 19 : 22));
+            // on a phone the cards are one row that is swiped sideways (they stood one under the other at half the width of the screen,
+            // and the books began below the middle of the screen)
+            var wrap = new WrapPanel { Margin = new(0, 8, 0, 0), Orientation = Orientation.Horizontal };
             foreach (var (kind, title, detail, open) in Recent)
             {
                 var kindText = Themed(new TextBlock { Text = kind.ToUpperInvariant(), FontSize = 10, FontWeight = FontWeight.SemiBold, LetterSpacing = 1.2 }, TextBlock.ForegroundProperty, "BsAccent");
@@ -163,7 +165,9 @@ public sealed class HomeView : UserControl
                 card.OnPress((_, e) => { if (e.GetCurrentPoint(card).Properties.IsLeftButtonPressed) o(); });
                 wrap.Children.Add(card);
             }
-            panel.Children.Add(wrap);
+            panel.Children.Add(AppPlatform.IsMobile
+                ? new ScrollViewer { Content = wrap, HorizontalScrollBarVisibility = Avalonia.Controls.Primitives.ScrollBarVisibility.Hidden, VerticalScrollBarVisibility = Avalonia.Controls.Primitives.ScrollBarVisibility.Disabled }
+                : wrap);
         }
 
         Section(panel, L("Altes Testament"), _books.Where(b => BookCategories.IsOldTestament(BookCategories.Of(b.Id))));

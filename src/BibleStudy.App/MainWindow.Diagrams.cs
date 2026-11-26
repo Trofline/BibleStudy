@@ -233,7 +233,7 @@ public partial class MainWindow
     /// <summary>The button that opens a graph in a window of its own; <paramref name="source"/> gives the control at the time of the click.</summary>
     Button PopOutButton(Func<Control?> source, Func<string> title)
     {
-        var b = new Button { Content = L("In eigenem Fenster öffnen"), HorizontalAlignment = HorizontalAlignment.Left, Margin = new(0, 0, 0, 6) };
+        var b = new Button { Content = L("In eigenem Fenster öffnen"), HorizontalAlignment = HorizontalAlignment.Left, Margin = new(0, 0, 0, 6), IsVisible = !AppPlatform.IsMobile };   // a phone has no windows
         b.Click += (_, _) => { if (source() is { } c) ShowImageWindow(c, title()); };
         return b;
     }

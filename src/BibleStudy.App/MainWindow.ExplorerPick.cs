@@ -61,16 +61,18 @@ public partial class MainWindow
             fly.Items.Add(ColorMenu(items, _exPickMore));
             fly.Items.Add(TagMenu(items, _exPickMore));
             fly.Items.Add(OtherVaultMenu(items));
+            if (IsPhone) { fly.Items.Add(new Separator()); fly.Items.Add(MenuAction(L("Löschen"), () => ExDelete(_exSel.ToList()))); }   // a phone: one button less in the bar
             fly.ShowAt(_exPickMore);
         };
         _exPickDelete = Action(L("Löschen"), L("In den Papierkorb legen (Rückgängig geht)"));
         _exPickDelete.Click += (_, _) => ExDelete(_exSel.ToList());
         var done = new Button { Content = L("Fertig"), Classes = { "primary" }, Margin = new(0, 0, 0, 6), VerticalAlignment = VerticalAlignment.Center };
         done.Click += (_, _) => SetExPick(false);
-        var actions = new WrapPanel { Children = { _exPickAll, _exPickCount, _exPickMove, _exPickPath, _exPickMore, _exPickDelete } };
+        var actions = new WrapPanel { Children = { _exPickAll, _exPickCount, _exPickMove, _exPickPath, _exPickMore } };
+        if (!IsPhone) actions.Children.Add(_exPickDelete);
         var dock = new DockPanel { Children = { done, actions } };
         DockPanel.SetDock(done, Dock.Right);
-        _exPickBar = new Border { CornerRadius = new(12), Padding = new(10, 8, 10, 2), Margin = new(14, 8, 14, 0), BorderThickness = new(1), IsVisible = false, Child = dock };
+        _exPickBar = new Border { CornerRadius = new(12), Padding = IsPhone ? new(8, 6, 8, 0) : new(10, 8, 10, 2), Margin = IsPhone ? new(6, 4, 6, 0) : new(14, 8, 14, 0), BorderThickness = new(1), IsVisible = false, Child = dock };
         _exPickBar.Bind(Border.BackgroundProperty, this.GetResourceObservable("BsSurface2"));
         _exPickBar.Bind(Border.BorderBrushProperty, this.GetResourceObservable("BsAccent"));
     }
@@ -106,13 +108,13 @@ public partial class MainWindow
     {
         if (_exPickBar is null) return;
         _exPickBar.IsVisible = _exPick && !_exInTrash;
-        _exPickBtn.IsVisible = !_exInTrash;
+        _exPickBtn.IsVisible = !_exInTrash && !(IsPhone && _exPick);   // on a phone the bar below has its own "Fertig": not two of them
         if (!_exPick) return;
         var n = _exSel.Count;
         _exPickCount.Text = n == 0 ? L("Nichts gewählt") : n == 1 ? L("1 gewählt") : L("{0} gewählt", n);
         var own = _exSel.Where(i => !Foreign(i)).ToList();
         _exPickMove.IsEnabled = _exPickDelete.IsEnabled = own.Count > 0;
-        _exPickMore.IsEnabled = own.Any(i => i.Kind == ExKind.Mark);
+        _exPickMore.IsEnabled = IsPhone ? own.Count > 0 : own.Any(i => i.Kind == ExKind.Mark);
         _exPickPath.IsEnabled = own.Any(i => i.Kind is ExKind.Mark or ExKind.Note);
         _exPickAll.Content = n == _exRows.Count && n > 0 ? L("Keine") : L("Alle");
     }

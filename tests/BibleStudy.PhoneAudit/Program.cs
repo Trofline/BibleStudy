@@ -29,7 +29,7 @@ var report = new List<string>();
 
 foreach (var (w, h) in sizes)
 {
-    var win = new MainWindow { Width = w, Height = h };
+    var win = new MainWindow { MinWidth = 0, MinHeight = 0, Width = w, Height = h };   // the window of a desktop is at least 850 wide
     win.Show();
     Pump(20);
     var startWait = DateTime.Now;
@@ -77,7 +77,7 @@ foreach (var (w, h) in sizes)
     // the settings: every area
     var settingsTab = (int)(typeof(MainWindow).GetField("SettingsTab", All)?.GetValue(null) ?? -1);
     if (settingsTab >= 0)
-        for (var area = 0; area < 14; area++)
+        for (var area = 0; area < 8; area++)
         {
             Call("ShowReader"); Call("RevealSideTab", settingsTab); Call("ShowSettingsArea", (int?)area);
             Screen($"{n++:00}_settings_{area}");

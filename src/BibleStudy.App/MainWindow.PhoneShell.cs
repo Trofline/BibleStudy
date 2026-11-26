@@ -391,12 +391,17 @@ public partial class MainWindow
         // the back arrow: only where there is something to go back to
         _pBack.IsVisible = SidePanel.IsVisible || _activeWork is not null || !reader || BackBtn.IsEnabled;
         _pTitle.IsHitTestVisible = reader;
-        var panelGroup = SidePanel.IsVisible ? Rail.Children.OfType<Button>().FirstOrDefault(b => b.Classes.Contains("active") && b.Tag is NavGroup) : null;
+        // the bottom bar shows where one is: reading, the search, the bookmarks, or one of the areas under "Mehr" (a work tab, a tab of the
+        // side panel, the settings). It said "Lesen" on nearly every screen.
+        var sideGroup = SidePanel.IsVisible ? NavGroups.FirstOrDefault(g => g.Tabs.Any(t => t.Index == SideTabs.SelectedIndex)) : null;
+        var inSearch = sideGroup?.Name == K("Suchen");
+        var inMarks = sideGroup?.Name == K("Merken");
+        var elsewhere = (SidePanel.IsVisible && !inSearch && !inMarks) || (!SidePanel.IsVisible && _activeWork is not null);
         void Mark(string key, bool active) { if (_navBtns.TryGetValue(key, out var b) && b.Classes.Contains("active") != active) b.Classes.Set("active", active); }
-        Mark("read", !SidePanel.IsVisible);
-        Mark("search", panelGroup?.Tag is NavGroup g1 && g1.Name == K("Suchen"));
-        Mark("marks", panelGroup?.Tag is NavGroup g2 && g2.Name == K("Merken"));
-        Mark("tools", false); Mark("more", false);
+        Mark("read", !SidePanel.IsVisible && _activeWork is null);
+        Mark("search", inSearch);
+        Mark("marks", inMarks);
+        Mark("tools", false); Mark("more", elsewhere);
     }
 
     string BookBtnText()
@@ -506,6 +511,13 @@ public partial class MainWindow
         app.Styles.Add(styles);
         // the short descriptions under the tabs of the side panel: on a phone the room belongs to the content
         SubHint.IsVisible = false;
+        // the tabs of a group in the side panel ("Übersicht, Grundtext, Wort, Querverweise, Vorkommen"): one row that scrolls sideways, not two
+        if (SubPills.Parent is StackPanel subNav && subNav.Children.IndexOf(SubPills) is var at and >= 0)
+        {
+            subNav.Children.RemoveAt(at);
+            subNav.Margin = new Thickness(8, 6, 8, 0);
+            subNav.Children.Insert(at, new ScrollViewer { Content = SubPills, HorizontalScrollBarVisibility = ScrollBarVisibility.Hidden, VerticalScrollBarVisibility = ScrollBarVisibility.Disabled });
+        }
         // the title of the documents and its two buttons do not fit in one row: the buttons go below it
         if (DocNewBtn.Parent is DockPanel docHead)
         {
@@ -519,6 +531,33 @@ public partial class MainWindow
             docHead.Children.Insert(0, row);
         }
         CompactDocListForPhone();
+        Dispatcher.UIThread.Post(CompactSearchForPhone, DispatcherPriority.Background);   // after the search got its extra buttons
+    }
+
+    /// <summary>
+    /// The search on a phone: under the field stood five rows of choices (range, how words match, more options, build a search, help,
+    /// topics, ☆, saved searches, word calculator) before the first hit. Now the range and the match share one row, and everything else
+    /// is behind "⋯" at the end of that row.
+    /// </summary>
+    void CompactSearchForPhone()
+    {
+        if (SearchScopeBox.Parent is not Border scopePill || SearchMatchBox.Parent is not Border matchPill || scopePill.Parent is not WrapPanel wrap || wrap.Parent is not StackPanel stack) return;
+        var extras = wrap.Children.Where(c => c != scopePill && c != matchPill).ToList();
+        wrap.Children.Clear();
+        var more = new WrapPanel { MaxWidth = 320 };
+        foreach (var c in extras) { c.Margin = new Thickness(0, 0, 8, 8); more.Children.Add(c); }
+        var dots = new Button { Content = "⋯", Classes = { "seg" }, MinWidth = 44, Height = 36, HorizontalContentAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Center };
+        ToolTip.SetTip(dots, L("Mehr Optionen, Suche bauen, Suchhilfe, gemerkte Suchen …"));
+        dots.Flyout = new Flyout { Placement = PlacementMode.BottomEdgeAlignedRight, Content = more };
+        // a toggle that opens a card closes the menu, so the card is seen
+        foreach (var t in extras.OfType<ToggleButton>()) t.IsCheckedChanged += (_, _) => dots.Flyout.Hide();
+        foreach (var box in new[] { SearchScopeBox, SearchMatchBox }) { box.Width = double.NaN; box.MinWidth = 0; box.HorizontalAlignment = HorizontalAlignment.Stretch; }
+        foreach (var pill in new[] { scopePill, matchPill }) { pill.HorizontalAlignment = HorizontalAlignment.Stretch; pill.Margin = new Thickness(0, 0, 6, 0); }
+        var row = new Grid { ColumnDefinitions = new ColumnDefinitions("*,*,Auto") };
+        Grid.SetColumn(matchPill, 1); Grid.SetColumn(dots, 2);
+        row.Children.Add(scopePill); row.Children.Add(matchPill); row.Children.Add(dots);
+        var at = stack.Children.IndexOf(wrap);
+        stack.Children[at] = row;
     }
 
     /// <summary>
@@ -558,6 +597,8 @@ public partial class MainWindow
             top.Children.Remove(DocAllVaultsCheck);
             more.Children.Insert(0, DocAllVaultsCheck);
         }
+        // the category and the folder of an open document: side by side even on a small phone (170 + 170 took two rows)
+        DocCategoryBox.Width = DocFolderBox.Width = 140;
         // the filter box of a desktop width
         DocFilterBox.Width = double.NaN; DocFilterBox.MinWidth = 200;
     }

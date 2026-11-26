@@ -3605,5 +3605,8 @@
   "Dieser Link nennt keine Bibelstelle.": "Эта ссылка не указывает на место из Библии.",
   "Im geteilten Text wurde keine Bibelstelle gefunden.": "В отправленном тексте не найдено ни одного места из Библии.",
   "Link zur Stelle kopieren (öffnet BibleStudy)": "Копировать ссылку на место (открывает BibleStudy)",
-  "Link kopiert: {0}": "Ссылка скопирована: {0}"
+  "Link kopiert: {0}": "Ссылка скопирована: {0}",
+  "Mehr Optionen, Suche bauen, Suchhilfe, gemerkte Suchen …": "Другие параметры, конструктор поиска, справка, сохранённые поиски …",
+  "Tippe im Bibeltext auf einen Vers. Hier erscheint dann alles, was du und die Werkzeuge zu diesem Vers haben.": "Коснись стиха в тексте Библии. Здесь появится всё, что есть у тебя и у инструментов к этому стиху.",
+  "{0} Wörter · {1} Zeichen": "{0} слов · {1} знаков"
 }
