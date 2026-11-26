@@ -1,6 +1,6 @@
 // The widgets of BibleStudy on the iPhone (a WidgetKit extension, built by the IPA workflow with swiftc and put into the app's PlugIns folder).
 //
-// - "BibleStudy" on the lock screen, under the clock: a small round button that only opens the app.
+// - "BibleStudy" on the lock screen, under the clock: a small round button with the BibleStudy symbol that only opens the app.
 // - "Vers des Tages" on the home screen (small, medium) and the lock screen: the verse of the day and what is next in the reading plan.
 //
 // The extension cannot read the vault or the Bibles. The app writes a small file (widget.json, see MainWindow.Widgets.cs) into the folder it shares
@@ -142,6 +142,7 @@ struct Eyebrow: View {
 
 struct TodayView: View {
     @Environment(\.widgetFamily) var family
+    @Environment(\.widgetRenderingMode) var renderingMode
     let entry: TodayEntry
 
     var body: some View {
@@ -200,7 +201,60 @@ struct TodayView: View {
         }
         .padding(10)
         .frame(maxHeight: .infinity, alignment: .topLeading)
-        .background(Color.bsSurface, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+        .background(planBackground, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+    }
+
+    /// In the tinted (and clear) home screen iOS paints every opaque colour in the one tint colour, so an opaque panel had the colour of its own text
+    /// and the text could not be seen. There the panel is only a faint veil, whose alpha survives the tinting, and the text stays readable on it.
+    var planBackground: Color {
+        renderingMode == .fullColor ? Color.bsSurface : Color.white.opacity(0.12)
+    }
+}
+
+/// The BibleStudy symbol of the app icon (an open book with a cross in front of it) as one plain shape, so that the lock screen can draw it
+/// in its single colour like its own symbols. Drawn on a 100 × 100 grid; the pages leave a gap around the cross.
+struct BibleStudyMark: Shape {
+    func path(in rect: CGRect) -> Path {
+        var pages = Path()
+        // left and right page
+        pages.move(to: CGPoint(x: 47, y: 40))
+        pages.addCurve(to: CGPoint(x: 7, y: 35), control1: CGPoint(x: 37, y: 34), control2: CGPoint(x: 21, y: 32))
+        pages.addLine(to: CGPoint(x: 7, y: 82))
+        pages.addCurve(to: CGPoint(x: 47, y: 87), control1: CGPoint(x: 21, y: 79), control2: CGPoint(x: 37, y: 81))
+        pages.closeSubpath()
+        pages.move(to: CGPoint(x: 53, y: 40))
+        pages.addCurve(to: CGPoint(x: 93, y: 35), control1: CGPoint(x: 63, y: 34), control2: CGPoint(x: 79, y: 32))
+        pages.addLine(to: CGPoint(x: 93, y: 82))
+        pages.addCurve(to: CGPoint(x: 53, y: 87), control1: CGPoint(x: 79, y: 79), control2: CGPoint(x: 63, y: 81))
+        pages.closeSubpath()
+        // the cover under the pages
+        pages.move(to: CGPoint(x: 3, y: 40))
+        pages.addLine(to: CGPoint(x: 3, y: 89))
+        pages.addCurve(to: CGPoint(x: 50, y: 95), control1: CGPoint(x: 20, y: 86), control2: CGPoint(x: 38, y: 88))
+        pages.addCurve(to: CGPoint(x: 97, y: 89), control1: CGPoint(x: 62, y: 88), control2: CGPoint(x: 80, y: 86))
+        pages.addLine(to: CGPoint(x: 97, y: 40))
+        pages.addLine(to: CGPoint(x: 94, y: 40))
+        pages.addLine(to: CGPoint(x: 94, y: 85))
+        pages.addCurve(to: CGPoint(x: 50, y: 91), control1: CGPoint(x: 79, y: 83), control2: CGPoint(x: 62, y: 85))
+        pages.addCurve(to: CGPoint(x: 6, y: 85), control1: CGPoint(x: 38, y: 85), control2: CGPoint(x: 21, y: 83))
+        pages.addLine(to: CGPoint(x: 6, y: 40))
+        pages.closeSubpath()
+
+        let gap = Self.cross(armTop: 6, bar: (24, 38), arm: (27, 73), width: 18, bottom: 72)
+        let cross = Self.cross(armTop: 10, bar: (28, 36), arm: (31, 69), width: 10, bottom: 68)
+        let mark = pages.cgPath.subtracting(gap.cgPath).union(cross.cgPath)
+
+        let side = min(rect.width, rect.height)
+        let t = CGAffineTransform(translationX: rect.midX - side / 2, y: rect.midY - side / 2).scaledBy(x: side / 100, y: side / 100)
+        return Path(mark).applying(t)
+    }
+
+    /// A latin cross centred on x = 50: the upright from `armTop` to `bottom`, `width` wide; the crossbar from y `bar.0` to `bar.1`, x `arm.0` to `arm.1`.
+    static func cross(armTop: CGFloat, bar: (CGFloat, CGFloat), arm: (CGFloat, CGFloat), width: CGFloat, bottom: CGFloat) -> Path {
+        var p = Path()
+        p.addRect(CGRect(x: 50 - width / 2, y: armTop, width: width, height: bottom - armTop))
+        p.addRect(CGRect(x: arm.0, y: bar.0, width: arm.1 - arm.0, height: bar.1 - bar.0))
+        return Path(p.cgPath.normalized())
     }
 }
 
@@ -213,7 +267,7 @@ struct LauncherView: View {
         default:
             ZStack {
                 AccessoryWidgetBackground()
-                Image(systemName: "book.closed.fill").font(.system(size: 22, weight: .semibold)).widgetAccentable()
+                BibleStudyMark().padding(9).widgetAccentable()
             }
         }
     }
