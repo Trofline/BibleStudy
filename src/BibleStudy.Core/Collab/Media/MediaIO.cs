@@ -17,16 +17,17 @@ public static class MediaIO
 
     public static async Task<List<MediaDevice>> CamerasAsync() => (await Ffmpeg.ListAsync()).Where(d => d.IsVideo).ToList();
 
-    public static IDisposable StartMicrophone(MediaDevice? mic, Action<short[]> onPiece)
+    /// <summary>The microphone in pieces of 40 ms at <paramref name="rate"/> (16 kHz for voice messages and notes, 48 kHz in a call).</summary>
+    public static IDisposable StartMicrophone(MediaDevice? mic, Action<short[]> onPiece, int rate = AudioFormat.Rate)
     {
-        if (OperatingSystem.IsWindows() && !Ffmpeg.Fake) return WinAudio.StartMicrophone(mic, onPiece);
-        return new FfmpegReader(Ffmpeg.StartMicrophone(mic), AudioFormat.FrameSamples * 2, bytes => onPiece(MuLaw.FromBytes(bytes)));
+        if (OperatingSystem.IsWindows() && !Ffmpeg.Fake) return WinAudio.StartMicrophone(mic, onPiece, rate);
+        return new FfmpegReader(Ffmpeg.StartMicrophone(mic, rate), AudioFormat.FrameOf(rate) * 2, bytes => onPiece(MuLaw.FromBytes(bytes)));
     }
 
-    public static IDisposable StartSpeaker(Func<short[]> next)
+    public static IDisposable StartSpeaker(Func<short[]> next, int rate = AudioFormat.Rate)
     {
-        if (OperatingSystem.IsWindows() && !Ffmpeg.Fake) return WinAudio.StartSpeaker(next);
-        return new FfmpegWriter(Ffmpeg.StartSpeaker(), next);
+        if (OperatingSystem.IsWindows() && !Ffmpeg.Fake) return WinAudio.StartSpeaker(next, rate);
+        return new FfmpegWriter(Ffmpeg.StartSpeaker(rate), next);
     }
 
     /// <summary>Starts the camera; <paramref name="onPicture"/> gets every picture (on a background thread): an H.264 access unit when

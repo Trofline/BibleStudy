@@ -9,7 +9,7 @@ public sealed record MediaDevice(string Name, string Id, bool IsVideo);
 
 /// <summary>
 /// The camera (and on Mac/Linux the microphone and the speaker) through FFmpeg, a free program that is started on its own: it reads the
-/// device and writes plain pictures (JPEG) or plain sound (16 kHz PCM) to us, or plays the sound we hand it. BibleStudy uses an FFmpeg that is
+/// device and writes pictures (H.264 or JPEG) or plain sound (PCM) to us, or plays the sound we hand it. BibleStudy uses an FFmpeg that is
 /// already on the computer, or the one from the download manager.
 /// </summary>
 public static partial class Ffmpeg
@@ -138,9 +138,9 @@ public static partial class Ffmpeg
         catch (Exception) { return false; }
     }
 
-    static IEnumerable<string> MicInput(MediaDevice? mic)
+    static IEnumerable<string> MicInput(MediaDevice? mic, int rate)
     {
-        if (Fake) return ["-re", "-f", "lavfi", "-i", "sine=frequency=440:sample_rate=16000"];
+        if (Fake) return ["-re", "-f", "lavfi", "-i", $"sine=frequency=440:sample_rate={rate}"];
         if (OperatingSystem.IsWindows()) return ["-f", "dshow", "-audio_buffer_size", "40", "-i", "audio=" + (mic?.Id ?? "")];
         if (OperatingSystem.IsMacOS()) return ["-f", "avfoundation", "-i", ":" + (mic?.Id ?? "0")];
         return ["-f", "pulse", "-fragment_size", "1280", "-i", mic?.Id ?? "default"];
@@ -187,22 +187,22 @@ public static partial class Ffmpeg
         return Process.Start(Info(exe, args, input: true))!;
     }
 
-    /// <summary>The microphone as 16 kHz 16-bit mono PCM on the standard output.</summary>
-    public static Process StartMicrophone(MediaDevice? mic)
+    /// <summary>The microphone as 16-bit mono PCM at <paramref name="rate"/> on the standard output.</summary>
+    public static Process StartMicrophone(MediaDevice? mic, int rate = AudioFormat.Rate)
     {
         var exe = Find() ?? throw new FileNotFoundException("ffmpeg");
         var args = new List<string> { "-hide_banner", "-loglevel", "error", "-fflags", "nobuffer" };
-        args.AddRange(MicInput(mic));
-        args.AddRange(["-vn", "-ac", "1", "-ar", AudioFormat.Rate.ToString(CultureInfo.InvariantCulture), "-f", "s16le", "-flush_packets", "1", "-"]);
+        args.AddRange(MicInput(mic, rate));
+        args.AddRange(["-vn", "-ac", "1", "-ar", rate.ToString(CultureInfo.InvariantCulture), "-f", "s16le", "-flush_packets", "1", "-"]);
         return Process.Start(Info(exe, args))!;
     }
 
-    /// <summary>Plays 16 kHz 16-bit mono PCM written to the standard input (Mac and Linux; Windows plays it itself).</summary>
-    public static Process StartSpeaker()
+    /// <summary>Plays 16-bit mono PCM at <paramref name="rate"/> written to the standard input (Mac and Linux; Windows plays it itself).</summary>
+    public static Process StartSpeaker(int rate = AudioFormat.Rate)
     {
         var exe = Find() ?? throw new FileNotFoundException("ffmpeg");
         var output = Fake ? new[] { "-f", "null", "-" } : OperatingSystem.IsMacOS() ? ["-f", "audiotoolbox", "-"] : ["-f", "pulse", "BibleStudy"];
-        var args = new List<string> { "-hide_banner", "-loglevel", "error", "-fflags", "nobuffer", "-f", "s16le", "-ar", AudioFormat.Rate.ToString(CultureInfo.InvariantCulture), "-ac", "1", "-i", "-" };
+        var args = new List<string> { "-hide_banner", "-loglevel", "error", "-fflags", "nobuffer", "-f", "s16le", "-ar", rate.ToString(CultureInfo.InvariantCulture), "-ac", "1", "-i", "-" };
         args.AddRange(output);
         return Process.Start(Info(exe, args, input: true))!;
     }
@@ -215,9 +215,9 @@ public static partial class Ffmpeg
 public sealed record CameraQuality(int Width, int Height, int Fps, int Q, int Kbps)
 {
     public static readonly CameraQuality Low = new(320, 240, 15, 7, 300);
-    public static readonly CameraQuality Medium = new(640, 360, 30, 5, 800);
-    public static readonly CameraQuality High = new(1280, 720, 30, 5, 2000);
-    public static readonly CameraQuality FullHd = new(1920, 1080, 30, 5, 4000);
+    public static readonly CameraQuality Medium = new(640, 360, 30, 5, 1000);
+    public static readonly CameraQuality High = new(1280, 720, 30, 5, 2500);
+    public static readonly CameraQuality FullHd = new(1920, 1080, 30, 5, 5000);
 
     /// <summary>Pictures a second the picture-by-picture way manages (every picture is whole there, so it stays at 10 to 15).</summary>
     public int JpegFps => Math.Min(Fps, Width <= 320 ? 10 : 15);

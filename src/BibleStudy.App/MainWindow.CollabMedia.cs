@@ -12,7 +12,7 @@ namespace BibleStudy.App;
 
 /// <summary>
 /// Studying together with voice and camera: hold a button to talk (push to talk), switch the microphone on for a call, send a voice message,
-/// switch the camera on. Sound goes as 40 ms pieces packed with μ-law, the camera as a video stream (H.264, see MainWindow.CollabVideo.cs;
+/// switch the camera on. Sound goes as 40 ms pieces of 48 kHz (voice messages as 16 kHz μ-law), the camera as a video stream (H.264, see MainWindow.CollabVideo.cs;
 /// single JPEG pictures when the FFmpeg there cannot make H.264); everything through the same
 /// encrypted connections as the rest. Received sound is mixed and played only while "Hear the others" is on; nothing is recorded or saved,
 /// except a voice message the person sends on purpose.
@@ -20,7 +20,7 @@ namespace BibleStudy.App;
 public partial class MainWindow
 {
     IDisposable? _mic, _speaker, _camera;
-    readonly AudioMixer _mixer = new();
+    readonly AudioMixer _mixer = new(AudioFormat.CallFrameSamples);   // plays at 48 kHz
     bool _callMic, _pttHeld, _recording, _camOn;
     readonly List<short> _voiceRec = [];
     DateTime _recStart;
@@ -144,7 +144,7 @@ public partial class MainWindow
             fps.SelectionChanged += async (_, _) => await Apply();
             to.Children.Add(quality);
             to.Children.Add(fps);
-            to.Children.Add(new TextBlock { Text = L("Ruckelt das Bild oder kommt es spät an, wähle eine niedrigere Qualität. Jede Person mit Kamera braucht zum Senden etwa: HD 2 Mbit/s, Full HD 4 Mbit/s, mit 60 Bildern pro Sekunde die Hälfte mehr. Die anderen brauchen ebenso viel zum Empfangen."), Classes = { "caption" }, TextWrapping = TextWrapping.Wrap });
+            to.Children.Add(new TextBlock { Text = L("Ruckelt das Bild oder kommt es spät an, wähle eine niedrigere Qualität. Jede Person mit Kamera braucht zum Senden etwa: HD 2,5 Mbit/s, Full HD 5 Mbit/s, mit 60 Bildern pro Sekunde die Hälfte mehr. Die anderen brauchen ebenso viel zum Empfangen."), Classes = { "caption" }, TextWrapping = TextWrapping.Wrap });
         }
         else to.Children.Add(new TextBlock { Text = Ffmpeg.Find() is null ? FfmpegHint() : L("Keine Kamera gefunden."), Classes = { "caption" }, TextWrapping = TextWrapping.Wrap });
     }
@@ -172,7 +172,7 @@ public partial class MainWindow
         if (need && _mic is null)
         {
             if (MediaIO.SoundNeedsFfmpeg && Ffmpeg.Find() is null) { _mediaInfo.Text = FfmpegHint(); return; }
-            try { var device = await PickAsync(false); _mic ??= MediaIO.StartMicrophone(device, OnMicPiece); _mediaInfo.Text = ""; }
+            try { var device = await PickAsync(false); _mic ??= MediaIO.StartMicrophone(device, OnMicPiece, AudioFormat.CallRate); _mediaInfo.Text = ""; }
             catch (Exception ex) { _mediaInfo.Text = L("Das Mikrofon ließ sich nicht öffnen: {0}", ex.Message); }
         }
         else if (!need && _mic is not null) { _mic.Dispose(); _mic = null; _myLevel = 0; }
@@ -183,9 +183,9 @@ public partial class MainWindow
     void OnMicPiece(short[] pcm)
     {
         _myLevel = MuLaw.Level(pcm);
-        if (_recording) lock (_voiceRec) { if (_voiceRec.Count < AudioFormat.Rate * 120) _voiceRec.AddRange(pcm); }
+        if (_recording) lock (_voiceRec) { if (_voiceRec.Count < AudioFormat.CallRate * 120) _voiceRec.AddRange(pcm); }
         if ((_pttHeld || _callMic) && _group is { Any: true } g)
-            try { g.Send(new { t = "au", d = Convert.ToBase64String(MuLaw.Encode(pcm)) }); } catch { }
+            try { g.Send(new { t = "a2", d = Convert.ToBase64String(MuLaw.ToBytes(pcm)) }); } catch { }   // 48 kHz, 16 bit: the full voice
     }
 
     void StartVoiceMessage()
@@ -201,6 +201,7 @@ public partial class MainWindow
         _recording = false;
         UpdateMic();
         short[] pcm; lock (_voiceRec) { pcm = _voiceRec.ToArray(); _voiceRec.Clear(); }
+        pcm = AudioFormat.Down3(pcm);   // a voice message stays 16 kHz μ-law, as every version plays it
         if (!send || pcm.Length < AudioFormat.Rate / 4) return;
         var data = MuLaw.Encode(pcm);
         var secs = (pcm.Length + AudioFormat.Rate / 2) / AudioFormat.Rate;
@@ -223,7 +224,7 @@ public partial class MainWindow
                 var wav = Path.Combine(Path.GetTempPath(), "bs_voice.wav");
                 try { Wav.Write(wav, MuLaw.Decode(mulaw)); (_voicePlayer ??= new AudioPlayer()).Play(wav); } catch (Exception ex) { _mediaInfo.Text = ex.Message; }
             }
-            else if (EnsureSpeaker()) _mixer.Add("vm" + Guid.NewGuid().ToString("N"), MuLaw.Decode(mulaw));
+            else if (EnsureSpeaker()) _mixer.Add("vm" + Guid.NewGuid().ToString("N"), AudioFormat.Up3(MuLaw.Decode(mulaw)));
         };
         var card = Card(new StackPanel
         {
@@ -242,7 +243,7 @@ public partial class MainWindow
     {
         if (_speaker is not null) return true;
         if (MediaIO.SoundNeedsFfmpeg && Ffmpeg.Find() is null) { _mediaInfo.Text = FfmpegHint(); return false; }
-        try { _speaker = MediaIO.StartSpeaker(_mixer.Next); return true; }
+        try { _speaker = MediaIO.StartSpeaker(_mixer.Next, AudioFormat.CallRate); return true; }
         catch (Exception ex) { _mediaInfo.Text = L("Der Lautsprecher ließ sich nicht öffnen: {0}", ex.Message); return false; }
     }
 
@@ -377,7 +378,16 @@ public partial class MainWindow
                 byte[] data;
                 try { data = Convert.FromBase64String(d.GetString()!); } catch (FormatException) { return true; }
                 if (data.Length is 0 or > 4 * AudioFormat.FrameSamples) return true;
-                if (EnsureSpeaker()) _mixer.Add(p.Id, MuLaw.Decode(data));
+                if (EnsureSpeaker()) _mixer.Add(p.Id, AudioFormat.Up3(MuLaw.Decode(data)));   // an older version: 16 kHz μ-law
+                return true;
+            }
+            case "a2":
+            {
+                if (AppPlatform.IsMobile || !_settings.CollabHear || !root.TryGetProperty("d", out var d) || d.ValueKind != JsonValueKind.String) return true;
+                byte[] data;
+                try { data = Convert.FromBase64String(d.GetString()!); } catch (FormatException) { return true; }
+                if (data.Length is < 2 or > 4 * AudioFormat.CallFrameSamples * 2) return true;
+                if (EnsureSpeaker()) _mixer.Add(p.Id, MuLaw.FromBytes(data));
                 return true;
             }
             case "vf":

@@ -203,4 +203,35 @@ public class MediaTests
         }
         finally { Environment.SetEnvironmentVariable("BIBLESTUDY_FAKEMEDIA", null); }
     }
+
+    [Fact]
+    public void Call_sound_is_48_khz_and_voice_messages_stay_16_khz()
+    {
+        var call = Enumerable.Range(0, AudioFormat.CallFrameSamples).Select(i => (short)(i % 300)).ToArray();
+        var small = AudioFormat.Down3(call);
+        Assert.Equal(AudioFormat.FrameSamples, small.Length);
+        var back = AudioFormat.Up3(small);
+        Assert.Equal(AudioFormat.CallFrameSamples, back.Length);
+        Assert.Equal(new short[] { 30, 33, 36 }, AudioFormat.Up3(new short[] { 30, 39 })[..3]);
+
+        var m = new AudioMixer(AudioFormat.CallFrameSamples);
+        for (var k = 0; k < 3; k++) m.Add("anna", call);
+        Assert.Equal(AudioFormat.CallFrameSamples, m.Next().Length);
+        Assert.Equal(AudioFormat.CallFrameSamples, AudioFormat.FrameOf(AudioFormat.CallRate));
+    }
+
+    [Fact]
+    public async Task The_test_tone_comes_at_48_khz_for_a_call()
+    {
+        if (Ffmpeg.Find() is null) return;
+        Environment.SetEnvironmentVariable("BIBLESTUDY_FAKEMEDIA", "1");
+        try
+        {
+            var pieces = 0;
+            using (MediaIO.StartMicrophone(null, p => { if (p.Length == AudioFormat.CallFrameSamples && MuLaw.Level(p) > 0.1) Interlocked.Increment(ref pieces); }, AudioFormat.CallRate))
+                await Task.Delay(2000);
+            Assert.True(pieces >= 15, $"pieces {pieces}");
+        }
+        finally { Environment.SetEnvironmentVariable("BIBLESTUDY_FAKEMEDIA", null); }
+    }
 }
