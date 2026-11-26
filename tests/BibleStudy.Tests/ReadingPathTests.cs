@@ -169,16 +169,6 @@ public class ReadingPathTests
         v.Wipe();
         Assert.Empty(v.GetReadingPaths());
     }
-}
-
-public class ReadingPathMergeTests
-{
-    [Fact]
-    public void Several_marks_in_one_verse_make_one_step()
-    {
-        var steps = StudyPassage.Merged([new("LEV", 11, 4, 4), new("LEV", 11, 4, 4), new("LEV", 11, 4, 4), new("LEV", 11, 5, 5), new("LEV", 11, 5, 5), new("LEV", 11, 1, 3), new("LEV", 11, 2, 2)]);
-        Assert.Equal(["LEV 11:4", "LEV 11:5", "LEV 11:1-3"], steps.Select(s => s.ToString()));
-    }
 
     [Fact]
     public void Paths_sent_by_someone_else_are_checked_before_they_are_kept()
@@ -200,5 +190,15 @@ public class ReadingPathMergeTests
         ReadingPathFile.KeepPaths(v, found.Select(f => f.Path));
         Assert.Equal(["Gnade", "Gnade (2)"], v.GetReadingPaths().Select(p => p.Name).Order());   // the own path is not overwritten
         Assert.Equal("ROM 3:23", v.GetReadingPaths().Single(p => p.Name == "Gnade").Steps[0].ToString());
+    }
+}
+
+public class ReadingPathMergeTests
+{
+    [Fact]
+    public void Several_marks_in_one_verse_make_one_step()
+    {
+        var steps = StudyPassage.Merged([new("LEV", 11, 4, 4), new("LEV", 11, 4, 4), new("LEV", 11, 4, 4), new("LEV", 11, 5, 5), new("LEV", 11, 5, 5), new("LEV", 11, 1, 3), new("LEV", 11, 2, 2)]);
+        Assert.Equal(["LEV 11:4", "LEV 11:5", "LEV 11:1-3"], steps.Select(s => s.ToString()));
     }
 }

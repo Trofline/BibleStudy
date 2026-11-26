@@ -37,13 +37,13 @@ public partial class MainWindow
                 data = buffer.ToArray();
             }
             if (data.Length == 0) { AddCollabLog(L("„{0}“ ist leer.", file.Name), system: true); return; }
-            await SendBlobAsync("file", SafeFileName(file.Name), data, L("Du hast die Datei „{0}“ gesendet ({1}).", file.Name, SizeText(data.LongLength)));
+            await SendBlobAsync("file", SafeIncomingFileName(file.Name), data, L("Du hast die Datei „{0}“ gesendet ({1}).", file.Name, SizeText(data.LongLength)));
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException) { AddCollabLog(L("Die Datei ließ sich nicht lesen: ") + ex.Message, system: true); }
     }
 
     /// <summary>A name that is only a name: no folders, no characters a file system refuses, not empty.</summary>
-    static string SafeFileName(string? name)
+    static string SafeIncomingFileName(string? name)
     {
         var n = System.IO.Path.GetFileName((name ?? "").Replace('\\', '/').Split('/').LastOrDefault() ?? "").Trim().Trim('.');
         foreach (var c in System.IO.Path.GetInvalidFileNameChars().Concat(['<', '>', ':', '"', '|', '?', '*'])) n = n.Replace(c, '_');
@@ -54,7 +54,7 @@ public partial class MainWindow
     /// <summary>A file from someone else arrived: a card offers to save it (where the receiver chooses) or to decline it.</summary>
     void ShowReceivedFile(string name, byte[] data)
     {
-        name = SafeFileName(name);
+        name = SafeIncomingFileName(name);
         var who = PeerWho;
         var save = new Button { Content = L("Annehmen und speichern …"), Classes = { "tool" }, Width = double.NaN, Padding = new(10, 0), Margin = new(0, 0, 6, 6) };
         var decline = new Button { Content = L("Ablehnen"), Classes = { "tool" }, Width = double.NaN, Padding = new(10, 0), Margin = new(0, 0, 6, 6) };
