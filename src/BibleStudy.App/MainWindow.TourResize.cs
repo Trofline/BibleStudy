@@ -65,7 +65,7 @@ public partial class MainWindow
         grip.PointerEntered += (_, _) => bar.Bind(Border.BackgroundProperty, this.GetResourceObservable("BsAccent"));
         grip.PointerExited += (_, _) => { if (from is null) bar.Bind(Border.BackgroundProperty, this.GetResourceObservable("BsBorder")); };
         // the presenter of a bubble has a largest width of its own; the grip decides now
-        grip.AttachedToVisualTree += (_, _) => { if (grip.FindAncestorOfType<Avalonia.Controls.Primitives.FlyoutPresenter>() is { } presenter) presenter.MaxWidth = double.PositiveInfinity; };
+        grip.AttachedToVisualTree += (_, _) => { if (grip.FindAncestorOfType<FlyoutPresenter>() is { } presenter) presenter.MaxWidth = double.PositiveInfinity; };
 
         var grid = new Grid { ColumnDefinitions = new ColumnDefinitions("*,Auto") };
         grid.Children.Add(content);
