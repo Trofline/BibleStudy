@@ -38,6 +38,9 @@ Popup.IsOpenProperty.Changed.AddClassHandler<Popup>((p, e) => { if (p.IsOpen) { 
 
 foreach (var (w, h) in sizes)
 {
+    // the vault of the size before still holds its database files open in the pool: let go of them, then the folder can go
+    Type.GetType("Microsoft.Data.Sqlite.SqliteConnection, Microsoft.Data.Sqlite")?.GetMethod("ClearAllPools")?.Invoke(null, null);
+    GC.Collect(); GC.WaitForPendingFinalizers();
     try { if (Directory.Exists(data)) Directory.Delete(data, true); } catch (IOException) { report.Add("  ! data folder still in use: the data of the size before stays"); }
     var win = new MainWindow { MinWidth = 0, MinHeight = 0, Width = w, Height = h };
     win.Show();

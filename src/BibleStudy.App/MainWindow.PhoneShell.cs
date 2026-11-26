@@ -545,11 +545,14 @@ public partial class MainWindow
         CompactDocListForPhone();
         Dispatcher.UIThread.Post(CompactSearchForPhone, DispatcherPriority.Background);   // after the search got its extra buttons
         // the notes: a smaller editor, and the links of a note one row to swipe (on an iPhone SE two notes of the list were left)
-        NoteEditor.Height = 76;
+        NoteEditor.Height = double.NaN; NoteEditor.MinHeight = 64; NoteEditor.MaxHeight = 150;   // grows with the note, up to a third of the screen (76 cut it off)
         // the editor of a document: "Exportieren" as a symbol, the switch of saving as its dot (see ShowAutoSaveState): one row, not two
         ToolTip.SetTip(DocExportBtn, L("Exportieren"));
         DocExportBtn.Content = new Icon { Data = Geometry.Parse("M12 3v12 M7 10l5 5 5-5 M5 21h14"), IconSize = 18 };
         DocAutoSaveBtn.MinWidth = 40;
+        ToolTip.SetTip(DocSaveBtn, L("Speichern"));
+        DocSaveBtn.Content = new Icon { Data = Geometry.Parse("M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z M17 21v-8H7v8 M7 3v5h8"), IconSize = 18 };
+        DocSaveBtn.MinWidth = 44;
         ShowAutoSaveState();
         OneSwipeRow(NoteLinksPanel); OneSwipeRow(NoteBacklinksPanel);
     }

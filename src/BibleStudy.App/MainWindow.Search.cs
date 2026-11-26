@@ -456,7 +456,7 @@ public partial class MainWindow
             : L("{0} Verse · {1} Fundstellen in {2}{3}", list.Count.ToString("N0"), words.ToString("N0"), t.ShortName, (list.Count > ShownHits ? L(" (erste {0} angezeigt)", ShownHits) : ""));
         if (_hitForm is not null) SearchInfo.Text += " · " + L("nur „{0}“", _hitForm);
         if (_hits.Count > 0 && _searchExtra.Length > 0) SearchInfo.Text += "\n" + _searchExtra;
-        SearchQueueBtn.IsVisible = list.Count > 0; UpdateHitActions(list.Count > 0);
+        SearchQueueBtn.IsVisible = list.Count > 0 && !AppPlatform.IsMobile; UpdateHitActions(list.Count > 0);   // a phone has it in "Treffer ▾"
         ShowFoundForms(t);
 
         // hits per book, in Bible order; click narrows the list to that book, click again shows all (with a chosen form: the verses with it)

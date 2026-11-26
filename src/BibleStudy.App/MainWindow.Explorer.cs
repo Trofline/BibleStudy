@@ -622,7 +622,7 @@ public partial class MainWindow
             var on = _exSort == sort;
             var b = new Button
             {
-                Classes = { "ghost" }, Padding = new(4, 2), HorizontalAlignment = HorizontalAlignment.Left, FontSize = 12, FontWeight = FontWeight.SemiBold,
+                Classes = { "ghost" }, Padding = new(4, 2), MinHeight = 0, HorizontalAlignment = HorizontalAlignment.Left, FontSize = 12, FontWeight = FontWeight.SemiBold,   // (a column head: not the 34 px of a phone button)
                 Content = text + (on ? (_exSortDesc ? "  ▼" : "  ▲") : ""), Opacity = on ? 1 : 0.75,
             };
             ToolTip.SetTip(b, L("Nach dieser Spalte sortieren"));
