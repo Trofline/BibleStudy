@@ -119,7 +119,22 @@ public partial class MainWindow
         to.Children.Add(new TextBlock { Text = L("Mikrofon"), FontWeight = FontWeight.SemiBold });
         to.Children.Add(Box(mics, _settings.CollabMic, v => _settings.CollabMic = v));
         to.Children.Add(new TextBlock { Text = L("Kamera"), FontWeight = FontWeight.SemiBold });
-        if (cams.Count > 0) to.Children.Add(Box(cams, _settings.CollabCamera, v => _settings.CollabCamera = v));
+        if (cams.Count > 0)
+        {
+            to.Children.Add(Box(cams, _settings.CollabCamera, v => _settings.CollabCamera = v));
+            var quality = new ComboBox
+            {
+                ItemsSource = new[] { L("Bildqualität: niedrig (für langsames Internet)"), L("Bildqualität: mittel"), L("Bildqualität: HD (720p)") },
+                SelectedIndex = Math.Clamp(_settings.CollabCameraQuality, 0, 2), HorizontalAlignment = HorizontalAlignment.Stretch,
+            };
+            quality.SelectionChanged += async (_, _) =>
+            {
+                _settings.CollabCameraQuality = quality.SelectedIndex; SaveSettings();
+                if (_camOn && _camera is not null) { await SetCameraAsync(false); await SetCameraAsync(true); }   // takes effect at once
+            };
+            to.Children.Add(quality);
+            to.Children.Add(new TextBlock { Text = L("Ruckelt das Bild oder kommt es spät an, wähle eine niedrigere Qualität: HD braucht bei jeder Person mit Kamera etwa 5 Mbit/s zum Senden und bei allen anderen ebenso viel zum Empfangen."), Classes = { "caption" }, TextWrapping = TextWrapping.Wrap });
+        }
         else to.Children.Add(new TextBlock { Text = Ffmpeg.Find() is null ? FfmpegHint() : L("Keine Kamera gefunden."), Classes = { "caption" }, TextWrapping = TextWrapping.Wrap });
     }
 
@@ -220,6 +235,10 @@ public partial class MainWindow
         catch (Exception ex) { _mediaInfo.Text = L("Der Lautsprecher ließ sich nicht öffnen: {0}", ex.Message); return false; }
     }
 
+    const int MaxPicture = 400_000;   // one camera picture; an HD picture is about 60 to 150 KB
+    volatile byte[]? _ownFrame;
+    int _ownFramePosted;
+
     // ---- camera ----------------------------------------------------------------------------------------------------------
 
     async Task SetCameraAsync(bool on)
@@ -231,15 +250,19 @@ public partial class MainWindow
         if (cam is null) { _mediaInfo.Text = L("Keine Kamera gefunden."); return; }
         try
         {
-            _camera = MediaIO.StartCamera(cam, jpeg =>
+            _camOn = true;   // while it opens: a second tap does not start it twice
+            _camera = await MediaIO.StartCameraAsync(cam, CameraQuality.Of(_settings.CollabCameraQuality), jpeg =>
             {
-                if (jpeg.Length > 200_000) return;
+                if (jpeg.Length > MaxPicture) return;
                 if (_group is { Any: true } g) try { g.Send(new { t = "vf", d = Convert.ToBase64String(jpeg) }); } catch { }
-                OnUi(() => ShowFrame("me", L("Du"), PeopleInkOf(null), jpeg));
+                _ownFrame = jpeg;
+                if (Interlocked.Exchange(ref _ownFramePosted, 1) == 0)   // only the newest picture is shown: a busy screen never falls behind
+                    OnUi(() => { Interlocked.Exchange(ref _ownFramePosted, 0); if (_ownFrame is { } f && _camOn) ShowFrame("me", L("Du"), PeopleInkOf(null), f); });
             });
-            _camOn = true; _mediaInfo.Text = "";
+            if (!_camOn) { _camera.Dispose(); _camera = null; return; }   // switched off (or left) while it opened
+            _mediaInfo.Text = "";
         }
-        catch (Exception ex) { _mediaInfo.Text = L("Die Kamera ließ sich nicht öffnen: {0}", ex.Message); }
+        catch (Exception ex) { _camOn = false; _mediaInfo.Text = L("Die Kamera ließ sich nicht öffnen: {0}", ex.Message); }
     }
 
     Color PeopleInkOf(CollabPerson? p) => p?.Ink ?? Color.Parse("#30A46C");
@@ -322,7 +345,7 @@ public partial class MainWindow
                 if (!root.TryGetProperty("d", out var d) || d.ValueKind != JsonValueKind.String) return true;
                 byte[] jpeg;
                 try { jpeg = Convert.FromBase64String(d.GetString()!); } catch (FormatException) { return true; }
-                if (jpeg.Length is < 4 or > 200_000 || jpeg[0] != 0xFF || jpeg[1] != 0xD8) return true;   // only a JPEG picture
+                if (jpeg.Length is < 4 or > MaxPicture || jpeg[0] != 0xFF || jpeg[1] != 0xD8) return true;   // only a JPEG picture
                 ShowFrame(p.Id, p.Name, p.Ink, jpeg);
                 return true;
             }

@@ -4,7 +4,24 @@ Study **connected** with other people: chat, share verses and documents, and rea
 
 ## 10.1 Setting up the connection
 
-Right-hand bar → **Together → Study together**. Enter your name first.
+Right-hand bar → **Together → Study together**. Enter your name first. The easiest way is a **room with a room code**: it works from anywhere, whatever network you are in.
+
+### Over the internet with a room code (recommended)
+
+Wherever you are (for example each at home, or one on mobile data), you meet in a **room**. Up to **five people** fit in one room.
+
+Under **Over the internet (room code)**:
+
+1. One person chooses **Create a room**. A short **room code** like `K7F2-QXM9` appears.
+2. They send the code to the others by messenger (or read it out on the phone).
+3. The others choose **Join a room**, type in the code and tap **Join**.
+4. After a second or two you are connected. The room code stays at the top of the page so that someone else can still join.
+
+Everybody sees a **check number**. If it is the same for all of you, nobody is in between.
+
+**How it works:** The programs do not connect to each other directly (that fails with many internet connections) but each one to a small **relay server** on the internet, the way a browser opens a website. The relay only passes the messages on. Everything is **end-to-end encrypted**: the key is made on your devices from the room code; the relay does not know the code (only a hash of it as the room name) and cannot read anything. It stores nothing. You need no account and nothing to set up.
+
+**Daily limit:** The relay runs on the free plan and therefore has a daily limit for all users together. When it is used up, connect **in the same network** (next section) until the next day. If you are in different places, all join the same free **ZeroTier** network (zerotier.com: one person creates a network, the others join with its network ID). Then you are “in the same network” for BibleStudy and connect without any relay.
 
 ### In the same network (no codes)
 
@@ -24,21 +41,6 @@ You can be as many as you like. Whoever is connected already adds someone under 
 ### Friends
 
 For a person in the same network, **Remember as friend** appears. Afterwards they are listed under **Friends**, and one tap connects you, even when they do not show up in the list (then by the address used last). With **Accept automatically** you are no longer asked for this friend. A friend is recognised by a shared secret swapped when remembering, not only by the name.
-
-### In different networks (with a room code, beta)
-
-If you are not in the same network (for example each at home, or one on mobile data), you meet in a **room**. Up to **five people** fit in one room.
-
-Under **Over the internet (other networks, beta)**:
-
-1. One person chooses **Create a room**. A short **room code** like `K7F2-QXM9` appears.
-2. They send the code to the others by messenger (or read it out on the phone).
-3. The others choose **Join a room**, type in the code and tap **Join**.
-4. After a second or two you are connected. The room code stays at the top of the page so that someone else can still join.
-
-Everybody sees a **check number**. If it is the same for all of you, nobody is in between.
-
-**How it works:** The programs do not connect to each other directly (that fails with many internet connections) but each one to a small **relay server** on the internet, the way a browser opens a website. The relay only passes the messages on. Everything is **end-to-end encrypted**: the key is made on your devices from the room code; the relay does not know the code (only a hash of it as the room name) and cannot read anything. It stores nothing. You need no account and nothing to set up.
 
 ## 10.2 What you can do
 
@@ -66,6 +68,7 @@ Under **Talking and camera**:
 - **Microphone on (call):** like a call, until you switch it off again. With headphones there is no echo.
 - **Voice message:** tap, speak, tap again; 2 minutes at most. The others play it with **▶ Play**.
 - **Camera on:** your picture appears as a small tile for everyone; **Large video** shows all pictures in a window of their own.
+- **Picture quality:** under **Choose microphone and camera**: low, medium or **HD (720p)** (default). If the picture stutters or arrives late, choose a lower level: HD needs about 5 Mbit/s for each person with a camera. When the picture cannot keep up, BibleStudy skips old pictures and always shows the newest, so the delay does not keep growing.
 - **Hear the others** switches the others' sound off and on. Under **Choose microphone and camera** you pick the devices.
 
 On Windows, talking works without anything extra. For the camera (and on Mac and Linux also for sound) BibleStudy needs the free program **FFmpeg**: on Windows in the download manager under **Camera and sound** (about 110 MB), on a Mac with `brew install ffmpeg`, on Linux with the package manager (`sudo apt install ffmpeg`). If FFmpeg is installed already, it is used. Talking and camera on the phone come later.
@@ -93,7 +96,7 @@ Nothing is recorded, except a voice message you send yourself. Sound and picture
 - Everybody must have the room **open at the same time**. Whoever created the room keeps the page open until the others are there.
 - “Nobody came”: check the code. It has 8 characters; upper or lower case and the dash do not matter.
 - “There are already five people in this room”: ask for a new code.
-- “The relay server cannot be reached right now”: check the internet connection. On the free plan the relay has a daily limit; when it is reached, it works again the next day.
+- “The relay server cannot be reached right now”: check the internet connection. On the free plan the relay has a daily limit; when it is reached, connect in the same network until the next day, or from different places through a shared ZeroTier network (see above).
 
 ### Your own relay server
 

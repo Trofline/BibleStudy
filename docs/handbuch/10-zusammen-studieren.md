@@ -4,7 +4,24 @@ Mit anderen Personen **verbunden** studieren: Chat, Verse und Dokumente teilen, 
 
 ## 10.1 Verbindung aufbauen
 
-Rechte Leiste → **Zusammen → Zusammen studieren**. Gib zuerst deinen Namen ein.
+Rechte Leiste → **Zusammen → Zusammen studieren**. Gib zuerst deinen Namen ein. Am einfachsten ist ein **Raum mit Raum-Code**: Das klappt von überall, egal in welchem Netzwerk ihr seid.
+
+### Über das Internet mit Raum-Code (empfohlen)
+
+Egal wo ihr seid (zum Beispiel jeder bei sich zu Hause, oder einer im Mobilfunk): Ihr trefft euch in einem **Raum**. Bis zu **fünf Personen** passen in einen Raum.
+
+Unter **Über das Internet (Raum-Code)**:
+
+1. Eine Person wählt **Raum erstellen**. Es erscheint ein kurzer **Raum-Code** wie `K7F2-QXM9`.
+2. Sie schickt den Code per Messenger an die anderen (oder liest ihn am Telefon vor).
+3. Die anderen wählen **Raum beitreten**, tippen den Code ein und tippen auf **Beitreten**.
+4. Nach ein, zwei Sekunden seid ihr verbunden. Der Raum-Code bleibt oben auf der Seite stehen, damit noch jemand dazukommen kann.
+
+Alle sehen eine **Prüfzahl**. Ist sie bei allen gleich, sitzt niemand dazwischen.
+
+**Wie das funktioniert:** Die Programme verbinden sich nicht direkt miteinander (das scheitert bei vielen Anschlüssen), sondern jedes für sich mit einem kleinen **Vermittler-Server** im Internet, so wie ein Browser eine Webseite öffnet. Der Vermittler reicht die Nachrichten nur weiter. Alles ist **Ende-zu-Ende verschlüsselt**: Der Schlüssel entsteht auf euren Geräten aus dem Raum-Code; der Vermittler kennt den Code nicht (nur eine Prüfsumme davon als Raumname) und kann nichts lesen. Er speichert nichts. Ihr braucht kein Konto und müsst nichts einrichten.
+
+**Tageslimit:** Der Vermittler läuft im kostenlosen Tarif und hat deshalb ein Tageslimit für alle Nutzer zusammen. Ist es aufgebraucht, verbindet euch bis zum nächsten Tag **im selben Netzwerk** (nächster Abschnitt). Seid ihr an verschiedenen Orten, tretet alle demselben kostenlosen **ZeroTier**-Netzwerk bei (zerotier.com: eine Person erstellt ein Netzwerk, die anderen treten mit dessen Netzwerk-ID bei). Danach seid ihr für BibleStudy „im selben Netzwerk“ und verbindet euch ganz ohne Vermittler.
 
 ### Im selben Netzwerk (ohne Codes)
 
@@ -24,21 +41,6 @@ Ihr könnt beliebig viele sein. Wer schon verbunden ist, holt unter **Weitere Pe
 ### Freunde
 
 Bei einer Person im selben Netzwerk erscheint **Als Freund merken**. Danach steht sie unter **Freunde**, und ein Tipp verbindet euch, auch wenn sie gerade nicht in der Liste auftaucht (dann über die zuletzt benutzte Adresse). Mit **Automatisch annehmen** wirst du bei diesem Freund nicht mehr gefragt. Erkannt wird ein Freund an einem gemeinsamen Geheimnis, das beim Merken ausgetauscht wird, nicht nur am Namen.
-
-### In verschiedenen Netzwerken (mit Raum-Code, Beta)
-
-Seid ihr nicht im selben Netzwerk (zum Beispiel jeder bei sich zu Hause, oder einer im Mobilfunk), trefft ihr euch in einem **Raum**. Bis zu **fünf Personen** passen in einen Raum.
-
-Unter **Über das Internet (andere Netze, Beta)**:
-
-1. Eine Person wählt **Raum erstellen**. Es erscheint ein kurzer **Raum-Code** wie `K7F2-QXM9`.
-2. Sie schickt den Code per Messenger an die anderen (oder liest ihn am Telefon vor).
-3. Die anderen wählen **Raum beitreten**, tippen den Code ein und tippen auf **Beitreten**.
-4. Nach ein, zwei Sekunden seid ihr verbunden. Der Raum-Code bleibt oben auf der Seite stehen, damit noch jemand dazukommen kann.
-
-Alle sehen eine **Prüfzahl**. Ist sie bei allen gleich, sitzt niemand dazwischen.
-
-**Wie das funktioniert:** Die Programme verbinden sich nicht direkt miteinander (das scheitert bei vielen Anschlüssen), sondern jedes für sich mit einem kleinen **Vermittler-Server** im Internet, so wie ein Browser eine Webseite öffnet. Der Vermittler reicht die Nachrichten nur weiter. Alles ist **Ende-zu-Ende verschlüsselt**: Der Schlüssel entsteht auf euren Geräten aus dem Raum-Code; der Vermittler kennt den Code nicht (nur eine Prüfsumme davon als Raumname) und kann nichts lesen. Er speichert nichts. Ihr braucht kein Konto und müsst nichts einrichten.
 
 ## 10.2 Was ihr tun könnt
 
@@ -66,6 +68,7 @@ Unter **Sprechen und Kamera**:
 - **Mikrofon an (Gespräch):** wie ein Anruf, bis du es wieder ausschaltest. Mit Kopfhörern gibt es kein Echo.
 - **Sprachnachricht:** antippen, sprechen, noch einmal antippen; höchstens 2 Minuten. Die anderen spielen sie mit **▶ Abspielen** ab.
 - **Kamera an:** Dein Bild erscheint bei allen als kleine Kachel; **Videos groß** zeigt alle Bilder in einem eigenen Fenster.
+- **Bildqualität:** unter **Mikrofon und Kamera wählen**: niedrig, mittel oder **HD (720p)** (Standard). Ruckelt das Bild oder kommt es spät an, wähle eine niedrigere Stufe: HD braucht für jede Person mit Kamera etwa 5 Mbit/s. Kommt das Bild nicht hinterher, lässt BibleStudy alte Bilder weg und zeigt immer das neueste, damit es nicht immer weiter verzögert.
 - **Die anderen hören** schaltet den Ton der anderen aus und an. Unter **Mikrofon und Kamera wählen** suchst du die Geräte aus.
 
 Unter Windows geht Sprechen ohne Zusatz. Für die Kamera (und unter Mac und Linux auch für den Ton) braucht BibleStudy das freie Programm **FFmpeg**: unter Windows im Download-Manager unter **Kamera und Ton** (rund 110 MB), am Mac mit `brew install ffmpeg`, unter Linux mit der Paketverwaltung (`sudo apt install ffmpeg`). Ist FFmpeg schon installiert, wird es benutzt. Auf dem Handy kommen Sprechen und Kamera später.
@@ -93,7 +96,7 @@ Nichts wird aufgezeichnet, außer einer Sprachnachricht, die du selbst sendest. 
 - Alle müssen den Raum **gleichzeitig offen** haben. Wer den Raum erstellt hat, lässt die Seite offen, bis die anderen da sind.
 - „Es ist niemand gekommen“: Prüft den Code. Er hat 8 Zeichen; Groß- und Kleinschreibung und der Bindestrich sind egal.
 - „In diesem Raum sind schon fünf Personen“: Lasst euch einen neuen Code geben.
-- „Der Vermittler-Server ist gerade nicht erreichbar“: Prüfe die Internetverbindung. Im kostenlosen Tarif hat der Vermittler ein Tageslimit; ist es erreicht, geht es am nächsten Tag wieder.
+- „Der Vermittler-Server ist gerade nicht erreichbar“: Prüfe die Internetverbindung. Im kostenlosen Tarif hat der Vermittler ein Tageslimit; ist es erreicht, verbindet euch bis zum nächsten Tag im selben Netzwerk, an verschiedenen Orten über ein gemeinsames ZeroTier-Netzwerk (siehe oben).
 
 ### Eigener Vermittler-Server
 

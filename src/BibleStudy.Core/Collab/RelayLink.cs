@@ -52,7 +52,7 @@ public sealed class RelayLink : ICollabLink
     readonly TaskCompletionSource _open = new(TaskCreationOptions.RunContinuationsAsynchronously);
     readonly object _gate = new();
     readonly Dictionary<byte, Member> _members = [];
-    readonly List<byte[]> _outbox = [];
+    readonly List<(byte[] Data, string? Picture)> _outbox = [];
     readonly ECDiffieHellman _ecdh = ECDiffieHellman.Create(ECCurve.NamedCurves.nistP256);
     readonly byte[] _mine, _senderKey = RandomNumberGenerator.GetBytes(32);
     readonly AesGcm _send;
@@ -341,8 +341,24 @@ public sealed class RelayLink : ICollabLink
     public void Send(string text)
     {
         if (!IsOpen) return;
-        lock (_outbox) _outbox.Add(Encoding.UTF8.GetBytes(text));
+        // a camera picture still waiting is worth nothing once a newer one of the same person is there: with a slow upload the pictures
+        // are thinned out instead of falling further and further behind
+        var picture = text.StartsWith("{\"t\":\"vf\"", StringComparison.Ordinal) ? PictureOwner(text) : null;
+        lock (_outbox)
+        {
+            if (picture is not null) _outbox.RemoveAll(o => o.Picture == picture);
+            _outbox.Add((Encoding.UTF8.GetBytes(text), picture));
+        }
         if (_signal.CurrentCount == 0) _signal.Release();
+    }
+
+    /// <summary>Whose camera picture this is: the group writes the id at the end ("fid"), the picture itself is base64 and holds no quotes.</summary>
+    static string PictureOwner(string text)
+    {
+        var at = text.LastIndexOf("\"fid\":\"", StringComparison.Ordinal);
+        if (at < 0) return "";
+        var end = text.IndexOf('"', at + 7);
+        return end < 0 ? "" : text[(at + 7)..end];
     }
 
     async Task SendLoop(CancellationToken ct)
@@ -354,7 +370,7 @@ public sealed class RelayLink : ICollabLink
                 await _signal.WaitAsync(ct);
                 await Task.Delay(Gather, ct);   // what comes in meanwhile goes in the same batch
                 byte[][] items;
-                lock (_outbox) { items = [.. _outbox]; _outbox.Clear(); }
+                lock (_outbox) { items = [.. _outbox.Select(o => o.Data)]; _outbox.Clear(); }
                 if (items.Length == 0) continue;
                 using var batch = new MemoryStream();
                 foreach (var item in items)

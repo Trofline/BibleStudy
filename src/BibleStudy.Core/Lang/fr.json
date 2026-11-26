@@ -3575,11 +3575,9 @@
   "Raum wird erstellt …": "Création de la salle …",
   "Raum-Code: {0}": "Code de salle : {0}",
   "Schicke diesen Raum-Code den anderen:": "Envoie ce code de salle aux autres :",
-  "Seid ihr nicht im selben Netzwerk, erstellt eine Person einen Raum und schickt den anderen den kurzen Raum-Code, zum Beispiel per Messenger. Die anderen tippen ihn ein, fertig. Bis zu fünf Personen passen in einen Raum.": "Si vous n’êtes pas dans le même réseau, une personne crée une salle et envoie le court code de salle aux autres, par exemple par messagerie. Les autres le saisissent, c’est tout. Jusqu’à cinq personnes tiennent dans une salle.",
   "Studiere die Bibel mit einer anderen Person, von Programm zu Programm: verschlüsselt, ohne Konto und kostenlos.": "Étudie la Bible avec une autre personne, d’application à application : chiffré, sans compte et gratuit.",
   "Verbinde …": "Connexion …",
   "Warte auf die anderen … ({0})": "En attente des autres … ({0})",
-  "Über das Internet (andere Netze, Beta)": "Par Internet (autres réseaux, bêta)",
   "Die Update-Datei ist beschädigt.": "Le fichier de mise à jour est endommagé.",
   "Update-Datei installieren …": "Installer un fichier de mise à jour …",
   "Für Testversionen (Beta), die du als Datei (.bsupdate) bekommen hast. Vorher wird eine Sicherung deiner Daten angelegt.": "Pour les versions de test (bêta) reçues sous forme de fichier (.bsupdate). Tes données sont sauvegardées avant.",
@@ -3600,5 +3598,13 @@
   "Dieser Link nennt keine Bibelstelle.": "Ce lien n'indique aucun passage biblique.",
   "Im geteilten Text wurde keine Bibelstelle gefunden.": "Aucun passage biblique n'a été trouvé dans le texte partagé.",
   "Link zur Stelle kopieren (öffnet BibleStudy)": "Copier le lien vers le passage (ouvre BibleStudy)",
-  "Link kopiert: {0}": "Lien copié : {0}"
+  "Link kopiert: {0}": "Lien copié : {0}",
+  "Über das Internet (Raum-Code)": "Par internet (code de salle)",
+  "Eine Person erstellt einen Raum und schickt den anderen den kurzen Raum-Code, zum Beispiel per Messenger. Die anderen tippen ihn ein, fertig. Das klappt von überall, auch wenn ihr in verschiedenen Netzwerken seid. Bis zu fünf Personen passen in einen Raum.": "Une personne crée une salle et envoie aux autres le code court de la salle, par exemple par messagerie. Les autres le saisissent, c'est tout. Cela fonctionne de partout, même si vous êtes sur des réseaux différents. Une salle accueille jusqu'à cinq personnes.",
+  "Der Vermittler ist kostenlos und hat deshalb ein Tageslimit. Ist es aufgebraucht, verbindet euch bis zum nächsten Tag im selben Netzwerk (unten). Seid ihr an verschiedenen Orten, geht das, wenn ihr beide demselben kostenlosen ZeroTier-Netzwerk beitretet (siehe Handbuch).": "Le relais est gratuit et a donc une limite quotidienne. Lorsqu'elle est atteinte, connectez-vous sur le même réseau (ci-dessous) jusqu'au lendemain. Si vous êtes à des endroits différents, cela fonctionne si vous rejoignez tous le même réseau ZeroTier gratuit (voir le manuel).",
+  "Klappt es auch dann nicht, ist vielleicht das Tageslimit des kostenlosen Vermittlers aufgebraucht. Dann verbindet euch bis morgen im selben Netzwerk, an verschiedenen Orten über ein gemeinsames ZeroTier-Netzwerk (siehe Handbuch).": "Si cela ne fonctionne toujours pas, la limite quotidienne du relais gratuit est peut-être atteinte. Connectez-vous alors jusqu'à demain sur le même réseau, ou depuis des endroits différents via un réseau ZeroTier commun (voir le manuel).",
+  "Bildqualität: niedrig (für langsames Internet)": "Qualité d'image : basse (pour internet lent)",
+  "Bildqualität: mittel": "Qualité d'image : moyenne",
+  "Bildqualität: HD (720p)": "Qualité d'image : HD (720p)",
+  "Ruckelt das Bild oder kommt es spät an, wähle eine niedrigere Qualität: HD braucht bei jeder Person mit Kamera etwa 5 Mbit/s zum Senden und bei allen anderen ebenso viel zum Empfangen.": "Si l'image saccade ou arrive en retard, choisissez une qualité plus basse : la HD demande environ 5 Mbit/s en envoi pour chaque personne avec caméra, et autant en réception pour toutes les autres."
 }

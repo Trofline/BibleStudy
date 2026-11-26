@@ -43,6 +43,7 @@ public partial class MainWindow
     }
 
     CollabGroup? _group;
+    readonly Dictionary<string, (ICollabLink Link, string Name, string Raw)> _latestPictures = [];
     RelayLink? _pendingCode;       // the room across networks while waiting for the other person
     readonly Dictionary<string, CollabPerson> _people = [];
     CollabPerson? _from;           // who wrote the message being handled
@@ -78,7 +79,23 @@ public partial class MainWindow
         if (_group is null)
         {
             _group = new CollabGroup(_settings.CollabId);
-            _group.Message += (link, fid, fn, raw) => OnUi(() => OnGroupMessage(link, fid, fn, raw));
+            _group.Message += (link, fid, fn, raw) =>
+            {
+                // camera pictures: only the newest of each person waits for the screen, so a slow moment never builds up a delay
+                if (raw.StartsWith("{\"t\":\"vf\"", StringComparison.Ordinal))
+                {
+                    bool post;
+                    lock (_latestPictures) { post = _latestPictures.Count == 0; _latestPictures[fid] = (link, fn, raw); }
+                    if (post) OnUi(() =>
+                    {
+                        List<(ICollabLink, string, string, string)> all;
+                        lock (_latestPictures) { all = _latestPictures.Select(x => (x.Value.Link, x.Key, x.Value.Name, x.Value.Raw)).ToList(); _latestPictures.Clear(); }
+                        foreach (var (l, f, n, r) in all) OnGroupMessage(l, f, n, r);
+                    });
+                    return;
+                }
+                OnUi(() => OnGroupMessage(link, fid, fn, raw));
+            };
         }
         _group.MyName = _settings.CollabName;
         return _group;
@@ -106,30 +123,28 @@ public partial class MainWindow
         var name = new TextBox { PlaceholderText = L("Dein Name (wird der anderen Person gezeigt)"), Text = _settings.CollabName, MaxLength = 40 };
         name.LostFocus += (_, _) => { _settings.CollabName = (name.Text ?? "").Trim(); SaveSettings(); EnsureNet(); };
         CollabPanel.Children.Add(name);
-        CollabPanel.Children.Add(BuildNetCard());
 
+        // the way that works everywhere comes first: both programs meet at a small relay server, which passes on only sealed messages
         var area = new StackPanel { Spacing = 8 };
         var host = new Button { Content = L("Raum erstellen"), Classes = { "primary" }, Margin = new(0, 0, 8, 0) };
         var join = new Button { Content = L("Raum beitreten") };
         host.Click += async (_, _) => { if (CollabNameOk(name)) await HostRoomAsync(area); };
         join.Click += (_, _) => { if (CollabNameOk(name)) JoinRoomFlow(area); };
-        // for two people in different networks: both programs meet at a small relay server, which passes on only sealed messages
-        CollabPanel.Children.Add(new Expander
+        CollabPanel.Children.Add(Card(new StackPanel
         {
-            Header = L("Über das Internet (andere Netze, Beta)"), Margin = new(0, 8, 0, 0),
-            Content = new StackPanel
+            Spacing = 8,
+            Children =
             {
-                Spacing = 8, Margin = new(0, 6, 0, 0),
-                Children =
-                {
-                    new TextBlock { Text = L("Seid ihr nicht im selben Netzwerk, erstellt eine Person einen Raum und schickt den anderen den kurzen Raum-Code, zum Beispiel per Messenger. Die anderen tippen ihn ein, fertig. Bis zu fünf Personen passen in einen Raum."), Classes = { "caption" }, TextWrapping = TextWrapping.Wrap },
-                    new TextBlock { Text = L("Die Verbindung läuft über einen kleinen Vermittler-Server im Internet. Er reicht nur verschlüsselte Nachrichten weiter: Der Schlüssel entsteht aus dem Raum-Code auf euren Geräten, der Server kann nichts lesen und sieht den Code nicht. Ein Konto braucht ihr nicht."), Classes = { "caption" }, TextWrapping = TextWrapping.Wrap },
-                    new WrapPanel { Children = { host, join } },
-                    area,
-                    BuildServerBox(),
-                },
+                new TextBlock { Text = L("Über das Internet (Raum-Code)"), FontWeight = FontWeight.SemiBold },
+                new TextBlock { Text = L("Eine Person erstellt einen Raum und schickt den anderen den kurzen Raum-Code, zum Beispiel per Messenger. Die anderen tippen ihn ein, fertig. Das klappt von überall, auch wenn ihr in verschiedenen Netzwerken seid. Bis zu fünf Personen passen in einen Raum."), Classes = { "caption" }, TextWrapping = TextWrapping.Wrap },
+                new WrapPanel { Children = { host, join } },
+                area,
+                new TextBlock { Text = L("Die Verbindung läuft über einen kleinen Vermittler-Server im Internet. Er reicht nur verschlüsselte Nachrichten weiter: Der Schlüssel entsteht aus dem Raum-Code auf euren Geräten, der Server kann nichts lesen und sieht den Code nicht. Ein Konto braucht ihr nicht."), Classes = { "caption" }, TextWrapping = TextWrapping.Wrap },
+                new TextBlock { Text = L("Der Vermittler ist kostenlos und hat deshalb ein Tageslimit. Ist es aufgebraucht, verbindet euch bis zum nächsten Tag im selben Netzwerk (unten). Seid ihr an verschiedenen Orten, geht das, wenn ihr beide demselben kostenlosen ZeroTier-Netzwerk beitretet (siehe Handbuch)."), Classes = { "caption" }, TextWrapping = TextWrapping.Wrap },
+                BuildServerBox(),
             },
-        });
+        }));
+        CollabPanel.Children.Add(BuildNetCard());
     }
 
     /// <summary>The relay server the program uses unless the person chose an own one (see relay/ in the repository).</summary>
@@ -468,6 +483,7 @@ public partial class MainWindow
 
     string RoomFailed(Exception ex) =>
         L("Der Vermittler-Server ist gerade nicht erreichbar. Prüfe die Internetverbindung und versuche es gleich noch einmal.")
+        + "\n" + L("Klappt es auch dann nicht, ist vielleicht das Tageslimit des kostenlosen Vermittlers aufgebraucht. Dann verbindet euch bis morgen im selben Netzwerk, an verschiedenen Orten über ein gemeinsames ZeroTier-Netzwerk (siehe Handbuch).")
         + "\n" + L("Technische Angaben: {0}", ex.Message);
 
     /// <summary>Waits until the other person is in the room and the key is agreed, and says what happens meanwhile.</summary>

@@ -95,12 +95,26 @@ public static partial class Ffmpeg
         return list;
     }
 
-    static IEnumerable<string> CameraInput(MediaDevice cam)
+    /// <summary>How many ways <see cref="StartCamera"/> tries to open a camera, from the most demanding to the plainest.</summary>
+    public const int CameraAttempts = 3;
+
+    /// <summary>
+    /// Attempt 0 asks the camera for the size as compressed pictures (MJPEG): that is how most webcams give HD at a full frame rate, uncompressed
+    /// they often manage only a few pictures a second at that size. Attempt 1 asks only for the size, attempt 2 takes what the camera offers.
+    /// </summary>
+    static IEnumerable<string> CameraInput(MediaDevice cam, CameraQuality q, int attempt)
     {
-        if (Fake) return ["-re", "-f", "lavfi", "-i", "testsrc=size=320x240:rate=8"];
-        if (OperatingSystem.IsWindows()) return ["-f", "dshow", "-video_size", "640x480", "-i", "video=" + cam.Id];
-        if (OperatingSystem.IsMacOS()) return ["-f", "avfoundation", "-framerate", "30", "-video_size", "640x480", "-i", cam.Id + ":none"];
-        return ["-f", "v4l2", "-i", cam.Id];
+        if (Fake) return ["-re", "-f", "lavfi", "-i", $"testsrc=size={q.Width}x{q.Height}:rate={q.Fps}"];
+        var size = $"{q.Width}x{q.Height}";
+        if (OperatingSystem.IsWindows())
+            return [.. new[] { "-f", "dshow", "-rtbufsize", "4M" },
+                    .. attempt switch { 0 => new[] { "-vcodec", "mjpeg", "-video_size", size, "-framerate", "30" }, 1 => ["-video_size", size], _ => [] },
+                    "-i", "video=" + cam.Id];
+        if (OperatingSystem.IsMacOS())
+            return [.. new[] { "-f", "avfoundation", "-framerate", "30" }, .. attempt < 2 ? new[] { "-video_size", size } : ["-video_size", "640x480"], "-i", cam.Id + ":none"];
+        return [.. new[] { "-f", "v4l2" },
+                .. attempt switch { 0 => new[] { "-input_format", "mjpeg", "-video_size", size }, 1 => ["-video_size", size], _ => [] },
+                "-i", cam.Id];
     }
 
     static IEnumerable<string> MicInput(MediaDevice? mic)
@@ -111,13 +125,15 @@ public static partial class Ffmpeg
         return ["-f", "pulse", "-fragment_size", "1280", "-i", mic?.Id ?? "default"];
     }
 
-    /// <summary>The camera as small JPEG pictures (320 px wide, about 8 a second) on the standard output.</summary>
-    public static Process StartCamera(MediaDevice cam, int fps = 8)
+    /// <summary>The camera as JPEG pictures of the chosen quality on the standard output, each written out at once (no waiting in buffers).</summary>
+    public static Process StartCamera(MediaDevice cam, CameraQuality quality, int attempt = 0)
     {
         var exe = Find() ?? throw new FileNotFoundException("ffmpeg");
-        var args = new List<string> { "-hide_banner", "-loglevel", "error" };
-        args.AddRange(CameraInput(cam));
-        args.AddRange(["-an", "-vf", $"fps={fps},scale=320:-2", "-q:v", "7", "-f", "mjpeg", "-"]);
+        var args = new List<string> { "-hide_banner", "-loglevel", "error", "-fflags", "nobuffer", "-flags", "low_delay" };
+        args.AddRange(CameraInput(cam, quality, attempt));
+        // never larger than the camera gives (a 640 camera is not blown up), the height follows the picture
+        args.AddRange(["-an", "-vf", $"fps={quality.Fps},scale='min({quality.Width},iw)':-2", "-q:v", quality.Q.ToString(CultureInfo.InvariantCulture),
+            "-f", "mjpeg", "-flush_packets", "1", "-"]);
         return Process.Start(Info(exe, args))!;
     }
 
@@ -140,4 +156,15 @@ public static partial class Ffmpeg
         args.AddRange(output);
         return Process.Start(Info(exe, args, input: true))!;
     }
+}
+
+/// <summary>How the camera is sent: picture size, pictures a second and JPEG quality (2 is best, 31 worst). Higher needs a faster internet connection.</summary>
+public sealed record CameraQuality(int Width, int Height, int Fps, int Q)
+{
+    public static readonly CameraQuality Low = new(320, 240, 10, 7);
+    public static readonly CameraQuality Medium = new(640, 360, 15, 5);
+    public static readonly CameraQuality High = new(1280, 720, 15, 5);
+
+    /// <summary>0 low, 1 medium, 2 high (HD).</summary>
+    public static CameraQuality Of(int level) => level switch { <= 0 => Low, 1 => Medium, _ => High };
 }

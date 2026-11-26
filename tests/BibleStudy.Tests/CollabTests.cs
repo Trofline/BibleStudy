@@ -147,6 +147,27 @@ public class CollabTests
         Assert.Contains(big, got);
     }
 
+    [Fact]
+    public async Task Camera_pictures_that_wait_are_replaced_by_the_newest()
+    {
+        await using var relay = TestRelay.Start();
+        using var host = RelayLink.Create(relay.Url);
+        await host.StartAsync();
+        using var guest = RelayLink.Join(relay.Url, host.Code);
+        var got = new ConcurrentQueue<string>();
+        host.Received += got.Enqueue;
+        await guest.StartAsync();
+        await guest.WaitOpenAsync(TimeSpan.FromSeconds(10));
+        await host.WaitOpenAsync(TimeSpan.FromSeconds(10));
+        for (var i = 0; i < 20; i++) guest.Send($"{{\"t\":\"vf\",\"d\":\"{i}\",\"fid\":\"G\"}}");
+        guest.Send("{\"t\":\"chat\",\"text\":\"danach\",\"fid\":\"G\"}");
+        await Until(() => got.Any(m => m.Contains("danach")));
+        var pictures = got.Where(m => m.Contains("\"vf\"")).ToList();
+        Assert.True(pictures.Count < 20, $"{pictures.Count} pictures arrived");
+        Assert.Contains("\"d\":\"19\"", pictures.Last());
+        Assert.Contains(got, m => m.Contains("danach"));   // everything else arrives
+    }
+
     [Theory]
     [InlineData("k7f2-qxm9", "K7F2QXM9")]
     [InlineData(" K7F2 QXM9 ", "K7F2QXM9")]

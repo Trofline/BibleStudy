@@ -3575,11 +3575,9 @@
   "Raum wird erstellt …": "Creando la sala …",
   "Raum-Code: {0}": "Código de sala: {0}",
   "Schicke diesen Raum-Code den anderen:": "Envía este código de sala a los demás:",
-  "Seid ihr nicht im selben Netzwerk, erstellt eine Person einen Raum und schickt den anderen den kurzen Raum-Code, zum Beispiel per Messenger. Die anderen tippen ihn ein, fertig. Bis zu fünf Personen passen in einen Raum.": "Si no estáis en la misma red, una persona crea una sala y envía el código corto a los demás, por ejemplo por mensajería. Los demás lo escriben y listo. En una sala caben hasta cinco personas.",
   "Studiere die Bibel mit einer anderen Person, von Programm zu Programm: verschlüsselt, ohne Konto und kostenlos.": "Estudia la Biblia con otra persona, de programa a programa: cifrado, sin cuenta y gratis.",
   "Verbinde …": "Conectando …",
   "Warte auf die anderen … ({0})": "Esperando a los demás … ({0})",
-  "Über das Internet (andere Netze, Beta)": "Por internet (otras redes, beta)",
   "Die Update-Datei ist beschädigt.": "El archivo de actualización está dañado.",
   "Update-Datei installieren …": "Instalar archivo de actualización …",
   "Für Testversionen (Beta), die du als Datei (.bsupdate) bekommen hast. Vorher wird eine Sicherung deiner Daten angelegt.": "Para versiones de prueba (beta) que recibiste como archivo (.bsupdate). Antes se hace una copia de seguridad de tus datos.",
@@ -3600,5 +3598,13 @@
   "Dieser Link nennt keine Bibelstelle.": "Este enlace no indica ningún pasaje bíblico.",
   "Im geteilten Text wurde keine Bibelstelle gefunden.": "No se encontró ningún pasaje bíblico en el texto compartido.",
   "Link zur Stelle kopieren (öffnet BibleStudy)": "Copiar enlace al pasaje (abre BibleStudy)",
-  "Link kopiert: {0}": "Enlace copiado: {0}"
+  "Link kopiert: {0}": "Enlace copiado: {0}",
+  "Über das Internet (Raum-Code)": "Por internet (código de sala)",
+  "Eine Person erstellt einen Raum und schickt den anderen den kurzen Raum-Code, zum Beispiel per Messenger. Die anderen tippen ihn ein, fertig. Das klappt von überall, auch wenn ihr in verschiedenen Netzwerken seid. Bis zu fünf Personen passen in einen Raum.": "Una persona crea una sala y envía a los demás el código corto de la sala, por ejemplo por mensajería. Los demás lo escriben y listo. Funciona desde cualquier lugar, aunque estéis en redes distintas. En una sala caben hasta cinco personas.",
+  "Der Vermittler ist kostenlos und hat deshalb ein Tageslimit. Ist es aufgebraucht, verbindet euch bis zum nächsten Tag im selben Netzwerk (unten). Seid ihr an verschiedenen Orten, geht das, wenn ihr beide demselben kostenlosen ZeroTier-Netzwerk beitretet (siehe Handbuch).": "El intermediario es gratuito y por eso tiene un límite diario. Cuando se agota, conectaos en la misma red (abajo) hasta el día siguiente. Si estáis en lugares distintos, funciona si todos os unís a la misma red gratuita de ZeroTier (ver el manual).",
+  "Klappt es auch dann nicht, ist vielleicht das Tageslimit des kostenlosen Vermittlers aufgebraucht. Dann verbindet euch bis morgen im selben Netzwerk, an verschiedenen Orten über ein gemeinsames ZeroTier-Netzwerk (siehe Handbuch).": "Si aun así no funciona, quizá se haya agotado el límite diario del intermediario gratuito. Entonces conectaos hasta mañana en la misma red, o desde lugares distintos a través de una red de ZeroTier común (ver el manual).",
+  "Bildqualität: niedrig (für langsames Internet)": "Calidad de imagen: baja (para internet lento)",
+  "Bildqualität: mittel": "Calidad de imagen: media",
+  "Bildqualität: HD (720p)": "Calidad de imagen: HD (720p)",
+  "Ruckelt das Bild oder kommt es spät an, wähle eine niedrigere Qualität: HD braucht bei jeder Person mit Kamera etwa 5 Mbit/s zum Senden und bei allen anderen ebenso viel zum Empfangen.": "Si la imagen se entrecorta o llega tarde, elige una calidad más baja: HD necesita unos 5 Mbit/s para enviar en cada persona con cámara, y lo mismo para recibir en todas las demás."
 }

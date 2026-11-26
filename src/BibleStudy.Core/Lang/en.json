@@ -3575,11 +3575,9 @@
   "Raum wird erstellt …": "Creating the room …",
   "Raum-Code: {0}": "Room code: {0}",
   "Schicke diesen Raum-Code den anderen:": "Send this room code to the others:",
-  "Seid ihr nicht im selben Netzwerk, erstellt eine Person einen Raum und schickt den anderen den kurzen Raum-Code, zum Beispiel per Messenger. Die anderen tippen ihn ein, fertig. Bis zu fünf Personen passen in einen Raum.": "If you are not in the same network, one person creates a room and sends the short room code to the others, for example by messenger. They type it in, done. Up to five people fit in one room.",
   "Studiere die Bibel mit einer anderen Person, von Programm zu Programm: verschlüsselt, ohne Konto und kostenlos.": "Study the Bible with another person, from app to app: encrypted, without an account and free.",
   "Verbinde …": "Connecting …",
   "Warte auf die anderen … ({0})": "Waiting for the others … ({0})",
-  "Über das Internet (andere Netze, Beta)": "Over the internet (other networks, beta)",
   "Die Update-Datei ist beschädigt.": "The update file is damaged.",
   "Update-Datei installieren …": "Install update file …",
   "Für Testversionen (Beta), die du als Datei (.bsupdate) bekommen hast. Vorher wird eine Sicherung deiner Daten angelegt.": "For test versions (beta) you received as a file (.bsupdate). Your data is backed up first.",
@@ -3600,5 +3598,13 @@
   "Dieser Link nennt keine Bibelstelle.": "This link does not name a Bible passage.",
   "Im geteilten Text wurde keine Bibelstelle gefunden.": "No Bible passage was found in the shared text.",
   "Link zur Stelle kopieren (öffnet BibleStudy)": "Copy link to the passage (opens BibleStudy)",
-  "Link kopiert: {0}": "Link copied: {0}"
+  "Link kopiert: {0}": "Link copied: {0}",
+  "Über das Internet (Raum-Code)": "Over the internet (room code)",
+  "Eine Person erstellt einen Raum und schickt den anderen den kurzen Raum-Code, zum Beispiel per Messenger. Die anderen tippen ihn ein, fertig. Das klappt von überall, auch wenn ihr in verschiedenen Netzwerken seid. Bis zu fünf Personen passen in einen Raum.": "One person creates a room and sends the others the short room code, for example by messenger. The others type it in, done. This works from anywhere, even if you are on different networks. Up to five people fit in a room.",
+  "Der Vermittler ist kostenlos und hat deshalb ein Tageslimit. Ist es aufgebraucht, verbindet euch bis zum nächsten Tag im selben Netzwerk (unten). Seid ihr an verschiedenen Orten, geht das, wenn ihr beide demselben kostenlosen ZeroTier-Netzwerk beitretet (siehe Handbuch).": "The relay is free and therefore has a daily limit. When it is used up, connect on the same network (below) until the next day. If you are in different places, this works when you all join the same free ZeroTier network (see the handbook).",
+  "Klappt es auch dann nicht, ist vielleicht das Tageslimit des kostenlosen Vermittlers aufgebraucht. Dann verbindet euch bis morgen im selben Netzwerk, an verschiedenen Orten über ein gemeinsames ZeroTier-Netzwerk (siehe Handbuch).": "If it still does not work, the daily limit of the free relay may be used up. Then connect on the same network until tomorrow, or from different places through a shared ZeroTier network (see the handbook).",
+  "Bildqualität: niedrig (für langsames Internet)": "Picture quality: low (for slow internet)",
+  "Bildqualität: mittel": "Picture quality: medium",
+  "Bildqualität: HD (720p)": "Picture quality: HD (720p)",
+  "Ruckelt das Bild oder kommt es spät an, wähle eine niedrigere Qualität: HD braucht bei jeder Person mit Kamera etwa 5 Mbit/s zum Senden und bei allen anderen ebenso viel zum Empfangen.": "If the picture stutters or arrives late, choose a lower quality: HD needs about 5 Mbit/s for sending from each person with a camera, and as much for receiving at everyone else."
 }
