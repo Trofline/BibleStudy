@@ -218,28 +218,8 @@ public sealed class AppSettings
     public int SearchRange { get; set; }
     /// <summary>Name shown to the other person when studying together.</summary>
     public string CollabName { get; set; } = "";
-    /// <summary>Optional own relay server (TURN) for studying together when no direct connection is possible.</summary>
-    public string RelayUrl { get; set; } = "";
-    public string RelayUser { get; set; } = "";
-    /// <summary>The password itself; in the file it stands locked to this Windows user (see <see cref="RelayPasswordStored"/>).</summary>
-    [System.Text.Json.Serialization.JsonIgnore] public string RelayPassword { get; set; } = "";
-
-    /// <summary>
-    /// What settings.json holds: on Windows the password locked with the Windows account (DPAPI), so it is not readable in the file or in a
-    /// backup; elsewhere as it is. A file of an older version holds it as plain text and is read as before.
-    /// </summary>
-    [System.Text.Json.Serialization.JsonPropertyName("RelayPassword")]
-    public string RelayPasswordStored
-    {
-        get => RelayPassword.Length == 0 || !OperatingSystem.IsWindows() ? RelayPassword
-            : "dpapi:" + Convert.ToBase64String(System.Security.Cryptography.ProtectedData.Protect(System.Text.Encoding.UTF8.GetBytes(RelayPassword), null, System.Security.Cryptography.DataProtectionScope.CurrentUser));
-        set
-        {
-            if (value is null || !value.StartsWith("dpapi:", StringComparison.Ordinal)) { RelayPassword = value ?? ""; return; }
-            try { RelayPassword = OperatingSystem.IsWindows() ? System.Text.Encoding.UTF8.GetString(System.Security.Cryptography.ProtectedData.Unprotect(Convert.FromBase64String(value[6..]), null, System.Security.Cryptography.DataProtectionScope.CurrentUser)) : ""; }
-            catch (Exception ex) when (ex is System.Security.Cryptography.CryptographicException or FormatException) { RelayPassword = ""; }   // another computer or user: it has to be typed again
-        }
-    }
+    /// <summary>Studying together across networks: an own relay server instead of the built-in one (empty = the built-in one). See relay/ in the repository.</summary>
+    public string CollabServer { get; set; } = "";
     public bool CollabSendLocation { get; set; } = true;
     /// <summary>Studying together: the other person sees the mouse pointer when both read the same chapter.</summary>
     public bool CollabSendPointer { get; set; } = true;
@@ -250,6 +230,8 @@ public sealed class AppSettings
     /// <summary>Studying together: the chosen microphone and camera (by name; empty = the standard one) and whether the others are heard.</summary>
     public string CollabMic { get; set; } = "";
     public string CollabCamera { get; set; } = "";
+    /// <summary>How sharp the own camera is sent: 0 low, 1 medium, 2 HD (720p). See <see cref="BibleStudy.Core.Collab.Media.CameraQuality"/>.</summary>
+    public int CollabCameraQuality { get; set; } = 2;
     public bool CollabHear { get; set; } = true;
     public List<SavedSearch> SavedSearches { get; set; } = [];
     /// <summary>How the hits are shown: 0 verses, 1 aligned, 2 grid, 3 comparison, 4 analysis.</summary>

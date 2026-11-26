@@ -13,7 +13,6 @@ static class Licenses
         (L("Easton's Bible Dictionary"), L("Bibellexikon"), L("Gemeinfrei (1897)")),
         (L("STEPBible Lexikon (Tyndale House)"), L("Strong-Wörterbuch"), L("CC BY 4.0")),
         ("OpenThesaurus", L("Deutsche Synonyme"), L("CC BY-SA 4.0 / LGPL")),
-        ("SIPSorcery (WebRTC)", L("Direktverbindung beim gemeinsamen Studium"), "BSD-3-Clause"),
         (L("Natural Earth"), L("Weltkarte"), L("Gemeinfrei")),
         ("QRCoder", L("QR-Code für die Handys"), "MIT"),
         (L("Avalonia UI, Microsoft.Data.Sqlite, ModelContextProtocol"), L("Programmbibliotheken"), L("MIT / Apache-2.0")),
