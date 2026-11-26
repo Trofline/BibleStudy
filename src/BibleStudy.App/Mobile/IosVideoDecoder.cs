@@ -58,8 +58,7 @@ sealed class IosVideoDecoder(Action<int, int, byte[]> sink) : VideoDecoderBase(s
     protected override void Stop()
     {
         var session = Interlocked.Exchange(ref _session, null);
-        try { session?.Invalidate(); } catch (Exception) { }
-        session?.Dispose();
+        session?.Dispose();   // ends the session (the binding has no Invalidate of its own)
         _format?.Dispose(); _format = null;
     }
 }
