@@ -18,6 +18,15 @@
       "category": "other",
       "versions": [
         {
+          "version": "1.9.32",
+          "buildVersion": "52",
+          "date": "2026-11-26",
+          "localizedDescription": "## New in 1.9.32\n**Kind of update:** New feature, Mini feature\n- **[New feature]** **Studying together across networks:** one person creates a room and gets a short room code; up to five people join, on the same Wi-Fi, on mobile data or somewhere else entirely. Everything is end-to-end encrypted and passes through a small relay of our own that cannot read it. The room code is now the default; studying together on the same network works as before. You are asked once more for your consent the first time.\n- **[Mini feature]** **Daily limit:** a note explains that the free relay has a daily limit and what still works then: the same network or a shared ZeroTier network.\n- **[Mini feature]** **Camera in HD:** the camera when studying together now sends 720p by default, with a choice of low/medium/HD and noticeably less delay.\n\n**iPhone:** update in SideStore (Sources → pull down → My Apps → Update). **Android:** the app updates itself.",
+          "downloadURL": "https://github.com/Trofline/BibleStudy/releases/download/v1.9.32/BibleStudy-iOS-1.9.32.ipa",
+          "size": 47542130,
+          "minOSVersion": "15.0"
+        },
+        {
           "version": "1.9.31",
           "buildVersion": "50",
           "date": "2026-11-26",
