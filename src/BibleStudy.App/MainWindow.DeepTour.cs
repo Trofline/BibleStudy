@@ -376,7 +376,7 @@ public partial class MainWindow
             _noticeHost!.Children.Add(_deepCard);
         }
         var card = _deepCard;
-        card.Width = PW(400);
+        card.Width = TourWidth(400);
         card.HorizontalAlignment = _phone ? HorizontalAlignment.Center : HorizontalAlignment.Left;
         card.VerticalAlignment = _phone ? VerticalAlignment.Top : VerticalAlignment.Bottom;
         card.Margin = _phone ? new Thickness(12, 56, 12, 0) : new Thickness(16, 0, 0, 36);
@@ -424,7 +424,7 @@ public partial class MainWindow
         if (demo is not null) right.Children.Add(demo);
         right.Children.Add(back); right.Children.Add(next);
         panel.Children.Add(new StackPanel { Spacing = 6, Margin = new(0, 4, 0, 0), Children = { right, left } });
-        card.Child = panel;
+        card.Child = WithTourGrip(panel, card, 400, 14);
 
         // the task ticks itself off as soon as it is done in the program
         _deepTimer?.Stop();

@@ -135,7 +135,7 @@ public partial class MainWindow
             _noticeHost!.Children.Add(_tabTourCard);
         }
         var card = _tabTourCard;
-        card.Width = PW(360);
+        card.Width = TourWidth(360);
         card.HorizontalAlignment = _phone ? HorizontalAlignment.Center : HorizontalAlignment.Left;
         card.VerticalAlignment = _phone ? VerticalAlignment.Top : VerticalAlignment.Bottom;
         card.Margin = _phone ? new Thickness(12, 56, 12, 0) : new Thickness(16, 0, 0, 36);
@@ -162,7 +162,7 @@ public partial class MainWindow
         DockPanel.SetDock(right, Dock.Right);
         bottom.Children.Add(right); bottom.Children.Add(off);
 
-        card.Child = new StackPanel
+        card.Child = WithTourGrip(new StackPanel
         {
             Spacing = 8,
             Children =
@@ -172,7 +172,7 @@ public partial class MainWindow
                 new TextBlock { Text = L(step.Text), TextWrapping = TextWrapping.Wrap },
                 bottom,
             },
-        };
+        }, card, 360, 14);
     }
 
     /// <summary>Closes the card. Seen: the person closed it or read it to the end, so it does not come again; otherwise (another tour took over) it comes next time.</summary>

@@ -165,7 +165,7 @@ public partial class MainWindow
         var step = steps[i]; var last = i == steps.Length - 1;
         var moved = false;
 
-        var panel = new StackPanel { Spacing = 8, Width = PW(330) };
+        var panel = new StackPanel { Spacing = 8, Width = TourWidth(330) };
         panel.Children.Add(new TextBlock { Text = step.Title, FontSize = 17, FontWeight = FontWeight.SemiBold, TextWrapping = TextWrapping.Wrap });
         panel.Children.Add(new TextBlock { Text = step.Text, TextWrapping = TextWrapping.Wrap });
         if (step.Extra?.Invoke() is { } extra) panel.Children.Add(extra);
@@ -179,7 +179,7 @@ public partial class MainWindow
         buttons.Children.Add(new StackPanel { Orientation = Orientation.Horizontal, Spacing = 10, VerticalAlignment = VerticalAlignment.Center, Children = { new TextBlock { Text = $"{i + 1} / {steps.Length}", Classes = { "caption" }, VerticalAlignment = VerticalAlignment.Center }, skip } });
         panel.Children.Add(buttons);
 
-        var flyout = new Flyout { Content = panel, Placement = step.Placement };
+        var flyout = new Flyout { Content = WithTourGrip(panel, panel, 330, 10), Placement = step.Placement };
         void Go(Action then) { moved = true; flyout.Hide(); DispatcherTimer.RunOnce(then, TimeSpan.FromMilliseconds(150)); }   // the old bubble must be gone first
         next.Click += (_, _) => Go(() => ShowTourStep(steps, i + 1));
         back.Click += (_, _) => Go(() => ShowTourStep(steps, i - 1));
