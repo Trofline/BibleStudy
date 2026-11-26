@@ -34,7 +34,7 @@ public partial class MainWindow
         // what needs a computer: the Windows start menu, a Syncthing folder, opening a folder in the file manager
         StartMenuBtn.IsVisible = StartMenuInfo.IsVisible = BackupSyncBtn.IsVisible = SourcesCacheBtn.IsVisible = false;
         if (OperatingSystem.IsIOS()) RestartBtn.IsVisible = false;   // an iPhone app cannot start itself again
-        if (AppPaths.IsPortable && RemoveAppBtn is not null) RemoveAppBtn.IsVisible = false;   // the portable folder of a PC (only the PC trial of the phone layout has one)
+        if (BibleStudy.Core.AppPaths.IsPortable) RemoveAppBtn.IsVisible = false;   // the portable folder of a PC (only the PC trial of the phone layout has one)
         // the list of sections beside the settings is longer than a low screen: it scrolls on its own
         if (SettingsScroll.Parent is Grid sg && sg.Children.FirstOrDefault(c => Grid.GetColumn(c) == 1) is Control toc and not ScrollViewer)
         {
