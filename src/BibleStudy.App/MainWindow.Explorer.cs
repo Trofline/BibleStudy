@@ -940,8 +940,16 @@ public partial class MainWindow
             }
             if (!props.IsLeftButtonPressed) return;
             ExplorerHost.Focusable = true; ExplorerHost.Focus();
-            if (_exPick) { e.Handled = true; if (e.Pointer.Type == PointerType.Touch) ExPickOnLift(row, item, e); else ExPickToggle(item); return; }   // choosing: a tap ticks, nothing opens or moves
-            if (e.Pointer.Type == PointerType.Touch) ExLongPressToPick(row, item, e);
+            if (e.Pointer.Type == PointerType.Touch)
+            {
+                // A finger does nothing when it goes down: it may be the start of a scroll. Nothing is chosen, nothing is dragged and the
+                // finger is not taken from the list. Lifting it on the spot opens the row, or ticks it while choosing ("Auswählen" above);
+                // holding it opens the menu of the row (only if the list did not scroll meanwhile, see GuardHolding).
+                e.Handled = _exPick;
+                TouchTap.Defer(row, e, () => { if (_exPick) ExPickToggle(item); else ExOpen(item); });
+                return;
+            }
+            if (_exPick) { e.Handled = true; ExPickToggle(item); return; }   // choosing: a click ticks, nothing opens or moves
             if (e.ClickCount == 2) { e.Handled = true; ExOpen(item); return; }
             var ctrl = e.KeyModifiers.HasFlag(Mods.Ctrl);
             var chosen = _exSel.Any(s => s.Kind == item.Kind && s.Id == item.Id);

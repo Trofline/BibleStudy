@@ -44,12 +44,47 @@ public partial class MainWindow
             sg.SizeChanged += (_, _) => sv.IsVisible = sg.Bounds.Width >= 520 && !_phone;
         }
         SizeChanged += (_, _) => ApplyPhoneLayout();
+        GuardHolding();
 #if MOBILE
         BackHandler = OnPhoneBack;
 #endif
         ApplyPhoneLayout();
     }
 
+
+    Point _holdFrom;
+    bool _holdMoved;
+    long _holdDown, _holdScrolled;
+
+    /// <summary>
+    /// Holding a finger opens the menu of what is under it (Avalonia's Holding gesture). Avalonia measures the finger against the element it
+    /// went down on, and a list that scrolls carries that element along with the finger: so a menu (or a choice) came up in the middle of a
+    /// scroll and the app felt as if it acted on its own. Here the finger is measured against the window, and any scroll since it went down
+    /// counts too; then the hold is not a hold and nothing opens.
+    /// </summary>
+    void GuardHolding()
+    {
+        AddHandler(PointerPressedEvent, (object? _, PointerPressedEventArgs e) =>
+        {
+            if (e.Pointer.Type != PointerType.Touch) return;
+            _holdFrom = e.GetPosition(this); _holdMoved = false; _holdDown = Environment.TickCount64;
+        }, RoutingStrategies.Tunnel, handledEventsToo: true);
+        AddHandler(PointerMovedEvent, (object? _, PointerEventArgs e) =>
+        {
+            if (e.Pointer.Type != PointerType.Touch || _holdMoved) return;
+            var p = e.GetPosition(this);
+            if (Math.Abs(p.X - _holdFrom.X) > 10 || Math.Abs(p.Y - _holdFrom.Y) > 10) _holdMoved = true;
+        }, RoutingStrategies.Tunnel, handledEventsToo: true);
+        AddHandler(ScrollViewer.ScrollChangedEvent, (object? _, ScrollChangedEventArgs e) =>
+        {
+            if (Math.Abs(e.OffsetDelta.Y) + Math.Abs(e.OffsetDelta.X) > 0.5) _holdScrolled = Environment.TickCount64;
+        }, RoutingStrategies.Bubble, handledEventsToo: true);
+        AddHandler(HoldingEvent, (object? _, HoldingRoutedEventArgs e) =>
+        {
+            if (e.PointerType != PointerType.Touch || e.HoldingState != HoldingState.Started) return;
+            if (_holdMoved || _holdScrolled >= _holdDown) e.Handled = true;   // handled: Avalonia does not open the menu
+        }, RoutingStrategies.Bubble, handledEventsToo: true);
+    }
 
     /// <summary>Rows of buttons that are made for a wide window (the editor of a document) wrap onto a second line instead of being cut off.</summary>
     void WrapDocumentBar()

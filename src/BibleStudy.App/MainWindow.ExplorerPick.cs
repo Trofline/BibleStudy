@@ -8,8 +8,9 @@ namespace BibleStudy.App;
 
 /// <summary>
 /// Choosing in the explorer as in the gallery of a phone: "Auswählen" turns every row into a box to tick (a tap ticks or unticks, nothing opens),
-/// a bar below says how many are chosen and does one thing with all of them: move, color, tags, a reading path, delete. A long press on a row
-/// starts it with that row. On a computer Ctrl and Shift keep working as before.
+/// a bar below says how many are chosen and does one thing with all of them: move, color, tags, a reading path, delete. Choosing starts only
+/// with that button: a finger that rests on a row while scrolling must never start it (it did, and scrolling chose verses). A tap on a row
+/// opens it, a long press shows its menu. On a computer Ctrl and Shift keep working as before.
 /// </summary>
 public partial class MainWindow
 {
@@ -99,40 +100,6 @@ public partial class MainWindow
     {
         if (_exSel.RemoveAll(s => SameItem(s, item)) == 0) _exSel.Add(item);
         ExShowSelection();
-    }
-
-    /// <summary>A finger ticks a row when it lifts without having moved: a finger that slides is scrolling the list.</summary>
-    void ExPickOnLift(Control row, ExItem item, Avalonia.Input.PointerPressedEventArgs e)
-    {
-        var start = e.GetPosition(row); var pointer = e.Pointer;
-        void Up(object? s, Avalonia.Input.PointerReleasedEventArgs a)
-        {
-            if (a.Pointer != pointer) return;
-            row.RemoveHandler(Avalonia.Input.InputElement.PointerReleasedEvent, Up);
-            var p = a.GetPosition(row);
-            if (Math.Abs(p.X - start.X) + Math.Abs(p.Y - start.Y) < 12) ExPickToggle(item);
-        }
-        row.AddHandler(Avalonia.Input.InputElement.PointerReleasedEvent, Up, Avalonia.Interactivity.RoutingStrategies.Tunnel | Avalonia.Interactivity.RoutingStrategies.Bubble, handledEventsToo: true);
-    }
-
-    /// <summary>A finger that rests on a row starts choosing, with that row ticked (as in the gallery of a phone).</summary>
-    void ExLongPressToPick(Control row, ExItem item, Avalonia.Input.PointerPressedEventArgs e)
-    {
-        var start = e.GetPosition(row); var pointer = e.Pointer;
-        var timer = new Avalonia.Threading.DispatcherTimer { Interval = TimeSpan.FromMilliseconds(550) };
-        void Stop() { timer.Stop(); row.RemoveHandler(Avalonia.Input.InputElement.PointerReleasedEvent, Up); row.RemoveHandler(Avalonia.Input.InputElement.PointerMovedEvent, Move); }
-        void Up(object? s, Avalonia.Input.PointerReleasedEventArgs a) { if (a.Pointer == pointer) Stop(); }
-        void Move(object? s, Avalonia.Input.PointerEventArgs a) { if (a.Pointer == pointer && (Math.Abs(a.GetPosition(row).X - start.X) + Math.Abs(a.GetPosition(row).Y - start.Y)) > 12) Stop(); }
-        row.AddHandler(Avalonia.Input.InputElement.PointerReleasedEvent, Up, Avalonia.Interactivity.RoutingStrategies.Tunnel | Avalonia.Interactivity.RoutingStrategies.Bubble, handledEventsToo: true);
-        row.AddHandler(Avalonia.Input.InputElement.PointerMovedEvent, Move, Avalonia.Interactivity.RoutingStrategies.Tunnel | Avalonia.Interactivity.RoutingStrategies.Bubble, handledEventsToo: true);
-        timer.Tick += (_, _) =>
-        {
-            Stop();
-            if (_exDragging || _exPick) return;
-            _exDrag = null; pointer.Capture(null);
-            SetExPick(true, item);
-        };
-        timer.Start();
     }
 
     void UpdateExPickBar()

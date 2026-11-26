@@ -155,10 +155,10 @@ public partial class MainWindow
             row.PointerEntered += (_, _) => row.Bind(Border.BackgroundProperty, this.GetResourceObservable("BsSurface2"));
             row.PointerExited += (_, _) => { row.ClearValue(Border.BackgroundProperty); row.Background = Brushes.Transparent; };
         }
-        row.PointerPressed += async (_, e) =>
+        row.OnPress(async (_, e) =>
         {
             if (e.GetCurrentPoint(row).Properties.IsLeftButtonPressed) await GoToAsync(n.Ref.Book, n.Ref.Chapter, n.Ref.Verse);
-        };
+        });
 
         var menu = new MenuFlyout();
         var move = new MenuItem { Header = L("In Ordner verschieben") };

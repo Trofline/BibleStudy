@@ -97,8 +97,9 @@ public partial class MainWindow
         {
             pressed = e;
             var left = e.GetCurrentPoint(MarksList).Properties.IsLeftButtonPressed;
-            down = left ? e.GetPosition(MarksList) : null;
-            dragged = left ? (e.Source as StyledElement)?.DataContext as Entry : null;
+            var drag = left && e.Pointer.Type != PointerType.Touch;   // a finger that moves scrolls the list: it must not drag a mark out of it
+            down = drag ? e.GetPosition(MarksList) : null;
+            dragged = drag ? (e.Source as StyledElement)?.DataContext as Entry : null;
             _marksHeld = left;   // jumping to the verse waits for the release: it would take the document away from under the drag
         }, RoutingStrategies.Tunnel, true);
         MarksList.AddHandler(PointerReleasedEvent, async (object? _, PointerReleasedEventArgs e) =>

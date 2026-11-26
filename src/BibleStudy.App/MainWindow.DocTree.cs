@@ -284,6 +284,8 @@ public partial class MainWindow
         row.PointerPressed += (_, e) =>
         {
             if (!e.GetCurrentPoint(row).Properties.IsLeftButtonPressed) return;
+            // a finger: no drag (moving it scrolls the list), a tap on the spot opens; the folder of a document is set in its editor or its menu
+            if (e.Pointer.Type == PointerType.Touch) { TouchTap.Defer(row, e, click); return; }
             _dragDoc = d; _dragFrom = e.GetPosition(DocHost); _dragging = false;
             e.Pointer.Capture(row);
         };

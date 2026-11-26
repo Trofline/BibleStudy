@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Opens every screen of the app in the phone layout at the sizes of real phones, takes a picture of each and lists what reaches out of the
+       screen or is cut off. Run: dotnet run -c Release -project tests/BibleStudy.PhoneAudit [folder for the pictures]. -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Version>9.9.9</Version>
+    <NoWarn>$(NoWarn);CS8602;CS8600;CS8604;CS8321</NoWarn>
+    <ApplicationManifest>..\..\src\BibleStudy.App\app.manifest</ApplicationManifest>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Avalonia.Headless" Version="12.1.4" />
+    <PackageReference Include="Avalonia.Skia" Version="12.1.4" />
+    <ProjectReference Include="..\..\src\BibleStudy.App\BibleStudy.App.csproj" />
+  </ItemGroup>
+</Project>
