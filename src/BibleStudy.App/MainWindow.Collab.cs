@@ -133,7 +133,7 @@ public partial class MainWindow
     }
 
     /// <summary>The relay server the program uses unless the person chose an own one (see relay/ in the repository).</summary>
-    const string DefaultCollabServer = "wss://biblestudy-relay.trofline.workers.dev";
+    const string DefaultCollabServer = "wss://biblestudy-relay.troflineblack.workers.dev";
 
     string CollabServer => _settings.CollabServer.Trim() is { Length: > 0 } own ? own : DefaultCollabServer;
 

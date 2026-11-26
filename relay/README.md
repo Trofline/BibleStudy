@@ -26,7 +26,12 @@ npx wrangler login      # opens the browser once to sign in to Cloudflare
 npx wrangler deploy
 ```
 
-`wrangler deploy` prints the address, for example `https://biblestudy-relay.<your-name>.workers.dev`.
+On Windows PowerShell, write `npx.cmd` instead of `npx` if scripts are blocked.
+
+```
+```
+
+`wrangler deploy` prints the address (the built-in one is `https://biblestudy-relay.troflineblack.workers.dev`), for example `https://biblestudy-relay.<your-name>.workers.dev`.
 That address (as `wss://…`) is the built-in relay in `src/BibleStudy.App/MainWindow.Collab.cs` (`DefaultCollabServer`);
 anyone else can enter their own under *Study together → Own relay server (optional)*.
 
