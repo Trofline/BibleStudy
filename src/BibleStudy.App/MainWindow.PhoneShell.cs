@@ -518,6 +518,48 @@ public partial class MainWindow
             DockPanel.SetDock(row, Avalonia.Controls.Dock.Bottom);
             docHead.Children.Insert(0, row);
         }
+        CompactDocListForPhone();
+    }
+
+    /// <summary>
+    /// The list of documents on a phone: above it stood a title with a sentence, three buttons, the search, a check box, the word "KATEGORIEN",
+    /// the chips over several lines and the filters, and the documents themselves got the bottom third of the screen. Now the title goes
+    /// (the tab says "Dokumente"), the buttons and the search share the top, the categories are one row that scrolls sideways, and the
+    /// check box for all vaults moves to "Mehr Filter".
+    /// </summary>
+    void CompactDocListForPhone()
+    {
+        if (DocNewBtn.Parent is not WrapPanel buttons || buttons.Parent is not DockPanel docHead || docHead.Parent is not StackPanel top) return;
+        foreach (var c in docHead.Children.OfType<StackPanel>().ToList()) c.IsVisible = false;   // "Deine Dokumente" and its sentence
+        buttons.Margin = default;
+        foreach (var b in buttons.Children.OfType<Control>()) b.Margin = default;
+        top.Spacing = 6;
+        top.Margin = new Thickness(0, 0, 0, 4);
+        DocListPanel.Margin = new Thickness(8, 8, 4, 6);
+        // the word above the chips
+        foreach (var t in top.Children.OfType<TextBlock>().Where(t => t.Classes.Contains("eyebrow"))) t.IsVisible = false;
+        // the chips: one row that scrolls sideways
+        if (DocCategoryChips.Parent == top)
+        {
+            var at = top.Children.IndexOf(DocCategoryChips);
+            top.Children.RemoveAt(at);
+            DocCategoryChips.Orientation = Orientation.Horizontal;
+            var strip = new ScrollViewer
+            {
+                Content = DocCategoryChips,
+                HorizontalScrollBarVisibility = Avalonia.Controls.Primitives.ScrollBarVisibility.Hidden,
+                VerticalScrollBarVisibility = Avalonia.Controls.Primitives.ScrollBarVisibility.Disabled,
+            };
+            top.Children.Insert(at, strip);
+        }
+        // "Dokumente aller Vaults zeigen" goes under "Mehr Filter und Graph"
+        if (DocAllVaultsCheck.Parent == top && top.Children.OfType<Expander>().FirstOrDefault() is { Content: StackPanel more })
+        {
+            top.Children.Remove(DocAllVaultsCheck);
+            more.Children.Insert(0, DocAllVaultsCheck);
+        }
+        // the filter box of a desktop width
+        DocFilterBox.Width = double.NaN; DocFilterBox.MinWidth = 200;
     }
 }
 
