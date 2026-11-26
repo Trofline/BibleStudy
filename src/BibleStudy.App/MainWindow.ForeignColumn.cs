@@ -214,16 +214,19 @@ public partial class MainWindow
     /// <summary>Marks the whole verse (or the selected words of it) of such a column, in its own place.</summary>
     void MarkForeign(int col, VerseRef r, TranslationInfo t, string hex, (int Start, int End, string Text)? words)
     {
-        if (words is { } w) _vault.AddMark(t.Id, r, w.Start, w.End, w.Text, hex, "", null, AutoTags(r), r.Verse);
+        var target = MarkTargetFolder();
+        var before = target is null ? null : MarkIdsHere();
+        if (words is { } w) _vault.AddMark(t.Id, r, w.Start, w.End, w.Text, hex, "", target, AutoTags(r), r.Verse);
         else
         {
             var same = ColState(col)?.Marks.FirstOrDefault(m => m.WholeVerse && m.Ref.Verse == r.Verse && m.LastVerse == r.Verse);
             if (same is not null) _vault.UpdateMark(same.Id, hex, same.Note, same.FolderId, same.Tags);   // marked again: only the color changes
-            else _vault.AddMark(Mark.AnyTranslation, r, -1, -1, ColVerseText(col, r.Verse).Trim(), hex, "", null, AutoTags(r), r.Verse);
+            else _vault.AddMark(Mark.AnyTranslation, r, -1, -1, ColVerseText(col, r.Verse).Trim(), hex, "", target, AutoTags(r), r.Verse);
         }
         RefreshCollection();
         AfterForeignChange();
         StatusText.Text = L("Markiert: {0}", words is { } ww ? Loc.Quote(Shorten(ww.Text, 40)) : Label(r));
+        if (target is long f && before is not null) AfterMarkedIntoFolder(f, before);
     }
 
     void UnmarkForeign(List<Mark> marks, VerseRef r)

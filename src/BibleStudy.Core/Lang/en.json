@@ -3605,5 +3605,15 @@
   "Dieser Link nennt keine Bibelstelle.": "This link does not name a Bible passage.",
   "Im geteilten Text wurde keine Bibelstelle gefunden.": "No Bible passage was found in the shared text.",
   "Link zur Stelle kopieren (öffnet BibleStudy)": "Copy link to the passage (opens BibleStudy)",
-  "Link kopiert: {0}": "Link copied: {0}"
+  "Link kopiert: {0}": "Link copied: {0}",
+  "Aktiver Vault „{0}“. Neue Markierungen kommen direkt in den Ordner „{1}“. Klicken zum Wechseln.": "Active vault “{0}”. New highlights go straight into the folder “{1}”. Click to switch.",
+  "Neue Markierungen kommen jetzt direkt in den Ordner „{0}“.": "New highlights now go straight into the folder “{0}”.",
+  "Neue Markierungen kommen in keinen Ordner.": "New highlights go into no folder.",
+  "Anhängen": "Append",
+  "{0} neue Verse": "{0} new verses",
+  "Im Ordner „{0}“ ist neu: {1}. Sollen neue Verse dieses Ordners hinten an den Lesepfad „{2}“ angehängt werden? Was du am Lesepfad geändert hast, bleibt so. Diese Frage kommt nur einmal.": "New in the folder “{0}”: {1}. Should new verses of this folder be appended to the end of the reading path “{2}”? What you changed in the reading path stays as it is. This question comes only once.",
+  "Der Vault wurde gewechselt; der Lesepfad blieb, wie er war.": "The vault was switched; the reading path stayed as it was.",
+  "Den Lesepfad „{0}“ gibt es nicht mehr.": "The reading path “{0}” no longer exists.",
+  "„{0}“ hat diese Verse schon.": "“{0}” already has these verses.",
+  "Markiert: {0} · in „{1}“ · Strg+Z macht es rückgängig": "Marked: {0} · in “{1}” · Ctrl+Z takes it back"
 }

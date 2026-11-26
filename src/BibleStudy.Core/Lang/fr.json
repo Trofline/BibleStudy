@@ -3605,5 +3605,15 @@
   "Dieser Link nennt keine Bibelstelle.": "Ce lien n'indique aucun passage biblique.",
   "Im geteilten Text wurde keine Bibelstelle gefunden.": "Aucun passage biblique n'a été trouvé dans le texte partagé.",
   "Link zur Stelle kopieren (öffnet BibleStudy)": "Copier le lien vers le passage (ouvre BibleStudy)",
-  "Link kopiert: {0}": "Lien copié : {0}"
+  "Link kopiert: {0}": "Lien copié : {0}",
+  "Aktiver Vault „{0}“. Neue Markierungen kommen direkt in den Ordner „{1}“. Klicken zum Wechseln.": "Vault actif « {0} ». Les nouveaux surlignages vont directement dans le dossier « {1} ». Cliquer pour changer.",
+  "Neue Markierungen kommen jetzt direkt in den Ordner „{0}“.": "Les nouveaux surlignages vont maintenant directement dans le dossier « {0} ».",
+  "Neue Markierungen kommen in keinen Ordner.": "Les nouveaux surlignages ne vont dans aucun dossier.",
+  "Anhängen": "Ajouter",
+  "{0} neue Verse": "{0} nouveaux versets",
+  "Im Ordner „{0}“ ist neu: {1}. Sollen neue Verse dieses Ordners hinten an den Lesepfad „{2}“ angehängt werden? Was du am Lesepfad geändert hast, bleibt so. Diese Frage kommt nur einmal.": "Nouveau dans le dossier « {0} » : {1}. Ajouter les nouveaux versets de ce dossier à la fin du parcours de lecture « {2} » ? Ce que tu as modifié dans le parcours reste tel quel. Cette question n’apparaît qu’une fois.",
+  "Der Vault wurde gewechselt; der Lesepfad blieb, wie er war.": "Le vault a été changé ; le parcours de lecture est resté tel quel.",
+  "Den Lesepfad „{0}“ gibt es nicht mehr.": "Le parcours de lecture « {0} » n’existe plus.",
+  "„{0}“ hat diese Verse schon.": "« {0} » contient déjà ces versets.",
+  "Markiert: {0} · in „{1}“ · Strg+Z macht es rückgängig": "Marqué : {0} · dans « {1} » · Ctrl+Z l’annule"
 }
