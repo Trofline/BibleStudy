@@ -19,6 +19,7 @@ Your language is missing? Save the **template with the AI instruction**, have an
 - **Font:** size, line spacing, justified text, an easier-to-read font (for example for dyslexia), high contrast.
 - **Verse numbers:** small superscript, normal in the text, hidden.
 - **Words of Jesus** highlighted in color, with their own color (independent of the color scheme; own colors with **+**).
+- **Add the words of Jesus**: for translations that do not mark them (many imported Bibles) they are estimated from the KJV. Verses that are all red there are all red here; in partly red verses the text inside quotation marks counts. It is an estimate and can be off at the edges. When the imported file marks the words of Jesus itself (OSIS, USFM, USX, Zefania, e-Sword, MySword, EPUB, Word, web pages), its marking is used.
 - **Dark background:** night blue, black, gray, warm, forest or violet (applies to the dark design).
 - **Selection color:** accent color (default), gray or blue.
 - **Hebrew:** show/hide vowel points and accent marks (cantillation).

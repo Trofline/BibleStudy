@@ -31,7 +31,7 @@ public static partial class BibleImporters
     /// <summary>HTML as lines: headings become "# …", marked verse numbers become &lt;sup&gt;n&lt;/sup&gt;, blocks become lines.</summary>
     public static IEnumerable<string> HtmlToLines(string html)
     {
-        var s = HtmlHidden().Replace(html, " ");
+        var s = MarkJesusInHtml(HtmlHidden().Replace(html, " "));   // red-letter spans (class "wj", red color) → Jesus markers
         s = HtmlHeading().Replace(s, m => "\n# " + HtmlOtherTags().Replace(m.Groups[1].Value, "").Replace("<sup>", "").Replace("</sup>", "") + "\n");
         s = HtmlVerseSpan().Replace(s, "<sup>$1</sup>");
         s = HtmlBreak().Replace(s, "\n");
@@ -137,7 +137,10 @@ public static partial class BibleImporters
                 var sup = (string?)r.Element(w + "rPr")?.Element(w + "vertAlign")?.Attribute(w + "val") == "superscript";
                 var text = string.Concat(r.Elements().Select(e => e.Name == w + "t" ? e.Value : e.Name == w + "tab" ? " " : e.Name == w + "br" ? " " : ""));
                 if (text.Length == 0) continue;
-                sb.Append(sup && text.Trim().All(char.IsDigit) ? $"<sup>{text.Trim()}</sup> " : text);
+                if (sup && text.Trim().All(char.IsDigit)) { sb.Append($"<sup>{text.Trim()}</sup> "); continue; }
+                // red text (a red-letter edition): words of Jesus
+                var red = IsRedColor((string?)r.Element(w + "rPr")?.Element(w + "color")?.Attribute(w + "val"));
+                sb.Append(red ? JesusOpen + text + JesusClose : text);
             }
             var line = Whitespace().Replace(sb.ToString(), " ").Trim();
             if (line.Length > 0) lines.Add(heading ? "# " + line : line);

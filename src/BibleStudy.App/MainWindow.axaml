@@ -709,6 +709,7 @@
                                     <WrapPanel x:Name="SubMarkPanel" Grid.Row="4" Grid.Column="1" Margin="0,8,0,0" />
                                 </Grid>
                                 <CheckBox x:Name="JesusRedCheck" Content="Worte Jesu farbig hervorheben" />
+                                <CheckBox x:Name="JesusFromKjvCheck" Content="Worte Jesu ergänzen, wo die Übersetzung sie nicht kennzeichnet (aus der KJV geschätzt)" Margin="24,0,0,0" />
                                 <TextBlock Classes="caption" Text="Farbe der Worte Jesu (unabhängig vom Farbschema)" />
                                 <WrapPanel x:Name="JesusColorPanel" />
                                 <CheckBox x:Name="HighContrastCheck" Content="Hoher Kontrast (Text, Rahmen und Hinweise kräftiger)" />

@@ -265,6 +265,8 @@ public sealed class AppSettings
     public int ReaderWidth { get; set; } = 760;
     public string VerseNumbers { get; set; } = "Small";   // Small | Normal | Hidden
     public bool JesusRed { get; set; } = true;
+    /// <summary>Words of Jesus for translations that do not mark them, estimated from the KJV.</summary>
+    public bool JesusFromKjv { get; set; } = true;
     /// <summary>Own color of the words of Jesus as #RRGGBB; empty = the program default.</summary>
     public string JesusColor { get; set; } = "";
     public List<string> CustomJesusColors { get; set; } = [];   // own colors for the words of Jesus, chosen with the "+" in the settings

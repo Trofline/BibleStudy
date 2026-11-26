@@ -283,7 +283,29 @@ public sealed class CompositeProvider(IBibleProvider web, LocalBibleStore local,
     public async Task<Chapter> GetChapterAsync(string translationId, string bookId, int chapter, CancellationToken ct = default)
     {
         var result = await For(translationId).GetChapterAsync(translationId, bookId, chapter, ct);
-        return Overlay is not null && Overlay.Has(translationId) ? Overlay.Apply(result) : result;
+        if (Overlay is not null && Overlay.Has(translationId)) result = Overlay.Apply(result);
+        if (JesusFromReference?.Invoke() == true && Providers.JesusTransfer.Wanted(result)) result = await WithJesusFromReferenceAsync(result, ct);
+        return result;
+    }
+
+    /// <summary>When it gives true, a chapter that does not mark the words of Jesus gets them estimated from the KJV (see JesusTransfer).</summary>
+    public Func<bool>? JesusFromReference { get; set; }
+
+    async Task<Chapter> WithJesusFromReferenceAsync(Chapter chapter, CancellationToken ct)
+    {
+        try
+        {
+            // the KJV chapter comes from the disk cache after the first time; offline and not cached: the chapter stays as it is
+            using var timeout = CancellationTokenSource.CreateLinkedTokenSource(ct);
+            timeout.CancelAfter(TimeSpan.FromSeconds(4));
+            var reference = await web.GetChapterAsync(Providers.JesusTransfer.ReferenceId, chapter.BookId, chapter.Number, timeout.Token);
+            return Providers.JesusTransfer.Apply(chapter, reference);
+        }
+        catch (Exception e) when (e is HttpRequestException or TaskCanceledException or OperationCanceledException or IOException or System.Text.Json.JsonException or KeyNotFoundException or InvalidOperationException)
+        {
+            ct.ThrowIfCancellationRequested();
+            return chapter;
+        }
     }
     public Task<IReadOnlyList<VerseText>> GetAllVersesAsync(string translationId, CancellationToken ct = default) => For(translationId).GetAllVersesAsync(translationId, ct);
 }
