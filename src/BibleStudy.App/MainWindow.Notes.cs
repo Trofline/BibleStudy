@@ -121,10 +121,10 @@ public partial class MainWindow
             NotesTree.Children.Add(body);
         }
 
-        foreach (var f in folders)
+        void FolderGroup(Folder f)
         {
             var inFolder = shown.Where(n => n.FolderId == f.Id).ToList();
-            if (inFolder.Count == 0 && searching) continue;
+            if (inFolder.Count == 0 && searching) return;
             var folder = f;
             var menu = new MenuFlyout();
             var delete = new MenuItem { Header = L("Ordner löschen (die Notizen bleiben)") };
@@ -132,6 +132,9 @@ public partial class MainWindow
             menu.Items.Add(delete);
             Group("f:" + f.Id, f.Name, inFolder.Count, body => { foreach (var n in inFolder) body.Children.Add(NoteRow(n, folders)); }, menu, f.Depth);
         }
+        // phone: folders with nothing in them (also not further down) go below the notes, so the notes come first
+        var (filled, emptyFolders) = IsPhone ? SplitEmptySubtrees(folders, f => f.Depth, f => shown.Any(n => n.FolderId == f.Id)) : (folders, new List<Folder>());
+        foreach (var f in filled) FolderGroup(f);
         var folderIds = folders.Select(f => f.Id).ToHashSet();
         var loose = shown.Where(n => n.FolderId is not long id || !folderIds.Contains(id)).ToList();
         foreach (var g in loose.GroupBy(n => n.Ref.Book).OrderBy(g => BookOrder(g.Key)))
@@ -139,6 +142,7 @@ public partial class MainWindow
             var book = g.Key;
             Group("b:" + book, BookName(book), g.Count(), body => { foreach (var n in g) body.Children.Add(NoteRow(n, folders)); });
         }
+        foreach (var f in emptyFolders) FolderGroup(f);
         if (all.Count > 0 && shown.Count == 0) NotesTree.Children.Add(new TextBlock { Text = L("Keine Notiz passt zur Suche."), Classes = { "caption" }, Margin = new(2, 8) });
     }
 
