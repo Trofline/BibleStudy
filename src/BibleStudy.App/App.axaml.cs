@@ -188,10 +188,19 @@ public partial class App : Application
         {
             // (the first report comes before the view has a size and is in screen pixels: wait for the real size, the value is then in device-independent pixels)
             if (host.Bounds.Width < 10) return;
-            host.Padding = insets.SafeAreaPadding;
+            var pad = insets.SafeAreaPadding;
+            // the keyboard: drawn edge to edge, the app is not made smaller by Android when it comes up, and it covered the field one types in
+            // (and the lower half of every list). The part it covers is kept free; if the system already made the app smaller, nothing is.
+            if (TopLevel.GetTopLevel(host)?.InputPane is { State: Avalonia.Controls.Platform.InputPaneState.Open } pane && pane.OccludedRect.Height > 0)
+            {
+                var covered = host.Bounds.Height - pane.OccludedRect.Top;
+                if (covered > pad.Bottom) pad = new Thickness(pad.Left, pad.Top, pad.Right, covered);
+            }
+            host.Padding = pad;
             try { if (host.Background is Avalonia.Media.ISolidColorBrush b) insets.SystemBarColor = b.Color; } catch { /* old versions keep their bar */ }
         }
         insets.SafeAreaChanged += (_, _) => Apply();
+        if (TopLevel.GetTopLevel(host)?.InputPane is { } keyboard) keyboard.StateChanged += (_, _) => Apply();
         host.PropertyChanged += (_, e) => { if (e.Property == Avalonia.Controls.Primitives.TemplatedControl.BackgroundProperty) Apply(); };
         host.SizeChanged += (_, _) => Apply();   // after a turn too: the free area is another one
         Apply();

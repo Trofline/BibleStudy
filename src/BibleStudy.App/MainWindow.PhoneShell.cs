@@ -376,6 +376,9 @@ public partial class MainWindow
         if (!_shellOn || _pTitleText is null || _pBack is null || _pTrans is null || _pPrev is null || _pNext is null || _pTitle is null) return;
         // a phone held across is only about 360 high: the bars shrink (the labels of the bottom bar go)
         var low = Bounds.Height < 480;
+        // while the keyboard is up the bottom bar goes, as in other apps: the room above the keyboard belongs to what one types in
+        var typing = TopLevel.GetTopLevel(this)?.InputPane is { State: Avalonia.Controls.Platform.InputPaneState.Open };
+        if (_pNav is { } navBar && navBar.IsVisible == typing) navBar.IsVisible = !typing;
         if (_pBar is { } pb) pb.Height = low ? 44 : 52;
         foreach (var nb in _navBtns.Values) { nb.Height = low ? 40 : 58; if (nb.Content is StackPanel { Children: [_, TextBlock lb] }) lb.IsVisible = !low; }
         var reader = ReaderBrowsing();
