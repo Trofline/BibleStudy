@@ -709,6 +709,7 @@
                                     <WrapPanel x:Name="SubMarkPanel" Grid.Row="4" Grid.Column="1" Margin="0,8,0,0" />
                                 </Grid>
                                 <CheckBox x:Name="JesusRedCheck" Content="Worte Jesu farbig hervorheben" />
+                                <CheckBox x:Name="JesusFromKjvCheck" Content="Worte Jesu ergänzen, wo die Übersetzung sie nicht kennzeichnet (aus der KJV geschätzt)" Margin="24,0,0,0" />
                                 <TextBlock Classes="caption" Text="Farbe der Worte Jesu (unabhängig vom Farbschema)" />
                                 <WrapPanel x:Name="JesusColorPanel" />
                                 <CheckBox x:Name="HighContrastCheck" Content="Hoher Kontrast (Text, Rahmen und Hinweise kräftiger)" />
@@ -1053,8 +1054,10 @@
                                 <TextBlock x:Name="VersionText" Classes="caption" TextWrapping="Wrap" />
                                 <CheckBox x:Name="SigningWarnCheck" IsVisible="False" Content="Warnen, bevor die App abläuft (nur nötig, wenn der Kurzbefehl sie nicht automatisch neu signiert)" />
                                 <CheckBox x:Name="AutoUpdateCheck" Content="Bei jedem Start nach Updates suchen (eine Anfrage an GitHub, es werden keine Daten gesendet). Installiert wird nie ohne deine Zustimmung." />
+                                <CheckBox x:Name="PatchNotesAutoCheck" Content="Nach einem Update die Patch Notes (was ist neu) automatisch anzeigen" />
                                 <WrapPanel>
                                     <Button x:Name="CheckUpdateBtn" Content="Jetzt nach Updates suchen" Margin="0,0,6,6" />
+                                    <Button x:Name="InstallUpdateFileBtn" Content="Update-Datei installieren …" Margin="0,0,6,6" IsVisible="False" ToolTip.Tip="Für Testversionen (Beta), die du als Datei (.bsupdate) bekommen hast. Vorher wird eine Sicherung deiner Daten angelegt." />
                                     <Button x:Name="PatchNotesBtn" Content="Patch Notes (was ist neu)" Margin="0,0,6,6" />
                                     <Button x:Name="GitHubBtn" Content="Projekt auf GitHub" Margin="0,0,6,6" />
                                     <Button x:Name="MessagesBtn" Content="Mitteilungen und Vorschläge" Margin="0,0,6,6" ToolTip.Tip="Alle Vorschläge an- und ausschalten oder noch einmal ansehen, was ist neu, und die Mitteilungen seit dem Start." />

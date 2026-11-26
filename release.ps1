@@ -9,9 +9,18 @@
 #                                                gh release create v1.0.0 release/* --prerelease --latest=false ...
 #                                              Copies from 1.6.7 on read pre-releases and update in-app, whatever they skipped. Older copies, and the download
 #                                              link, ask for "latest": they stay on the last full release and find a working installer there.
+#        .\release.ps1 -Version 1.9.31.1-beta -Beta   a PRIVATE test version, published nowhere: one file BibleStudy-Beta-<version>.bsupdate that
+#                                              testers install with Settings > Updates > "Install update file …" (Windows, Linux, macOS; the files it shares
+#                                              with published releases come from their packs on GitHub), and BibleStudy-Android-<version>.apk to install by hand.
+#                                              Number it between the last release and the next one (1.9.31 -> 1.9.31.1-beta): the next release then updates
+#                                              the testers as usual. Its APK takes the Android version code of the project + 1, so the next release needs + 2.
 # Never delete an old release: its pack can hold files that newer lists still point to.
-param([string]$Version = "1.0.0", [switch]$Quick)
+param([string]$Version = "1.0.0", [switch]$Quick, [switch]$Beta)
 $ErrorActionPreference = 'Stop'
+if ($Beta) {
+    $Quick = $true
+    if ($Version -notmatch '^\d+\.\d+\.\d+(\.\d+)?-beta[0-9.]*$') { throw 'a test version is numbered like 1.9.31.1-beta' }
+}
 $root = $PSScriptRoot
 $rel = Join-Path $root 'release'
 $stage = Join-Path $rel 'stage\BibleStudy'
@@ -201,11 +210,16 @@ Write-Host "== Android app (APK), signed with the key of the app"
 # every release carries it: the Android app updates itself from the newest release that has one (1.9.15 to 1.9.17 went out without it,
 # and the phones stayed on 1.9.14). The key stays on this computer; without it there is no APK, and that is said loudly.
 $androidProject = "$root\src\BibleStudy.Android\BibleStudy.Android.csproj"
-if (-not ([IO.File]::ReadAllText($androidProject) -match "<Version>$([regex]::Escape($Version))</Version>")) { throw "the Android project does not carry version $Version (<Version> in $androidProject)" }
+$androidArgs = @()
+if ($Beta) {
+    # a test version: one code above the project's, its own number; the project file stays as it is
+    $code = [int]([regex]::Match([IO.File]::ReadAllText($androidProject), '<ApplicationVersion>(\d+)</ApplicationVersion>').Groups[1].Value) + 1
+    $androidArgs = @("-p:Version=$Version", "-p:ApplicationDisplayVersion=$Version", "-p:ApplicationVersion=$code")
+} elseif (-not ([IO.File]::ReadAllText($androidProject) -match "<Version>$([regex]::Escape($Version))</Version>")) { throw "the Android project does not carry version $Version (<Version> in $androidProject)" }
 $keystore = Join-Path $env:USERPROFILE '.biblestudy-android\biblestudy.keystore'
 if (Test-Path $keystore) {
     $apkOut = Join-Path $rel 'android'
-    dotnet publish $androidProject -c Release -p:DebugType=none -o $apkOut
+    dotnet publish $androidProject -c Release -p:DebugType=none @androidArgs -o $apkOut
     if ($LASTEXITCODE) { throw 'publish android failed' }
     $apk = Get-ChildItem $apkOut -Filter '*-Signed.apk' | Select-Object -First 1
     if (-not $apk) { throw 'no signed APK was made' }
@@ -214,6 +228,12 @@ if (Test-Path $keystore) {
 } else { Write-Warning "No Android key in $keystore : this release has no APK, phones with Android get no update" }
 
 Remove-Item -LiteralPath (Join-Path $rel 'stage') -Recurse -Force
+if ($Beta) {
+    Write-Host "== Test version: one local update file instead of the lists and packs (they must not reach a release)"
+    dotnet "$root\tools\BibleStudy.UpdatePack\bin\Release\net10.0\BibleStudy.UpdatePack.dll" bundle $rel $Version "$rel\BibleStudy-Beta-$Version.bsupdate"
+    if ($LASTEXITCODE) { throw 'bundling the update file failed' }
+    Get-ChildItem $rel -File | Where-Object { $_.Name -like 'BibleStudy-Update-*' -or $_.Name -like 'BibleStudy-Pack-*' } | Remove-Item -Force
+}
 if (-not $Quick) { Remove-Item -LiteralPath (Join-Path $rel 'setup'), $payload -Recurse -Force }
 Get-ChildItem $rel -File | Where-Object { $_.Name -ne 'SHA256SUMS.txt' } | ForEach-Object { '{0}  {1}' -f (Get-FileHash $_.FullName -Algorithm SHA256).Hash.ToLower(), $_.Name } | Set-Content "$rel\SHA256SUMS.txt"
 Get-ChildItem $rel -File | ForEach-Object { '{0,-40} {1,8:N1} MB' -f $_.Name, ($_.Length / 1MB) }

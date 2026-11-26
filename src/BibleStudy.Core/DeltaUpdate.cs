@@ -178,7 +178,8 @@ public static class DeltaUpdate
     /// Fetches the changed files into a staging folder next to the program and checks each one. Only when all are there it leaves the note that
     /// makes <see cref="Swap"/> install them when the program ends; nothing of the program has been changed until then.
     /// </summary>
-    public static async Task DownloadAsync(DeltaPlan plan, HttpClient http, IProgress<double>? progress, CancellationToken ct = default)
+    /// <param name="localPacks">Packs that lie in a local update file (pack name → file on disk): their files are read from there, all others come from GitHub.</param>
+    public static async Task DownloadAsync(DeltaPlan plan, HttpClient http, IProgress<double>? progress, CancellationToken ct = default, IReadOnlyDictionary<string, string>? localPacks = null)
     {
         var staging = Path.Combine(plan.Root, StagingName);
         if (Directory.Exists(staging)) Directory.Delete(staging, true);
@@ -188,7 +189,8 @@ public static class DeltaUpdate
             long done = 0; var total = Math.Max(1, plan.DownloadBytes);
             await Parallel.ForEachAsync(plan.Download, new ParallelOptions { MaxDegreeOfParallelism = 4, CancellationToken = ct }, async (file, token) =>
             {
-                await FetchOneAsync(file, Full(staging, file.Path), http, token);
+                if (file.Pack is not null && localPacks?.GetValueOrDefault(file.Pack) is { } local) await ReadLocalAsync(file, local, Full(staging, file.Path), token);
+                else await FetchOneAsync(file, Full(staging, file.Path), http, token);
                 progress?.Report((double)Interlocked.Add(ref done, file.Length) / total);
             });
             File.WriteAllText(Path.Combine(staging, ManifestName), WriteManifest(plan.Target));
@@ -200,6 +202,99 @@ public static class DeltaUpdate
             try { Directory.Delete(staging, true); } catch (Exception ex) when (ex is IOException or UnauthorizedAccessException) { }
             throw;
         }
+    }
+
+    /// <summary>Unpacks one file from a pack on disk (a local update file) and checks it like a download.</summary>
+    static async Task ReadLocalAsync(UpdateFile f, string packPath, string target, CancellationToken ct)
+    {
+        Directory.CreateDirectory(Path.GetDirectoryName(target)!);
+        var bytes = new byte[f.Length];
+        await using (var pack = new FileStream(packPath, FileMode.Open, FileAccess.Read, FileShare.Read))
+        {
+            if (f.Offset < 0 || f.Offset + f.Length > pack.Length) throw new InvalidDataException(L("Die Update-Datei ist beschädigt."));
+            pack.Seek(f.Offset, SeekOrigin.Begin);
+            await pack.ReadExactlyAsync(bytes, ct);
+        }
+        string actual;
+        await using (var gz = new GZipStream(new MemoryStream(bytes), CompressionMode.Decompress))
+        await using (var dst = File.Create(target))
+        using (var sha = IncrementalHash.CreateHash(HashAlgorithmName.SHA256))
+        {
+            var buffer = new byte[81920]; int n;
+            while ((n = await gz.ReadAsync(buffer, ct)) > 0) { sha.AppendData(buffer, 0, n); await dst.WriteAsync(buffer.AsMemory(0, n), ct); }
+            actual = Convert.ToHexString(sha.GetHashAndReset());
+        }
+        if (!actual.Equals(f.Sha256, StringComparison.OrdinalIgnoreCase)) throw new InvalidDataException(L("Die Prüfsumme der Datei stimmt nicht – Update abgebrochen."));
+        if (f.Exec && !OperatingSystem.IsWindows())
+            File.SetUnixFileMode(target, UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute | UnixFileMode.GroupRead | UnixFileMode.GroupExecute | UnixFileMode.OtherRead | UnixFileMode.OtherExecute);
+    }
+
+    // ---- a local update file (private test versions) ------------------------------------------------------------------
+
+    /// <summary>The ending of a local update file: a zip with the lists of files and the packs of one version, for every system it was made for.</summary>
+    public const string LocalExtension = ".bsupdate";
+
+    /// <summary>What a local update file holds for this system: the version's list of files and its packs, unpacked into <see cref="Folder"/>.</summary>
+    public sealed record LocalPackage(UpdateManifest Manifest, Dictionary<string, string> Packs, string Folder);
+
+    /// <summary>
+    /// Opens a local update file (made by <c>release.ps1 -Beta</c>) for the system <paramref name="rid"/>. The packs of this system are unpacked into a temp
+    /// folder; files the version shares with published releases stay in their packs on GitHub. Null when the file holds nothing for this system.
+    /// </summary>
+    public static LocalPackage? OpenLocal(string path, string rid)
+    {
+        using var zip = ZipFile.OpenRead(path);
+        var prefix = $"BibleStudy-Update-{rid}-";
+        var entry = zip.Entries.FirstOrDefault(e => e.FullName.StartsWith(prefix, StringComparison.Ordinal) && e.FullName.EndsWith(".json", StringComparison.Ordinal) && !e.FullName.Contains('/'));
+        if (entry is null) return null;
+        UpdateManifest manifest;
+        using (var reader = new StreamReader(entry.Open())) manifest = ParseManifest(reader.ReadToEnd());
+        if (manifest.Rid != rid) throw new InvalidDataException(L("Die Update-Datei ist beschädigt."));
+        var folder = Path.Combine(Path.GetTempPath(), "BibleStudy-LocalUpdate-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(folder);
+        var packs = new Dictionary<string, string>(StringComparer.Ordinal);
+        try
+        {
+            foreach (var name in manifest.Files.Select(f => f.Pack).OfType<string>().Distinct())
+            {
+                if (zip.GetEntry(name) is not { } pack) continue;   // a pack of a published release: it comes from GitHub
+                var target = Path.Combine(folder, name);
+                pack.ExtractToFile(target);
+                packs[name] = target;
+            }
+        }
+        catch { DeleteLocal(folder); throw; }
+        return new LocalPackage(manifest, packs, folder);
+    }
+
+    /// <summary>Removes the unpacked packs of a local update file.</summary>
+    public static void DeleteLocal(string folder)
+    {
+        try { if (Directory.Exists(folder)) Directory.Delete(folder, true); } catch (Exception ex) when (ex is IOException or UnauthorizedAccessException) { }
+    }
+
+    /// <summary>
+    /// Bundles the lists of files and packs of one version (as release.ps1 writes them into its output folder) into one local update file.
+    /// Returns the systems it holds.
+    /// </summary>
+    public static List<string> BundleLocal(string releaseDir, string version, string outFile)
+    {
+        var rids = new List<string>();
+        if (File.Exists(outFile)) File.Delete(outFile);
+        using var zip = ZipFile.Open(outFile, ZipArchiveMode.Create);
+        foreach (var json in Directory.EnumerateFiles(releaseDir, $"BibleStudy-Update-*-{version}.json").Order(StringComparer.Ordinal))
+        {
+            var name = Path.GetFileName(json);
+            var rid = name["BibleStudy-Update-".Length..^($"-{version}.json".Length)];
+            var manifest = ParseManifest(File.ReadAllText(json));
+            if (manifest.Version != version || manifest.Rid != rid) throw new InvalidDataException("manifest " + name);
+            zip.CreateEntryFromFile(json, name, CompressionLevel.Optimal);
+            var pack = Path.Combine(releaseDir, PackAsset(rid, version));
+            if (File.Exists(pack)) zip.CreateEntryFromFile(pack, Path.GetFileName(pack), CompressionLevel.NoCompression);   // gzip inside already
+            rids.Add(rid);
+        }
+        if (rids.Count == 0) throw new InvalidDataException("no list of files for " + version + " in " + releaseDir);
+        return rids;
     }
 
     static async Task FetchOneAsync(UpdateFile f, string target, HttpClient http, CancellationToken ct)

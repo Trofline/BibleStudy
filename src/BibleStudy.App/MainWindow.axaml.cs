@@ -83,7 +83,7 @@ public partial class MainWindow : AppWindow
         _ownCommentaries = new LocalCommentaryStore(Path.Combine(_root, "commentaries.db"));
         CreatePlugins();
         _overlay = new StrongsOverlay(Path.Combine(_root, "strongs-overlay"));
-        _provider = new CompositeProvider(_hello, _local, _pluginProvider) { Overlay = _overlay };
+        _provider = new CompositeProvider(_hello, _local, _pluginProvider) { Overlay = _overlay, JesusFromReference = () => _settings is { JesusRed: true, JesusFromKjv: true } };
         Closed += (_, _) => { try { EndQueueRun(); DeleteGuestVaults(_root); RemoveGuestBibles(); } catch (Exception ex) { ErrorLog.Write(ex); } };
         Closed += (_, _) => { try { _overlay.CommitAll(); } catch (Exception ex) when (ex is IOException or UnauthorizedAccessException) { ErrorLog.Write(ex); } };
         Closed += (_, _) => { _live?.Dispose(); _live = null; };
@@ -259,6 +259,7 @@ public partial class MainWindow : AppWindow
         }
         // after "Restart program" the user is taken back to the settings page
         if (Environment.GetCommandLineArgs().Contains("--open-settings")) OpenWork(NavGroups.First(g => g.Name == "Mehr"), SettingsTab);
+        StartLinks();   // a passage that a link (biblestudy://Joh3,16) asked for
     }
 
     void FillTranslations()
