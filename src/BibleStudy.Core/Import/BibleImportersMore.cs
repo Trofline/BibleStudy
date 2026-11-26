@@ -61,33 +61,28 @@ public static partial class BibleImporters
                 footnotes.Add((book, chapter, new Footnote(id, verse, text)));
                 return id;
             }
-            var verses = _order.Select(k =>
+            // red-letter text may go on over several verses (a speech in OSIS, a red span over a paragraph), but not into the next chapter
+            var jesus = false;
+            (string, int)? chapterOf = null;
+            var verses = new List<ParsedVerse>(_order.Count);
+            foreach (var k in _order)
             {
+                if (chapterOf != (k.Item1, k.Item2)) { jesus = false; chapterOf = (k.Item1, k.Item2); }
                 var raw = _by[k].ToString();
                 open.TryGetValue(k, out var mine);
-                if (!raw.Contains(PdfBibleLayout.NoteOpen) && mine is null) return new ParsedVerse(k.Item1, k.Item2, k.Item3, [new Segment(raw)]);
-                // the text with a footnote where its letter stands; a note whose letter is not in the verse comes at its end
-                var segments = new List<Segment>();
-                foreach (var part in Regex.Split(raw, $@"({PdfBibleLayout.NoteOpen}[a-z]{{1,2}}{PdfBibleLayout.NoteClose})"))
+                if (mine is null && raw.IndexOfAny([PdfBibleLayout.NoteOpen, JesusOpen, JesusClose]) < 0 && !jesus) { verses.Add(new ParsedVerse(k.Item1, k.Item2, k.Item3, [new Segment(raw)])); continue; }
+                // the text with a footnote where its letter stands; a letter without its note (none printed at the page foot) is left out
+                var segments = MarkedSegments(raw, ref jesus, letter =>
                 {
-                    if (part.Length == 0) continue;
-                    if (part[0] == PdfBibleLayout.NoteOpen)
-                    {
-                        var letter = part[1..^1];
-                        // a letter without its note (none printed at the page foot) is left out; FirstOrDefault would give an empty tuple here
-                        var at = mine?.FindIndex(n => n.Letter == letter) ?? -1;
-                        if (at >= 0) { var found = mine![at]; mine.RemoveAt(at); segments.Add(new Segment("", NoteId: Add(k.Item1, k.Item2, k.Item3, found.Text))); }
-                        continue;
-                    }
-                    segments.Add(new Segment(part));
-                }
+                    var at = mine?.FindIndex(n => n.Letter == letter) ?? -1;
+                    if (at < 0) return null;
+                    var found = mine![at]; mine.RemoveAt(at);
+                    return Add(k.Item1, k.Item2, k.Item3, found.Text);
+                });
+                // a note whose letter is not in the verse comes at its end
                 if (mine is not null) foreach (var n in mine) segments.Add(new Segment("", NoteId: Add(k.Item1, k.Item2, k.Item3, n.Text)));
-                // a blank in front of a marker or doubled around it goes
-                for (var i = 0; i < segments.Count; i++)
-                    if (segments[i].NoteId is null) segments[i] = segments[i] with { Text = Whitespace().Replace(segments[i].Text, " ") };
-                if (segments.Count > 0 && segments[0].NoteId is null) segments[0] = segments[0] with { Text = segments[0].Text.TrimStart() };
-                return new ParsedVerse(k.Item1, k.Item2, k.Item3, segments.Where(s => s.NoteId is not null || s.Text.Length > 0).ToList());
-            }).ToList();
+                verses.Add(new ParsedVerse(k.Item1, k.Item2, k.Item3, segments));
+            }
             return new ParsedBible(name, name.Length > 12 ? name[..12].Trim() : name, languageCode, verses, footnotes, _headings.Count > 0 ? _headings : null);
         }
     }
@@ -138,7 +133,18 @@ public static partial class BibleImporters
         (string Book, int Chapter, int Verse)? cur = null;
         var container = false;                       // <verse osisID>text</verse> (otherwise milestones: sID … eID)
         var text = new StringBuilder();
-        void Flush() { if (cur is { } k) c.Add(k.Book, k.Chapter, k.Verse, text.ToString()); text.Clear(); cur = null; container = false; }
+        // words of Jesus: <q who="Jesus">…</q>, or milestones <q who="Jesus" sID="x"/> … <q eID="x"/> that may span verses
+        var quotes = new Stack<bool>();              // open <q> containers: does each mark words of Jesus?
+        var milestones = new HashSet<string>();      // sIDs of open Jesus milestones
+        var jesus = false;
+        void SetJesus()
+        {
+            var now = quotes.Contains(true) || milestones.Count > 0;
+            if (now != jesus && cur is not null) text.Append(now ? JesusOpen : JesusClose);
+            jesus = now;
+        }
+        void Flush() { if (cur is { } k) c.Add(k.Book, k.Chapter, k.Verse, text.ToString() + (jesus ? JesusClose.ToString() : "")); text.Clear(); cur = null; container = false; }
+        void Begin((string, int, int)? at) { cur = at; if (cur is not null && jesus) text.Append(JesusOpen); }
         (string, int, int)? Parse(string? id)
         {
             if (id is null) return null;
@@ -158,11 +164,20 @@ public static partial class BibleImporters
                     if (n == "verse")
                     {
                         if (r.GetAttribute("eID") is not null && r.GetAttribute("sID") is null) Flush();
-                        else if (r.GetAttribute("sID") is { } sid) { Flush(); cur = Parse(sid); }
-                        else if (r.GetAttribute("osisID") is { } oid && !r.IsEmptyElement) { Flush(); cur = Parse(oid); container = cur is not null; }
+                        else if (r.GetAttribute("sID") is { } sid) { Flush(); Begin(Parse(sid)); }
+                        else if (r.GetAttribute("osisID") is { } oid && !r.IsEmptyElement) { Flush(); Begin(Parse(oid)); container = cur is not null; }
+                    }
+                    else if (n == "q")
+                    {
+                        var who = string.Equals(r.GetAttribute("who"), "Jesus", StringComparison.OrdinalIgnoreCase);
+                        if (r.GetAttribute("eID") is { } eid) milestones.Remove(eid);
+                        else if (r.GetAttribute("sID") is { } qsid) { if (who) milestones.Add(qsid); }
+                        else if (!r.IsEmptyElement) quotes.Push(who);
+                        SetJesus();
                     }
                     break;
                 case XmlNodeType.EndElement:
+                    if (r.LocalName.Equals("q", StringComparison.OrdinalIgnoreCase) && quotes.Count > 0) { quotes.Pop(); SetJesus(); }
                     if (container && r.LocalName.Equals("verse", StringComparison.OrdinalIgnoreCase)) Flush();
                     break;
                 case XmlNodeType.Text or XmlNodeType.CDATA or XmlNodeType.SignificantWhitespace or XmlNodeType.Whitespace:
@@ -189,9 +204,11 @@ public static partial class BibleImporters
     {
         using var r = XmlReader.Create(stream, new XmlReaderSettings { DtdProcessing = DtdProcessing.Ignore });
         string? book = null; var chapter = 0; var verse = 0;
+        var chars = new Stack<bool>();   // open <char> elements: is each one "wj" (words of Jesus)?
         r.Read();
         while (!r.EOF)
         {
+            if (r.NodeType == XmlNodeType.EndElement && r.LocalName.Equals("char", StringComparison.OrdinalIgnoreCase) && chars.Count > 0) chars.Pop();
             if (r.NodeType == XmlNodeType.Element)
             {
                 var skip = false;
@@ -202,11 +219,12 @@ public static partial class BibleImporters
                     case "verse": verse = r.GetAttribute("number") is { } vn && int.TryParse(vn.Split('-')[0], out var vi) ? vi : 0; break;
                     case "note": skip = true; break;
                     case "para": skip = UsxHeadingStyles.Contains(r.GetAttribute("style") ?? ""); break;
+                    case "char": if (!r.IsEmptyElement) chars.Push(r.GetAttribute("style") is "wj" or "+wj"); break;
                 }
                 if (skip) { r.Skip(); continue; }
             }
             else if (book is not null && verse > 0 && r.NodeType is XmlNodeType.Text or XmlNodeType.CDATA or XmlNodeType.SignificantWhitespace)
-                c.Add(book, chapter, verse, r.Value);
+                c.Add(book, chapter, verse, chars.Contains(true) ? JesusOpen + r.Value + JesusClose : r.Value);
             r.Read();
         }
     }
@@ -239,6 +257,7 @@ public static partial class BibleImporters
     {
         text = UsfmNotes().Replace(text, " ");
         text = UsfmWord().Replace(text, "$1");
+        text = UsfmJesus().Replace(text, m => m.Value.EndsWith('*') ? JesusClose.ToString() : JesusOpen.ToString());   // \wj … \wj*: words of Jesus
         string? book = null; var chapter = 0; var verse = 0;
         foreach (var raw in text.Split('\n'))
         {
@@ -272,6 +291,7 @@ public static partial class BibleImporters
 
     [GeneratedRegex(@"\\(f|fe|x|ef|ex)\s.*?\\\1\*", RegexOptions.Singleline)] private static partial Regex UsfmNotes();
     [GeneratedRegex(@"\\\+?w\s+([^|\\]*?)(?:\|[^\\]*)?\\\+?w\*")] private static partial Regex UsfmWord();
+    [GeneratedRegex(@"\\\+?wj\*|\\\+?wj\s?")] private static partial Regex UsfmJesus();
     [GeneratedRegex(@"^\\(?<m>[a-z0-9]+)\*?\s*(?<r>.*)$", RegexOptions.IgnoreCase)] private static partial Regex UsfmMarker();
     [GeneratedRegex(@"^(?<n>\d+)[a-b]?(?:[-,]\d+[a-b]?)*\s*(?<t>.*)$")] private static partial Regex UsfmVerse();
     [GeneratedRegex(@"\\\+?[a-z0-9]+\*?\s?|\|[^\\]*(?=\\)", RegexOptions.IgnoreCase)] private static partial Regex UsfmInline();

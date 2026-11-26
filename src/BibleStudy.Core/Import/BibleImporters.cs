@@ -77,7 +77,9 @@ public static partial class BibleImporters
         {
             var book = reader.GetInt32(0);
             if (book < 1 || book > 66 || reader.IsDBNull(3)) continue;
-            verses.Add(new ParsedVerse(BookData.UsfmIds[book - 1], reader.GetInt32(1), reader.GetInt32(2), [new Segment(CleanPlain(reader.GetString(3)))]));
+            var jesus = false;
+            if (MarkedSegments(CleanPlain(EswordJesus(reader.GetString(3))), ref jesus) is { Count: > 0 } segments)
+                verses.Add(new ParsedVerse(BookData.UsfmIds[book - 1], reader.GetInt32(1), reader.GetInt32(2), segments));
         }
         return new ParsedBible(title, abbreviation, languageCode, verses, []);
     }
@@ -101,23 +103,36 @@ public static partial class BibleImporters
                 case "VERS":
                     var number = int.TryParse(reader.GetAttribute("vnumber"), out var v) ? v : 0;
                     var text = ReadVerseText(reader);
-                    if (book is >= 1 and <= 66 && number > 0 && text.Length > 0) verses.Add(new ParsedVerse(BookData.UsfmIds[book - 1], chapter, number, [new Segment(text)]));
+                    var jesus = false;
+                    if (book is >= 1 and <= 66 && number > 0 && text.Length > 0 && MarkedSegments(text, ref jesus) is { Count: > 0 } segments) verses.Add(new ParsedVerse(BookData.UsfmIds[book - 1], chapter, number, segments));
                     break;
             }
         }
         return new ParsedBible(name, name.Length > 12 ? name[..12] : name, languageCode, verses, []);
     }
 
-    /// <summary>Text of a VERS element without notes and cross references.</summary>
+    /// <summary>Text of a VERS element without notes and cross references; red text (&lt;STYLE css="color:red"&gt;, words of Jesus) between Jesus markers.</summary>
     static string ReadVerseText(XmlReader reader)
     {
         if (reader.IsEmptyElement) return "";
         var sb = new System.Text.StringBuilder();
         var depth = reader.Depth;
+        var styles = new Stack<bool>();   // open STYLE elements: is each one red?
         reader.Read();
         while (reader.Depth > depth)
         {
-            if (reader.NodeType == XmlNodeType.Element && reader.Name.ToUpperInvariant() is "NOTE" or "XREF") { reader.Skip(); continue; }
+            var name = reader.Name.ToUpperInvariant();
+            if (reader.NodeType == XmlNodeType.Element && name is "NOTE" or "XREF") { reader.Skip(); continue; }
+            if (reader.NodeType == XmlNodeType.Element && name == "STYLE" && !reader.IsEmptyElement)
+            {
+                var red = IsRedColor(CssColor(reader.GetAttribute("css"))) || reader.GetAttribute("fs") is { } fs && JesusClass().IsMatch(fs);
+                if (red && !styles.Contains(true)) sb.Append(JesusOpen);
+                styles.Push(red);
+            }
+            else if (reader.NodeType == XmlNodeType.EndElement && name == "STYLE" && styles.Count > 0)
+            {
+                if (styles.Pop() && !styles.Contains(true)) sb.Append(JesusClose);
+            }
             if (reader.NodeType is XmlNodeType.Text or XmlNodeType.CDATA or XmlNodeType.SignificantWhitespace or XmlNodeType.Whitespace) sb.Append(reader.Value);
             reader.Read();
         }
@@ -259,6 +274,18 @@ public static partial class BibleImporters
         return result;
     }
 
+    /// <summary>
+    /// Words of Jesus in a module as Jesus markers: MySword writes &lt;FR&gt;…&lt;Fr&gt;, e-Sword colors them with \cf15 in its RTF ("{\cf15 Ich bin}"),
+    /// web-like modules use a red &lt;font&gt; or &lt;span&gt;.
+    /// </summary>
+    static string EswordJesus(string raw)
+    {
+        if (raw.Contains("<FR>", StringComparison.Ordinal)) raw = raw.Replace("<FR>", JesusOpen.ToString()).Replace("<Fr>", JesusClose.ToString());
+        if (raw.Contains(@"\cf15", StringComparison.Ordinal)) raw = EswordRed().Replace(raw, m => JesusOpen + (m.Groups[1].Success ? m.Groups[1].Value : m.Groups[2].Value) + JesusClose);
+        if (raw.Contains('<')) raw = MarkJesusInHtml(raw);
+        return raw;
+    }
+
     static string CleanPlain(string raw)
     {
         var withoutNotes = EswordNotes().Replace(raw, "");
@@ -280,4 +307,5 @@ public static partial class BibleImporters
     [GeneratedRegex(@"\s+")] private static partial Regex Whitespace();
     [GeneratedRegex("<(RF|FI)>.*?<(Rf|Fi)>", RegexOptions.Singleline)] private static partial Regex EswordNotes();
     [GeneratedRegex(@"\\[a-zA-Z]+-?\d*\s?|\\[{}\\]")] private static partial Regex RtfCodes();
+    [GeneratedRegex(@"\{\\cf15\s?([^{}]*)\}|\\cf15\s?(.*?)(?:\\cf\d+\s?|$)", RegexOptions.Singleline)] private static partial Regex EswordRed();
 }
