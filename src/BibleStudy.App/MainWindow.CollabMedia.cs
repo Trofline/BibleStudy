@@ -12,7 +12,8 @@ namespace BibleStudy.App;
 
 /// <summary>
 /// Studying together with voice and camera: hold a button to talk (push to talk), switch the microphone on for a call, send a voice message,
-/// switch the camera on. Sound goes as 40 ms pieces packed with μ-law, pictures as small JPEGs (about 8 a second); everything through the same
+/// switch the camera on. Sound goes as 40 ms pieces packed with μ-law, the camera as a video stream (H.264, see MainWindow.CollabVideo.cs;
+/// single JPEG pictures when the FFmpeg there cannot make H.264); everything through the same
 /// encrypted connections as the rest. Received sound is mixed and played only while "Hear the others" is on; nothing is recorded or saved,
 /// except a voice message the person sends on purpose.
 /// </summary>
@@ -124,16 +125,26 @@ public partial class MainWindow
             to.Children.Add(Box(cams, _settings.CollabCamera, v => _settings.CollabCamera = v));
             var quality = new ComboBox
             {
-                ItemsSource = new[] { L("Bildqualität: niedrig (für langsames Internet)"), L("Bildqualität: mittel"), L("Bildqualität: HD (720p)") },
-                SelectedIndex = Math.Clamp(_settings.CollabCameraQuality, 0, 2), HorizontalAlignment = HorizontalAlignment.Stretch,
+                ItemsSource = new[] { L("Bildqualität: niedrig (für langsames Internet)"), L("Bildqualität: mittel"), L("Bildqualität: HD (720p)"), L("Bildqualität: Full HD (1080p)") },
+                SelectedIndex = Math.Clamp(_settings.CollabCameraQuality, 0, 3), HorizontalAlignment = HorizontalAlignment.Stretch,
             };
-            quality.SelectionChanged += async (_, _) =>
+            var fps = new ComboBox
             {
-                _settings.CollabCameraQuality = quality.SelectedIndex; SaveSettings();
-                if (_camOn && _camera is not null) { await SetCameraAsync(false); await SetCameraAsync(true); }   // takes effect at once
+                ItemsSource = new[] { L("30 Bilder pro Sekunde"), L("60 Bilder pro Sekunde (flüssiger)") },
+                SelectedIndex = _settings.CollabCameraFps >= 60 ? 1 : 0, HorizontalAlignment = HorizontalAlignment.Stretch,
             };
+            async Task Apply()
+            {
+                _settings.CollabCameraQuality = Math.Max(0, quality.SelectedIndex);
+                _settings.CollabCameraFps = fps.SelectedIndex == 1 ? 60 : 30;
+                SaveSettings();
+                if (_camOn && _camera is not null) { await SetCameraAsync(false); await SetCameraAsync(true); }   // takes effect at once
+            }
+            quality.SelectionChanged += async (_, _) => await Apply();
+            fps.SelectionChanged += async (_, _) => await Apply();
             to.Children.Add(quality);
-            to.Children.Add(new TextBlock { Text = L("Ruckelt das Bild oder kommt es spät an, wähle eine niedrigere Qualität: HD braucht bei jeder Person mit Kamera etwa 5 Mbit/s zum Senden und bei allen anderen ebenso viel zum Empfangen."), Classes = { "caption" }, TextWrapping = TextWrapping.Wrap });
+            to.Children.Add(fps);
+            to.Children.Add(new TextBlock { Text = L("Ruckelt das Bild oder kommt es spät an, wähle eine niedrigere Qualität. Jede Person mit Kamera braucht zum Senden etwa: HD 2 Mbit/s, Full HD 4 Mbit/s, mit 60 Bildern pro Sekunde die Hälfte mehr. Die anderen brauchen ebenso viel zum Empfangen."), Classes = { "caption" }, TextWrapping = TextWrapping.Wrap });
         }
         else to.Children.Add(new TextBlock { Text = Ffmpeg.Find() is null ? FfmpegHint() : L("Keine Kamera gefunden."), Classes = { "caption" }, TextWrapping = TextWrapping.Wrap });
     }
@@ -235,7 +246,7 @@ public partial class MainWindow
         catch (Exception ex) { _mediaInfo.Text = L("Der Lautsprecher ließ sich nicht öffnen: {0}", ex.Message); return false; }
     }
 
-    const int MaxPicture = 400_000;   // one camera picture; an HD picture is about 60 to 150 KB
+    const int MaxPicture = 400_000;   // one camera picture (the picture-by-picture way); an HD picture is about 60 to 150 KB
     volatile byte[]? _ownFrame;
     int _ownFramePosted;
 
@@ -251,18 +262,33 @@ public partial class MainWindow
         try
         {
             _camOn = true;   // while it opens: a second tap does not start it twice
-            _camera = await MediaIO.StartCameraAsync(cam, CameraQuality.Of(_settings.CollabCameraQuality), jpeg =>
-            {
-                if (jpeg.Length > MaxPicture) return;
-                if (_group is { Any: true } g) try { g.Send(new { t = "vf", d = Convert.ToBase64String(jpeg) }); } catch { }
-                _ownFrame = jpeg;
-                if (Interlocked.Exchange(ref _ownFramePosted, 1) == 0)   // only the newest picture is shown: a busy screen never falls behind
-                    OnUi(() => { Interlocked.Exchange(ref _ownFramePosted, 0); if (_ownFrame is { } f && _camOn) ShowFrame("me", L("Du"), PeopleInkOf(null), f); });
-            });
+            var quality = CameraQuality.Of(_settings.CollabCameraQuality, _settings.CollabCameraFps);
+            var h264 = await Task.Run(Ffmpeg.CanH264);
+            Action<byte[]> onPicture = h264 ? OnOwnVideoUnit : OnOwnJpeg;
+            _camera = await MediaIO.StartCameraAsync(cam, quality, onPicture, h264);
             if (!_camOn) { _camera.Dispose(); _camera = null; return; }   // switched off (or left) while it opened
             _mediaInfo.Text = "";
         }
         catch (Exception ex) { _camOn = false; _mediaInfo.Text = L("Die Kamera ließ sich nicht öffnen: {0}", ex.Message); }
+    }
+
+    /// <summary>A picture of the own video stream (on a background thread): to the others, and into the own preview (decoded small, so it shows what the others see).</summary>
+    void OnOwnVideoUnit(byte[] au)
+    {
+        if (au.Length > MaxVideoUnit || !_camOn) return;
+        var d = Convert.ToBase64String(au);
+        if (_group is { Any: true } g)
+            try { g.Send(H264.IsKeyframe(au) ? new { t = "vc", k = 1, d } : (object)new { t = "vc", d }); } catch { }
+        VideoInOf("me", 640).Decoder?.Push(au);
+    }
+
+    void OnOwnJpeg(byte[] jpeg)
+    {
+        if (jpeg.Length > MaxPicture) return;
+        if (_group is { Any: true } g) try { g.Send(new { t = "vf", d = Convert.ToBase64String(jpeg) }); } catch { }
+        _ownFrame = jpeg;
+        if (Interlocked.Exchange(ref _ownFramePosted, 1) == 0)   // only the newest picture is shown: a busy screen never falls behind
+            OnUi(() => { Interlocked.Exchange(ref _ownFramePosted, 0); if (_ownFrame is { } f && _camOn) ShowFrame("me", L("Du"), PeopleInkOf(null), f); });
     }
 
     Color PeopleInkOf(CollabPerson? p) => p?.Ink ?? Color.Parse("#30A46C");
@@ -271,6 +297,13 @@ public partial class MainWindow
     {
         Bitmap bmp;
         try { using var ms = new MemoryStream(jpeg); bmp = new Bitmap(ms); } catch { return; }
+        ShowPicture(id, name, ink, bmp);
+    }
+
+    /// <summary>Shows a picture in the person's tile, the field and the large window. A JPEG picture belongs to the tile (and goes with the next
+    /// one); the bitmaps of a video stream belong to its decoder (<see cref="VideoSurface"/>).</summary>
+    void ShowPicture(string id, string name, Color ink, Bitmap bmp)
+    {
         if (!_tiles.TryGetValue(id, out var t))
         {
             var image = new Image { Width = 160, Height = 120, Stretch = Stretch.UniformToFill };
@@ -288,14 +321,19 @@ public partial class MainWindow
         _tileInfo[id] = (name, ink);
         UpdateBigVideo(id, name, ink, bmp);
         UpdateDock(id, bmp);
-        old?.Dispose();
+        if (old is not null && old is not WriteableBitmap && old != bmp) old.Dispose();
     }
 
     void RemoveTile(string id)
     {
         if (_bigGrid?.Children.FirstOrDefault(c => c.Tag as string == id) is { } b) _bigGrid.Children.Remove(b);
         _tileInfo.Remove(id);
-        if (_tiles.Remove(id, out var t)) { _videoTiles.Children.Remove(t.Tile); RefreshDock(); (t.Image.Source as Bitmap)?.Dispose(); }   // the field no longer shows it before the picture goes
+        if (_tiles.Remove(id, out var t))
+        {
+            _videoTiles.Children.Remove(t.Tile); RefreshDock();   // the field no longer shows it before the picture goes
+            if (t.Image.Source is Bitmap shown and not WriteableBitmap) shown.Dispose();
+        }
+        StopVideoIn(id);
     }
 
     // ---- the line "who speaks" and old pictures ----------------------------------------------------------------------------
@@ -321,6 +359,9 @@ public partial class MainWindow
         _speaker?.Dispose(); _speaker = null;
         _mixer.ClearAll();
         foreach (var id in _tiles.Keys.ToList()) RemoveTile(id);
+        List<string> decoding;
+        lock (_videoIn) decoding = [.. _videoIn.Keys];
+        foreach (var id in decoding) StopVideoIn(id);
     }
 
     // ---- receiving --------------------------------------------------------------------------------------------------------

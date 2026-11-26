@@ -104,4 +104,103 @@ public class MediaTests
             await Task.Delay(600);
         Assert.True(asked >= 10, $"asked {asked}");
     }
+
+    [Theory]
+    [InlineData("674d402ada01e0089f970110000003001000000788f1832a", 1920, 1080)]   // main profile, cropped from 1088, with an escaped 03
+    [InlineData("67640016acd940d83de6f0110000030001000003000a0f162d96", 854, 480)] // high profile, cropped from 864
+    public void The_picture_size_is_read_from_the_sps(string hex, int width, int height) =>
+        Assert.Equal((width, height), H264.Size(Convert.FromHexString(hex)));
+
+    static byte[] Au(bool key, byte fill) => key
+        ? [0, 0, 0, 1, 0x09, 0xF0, 0, 0, 0, 1, 0x67, 0x4D, 0, 0, 0, 1, 0x68, 0xEE, 0, 0, 1, 0x65, fill, fill]
+        : [0, 0, 0, 1, 0x09, 0xF0, 0, 0, 1, 0x41, fill, fill, fill];
+
+    [Fact]
+    public void Video_pictures_are_cut_at_their_delimiters_even_when_split_anywhere()
+    {
+        var stream = Au(true, 1).Concat(Au(false, 2)).Concat(Au(false, 3)).Concat(Au(true, 4)).ToArray();
+        for (var cut = 1; cut < stream.Length; cut++)
+        {
+            var s = new H264Splitter();
+            var got = s.Push(stream.AsSpan(0, cut)).Concat(s.Push(stream.AsSpan(cut))).ToList();
+            Assert.Equal(3, got.Count);   // the last one is complete only when the next begins
+            Assert.Equal(Au(false, 2), got[1]);
+            Assert.True(H264.IsKeyframe(got[0]));
+            Assert.False(H264.IsKeyframe(got[2]));
+        }
+    }
+
+    [Fact]
+    public void A_key_picture_gives_its_parameter_sets_and_converts_for_the_iphone()
+    {
+        var key = Au(true, 7);
+        var sets = H264.ParameterSets(key);
+        Assert.NotNull(sets);
+        Assert.Equal(new byte[] { 0x67, 0x4D }, sets!.Value.Sps);
+        Assert.Equal(new byte[] { 0x68, 0xEE }, sets.Value.Pps);
+        Assert.Equal(new byte[] { 0, 0, 0, 3, 0x65, 7, 7 }, H264.ToLengthPrefixed(key));
+        Assert.Equal(key[6..], H264.WithoutDelimiter(key));
+        Assert.Null(H264.ParameterSets(Au(false, 1)));
+    }
+
+    [Fact]
+    public void Video_colors_become_screen_colors()
+    {
+        // 2x2 pixels: white, black / grey, grey; U and V neutral
+        byte[] y = [235, 16, 126, 126], u = [128], v = [128];
+        var bgra = new byte[16];
+        Yuv.ToBgra(y, 0, 2, u, 0, v, 0, 1, 1, 2, 2, bgra);
+        Assert.Equal(new byte[] { 255, 255, 255, 255, 0, 0, 0, 255 }, bgra[..8]);
+        Assert.InRange(bgra[8], 126, 130);
+        // only every second pixel: one pixel, the first
+        var small = new byte[4];
+        Yuv.ToBgra(y, 0, 2, u, 0, v, 0, 1, 1, 2, 2, small, every: 2);
+        Assert.Equal(new byte[] { 255, 255, 255, 255 }, small);
+    }
+
+    [Fact]
+    public void Sixty_pictures_a_second_need_half_as_much_data_again()
+    {
+        var hd = CameraQuality.Of(2, 30);
+        var hd60 = CameraQuality.Of(2, 60);
+        Assert.Equal((1280, 720, 30), (hd.Width, hd.Height, hd.Fps));
+        Assert.Equal((60, hd.Kbps * 3 / 2), (hd60.Fps, hd60.Kbps));
+        Assert.Equal(1920, CameraQuality.Of(3).Width);
+        Assert.Equal(15, CameraQuality.Of(0, 60).Fps);   // the low level stays low
+        Assert.Equal(15, CameraQuality.Of(3, 60).JpegFps);
+    }
+
+    [Fact]
+    public async Task The_test_camera_goes_through_h264_and_back_into_pictures()
+    {
+        if (Ffmpeg.Find() is null) return;   // no ffmpeg on this computer: nothing to try
+        Environment.SetEnvironmentVariable("BIBLESTUDY_FAKEMEDIA", "1");
+        try
+        {
+            if (!Ffmpeg.CanH264()) return;
+            var units = new List<byte[]>();
+            var pictures = 0; var size = (0, 0);
+            using var decoder = MediaIO.StartH264Decoder((w, h, bgra) => { size = (w, h); Assert.Equal(w * h * 4, bgra.Length); Interlocked.Increment(ref pictures); })!;
+            using (await MediaIO.StartCameraAsync(new MediaDevice("Testbild", "fake", true), CameraQuality.Medium, au => { lock (units) units.Add(au); decoder.Push(au); }, h264: true))
+                await Task.Delay(2500);
+            await Task.Delay(500);
+            lock (units)
+            {
+                Assert.True(units.Count >= 20, $"units {units.Count}");
+                Assert.True(H264.IsKeyframe(units[0]));
+                Assert.Equal((640, 360), H264.Size(H264.ParameterSets(units[0])!.Value.Sps));
+                Assert.True(units.Average(u => u.Length) < 40_000, "a video picture is small");
+            }
+            Assert.True(pictures >= 15, $"pictures {pictures}");
+            Assert.Equal((640, 360), size);
+
+            // the own preview: the same stream, made smaller
+            var small = (0, 0);
+            using var preview = MediaIO.StartH264Decoder((w, h, _) => small = (w, h), maxWidth: 320)!;
+            lock (units) foreach (var u in units) preview.Push(u);
+            await Task.Delay(1500);
+            Assert.Equal((320, 180), small);
+        }
+        finally { Environment.SetEnvironmentVariable("BIBLESTUDY_FAKEMEDIA", null); }
+    }
 }

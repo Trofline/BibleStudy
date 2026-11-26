@@ -343,11 +343,15 @@ public sealed class RelayLink : ICollabLink
         if (!IsOpen) return;
         // a camera picture still waiting is worth nothing once a newer one of the same person is there: with a slow upload the pictures
         // are thinned out instead of falling further and further behind
-        var picture = text.StartsWith("{\"t\":\"vf\"", StringComparison.Ordinal) ? PictureOwner(text) : null;
+        var picture = text.StartsWith("{\"t\":\"vf\"", StringComparison.Ordinal) ? "f" + PictureOwner(text) : null;
+        // the video stream builds each picture on the ones before it: only a key picture makes the waiting older ones worthless
+        var video = text.StartsWith("{\"t\":\"vc\"", StringComparison.Ordinal) ? "v" + PictureOwner(text) : null;
+        var key = video is not null && text.StartsWith("{\"t\":\"vc\",\"k\":1", StringComparison.Ordinal);
         lock (_outbox)
         {
             if (picture is not null) _outbox.RemoveAll(o => o.Picture == picture);
-            _outbox.Add((Encoding.UTF8.GetBytes(text), picture));
+            if (key) _outbox.RemoveAll(o => o.Picture == video);
+            _outbox.Add((Encoding.UTF8.GetBytes(text), picture ?? video));
         }
         if (_signal.CurrentCount == 0) _signal.Release();
     }

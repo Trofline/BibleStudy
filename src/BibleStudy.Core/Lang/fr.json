@@ -3606,5 +3606,8 @@
   "Bildqualität: niedrig (für langsames Internet)": "Qualité d'image : basse (pour internet lent)",
   "Bildqualität: mittel": "Qualité d'image : moyenne",
   "Bildqualität: HD (720p)": "Qualité d'image : HD (720p)",
-  "Ruckelt das Bild oder kommt es spät an, wähle eine niedrigere Qualität: HD braucht bei jeder Person mit Kamera etwa 5 Mbit/s zum Senden und bei allen anderen ebenso viel zum Empfangen.": "Si l'image saccade ou arrive en retard, choisissez une qualité plus basse : la HD demande environ 5 Mbit/s en envoi pour chaque personne avec caméra, et autant en réception pour toutes les autres."
+  "Bildqualität: Full HD (1080p)": "Qualité d'image : Full HD (1080p)",
+  "30 Bilder pro Sekunde": "30 images par seconde",
+  "60 Bilder pro Sekunde (flüssiger)": "60 images par seconde (plus fluide)",
+  "Ruckelt das Bild oder kommt es spät an, wähle eine niedrigere Qualität. Jede Person mit Kamera braucht zum Senden etwa: HD 2 Mbit/s, Full HD 4 Mbit/s, mit 60 Bildern pro Sekunde die Hälfte mehr. Die anderen brauchen ebenso viel zum Empfangen.": "Si l'image saccade ou arrive en retard, choisis une qualité plus basse. Chaque personne avec caméra a besoin d'environ, pour envoyer : HD 2 Mbit/s, Full HD 4 Mbit/s, la moitié en plus à 60 images par seconde. Les autres ont besoin d'autant pour recevoir."
 }
