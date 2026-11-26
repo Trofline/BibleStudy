@@ -30,6 +30,7 @@ public sealed class RelayLink : ICollabLink
     static readonly TimeSpan Gather = TimeSpan.FromMilliseconds(100);
     const byte KeyFrame = 0x01, SenderKeyFrame = 0x02, DataFrame = 0x10;
     const byte More = 1, First = 2;
+    static readonly byte[] SenderKeyAad = [SenderKeyFrame];
 
     sealed class Member
     {
@@ -158,15 +159,17 @@ public sealed class RelayLink : ICollabLink
         other.ImportSubjectPublicKeyInfo(theirs, out _);
         var shared = _ecdh.DeriveKeyFromHash(other.PublicKey, HashAlgorithmName.SHA256);
         var (a, b) = _mine.AsSpan().SequenceCompareTo(theirs) < 0 ? (_mine, theirs) : (theirs, _mine);
-        var transcript = SHA256.HashData([.. a, .. b]);
+        byte[] both = [.. a, .. b];
+        var transcript = SHA256.HashData(both);
         m.Public = theirs;
-        m.Pair = new AesGcm(HMACSHA256.HashData(_codeKey, [.. shared, .. transcript]), 16);
+        byte[] secret = [.. shared, .. transcript];
+        m.Pair = new AesGcm(HMACSHA256.HashData(_codeKey, secret), 16);
         await SendKeyAsync(id, m);
         if (m.SenderKeySent) return;
         m.SenderKeySent = true;
         var nonce = RandomNumberGenerator.GetBytes(12);
         var sealedKey = new byte[_senderKey.Length]; var tag = new byte[16];
-        m.Pair.Encrypt(nonce, _senderKey, sealedKey, tag, [SenderKeyFrame]);
+        m.Pair.Encrypt(nonce, _senderKey, sealedKey, tag, SenderKeyAad);
         await SendFrameAsync([id, SenderKeyFrame, .. nonce, .. sealedKey, .. tag]);
     }
 
@@ -175,7 +178,7 @@ public sealed class RelayLink : ICollabLink
         var m = MemberOf(id);
         if (m.Pair is null || m.Recv is not null || data.Length != 12 + 32 + 16) return;
         var key = new byte[32];
-        try { m.Pair.Decrypt(data[..12], data[12..44], data[44..], key, [SenderKeyFrame]); }
+        try { m.Pair.Decrypt(data[..12], data[12..44], data[44..], key, SenderKeyAad); }
         catch (CryptographicException)
         {
             // whoever does not know the code cannot seal this: in an empty room that means a wrong code (or someone guessing), else it is ignored
@@ -281,7 +284,7 @@ public sealed class RelayLink : ICollabLink
         if (counter <= m.Last) return;                             // played back a second time
         var cipher = data.AsSpan(9, data.Length - 9 - 16);
         var plain = new byte[cipher.Length];
-        try { m.Recv.Decrypt(Nonce(counter), cipher, data.AsSpan(data.Length - 16), plain, [flags]); }
+        try { m.Recv.Decrypt(Nonce(counter), cipher, data.AsSpan(data.Length - 16), plain, new[] { flags }); }
         catch (CryptographicException) { return; }
         m.Last = counter;
         if ((flags & First) != 0) m.Parts = null;
@@ -377,7 +380,7 @@ public sealed class RelayLink : ICollabLink
             var frame = new byte[2 + 1 + 8 + n + 16];
             frame[0] = 0; frame[1] = DataFrame; frame[2] = flags;
             BitConverter.GetBytes(counter).CopyTo(frame, 3);
-            _send.Encrypt(Nonce(counter), plain.AsSpan(at, n), frame.AsSpan(11, n), frame.AsSpan(11 + n, 16), [flags]);
+            _send.Encrypt(Nonce(counter), plain.AsSpan(at, n), frame.AsSpan(11, n), frame.AsSpan(11 + n, 16), new[] { flags });
             await SendFrameAsync(frame);
         }
     }
