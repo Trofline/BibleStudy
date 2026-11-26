@@ -83,7 +83,7 @@ public static class Loc
         return Adapt(de);
     }
 
-    static readonly bool Mobile = OperatingSystem.IsAndroid() || OperatingSystem.IsIOS();
+    static readonly bool Mobile = OperatingSystem.IsAndroid() || OperatingSystem.IsIOS() || Environment.GetEnvironmentVariable("BIBLESTUDY_PHONE") == "1";   // (the variable: the phone layout tried on a PC)
     static readonly bool Mac = OperatingSystem.IsMacOS();
     static readonly System.Text.RegularExpressions.Regex KeyHint = new(@"\s*\([^()]*\b(?:Strg|Ctrl|Cmd)\+[^()]*\)", System.Text.RegularExpressions.RegexOptions.Compiled);
     static readonly System.Text.RegularExpressions.Regex KeyTail = new(@"\s·\s(?:Strg|Ctrl|Cmd)\+.*$", System.Text.RegularExpressions.RegexOptions.Compiled);

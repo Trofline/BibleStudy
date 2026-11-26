@@ -378,6 +378,9 @@ public partial class MainWindow
         var low = Bounds.Height < 480;
         // while the keyboard is up the bottom bar goes, as in other apps: the room above the keyboard belongs to what one types in
         var typing = TopLevel.GetTopLevel(this)?.InputPane is { State: Avalonia.Controls.Platform.InputPaneState.Open };
+        // the editor of the notes only once a verse is chosen: before, it is an empty box with buttons above the list
+        var noting = _noteRef is not null;
+        if (NoteEditor.IsVisible != noting) { NoteEditor.IsVisible = noting; if (NoteSaveBtn.Parent is Control noteButtons) noteButtons.IsVisible = noting; }
         if (_pNav is { } navBar && navBar.IsVisible == typing) navBar.IsVisible = !typing;
         if (_pBar is { } pb) pb.Height = low ? 44 : 52;
         foreach (var nb in _navBtns.Values) { nb.Height = low ? 40 : 58; if (nb.Content is StackPanel { Children: [_, TextBlock lb] }) lb.IsVisible = !low; }
@@ -510,6 +513,12 @@ public partial class MainWindow
             { Setters = { new Avalonia.Styling.Setter(TextBlock.TextTrimmingProperty, TextTrimming.CharacterEllipsis) } },
             new Avalonia.Styling.Style(x => x.OfType<Expander>().Template().Descendant().OfType<Avalonia.Controls.Presenters.ContentPresenter>())
             { Setters = { new Avalonia.Styling.Setter(Avalonia.Controls.Presenters.ContentPresenter.TextWrappingProperty, TextWrapping.Wrap) } },
+            // a finger needs about 34 px: buttons of 22–28 px ("← Alle Einstellungen", "Papierkorb", the small tools) were hard to hit.
+            // Only plain buttons (not the arrows of a scroll bar or the days of a calendar, which are buttons of their own kind).
+            new Avalonia.Styling.Style(x => x.OfType<Button>())
+            { Setters = { new Avalonia.Styling.Setter(MinHeightProperty, 34.0) } },
+            new Avalonia.Styling.Style(x => x.OfType<ToggleButton>())
+            { Setters = { new Avalonia.Styling.Setter(MinHeightProperty, 34.0) } },
         };
         app.Styles.Add(styles);
         // the short descriptions under the tabs of the side panel: on a phone the room belongs to the content
@@ -535,6 +544,14 @@ public partial class MainWindow
         }
         CompactDocListForPhone();
         Dispatcher.UIThread.Post(CompactSearchForPhone, DispatcherPriority.Background);   // after the search got its extra buttons
+        // the notes: a smaller editor, and the links of a note one row to swipe (on an iPhone SE two notes of the list were left)
+        NoteEditor.Height = 76;
+        // the editor of a document: "Exportieren" as a symbol, the switch of saving as its dot (see ShowAutoSaveState): one row, not two
+        ToolTip.SetTip(DocExportBtn, L("Exportieren"));
+        DocExportBtn.Content = new Icon { Data = Geometry.Parse("M12 3v12 M7 10l5 5 5-5 M5 21h14"), IconSize = 18 };
+        DocAutoSaveBtn.MinWidth = 40;
+        ShowAutoSaveState();
+        OneSwipeRow(NoteLinksPanel); OneSwipeRow(NoteBacklinksPanel);
     }
 
     /// <summary>
@@ -561,6 +578,19 @@ public partial class MainWindow
         row.Children.Add(scopePill); row.Children.Add(matchPill); row.Children.Add(dots);
         var at = stack.Children.IndexOf(wrap);
         stack.Children[at] = row;
+        // the found forms, the books with hits, the last searches, the Strong numbers: each one row that is swiped sideways. Over several
+        // lines they pushed the hits down to the lower third of the screen (on an iPhone SE ~190 px of hits were left).
+        foreach (var chips in new[] { SearchStrongsPanel, SearchHistoryPanel, SearchFormsPanel, SearchBooksPanel }) OneSwipeRow(chips);
+    }
+
+    /// <summary>A row of chips that wraps onto many lines becomes one line that scrolls sideways (only on a phone).</summary>
+    static void OneSwipeRow(WrapPanel chips)
+    {
+        if (chips.Parent is not Panel parent || parent.Children.IndexOf(chips) is not (>= 0 and var at)) return;
+        parent.Children.RemoveAt(at);
+        var strip = new ScrollViewer { Content = chips, HorizontalScrollBarVisibility = ScrollBarVisibility.Hidden, VerticalScrollBarVisibility = ScrollBarVisibility.Disabled };
+        strip.Bind(IsVisibleProperty, chips.GetObservable(IsVisibleProperty));
+        parent.Children.Insert(at, strip);
     }
 
     /// <summary>
@@ -602,6 +632,7 @@ public partial class MainWindow
         }
         // the category and the folder of an open document: side by side even on a small phone (170 + 170 took two rows)
         DocCategoryBox.Width = DocFolderBox.Width = 140;
+        foreach (var ex in top.Children.OfType<Expander>()) ex.HorizontalAlignment = HorizontalAlignment.Stretch;   // "Mehr Filter und Graph" was half a box
         // the filter box of a desktop width
         DocFilterBox.Width = double.NaN; DocFilterBox.MinWidth = 200;
     }

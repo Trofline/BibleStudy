@@ -3608,5 +3608,6 @@
   "Link kopiert: {0}": "Ссылка скопирована: {0}",
   "Mehr Optionen, Suche bauen, Suchhilfe, gemerkte Suchen …": "Другие параметры, конструктор поиска, справка, сохранённые поиски …",
   "Tippe im Bibeltext auf einen Vers. Hier erscheint dann alles, was du und die Werkzeuge zu diesem Vers haben.": "Коснись стиха в тексте Библии. Здесь появится всё, что есть у тебя и у инструментов к этому стиху.",
-  "{0} Wörter · {1} Zeichen": "{0} слов · {1} знаков"
+  "{0} Wörter · {1} Zeichen": "{0} слов · {1} знаков",
+  "Auto": "Авто"
 }

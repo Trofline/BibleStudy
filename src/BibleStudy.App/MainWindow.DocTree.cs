@@ -121,7 +121,7 @@ public partial class MainWindow
             var open = !_closedDocFolders.Contains(id);
             DocTree.Children.Add(FolderHeader(id, name, inFolder.Count, open, depth));
             if (!open) continue;
-            if (inFolder.Count == 0) DocTree.Children.Add(new TextBlock { Text = L("leer – hierher ziehen"), Classes = { "caption" }, Margin = new(30, 0, 0, 4), Opacity = 0.7 });
+            if (inFolder.Count == 0 && !IsPhone) DocTree.Children.Add(new TextBlock { Text = L("leer – hierher ziehen"), Classes = { "caption" }, Margin = new(30, 0, 0, 4), Opacity = 0.7 });
             foreach (var d in inFolder) DocTree.Children.Add(DocRow(d, 16));
         }
     }

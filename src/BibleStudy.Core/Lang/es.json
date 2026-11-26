@@ -3608,5 +3608,6 @@
   "Link kopiert: {0}": "Enlace copiado: {0}",
   "Mehr Optionen, Suche bauen, Suchhilfe, gemerkte Suchen …": "Más opciones, construir búsqueda, ayuda de búsqueda, búsquedas guardadas …",
   "Tippe im Bibeltext auf einen Vers. Hier erscheint dann alles, was du und die Werkzeuge zu diesem Vers haben.": "Toca un versículo en el texto bíblico. Aquí aparecerá todo lo que tú y las herramientas tenéis sobre ese versículo.",
-  "{0} Wörter · {1} Zeichen": "{0} palabras · {1} caracteres"
+  "{0} Wörter · {1} Zeichen": "{0} palabras · {1} caracteres",
+  "Auto": "Auto"
 }

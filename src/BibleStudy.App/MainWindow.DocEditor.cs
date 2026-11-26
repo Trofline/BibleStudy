@@ -63,7 +63,10 @@ public partial class MainWindow
         var on = DocAutoSaveBtn.IsChecked == true;
         var green = new SolidColorBrush(Color.Parse("#30A46C"));
         var dot = new Avalonia.Controls.Shapes.Ellipse { Width = 9, Height = 9, StrokeThickness = 1.5, Stroke = on ? green : Brushes.Gray, Fill = on ? green : null, VerticalAlignment = VerticalAlignment.Center };
-        DocAutoSaveBtn.Content = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 7, Children = { dot, new TextBlock { Text = on ? L("Auto-Speichern: an") : L("Auto-Speichern: aus"), VerticalAlignment = VerticalAlignment.Center } } };
+        var words = on ? L("Auto-Speichern: an") : L("Auto-Speichern: aus");
+        if (IsPhone) ToolTip.SetTip(DocAutoSaveBtn, words);
+        // a phone: the dot and "Auto" (green = saves itself), so the bar of the editor fits in one row
+        DocAutoSaveBtn.Content = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 7, Children = { dot, new TextBlock { Text = IsPhone ? L("Auto") : words, VerticalAlignment = VerticalAlignment.Center } } };
     }
 
     void OnDocKey(object? sender, KeyEventArgs e)
