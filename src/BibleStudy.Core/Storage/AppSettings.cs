@@ -389,8 +389,6 @@ public sealed class AppSettings
     public bool TabToursOff { get; set; }
     /// <summary>The person was asked (on the first start, or once after the update that brought them) whether the tab tours should come.</summary>
     public bool TabToursAsked { get; set; }
-    /// <summary>How much wider (or, below zero, narrower) the person dragged the boxes of the tours (short tour, deep tour, tab tours), in pixels.</summary>
-    public double TourWidthExtra { get; set; }
     public string? PlanId { get; set; }
     public string? PlanStart { get; set; }
     public List<string> PlanDoneDays { get; set; } = [];
