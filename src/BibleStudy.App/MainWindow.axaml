@@ -1055,6 +1055,7 @@
                                 <CheckBox x:Name="AutoUpdateCheck" Content="Bei jedem Start nach Updates suchen (eine Anfrage an GitHub, es werden keine Daten gesendet). Installiert wird nie ohne deine Zustimmung." />
                                 <WrapPanel>
                                     <Button x:Name="CheckUpdateBtn" Content="Jetzt nach Updates suchen" Margin="0,0,6,6" />
+                                    <Button x:Name="InstallUpdateFileBtn" Content="Update-Datei installieren …" Margin="0,0,6,6" IsVisible="False" ToolTip.Tip="Für Testversionen (Beta), die du als Datei (.bsupdate) bekommen hast. Vorher wird eine Sicherung deiner Daten angelegt." />
                                     <Button x:Name="PatchNotesBtn" Content="Patch Notes (was ist neu)" Margin="0,0,6,6" />
                                     <Button x:Name="GitHubBtn" Content="Projekt auf GitHub" Margin="0,0,6,6" />
                                     <Button x:Name="RestartBtn" Content="Programm neu starten" Margin="0,0,6,6" ToolTip.Tip="Beendet BibleStudy und startet es sofort neu; du landest wieder hier in den Einstellungen." />

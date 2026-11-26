@@ -121,6 +121,7 @@ Claude Code (mit Bibel-Werkzeugen) oder Ollama; die Anweisung für Claude; der M
 ## 13.15 Updates und Programm
 
 - **Jetzt nach Updates suchen.** Ab Version 1.6.7 lädt ein Update nur die geänderten Dateien (meist wenige MB), auf Windows, Linux und macOS. Startet die neue Version nicht, kommt die alte automatisch zurück. *Jetzt installieren* startet kurz neu und du liest genau dort weiter, wo du warst. *Beim Schließen installieren* lädt im Hintergrund und spielt das Update beim nächsten Beenden ein.
+- **Update-Datei installieren …** Für Testversionen (Beta), die du als Datei `BibleStudy-Beta-….bsupdate` bekommen hast, ohne dass sie öffentlich erschienen sind. Vorher wird deine Arbeit gesichert, danach startet das Programm neu; klappt etwas nicht, kommt die bisherige Version von selbst zurück. Die nächste normale Version kommt danach wie gewohnt als Update. Auf Android installierst du eine Testversion als APK-Datei, auf dem iPhone über SideStore.
 - **Patch Notes** (was ist neu).
 - **Projekt auf GitHub.**
 - **Programm neu starten.**

@@ -400,5 +400,58 @@ public class DeltaUpdateTests : IDisposable
         Assert.Equal(("2.0.0", "exit code 1"), DeltaUpdate.LastFailed(_dir));
     }
 
+    /// <summary>A private test version as one local file: its own files come from the file, the ones it shares with a published release from GitHub.</summary>
+    [Fact]
+    public async Task LocalUpdateFile_InstallsATestVersion_WithoutItsPackOnGitHub()
+    {
+        var published = Path.Combine(_dir, "out");
+        var v1 = Folder("v1", ("a.dll", "old a"), ("same.dll", new string('s', 5000)), ("gone.dll", "bye"));
+        var m1 = DeltaUpdate.BuildPack(v1, "win-x64", "1.0.0", null, published);
+        File.WriteAllText(Path.Combine(v1, DeltaUpdate.ManifestName), DeltaUpdate.WriteManifest(m1));
+        var beta = Path.Combine(_dir, "beta");
+        foreach (var rid in new[] { "win-x64", "linux-x64" })
+        {
+            var src = Folder("src-" + rid, ("a.dll", "beta a " + rid), ("same.dll", new string('s', 5000)), ("new.dll", "fresh"));
+            var m = DeltaUpdate.BuildPack(src, rid, "1.0.0.1-beta", rid == "win-x64" ? m1 : null, beta);
+            File.WriteAllText(Path.Combine(beta, DeltaUpdate.ManifestAsset(rid, "1.0.0.1-beta")), DeltaUpdate.WriteManifest(m));
+        }
+        var file = Path.Combine(_dir, "BibleStudy-Beta-1.0.0.1-beta" + DeltaUpdate.LocalExtension);
+        Assert.Equal(["linux-x64", "win-x64"], DeltaUpdate.BundleLocal(beta, "1.0.0.1-beta", file));
+        Assert.Null(DeltaUpdate.OpenLocal(file, "osx-arm64"));
+
+        File.Delete(Path.Combine(v1, "same.dll"));   // a file the tester lost: it comes from the published pack
+        var local = DeltaUpdate.OpenLocal(file, "win-x64")!;
+        Assert.Equal("1.0.0.1-beta", local.Manifest.Version);
+        var plan = DeltaUpdate.CreatePlan(local.Manifest, m1, v1, false);
+        var net = new Packs(published);
+        await DeltaUpdate.DownloadAsync(plan, new HttpClient(net), null, localPacks: local.Packs);
+        DeltaUpdate.DeleteLocal(local.Folder);
+        Assert.False(Directory.Exists(local.Folder));
+        Assert.All(net.Asked, u => Assert.Contains("/v1.0.0/", u));   // the test version itself is nowhere online
+        Assert.Single(net.Asked);
+
+        DeltaUpdate.Swap(v1);
+        Assert.Equal("beta a win-x64", Read(v1, "a.dll"));
+        Assert.Equal("fresh", Read(v1, "new.dll"));
+        Assert.Equal(new string('s', 5000), Read(v1, "same.dll"));
+        Assert.False(File.Exists(Path.Combine(v1, "gone.dll")));
+        Assert.Equal("1.0.0.1-beta", DeltaUpdate.LoadInstalled(v1)!.Version);
+    }
+
+    [Fact]
+    public async Task LocalUpdateFile_ADamagedPack_ChangesNothing()
+    {
+        var (root, output, m1, m2) = TwoVersions();
+        var pack = Path.Combine(output, DeltaUpdate.PackAsset("win-x64", "2.0.0"));
+        var bytes = File.ReadAllBytes(pack);
+        bytes[m2.Files.Single(f => f.Path == "new.dll").Offset + 10] ^= 0x55;   // inside the compressed data, past the gzip header
+        File.WriteAllBytes(pack, bytes);
+        var plan = DeltaUpdate.CreatePlan(m2, m1, root, false);
+        await Assert.ThrowsAnyAsync<Exception>(() => DeltaUpdate.DownloadAsync(plan, new HttpClient(new Packs(output)), null,
+            localPacks: new Dictionary<string, string> { [DeltaUpdate.PackAsset("win-x64", "2.0.0")] = pack }));
+        Assert.False(DeltaUpdate.IsReady(root));
+        Assert.Equal("old a", Read(root, "a.dll"));
+    }
+
     public void Dispose() { try { Directory.Delete(_dir, true); } catch (Exception ex) when (ex is IOException or UnauthorizedAccessException) { } }
 }

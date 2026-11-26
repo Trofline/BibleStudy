@@ -30,6 +30,7 @@ public partial class MainWindow
         SigningWarnCheck.IsChecked = _settings.WarnSigningEnds;
         SigningWarnCheck.IsCheckedChanged += (_, _) => { _settings.WarnSigningEnds = SigningWarnCheck.IsChecked == true; SaveSettings(); };
         CheckUpdateBtn.Click += async (_, _) => await CheckForUpdateAsync(manual: true);
+        InitLocalUpdate();
         RemoveAppBtn.IsVisible = OperatingSystem.IsWindows() && (AppPaths.IsPortable || AppPaths.IsInstalled);
         RemoveAppBtn.Content = AppPaths.IsPortable ? L("Portable-Version entfernen …") : L("Deinstallieren …");
         RemoveAppBtn.Click += async (_, _) => await RemoveProgramAsync();
@@ -290,7 +291,8 @@ public partial class MainWindow
         catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException or System.Text.Json.JsonException or InvalidDataException or IOException or UnauthorizedAccessException) { ErrorLog.Write(ex); return null; }
     }
 
-    async Task InstallUpdateAsync(UpdateInfo info, DeltaPlan? plan = null, bool onClose = false)
+    /// <param name="localPacks">A test version from a local update file: its own files come from there (<see cref="DeltaUpdate.OpenLocal"/>), and there is no full package to fall back on.</param>
+    async Task InstallUpdateAsync(UpdateInfo info, DeltaPlan? plan = null, bool onClose = false, IReadOnlyDictionary<string, string>? localPacks = null)
     {
 #if ANDROID
         if (info.AssetName.EndsWith(".apk", StringComparison.OrdinalIgnoreCase)) { await InstallApkAsync(info); return; }
@@ -306,7 +308,7 @@ public partial class MainWindow
             {
                 try
                 {
-                    await DeltaUpdate.DownloadAsync(plan, _http, progress);
+                    await DeltaUpdate.DownloadAsync(plan, _http, progress, localPacks: localPacks);
                     if (onClose)
                     {
                         // _updating stays on: no second offer while this one waits. The files are swapped when the program ends (Program.Main)
@@ -326,7 +328,7 @@ public partial class MainWindow
                 catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException or InvalidDataException or IOException or UnauthorizedAccessException)
                 {
                     ErrorLog.Write(ex);   // nothing of the program has changed yet: on to the full package
-                    if (!OperatingSystem.IsWindows() || onClose) throw;   // in the background nothing big is fetched unasked
+                    if (!OperatingSystem.IsWindows() || onClose || localPacks is not null) throw;   // in the background nothing big is fetched unasked
                 }
             }
             if (info.DownloadUrl.Length == 0)
