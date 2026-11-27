@@ -250,8 +250,8 @@ Get **LocalDevVPN** from the App Store, open it once and tap **Allow** for the V
 > | Choose App Extensions | Pick extensions one by one. Not needed. | |
 > | Cancel | Nothing is installed. | |
 >
-> **Get rid of the question (set it once, never again):** in SideStore under **Settings → User Customizations** (at the bottom, with the advanced settings):
-> - **SideStore 0.6.4:** **turn off "Customize App Extensions"**. SideStore then stops asking and keeps the widget with its own ID, exactly like the second button.
+> **Get rid of the question (set it once, never again):** this needs **SideStore 0.6.4 or newer** (the version is shown at the very bottom of *Settings* in SideStore); older versions always ask, so update SideStore first. In SideStore tap **Settings** at the bottom, scroll all the way down to **ADVANCED SETTINGS** and open **User Customizations**:
+> - **SideStore 0.6.4:** in the **GENERAL** section **turn off "Customize App Extensions"**. SideStore then stops asking and keeps the widget with its own ID, exactly like the second button.
 > - **Newer SideStore versions (0.7, nightly):** under **"Customize Extensions"** pick **"Keep All"** instead of *Prompt User*. That is the same second button, just automatic. *(Do not pick "Use Main Profile" there, or there are no widgets.)*
 >
 > The app itself cannot switch the question off: SideStore asks for every app with an extension as long as this setting says "ask".

@@ -253,8 +253,8 @@ Ohne ihn öffnet iOS keine selbst installierten Apps. iOS warnt dabei, dass die 
 > | Choose App Extensions | Erweiterungen einzeln auswählen. Nicht nötig. | |
 > | Cancel | Es wird nichts installiert. | |
 >
-> **Die Frage loswerden (einmal einstellen, dann nie wieder):** In SideStore unter **Settings → User Customizations** (ganz unten bei den erweiterten Einstellungen):
-> - **SideStore 0.6.4:** den Schalter **„Customize App Extensions“ ausschalten**. SideStore fragt dann nicht mehr und behält das Widget mit eigener ID, genau wie der zweite Knopf.
+> **Die Frage loswerden (einmal einstellen, dann nie wieder):** Das geht erst ab **SideStore 0.6.4** (die Versionsnummer steht in SideStore ganz unten unter *Settings*); ältere Versionen fragen immer, dann SideStore aktualisieren. In SideStore unten auf **Settings** tippen, ganz nach unten zu **ADVANCED SETTINGS** scrollen und **User Customizations** öffnen:
+> - **SideStore 0.6.4:** im Abschnitt **GENERAL** den Schalter **„Customize App Extensions“ ausschalten**. SideStore fragt dann nicht mehr und behält das Widget mit eigener ID, genau wie der zweite Knopf.
 > - **Neuere SideStore-Versionen (0.7, Nightly):** unter **„Customize Extensions“** statt *Prompt User* **„Keep All“** wählen. Das ist derselbe zweite Knopf, nur automatisch. *(„Use Main Profile“ dort nicht nehmen, sonst gibt es keine Widgets.)*
 >
 > Die App selbst kann die Frage nicht abschalten: SideStore stellt sie bei jeder App mit Erweiterung, solange diese Einstellung auf „fragen“ steht.
