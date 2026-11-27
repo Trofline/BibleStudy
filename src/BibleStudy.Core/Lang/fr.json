@@ -4014,5 +4014,20 @@
   "Alle gespeicherten Chats von „Zusammen studieren“ werden auf diesem Gerät gelöscht. Bei den anderen Personen bleiben ihre eigenen Kopien.": "Toutes les discussions enregistrées de « Étudier ensemble » seront supprimées sur cet appareil. Les autres personnes gardent leurs propres copies.",
   "Übers Internet": "Par Internet",
   "Verbindet euch über den Vermittler, auch an verschiedenen Orten, ohne Raum-Code. Ihr tippt beide hier auf „Übers Internet“.": "Vous connecte via le relais, même depuis des lieux différents, sans code de salle. Vous appuyez tous les deux ici sur « Par Internet ».",
-  "Seid ihr an verschiedenen Orten, tippt ihr beide auf „Übers Internet“: Dann seid ihr ohne Raum-Code verbunden.": "Si vous êtes à des endroits différents, appuyez tous les deux sur « Par Internet » : vous êtes alors connectés sans code de salle."
+  "Seid ihr an verschiedenen Orten, tippt ihr beide auf „Übers Internet“: Dann seid ihr ohne Raum-Code verbunden.": "Si vous êtes à des endroits différents, appuyez tous les deux sur « Par Internet » : vous êtes alors connectés sans code de salle.",
+  "Kapitel {0} von {1} …": "Chapitre {0} sur {1} …",
+  "Zeile {0} der Datei lässt sich nicht lesen.": "La ligne {0} du fichier est illisible.",
+  "Aktuelle Übersetzung als TXT exportieren …": "Exporter la traduction actuelle en TXT …",
+  "Speichert die Übersetzung, die du gerade liest, vollständig als .txt: mit Strong-Nummern, Fußnoten, Überschriften und Worten Jesu. Der Import liest die Datei genau so wieder ein.": "Enregistre la traduction que tu lis en entier au format .txt : avec les numéros Strong, les notes, les titres et les paroles de Jésus. L'import relit le fichier exactement tel quel.",
+  "Übersetzung als TXT speichern": "Enregistrer la traduction en TXT",
+  "„{0}“ exportiert: {1} Verse, {2} Fußnoten. Gespeichert: {3}": "« {0} » exportée : {1} versets, {2} notes. Enregistré : {3}",
+  "Übersetzung senden": "Envoyer la traduction",
+  "Sendet die Übersetzung, die du gerade liest, als .txt mit allem, was dazugehört. Die andere Person übernimmt sie mit einem Klick. Sende nur Übersetzungen, die du weitergeben darfst.": "Envoie la traduction que tu lis en .txt avec tout ce qui va avec. L'autre personne la reprend en un clic. N'envoie que des traductions que tu as le droit de transmettre.",
+  "Übersetzung „{0}“ wird vorbereitet …": "Préparation de la traduction « {0} » …",
+  "Diese Übersetzung ist zu groß zum Senden.": "Cette traduction est trop volumineuse pour être envoyée.",
+  "Du hast die Übersetzung „{0}“ gesendet ({1}).": "Tu as envoyé la traduction « {0} » ({1}).",
+  "{0} sendet die Übersetzung „{1}“ ({2})": "{0} envoie la traduction « {1} » ({2})",
+  "Wird wie eine eigene .txt-Datei importiert und steht dann in der Übersetzungsliste.": "Importée comme ton propre fichier .txt, elle apparaît ensuite dans la liste des traductions.",
+  "Die Datei ist keine Übersetzung im Format von BibleStudy.": "Le fichier n'est pas une traduction au format de BibleStudy.",
+  "Keine Übersetzung gewählt.": "Aucune traduction sélectionnée."
 }

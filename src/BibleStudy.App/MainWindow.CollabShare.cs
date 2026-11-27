@@ -179,7 +179,7 @@ public partial class MainWindow
             case "blob":
             {
                 var id = Str("id", 16); var kind = Str("kind", 10); var size = Long("size"); var parts = (int)Long("parts");
-                if (id.Length == 0 || kind is not ("vault" or "marks" or "notes" or "voice" or "image" or "paths" or "file") || size < 1 || size > MaxBlob || parts < 1 || parts != (size + PieceBytes - 1) / PieceBytes) return true;
+                if (id.Length == 0 || kind is not ("vault" or "marks" or "notes" or "voice" or "image" or "paths" or "file" or "bible") || size < 1 || size > MaxBlob || parts < 1 || parts != (size + PieceBytes - 1) / PieceBytes) return true;
                 if (kind == "image" && size > MaxSharedImage) return true;
                 if (kind == "paths" && size > MaxSentPathBytes) return true;
                 if (kind == "file" && size > MaxPcFile) return true;
@@ -221,6 +221,7 @@ public partial class MainWindow
                         case "image": ReceiveImage(b.Name, data); break;
                         case "paths": ShowReceivedPaths(data); break;
                         case "file": ShowReceivedFile(b.Name, data); break;
+                        case "bible": ShowReceivedTranslation(b.Name, data); break;
                     }
                 }
                 return true;

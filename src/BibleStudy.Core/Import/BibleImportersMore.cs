@@ -305,6 +305,8 @@ public static partial class BibleImporters
         var c = new Collector();
         var csv = path.EndsWith(".csv", StringComparison.OrdinalIgnoreCase);
         var lines = File.ReadAllLines(path);
+        // a file from the own export: everything in it (Strong's numbers, footnotes, headings, words of Jesus) comes back exactly
+        if (BibleTextFile.IsOwnFormat(lines)) return BibleTextFile.Read(lines, Path.GetFileNameWithoutExtension(path), languageCode);
         var delimiter = csv ? new[] { ';', '\t', ',', '|' }.MaxBy(d => lines.Take(20).Sum(l => l.Count(ch => ch == d))) : '\t';
         foreach (var line in lines)
         {

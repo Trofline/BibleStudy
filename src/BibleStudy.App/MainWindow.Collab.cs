@@ -329,7 +329,7 @@ public partial class MainWindow
         var fileBtn = new Button { Content = L("Datei senden …"), Margin = new(0, 0, 8, 6) };
         ToolTip.SetTip(fileBtn, L("Eine Datei von deinem Gerät (z. B. ein Word-Dokument), bis {0}. Die anderen können sie annehmen und speichern oder ablehnen.", SizeText(MaxSentFile)));
         fileBtn.Click += async (_, _) => await PickAndSendFileAsync();
-        foreach (var b in new[] { verse, come, react, marksBtn, notesBtn, pathsBtn, doc, fileBtn, vaultBtn }) actions.Children.Add(b);
+        foreach (var b in new[] { verse, come, react, marksBtn, notesBtn, pathsBtn, doc, fileBtn, vaultBtn, BuildSendTranslationButton() }) actions.Children.Add(b);
         CollabPanel.Children.Add(actions);
         CollabPanel.Children.Add(ChatTile());
         var save = new Button { Content = L("Treffen als Dokument speichern"), Classes = { "tool" }, Width = double.NaN, Padding = new(10, 0), HorizontalAlignment = HorizontalAlignment.Left };

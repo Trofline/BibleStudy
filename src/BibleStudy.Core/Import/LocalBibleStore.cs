@@ -144,6 +144,31 @@ public sealed class LocalBibleStore : SqliteDb, IBibleProvider
         return await Task.FromResult<IReadOnlyList<VerseText>>(rows.OrderBy(v => order.GetValueOrDefault(v.BookId, 99)).ThenBy(v => v.Chapter).ThenBy(v => v.Number).ToList());
     }
 
+    /// <summary>
+    /// A stored translation exactly as it was saved (no parallel passages turned into footnotes, nothing added), in Bible order;
+    /// null when there is none with this id. Saving the result again gives the same translation.
+    /// </summary>
+    public ParsedBible? Load(string translationId)
+    {
+        var head = Query("SELECT name,short_name,language FROM translations WHERE id=$i", c => c.Parameters.AddWithValue("$i", translationId),
+            r => (Name: r.GetString(0), Short: r.IsDBNull(1) ? "" : r.GetString(1), Lang: r.IsDBNull(2) ? "" : r.GetString(2))).FirstOrDefault();
+        if (head.Name is null) return null;
+        var order = BookData.UsfmIds.Select((b, i) => (b, i)).ToDictionary(x => x.b, x => x.i);
+        int Pos(string book) => order.GetValueOrDefault(book, 99);
+        void Id(SqliteCommand c) => c.Parameters.AddWithValue("$i", translationId);
+        var verses = Query("SELECT book,chapter,verse,segs FROM verses WHERE translation=$i", Id,
+                r => new ParsedVerse(r.GetString(0), r.GetInt32(1), r.GetInt32(2), FromJson(r.GetString(3))))
+            .OrderBy(v => Pos(v.Book)).ThenBy(v => v.Book, StringComparer.Ordinal).ThenBy(v => v.Chapter).ThenBy(v => v.Verse).ToList();
+        var notes = Query("SELECT book,chapter,note_id,verse,text FROM notes WHERE translation=$i", Id,
+                r => (Book: r.GetString(0), Chapter: r.GetInt32(1), Note: new Footnote(r.GetInt32(2), r.GetInt32(3), r.IsDBNull(4) ? "" : r.GetString(4))))
+            .OrderBy(n => Pos(n.Book)).ThenBy(n => n.Book, StringComparer.Ordinal).ThenBy(n => n.Chapter).ThenBy(n => n.Note.NoteId).ToList();
+        var headings = Query("SELECT book,chapter,verse,ord,text FROM headings WHERE translation=$i", Id,
+                r => (Book: r.GetString(0), Chapter: r.GetInt32(1), Verse: r.GetInt32(2), Ord: r.GetInt32(3), Text: r.GetString(4)))
+            .OrderBy(h => Pos(h.Book)).ThenBy(h => h.Book, StringComparer.Ordinal).ThenBy(h => h.Chapter).ThenBy(h => h.Verse).ThenBy(h => h.Ord)
+            .Select(h => (h.Book, h.Chapter, h.Verse, h.Text)).ToList();
+        return new ParsedBible(head.Name, head.Short, head.Lang, verses, notes, headings.Count > 0 ? headings : null);
+    }
+
     static string ToJson(IReadOnlyList<Segment> segments) =>
         JsonSerializer.Serialize(segments.Select(s => new SegmentDto(s.NoteId is null ? s.Text : null, s.Strongs?.ToArray(), s.NoteId, s.WordsOfJesus ? true : null)));
 

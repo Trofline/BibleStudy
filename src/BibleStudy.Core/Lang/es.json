@@ -4014,5 +4014,20 @@
   "Alle gespeicherten Chats von „Zusammen studieren“ werden auf diesem Gerät gelöscht. Bei den anderen Personen bleiben ihre eigenen Kopien.": "Se borrarán en este dispositivo todos los chats guardados de «Estudiar juntos». Las demás personas conservan sus propias copias.",
   "Übers Internet": "Por internet",
   "Verbindet euch über den Vermittler, auch an verschiedenen Orten, ohne Raum-Code. Ihr tippt beide hier auf „Übers Internet“.": "Os conecta a través del intermediario, también desde lugares distintos y sin código de sala. Los dos pulsáis aquí «Por internet».",
-  "Seid ihr an verschiedenen Orten, tippt ihr beide auf „Übers Internet“: Dann seid ihr ohne Raum-Code verbunden.": "Si estáis en lugares distintos, los dos pulsáis «Por internet» y quedáis conectados sin código de sala."
+  "Seid ihr an verschiedenen Orten, tippt ihr beide auf „Übers Internet“: Dann seid ihr ohne Raum-Code verbunden.": "Si estáis en lugares distintos, los dos pulsáis «Por internet» y quedáis conectados sin código de sala.",
+  "Kapitel {0} von {1} …": "Capítulo {0} de {1} …",
+  "Zeile {0} der Datei lässt sich nicht lesen.": "No se puede leer la línea {0} del archivo.",
+  "Aktuelle Übersetzung als TXT exportieren …": "Exportar la traducción actual como TXT …",
+  "Speichert die Übersetzung, die du gerade liest, vollständig als .txt: mit Strong-Nummern, Fußnoten, Überschriften und Worten Jesu. Der Import liest die Datei genau so wieder ein.": "Guarda completa la traducción que estás leyendo como .txt: con números Strong, notas al pie, títulos y palabras de Jesús. La importación vuelve a leer el archivo exactamente igual.",
+  "Übersetzung als TXT speichern": "Guardar traducción como TXT",
+  "„{0}“ exportiert: {1} Verse, {2} Fußnoten. Gespeichert: {3}": "«{0}» exportada: {1} versículos, {2} notas al pie. Guardado: {3}",
+  "Übersetzung senden": "Enviar traducción",
+  "Sendet die Übersetzung, die du gerade liest, als .txt mit allem, was dazugehört. Die andere Person übernimmt sie mit einem Klick. Sende nur Übersetzungen, die du weitergeben darfst.": "Envía la traducción que estás leyendo como .txt con todo lo que le pertenece. La otra persona la adopta con un clic. Envía solo traducciones que puedas compartir.",
+  "Übersetzung „{0}“ wird vorbereitet …": "Preparando la traducción «{0}» …",
+  "Diese Übersetzung ist zu groß zum Senden.": "Esta traducción es demasiado grande para enviarla.",
+  "Du hast die Übersetzung „{0}“ gesendet ({1}).": "Has enviado la traducción «{0}» ({1}).",
+  "{0} sendet die Übersetzung „{1}“ ({2})": "{0} envía la traducción «{1}» ({2})",
+  "Wird wie eine eigene .txt-Datei importiert und steht dann in der Übersetzungsliste.": "Se importa como un archivo .txt propio y aparece luego en la lista de traducciones.",
+  "Die Datei ist keine Übersetzung im Format von BibleStudy.": "El archivo no es una traducción en el formato de BibleStudy.",
+  "Keine Übersetzung gewählt.": "No hay ninguna traducción seleccionada."
 }

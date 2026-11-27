@@ -53,17 +53,32 @@ public class LocalizationTests
         Assert.True(unused.Count == 0, "texts that the program no longer uses in " + code + ":\n" + string.Join("\n", unused.Take(15)));
     }
 
+}
+
+/// <summary>
+/// Tests that switch the language of the whole program. The language is global: while one of them runs, other tests would get English messages
+/// (an import test that expects "kopiergeschützt" failed now and then). So they run alone, after all others, and always switch back.
+/// </summary>
+[CollectionDefinition("Language", DisableParallelization = true)]
+public class LanguageCollection;
+
+[Collection("Language")]
+public class LanguageSwitchTests
+{
     [Fact]
     public void Unknown_language_falls_back_to_the_default()
     {
-        Loc.Use("xx");
-        Assert.Equal(Loc.DefaultCode, Loc.Code);
-        Loc.Use("de");
-        Assert.Equal("Suchen", Loc.L("Suchen"));
-        Loc.Use("en");
-        Assert.Equal("Search", Loc.L("Suchen"));
-        Assert.Equal("1 verses", Loc.L("{0} Verse", 1));
-        Loc.Use("de");
+        try
+        {
+            Loc.Use("xx");
+            Assert.Equal(Loc.DefaultCode, Loc.Code);
+            Loc.Use("de");
+            Assert.Equal("Suchen", Loc.L("Suchen"));
+            Loc.Use("en");
+            Assert.Equal("Search", Loc.L("Suchen"));
+            Assert.Equal("1 verses", Loc.L("{0} Verse", 1));
+        }
+        finally { Loc.Use("de"); }
     }
 }
 

@@ -4014,5 +4014,20 @@
   "Alle gespeicherten Chats von „Zusammen studieren“ werden auf diesem Gerät gelöscht. Bei den anderen Personen bleiben ihre eigenen Kopien.": "All saved chats of “Study together” are deleted on this device. The other people keep their own copies.",
   "Übers Internet": "Over the internet",
   "Verbindet euch über den Vermittler, auch an verschiedenen Orten, ohne Raum-Code. Ihr tippt beide hier auf „Übers Internet“.": "Connects you through the relay, even in different places, without a room code. Both of you tap “Over the internet” here.",
-  "Seid ihr an verschiedenen Orten, tippt ihr beide auf „Übers Internet“: Dann seid ihr ohne Raum-Code verbunden.": "If you are in different places, both of you tap “Over the internet”: then you are connected without a room code."
+  "Seid ihr an verschiedenen Orten, tippt ihr beide auf „Übers Internet“: Dann seid ihr ohne Raum-Code verbunden.": "If you are in different places, both of you tap “Over the internet”: then you are connected without a room code.",
+  "Kapitel {0} von {1} …": "Chapter {0} of {1} …",
+  "Zeile {0} der Datei lässt sich nicht lesen.": "Line {0} of the file cannot be read.",
+  "Aktuelle Übersetzung als TXT exportieren …": "Export current translation as TXT …",
+  "Speichert die Übersetzung, die du gerade liest, vollständig als .txt: mit Strong-Nummern, Fußnoten, Überschriften und Worten Jesu. Der Import liest die Datei genau so wieder ein.": "Saves the translation you are reading in full as .txt: with Strong's numbers, footnotes, headings and words of Jesus. The import reads the file back exactly as it was.",
+  "Übersetzung als TXT speichern": "Save translation as TXT",
+  "„{0}“ exportiert: {1} Verse, {2} Fußnoten. Gespeichert: {3}": "“{0}” exported: {1} verses, {2} footnotes. Saved: {3}",
+  "Übersetzung senden": "Send translation",
+  "Sendet die Übersetzung, die du gerade liest, als .txt mit allem, was dazugehört. Die andere Person übernimmt sie mit einem Klick. Sende nur Übersetzungen, die du weitergeben darfst.": "Sends the translation you are reading as .txt with everything that belongs to it. The other person takes it over with one click. Only send translations you are allowed to pass on.",
+  "Übersetzung „{0}“ wird vorbereitet …": "Preparing translation “{0}” …",
+  "Diese Übersetzung ist zu groß zum Senden.": "This translation is too large to send.",
+  "Du hast die Übersetzung „{0}“ gesendet ({1}).": "You sent the translation “{0}” ({1}).",
+  "{0} sendet die Übersetzung „{1}“ ({2})": "{0} is sending the translation “{1}” ({2})",
+  "Wird wie eine eigene .txt-Datei importiert und steht dann in der Übersetzungsliste.": "Imported like your own .txt file; it then appears in the translation list.",
+  "Die Datei ist keine Übersetzung im Format von BibleStudy.": "The file is not a translation in BibleStudy's format.",
+  "Keine Übersetzung gewählt.": "No translation selected."
 }

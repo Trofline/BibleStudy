@@ -4014,5 +4014,20 @@
   "Alle gespeicherten Chats von „Zusammen studieren“ werden auf diesem Gerät gelöscht. Bei den anderen Personen bleiben ihre eigenen Kopien.": "Все сохранённые чаты «Изучать вместе» будут удалены на этом устройстве. У других людей останутся их собственные копии.",
   "Übers Internet": "Через интернет",
   "Verbindet euch über den Vermittler, auch an verschiedenen Orten, ohne Raum-Code. Ihr tippt beide hier auf „Übers Internet“.": "Соединяет вас через посредника, даже из разных мест и без кода комнаты. Вы оба нажимаете здесь «Через интернет».",
-  "Seid ihr an verschiedenen Orten, tippt ihr beide auf „Übers Internet“: Dann seid ihr ohne Raum-Code verbunden.": "Если вы в разных местах, нажмите оба «Через интернет» — и вы соединитесь без кода комнаты."
+  "Seid ihr an verschiedenen Orten, tippt ihr beide auf „Übers Internet“: Dann seid ihr ohne Raum-Code verbunden.": "Если вы в разных местах, нажмите оба «Через интернет» — и вы соединитесь без кода комнаты.",
+  "Kapitel {0} von {1} …": "Глава {0} из {1} …",
+  "Zeile {0} der Datei lässt sich nicht lesen.": "Не удаётся прочитать строку {0} файла.",
+  "Aktuelle Übersetzung als TXT exportieren …": "Экспортировать текущий перевод в TXT …",
+  "Speichert die Übersetzung, die du gerade liest, vollständig als .txt: mit Strong-Nummern, Fußnoten, Überschriften und Worten Jesu. Der Import liest die Datei genau so wieder ein.": "Сохраняет читаемый перевод целиком в .txt: с номерами Стронга, сносками, заголовками и словами Иисуса. Импорт прочитает файл обратно точно таким же.",
+  "Übersetzung als TXT speichern": "Сохранить перевод как TXT",
+  "„{0}“ exportiert: {1} Verse, {2} Fußnoten. Gespeichert: {3}": "«{0}» экспортирован: {1} стихов, {2} сносок. Сохранено: {3}",
+  "Übersetzung senden": "Отправить перевод",
+  "Sendet die Übersetzung, die du gerade liest, als .txt mit allem, was dazugehört. Die andere Person übernimmt sie mit einem Klick. Sende nur Übersetzungen, die du weitergeben darfst.": "Отправляет читаемый перевод в .txt со всем содержимым. Другой человек принимает его одним щелчком. Отправляйте только переводы, которые вам разрешено передавать.",
+  "Übersetzung „{0}“ wird vorbereitet …": "Подготовка перевода «{0}» …",
+  "Diese Übersetzung ist zu groß zum Senden.": "Этот перевод слишком велик для отправки.",
+  "Du hast die Übersetzung „{0}“ gesendet ({1}).": "Вы отправили перевод «{0}» ({1}).",
+  "{0} sendet die Übersetzung „{1}“ ({2})": "{0} отправляет перевод «{1}» ({2})",
+  "Wird wie eine eigene .txt-Datei importiert und steht dann in der Übersetzungsliste.": "Импортируется как собственный файл .txt и затем появляется в списке переводов.",
+  "Die Datei ist keine Übersetzung im Format von BibleStudy.": "Файл не является переводом в формате BibleStudy.",
+  "Keine Übersetzung gewählt.": "Перевод не выбран."
 }

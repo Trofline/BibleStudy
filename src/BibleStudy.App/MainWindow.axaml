@@ -881,6 +881,8 @@
                                     <Border Classes="pill"><ComboBox x:Name="LocalBibleBox" Width="200" PlaceholderText="Importierte Übersetzungen" /></Border>
                                     <Button x:Name="RemoveBibleBtn" Content="Entfernen" />
                                 </StackPanel>
+                                <Button x:Name="ExportBibleTxtBtn" Content="Aktuelle Übersetzung als TXT exportieren …" HorizontalAlignment="Left"
+                                        ToolTip.Tip="Speichert die Übersetzung, die du gerade liest, vollständig als .txt: mit Strong-Nummern, Fußnoten, Überschriften und Worten Jesu. Der Import liest die Datei genau so wieder ein." />
                                 <TextBlock x:Name="ImportBibleInfo" Classes="caption" TextWrapping="Wrap" />
                                 <Button x:Name="ImportAiBtn" Content="Mit KI korrigieren" IsVisible="False" Margin="0,0,6,6" ToolTip.Tip="Gibt die auffälligen Verse an Claude. Die Vorschläge siehst du vor dem Übernehmen Vers für Vers." />
 <Button x:Name="ImportCheckBtn" Content="Prüfbericht für KI speichern" IsVisible="False" HorizontalAlignment="Left" ToolTip.Tip="Speichert eine Markdown-Datei mit den Regeln und den gefundenen Fehlern. Gib sie mit der Quelldatei an eine KI; die korrigierte USFM-Datei importierst du dann hier." />
