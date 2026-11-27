@@ -39,6 +39,7 @@ public partial class MainWindow
         _readTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(700) };
         _readTimer.Tick += (_, _) => CollabReadTick();
         _readTimer.Start();
+        InitCollabStudy();
     }
 
     void OnReaderPointer(PointerEventArgs e)
@@ -78,21 +79,30 @@ public partial class MainWindow
         var words = _sel is { Parts.Count: > 0 } ? Clip(SelectedText().Trim(), 120) : "";
         var verses = (_sel is { Parts.Count: > 0 } s ? s.Parts.Select(p => p.Verse).Distinct().ToArray()
             : _selVerses.Count > 0 ? _selVerses.OrderBy(v => v).ToArray() : _selected is int one ? [one] : []).Take(200).ToArray();
-        var key = $"{_curBook} {_curChapter} {string.Join(",", verses)} {words}";
+        // the exact words (offsets in the verse texts) with the fingerprint of the text: drawn as a selection where the other one has the same text
+        var (tr, parts) = ExactSelection();
+        var key = $"{_curBook} {_curChapter} {string.Join(",", verses)} {words} {tr} {string.Join(";", parts.Select(x => string.Join(",", x)))}";
         if (key == _sentSel) return;
         _sentSel = key;
-        CollabSend(new { t = "sel", book = _curBook, chapter = _curChapter, verses, words });
+        CollabSend(new { t = "sel", book = _curBook, chapter = _curChapter, verses, words, tr, parts });
     }
 
     /// <summary>Sends the own highlights of the open chapter when they changed (the others see them as a bar at the side and can take them over).</summary>
     void CollabSendChapterMarks()
     {
         if (!CollabOpen || !_settings.CollabSendLocation || _curChapter < 1) return;
-        var items = _vault.GetMarks(_curBook, _curChapter).Take(300).Select(m => new { v = m.Ref.Verse, e = m.EndVerse, c = m.Color }).ToList();
-        var key = $"{_curBook} {_curChapter} " + string.Join(";", items.Select(i => $"{i.v}-{i.e}-{i.c}"));
+        // marks on words of the translation in the first column carry their words too (s = start, x = end); the others see them on the words when their text is the same
+        var mainId = _cells.FirstOrDefault(c => !c.Data.Foreign && c.Data.Col == 0)?.Data.T.Id;
+        var items = _vault.GetMarks(_curBook, _curChapter).Take(300).Select(m =>
+        {
+            var exact = !m.WholeVerse && mainId is not null && m.TranslationId == mainId;
+            return new { v = m.Ref.Verse, e = m.EndVerse, c = m.Color, s = exact ? m.Start : -1, x = exact ? m.End : -1 };
+        }).ToList();
+        var tr = MainPrint();
+        var key = $"{_curBook} {_curChapter} {tr} " + string.Join(";", items.Select(i => $"{i.v}-{i.e}-{i.c}-{i.s}-{i.x}"));
         if (key == _sentMarks) return;
         _sentMarks = key;
-        CollabSend(new { t = "mk", book = _curBook, chapter = _curChapter, items });
+        CollabSend(new { t = "mk", book = _curBook, chapter = _curChapter, items, tr });
     }
 
     /// <summary>While reading aloud: which verse is read now (from the speech progress, or estimated from the time), sent when it changes.</summary>
@@ -117,6 +127,7 @@ public partial class MainWindow
         foreach (var p in _people.Values) { p.Sel = null; p.Ptr = null; p.Reading = null; p.Marks = null; }
         _sentSel = ""; _sentMarks = ""; _sentReading = 0;
         _peerTyping.IsVisible = false;
+        ResetCollabStudy();
         RenderPeerLayer();
     }
 
@@ -126,6 +137,7 @@ public partial class MainWindow
         string Str(string key, int max) => root.TryGetProperty(key, out var e) && e.ValueKind == JsonValueKind.String ? Clip(e.GetString(), max) : "";
         int Int(string key) => root.TryGetProperty(key, out var e) && e.ValueKind == JsonValueKind.Number && e.TryGetInt32(out var n) ? n : 0;
         double Num(string key) => root.TryGetProperty(key, out var e) && e.ValueKind == JsonValueKind.Number && e.TryGetDouble(out var d) && double.IsFinite(d) ? Math.Clamp(d, 0, 1) : 0;
+        if (HandleCollabStudy(type, root)) return true;
         var p = _from!;
         var book = Str("book", 8); var chapter = Int("chapter");
         var place = _books.Any(b => b.Id == book) && chapter is >= 1 and <= 200;
@@ -137,9 +149,10 @@ public partial class MainWindow
                 var verses = root.TryGetProperty("verses", out var arr) && arr.ValueKind == JsonValueKind.Array
                     ? arr.EnumerateArray().Take(200).Where(x => x.ValueKind == JsonValueKind.Number && x.TryGetInt32(out _)).Select(x => x.GetInt32()).Where(v => v is > 0 and <= 200).ToArray() : [];
                 p.Sel = (book, chapter, verses, Str("words", 120).Trim());
+                ReadExactSel(p, root, book, chapter);
                 ShowPeople(); RenderPeerLayer();
                 // whoever is followed clicks a verse: it comes into view here too (nav is sent only when the chapter changes)
-                if (verses.Length > 0 && (_follow || (_leaderId == p.Id && _followLeader))) _ = FollowAsync((book, chapter, verses.Min()));
+                if (verses.Length > 0 && (_follow || (_leaderId == p.Id && _followLeader)) && !LeaderScrollsHere(p, book, chapter)) _ = FollowAsync((book, chapter, verses.Min()));
                 return true;
             }
             case "ptr":
@@ -163,6 +176,7 @@ public partial class MainWindow
                     if (color is not null && v is > 0 and <= 200) list.Add((v, end > v && end <= 200 ? end : 0, color));
                 }
                 p.Marks = (book, chapter, list);
+                ReadExactMarks(p, root, book, chapter);
                 ShowPeople(); RenderPeerLayer();
                 return true;
             }
@@ -223,7 +237,8 @@ public partial class MainWindow
                     Canvas.SetLeft(bar, a.X - 12 - lane * 6); Canvas.SetTop(bar, a.Y);
                     _peerFrames.Add(bar);
                 }
-            if (p.Sel is { } sel && Here(sel.Book, sel.Chapter))
+            // the same text on both sides: the selected words themselves, as a selection; else a frame around the verses
+            if (p.Sel is { } sel && Here(sel.Book, sel.Chapter) && !DrawExactSelection(p, lane))
             {
                 var first = true;
                 foreach (var v in sel.Verses)
@@ -281,6 +296,7 @@ public partial class MainWindow
             else p.Pointer.IsVisible = false;
             lane++;
         }
+        AddStudyFrames();
         foreach (var f in _peerFrames) _peerLayer.Children.Insert(0, f);   // under the pointers
         ShowFloatingReactions();
     }

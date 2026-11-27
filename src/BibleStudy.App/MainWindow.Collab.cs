@@ -50,6 +50,7 @@ public partial class MainWindow
     int _inkNext;
     readonly Dictionary<string, Color> _inkOf = [];
     string _peopleChapter = "";
+    int _followDepth;
     bool _collabSuppress;          // true while the app itself jumps to another person's place, so that it does not echo back
     bool _follow;
     readonly StackPanel _collabLog = new() { Spacing = 6 };
@@ -287,9 +288,10 @@ public partial class MainWindow
         var lead = new Button { Content = _iLead ? L("Leitung abgeben") : L("Ich leite"), Margin = new(0, 0, 8, 6) };
         ToolTip.SetTip(lead, L("Wer leitet, gibt die Stelle vor: Die anderen springen automatisch mit, bis sie selbst blättern."));
         lead.Click += (_, _) => { SetLeading(!_iLead); lead.Content = _iLead ? L("Leitung abgeben") : L("Ich leite"); };
-        Detach(_leaderBar);
+        Detach(_leaderBar); Detach(_tourBar);
         CollabPanel.Children.Add(new WrapPanel { Children = { lead } });
         CollabPanel.Children.Add(_leaderBar);
+        CollabPanel.Children.Add(_tourBar);
         UpdateLeaderBar();
 
         var send = new CheckBox { Content = L("Meine Bibelstelle mitsenden"), IsChecked = _settings.CollabSendLocation };
@@ -364,6 +366,7 @@ public partial class MainWindow
             var line = new List<string>();
             if (p.Place is { } at) line.Add(L("liest {0}", $"{BookName(at.Book)} {at.Chapter}" + (at.Verse is int pv ? "," + pv : "")));
             if (p.Leads) line.Add(L("leitet"));
+            if (SameTextAs(p)) line.Add(L("gleicher Bibeltext"));
             if (p.Reading is { } r) line.Add(L("liest gerade vor: {0}", $"{BookName(r.Book)} {r.Chapter},{r.Verse}"));
             if (p.Sel is { Words.Length: > 0 } s) line.Add($"»{Shorten(s.Words, 60)}«");
             var row = new StackPanel { Spacing = 2 };
@@ -640,9 +643,11 @@ public partial class MainWindow
     {
         // the chapter is already open: only the verse comes into view, the text is not loaded again
         if (p.Verse is int open && p.Book == _curBook && p.Chapter == _curChapter && _verseBoxes.ContainsKey(open)) { ScrollToVerse(open); return; }
+        // several jumps can overlap (the "lead" and the "nav" of the leader arrive together): the suppression ends only with the last of them
+        _followDepth++;
         _collabSuppress = true;
         try { await GoToAsync(p.Book, p.Chapter, p.Verse); }
-        finally { _collabSuppress = false; }
+        finally { if (--_followDepth <= 0) { _followDepth = 0; _collabSuppress = false; } }
         // in the chapter already open the view keeps its place: the verse the other one clicked is brought to the top after that
         if (p.Verse is int v) Avalonia.Threading.Dispatcher.UIThread.Post(() => ScrollToVerse(v), Avalonia.Threading.DispatcherPriority.Background);
     }

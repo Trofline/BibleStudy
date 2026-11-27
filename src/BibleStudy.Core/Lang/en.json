@@ -3984,5 +3984,21 @@
   "{0} möchte dir {1} Lesepfade schicken": "{0} wants to send you {1} reading paths",
   "„{0}“ ist leer.": "“{0}” is empty.",
   "„{0}“ ist zu groß ({1}). Senden lassen sich Dateien bis {2}.": "“{0}” is too large ({1}). Files up to {2} can be sent.",
-  "„{0}“ ist zu groß. Senden lassen sich Dateien bis {1}.": "“{0}” is too large. Files up to {1} can be sent."
+  "„{0}“ ist zu groß. Senden lassen sich Dateien bis {1}.": "“{0}” is too large. Files up to {1} can be sent.",
+  "Den Lesepfad beenden (du leitest weiter)": "End the reading path (you keep leading)",
+  "Diesen Lesepfad als neuen Lesepfad in deinem Vault speichern": "Save this reading path as a new reading path in your vault",
+  "Dorthin gehen, wo der Lesepfad gerade ist": "Go to where the reading path is now",
+  "Du führst durch den Lesepfad „{0}“.": "You are leading through the reading path “{0}”.",
+  "Du führst": "You lead",
+  "Du gehst Schritt für Schritt durch einen deiner Lesepfade. Alle sehen dieselbe Stelle und den Schritt.": "You go step by step through one of your reading paths. Everyone sees the same passage and the step.",
+  "Durch einen Lesepfad führen ▾": "Lead through a reading path ▾",
+  "Lesepfad behalten": "Keep reading path",
+  "Noch kein Lesepfad": "No reading path yet",
+  "Schritt {0} von {1}": "Step {0} of {1}",
+  "Zur Stelle": "Go there",
+  "{0} führt durch den Lesepfad „{1}“ ({2} Schritte).": "{0} is leading through the reading path “{1}” ({2} steps).",
+  "{0} führt": "{0} leads",
+  "{0} hat den Lesepfad beendet.": "{0} ended the reading path.",
+  "{0} wählt aus": "{0} is selecting",
+  "gleicher Bibeltext": "same Bible text"
 }

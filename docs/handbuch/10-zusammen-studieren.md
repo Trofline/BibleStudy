@@ -46,6 +46,9 @@ Bei einer Person im selben Netzwerk erscheint **Als Freund merken**. Danach steh
 
 - **Chatten.** Du siehst, wenn die andere Person schreibt. Ist die Seite zu, meldet ein kleiner Hinweis neue Nachrichten.
 - **Leiten:** Wer auf **Ich leite** tippt, gibt die Stelle vor. Alle anderen springen automatisch mit, bis sie selbst blättern; dann erscheint **Wieder folgen**.
+- **Mitscrollen:** Solange jemand leitet, wird auch das Scrollen übertragen. Der Vers in der Mitte des Leiter-Fensters steht bei allen anderen ebenfalls in der Mitte, auch wenn Fenster und Schriftgrößen verschieden sind. Scrollst du selbst (Mausrad, Finger), hat das für drei Sekunden Vorrang.
+- **Durch einen Lesepfad führen:** Wer leitet, wählt unter **Durch einen Lesepfad führen** einen seiner Lesepfade und geht mit **Weiter** und **Zurück** Schritt für Schritt hindurch. Alle sehen, welcher Schritt es ist; die Verse des Schritts sind in der Farbe des Lesepfads eingerahmt. Mit **Lesepfad behalten** speichern die anderen den Pfad in ihrem Vault.
+- **Gleicher Bibeltext:** Jede Seite bildet aus dem Text des offenen Kapitels einen kurzen Fingerabdruck. Stimmt er überein (in der Personenliste steht dann „gleicher Bibeltext“), seht ihr die Auswahl der anderen genau auf den Wörtern (blau hinterlegt, schon während sie ziehen) und ihre Markierungen auf den markierten Wörtern. Bei verschiedenen Übersetzungen bleibt es beim Rahmen um den Vers.
 - **Fragen zum Text:** eine gemeinsame Liste. Jeder kann Fragen hinzufügen und abhaken, wenn sie besprochen sind.
 - **Gemeinsames Notizblatt:** eine Seite, an der alle schreiben (schreiben zwei gleichzeitig, gilt die zuletzt gesendete Fassung). Lässt sich als Dokument speichern.
 - **Reagieren:** auf eine Chatnachricht tippen oder für einen Vers **Reagieren** wählen (♥, Amen, ✓, !, ?). Eine Reaktion auf einen Vers erscheint kurz über dem Vers.

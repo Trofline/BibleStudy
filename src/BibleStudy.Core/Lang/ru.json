@@ -3984,5 +3984,21 @@
   "{0} möchte dir {1} Lesepfade schicken": "{0} хочет отправить вам пути чтения: {1}",
   "„{0}“ ist leer.": "«{0}» пуст.",
   "„{0}“ ist zu groß ({1}). Senden lassen sich Dateien bis {2}.": "«{0}» слишком большой ({1}). Можно отправлять файлы до {2}.",
-  "„{0}“ ist zu groß. Senden lassen sich Dateien bis {1}.": "«{0}» слишком большой. Можно отправлять файлы до {1}."
+  "„{0}“ ist zu groß. Senden lassen sich Dateien bis {1}.": "«{0}» слишком большой. Можно отправлять файлы до {1}.",
+  "Den Lesepfad beenden (du leitest weiter)": "Завершить путь чтения (ты продолжаешь вести)",
+  "Diesen Lesepfad als neuen Lesepfad in deinem Vault speichern": "Сохранить этот путь чтения как новый в твоём хранилище",
+  "Dorthin gehen, wo der Lesepfad gerade ist": "Перейти туда, где сейчас путь чтения",
+  "Du führst durch den Lesepfad „{0}“.": "Ты ведёшь по пути чтения «{0}».",
+  "Du führst": "Ты ведёшь",
+  "Du gehst Schritt für Schritt durch einen deiner Lesepfade. Alle sehen dieselbe Stelle und den Schritt.": "Ты шаг за шагом проходишь один из своих путей чтения. Все видят то же место и шаг.",
+  "Durch einen Lesepfad führen ▾": "Вести по пути чтения ▾",
+  "Lesepfad behalten": "Сохранить путь",
+  "Noch kein Lesepfad": "Пока нет пути чтения",
+  "Schritt {0} von {1}": "Шаг {0} из {1}",
+  "Zur Stelle": "Перейти",
+  "{0} führt durch den Lesepfad „{1}“ ({2} Schritte).": "{0} ведёт по пути чтения «{1}» ({2} шагов).",
+  "{0} führt": "{0} ведёт",
+  "{0} hat den Lesepfad beendet.": "{0} завершил(а) путь чтения.",
+  "{0} wählt aus": "{0} выделяет",
+  "gleicher Bibeltext": "тот же текст Библии"
 }

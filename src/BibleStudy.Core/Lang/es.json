@@ -3984,5 +3984,21 @@
   "{0} möchte dir {1} Lesepfade schicken": "{0} quiere enviarte {1} rutas de lectura",
   "„{0}“ ist leer.": "«{0}» está vacío.",
   "„{0}“ ist zu groß ({1}). Senden lassen sich Dateien bis {2}.": "«{0}» es demasiado grande ({1}). Se pueden enviar archivos de hasta {2}.",
-  "„{0}“ ist zu groß. Senden lassen sich Dateien bis {1}.": "«{0}» es demasiado grande. Se pueden enviar archivos de hasta {1}."
+  "„{0}“ ist zu groß. Senden lassen sich Dateien bis {1}.": "«{0}» es demasiado grande. Se pueden enviar archivos de hasta {1}.",
+  "Den Lesepfad beenden (du leitest weiter)": "Terminar la ruta de lectura (sigues guiando)",
+  "Diesen Lesepfad als neuen Lesepfad in deinem Vault speichern": "Guardar esta ruta como una nueva ruta de lectura en tu bóveda",
+  "Dorthin gehen, wo der Lesepfad gerade ist": "Ir adonde está ahora la ruta de lectura",
+  "Du führst durch den Lesepfad „{0}“.": "Guías por la ruta de lectura «{0}».",
+  "Du führst": "Tú guías",
+  "Du gehst Schritt für Schritt durch einen deiner Lesepfade. Alle sehen dieselbe Stelle und den Schritt.": "Recorres paso a paso una de tus rutas de lectura. Todos ven el mismo pasaje y el paso.",
+  "Durch einen Lesepfad führen ▾": "Guiar por una ruta de lectura ▾",
+  "Lesepfad behalten": "Conservar la ruta",
+  "Noch kein Lesepfad": "Aún no hay ruta de lectura",
+  "Schritt {0} von {1}": "Paso {0} de {1}",
+  "Zur Stelle": "Ir allí",
+  "{0} führt durch den Lesepfad „{1}“ ({2} Schritte).": "{0} guía por la ruta de lectura «{1}» ({2} pasos).",
+  "{0} führt": "{0} guía",
+  "{0} hat den Lesepfad beendet.": "{0} terminó la ruta de lectura.",
+  "{0} wählt aus": "{0} selecciona",
+  "gleicher Bibeltext": "mismo texto bíblico"
 }

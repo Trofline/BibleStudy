@@ -50,6 +50,7 @@ public partial class MainWindow
     /// <summary>The line "Anna leads": while following, says so; after turning the page oneself, offers to follow again.</summary>
     void UpdateLeaderBar()
     {
+        UpdateTourBar();
         _leaderBar.Bind(Border.BackgroundProperty, this.GetResourceObservable("BsSurface2"));
         if (_leaderId is null || !_people.TryGetValue(_leaderId, out var leader)) { _leaderBar.IsVisible = false; return; }
         var text = new TextBlock { Text = _followLeader ? L("{0} leitet. Du folgst automatisch.", leader.Name) : L("{0} leitet. Du liest gerade woanders.", leader.Name), TextWrapping = TextWrapping.Wrap, VerticalAlignment = VerticalAlignment.Center };
@@ -71,6 +72,10 @@ public partial class MainWindow
     void CollabNavigatedByMe()
     {
         if (_collabSuppress || _leaderId is null || !_followLeader) return;
+        // arriving where the leader is (or where their scrolling or reading path is) is following, not leaving
+        if (_people.TryGetValue(_leaderId, out var leader) && leader.Place is { } lp && lp.Book == _curBook && lp.Chapter == _curChapter) return;
+        if (_leaderView == (_curBook, _curChapter) || _pendingView is { } pv && pv.Book == _curBook && pv.Chapter == _curChapter) return;
+        if (_tour is { } t && t.By == _leaderId && t.Index < t.Steps.Count && t.Steps[t.Index].Covers(_curBook, _curChapter)) return;
         _followLeader = false;
         UpdateLeaderBar();
     }
@@ -82,6 +87,7 @@ public partial class MainWindow
         if (_iLead) CollabSend(new { t = "lead", on = true });
         if (_questions.Count > 0) CollabSend(new { t = "qall", items = _questions.Select(q => new { id = q.Id, text = q.Text, by = q.By, done = q.Done }) });
         if ((_padBox.Text ?? "").Length > 0) CollabSend(new { t = "pad", text = _padBox.Text });
+        SendStudyState();
     }
 
     // ---- questions --------------------------------------------------------------------------------------------------------
