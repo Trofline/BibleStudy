@@ -48,6 +48,7 @@ public partial class MainWindow
     List<ExItem>? _exCut;                  // Ctrl+X: waits for Ctrl+V
     Grid _exHead = null!;
     Border _exToast = null!;
+    DockPanel? _exRoot;
     TextBlock _exToastText = null!;
     Button _exToastUndo = null!;
     Avalonia.Threading.DispatcherTimer? _exToastTimer;
@@ -198,7 +199,7 @@ public partial class MainWindow
         };
         _exToast.Bind(Border.BackgroundProperty, this.GetResourceObservable("BsSurface2"));
         _exToast.Bind(Border.BorderBrushProperty, this.GetResourceObservable("BsAccent"));
-        var root = new DockPanel();
+        var root = _exRoot = new DockPanel();
         DockPanel.SetDock(bar, Dock.Top); DockPanel.SetDock(_exInfo, Dock.Bottom); DockPanel.SetDock(_exToast, Dock.Bottom); DockPanel.SetDock(_exPickBar, Dock.Bottom);
         root.Children.Add(bar); root.Children.Add(_exInfo); root.Children.Add(_exToast); root.Children.Add(_exPickBar); root.Children.Add(body);
 
@@ -464,6 +465,7 @@ public partial class MainWindow
     /// <summary>After a change here the other lists (Markierungen, Notizen, the text) show it too.</summary>
     void AfterExplorerChange()
     {
+        UpdateVaultTopText();   // the folder new marks go into may have been renamed or deleted
         RefreshExplorer();
         _exQuiet = true;
         try { RefreshCollection(); RefreshNotesTree(); } finally { _exQuiet = false; }
@@ -869,6 +871,8 @@ public partial class MainWindow
         if (target is long t) _exOpen.Add(t);
         _exSel.Clear();
         AfterExplorerChange();
+        if (target is long into && moved > 0)   // verses that came into a folder with a reading path: the note may ask to append them
+            FolderGrew(into, items.Where(i => i.Kind is ExKind.Mark or ExKind.Note && i.FolderId != into).Select(ExStep).OfType<StudyPassage>());
         var where = target is long tf && FolderById(tf) is { } f ? f.Name : L("Alle Markierungen");
         var what = moved == 1 && firstMoved is not null ? "„" + Shorten(firstMoved.Title, 40) + "“" : L("{0} Einträge", moved);
         if (moved > 0)

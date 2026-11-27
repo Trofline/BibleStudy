@@ -144,7 +144,7 @@ public partial class MainWindow
         _vaultUiLoading = false;
         VaultInfo.Text = L("Aktiver Vault: {0}", _vault.Name);
         FillSharedVaults();
-        if (VaultTopText is not null) VaultTopText.Text = _vault.Name;
+        UpdateVaultTopText();
     }
 
     void InitVault()

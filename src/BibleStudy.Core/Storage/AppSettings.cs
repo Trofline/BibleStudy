@@ -81,6 +81,12 @@ public sealed class AppSettings
     public bool TodosAllVaults { get; set; }   // the to-do list shows the to-dos of all vaults, not only of the active one
     /// <summary>Shared vaults: their content shows in every other vault too (to look at; it is changed in the vault itself).</summary>
     public List<string> SharedVaults { get; set; } = [];
+    /// <summary>Per vault: the folder new marks go straight into (chosen with the vault in the top bar).</summary>
+    public Dictionary<string, long> MarkTargetFolders { get; set; } = [];
+    /// <summary>Reading paths ("vault\u001fid") whose folder got new verses and that were asked once whether they go onto the path.</summary>
+    public List<string> PathGrowAsked { get; set; } = [];
+    /// <summary>Of those, the ones answered "append": later new verses of the folder are appended to the path by themselves.</summary>
+    public List<string> PathGrowAppend { get; set; } = [];
     /// <summary>The clock at the bottom right of the status bar.</summary>
     public bool ShowClock { get; set; } = true;
     /// <summary>The length of the timer chosen last, in minutes.</summary>
