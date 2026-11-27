@@ -80,14 +80,14 @@ public partial class MainWindow
         };
         cell.Bind(Border.BackgroundProperty, this.GetResourceObservable("BsSurface2"));
         ToolTip.SetTip(cell, string.IsNullOrEmpty(w.ParsingFull) ? w.Parsing : w.ParsingFull);
-        cell.PointerPressed += async (_, e) =>
+        cell.OnPress(async (_, e) =>
         {
             if (!e.GetCurrentPoint(cell).Properties.IsLeftButtonPressed) return;
             foreach (var other in GrundtextPanel.Children.OfType<Border>()) other.ClearValue(Border.BorderBrushProperty);
             cell.BorderThickness = new(1.5);
             cell.Bind(Border.BorderBrushProperty, this.GetResourceObservable("BsAccent"));
             await ShowGrundtextDetailAsync(w);
-        };
+        });
         cell.BorderThickness = new(1.5); // reserve the space of the selection frame
         cell.BorderBrush = Brushes.Transparent;
         return cell;

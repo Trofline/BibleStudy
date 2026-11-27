@@ -50,7 +50,7 @@ public partial class MainWindow
             SentencePanel.Children.Clear();
             SentencePanel.Children.Add(new TextBlock { Text = L("SATZDIAGRAMM"), Classes = { "eyebrow" } });
             SentencePanel.Children.Add(_sentenceStatus);
-            var big = new Button { Content = L("In eigenem Fenster öffnen"), HorizontalAlignment = HorizontalAlignment.Left, Padding = new(10, 0), Height = 30 };
+            var big = new Button { Content = L("In eigenem Fenster öffnen"), HorizontalAlignment = HorizontalAlignment.Left, Padding = new(10, 0), Height = 30, VerticalContentAlignment = VerticalAlignment.Center, IsVisible = !AppPlatform.IsMobile };   // a phone has no windows
             big.Click += async (_, _) => await OpenSentenceWindowAsync();
             SentencePanel.Children.Add(big);
             SentencePanel.Children.Add(_sentenceViewer);

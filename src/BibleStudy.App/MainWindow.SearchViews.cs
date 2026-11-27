@@ -54,6 +54,13 @@ public partial class MainWindow
             b.Click += (_, _) => hitsFlyout.Hide();
             actions.Children.Add(b);
         }
+        if (AppPlatform.IsMobile)
+        {
+            // a phone: "Alle Treffer zur Leseliste" lives in this menu; in a row of its own above the hits it was cut in half on an iPhone SE
+            var queue = new Button { Content = L("Alle Treffer zur Leseliste"), HorizontalAlignment = HorizontalAlignment.Stretch, HorizontalContentAlignment = HorizontalAlignment.Left, Classes = { "seg" } };
+            queue.Click += (_, _) => { hitsFlyout.Hide(); SearchQueueBtn.RaiseEvent(new Avalonia.Interactivity.RoutedEventArgs(Button.ClickEvent)); };
+            actions.Children.Insert(0, queue);
+        }
         hitsMenu.Click += (_, _) => hitsFlyout.ShowAt(hitsMenu);
         _viewRow.Children.Add(hitsMenu);
         if (SearchDock.Children.IndexOf(SearchTopScroll) is var at and >= 0)

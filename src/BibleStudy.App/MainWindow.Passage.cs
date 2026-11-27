@@ -128,7 +128,11 @@ public partial class MainWindow
     {
         var version = ++_guideVersion;
         GuidePanel.Children.Clear();
-        if (r.Book == "") { GuidePanel.Children.Add(Muted(L("Klicke im Bibeltext einen Vers an. Hier erscheint dann alles, was du und die Werkzeuge zu diesem Vers haben."))); return; }
+        if (r.Book == "" || r.Chapter <= 0 || r.Verse <= 0)   // no verse chosen yet (it showed "0:0")
+        {
+            GuidePanel.Children.Add(Muted(AppPlatform.IsMobile ? L("Tippe im Bibeltext auf einen Vers. Hier erscheint dann alles, was du und die Werkzeuge zu diesem Vers haben.") : L("Klicke im Bibeltext einen Vers an. Hier erscheint dann alles, was du und die Werkzeuge zu diesem Vers haben.")));
+            return;
+        }
         var current = TranslationBox.SelectedItem as TranslationInfo;
 
         GuidePanel.Children.Add(new TextBlock { Text = Label(r), Classes = { "h2" } });

@@ -34,6 +34,23 @@ public partial class MainWindow
         TodoTopBtn.Click += (_, _) => ShowTodoPopup();
         TodoAllVaultsCheck.IsChecked = _settings.TodosAllVaults;
         TodoAllVaultsCheck.IsCheckedChanged += (_, _) => SetTodosAllVaults(TodoAllVaultsCheck.IsChecked == true);
+        if (AppPlatform.IsMobile)
+        {
+            // a phone: the verse and the date for a new to-do show up once something is typed; "all vaults" only where there are several.
+            // The list began 300 px down the screen.
+            var options = TodoVerseCheck.Parent as Control;
+            void Fit()
+            {
+                if (!IsPhone) { if (options is not null) options.IsVisible = true; TodoAllVaultsCheck.IsVisible = true; return; }
+                if (options is not null) options.IsVisible = !string.IsNullOrEmpty(TodoBox.Text) || TodoDue.SelectedDate is not null || TodoVerseCheck.IsChecked == true;
+                TodoAllVaultsCheck.IsVisible = VaultNames().Count() > 1 || TodoAllVaultsCheck.IsChecked == true;
+            }
+            TodoBox.TextChanged += (_, _) => Fit();
+            TodoBox.GotFocus += (_, _) => Fit();
+            TodoDue.SelectedDateChanged += (_, _) => Fit();
+            TodoAllVaultsCheck.AttachedToVisualTree += (_, _) => Fit();
+            Fit();
+        }
     }
 
     /// <summary>The same checklist as a small window from the top bar: write something, press Enter, tick it off. Reachable from everywhere.</summary>
@@ -117,6 +134,7 @@ public partial class MainWindow
         var done = groups.Sum(g => g.All.Count(t => t.Done));
         TodoBar.Maximum = Math.Max(1, total); TodoBar.Value = done;
         TodoCount.Text = total == 0 ? "" : L("{0} von {1} erledigt", done, total);
+        if (TodoBar.Parent is Control barRow) barRow.IsVisible = total > 0;   // an empty bar with no to-dos says nothing
         TodoClearBtn.IsVisible = done > 0;
 
         if (_todoPopupCount is not null) _todoPopupCount.Text = TodoCount.Text;
@@ -204,23 +222,26 @@ public partial class MainWindow
         row.Children.Add(left);
 
         var tools = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 4, VerticalAlignment = VerticalAlignment.Center };
+        // on a phone the date and the verse go on a line of their own below the text: beside it they left the text 150 px, and it broke
+        // after nearly every word (and the date stuck to its end)
+        var meta = IsPhone ? new StackPanel { Orientation = Orientation.Horizontal, Spacing = 8, Margin = new(30, 2, 0, 4) } : tools;
         if (t.Due is { } due && !t.Done)
         {
             var late = due < today;
             var text = due == today ? L("heute") : due == today.AddDays(1) ? L("morgen") : due.ToString("d", Loc.Culture);
             var badge = new TextBlock { Text = text, FontSize = 12, FontWeight = late ? FontWeight.SemiBold : FontWeight.Normal, Foreground = late ? new SolidColorBrush(Color.Parse("#E5484D")) : Res("BsMuted"), VerticalAlignment = VerticalAlignment.Center };
             if (late) ToolTip.SetTip(badge, L("Überfällig"));
-            tools.Children.Add(badge);
+            meta.Children.Add(badge);
         }
-        else if (t.Due is { } doneDue) tools.Children.Add(new TextBlock { Text = doneDue.ToString("d", Loc.Culture), FontSize = 12, Opacity = 0.5, VerticalAlignment = VerticalAlignment.Center });
+        else if (t.Due is { } doneDue) meta.Children.Add(new TextBlock { Text = doneDue.ToString("d", Loc.Culture), FontSize = 12, Opacity = 0.5, VerticalAlignment = VerticalAlignment.Center });
         if (t.Ref is { } r)
         {
-            var link = new Button { Content = Label(r), FontSize = 12, Padding = new(8, 2) };
+            var link = new Button { Content = Label(r), FontSize = 12, Padding = new(8, 2), MinHeight = IsPhone ? 32 : 0, VerticalContentAlignment = VerticalAlignment.Center };
             link.Click += async (_, _) => await GoToAsync(r.Book, r.Chapter, r.Verse);
-            tools.Children.Add(link);
+            meta.Children.Add(link);
         }
 
-        var more = new Button { Classes = { "tool" }, Width = 28, Height = 28, Content = new Icon { Data = Geometry.Parse("M5 12h.01 M12 12h.01 M19 12h.01"), IconSize = 16 } };
+        var more = new Button { Classes = { "tool" }, Width = IsPhone ? 36 : 28, Height = IsPhone ? 36 : 28, Content = new Icon { Data = Geometry.Parse("M5 12h.01 M12 12h.01 M19 12h.01"), IconSize = 16 } };
         ToolTip.SetTip(more, L("Mehr: bearbeiten, Teil-To-do, Datum, verschieben"));
         var menu = new MenuFlyout();   // a flyout of its own: a context menu attached to the row cannot be opened on another control
         MenuItem Item(string header, Action act) { var m = new MenuItem { Header = header }; m.Click += (_, _) => act(); menu.Items.Add(m); return m; }
@@ -234,13 +255,19 @@ public partial class MainWindow
         row.ContextFlyout = menu;
         tools.Children.Add(more);
 
-        var delete = new Button { Classes = { "tool" }, Width = 28, Height = 28, Content = new Icon { Data = Geometry.Parse("M18 6L6 18 M6 6l12 12"), IconSize = 14 } };
+        var delete = new Button { Classes = { "tool" }, Width = IsPhone ? 36 : 28, Height = IsPhone ? 36 : 28, Content = new Icon { Data = Geometry.Parse("M18 6L6 18 M6 6l12 12"), IconSize = 14 } };
         ToolTip.SetTip(delete, child ? L("Teil-To-do löschen") : L("To-do löschen (mit seinen Teil-To-dos)"));
         delete.Click += (_, _) => { store.DeleteTodo(id); RefreshTodos(); };
         tools.Children.Add(delete);
 
         Grid.SetColumn(tools, 1);
         row.Children.Add(tools);
+        if (meta != tools && meta.Children.Count > 0)
+        {
+            row.RowDefinitions = new RowDefinitions("Auto,Auto");
+            Grid.SetRow(meta, 1); Grid.SetColumnSpan(meta, 2);
+            row.Children.Add(meta);
+        }
         return row;
     }
 

@@ -86,7 +86,7 @@ public partial class MainWindow
                 Child = new StackPanel { Children = { head, sub, new TextBlock { Text = grammar, TextWrapping = TextWrapping.Wrap } } },
             };
             card.Bind(Border.BorderBrushProperty, this.GetResourceObservable("BsBorder"));
-            if (w.Strong.Length > 0) { var id = w.Strong; card.PointerPressed += (_, _) => _ = AnalyzeWordAsync(id); ToolTip.SetTip(card, L("Klicken: Wort analysieren")); }
+            if (w.Strong.Length > 0) { var id = w.Strong; card.OnPress((_, _) => _ = AnalyzeWordAsync(id)); ToolTip.SetTip(card, L("Klicken: Wort analysieren")); }
             _syntaxView.Children.Add(card);
         }
     }

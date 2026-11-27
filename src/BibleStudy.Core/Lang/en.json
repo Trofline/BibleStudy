@@ -3946,5 +3946,9 @@
   "Der Vault wurde gewechselt; der Lesepfad blieb, wie er war.": "The vault was switched; the reading path stayed as it was.",
   "Den Lesepfad „{0}“ gibt es nicht mehr.": "The reading path “{0}” no longer exists.",
   "„{0}“ hat diese Verse schon.": "“{0}” already has these verses.",
-  "Markiert: {0} · in „{1}“ · Strg+Z macht es rückgängig": "Marked: {0} · in “{1}” · Ctrl+Z takes it back"
+  "Markiert: {0} · in „{1}“ · Strg+Z macht es rückgängig": "Marked: {0} · in “{1}” · Ctrl+Z takes it back",
+  "Mehr Optionen, Suche bauen, Suchhilfe, gemerkte Suchen …": "More options, build a search, search help, saved searches …",
+  "Tippe im Bibeltext auf einen Vers. Hier erscheint dann alles, was du und die Werkzeuge zu diesem Vers haben.": "Tap a verse in the Bible text. Everything you and the tools have on that verse then appears here.",
+  "{0} Wörter · {1} Zeichen": "{0} words · {1} characters",
+  "Auto": "Auto"
 }

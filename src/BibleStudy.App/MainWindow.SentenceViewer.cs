@@ -71,7 +71,11 @@ public partial class MainWindow
             next.Click += (_, _) => Go(_index + 1);
             var jump = new ComboBox { MinWidth = 150, MaxWidth = 340, ItemsSource = _list.Select(Describe).ToList(), SelectedIndex = _index };
             jump.SelectionChanged += (_, _) => { if (jump.SelectedIndex >= 0 && jump.SelectedIndex != _index) Go(jump.SelectedIndex); };
-            var nav = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 6, Children = { prev, next, jump } };
+            // the list of sentences takes the room that is left (in a row of its own width it reached out of a small phone)
+            var nav = new Grid { ColumnDefinitions = new("Auto,Auto,*"), HorizontalAlignment = HorizontalAlignment.Left, MaxWidth = 32 + 32 + 12 + 340 };
+            jump.MinWidth = 0; jump.HorizontalAlignment = HorizontalAlignment.Stretch; jump.Margin = new(6, 0, 0, 0); next.Margin = new(6, 0, 0, 0);
+            Grid.SetColumn(next, 1); Grid.SetColumn(jump, 2);
+            nav.Children.Add(prev); nav.Children.Add(next); nav.Children.Add(jump);
             _head.Children.Add(nav);
 
             // what is written on the lines: original words or their meanings

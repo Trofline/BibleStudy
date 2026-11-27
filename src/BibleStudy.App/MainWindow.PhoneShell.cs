@@ -376,6 +376,12 @@ public partial class MainWindow
         if (!_shellOn || _pTitleText is null || _pBack is null || _pTrans is null || _pPrev is null || _pNext is null || _pTitle is null) return;
         // a phone held across is only about 360 high: the bars shrink (the labels of the bottom bar go)
         var low = Bounds.Height < 480;
+        // while the keyboard is up the bottom bar goes, as in other apps: the room above the keyboard belongs to what one types in
+        var typing = TopLevel.GetTopLevel(this)?.InputPane is { State: Avalonia.Controls.Platform.InputPaneState.Open };
+        // the editor of the notes only once a verse is chosen: before, it is an empty box with buttons above the list
+        var noting = _noteRef is not null;
+        if (NoteEditor.IsVisible != noting) { NoteEditor.IsVisible = noting; if (NoteSaveBtn.Parent is Control noteButtons) noteButtons.IsVisible = noting; }
+        if (_pNav is { } navBar && navBar.IsVisible == typing) navBar.IsVisible = !typing;
         if (_pBar is { } pb) pb.Height = low ? 44 : 52;
         foreach (var nb in _navBtns.Values) { nb.Height = low ? 40 : 58; if (nb.Content is StackPanel { Children: [_, TextBlock lb] }) lb.IsVisible = !low; }
         var reader = ReaderBrowsing();
@@ -391,12 +397,17 @@ public partial class MainWindow
         // the back arrow: only where there is something to go back to
         _pBack.IsVisible = SidePanel.IsVisible || _activeWork is not null || !reader || BackBtn.IsEnabled;
         _pTitle.IsHitTestVisible = reader;
-        var panelGroup = SidePanel.IsVisible ? Rail.Children.OfType<Button>().FirstOrDefault(b => b.Classes.Contains("active") && b.Tag is NavGroup) : null;
+        // the bottom bar shows where one is: reading, the search, the bookmarks, or one of the areas under "Mehr" (a work tab, a tab of the
+        // side panel, the settings). It said "Lesen" on nearly every screen.
+        var sideGroup = SidePanel.IsVisible ? NavGroups.FirstOrDefault(g => g.Tabs.Any(t => t.Index == SideTabs.SelectedIndex)) : null;
+        var inSearch = sideGroup?.Name == K("Suchen");
+        var inMarks = sideGroup?.Name == K("Merken");
+        var elsewhere = (SidePanel.IsVisible && !inSearch && !inMarks) || (!SidePanel.IsVisible && _activeWork is not null);
         void Mark(string key, bool active) { if (_navBtns.TryGetValue(key, out var b) && b.Classes.Contains("active") != active) b.Classes.Set("active", active); }
-        Mark("read", !SidePanel.IsVisible);
-        Mark("search", panelGroup?.Tag is NavGroup g1 && g1.Name == K("Suchen"));
-        Mark("marks", panelGroup?.Tag is NavGroup g2 && g2.Name == K("Merken"));
-        Mark("tools", false); Mark("more", false);
+        Mark("read", !SidePanel.IsVisible && _activeWork is null);
+        Mark("search", inSearch);
+        Mark("marks", inMarks);
+        Mark("tools", false); Mark("more", elsewhere);
     }
 
     string BookBtnText()
@@ -502,10 +513,23 @@ public partial class MainWindow
             { Setters = { new Avalonia.Styling.Setter(TextBlock.TextTrimmingProperty, TextTrimming.CharacterEllipsis) } },
             new Avalonia.Styling.Style(x => x.OfType<Expander>().Template().Descendant().OfType<Avalonia.Controls.Presenters.ContentPresenter>())
             { Setters = { new Avalonia.Styling.Setter(Avalonia.Controls.Presenters.ContentPresenter.TextWrappingProperty, TextWrapping.Wrap) } },
+            // a finger needs about 34 px: buttons of 22–28 px ("← Alle Einstellungen", "Papierkorb", the small tools) were hard to hit.
+            // Only plain buttons (not the arrows of a scroll bar or the days of a calendar, which are buttons of their own kind).
+            new Avalonia.Styling.Style(x => x.OfType<Button>())
+            { Setters = { new Avalonia.Styling.Setter(MinHeightProperty, 34.0) } },
+            new Avalonia.Styling.Style(x => x.OfType<ToggleButton>())
+            { Setters = { new Avalonia.Styling.Setter(MinHeightProperty, 34.0) } },
         };
         app.Styles.Add(styles);
         // the short descriptions under the tabs of the side panel: on a phone the room belongs to the content
         SubHint.IsVisible = false;
+        // the tabs of a group in the side panel ("Übersicht, Grundtext, Wort, Querverweise, Vorkommen"): one row that scrolls sideways, not two
+        if (SubPills.Parent is StackPanel subNav && subNav.Children.IndexOf(SubPills) is var at and >= 0)
+        {
+            subNav.Children.RemoveAt(at);
+            subNav.Margin = new Thickness(8, 6, 8, 0);
+            subNav.Children.Insert(at, new ScrollViewer { Content = SubPills, HorizontalScrollBarVisibility = ScrollBarVisibility.Hidden, VerticalScrollBarVisibility = ScrollBarVisibility.Disabled });
+        }
         // the title of the documents and its two buttons do not fit in one row: the buttons go below it
         if (DocNewBtn.Parent is DockPanel docHead)
         {
@@ -518,6 +542,102 @@ public partial class MainWindow
             DockPanel.SetDock(row, Avalonia.Controls.Dock.Bottom);
             docHead.Children.Insert(0, row);
         }
+        CompactDocListForPhone();
+        Dispatcher.UIThread.Post(CompactSearchForPhone, DispatcherPriority.Background);   // after the search got its extra buttons
+        // the notes: a smaller editor, and the links of a note one row to swipe (on an iPhone SE two notes of the list were left)
+        NoteEditor.Height = double.NaN; NoteEditor.MinHeight = 64; NoteEditor.MaxHeight = 150;   // grows with the note, up to a third of the screen (76 cut it off)
+        // the editor of a document: "Exportieren" as a symbol, the switch of saving as its dot (see ShowAutoSaveState): one row, not two
+        ToolTip.SetTip(DocExportBtn, L("Exportieren"));
+        DocExportBtn.Content = new Icon { Data = Geometry.Parse("M12 3v12 M7 10l5 5 5-5 M5 21h14"), IconSize = 18 };
+        DocAutoSaveBtn.MinWidth = 40;
+        ToolTip.SetTip(DocSaveBtn, L("Speichern"));
+        DocSaveBtn.Content = new Icon { Data = Geometry.Parse("M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z M17 21v-8H7v8 M7 3v5h8"), IconSize = 18 };
+        DocSaveBtn.MinWidth = 44;
+        ShowAutoSaveState();
+        OneSwipeRow(NoteLinksPanel); OneSwipeRow(NoteBacklinksPanel);
+    }
+
+    /// <summary>
+    /// The search on a phone: under the field stood five rows of choices (range, how words match, more options, build a search, help,
+    /// topics, ☆, saved searches, word calculator) before the first hit. Now the range and the match share one row, and everything else
+    /// is behind "⋯" at the end of that row.
+    /// </summary>
+    void CompactSearchForPhone()
+    {
+        if (SearchScopeBox.Parent is not Border scopePill || SearchMatchBox.Parent is not Border matchPill || scopePill.Parent is not WrapPanel wrap || wrap.Parent is not StackPanel stack) return;
+        var extras = wrap.Children.Where(c => c != scopePill && c != matchPill).ToList();
+        wrap.Children.Clear();
+        var more = new WrapPanel { MaxWidth = 320 };
+        foreach (var c in extras) { c.Margin = new Thickness(0, 0, 8, 8); more.Children.Add(c); }
+        var dots = new Button { Content = "⋯", Classes = { "seg" }, MinWidth = 44, Height = 36, HorizontalContentAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Center };
+        ToolTip.SetTip(dots, L("Mehr Optionen, Suche bauen, Suchhilfe, gemerkte Suchen …"));
+        dots.Flyout = new Flyout { Placement = PlacementMode.BottomEdgeAlignedRight, Content = more };
+        // a toggle that opens a card closes the menu, so the card is seen
+        foreach (var t in extras.OfType<ToggleButton>()) t.IsCheckedChanged += (_, _) => dots.Flyout.Hide();
+        foreach (var box in new[] { SearchScopeBox, SearchMatchBox }) { box.Width = double.NaN; box.MinWidth = 0; box.HorizontalAlignment = HorizontalAlignment.Stretch; }
+        foreach (var pill in new[] { scopePill, matchPill }) { pill.HorizontalAlignment = HorizontalAlignment.Stretch; pill.Margin = new Thickness(0, 0, 6, 0); }
+        var row = new Grid { ColumnDefinitions = new ColumnDefinitions("*,*,Auto") };
+        Grid.SetColumn(matchPill, 1); Grid.SetColumn(dots, 2);
+        row.Children.Add(scopePill); row.Children.Add(matchPill); row.Children.Add(dots);
+        var at = stack.Children.IndexOf(wrap);
+        stack.Children[at] = row;
+        // the found forms, the books with hits, the last searches, the Strong numbers: each one row that is swiped sideways. Over several
+        // lines they pushed the hits down to the lower third of the screen (on an iPhone SE ~190 px of hits were left).
+        foreach (var chips in new[] { SearchStrongsPanel, SearchHistoryPanel, SearchFormsPanel, SearchBooksPanel }) OneSwipeRow(chips);
+    }
+
+    /// <summary>A row of chips that wraps onto many lines becomes one line that scrolls sideways (only on a phone).</summary>
+    static void OneSwipeRow(WrapPanel chips)
+    {
+        if (chips.Parent is not Panel parent || parent.Children.IndexOf(chips) is not (>= 0 and var at)) return;
+        parent.Children.RemoveAt(at);
+        var strip = new ScrollViewer { Content = chips, HorizontalScrollBarVisibility = ScrollBarVisibility.Hidden, VerticalScrollBarVisibility = ScrollBarVisibility.Disabled };
+        strip.Bind(IsVisibleProperty, chips.GetObservable(IsVisibleProperty));
+        parent.Children.Insert(at, strip);
+    }
+
+    /// <summary>
+    /// The list of documents on a phone: above it stood a title with a sentence, three buttons, the search, a check box, the word "KATEGORIEN",
+    /// the chips over several lines and the filters, and the documents themselves got the bottom third of the screen. Now the title goes
+    /// (the tab says "Dokumente"), the buttons and the search share the top, the categories are one row that scrolls sideways, and the
+    /// check box for all vaults moves to "Mehr Filter".
+    /// </summary>
+    void CompactDocListForPhone()
+    {
+        if (DocNewBtn.Parent is not WrapPanel buttons || buttons.Parent is not DockPanel docHead || docHead.Parent is not StackPanel top) return;
+        foreach (var c in docHead.Children.OfType<StackPanel>().ToList()) c.IsVisible = false;   // "Deine Dokumente" and its sentence
+        buttons.Margin = default;
+        foreach (var b in buttons.Children.OfType<Control>()) b.Margin = default;
+        top.Spacing = 6;
+        top.Margin = new Thickness(0, 0, 0, 4);
+        DocListPanel.Margin = new Thickness(8, 8, 4, 6);
+        // the word above the chips
+        foreach (var t in top.Children.OfType<TextBlock>().Where(t => t.Classes.Contains("eyebrow"))) t.IsVisible = false;
+        // the chips: one row that scrolls sideways
+        if (DocCategoryChips.Parent == top)
+        {
+            var at = top.Children.IndexOf(DocCategoryChips);
+            top.Children.RemoveAt(at);
+            DocCategoryChips.Orientation = Orientation.Horizontal;
+            var strip = new ScrollViewer
+            {
+                Content = DocCategoryChips,
+                HorizontalScrollBarVisibility = Avalonia.Controls.Primitives.ScrollBarVisibility.Hidden,
+                VerticalScrollBarVisibility = Avalonia.Controls.Primitives.ScrollBarVisibility.Disabled,
+            };
+            top.Children.Insert(at, strip);
+        }
+        // "Dokumente aller Vaults zeigen" goes under "Mehr Filter und Graph"
+        if (DocAllVaultsCheck.Parent == top && top.Children.OfType<Expander>().FirstOrDefault() is { Content: StackPanel more })
+        {
+            top.Children.Remove(DocAllVaultsCheck);
+            more.Children.Insert(0, DocAllVaultsCheck);
+        }
+        // the category and the folder of an open document: side by side even on a small phone (170 + 170 took two rows)
+        DocCategoryBox.Width = DocFolderBox.Width = 140;
+        foreach (var ex in top.Children.OfType<Expander>()) ex.HorizontalAlignment = HorizontalAlignment.Stretch;   // "Mehr Filter und Graph" was half a box
+        // the filter box of a desktop width
+        DocFilterBox.Width = double.NaN; DocFilterBox.MinWidth = 200;
     }
 }
 

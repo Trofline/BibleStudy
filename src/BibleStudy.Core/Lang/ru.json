@@ -3946,5 +3946,9 @@
   "Der Vault wurde gewechselt; der Lesepfad blieb, wie er war.": "Хранилище было сменено; путь чтения остался прежним.",
   "Den Lesepfad „{0}“ gibt es nicht mehr.": "Пути чтения «{0}» больше нет.",
   "„{0}“ hat diese Verse schon.": "В «{0}» эти стихи уже есть.",
-  "Markiert: {0} · in „{1}“ · Strg+Z macht es rückgängig": "Отмечено: {0} · в «{1}» · Ctrl+Z отменяет"
+  "Markiert: {0} · in „{1}“ · Strg+Z macht es rückgängig": "Отмечено: {0} · в «{1}» · Ctrl+Z отменяет",
+  "Mehr Optionen, Suche bauen, Suchhilfe, gemerkte Suchen …": "Другие параметры, конструктор поиска, справка, сохранённые поиски …",
+  "Tippe im Bibeltext auf einen Vers. Hier erscheint dann alles, was du und die Werkzeuge zu diesem Vers haben.": "Коснись стиха в тексте Библии. Здесь появится всё, что есть у тебя и у инструментов к этому стиху.",
+  "{0} Wörter · {1} Zeichen": "{0} слов · {1} знаков",
+  "Auto": "Авто"
 }

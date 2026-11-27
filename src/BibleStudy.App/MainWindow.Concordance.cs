@@ -101,7 +101,7 @@ public partial class MainWindow
     {
         var chip = new Button
         {
-            Content = text, Classes = { "tool" }, Width = double.NaN, Height = 24, Padding = new(8, 0), FontSize = 11, Margin = new(0, 0, 4, 4),
+            Content = text, Classes = { "tool" }, Width = double.NaN, Height = IsPhone ? 34 : 24, Padding = new(IsPhone ? 10 : 8, 0), FontSize = IsPhone ? 13 : 11, Margin = new(0, 0, IsPhone ? 6 : 4, IsPhone ? 6 : 4),   // a finger needs more than 24 px
             Background = active ? Res("BsAccentSoft") : null, Foreground = active ? Res("BsAccent") : Res("BsMuted"),
             BorderBrush = underline is Color c ? new SolidColorBrush(c) : null, BorderThickness = underline is null ? new(0) : new(0, 0, 0, 2),
         };

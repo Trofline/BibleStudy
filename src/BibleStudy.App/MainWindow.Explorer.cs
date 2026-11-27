@@ -126,9 +126,12 @@ public partial class MainWindow
             void ViewMark() => view.Classes.Set("primary", _exFlatBtn.IsChecked == true || _exAllVaultsBtn.IsChecked == true);   // something is switched on: the button says so
             _exFlatBtn.IsCheckedChanged += (_, _) => ViewMark(); _exAllVaultsBtn.IsCheckedChanged += (_, _) => ViewMark(); ViewMark();
             _exPickBtn.Margin = new(6, 0, 0, 0); _exPickBtn.Height = 34; _exPickBtn.Padding = new(10, 0); _exPickBtn.VerticalContentAlignment = VerticalAlignment.Center;
+            // above: back / up, the path, the view and the new folder; below: the search as wide as the screen and "Auswählen"
+            // (the search stood between six buttons and showed "Su …")
             DockPanel.SetDock(newFolder, Dock.Right); DockPanel.SetDock(view, Dock.Right); DockPanel.SetDock(_exPickBtn, Dock.Right);
-            pathBox.Margin = new(0, 0, 0, 6);
-            bar = new StackPanel { Margin = new(10, 8, 10, 6), Children = { pathBox, new DockPanel { Children = { nav, newFolder, view, _exPickBtn, _exSearch } } } };
+            pathBox.Margin = new(6, 0, 0, 0);
+            _exSearch.Margin = new(0);
+            bar = new StackPanel { Margin = new(8, 6, 8, 4), Spacing = 6, Children = { new DockPanel { Children = { nav, newFolder, view, pathBox } }, new DockPanel { Children = { _exPickBtn, _exSearch } } } };
         }
         else
         {
@@ -621,7 +624,7 @@ public partial class MainWindow
             var on = _exSort == sort;
             var b = new Button
             {
-                Classes = { "ghost" }, Padding = new(4, 2), HorizontalAlignment = HorizontalAlignment.Left, FontSize = 12, FontWeight = FontWeight.SemiBold,
+                Classes = { "ghost" }, Padding = new(4, 2), MinHeight = 0, HorizontalAlignment = HorizontalAlignment.Left, FontSize = 12, FontWeight = FontWeight.SemiBold,   // (a column head: not the 34 px of a phone button)
                 Content = text + (on ? (_exSortDesc ? "  ▼" : "  ▲") : ""), Opacity = on ? 1 : 0.75,
             };
             ToolTip.SetTip(b, L("Nach dieser Spalte sortieren"));
@@ -944,8 +947,16 @@ public partial class MainWindow
             }
             if (!props.IsLeftButtonPressed) return;
             ExplorerHost.Focusable = true; ExplorerHost.Focus();
-            if (_exPick) { e.Handled = true; if (e.Pointer.Type == PointerType.Touch) ExPickOnLift(row, item, e); else ExPickToggle(item); return; }   // choosing: a tap ticks, nothing opens or moves
-            if (e.Pointer.Type == PointerType.Touch) ExLongPressToPick(row, item, e);
+            if (e.Pointer.Type == PointerType.Touch)
+            {
+                // A finger does nothing when it goes down: it may be the start of a scroll. Nothing is chosen, nothing is dragged and the
+                // finger is not taken from the list. Lifting it on the spot opens the row, or ticks it while choosing ("Auswählen" above);
+                // holding it opens the menu of the row (only if the list did not scroll meanwhile, see GuardHolding).
+                e.Handled = _exPick;
+                TouchTap.Defer(row, e, () => { if (_exPick) ExPickToggle(item); else ExOpen(item); });
+                return;
+            }
+            if (_exPick) { e.Handled = true; ExPickToggle(item); return; }   // choosing: a click ticks, nothing opens or moves
             if (e.ClickCount == 2) { e.Handled = true; ExOpen(item); return; }
             var ctrl = e.KeyModifiers.HasFlag(Mods.Ctrl);
             var chosen = _exSel.Any(s => s.Kind == item.Kind && s.Id == item.Id);

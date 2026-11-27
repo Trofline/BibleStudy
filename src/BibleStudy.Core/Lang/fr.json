@@ -3946,5 +3946,9 @@
   "Der Vault wurde gewechselt; der Lesepfad blieb, wie er war.": "Le vault a été changé ; le parcours de lecture est resté tel quel.",
   "Den Lesepfad „{0}“ gibt es nicht mehr.": "Le parcours de lecture « {0} » n’existe plus.",
   "„{0}“ hat diese Verse schon.": "« {0} » contient déjà ces versets.",
-  "Markiert: {0} · in „{1}“ · Strg+Z macht es rückgängig": "Marqué : {0} · dans « {1} » · Ctrl+Z l’annule"
+  "Markiert: {0} · in „{1}“ · Strg+Z macht es rückgängig": "Marqué : {0} · dans « {1} » · Ctrl+Z l’annule",
+  "Mehr Optionen, Suche bauen, Suchhilfe, gemerkte Suchen …": "Plus d’options, construire une recherche, aide, recherches enregistrées …",
+  "Tippe im Bibeltext auf einen Vers. Hier erscheint dann alles, was du und die Werkzeuge zu diesem Vers haben.": "Touche un verset dans le texte biblique. Tout ce que toi et les outils avez sur ce verset apparaîtra ici.",
+  "{0} Wörter · {1} Zeichen": "{0} mots · {1} caractères",
+  "Auto": "Auto"
 }
