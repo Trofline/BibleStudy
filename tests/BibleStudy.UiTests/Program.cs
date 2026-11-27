@@ -200,7 +200,10 @@ firstSettings.TourPending = false;
 Check("no update question by itself during the first start", !askDuringFirstStart);
 Check("looking for updates by hand still works", askByHand);
 Check("updates are offered again afterwards", (bool)Call("UpdateMayAsk", false)! == true);
+// the question about the tab tours (first start) would otherwise come up in between and be taken for the setup
+firstSettings.TabToursAsked = true;
 var setupWin = Dlg(() => { firstSettings.SetupDone = false; return Call("RunSetupWizardAsync"); }, out _);
+for (var i = 0; i < 40 && setupWin.Title != "Einrichtung"; i++) { Pump(2); Thread.Sleep(50); setupWin = win.OwnedWindows.FirstOrDefault(w => w.IsVisible && w.Title == "Einrichtung") ?? setupWin; }
 Check("the open setup does not count as done", !firstSettings.SetupDone);
 Press2(Plain(setupWin).First(b => (b.Content as string) == "Überspringen"));
 Check("the closed setup counts as done", firstSettings.SetupDone);
