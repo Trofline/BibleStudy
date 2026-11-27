@@ -9,6 +9,7 @@ using Avalonia.Media;
 using Avalonia.Threading;
 using BibleStudy.Core;
 using BibleStudy.Core.Models;
+using BibleStudy.Core.Search;
 using BibleStudy.Core.Storage;
 
 namespace BibleStudy.App;

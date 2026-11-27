@@ -1022,7 +1022,7 @@ Check("no sign where the mark is shown", !RunsOf((Control)F<System.Collections.I
     ve.RenameFolder(folder, "Der Engel"); Call("RefreshExplorer"); Settle(300);
     Check("explorer path: a renamed folder keeps its path", ExBadges() == 4);
     // the quick way: onto the path used last
-    Check("explorer path: the verse menu offers the path used last", typeof(MainWindow).GetMethod("QuickPathItem", All)!.Invoke(win, [1]) is MenuItem qi && (qi.Header as string ?? "").Contains("Engel des Herrn"));
+    Check("explorer path: the verse menu offers the path used last", typeof(MainWindow).GetMethod("QuickPathItem", All)!.Invoke(win, [1, null]) is MenuItem qi && (qi.Header as string ?? "").Contains("Engel des Herrn"));
     // at the top (no folder) nothing shows
     Call("ExNavigate", (long?)null); Settle(300);
     Check("explorer path: elsewhere no arrows and no bar", ExBadges() == 0 && !pathBar.IsVisible);
