@@ -3620,5 +3620,6 @@
   "Du hast die Übersetzung „{0}“ gesendet ({1}).": "Вы отправили перевод «{0}» ({1}).",
   "{0} sendet die Übersetzung „{1}“ ({2})": "{0} отправляет перевод «{1}» ({2})",
   "Wird wie eine eigene .txt-Datei importiert und steht dann in der Übersetzungsliste.": "Импортируется как собственный файл .txt и затем появляется в списке переводов.",
-  "Die Datei ist keine Übersetzung im Format von BibleStudy.": "Файл не является переводом в формате BibleStudy."
+  "Die Datei ist keine Übersetzung im Format von BibleStudy.": "Файл не является переводом в формате BibleStudy.",
+  "Keine Übersetzung gewählt.": "Перевод не выбран."
 }

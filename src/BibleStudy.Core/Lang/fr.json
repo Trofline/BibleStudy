@@ -3620,5 +3620,6 @@
   "Du hast die Übersetzung „{0}“ gesendet ({1}).": "Tu as envoyé la traduction « {0} » ({1}).",
   "{0} sendet die Übersetzung „{1}“ ({2})": "{0} envoie la traduction « {1} » ({2})",
   "Wird wie eine eigene .txt-Datei importiert und steht dann in der Übersetzungsliste.": "Importée comme ton propre fichier .txt, elle apparaît ensuite dans la liste des traductions.",
-  "Die Datei ist keine Übersetzung im Format von BibleStudy.": "Le fichier n'est pas une traduction au format de BibleStudy."
+  "Die Datei ist keine Übersetzung im Format von BibleStudy.": "Le fichier n'est pas une traduction au format de BibleStudy.",
+  "Keine Übersetzung gewählt.": "Aucune traduction sélectionnée."
 }

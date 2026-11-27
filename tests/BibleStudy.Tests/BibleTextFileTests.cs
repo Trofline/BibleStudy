@@ -82,7 +82,7 @@ public class BibleTextFileTests : IDisposable
     }
 
     [Fact]
-    public void Import_export_import_through_the_store_and_the_importer_is_identical()
+    public async Task Import_export_import_through_the_store_and_the_importer_is_identical()
     {
         var first = new LocalBibleStore(Path.Combine(_dir, "a.db"));
         var id = first.Save(Rich());
@@ -102,8 +102,8 @@ public class BibleTextFileTests : IDisposable
         // what the reader shows is the same chapter, footnotes and headings included
         foreach (var (book, chapter) in new[] { ("GEN", 1), ("MAT", 5), ("PSA", 3) })
         {
-            var a = first.GetChapterAsync(id, book, chapter).Result;
-            var b = second.GetChapterAsync(id2, book, chapter).Result;
+            var a = await first.GetChapterAsync(id, book, chapter);
+            var b = await second.GetChapterAsync(id2, book, chapter);
             Assert.Equal(string.Join("\n", a.Verses.Select(v => v.Number + " " + v.Text)), string.Join("\n", b.Verses.Select(v => v.Number + " " + v.Text)));
             Assert.Equal(string.Join("\n", (a.Footnotes ?? []).Select(n => $"{n.NoteId} {n.Verse} {n.Text}")), string.Join("\n", (b.Footnotes ?? []).Select(n => $"{n.NoteId} {n.Verse} {n.Text}")));
             Assert.Equal(string.Join("\n", (a.Headings ?? []).Select(h => $"{h.BeforeVerse} {h.Text}")), string.Join("\n", (b.Headings ?? []).Select(h => $"{h.BeforeVerse} {h.Text}")));
