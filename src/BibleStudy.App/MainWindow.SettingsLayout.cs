@@ -9,7 +9,7 @@ using Avalonia.Threading;
 namespace BibleStudy.App;
 
 /// <summary>
-/// The settings start with an overview: a search field and eight tiles (Appearance, Reading, Bibles and data …). A tile shows the cards of its
+/// The settings start with an overview: a search field and thirteen tiles (Appearance, Reading, Download Bibles, Backup …; the ones only for a computer are left out on a phone). A tile shows the cards of its
 /// area, the search shows every card that has the words. The cards themselves are the ones of the page as before: nothing is left out.
 /// </summary>
 public partial class MainWindow
@@ -22,12 +22,17 @@ public partial class MainWindow
     [
         (K("Aussehen"), K("Sprache, Farben, Schrift"), "M12 22a10 10 0 1 1 10-10c0 2.2-1.8 3-3.5 3H16a2 2 0 0 0-1.5 3.3A1.6 1.6 0 0 1 12 22z M7.5 10.5h.01 M10.5 7.5h.01 M14.5 7.5h.01 M17.5 10.5h.01", [0]),
         (K("Lesen"), K("Markieren, Vorlesen, Verhalten"), "M2 4h6a4 4 0 0 1 4 4v12a3 3 0 0 0-3-3H2z M22 4h-6a4 4 0 0 0-4 4v12a3 3 0 0 1 3-3h7z", [1]),
-        (K("Bibeln und Daten"), K("Downloads, Import, Quellen"), "M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4 M7 10l5 5 5-5 M12 15V3", [7, 8, 6, 9, 10]),
-        (K("Meine Daten"), K("Vaults, Sicherung, Import"), "M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.7-.9l-.8-1.2A2 2 0 0 0 7.9 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2z", [5, 12]),
+        (K("Bibeln herunterladen"), K("Download-Manager, offline lesen"), "M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4 M7 10l5 5 5-5 M12 15V3", [7, 8]),
+        (K("Übersetzungen und Quellen"), K("Eigene Übersetzung, Quellen, Daten"), "M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20 M9 7h7 M9 11h5", [6, 9]),
+        (K("Plugins"), K("Bibel-Plugins"), "M12 2v4 M9 2v4 M15 2v4 M7 6h10v5a5 5 0 0 1-10 0z M12 16v6", [10]),
+        (K("Vaults"), K("Mappen mit Notizen und Markierungen"), "M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.7-.9l-.8-1.2A2 2 0 0 0 7.9 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2z", [5]),
+        (K("Sicherung"), K("Sichern und wiederherstellen"), "M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z M9 12l2 2 4-4", [12]),
         (K("Synchronisieren"), K("PC und Handy"), "M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8 M3 3v5h5 M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16 M16 16h5v5", [13]),
-        (K("Fenster und Start"), K("Layouts, Tastenkürzel, Start"), "M4 4h16a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z M2 9h20 M6 6.5h.01 M9 6.5h.01", [4, 2, 3]),
+        (K("Fenster und Tastenkürzel"), K("Layouts, Tastenkürzel"), "M4 4h16a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z M2 9h20 M6 6.5h.01 M9 6.5h.01", [2, 3]),
+        (K("Programm und Start"), K("Start, Infobereich, Uhr"), "M12 2v10 M18.4 6.6a9 9 0 1 1-12.8 0", [4]),
         (K("KI"), K("Claude, Ollama"), "M12 3l1.9 5.8L20 11l-6.1 2.2L12 19l-1.9-5.8L4 11l6.1-2.2z M19 3v4 M21 5h-4", [14]),
-        (K("Hilfe und Updates"), K("Feedback, Version, Updates"), "M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20z M12 16v-4 M12 8h.01", [15, 11]),
+        (K("Updates"), K("Version, was ist neu"), "M21 12a9 9 0 1 1-3-6.7L21 8 M21 3v5h-5", [15]),
+        (K("Feedback"), K("Fehler melden, Ideen"), "M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20z M12 16v-4 M12 8h.01", [11]),
     ];
 
     readonly List<Border> _settingCards = [];

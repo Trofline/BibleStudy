@@ -26,8 +26,9 @@
                     <TextBlock x:Name="AppTitleText" Text="BibleStudy" Classes="h2" FontSize="21" VerticalAlignment="Center" />
                 </StackPanel>
                 <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="2" Margin="0,0,10,0" VerticalAlignment="Center">
-                    <Button x:Name="BackBtn" Classes="tool" ToolTip.Tip="Zurück zur vorherigen Stelle (Alt+←)">
-                        <local:Icon Data="M19 12H5 M12 19l-7-7 7-7" />
+                    <Button x:Name="BackBtn" Classes="tool" ToolTip.Tip="Zurück, wo du vorher warst (Alt+←). Rechtsklick: die zuletzt besuchten Stellen">
+                        <!-- the clock with the arrow back, as on the phone: where you were before, not the chapter before -->
+                        <local:Icon Data="M3 12a9 9 0 1 0 3-6.7 M3 4v5h5 M12 7v5l3 2" />
                     </Button>
                     <Button x:Name="ForwardBtn" Classes="tool" ToolTip.Tip="Vorwärts zur nächsten Stelle (Alt+→)" IsEnabled="False">
                         <local:Icon Data="M5 12h14 M12 5l7 7-7 7" />
