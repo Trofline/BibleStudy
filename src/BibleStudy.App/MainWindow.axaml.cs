@@ -493,7 +493,7 @@ public partial class MainWindow : AppWindow
             var sameChapter = keepScroll && _curBook == b.Id && _curChapter == ch.Number;
             var keepOffset = ReaderScroll.Offset; var keepCols = _colScrolls.Select(s => s.Offset).ToList();
             // a text selection belongs to the chapter it was made in (kept, its offsets would mark the same verse number of the next chapter)
-            if (!sameChapter) RememberPlace();
+            if (!sameChapter) { RememberPlace(); _chapterShows++; }
             if (_curBook != b.Id || _curChapter != ch.Number) ClearTextSelection(false);
             _curBook = b.Id; _curChapter = ch.Number; _selected = null; _selVerses.Clear(); _anchorVerse = null;
             if (ReaderHost.IsVisible && !_switchingVault) { try { _vault.SetLastPosition(_curBook, _curChapter); } catch (Exception) { /* a convenience; never block reading */ } }
@@ -883,6 +883,7 @@ public partial class MainWindow : AppWindow
 
     async Task ShowStudyAsync(WordSpan span)
     {
+        _studyCount++;
         RevealSideTab(3);
         StudyPanel.Children.Clear();
         StudyPanel.Children.Add(new TextBlock { Text = Loc.Quote(span.Word.Trim()), FontSize = 20, FontWeight = FontWeight.SemiBold, TextWrapping = TextWrapping.Wrap });
@@ -1066,6 +1067,7 @@ public partial class MainWindow : AppWindow
 
     void SelectVerse(int n)
     {
+        _selectCount++;
         _selected = n; _selVerses.Clear(); _selVerses.Add(n); _anchorVerse = n; _recolorGroup = false; Paint();
         ThreadPane.SelectedVerse = n;
         var r = new VerseRef(_curBook, _curChapter, n);

@@ -46,9 +46,9 @@ public partial class MainWindow
     }
 
     /// <summary>A small card at the verse: where does it point, and why (optional).</summary>
-    void ShowMyXrefEditor(VerseRef from, Control anchor)
+    void ShowMyXrefEditor(VerseRef from, Control anchor, string? prefill = null)
     {
-        var target = new TextBox { PlaceholderText = L("Bibelstelle, z. B. Joh 3,16 oder Röm 8,28-30") };
+        var target = new TextBox { PlaceholderText = L("Bibelstelle, z. B. Joh 3,16 oder Röm 8,28-30"), Text = prefill };
         var note = new TextBox { PlaceholderText = L("Kurze Notiz dazu (freiwillig)") };
         var info = new TextBlock { Classes = { "caption" }, TextWrapping = TextWrapping.Wrap };
         var save = new Button { Content = L("Querverweis speichern"), Classes = { "primary" }, HorizontalAlignment = HorizontalAlignment.Left };

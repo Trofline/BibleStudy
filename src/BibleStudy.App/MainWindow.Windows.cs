@@ -92,6 +92,7 @@ public partial class MainWindow
         else if (index == CollabTab && CollabPanel.Children.Count == 0) BuildCollabUi();
         else if (index == AnalysisTab) BuildAnalysisUi();
         else if (index == SermonTab && (_sermonVault != _vault.Name || SermonPanel.Children.Count == 0)) BuildSermonUi();
+        MaybeTabTour(index);
     }
 
     // ---- building a work area ------------------------------------------------------------------------------------------
@@ -241,6 +242,7 @@ public partial class MainWindow
     /// </summary>
     void SwitchReadTab()
     {
+        _tabSwitches++;
         var pins = PinnedTabs();
         if (pins.Count == 2)
         {

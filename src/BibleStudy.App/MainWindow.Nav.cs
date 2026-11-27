@@ -237,6 +237,7 @@ public partial class MainWindow
             else if (SideTabs.SelectedIndex is SentenceTab or PericopeTab) TabShown(SideTabs.SelectedIndex);
             else if (SideTabs.SelectedIndex == 2 && _notesStale) RefreshNotesTree();
             SyncNav();
+            MaybeTabTour(SideTabs.SelectedIndex);
         };
         if (GroupOf(SideTabs.SelectedIndex) is { Windowed: true }) SideTabs.SelectedIndex = 0;
         _lastSideIndex = SideTabs.SelectedIndex;

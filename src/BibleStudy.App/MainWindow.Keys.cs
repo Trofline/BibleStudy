@@ -152,6 +152,7 @@ public partial class MainWindow
         var chapter = _curBook + " " + _curChapter;
         if (chapter != _jumpChapter) { _jumpChapter = chapter; _jumpNumber.Reset(); }
         if (_jumpNumber.Type(digit, Environment.TickCount64, x => x >= 1 && x <= last && (_independent || _verseBoxes.ContainsKey(x))) is not int n) return;
+        _typedJumps++;
         SelectVerse(n); ScrollToVerse(n);
         StatusText.Text = L("Vers {0}", n);
         _jumpNumber.Finished(Environment.TickCount64);

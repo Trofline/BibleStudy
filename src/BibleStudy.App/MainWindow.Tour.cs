@@ -21,9 +21,21 @@ public partial class MainWindow
     void InitTour()
     {
         TourBtn.Click += (_, _) => StartTour();
+        MessagesBtn.Click += (_, _) => ShowMessageCenter();
+        HelpDeepTourBtn.Click += (_, _) => StartDeepTour();
+        HelpQuizBtn.Click += (_, _) => ShowQuiz();
+        HelpMessagesBtn.Click += (_, _) => ShowMessageCenter();
+        SettingsHelpBtn.Click += (_, _) => OpenWork(NavGroups.First(g => g.Name == "Hilfe"), 13);
+        SettingsHandbookBtn.Click += (_, _) => OpenWork(NavGroups.First(g => g.Name == "Hilfe"), HandbookTab);
+        SettingsDeepTourBtn.Click += (_, _) => StartDeepTour();
+        SettingsQuizBtn.Click += (_, _) => ShowQuiz();
+        HelpTabToursBtn.Click += (_, _) => ResetTabTours();
+        InitTabToursSettings();
         InitHelpPage();
         // a while after the start, when the splash screen and the notice about sources are gone
         DispatcherTimer.RunOnce(() => OfferTour(), TimeSpan.FromSeconds(6));
+        // the tabs of the last session come back at the start: their tours wait until the person opens a tab
+        DispatcherTimer.RunOnce(() => _tabToursReady = true, TimeSpan.FromSeconds(12));
     }
 
     async Task RunSetupThenTourAsync()
@@ -39,11 +51,27 @@ public partial class MainWindow
         // another window (notice, update question) is open: try again a little later
         if (OwnedWindows.Count > 0 || SplashWindow.IsShowing) { DispatcherTimer.RunOnce(() => OfferTour(), TimeSpan.FromSeconds(5)); return; }
         if (_settings.TourPending && !_settings.SetupDone) { _ = RunSetupThenTourAsync(); return; }
-        if (_settings.TourPending) { _settings.LastSeenVersion = AppPaths.Version; StartTour(); return; }   // a new installation has nothing "new" to read
+        if (_settings.TourPending) { _settings.LastSeenVersion = AppPaths.Version; _ = FirstStartToursAsync(); return; }   // a new installation has nothing "new" to read
         if (!_settings.BackupAsked && _settings.BackupSchedule == "off") { _ = AskForBackupAsync(); return; }
+        if (!_settings.TabToursAsked) { _ = AskTabToursThenGoOnAsync(); return; }
         _ = ShowPatchNotesIfNewAsync();
         _ = OfferReimportAsync();
         DispatcherTimer.RunOnce(ShowNewKeysTip, TimeSpan.FromSeconds(4));
+        PlanSuggestion();
+    }
+
+    /// <summary>The first start: ask whether the tours should come; yes starts the short tour, no ends the first start without any tour.</summary>
+    async Task FirstStartToursAsync()
+    {
+        if (await AskTabToursAsync(firstStart: true)) StartTour();
+        else FinishTour();
+    }
+
+    /// <summary>Whoever had the program before: asked once about the tab tours, then the start goes on as usual (patch notes and so on).</summary>
+    async Task AskTabToursThenGoOnAsync()
+    {
+        await AskTabToursAsync(firstStart: false);
+        if (!_exiting) OfferTour();
     }
 
     /// <summary>Asked once: whoever had the program before and has no backup yet. The answer is kept either way.</summary>
@@ -61,6 +89,8 @@ public partial class MainWindow
     void StartTour()
     {
         if (_touring) return;
+        if (DeepTouring) CloseDeepTour(finished: false);
+        CloseTabTour(seen: false);
         _palette.IsOpen = false; Focus();   // the command list must be gone: two popups at the same time confuse the renderer
         ShowReader();
         _touring = true;
@@ -79,6 +109,7 @@ public partial class MainWindow
             new(() => ParallelBtn, PlacementMode.Bottom, L("Parallel"), L("Weitere Übersetzungen als Spalten daneben. Jede Spalte kann auch eine andere Bibelstelle zeigen, z. B. 1. Mose neben Daniel.")),
             new(() => BookmarkBtn, PlacementMode.Bottom, L("Merken"), L("Setzt ein Lesezeichen auf den Vers (Strg+D), zum späteren Zurückspringen. Unter „Merken“ rechts in der Leiste findest du sie wieder.")),
             new(() => Rail, PlacementMode.Left, L("Die Leiste rechts"), L("Suchen, Vers (Querverweise, Grundtext), Notizen, Dokumente, Predigt, Planen (Lesepläne, To-dos, Gebete, Auswendiglernen), Zusammen und KI. Ziehst du ein Symbol aus der Leiste, wird es ein eigenes Fenster.")),
+            new(() => SideSplitter, PlacementMode.Left, L("Leiste breiter oder schmaler"), L("Am linken Rand der Leiste sitzt ein kleiner Griff. Zieh ihn nach links, wird die Leiste breiter, nach rechts schmaler. Probier es ruhig gleich aus; die Breite bleibt gespeichert.")),
             new(() => QuickJumpBox, PlacementMode.Bottom, L("Gehe zu … (Strg+K)"), L("Ein Feld für alles: eine Bibelstelle („Röm 8,28“), ein Wort, ein Befehl, ein Dokument. Tippen, mit den Pfeilen wählen, Enter.")),
             new(() => TodoTopBtn, PlacementMode.Bottom, L("To-dos"), L("Eine freie Liste zum Abhaken, von überall erreichbar.")),
             new(() => VaultTopBtn, PlacementMode.Bottom, L("Vault"), L("Ein Vault ist deine Mappe für ein Studienprojekt (z. B. „Predigt“ und „Privat“). Notizen, Markierungen und Dokumente gehören immer zu einem Vault.")),
@@ -131,7 +162,7 @@ public partial class MainWindow
             return;
         }
         while (i < steps.Length && steps[i].Anchor() is { IsEffectivelyVisible: false } or { Bounds.Width: 0 }) i++;   // a button that is not there (hidden panel, other layout) is skipped
-        if (i >= steps.Length) { FinishTour(); return; }
+        if (i >= steps.Length) { FinishTour(completed: true); return; }
         var step = steps[i]; var last = i == steps.Length - 1;
         var moved = false;
 
@@ -150,11 +181,27 @@ public partial class MainWindow
         panel.Children.Add(buttons);
 
         var flyout = new Flyout { Content = panel, Placement = step.Placement };
+        // at the edge of the side panel the person may try the drag right away: the press goes through, and the bubble comes back afterwards
+        var atEdge = ReferenceEquals(step.Anchor(), SideSplitter);
+        if (atEdge) flyout.OverlayDismissEventPassThrough = true;
         void Go(Action then) { moved = true; flyout.Hide(); DispatcherTimer.RunOnce(then, TimeSpan.FromMilliseconds(150)); }   // the old bubble must be gone first
         next.Click += (_, _) => Go(() => ShowTourStep(steps, i + 1));
         back.Click += (_, _) => Go(() => ShowTourStep(steps, i - 1));
-        skip.Click += (_, _) => Go(FinishTour);
-        flyout.Closed += (_, _) => { HideTourRing(); if (!moved) FinishTour(); };   // a click somewhere else ends the tour
+        skip.Click += (_, _) => Go(() => FinishTour());
+        flyout.Closed += (_, _) =>
+        {
+            HideTourRing();
+            if (moved) return;
+            if (!atEdge) { FinishTour(); return; }   // a click somewhere else ends the tour
+            // the press may reach the edge just after the bubble closed: look a moment later whether it was the drag
+            DispatcherTimer.RunOnce(() =>
+            {
+                if (!_touring) return;
+                if (_sideDragging) _afterSideDrag = () => { if (_touring) ShowTourStep(steps, i, true); };
+                else if (DateTime.UtcNow - _sideDragAt < TimeSpan.FromMilliseconds(600)) ShowTourStep(steps, i, true);
+                else FinishTour();
+            }, TimeSpan.FromMilliseconds(120));
+        };
         ShowTourRing(step.Anchor());
         flyout.ShowAt(step.Anchor());
     }
@@ -177,9 +224,11 @@ public partial class MainWindow
         _tourRing = null;
     }
 
-    void FinishTour()
+    void FinishTour(bool completed = false)
     {
         _touring = false; HideTourRing();
+        // the whole short tour was gone through: next comes the offer of the deep tour (once)
+        if (completed) DispatcherTimer.RunOnce(() => _ = OfferDeepTourAsync(), TimeSpan.FromMilliseconds(600));
         if (_activeWork is not null) ShowReader();   // the tour may have ended inside the settings
         DispatcherTimer.RunOnce(() => { _palette.IsOpen = false; if (QuickJumpBox.IsFocused) Focus(); }, TimeSpan.FromMilliseconds(250));
         if (!_settings.TourPending) return;

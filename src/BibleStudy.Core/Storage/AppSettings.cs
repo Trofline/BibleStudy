@@ -351,6 +351,26 @@ public sealed class AppSettings
     public bool BackupAsked { get; set; }
     /// <summary>The last "new shortcuts" hint that was shown (so each one appears only once).</summary>
     public string? TipShown { get; set; }
+    /// <summary>Now and then a suggestion of the program in the corner (the message center): at most one a day, one per start.</summary>
+    public bool Suggestions { get; set; } = true;
+    /// <summary>The suggestions that were shown already (each one comes by itself only once; in the message center it can be shown again).</summary>
+    public List<string> SuggestionsSeen { get; set; } = [];
+    /// <summary>The suggestions the person turned off one by one.</summary>
+    public List<string> SuggestionsOff { get; set; } = [];
+    /// <summary>The day (yyyy-MM-dd) the last suggestion came by itself.</summary>
+    public string? LastSuggestionDay { get; set; }
+    /// <summary>The deep tour: the step where it was left, the steps seen, whether it was offered after the short tour and whether it was finished.</summary>
+    public int DeepTourStep { get; set; }
+    public List<string> DeepTourSeen { get; set; } = [];
+    public bool DeepTourOffered { get; set; }
+    public bool DeepTourDone { get; set; }
+    /// <summary>The best result in the quiz about the program (right answers).</summary>
+    public int QuizBest { get; set; }
+    /// <summary>The tabs (by index) whose short tour was seen, and whether these tours are off altogether.</summary>
+    public List<string> TabToursSeen { get; set; } = [];
+    public bool TabToursOff { get; set; }
+    /// <summary>The person was asked (on the first start, or once after the update that brought them) whether the tab tours should come.</summary>
+    public bool TabToursAsked { get; set; }
     public string? PlanId { get; set; }
     public string? PlanStart { get; set; }
     public List<string> PlanDoneDays { get; set; } = [];

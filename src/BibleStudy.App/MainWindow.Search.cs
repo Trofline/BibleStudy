@@ -279,6 +279,7 @@ public partial class MainWindow
     {
         var text = SearchBox.Text?.Trim() ?? "";
         if (text.Length == 0 || _searching || TranslationBox.SelectedItem is not TranslationInfo t) return;
+        _searchCount++;
         _searching = true;
         try
         {
