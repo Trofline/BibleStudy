@@ -3606,5 +3606,6 @@
   "Bildqualität: niedrig (für langsames Internet)": "Calidad de imagen: baja (para internet lento)",
   "Bildqualität: mittel": "Calidad de imagen: media",
   "Bildqualität: HD (720p)": "Calidad de imagen: HD (720p)",
-  "Ruckelt das Bild oder kommt es spät an, wähle eine niedrigere Qualität: HD braucht bei jeder Person mit Kamera etwa 5 Mbit/s zum Senden und bei allen anderen ebenso viel zum Empfangen.": "Si la imagen se entrecorta o llega tarde, elige una calidad más baja: HD necesita unos 5 Mbit/s para enviar en cada persona con cámara, y lo mismo para recibir en todas las demás."
+  "Ruckelt das Bild oder kommt es spät an, wähle eine niedrigere Qualität: HD braucht bei jeder Person mit Kamera etwa 5 Mbit/s zum Senden und bei allen anderen ebenso viel zum Empfangen.": "Si la imagen se entrecorta o llega tarde, elige una calidad más baja: HD necesita unos 5 Mbit/s para enviar en cada persona con cámara, y lo mismo para recibir en todas las demás.",
+  "{0} aus anderen Vaults (unten)": "{0} de otros vaults (abajo)"
 }

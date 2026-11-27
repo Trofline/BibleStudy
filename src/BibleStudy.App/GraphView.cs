@@ -65,6 +65,37 @@ public sealed class GraphView : UserControl
     readonly ProgressBar _progress = new() { Minimum = 0, Maximum = 1, IsVisible = false };
     readonly Button _buildBtn = new() { Content = L("Querverweis-Daten laden"), HorizontalAlignment = HorizontalAlignment.Left };
     bool _loadingBooks;
+    readonly ScrollViewer _viewScroll = new() { HorizontalScrollBarVisibility = ScrollBarVisibility.Hidden, VerticalScrollBarVisibility = ScrollBarVisibility.Disabled, IsVisible = false, Margin = new(12, 8, 12, 2) };
+    readonly StackPanel _viewRow = new() { Orientation = Orientation.Horizontal, Spacing = 4 };
+    readonly ScrollViewer _legendScroll = new() { HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled, VerticalScrollBarVisibility = ScrollBarVisibility.Disabled };
+    readonly ScrollViewer _detailScroll = new() { HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled };
+    WrapPanel _strip = null!;
+    Control[] _views = [];
+    bool? _narrow;
+
+    /// <summary>
+    /// A phone: the graph had a strip of a few points between the buttons above and the details and the legend below (the network
+    /// lay on one line). There the kinds of graph stand in one row that slides sideways, the legend is one row too, and the details of a
+    /// chapter take at most a third of the height and scroll.
+    /// </summary>
+    void FitToWidth()
+    {
+        var narrow = Bounds.Width is > 0 and < 600;
+        _detailScroll.MaxHeight = narrow ? Math.Max(120, Bounds.Height * 0.3) : double.PositiveInfinity;
+        if (narrow == _narrow) return;
+        _narrow = narrow;
+        foreach (var v in _views)
+        {
+            (v.Parent as Panel)?.Children.Remove(v);
+            if (narrow) { v.Margin = default; _viewRow.Children.Add(v); }
+        }
+        if (!narrow) for (var i = _views.Length - 1; i >= 0; i--) { _views[i].Margin = new(0, 0, i == 0 ? 16 : i == _views.Length - 1 ? 16 : 4, 4); _strip.Children.Insert(0, _views[i]); }
+        _viewScroll.IsVisible = narrow;
+        _strip.Margin = narrow ? new(12, 4, 12, 2) : new(16, 10, 16, 6);
+        _legendScroll.HorizontalScrollBarVisibility = narrow ? ScrollBarVisibility.Hidden : ScrollBarVisibility.Disabled;
+        _detail.Margin = narrow ? new(8, 0, 8, 6) : new(16, 0, 16, 8);
+        _detail.Padding = narrow ? new(10, 6) : new(14, 10);
+    }
 
     public GraphView()
     {
@@ -86,7 +117,6 @@ public sealed class GraphView : UserControl
 
         _detailActions.Children.Add(_centerBtn); _detailActions.Children.Add(_expandBtn); _detailActions.Children.Add(_openBtn);
         foreach (var b in _detailActions.Children) b.Margin = new(0, 6, 8, 0);
-        _detail.Child = new StackPanel { Children = { _detailTitle, _detailInfo, _detailChips, _detailActions } };
 
         var host = new Grid { Children = { _net, _arc, _otnt, _chord, _force, _buildPanel } };
         var legend = new WrapPanel { Margin = new(16, 4, 16, 8) };
@@ -99,12 +129,20 @@ public sealed class GraphView : UserControl
             text.Bind(TextBlock.ForegroundProperty, this.GetResourceObservable("BsMuted"));
             legend.Children.Add(new StackPanel { Orientation = Orientation.Horizontal, Children = { dot, text } });
         }
-        var bottom = new StackPanel { Children = { _detail, legend } };
+        _legendScroll.Content = legend;
+        _detail.Child = null;
+        _detailScroll.Content = new StackPanel { Children = { _detailTitle, _detailInfo, _detailChips, _detailActions } };
+        _detail.Child = _detailScroll;
+        var bottom = new StackPanel { Children = { _detail, _legendScroll } };
         var dock = new DockPanel();
         var hintRow = new Border { Height = 24, Padding = new(16, 0), Child = _hint };
-        DockPanel.SetDock(strip, Dock.Top); DockPanel.SetDock(hintRow, Dock.Top); DockPanel.SetDock(bottom, Dock.Bottom);
-        dock.Children.Add(strip); dock.Children.Add(hintRow); dock.Children.Add(bottom); dock.Children.Add(host);
+        _viewScroll.Content = _viewRow;
+        DockPanel.SetDock(strip, Dock.Top); DockPanel.SetDock(_viewScroll, Dock.Top); DockPanel.SetDock(hintRow, Dock.Top); DockPanel.SetDock(bottom, Dock.Bottom);
+        dock.Children.Add(_viewScroll); dock.Children.Add(strip); dock.Children.Add(hintRow); dock.Children.Add(bottom); dock.Children.Add(host);
         Content = dock;
+        _strip = strip;
+        _views = [back, _netBtn, _arcBtn, _otntBtn, _chordBtn, _authorBtn, _wordBtn, _personBtn, _topicBtn];
+        SizeChanged += (_, _) => FitToWidth();
 
         _netBtn.Click += (_, _) => SetView(0);
         _otntBtn.Click += (_, _) => SetView(2);
@@ -380,7 +418,25 @@ sealed class NetworkCanvas : Control
     public event Action<int>? Selected, Open;
     public event Action<string>? Hovered;
 
-    public NetworkCanvas() => ClipToBounds = true;
+    public NetworkCanvas()
+    {
+        ClipToBounds = true;
+        // two fingers zoom (a phone has no mouse wheel)
+        GestureRecognizers.Add(new PinchGestureRecognizer());
+        AddHandler(PinchEvent, (_, e) =>
+        {
+            if (_pinchBase < 0) { _pinchBase = _zoom; _dragFrom = null; }
+            var next = Math.Clamp(_pinchBase * e.Scale, 0.4, 5);
+            var o = e.ScaleOrigin; var factor = next / _zoom;
+            _pan = new Vector(o.X - (o.X - _pan.X) * factor, o.Y - (o.Y - _pan.Y) * factor);
+            _zoom = next;
+            InvalidateVisual();
+            e.Handled = true;
+        });
+        AddHandler(PinchEndedEvent, (_, _) => _pinchBase = -1);
+    }
+
+    double _pinchBase = -1;
 
     CrossRefGraph? _g;
     List<int> _nodes = [];
@@ -478,7 +534,12 @@ sealed class NetworkCanvas : Control
         for (var i = 0; i < n; i++) _pos[i] = new Point((_pos[i].X - cx) / extent, (_pos[i].Y - cy) / extent);
     }
 
-    Point Map(Point p) => new((Bounds.Width / 2 + p.X * (Bounds.Width / 2 - 70)) * _zoom + _pan.X, (Bounds.Height / 2 + p.Y * (Bounds.Height / 2 - 40)) * _zoom + _pan.Y);
+    // the room kept at the edges for the names: on a phone a fixed 70 and 40 left almost nothing (all nodes stood on one line)
+    Point Map(Point p)
+    {
+        var mx = Math.Min(70, Bounds.Width * 0.16); var my = Math.Min(40, Bounds.Height * 0.1);
+        return new((Bounds.Width / 2 + p.X * (Bounds.Width / 2 - mx)) * _zoom + _pan.X, (Bounds.Height / 2 + p.Y * (Bounds.Height / 2 - my)) * _zoom + _pan.Y);
+    }
 
     double Radius(int i) => (i == 0 ? 15 : 5) + 8 * Math.Sqrt(_score[i] / Math.Max(1, _score.Max())) * (i == _selected ? 1.2 : 1);
 
@@ -505,18 +566,30 @@ sealed class NetworkCanvas : Control
             var color = HomeView.ColorOf(_g.At(_nodes[i]).Book);
             var radius = Radius(i);
             dc.DrawEllipse(new SolidColorBrush(color), i == _selected ? new Pen(text, 2.5) : i == _hover ? new Pen(text, 1.5) : null, c, radius, radius);
-            if (i == 0 || i == _selected || i == _hover || _nodes.Count <= 28 || radius > 10)
-            {
-                var label = new FormattedText(Label(i), CultureInfo.CurrentUICulture, FlowDirection.LeftToRight, Typeface.Default, i == _selected ? 13 : 11, text);
-                dc.DrawText(label, new Point(c.X - label.Width / 2, c.Y + radius + 2));
-            }
+        }
+        // the names after the nodes; one that would lie on a name already written is left out (on a phone they stood on top of each other).
+        // The chosen node, the center and the big nodes come first; zooming in (two fingers) shows the others.
+        var placed = new List<Rect>();
+        var halo = this.TryFindResource("BsBackground", ActualThemeVariant, out var bg) && bg is ISolidColorBrush sb ? new SolidColorBrush(sb.Color, 0.6) : new SolidColorBrush(Colors.Black, 0.5);
+        foreach (var i in Enumerable.Range(0, _nodes.Count).OrderByDescending(i => i == _selected).ThenByDescending(i => i == _hover).ThenByDescending(i => i == 0).ThenByDescending(Radius))
+        {
+            var c = Map(_pos[i]);
+            var radius = Radius(i);
+            if (!(i == 0 || i == _selected || i == _hover || _nodes.Count <= 28 || radius > 10)) continue;
+            var label = new FormattedText(Label(i), CultureInfo.CurrentUICulture, FlowDirection.LeftToRight, Typeface.Default, i == _selected ? 13 : 11, text);
+            var at = new Point(Math.Clamp(c.X - label.Width / 2, 2, Math.Max(2, Bounds.Width - label.Width - 2)), c.Y + radius + 2);
+            var box = new Rect(at.X - 2, at.Y, label.Width + 4, label.Height);
+            if (i != _selected && i != _hover && placed.Any(b => b.Intersects(box))) continue;
+            placed.Add(box);
+            dc.DrawRectangle(halo, null, box, 3, 3);
+            dc.DrawText(label, at);
         }
     }
 
     int HitTest(Point p)
     {
         for (var i = _nodes.Count - 1; i >= 0; i--)
-            if (Diff(Map(_pos[i]), p).Length <= Radius(i) + 4) return i;
+            if (Diff(Map(_pos[i]), p).Length <= Radius(i) + 8) return i;   // + a little: a finger is wider than a mouse pointer
         return -1;
     }
 

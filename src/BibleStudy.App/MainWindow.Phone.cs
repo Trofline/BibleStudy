@@ -89,6 +89,7 @@ public partial class MainWindow
             // the panel lies over the text and the tools: always on top, and what is below it never draws over it
             SidePanel.ZIndex = phone ? 10 : 0;
             FitExplorerToScreen();
+            ApplyPhoneLists(phone);
             // the work tabs: on a phone they do not fit side by side, the row scrolls sideways with the finger
             if (phone && TabBar.Child == TabStrip)
             {
@@ -173,7 +174,7 @@ public partial class MainWindow
         var start = e.GetPosition(this);
         var offset = ReaderScroll.Offset;
         var pointer = e.Pointer;
-        var timer = _longPress = new Avalonia.Threading.DispatcherTimer { Interval = TimeSpan.FromMilliseconds(550) };
+        var timer = _longPress = new Avalonia.Threading.DispatcherTimer { Interval = TimeSpan.FromMilliseconds(TouchTap.HoldMs) };
         void Cancel() { timer.Stop(); RemoveHandler(PointerReleasedEvent, OnUp); RemoveHandler(PointerMovedEvent, OnMove); }
         void OnUp(object? s, Avalonia.Input.PointerReleasedEventArgs a) { if (a.Pointer == pointer) Cancel(); }
         void OnMove(object? s, Avalonia.Input.PointerEventArgs a)

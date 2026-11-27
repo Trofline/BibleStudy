@@ -8,8 +8,8 @@ namespace BibleStudy.App;
 
 /// <summary>
 /// Choosing in the explorer as in the gallery of a phone: "Auswählen" turns every row into a box to tick (a tap ticks or unticks, nothing opens),
-/// a bar below says how many are chosen and does one thing with all of them: move, color, tags, a reading path, delete. A long press on a row
-/// starts it with that row. On a computer Ctrl and Shift keep working as before.
+/// a bar below says how many are chosen and does one thing with all of them: move, color, tags, a reading path, delete. Only the button starts it
+/// (a long press on a row does not: a thumb laid down to scroll started it by mistake). On a computer Ctrl and Shift keep working as before.
 /// </summary>
 public partial class MainWindow
 {
@@ -101,39 +101,12 @@ public partial class MainWindow
         ExShowSelection();
     }
 
-    /// <summary>A finger ticks a row when it lifts without having moved: a finger that slides is scrolling the list.</summary>
-    void ExPickOnLift(Control row, ExItem item, Avalonia.Input.PointerPressedEventArgs e)
-    {
-        var start = e.GetPosition(row); var pointer = e.Pointer;
-        void Up(object? s, Avalonia.Input.PointerReleasedEventArgs a)
-        {
-            if (a.Pointer != pointer) return;
-            row.RemoveHandler(Avalonia.Input.InputElement.PointerReleasedEvent, Up);
-            var p = a.GetPosition(row);
-            if (Math.Abs(p.X - start.X) + Math.Abs(p.Y - start.Y) < 12) ExPickToggle(item);
-        }
-        row.AddHandler(Avalonia.Input.InputElement.PointerReleasedEvent, Up, Avalonia.Interactivity.RoutingStrategies.Tunnel | Avalonia.Interactivity.RoutingStrategies.Bubble, handledEventsToo: true);
-    }
-
-    /// <summary>A finger that rests on a row starts choosing, with that row ticked (as in the gallery of a phone).</summary>
-    void ExLongPressToPick(Control row, ExItem item, Avalonia.Input.PointerPressedEventArgs e)
-    {
-        var start = e.GetPosition(row); var pointer = e.Pointer;
-        var timer = new Avalonia.Threading.DispatcherTimer { Interval = TimeSpan.FromMilliseconds(550) };
-        void Stop() { timer.Stop(); row.RemoveHandler(Avalonia.Input.InputElement.PointerReleasedEvent, Up); row.RemoveHandler(Avalonia.Input.InputElement.PointerMovedEvent, Move); }
-        void Up(object? s, Avalonia.Input.PointerReleasedEventArgs a) { if (a.Pointer == pointer) Stop(); }
-        void Move(object? s, Avalonia.Input.PointerEventArgs a) { if (a.Pointer == pointer && (Math.Abs(a.GetPosition(row).X - start.X) + Math.Abs(a.GetPosition(row).Y - start.Y)) > 12) Stop(); }
-        row.AddHandler(Avalonia.Input.InputElement.PointerReleasedEvent, Up, Avalonia.Interactivity.RoutingStrategies.Tunnel | Avalonia.Interactivity.RoutingStrategies.Bubble, handledEventsToo: true);
-        row.AddHandler(Avalonia.Input.InputElement.PointerMovedEvent, Move, Avalonia.Interactivity.RoutingStrategies.Tunnel | Avalonia.Interactivity.RoutingStrategies.Bubble, handledEventsToo: true);
-        timer.Tick += (_, _) =>
-        {
-            Stop();
-            if (_exDragging || _exPick) return;
-            _exDrag = null; pointer.Capture(null);
-            SetExPick(true, item);
-        };
-        timer.Start();
-    }
+    /// <summary>
+    /// A finger ticks a row when it lifts without having moved: a finger that slides is scrolling the list. The lift is heard at the window,
+    /// because the list takes the finger as soon as it moves a little, and the row itself then never hears it lift (so only one row could be ticked).
+    /// </summary>
+    void ExPickOnLift(Control row, ExItem item, Avalonia.Input.PointerPressedEventArgs e) =>
+        TouchTap.Defer(row, e, () => ExPickToggle(item), maxMs: 4000);   // while choosing a slow tap ticks too
 
     void UpdateExPickBar()
     {

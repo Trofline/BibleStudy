@@ -155,10 +155,11 @@ public partial class MainWindow
             row.PointerEntered += (_, _) => row.Bind(Border.BackgroundProperty, this.GetResourceObservable("BsSurface2"));
             row.PointerExited += (_, _) => { row.ClearValue(Border.BackgroundProperty); row.Background = Brushes.Transparent; };
         }
-        row.PointerPressed += async (_, e) =>
+        // on the lift of a tap: a thumb laid on the list to scroll it jumped to the verse at once
+        row.OnPress(async (_, e) =>
         {
-            if (e.GetCurrentPoint(row).Properties.IsLeftButtonPressed) await GoToAsync(n.Ref.Book, n.Ref.Chapter, n.Ref.Verse);
-        };
+            if (e.Pointer.Type == PointerType.Touch || e.GetCurrentPoint(row).Properties.IsLeftButtonPressed) await GoToAsync(n.Ref.Book, n.Ref.Chapter, n.Ref.Verse);
+        });
 
         var menu = new MenuFlyout();
         var move = new MenuItem { Header = L("In Ordner verschieben") };

@@ -682,7 +682,8 @@ public partial class MainWindow
         row.PointerExited += (_, _) => { if (!_exDragging) Paint(false); };
         if (item.Kind == ExKind.Folder) _exTargets.Add(new ExTarget(row, item.Id, on => { if (on) row.Background = Res("BsAccentSoft") ?? Brushes.Transparent; else Paint(false); }));
         ExDragSource(row, item);
-        row.ContextMenu = item.Kind == ExKind.Folder ? FolderContextMenu(item, row) : ItemContextMenu(item, row);
+        // while choosing, the bar below does it all: a slow tap must tick the row, not open its menu
+        if (!_exPick) row.ContextMenu = item.Kind == ExKind.Folder ? FolderContextMenu(item, row) : ItemContextMenu(item, row);
         return row;
     }
 
@@ -941,7 +942,7 @@ public partial class MainWindow
             if (!props.IsLeftButtonPressed) return;
             ExplorerHost.Focusable = true; ExplorerHost.Focus();
             if (_exPick) { e.Handled = true; if (e.Pointer.Type == PointerType.Touch) ExPickOnLift(row, item, e); else ExPickToggle(item); return; }   // choosing: a tap ticks, nothing opens or moves
-            if (e.Pointer.Type == PointerType.Touch) ExLongPressToPick(row, item, e);
+            // a finger does not start choosing by resting on a row: a thumb laid down to scroll did that all the time; "Auswählen" above starts it
             if (e.ClickCount == 2) { e.Handled = true; ExOpen(item); return; }
             var ctrl = e.KeyModifiers.HasFlag(Mods.Ctrl);
             var chosen = _exSel.Any(s => s.Kind == item.Kind && s.Id == item.Id);

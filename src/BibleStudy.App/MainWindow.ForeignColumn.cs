@@ -107,7 +107,7 @@ public partial class MainWindow
         _fLongPress?.Stop();
         var start = e.GetPosition(this); var pointer = e.Pointer;
         var scroll = col < _colScrolls.Count ? _colScrolls[col] : null; var offset = scroll?.Offset.Y ?? 0;
-        var timer = _fLongPress = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(550) };
+        var timer = _fLongPress = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(TouchTap.HoldMs) };
         var moved = false;
         void Cancel() { timer.Stop(); RemoveHandler(PointerReleasedEvent, OnUp); RemoveHandler(PointerMovedEvent, OnMove); }
         void OnUp(object? s, PointerReleasedEventArgs a)

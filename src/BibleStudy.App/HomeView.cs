@@ -62,6 +62,9 @@ public sealed class HomeView : UserControl
     double _fitWidth;
 
     readonly List<Border> _tiles = [];
+    readonly List<Border> _recentTiles = [];   // the cards of "Weiterarbeiten": two in a row on a phone, like the books
+    bool Narrow => _scroll.Bounds.Width is > 0 and < 520;
+    double RecentWidth => Narrow ? TileWidth : 220;
 
     /// <summary>A book tile: on a phone two fill the row (the long names like "Apostelgeschichte" need the room), elsewhere 148.</summary>
     double TileWidth => _scroll.Bounds.Width is > 0 and < 520 and var w ? Math.Floor((Math.Max(200, w - 28) - 20) / 2) - 1 : 148;
@@ -75,12 +78,13 @@ public sealed class HomeView : UserControl
         _panel.Margin = w < 520 ? new(0, 16, 0, 40) : new(0, 40, 0, 70);
         _panel.Width = w < 520 ? Math.Max(200, w - 28) : Math.Clamp(w - 64, 400, 940);   // a phone is narrower than the smallest desktop page
         foreach (var t in _tiles) if (t.Width != TileWidth) t.Width = TileWidth;
+        foreach (var t in _recentTiles) if (t.Width != RecentWidth) { t.Width = RecentWidth; t.Height = Narrow ? 70 : 92; }
     }
 
     /// <summary>(Re)builds the page; keeps the chapter grid of <paramref name="openBook"/> open if given.</summary>
     public void Show(IReadOnlyList<BookInfo> books, HashSet<(string, int)> read, string? openBook = null)
     {
-        _books = books; _read = read; _openBook = openBook; _tiles.Clear();
+        _books = books; _read = read; _openBook = openBook; _tiles.Clear(); _recentTiles.Clear();
         var panel = new StackPanel { Width = 940, HorizontalAlignment = HorizontalAlignment.Center, Margin = _scroll.Bounds.Width is > 0 and < 520 ? new(0, 16, 0, 40) : new(0, 40, 0, 70), Spacing = 6 };
         if (_openBook is not null && books.FirstOrDefault(b => b.Id == _openBook) is { } book) BuildChapters(panel, book);
         else BuildBooks(panel);
@@ -153,11 +157,15 @@ public sealed class HomeView : UserControl
             var wrap = new WrapPanel { Margin = new(0, 8, 0, 0) };
             foreach (var (kind, title, detail, open) in Recent)
             {
-                var kindText = Themed(new TextBlock { Text = kind.ToUpperInvariant(), FontSize = 10, FontWeight = FontWeight.SemiBold, LetterSpacing = 1.2 }, TextBlock.ForegroundProperty, "BsAccent");
+                // on a phone: two small cards in a row (one big card filled the width and showed three of them on a screen)
+                var narrow = Narrow;
+                var kindText = Themed(new TextBlock { Text = kind.ToUpperInvariant(), FontSize = narrow ? 9 : 10, FontWeight = FontWeight.SemiBold, LetterSpacing = narrow ? 0.6 : 1.2, TextTrimming = TextTrimming.CharacterEllipsis }, TextBlock.ForegroundProperty, "BsAccent");
                 var titleText = new TextBlock { Text = title, FontWeight = FontWeight.SemiBold, TextTrimming = TextTrimming.CharacterEllipsis };
                 var detailText = Caption(detail); detailText.MaxHeight = 34; detailText.TextTrimming = TextTrimming.CharacterEllipsis;
-                var card = new Border { Width = 220, Height = 92, Margin = new(0, 0, 10, 10), Padding = new(12, 10), CornerRadius = new(12), BorderThickness = new(1), Cursor = new Cursor(StandardCursorType.Hand), Classes = { "tile" },
-                    Child = new StackPanel { Spacing = 3, Children = { kindText, titleText, detailText } } };
+                if (narrow) { detailText.TextWrapping = TextWrapping.NoWrap; detailText.MaxHeight = 18; titleText.FontSize = 13.5; }
+                var card = new Border { Width = RecentWidth, Height = narrow ? 70 : 92, Margin = new(0, 0, 10, 10), Padding = narrow ? new(10, 7) : new(12, 10), CornerRadius = new(12), BorderThickness = new(1), Cursor = new Cursor(StandardCursorType.Hand), Classes = { "tile" },
+                    Child = new StackPanel { Spacing = narrow ? 1 : 3, Children = { kindText, titleText, detailText } } };
+                _recentTiles.Add(card);
                 Themed(card, Border.BackgroundProperty, "BsSurface"); Themed(card, Border.BorderBrushProperty, "BsBorder");
                 var o = open;
                 card.OnPress((_, e) => { if (e.GetCurrentPoint(card).Properties.IsLeftButtonPressed) o(); });
@@ -299,7 +307,7 @@ public sealed class HomeView : UserControl
         var start = e.GetPosition(this);
         var pointer = e.Pointer;
         var over = false;
-        var timer = new Avalonia.Threading.DispatcherTimer { Interval = TimeSpan.FromMilliseconds(550) };
+        var timer = new Avalonia.Threading.DispatcherTimer { Interval = TimeSpan.FromMilliseconds(TouchTap.HoldMs) };
         void Stop() { timer.Stop(); RemoveHandler(PointerReleasedEvent, Up); RemoveHandler(PointerMovedEvent, Move); }
         void Move(object? s, PointerEventArgs a)
         {

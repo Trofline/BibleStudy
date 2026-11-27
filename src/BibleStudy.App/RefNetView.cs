@@ -29,6 +29,24 @@ sealed class RefNetView : Control
     }
 
     double RowHeight(int n) => (Bounds.Height - Top * 2) / Math.Max(1, n);
+
+    /// <summary>
+    /// The size of the book names and how wide their column is. On a phone 39 books stand on a few hundred points: with the font of a
+    /// computer the names lay on top of each other ("Genesis Exodus" in one blot) and the two columns of 150 left no room for the ribbons.
+    /// The names get as small as a row is high (not under 7), and every second one is left out when even that does not fit.
+    /// </summary>
+    (double Font, double X0, double X1, int Every) Metrics()
+    {
+        var row = Math.Min(RowHeight(_ot.Count), RowHeight(_nt.Count));
+        var font = Math.Clamp(row * 0.95, 7, 11.5);
+        var every = row * 2 < font * 1.05 ? 3 : row < font * 1.05 ? 2 : 1;
+        var widest = _ot.Concat(_nt).Select(b => Measure(b.Name, font)).DefaultIfEmpty(0).Max();
+        var label = Math.Min(LabelWidth, Math.Min(widest + 12, Math.Max(60, Bounds.Width * 0.3)));
+        return (font, label + 10, Bounds.Width - label - 10, every);
+    }
+
+    static double Measure(string text, double font) =>
+        new FormattedText(text, CultureInfo.CurrentUICulture, FlowDirection.LeftToRight, Typeface.Default, font, Brushes.White).Width;
     double YOt(int i) => Top + (i + 0.5) * RowHeight(_ot.Count);
     double YNt(int j) => Top + (j + 0.5) * RowHeight(_nt.Count);
 
@@ -38,7 +56,7 @@ sealed class RefNetView : Control
     {
         var text = Res("BsText", Brushes.White);
         var muted = Res("BsMuted", Brushes.Gray);
-        var x0 = LabelWidth + 10; var x1 = Bounds.Width - LabelWidth - 10;
+        var (font, x0, x1, every) = Metrics();
         if (_count.Count == 0 || x1 <= x0 + 40)
         {
             dc.DrawText(new FormattedText(L("Keine Verweise in dieser Stärke."), CultureInfo.CurrentUICulture, FlowDirection.LeftToRight, Typeface.Default, 14, muted), new Point(24, 20));
@@ -73,8 +91,11 @@ sealed class RefNetView : Control
             {
                 var y = left ? YOt(i) : YNt(i);
                 var active = _hover == list[i].Id;
-                var f = new FormattedText(list[i].Name, CultureInfo.CurrentUICulture, FlowDirection.LeftToRight, new Typeface(FontFamily.Default, FontStyle.Normal, active ? FontWeight.SemiBold : FontWeight.Normal), 11.5, active ? text : muted);
-                dc.DrawText(f, new Point(left ? x0 - 10 - f.Width : x1 + 10, y - f.Height / 2));
+                if (i % every == 0 || active)
+                {
+                    var f = new FormattedText(list[i].Name, CultureInfo.CurrentUICulture, FlowDirection.LeftToRight, new Typeface(FontFamily.Default, FontStyle.Normal, active ? FontWeight.SemiBold : FontWeight.Normal), font, active ? text : muted);
+                    dc.DrawText(f, new Point(left ? x0 - 10 - f.Width : x1 + 10, y - f.Height / 2));
+                }
                 dc.DrawEllipse(new SolidColorBrush(HomeView.ColorOf(list[i].Id)), null, new Point(left ? x0 - 3 : x1 + 3, y), active ? 4 : 2.5, active ? 4 : 2.5);
             }
         }
@@ -83,7 +104,7 @@ sealed class RefNetView : Control
 
     string? BookAt(Point p)
     {
-        var x0 = LabelWidth + 10; var x1 = Bounds.Width - LabelWidth - 10;
+        var (_, x0, x1, _) = Metrics();
         if (p.X < x0 + 6) { var h = RowHeight(_ot.Count); var i = (int)((p.Y - Top) / h); return i >= 0 && i < _ot.Count ? _ot[i].Id : null; }
         if (p.X > x1 - 6) { var h = RowHeight(_nt.Count); var j = (int)((p.Y - Top) / h); return j >= 0 && j < _nt.Count ? _nt[j].Id : null; }
         return null;

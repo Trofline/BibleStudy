@@ -53,6 +53,7 @@ public partial class MainWindow
         InitPatchNotes();
         InitTopBar();
         InitPhone();
+        InitTouchHold();
         InitReadBarFit();
         InitReadingAids();
         InitCommentarySearch();

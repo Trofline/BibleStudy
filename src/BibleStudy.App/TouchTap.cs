@@ -15,6 +15,12 @@ static class TouchTap
     const double Slop = 9;          // how far a finger may wander and still be a tap (device-independent pixels)
     const long LongMs = 650;        // longer than this is no tap
 
+    /// <summary>
+    /// How long a finger rests before a long press counts (the verse menu, the menu of a row). Avalonia waits only 300 ms: an older hand that
+    /// is not quick, or a thumb laid down to scroll, opened a menu all the time. iOS and Android wait about 500 ms; a little more is calmer.
+    /// </summary>
+    public const int HoldMs = 800;
+
     /// <summary>Like <c>PointerPressed +=</c>, but for a finger only after it lifted without having moved.</summary>
     public static void OnPress(this InputElement control, EventHandler<PointerPressedEventArgs> handler)
     {
@@ -26,7 +32,7 @@ static class TouchTap
     }
 
     /// <summary>Runs <paramref name="act"/> when the touch of <paramref name="e"/> lifts without a scroll; nothing happens if it moved or was held.</summary>
-    public static void Defer(Visual from, PointerPressedEventArgs e, Action act)
+    public static void Defer(Visual from, PointerPressedEventArgs e, Action act, long maxMs = LongMs)
     {
         if (TopLevel.GetTopLevel(from) is not { } top) { act(); return; }
         var start = e.GetPosition(top);
@@ -49,7 +55,7 @@ static class TouchTap
             if (a.Pointer != pointer) return;
             Stop();
             var p = a.GetPosition(top);
-            if (Math.Abs(p.X - start.X) > Slop || Math.Abs(p.Y - start.Y) > Slop || Environment.TickCount64 - begin > LongMs) return;
+            if (Math.Abs(p.X - start.X) > Slop || Math.Abs(p.Y - start.Y) > Slop || Environment.TickCount64 - begin > maxMs) return;
             act();
         }
         top.AddHandler(InputElement.PointerReleasedEvent, Up, RoutingStrategies.Tunnel, handledEventsToo: true);
