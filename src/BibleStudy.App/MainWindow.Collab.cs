@@ -50,6 +50,7 @@ public partial class MainWindow
     int _inkNext;
     readonly Dictionary<string, Color> _inkOf = [];
     string _peopleChapter = "";
+    int _followDepth;
     bool _collabSuppress;          // true while the app itself jumps to another person's place, so that it does not echo back
     bool _follow;
     readonly StackPanel _collabLog = new() { Spacing = 6 };
@@ -628,9 +629,11 @@ public partial class MainWindow
     {
         // the chapter is already open: only the verse comes into view, the text is not loaded again
         if (p.Verse is int open && p.Book == _curBook && p.Chapter == _curChapter && _verseBoxes.ContainsKey(open)) { ScrollToVerse(open); return; }
+        // several jumps can overlap (the "lead" and the "nav" of the leader arrive together): the suppression ends only with the last of them
+        _followDepth++;
         _collabSuppress = true;
         try { await GoToAsync(p.Book, p.Chapter, p.Verse); }
-        finally { _collabSuppress = false; }
+        finally { if (--_followDepth <= 0) { _followDepth = 0; _collabSuppress = false; } }
         // in the chapter already open the view keeps its place: the verse the other one clicked is brought to the top after that
         if (p.Verse is int v) Avalonia.Threading.Dispatcher.UIThread.Post(() => ScrollToVerse(v), Avalonia.Threading.DispatcherPriority.Background);
     }

@@ -72,6 +72,10 @@ public partial class MainWindow
     void CollabNavigatedByMe()
     {
         if (_collabSuppress || _leaderId is null || !_followLeader) return;
+        // arriving where the leader is (or where their scrolling or reading path is) is following, not leaving
+        if (_people.TryGetValue(_leaderId, out var leader) && leader.Place is { } lp && lp.Book == _curBook && lp.Chapter == _curChapter) return;
+        if (_leaderView == (_curBook, _curChapter) || _pendingView is { } pv && pv.Book == _curBook && pv.Chapter == _curChapter) return;
+        if (_tour is { } t && t.By == _leaderId && t.Index < t.Steps.Count && t.Steps[t.Index].Covers(_curBook, _curChapter)) return;
         _followLeader = false;
         UpdateLeaderBar();
     }

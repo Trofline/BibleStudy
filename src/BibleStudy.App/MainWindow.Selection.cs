@@ -60,6 +60,10 @@ public partial class MainWindow
         ReaderScroll.AddHandler(PointerCaptureLostEvent, (_, _) => EndDrag(false), RoutingStrategies.Tunnel, handledEventsToo: true);
         AddHandler(KeyDownEvent, OnSelKeyDown, RoutingStrategies.Tunnel);
         InitQuickMark();
+        // the colors belong to the text: when the reader is left (settings, another page) they go
+        ReaderHost.PropertyChanged += (_, e) => { if (e.Property == IsVisibleProperty && !ReaderHost.IsVisible) HideSelectionPopup(); };
+        SideTabs.SelectionChanged += (_, e) => { if (ReferenceEquals(e.Source, SideTabs)) HideSelectionPopup(); };
+        SidePanel.PropertyChanged += (_, e) => { if (e.Property == IsVisibleProperty) HideSelectionPopup(); };
     }
 
     // ---- verses chosen with Ctrl and Shift ------------------------------------------------------------------------------
@@ -415,6 +419,14 @@ public partial class MainWindow
 
     void OnSelKeyDown(object? sender, KeyEventArgs e)
     {
+        // Escape always closes the colors first, wherever the focus is (also over a whole verse, where no text is selected)
+        if (e.Key == Key.Escape && _selPopup is not null)
+        {
+            HideSelectionPopup();
+            if (_sel is not null) ClearTextSelection(true);
+            e.Handled = true;
+            return;
+        }
         if (e.Handled) return;
         var ctrl = e.KeyModifiers.HasFlag(Mods.Ctrl) && !e.KeyModifiers.HasFlag(KeyModifiers.Shift) && !e.KeyModifiers.HasFlag(KeyModifiers.Alt);
         if (e.Key == Key.Escape && (_sel is not null || _selVerses.Count > 1) && !FocusInExplorer())
