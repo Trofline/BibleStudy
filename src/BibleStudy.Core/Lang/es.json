@@ -3606,5 +3606,14 @@
   "Bildqualität: niedrig (für langsames Internet)": "Calidad de imagen: baja (para internet lento)",
   "Bildqualität: mittel": "Calidad de imagen: media",
   "Bildqualität: HD (720p)": "Calidad de imagen: HD (720p)",
-  "Ruckelt das Bild oder kommt es spät an, wähle eine niedrigere Qualität: HD braucht bei jeder Person mit Kamera etwa 5 Mbit/s zum Senden und bei allen anderen ebenso viel zum Empfangen.": "Si la imagen se entrecorta o llega tarde, elige una calidad más baja: HD necesita unos 5 Mbit/s para enviar en cada persona con cámara, y lo mismo para recibir en todas las demás."
+  "Ruckelt das Bild oder kommt es spät an, wähle eine niedrigere Qualität: HD braucht bei jeder Person mit Kamera etwa 5 Mbit/s zum Senden und bei allen anderen ebenso viel zum Empfangen.": "Si la imagen se entrecorta o llega tarde, elige una calidad más baja: HD necesita unos 5 Mbit/s para enviar en cada persona con cámara, y lo mismo para recibir en todas las demás.",
+  "Nur der Bibeltext, bildschirmfüllend und ohne Ablenkung (wie F11). F11 oder ✕ unten beendet es.": "Solo el texto bíblico, a pantalla completa y sin distracciones (como F11). F11 o ✕ abajo lo termina.",
+  "Geteilt: links der Text, rechts die Studien-Werkzeuge, ganz rechts die Vers-Übersicht.": "Dividido: el texto a la izquierda, las herramientas de estudio a la derecha y el resumen del versículo en el extremo derecho.",
+  "Wortstudie an: Wörter im Text antippen, ganz rechts Grundtext und Bedeutung, daneben das Strong-Wörterbuch.": "Estudio de palabras activado: toca palabras del texto; texto original y significado en el extremo derecho, el diccionario Strong al lado.",
+  "Geteilt: links der Text, rechts deine Dokumente.": "Dividido: el texto a la izquierda, tus documentos a la derecha.",
+  "Geteilt: links der Text, rechts der Predigt-Editor, ganz rechts die Vers-Übersicht.": "Dividido: el texto a la izquierda, el editor de sermones a la derecha y el resumen del versículo en el extremo derecho.",
+  "Geteilt: links der Text, rechts die Materialien und Live für die Handys.": "Dividido: el texto a la izquierda, los materiales y Live para los móviles a la derecha.",
+  "Der Text mit „Zusammen studieren“ daneben: Chat, geteilte Verse, Mitlesen.": "El texto con «Estudiar juntos» al lado: chat, versículos compartidos, lectura conjunta.",
+  "Text links, Kommentare und Notizen als eigene Fenster rechts daneben.": "El texto a la izquierda, comentarios y notas como ventanas propias a la derecha.",
+  "Fokus-Modus beenden (F11)": "Salir del modo de enfoque (F11)"
 }

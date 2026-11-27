@@ -656,21 +656,57 @@ public partial class MainWindow
 
     LayoutPreset CaptureLayout() => new()
     {
-        SideOpen = SidePanel.IsVisible, SideWidth = SidePanel.Width, SideTab = _lastSideIndex, ActiveWork = _activeWork,
+        SideOpen = SidePanel.IsVisible, SideWidth = SidePanel.Width, SideTab = _lastSideIndex, ActiveWork = _settings.SplitView ? null : _activeWork,
         Windows = _windows.Values.Select(d => d.Win is { } w
             ? new WindowBounds(w.Position.X, w.Position.Y, (int)w.Width, (int)w.Height, w.WindowState == WindowState.Maximized) { Key = d.Key }
             : new WindowBounds(0, 0, 0, 0, false) { Key = d.Key }).ToList(),
+        Split = _settings.SplitView, Panes = _settings.SplitView ? [.. Panes] : null,
+        PaneWidths = _settings.SplitView && _settings.SplitWidths.Count == Panes.Count ? [.. _settings.SplitWidths] : null,
+        WordStudy = StudyBtn.IsChecked == true,
     };
 
     void ApplyLayout(LayoutPreset l, string? name = null)
     {
+        if (_settings.FocusMode) ToggleFocusMode();   // out of full screen first; the focus layout switches it on again at the end
         CloseAllDetached();
         if (name == "Dashboard") PlaceMainForDashboard();
+        if (l.Focus) { if (_settings.SplitView) SplitTopBtn.IsChecked = false; ShowWork(null); }
+        else if (l.Split is bool split) ApplySplit(split, l.Panes, l.PaneWidths);
         SidePanel.Width = Math.Clamp(l.SideWidth, 300, 900); _settings.SideWidth = SidePanel.Width;
         SetPanelOpen(l.SideOpen);
-        if (l.SideTab >= 0 && l.SideTab < SideTabs.ItemCount && GroupOf(l.SideTab) is { Windowed: false }) SideTabs.SelectedIndex = l.SideTab;
+        if (l.SideTab >= 0 && l.SideTab < SideTabs.ItemCount && GroupOf(l.SideTab) is { Windowed: false })
+        {
+            var same = SideTabs.SelectedIndex == l.SideTab;
+            SideTabs.SelectedIndex = l.SideTab;
+            // the verse overview shows the verse clicked last (choosing the tab draws it, an already chosen tab is drawn again)
+            if (same && l.SideOpen && l.SideTab == GuideTab) _ = ShowGuideAsync(_selected is int v ? new VerseRef(_curBook, _curChapter, v) : default);
+        }
         OpenLayoutWindows(l);
+        if (l.WordStudy is bool study && !_settings.EasyMode) StudyBtn.IsChecked = study;
+        if (l.Focus) ToggleFocusMode();
         SetActiveLayout(name);
+    }
+
+    /// <summary>Switches the split view on (with these areas, left to right) or off. Areas whose tab does not exist (compact look) are left out.</summary>
+    void ApplySplit(bool on, List<string>? panes, List<double>? widths)
+    {
+        var keep = (panes ?? []).Where(k => k == ReaderPane || _windows.ContainsKey(k) || NavGroups.Any(g => "group:" + g.Name == k)).Distinct().Take(MaxPanes).ToList();
+        if (on && panes is not null && keep.Count < 2) on = false;
+        if (on && keep.Count >= 2)
+        {
+            if (!_settings.SplitView) ShowWork(null);   // otherwise the tab open now would become an extra area
+            Panes.Clear(); Panes.AddRange(keep);
+            _settings.SplitWidths = widths is { } w && w.Count == keep.Count ? [.. w] : [];
+            if (_settings.SplitView)
+            {
+                foreach (var k in keep.Where(k => k != ReaderPane && !_windows.ContainsKey(k)))
+                    if (NavGroups.FirstOrDefault(g => "group:" + g.Name == k) is { } g) OpenWork(g);
+                _focusPane = Panes[^1];
+                LayoutPanes();
+                RebuildTabStrip();
+            }
+        }
+        SplitTopBtn.IsChecked = on;   // the switch's handler opens the areas
     }
 
     /// <summary>Opens the tabs and windows a layout lists (also used to restore the last session).</summary>
@@ -706,16 +742,34 @@ public partial class MainWindow
         ToolTip.SetTip(LayoutTopBtn, name is null ? L("Layouts: Anordnung speichern und laden") : L("Layouts – aktiv: {0}", name));
     }
 
-    static readonly string[] BuiltInLayouts = [K("Lesen"), K("Studium"), K("Schreiben"), K("Dashboard")];
+    static readonly string[] BuiltInLayouts = [K("Lesen"), K("Studium"), K("Wortstudie"), K("Schreiben"), K("Predigt"), K("Bibelstunde"), K("Zusammen"), K("Dashboard")];
+
+    /// <summary>What a built-in layout is for, shown under its name in the layout panel.</summary>
+    static string LayoutHint(string n) => n switch
+    {
+        "Lesen" => L("Nur der Bibeltext, bildschirmfüllend und ohne Ablenkung (wie F11). F11 oder ✕ unten beendet es."),
+        "Studium" => L("Geteilt: links der Text, rechts die Studien-Werkzeuge, ganz rechts die Vers-Übersicht."),
+        "Wortstudie" => L("Wortstudie an: Wörter im Text antippen, ganz rechts Grundtext und Bedeutung, daneben das Strong-Wörterbuch."),
+        "Schreiben" => L("Geteilt: links der Text, rechts deine Dokumente."),
+        "Predigt" => L("Geteilt: links der Text, rechts der Predigt-Editor, ganz rechts die Vers-Übersicht."),
+        "Bibelstunde" => L("Geteilt: links der Text, rechts die Materialien und Live für die Handys."),
+        "Zusammen" => L("Der Text mit „Zusammen studieren“ daneben: Chat, geteilte Verse, Mitlesen."),
+        "Dashboard" => L("Text links, Kommentare und Notizen als eigene Fenster rechts daneben."),
+        _ => "",
+    };
 
     /// <summary>The name of a layout as shown (the built-in ones are translated, the user's own are shown as typed).</summary>
     static string LayoutLabel(string n) => BuiltInLayouts.Contains(n) ? L(n) : n;
 
     LayoutPreset? BuiltIn(string name) => name switch
     {
-        "Lesen" => new() { SideOpen = false },
-        "Studium" => new() { SideOpen = true, SideWidth = 460, SideTab = GuideTab },
-        "Schreiben" => new() { SideOpen = true, SideWidth = 400, SideTab = GuideTab, ActiveWork = "group:Dokumente", Windows = [new(0, 0, 0, 0, false) { Key = "group:Dokumente" }] },
+        "Lesen" => new() { SideOpen = false, Focus = true, WordStudy = false },
+        "Studium" => new() { SideOpen = true, SideWidth = 400, SideTab = GuideTab, Split = true, Panes = [ReaderPane, "group:Studium"], PaneWidths = [0.55, 0.45] },
+        "Wortstudie" => new() { SideOpen = true, SideWidth = 430, SideTab = 3, Split = true, Panes = [ReaderPane, "group:Lernen"], PaneWidths = [0.6, 0.4], WordStudy = true },
+        "Schreiben" => new() { SideOpen = false, SideTab = GuideTab, Split = true, Panes = [ReaderPane, "group:Dokumente"] },
+        "Predigt" => new() { SideOpen = true, SideWidth = 380, SideTab = GuideTab, Split = true, Panes = [ReaderPane, "group:Predigt"] },
+        "Bibelstunde" => new() { SideOpen = false, Split = true, Panes = [ReaderPane, "group:Material"], PaneWidths = [0.5, 0.5] },
+        "Zusammen" => new() { SideOpen = true, SideWidth = 460, SideTab = CollabTab, Split = false },
         "Dashboard" => DashboardLayout(),
         _ => null,
     };
@@ -724,16 +778,16 @@ public partial class MainWindow
     LayoutPreset DashboardLayout()
     {
 #if MOBILE
-        return new() { SideOpen = false };
+        return new() { SideOpen = false, Split = false };
 #else
         var screen = Screens.ScreenFromWindow(this) ?? Screens.Primary;
-        if (screen is null) return new() { SideOpen = false };
+        if (screen is null) return new() { SideOpen = false, Split = false };
         var wa = screen.WorkingArea;
         int left = (int)(wa.Width * 0.58), right = wa.Width - left, half = wa.Height / 2;
         double s = screen.Scaling;
         return new()
         {
-            SideOpen = false,
+            SideOpen = false, Split = false,
             Windows =
             [
                 new(wa.X + left, wa.Y, (int)(right / s), (int)(half / s) - 28, false) { Key = "group:Bücher" },
@@ -785,7 +839,18 @@ public partial class MainWindow
             foreach (var n0 in BuiltInLayouts.Concat(_settings.Layouts.Keys.Except(BuiltInLayouts).Order()))
             {
                 var n = n0; var custom = _settings.Layouts.ContainsKey(n);
-                var load = new Button { Classes = { "seg" }, HorizontalAlignment = HorizontalAlignment.Stretch, HorizontalContentAlignment = HorizontalAlignment.Left, Content = (n == _settings.ActiveLayout ? "✓  " : "     ") + LayoutLabel(n) };
+                var title = (n == _settings.ActiveLayout ? "✓  " : "     ") + LayoutLabel(n);
+                var hint = custom ? "" : LayoutHint(n);
+                object content = hint.Length == 0 ? title : new StackPanel
+                {
+                    Spacing = 1,
+                    Children =
+                    {
+                        new TextBlock { Text = title },
+                        new TextBlock { Text = hint, Classes = { "caption" }, TextWrapping = TextWrapping.Wrap, Margin = new(19, 0, 0, 0) },
+                    },
+                };
+                var load = new Button { Classes = { "seg" }, HorizontalAlignment = HorizontalAlignment.Stretch, HorizontalContentAlignment = HorizontalAlignment.Left, Content = content };
                 load.Classes.Set("active", n == _settings.ActiveLayout);
                 load.Click += (_, _) => { ApplyLayout(FindLayout(n)!, n); StatusText.Text = L("Layout „{0}“ geladen.", LayoutLabel(n)); Fill(); };
                 var row = new DockPanel();
@@ -831,6 +896,14 @@ public partial class MainWindow
         // the search options and the hit chips never push the hit list out of the panel: they scroll within half of the height
         SearchDock.SizeChanged += (_, e) => SearchTopScroll.MaxHeight = Math.Max(160, e.NewSize.Height * 0.55);
         LayoutTopBtn.Click += (_, _) => ShowLayoutMenu();
+        // focus mode can be left with the mouse too: the layout "Lesen" switches it on from a menu, and not everyone knows F11
+        if (FocusBar.Child is StackPanel focusRow)
+        {
+            var exitFocus = new Button { Classes = { "tool" }, Width = 44, Height = 34, Margin = new(18, 0, 0, 0), Content = new Icon { Data = Geometry.Parse("M18 6L6 18 M6 6l12 12"), IconSize = 14 } };
+            ToolTip.SetTip(exitFocus, L("Fokus-Modus beenden (F11)"));
+            exitFocus.Click += (_, _) => { if (_settings.FocusMode) ToggleFocusMode(); };
+            focusRow.Children.Add(exitFocus);
+        }
         SettingsTopBtn.Click += (_, _) => OpenWork(NavGroups.First(g => g.Name == "Mehr"), SettingsTab);
         PopOutDocsBtn.Click += (_, _) => OpenWork(NavGroups.First(g => g.Name == "Dokumente"));
         // anything else that takes over the main area ends the work tab

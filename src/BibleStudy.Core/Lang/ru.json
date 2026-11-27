@@ -3606,5 +3606,14 @@
   "Bildqualität: niedrig (für langsames Internet)": "Качество изображения: низкое (для медленного интернета)",
   "Bildqualität: mittel": "Качество изображения: среднее",
   "Bildqualität: HD (720p)": "Качество изображения: HD (720p)",
-  "Ruckelt das Bild oder kommt es spät an, wähle eine niedrigere Qualität: HD braucht bei jeder Person mit Kamera etwa 5 Mbit/s zum Senden und bei allen anderen ebenso viel zum Empfangen.": "Если изображение дёргается или приходит с задержкой, выберите качество ниже: HD требует около 5 Мбит/с на отправку у каждого с камерой и столько же на приём у всех остальных."
+  "Ruckelt das Bild oder kommt es spät an, wähle eine niedrigere Qualität: HD braucht bei jeder Person mit Kamera etwa 5 Mbit/s zum Senden und bei allen anderen ebenso viel zum Empfangen.": "Если изображение дёргается или приходит с задержкой, выберите качество ниже: HD требует около 5 Мбит/с на отправку у каждого с камерой и столько же на приём у всех остальных.",
+  "Nur der Bibeltext, bildschirmfüllend und ohne Ablenkung (wie F11). F11 oder ✕ unten beendet es.": "Только текст Библии, на весь экран и без отвлечений (как F11). F11 или ✕ внизу завершает режим.",
+  "Geteilt: links der Text, rechts die Studien-Werkzeuge, ganz rechts die Vers-Übersicht.": "Разделено: слева текст, справа инструменты изучения, с самого края обзор стиха.",
+  "Wortstudie an: Wörter im Text antippen, ganz rechts Grundtext und Bedeutung, daneben das Strong-Wörterbuch.": "Изучение слов включено: нажимай на слова в тексте, справа с края оригинал и значение, рядом словарь Стронга.",
+  "Geteilt: links der Text, rechts deine Dokumente.": "Разделено: слева текст, справа твои документы.",
+  "Geteilt: links der Text, rechts der Predigt-Editor, ganz rechts die Vers-Übersicht.": "Разделено: слева текст, справа редактор проповеди, с самого края обзор стиха.",
+  "Geteilt: links der Text, rechts die Materialien und Live für die Handys.": "Разделено: слева текст, справа материалы и Live для телефонов.",
+  "Der Text mit „Zusammen studieren“ daneben: Chat, geteilte Verse, Mitlesen.": "Текст и рядом «Изучать вместе»: чат, общие стихи, совместное чтение.",
+  "Text links, Kommentare und Notizen als eigene Fenster rechts daneben.": "Текст слева, комментарии и заметки в отдельных окнах справа.",
+  "Fokus-Modus beenden (F11)": "Выйти из режима фокуса (F11)"
 }

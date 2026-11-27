@@ -50,6 +50,17 @@ Deine Sprache fehlt? Speichere die **Vorlage mit der KI-Anweisung**, lass sie vo
 
 Jeden Bereich der Seitenleiste kannst du in ein **eigenes Fenster** auslagern (Knopf ⧉ neben den Reitern oder Strg+Umschalt+O) und frei verschieben, auch auf einen zweiten Monitor. Die Anordnung speicherst du als **Layout** (Knopf *Layouts* oben, zum Beispiel „Dashboard“) und lädst sie jederzeit wieder.
 
+Fertige Layouts (ein Layout merkt sich auch die geteilte Ansicht und den Schalter *Wortstudie*):
+
+- **Lesen:** nur der Bibeltext, bildschirmfüllend, ohne Leisten (wie F11). F11 oder ✕ unten beendet es.
+- **Studium:** geteilte Ansicht, links der Text, rechts der Bereich *Studium* (Perikope, Satzdiagramm, Analyse, Synopse), ganz rechts die Vers-Übersicht.
+- **Wortstudie:** *Wortstudie* an, rechts das Strong-Wörterbuch, ganz rechts Grundtext und Bedeutung des angetippten Worts.
+- **Schreiben:** links der Text, rechts deine Dokumente.
+- **Predigt:** links der Text, rechts der Predigt-Editor, ganz rechts die Vers-Übersicht.
+- **Bibelstunde:** links der Text, rechts Materialien und Live.
+- **Zusammen:** der Text mit *Zusammen studieren* in der Seitenleiste.
+- **Dashboard:** Text links, Kommentare und Notizen als eigene Fenster rechts daneben.
+
 Weitere Optionen:
 
 - Mit Windows starten (nur mit der fertig installierten Programmdatei, nicht bei `dotnet run`),

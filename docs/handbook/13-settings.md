@@ -50,6 +50,17 @@ Your language is missing? Save the **template with the AI instruction**, have an
 
 You can move any area of the sidebar into its **own window** (the ⧉ button next to the tabs or Ctrl+Shift+O) and place it freely, even on a second monitor. You save the arrangement as a **layout** (the *Layouts* button at the top, for example "Dashboard") and load it again at any time.
 
+Ready-made layouts (a layout also remembers the split view and the *Word study* switch):
+
+- **Reading:** only the Bible text, full screen, without bars (like F11). F11 or ✕ at the bottom ends it.
+- **Study:** split view, the text on the left, the *Study* area on the right (pericope, sentence diagram, analysis, synopsis), the verse overview at the far right.
+- **Word study:** *Word study* on, the Strong's dictionary on the right, the original text and meaning of the tapped word at the far right.
+- **Write:** the text on the left, your documents on the right.
+- **Sermon:** the text on the left, the sermon editor on the right, the verse overview at the far right.
+- **Bible study:** the text on the left, materials and Live on the right.
+- **Together:** the text with *Study together* in the sidebar.
+- **Dashboard:** text on the left, commentaries and notes as separate windows to the right.
+
 More options:
 
 - Start with Windows (only with the fully installed program file, not with `dotnet run`),
