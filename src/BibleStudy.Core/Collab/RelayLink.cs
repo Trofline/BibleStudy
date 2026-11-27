@@ -120,6 +120,25 @@ public sealed class RelayLink : ICollabLink
         return sb.Length == CodeLength ? sb.ToString() : null;
     }
 
+    /// <summary>A code while it is typed: upper case, only letters and digits, a dash after the first four (as soon as a fifth follows, so that
+    /// deleting backwards never gets stuck at the dash). <paramref name="caret"/> moves along, so typing in the middle keeps its place.</summary>
+    public static string Typing(string? typed, ref int caret)
+    {
+        typed ??= "";
+        caret = Math.Clamp(caret, 0, typed.Length);
+        var sb = new StringBuilder();
+        var before = 0;   // letters and digits before the caret
+        for (var i = 0; i < typed.Length; i++)
+        {
+            if (!char.IsAsciiLetterOrDigit(typed[i])) continue;
+            if (i < caret) before++;
+            sb.Append(char.ToUpperInvariant(typed[i]));
+        }
+        if (sb.Length > 4) sb.Insert(4, '-');
+        caret = sb.Length > 4 && before > 4 ? before + 1 : before;
+        return sb.ToString();
+    }
+
     public static string Pretty(string code) => code.Length == CodeLength ? code[..4] + "-" + code[4..] : code;
 
     /// <summary>The name of the room on the relay: a hash of the code, so the relay does not learn the code itself.</summary>

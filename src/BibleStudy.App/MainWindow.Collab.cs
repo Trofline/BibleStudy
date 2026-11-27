@@ -249,7 +249,7 @@ public partial class MainWindow
     /// <summary>Tells the group who this is, and what is shared right now (questions, notepad, leading, place, chosen verses).</summary>
     void SendHello()
     {
-        Group().Send(new { t = "hello", name = _settings.CollabName });
+        Group().Send(new { t = "hello", name = _settings.CollabName, up = RoomUpSeconds });
         _sentSel = ""; _sentMarks = "";
         CollabSendLocation(_selected);
         CollabSendSelection();
@@ -270,6 +270,7 @@ public partial class MainWindow
         DockPanel.SetDock(leave, Dock.Right);
         top.Children.Add(leave); top.Children.Add(head);
         CollabPanel.Children.Add(top);
+        CollabPanel.Children.Add(EncryptionNote(L("Ende-zu-Ende-verschlüsselt: Was ihr sendet, könnt nur ihr lesen. Kein Server kann mitlesen oder etwas davon speichern.")));
         if (_group?.Links.OfType<RelayLink>().FirstOrDefault() is { } room)
         {
             var copy = new Button { Content = L("Code kopieren"), Classes = { "tool" }, Width = double.NaN, Padding = new(8, 0), VerticalAlignment = VerticalAlignment.Center };
@@ -422,7 +423,7 @@ public partial class MainWindow
         {
             if (TopLevel.GetTopLevel(this)?.Clipboard is { } clipboard) { await clipboard.SetTextAsync(code); copy.Content = L("Kopiert ✓"); }
         };
-        return new StackPanel { Spacing = 6, Children = { box, copy } };
+        return new StackPanel { Spacing = 6, Children = { box, copy, RoomCodeEncryptionNote() } };
     }
 
     async Task HostRoomAsync(StackPanel area)
@@ -447,8 +448,19 @@ public partial class MainWindow
     void JoinRoomFlow(StackPanel area)
     {
         area.Children.Clear();
-        area.Children.Add(new TextBlock { Text = L("Gib den Raum-Code ein, den du bekommen hast:"), FontWeight = FontWeight.SemiBold });
+        area.Children.Add(new TextBlock { Text = L("Gib den Raum-Code ein, den du bekommen hast:"), FontWeight = FontWeight.SemiBold, TextWrapping = TextWrapping.Wrap });
         var code = new TextBox { PlaceholderText = "ABCD-EFGH", MaxLength = 20, FontSize = 18, HorizontalAlignment = HorizontalAlignment.Left, MinWidth = 200 };
+        var formatting = false;
+        code.TextChanged += (_, _) =>   // upper case and the dash come by themselves
+        {
+            if (formatting) return;
+            var caret = code.CaretIndex;
+            var text = RelayLink.Typing(code.Text, ref caret);
+            if (text == (code.Text ?? "")) return;
+            formatting = true;
+            code.Text = text; code.CaretIndex = caret;
+            formatting = false;
+        };
         var go = new Button { Content = L("Beitreten"), Classes = { "primary" }, HorizontalAlignment = HorizontalAlignment.Left };
         var info = new TextBlock { Classes = { "caption" }, TextWrapping = TextWrapping.Wrap };
         async Task Join()
@@ -466,7 +478,7 @@ public partial class MainWindow
         }
         go.Click += async (_, _) => await Join();
         code.KeyDown += async (_, e) => { if (e.Key == Key.Enter) await Join(); };
-        area.Children.Add(code); area.Children.Add(go); area.Children.Add(info);
+        area.Children.Add(code); area.Children.Add(go); area.Children.Add(info); area.Children.Add(RoomCodeEncryptionNote());
     }
 
     string RoomFailed(Exception ex) =>
@@ -573,6 +585,7 @@ public partial class MainWindow
             {
                 case "hello":
                     if (Str("name", 40).Trim() is { Length: > 0 } hn) p.Name = hn;
+                    TakeRoomUp(Int("up"));
                     if (!p.Greeted)
                     {
                         p.Greeted = true;

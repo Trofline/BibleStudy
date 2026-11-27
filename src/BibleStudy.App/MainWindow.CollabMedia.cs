@@ -61,18 +61,17 @@ public partial class MainWindow
 
         // switches as plain buttons: colored while on, so the state is seen at a glance
         static void Mark(Button b, bool on) => b.Classes.Set("primary", on);
-        var call = new Button { Content = _callMic ? L("Mikrofon aus") : L("Mikrofon an (Gespräch)"), Margin = new(0, 0, 8, 6) };
-        Mark(call, _callMic);
+        var call = _callBtn = new Button { Margin = new(0, 0, 8, 6) };
         ToolTip.SetTip(call, L("Wie ein Anruf: Die anderen hören dich, bis du es wieder ausschaltest. Mit Kopfhörern gibt es kein Echo."));
-        call.Click += (_, _) => { _callMic = !_callMic; call.Content = _callMic ? L("Mikrofon aus") : L("Mikrofon an (Gespräch)"); Mark(call, _callMic); UpdateMic(); };
+        call.Click += (_, _) => PanelCallClick();
 
         var voice = new Button { Content = _recording ? L("■ Senden") : L("Sprachnachricht"), Margin = new(0, 0, 8, 6) };
         ToolTip.SetTip(voice, L("Antippen zum Aufnehmen, noch einmal zum Senden (höchstens 2 Minuten)."));
         voice.Click += (_, _) => { if (_recording) StopVoiceMessage(true); else StartVoiceMessage(); voice.Content = _recording ? L("■ Senden") : L("Sprachnachricht"); Mark(voice, _recording); };
 
-        var cam = new Button { Content = _camOn ? L("Kamera aus") : L("Kamera an"), Margin = new(0, 0, 8, 6) };
-        Mark(cam, _camOn);
-        cam.Click += async (_, _) => { cam.IsEnabled = false; await SetCameraAsync(!_camOn); cam.IsEnabled = true; cam.Content = _camOn ? L("Kamera aus") : L("Kamera an"); Mark(cam, _camOn); };
+        var cam = _camBtn = new Button { Margin = new(0, 0, 8, 6) };
+        cam.Click += async (_, _) => { cam.IsEnabled = false; await PanelCameraClickAsync(); cam.IsEnabled = true; };
+        RefreshMediaButtons();
 
         var pin = new Button { Content = _dockWanted ? L("Video nicht festhalten") : L("Video festhalten"), Margin = new(0, 0, 8, 6) };
         Mark(pin, _dockWanted);
@@ -89,7 +88,7 @@ public partial class MainWindow
 
         return new Expander
         {
-            Header = L("Sprechen und Kamera"), IsExpanded = _callMic || _camOn || _tiles.Count > 0,
+            Header = L("Sprechen und Kamera"), IsExpanded = _callMic || _micMuted || _camOn || _camPaused || _tiles.Count > 0,
             Content = new StackPanel
             {
                 Spacing = 6, Margin = new(0, 6, 0, 0),
@@ -345,7 +344,7 @@ public partial class MainWindow
         if (_mic is not null && (_pttHeld || _callMic) && _myLevel > 0.03) names.Insert(0, L("Du"));
         _speaking.Text = names.Count > 0 ? L("Es spricht: {0}", string.Join(", ", names))
             : _recording ? L("Aufnahme läuft … {0}", Duration((int)(DateTime.UtcNow - _recStart).TotalSeconds))
-            : _callMic ? L("Dein Mikrofon ist an.") : "";
+            : _callMic ? L("Dein Mikrofon ist an.") : _micMuted ? L("Dein Mikrofon ist stummgeschaltet.") : "";
         foreach (var (id, t) in _tiles.ToList())
             if (id != "me" && (DateTime.UtcNow - t.Last).TotalSeconds > 5) RemoveTile(id);   // the camera of someone who left or stopped
         if (!CollabOpen && (_mic is not null || _camOn || _speaker is not null)) StopMedia();
@@ -353,7 +352,7 @@ public partial class MainWindow
 
     void StopMedia()
     {
-        _pttHeld = false; _callMic = false;
+        _pttHeld = false; _callMic = false; _micMuted = false; _camPaused = false;
         if (_recording) StopVoiceMessage(false);
         _mic?.Dispose(); _mic = null;
         _camera?.Dispose(); _camera = null; _camOn = false;
