@@ -9,7 +9,7 @@ namespace BibleStudy.App;
 
 /// <summary>
 /// The small notices (phone: above the bar at the bottom, desktop: bottom right) that go again after a few seconds. Several at the same time
-/// lie on top of each other: the newest one at the bottom, the older ones move up. Each one goes away on its own, with a tap or with a swipe to the side.
+/// lie on top of each other: the newest one at the bottom, the older ones move up. Each one goes away on its own, with its X, a tap or a swipe to the side.
 /// Green for what went well (connected, synchronised), blue for a plain note, violet for a message or suggestion of the program.
 /// What was shown is kept for the time the program runs, so it can be read again in the message center.
 /// </summary>
@@ -92,7 +92,18 @@ public partial class MainWindow
             if (secondLabel is not null && second is not null) row.Children.Add(Make(secondLabel, second, false));
             body.Children.Add(row);
         }
-        card.Child = body;
+        // an X to take it away at once, when it is in the way (without waiting until it goes by itself)
+        var x = new Button
+        {
+            Content = "✕", Padding = new Thickness(6, 0), MinWidth = 0, MinHeight = 0, FontSize = 12, Background = Brushes.Transparent, Foreground = Brushes.White,
+            BorderThickness = new Thickness(0), VerticalAlignment = VerticalAlignment.Top, Margin = new Thickness(6, -2, -6, 0), Cursor = new Avalonia.Input.Cursor(Avalonia.Input.StandardCursorType.Hand),
+        };
+        ToolTip.SetTip(x, L("Schließen"));
+        x.Click += (_, e) => { e.Handled = true; HideNotice(card); };
+        var frame = new DockPanel();
+        DockPanel.SetDock(x, Dock.Right);
+        frame.Children.Add(x); frame.Children.Add(body);
+        card.Child = frame;
 
         // a swipe to the side moves it with the finger and takes it away; a tap takes it away too
         double startX = 0; var down = false;

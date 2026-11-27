@@ -3931,7 +3931,6 @@
   "Zieh die Leiste breiter oder schmaler.": "Haz el panel más ancho o más estrecho.",
   "Über das Internet (Raum-Code)": "Por internet (código de sala)",
   "Eine Person erstellt einen Raum und schickt den anderen den kurzen Raum-Code, zum Beispiel per Messenger. Die anderen tippen ihn ein, fertig. Das klappt von überall, auch wenn ihr in verschiedenen Netzwerken seid. Bis zu fünf Personen passen in einen Raum.": "Una persona crea una sala y envía a los demás el código corto de la sala, por ejemplo por mensajería. Los demás lo escriben y listo. Funciona desde cualquier lugar, aunque estéis en redes distintas. En una sala caben hasta cinco personas.",
-  "Der Vermittler ist kostenlos und hat deshalb ein Tageslimit. Ist es aufgebraucht, verbindet euch bis zum nächsten Tag im selben Netzwerk (unten). Seid ihr an verschiedenen Orten, geht das, wenn ihr beide demselben kostenlosen ZeroTier-Netzwerk beitretet (siehe Handbuch).": "El intermediario es gratuito y por eso tiene un límite diario. Cuando se agota, conectaos en la misma red (abajo) hasta el día siguiente. Si estáis en lugares distintos, funciona si todos os unís a la misma red gratuita de ZeroTier (ver el manual).",
   "Klappt es auch dann nicht, ist vielleicht das Tageslimit des kostenlosen Vermittlers aufgebraucht. Dann verbindet euch bis morgen im selben Netzwerk, an verschiedenen Orten über ein gemeinsames ZeroTier-Netzwerk (siehe Handbuch).": "Si aun así no funciona, quizá se haya agotado el límite diario del intermediario gratuito. Entonces conectaos hasta mañana en la misma red, o desde lugares distintos a través de una red de ZeroTier común (ver el manual).",
   "Bildqualität: niedrig (für langsames Internet)": "Calidad de imagen: baja (para internet lento)",
   "Bildqualität: mittel": "Calidad de imagen: media",
@@ -4061,5 +4060,7 @@
   "Feedback": "Comentarios",
   "Fehler melden, Ideen": "Informar errores, ideas",
   "Rundgänge, Handbuch, Quiz": "Recorridos, manual, cuestionario",
-  "{0} aus anderen Vaults (unten)": "{0} de otros vaults (abajo)"
+  "{0} aus anderen Vaults (unten)": "{0} de otros vaults (abajo)",
+  "Nur für den seltenen Notfall: Der Vermittler ist kostenlos und hat ein Tageslimit. Ist es einmal aufgebraucht, verbindet euch bis zum nächsten Tag im selben Netzwerk (unten), an verschiedenen Orten über ein gemeinsames ZeroTier-Netzwerk (siehe Handbuch). Sonst braucht ihr ZeroTier nicht.": "Solo para la rara emergencia: el intermediario es gratuito y tiene un límite diario. Si alguna vez se agota, conectaos hasta el día siguiente en la misma red (abajo) o, desde lugares distintos, mediante una red ZeroTier común (ver el manual). Si no, no necesitáis ZeroTier.",
+  "Du brauchst nichts zu installieren oder einzurichten, auch kein ZeroTier: Raum erstellen, Code schicken, fertig.": "No necesitas instalar ni configurar nada, tampoco ZeroTier: crea una sala, envía el código y listo."
 }

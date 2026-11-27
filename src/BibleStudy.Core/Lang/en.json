@@ -3931,7 +3931,6 @@
   "Zieh die Leiste breiter oder schmaler.": "Drag the panel wider or narrower.",
   "Über das Internet (Raum-Code)": "Over the internet (room code)",
   "Eine Person erstellt einen Raum und schickt den anderen den kurzen Raum-Code, zum Beispiel per Messenger. Die anderen tippen ihn ein, fertig. Das klappt von überall, auch wenn ihr in verschiedenen Netzwerken seid. Bis zu fünf Personen passen in einen Raum.": "One person creates a room and sends the others the short room code, for example by messenger. The others type it in, done. This works from anywhere, even if you are on different networks. Up to five people fit in a room.",
-  "Der Vermittler ist kostenlos und hat deshalb ein Tageslimit. Ist es aufgebraucht, verbindet euch bis zum nächsten Tag im selben Netzwerk (unten). Seid ihr an verschiedenen Orten, geht das, wenn ihr beide demselben kostenlosen ZeroTier-Netzwerk beitretet (siehe Handbuch).": "The relay is free and therefore has a daily limit. When it is used up, connect on the same network (below) until the next day. If you are in different places, this works when you all join the same free ZeroTier network (see the handbook).",
   "Klappt es auch dann nicht, ist vielleicht das Tageslimit des kostenlosen Vermittlers aufgebraucht. Dann verbindet euch bis morgen im selben Netzwerk, an verschiedenen Orten über ein gemeinsames ZeroTier-Netzwerk (siehe Handbuch).": "If it still does not work, the daily limit of the free relay may be used up. Then connect on the same network until tomorrow, or from different places through a shared ZeroTier network (see the handbook).",
   "Bildqualität: niedrig (für langsames Internet)": "Picture quality: low (for slow internet)",
   "Bildqualität: mittel": "Picture quality: medium",
@@ -4061,5 +4060,7 @@
   "Feedback": "Feedback",
   "Fehler melden, Ideen": "Report bugs, ideas",
   "Rundgänge, Handbuch, Quiz": "Tours, handbook, quiz",
-  "{0} aus anderen Vaults (unten)": "{0} from other vaults (below)"
+  "{0} aus anderen Vaults (unten)": "{0} from other vaults (below)",
+  "Nur für den seltenen Notfall: Der Vermittler ist kostenlos und hat ein Tageslimit. Ist es einmal aufgebraucht, verbindet euch bis zum nächsten Tag im selben Netzwerk (unten), an verschiedenen Orten über ein gemeinsames ZeroTier-Netzwerk (siehe Handbuch). Sonst braucht ihr ZeroTier nicht.": "Only for the rare emergency: the relay is free and has a daily limit. If it is ever used up, connect in the same network (below) until the next day, or from different places through a shared ZeroTier network (see the manual). Otherwise you do not need ZeroTier.",
+  "Du brauchst nichts zu installieren oder einzurichten, auch kein ZeroTier: Raum erstellen, Code schicken, fertig.": "You do not need to install or set up anything, not even ZeroTier: create a room, send the code, done."
 }

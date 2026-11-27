@@ -113,6 +113,7 @@ public partial class MainWindow
             Text = L("Studiere die Bibel mit einer anderen Person, von Programm zu Programm: verschlüsselt, ohne Konto und kostenlos."),
             Classes = { "caption" }, TextWrapping = TextWrapping.Wrap,
         });
+        CollabPanel.Children.Add(new TextBlock { Text = L("Du brauchst nichts zu installieren oder einzurichten, auch kein ZeroTier: Raum erstellen, Code schicken, fertig."), FontWeight = FontWeight.SemiBold, TextWrapping = TextWrapping.Wrap });
         CollabPanel.Children.Add(Card(new StackPanel
         {
             Spacing = 4,
@@ -143,7 +144,7 @@ public partial class MainWindow
                 new WrapPanel { Children = { host, join } },
                 area,
                 new TextBlock { Text = L("Die Verbindung läuft über einen kleinen Vermittler-Server im Internet. Er reicht nur verschlüsselte Nachrichten weiter: Der Schlüssel entsteht aus dem Raum-Code auf euren Geräten, der Server kann nichts lesen und sieht den Code nicht. Ein Konto braucht ihr nicht."), Classes = { "caption" }, TextWrapping = TextWrapping.Wrap },
-                new TextBlock { Text = L("Der Vermittler ist kostenlos und hat deshalb ein Tageslimit. Ist es aufgebraucht, verbindet euch bis zum nächsten Tag im selben Netzwerk (unten). Seid ihr an verschiedenen Orten, geht das, wenn ihr beide demselben kostenlosen ZeroTier-Netzwerk beitretet (siehe Handbuch)."), Classes = { "caption" }, TextWrapping = TextWrapping.Wrap },
+                new TextBlock { Text = L("Nur für den seltenen Notfall: Der Vermittler ist kostenlos und hat ein Tageslimit. Ist es einmal aufgebraucht, verbindet euch bis zum nächsten Tag im selben Netzwerk (unten), an verschiedenen Orten über ein gemeinsames ZeroTier-Netzwerk (siehe Handbuch). Sonst braucht ihr ZeroTier nicht."), Classes = { "caption" }, TextWrapping = TextWrapping.Wrap },
                 BuildServerBox(),
             },
         }));
@@ -591,6 +592,7 @@ public partial class MainWindow
                         p.Greeted = true;
                         RestoreChat(p);
                         AddCollabLog(L("{0} ist verbunden.", PeerWho), system: true);
+                        Notify(L("Zusammen studieren"), L("{0} ist verbunden.", PeerWho), true, stay: TimeSpan.FromSeconds(5));
                         SendHello();   // so the newcomer learns about this person (each one answers once)
                     }
                     if (CollabPanel.Children.Count > 0) BuildCollabUi();
