@@ -165,7 +165,7 @@ public partial class MainWindow
             return;
         }
         var d = new DragState { Anchor = cref, AnchorRaw = raw, Start = e.GetPosition(this), Last = e.GetPosition(this), Cells = ColCells(cref) };
-        d.Scroller = _independent && cref.Data.Col < _colScrolls.Count ? _colScrolls[cref.Data.Col] : ReaderScroll;
+        d.Scroller = ScrollerOf(cref);
         _drag = d;
         e.Pointer.Capture(ReaderScroll);
     }

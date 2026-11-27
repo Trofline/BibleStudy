@@ -38,7 +38,7 @@ public partial class MainWindow
         HookPathMargin(); HookPathBadgeClicks();
         var badges = new List<PathGutter.Badge>();
         var raw = new List<(int From, int To, Color Color)>();
-        if (_settings.PathArrows && !_independent)
+        if (_settings.PathArrows)
             foreach (var p in _chapterPaths)
             {
                 var color = PathColor(p);
@@ -51,8 +51,19 @@ public partial class MainWindow
         var arrows = raw.Select((a, i) => new PathGutter.Arrow(a.From, a.To, lanes[i], a.Color)).ToList();
         var width = PathGutter.WidthFor(lanes.Length == 0 ? 0 : lanes.Max() + 1, badges.Count > 0);
         PathMargin.BoxOf = v => _verseBoxes.GetValueOrDefault(v);
+        PathMargin.Visible = MainColumnArea;
         PathMargin.Show(badges, arrows);
         if (Math.Abs(width - _pathGutterWidth) > 0.5) { _pathGutterWidth = width; FitReader(); }
+    }
+
+    /// <summary>
+    /// Side by side with columns that scroll on their own, the main text scrolls in its own frame: the circles and arrows are drawn only where that
+    /// frame shows its verses (and in the margin left of it). Otherwise everywhere.
+    /// </summary>
+    Rect? MainColumnArea()
+    {
+        if (!_independent || _colScrolls.Count == 0 || _colScrolls[0].TranslatePoint(default, PathMargin) is not { } top) return null;
+        return new Rect(0, top.Y, top.X + _colScrolls[0].Bounds.Width, _colScrolls[0].Bounds.Height);
     }
 
     bool _pathLayoutHooked;
@@ -68,14 +79,17 @@ public partial class MainWindow
     // ---- under the verse ------------------------------------------------------------------------------------------------
 
     /// <summary>Under a step: the path, which step it is, and the step before and after (a click goes there).</summary>
-    IEnumerable<Control> PathChips(int verse)
+    IEnumerable<Control> PathChips(int verse) => PathChips(_curBook, _curChapter, verse, _chapterPaths);
+
+    /// <summary>The same for a verse of another chapter (a column side by side with a passage of its own).</summary>
+    IEnumerable<Control> PathChips(string book, int chapter, int verse, IEnumerable<ReadingPath>? paths = null)
     {
-        foreach (var p in _chapterPaths)
+        foreach (var p in paths ?? ReadingPaths().Where(x => x.Steps.Any(s => s.Covers(book, chapter))))
         {
             for (var i = 0; i < p.Steps.Count; i++)
             {
                 var s = p.Steps[i];
-                if (!s.Covers(_curBook, _curChapter) || s.From != verse) continue;
+                if (!s.Covers(book, chapter) || s.From != verse) continue;
                 var path = p; var index = i;
                 var color = PathColor(p);
                 var bar = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 4, Margin = new(0, 0, 8, 4) };
@@ -105,16 +119,18 @@ public partial class MainWindow
     // ---- the verse menu -------------------------------------------------------------------------------------------------
 
     /// <summary>The verses a step is made of: the chosen verses when this one is among them (each run of verses one step), else this verse.</summary>
-    List<StudyPassage> StepsFor(int verse)
+    List<StudyPassage> StepsFor(int verse, VerseRef? other = null)
     {
+        if (other is { } o) return [new StudyPassage(o.Book, o.Chapter, o.Verse, o.Verse)];   // a verse of a column with a passage of its own: only that one
         var chosen = _selVerses.Contains(verse) && _selVerses.Count > 1 ? _selVerses.ToHashSet() : [verse];
         return MarkLogic.Runs(chosen).Select(r => new StudyPassage(_curBook, _curChapter, r.From, r.To)).ToList();
     }
 
-    MenuItem PathMenu(int verse, Control anchor)
+    MenuItem PathMenu(int verse, Control anchor, VerseRef? other = null)
     {
         var menu = new MenuItem { Header = SubHeader(L("Lesepfad")) };
-        var steps = StepsFor(verse);
+        var steps = StepsFor(verse, other);
+        var (book, chapter) = other is { } o ? (o.Book, o.Chapter) : (_curBook, _curChapter);
         var paths = ReadingPaths();
         foreach (var p in paths.Take(12))
         {
@@ -122,7 +138,7 @@ public partial class MainWindow
             menu.Items.Add(MenuAction(L("An „{0}“ anhängen (Schritt {1})", Shorten(p.Name, 30), p.Steps.Count + 1), () => AddSteps(path, steps)));
         }
         menu.Items.Add(MenuAction(L("Neuer Lesepfad ab hier …"), () => AskPathName(anchor, "", name => NewPath(name, steps))));
-        var inPaths = paths.SelectMany(p => p.Steps.Select((s, i) => (p, s, i))).Where(x => x.s.Covers(_curBook, _curChapter) && x.s.From == verse).ToList();
+        var inPaths = paths.SelectMany(p => p.Steps.Select((s, i) => (p, s, i))).Where(x => x.s.Covers(book, chapter) && x.s.From == verse).ToList();
         if (inPaths.Count > 0 || paths.Count > 0) menu.Items.Add(new Separator());
         foreach (var (p, _, i) in inPaths)
         {
@@ -142,10 +158,10 @@ public partial class MainWindow
     }
 
     /// <summary>In the verse menu, above "Lesepfad": hang the verse (or the chosen verses) on the path used last.</summary>
-    MenuItem? QuickPathItem(int verse)
+    MenuItem? QuickPathItem(int verse, VerseRef? other = null)
     {
         if (LastPath() is not { } p) return null;
-        var steps = StepsFor(verse);
+        var steps = StepsFor(verse, other);
         var item = MenuAction(L("＋ An „{0}“ anhängen (Schritt {1})", Shorten(p.Name, 30), p.Steps.Count + 1), () => AddSteps(p, steps));
         item.Icon = new Border { Width = 10, Height = 10, CornerRadius = new(5), Background = new SolidColorBrush(PathColor(p)) };
         return item;

@@ -200,6 +200,9 @@ public partial class MainWindow
     /// A long press on a verse number chooses that verse; moving the finger down (or up) without lifting chooses all verses up to the one under it,
     /// lifting shows the colors for all of them. Lifting at once opens the verse menu, as before.
     /// </summary>
+    /// <summary>What scrolls under a cell: its own column when the columns scroll on their own, else the page.</summary>
+    ScrollViewer ScrollerOf(CellRef c) => _independent && c.Data.Col < _colScrolls.Count ? _colScrolls[c.Data.Col] : ReaderScroll;
+
     bool TryStartVerseDrag(Point at, Avalonia.Input.IPointer pointer, int verse, Border box)
     {
         var cref = _cells.FirstOrDefault(c => c.Data.Number == verse && !c.Data.Foreign && c.Data.Col == 0 && c.Tb.IsEffectivelyVisible);
@@ -210,7 +213,7 @@ public partial class MainWindow
         if (!onNumber) return false;
         ClearTextSelection(true);
         if (!_selVerses.Contains(verse) || _selVerses.Count > 1) SelectVerse(verse);
-        _drag = new DragState { Anchor = cref, Start = at, Last = at, Cells = ColCells(cref), Scroller = ReaderScroll, VerseRange = true, Verse = verse, Box = box };
+        _drag = new DragState { Anchor = cref, Start = at, Last = at, Cells = ColCells(cref), Scroller = ScrollerOf(cref), VerseRange = true, Verse = verse, Box = box };
         pointer.Capture(ReaderScroll);   // the finger now chooses verses; the page does not scroll under it
         return true;
     }
@@ -234,7 +237,7 @@ public partial class MainWindow
             while (en < t.Length && IsWordChar(t[en])) en++;
             ClearTextSelection(true);
             SetSelectionFrom(cref, s, cref, en, ColCells(cref));
-            _drag = new DragState { Anchor = cref, AnchorRaw = s, Start = at, Last = at, Cells = ColCells(cref), Scroller = ReaderScroll, TouchWord = true, Verse = verse, Box = box };
+            _drag = new DragState { Anchor = cref, AnchorRaw = s, Start = at, Last = at, Cells = ColCells(cref), Scroller = ScrollerOf(cref), TouchWord = true, Verse = verse, Box = box };
             pointer.Capture(ReaderScroll);   // the finger now selects; the page does not scroll under it
             return true;
         }
