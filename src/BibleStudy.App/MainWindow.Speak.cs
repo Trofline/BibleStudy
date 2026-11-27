@@ -83,6 +83,14 @@ public partial class MainWindow
 
     void InitSpeak()
     {
+        // the natural voices (Piper) run only on Windows (64 bit): elsewhere (iPhone, Android, Mac, Linux) the voice of the device reads,
+        // so there is nothing to choose and nothing to load; the choice and the voices with their sizes are left out there
+        if (!NaturalVoice.IsAvailable)
+        {
+            SpeakVoiceBox.IsVisible = SpeakVoicePanel.IsVisible = SpeakVoiceInfo.IsVisible = false;
+            if (SpeakVoiceBox.Parent is Panel parent && parent.Children.IndexOf(SpeakVoiceBox) is > 0 and var at && parent.Children[at - 1] is TextBlock label) label.IsVisible = false;
+            return;
+        }
         SpeakVoiceBox.ItemsSource = new[]
         {
             L("Windows-Stimme (technisch, ohne Download)"),

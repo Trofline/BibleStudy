@@ -250,9 +250,15 @@ Get **LocalDevVPN** from the App Store, open it once and tap **Allow** for the V
 > | Choose App Extensions | Pick extensions one by one. Not needed. | |
 > | Cancel | Nothing is installed. | |
 >
+> **Get rid of the question (set it once, never again):** in SideStore under **Settings → User Customizations** (at the bottom, with the advanced settings):
+> - **SideStore 0.6.4:** **turn off "Customize App Extensions"**. SideStore then stops asking and keeps the widget with its own ID, exactly like the second button.
+> - **Newer SideStore versions (0.7, nightly):** under **"Customize Extensions"** pick **"Keep All"** instead of *Prompt User*. That is the same second button, just automatic. *(Do not pick "Use Main Profile" there, or there are no widgets.)*
+>
+> The app itself cannot switch the question off: SideStore asks for every app with an extension as long as this setting says "ask".
+>
 > **After installing:** open BibleStudy once so the widget has something to show. Then hold your finger on the lock screen (or the home screen) → **Customize** / **Edit** → **Add Widgets** → **BibleStudy**. If BibleStudy is not in the list yet, wait a few minutes or restart the iPhone: iOS sometimes takes a while to notice a new widget.
 >
-> <sub>**Counting:** a free Apple ID allows 3 active apps, and the widget extension counts as one of them: SideStore + BibleStudy + widgets = 3. If SideStore says no slot is free, either remove another self-signed app or choose **Remove App Extensions** (BibleStudy then works without widgets). SideStore may ask again on updates: tap the same button. The buttons are always in English, also on a German iPhone.</sub>
+> <sub>**Counting:** a free Apple ID allows 3 active apps, and the widget extension counts as one of them: SideStore + BibleStudy + widgets = 3. If SideStore says no slot is free, either remove another self-signed app or choose **Remove App Extensions** (BibleStudy then works without widgets). SideStore may ask again on updates: tap the same button (or switch the question off as above). The buttons are always in English, also on a German iPhone.</sub>
 
 </td></tr>
 <tr><td>

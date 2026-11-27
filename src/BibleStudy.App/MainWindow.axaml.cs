@@ -142,6 +142,7 @@ public partial class MainWindow : AppWindow
         HomeBtn.Click += (_, _) => ShowHome();
         BackBtn.Click += async (_, _) => await GoBackAsync();
         ForwardBtn.Click += async (_, _) => await GoForwardAsync();
+        InitHistoryMenu();
         AddHandler(PointerPressedEvent, OnMouseSideButtons, Avalonia.Interactivity.RoutingStrategies.Tunnel);
         ReadBtn.Click += (_, _) => SetRead(_curBook, [_curChapter], ReadBtn.IsChecked == true);
         Home.ChapterChosen += async (book, chapter) => await GoToAsync(book, chapter);
