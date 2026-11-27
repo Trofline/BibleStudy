@@ -62,14 +62,14 @@ public partial class MainWindow
             scroll.Content = all;
             _scrolledAsOne[panel] = above;
         }
-        else if (!phone && _scrolledAsOne.Remove(panel, out var above))
+        else if (!phone && _scrolledAsOne.Remove(panel, out var saved))
         {
             if (scroll.Content is not StackPanel all) return;
             var list = all.Children.Last();
             all.Children.Clear();
             scroll.Content = list;
             panel.Children.Remove(scroll);
-            foreach (var c in above) panel.Children.Add(c);
+            foreach (var c in saved) panel.Children.Add(c);
             panel.Children.Add(scroll);
         }
     }
