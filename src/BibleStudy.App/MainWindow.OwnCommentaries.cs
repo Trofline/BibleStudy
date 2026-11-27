@@ -7,7 +7,7 @@ namespace BibleStudy.App;
 
 /// <summary>
 /// The commentaries the user brings along. The program ships none and loads none from the net: what a commentary teaches is for the user to judge.
-/// e-Sword (.cmtx) and MySword (.cmt.mybible) modules and Markdown or text files are read into the commentary store (see <see cref="OwnCommentaries"/>).
+/// Modules of e-Sword, MySword, MyBible, theWord and SWORD, OSIS files and documents (also the exports of Logos) are read into the commentary store (see <see cref="OwnCommentaries"/>).
 /// </summary>
 public partial class MainWindow
 {
@@ -37,7 +37,7 @@ public partial class MainWindow
         var files = await StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
         {
             Title = L("Kommentar zum Einlesen wählen"), AllowMultiple = true,
-            FileTypeFilter = [new FilePickerFileType(L("Kommentare")) { Patterns = ["*.cmtx", "*.mybible", "*.md", "*.markdown", "*.txt"] }],
+            FileTypeFilter = [new FilePickerFileType(L("Kommentare")) { Patterns = OwnCommentaries.Patterns }],
         });
         if (files.Count == 0) return;
         var done = new List<string>(); var failed = new List<string>(); string? lastId = null; var entries = 0;
@@ -51,7 +51,7 @@ public partial class MainWindow
                 _commentaryIndex.Remove(lastId);
                 done.Add(parsed.Name); entries += parsed.Entries.Count;
             }
-            catch (Exception ex) when (ex is IOException or InvalidDataException or UnauthorizedAccessException or Microsoft.Data.Sqlite.SqliteException)
+            catch (Exception ex) when (ex is IOException or InvalidDataException or NotSupportedException or UnauthorizedAccessException or System.Xml.XmlException or Microsoft.Data.Sqlite.SqliteException)
             {
                 failed.Add($"{Path.GetFileName(path)}: {ex.Message}");
             }

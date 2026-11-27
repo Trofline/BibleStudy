@@ -15,7 +15,7 @@ public sealed record ImportedNotes(string Name, IReadOnlyList<ImportedNote> Note
 /// <summary>
 /// The user's own files of e-Sword: notes and own commentaries (.notx, .cmtx) and topic notes (.topx). They are SQLite files whose tables
 /// differ a little between versions, so the tables are recognised by their columns: book, chapter, verse (or the beginning and end of a
-/// range) and the text, which e-Sword keeps as RTF or HTML. MySword commentaries (.mybible / .cmt.mybible) are read the same way.
+/// range) and the text, which e-Sword keeps as RTF or HTML. MySword commentaries (.mybible / .cmt.mybible), e-Sword HD (.cmti) and MyBible commentaries (.commentaries.SQLite3) are read the same way.
 /// </summary>
 public static class EswordNotes
 {
@@ -52,9 +52,9 @@ public static class EswordNotes
             if (text is null) continue;
             var book = Col("Book", "BookNumber", "book_number");
             var chapter = Col("Chapter", "ChapterBegin", "ChapterStart", "chapter_number_from");
-            var verse = Col("Verse", "VerseBegin", "VerseStart", "verse_number_from");
+            var verse = Col("Verse", "VerseBegin", "VerseStart", "verse_number_from", "fromverse");
             var chapterEnd = Col("ChapterEnd", "chapter_number_to");
-            var verseEnd = Col("VerseEnd", "verse_number_to");
+            var verseEnd = Col("VerseEnd", "verse_number_to", "toverse");
             var title = Col("Title", "Topic", "Name", "Subject");
 
             using var q = con.CreateCommand();
