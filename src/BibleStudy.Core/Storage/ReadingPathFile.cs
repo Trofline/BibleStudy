@@ -47,6 +47,42 @@ public static class ReadingPathFile
                 new VerseRef(m.Book, m.Chapter, m.Verse), m.Start, m.End, m.Text ?? "", m.Color ?? "", m.Note ?? "", null, [], m.EndVerse > m.Verse ? m.EndVerse : 0))]))];
     }
 
+    public const int MaxSentPaths = 200, MaxSentSteps = 2_000, MaxSentMarks = 20_000;
+
+    /// <summary>
+    /// Paths that came from someone else (sent while studying together): only books that exist, chapters and verses in a sane range, a color
+    /// that is a color, names and texts cut to size, and not more paths, steps and marks than a person could have made. Nothing that fails is kept.
+    /// </summary>
+    public static List<Imported> Checked(IEnumerable<Imported> found, Func<string, bool> isBook)
+    {
+        static string Cut(string? s, int max) => s is null ? "" : s.Length > max ? s[..max] : s;
+        static bool IsColor(string? c) => c is { Length: 7 } && c[0] == '#' && c.Skip(1).All(Uri.IsHexDigit);
+        var marks = 0;
+        var list = new List<Imported>();
+        foreach (var f in found.Take(MaxSentPaths))
+        {
+            var name = Cut(f.Path.Name.Trim(), 100);
+            var steps = f.Path.Steps.Where(s => isBook(s.Book) && s.Chapter is >= 1 and <= 200 && s.From is >= 0 and <= 200 && s.To is >= 0 and <= 200)
+                .Take(MaxSentSteps).ToList();
+            if (name.Length == 0 || steps.Count == 0) continue;
+            var kept = new List<Mark>();
+            foreach (var m in f.Marks)
+            {
+                if (marks >= MaxSentMarks) break;
+                if (!isBook(m.Ref.Book) || m.Ref.Chapter is < 1 or > 200 || m.Ref.Verse is < 1 or > 200 || !IsColor(m.Color)) continue;
+                kept.Add(m with
+                {
+                    TranslationId = Cut(m.TranslationId, 40), Text = Cut(m.Text, 2_000), Note = Cut(m.Note, 5_000),
+                    EndVerse = m.EndVerse > m.Ref.Verse && m.EndVerse <= 200 ? m.EndVerse : 0,
+                    Start = Math.Max(-1, m.Start), End = Math.Max(-1, m.End),
+                });
+                marks++;
+            }
+            list.Add(new Imported(new ReadingPath(0, name, IsColor(f.Path.Color) ? f.Path.Color : "", steps), kept));
+        }
+        return list;
+    }
+
     /// <summary>Keeps paths in the vault (a name that is taken gets a number); returns the new ids.</summary>
     public static List<long> KeepPaths(VaultStore vault, IEnumerable<ReadingPath> paths)
     {
