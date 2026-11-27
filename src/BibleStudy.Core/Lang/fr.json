@@ -4000,5 +4000,19 @@
   "{0} führt": "{0} guide",
   "{0} hat den Lesepfad beendet.": "{0} a terminé le parcours de lecture.",
   "{0} wählt aus": "{0} sélectionne",
-  "gleicher Bibeltext": "même texte biblique"
+  "gleicher Bibeltext": "même texte biblique",
+  "Neue Nachrichten ↓": "Nouveaux messages ↓",
+  "Chat": "Discussion",
+  "Chats": "Discussions",
+  "Gespeicherter Chat mit {0} (nur auf diesem Gerät)": "Discussion enregistrée avec {0} (uniquement sur cet appareil)",
+  "Chats von „Zusammen studieren“ auf diesem Gerät speichern": "Enregistrer les discussions de « Étudier ensemble » sur cet appareil",
+  "Bist du wieder mit derselben Person in einem Raum, siehst du euren bisherigen Chat. Gespeichert wird nur bei dir; jede Person speichert für sich.": "Quand tu te retrouves dans une salle avec la même personne, tu vois votre discussion précédente. Elle n’est enregistrée que chez toi ; chacun enregistre la sienne.",
+  "Gespeicherte Chats leeren …": "Vider les discussions enregistrées …",
+  "Keine gespeicherten Chats.": "Aucune discussion enregistrée.",
+  "{0} Nachrichten mit {1} Personen gespeichert.": "{0} messages avec {1} personnes enregistrés.",
+  "Chats leeren?": "Vider les discussions ?",
+  "Alle gespeicherten Chats von „Zusammen studieren“ werden auf diesem Gerät gelöscht. Bei den anderen Personen bleiben ihre eigenen Kopien.": "Toutes les discussions enregistrées de « Étudier ensemble » seront supprimées sur cet appareil. Les autres personnes gardent leurs propres copies.",
+  "Übers Internet": "Par Internet",
+  "Verbindet euch über den Vermittler, auch an verschiedenen Orten, ohne Raum-Code. Ihr tippt beide hier auf „Übers Internet“.": "Vous connecte via le relais, même depuis des lieux différents, sans code de salle. Vous appuyez tous les deux ici sur « Par Internet ».",
+  "Seid ihr an verschiedenen Orten, tippt ihr beide auf „Übers Internet“: Dann seid ihr ohne Raum-Code verbunden.": "Si vous êtes à des endroits différents, appuyez tous les deux sur « Par Internet » : vous êtes alors connectés sans code de salle."
 }

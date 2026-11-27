@@ -4000,5 +4000,19 @@
   "{0} führt": "{0} ведёт",
   "{0} hat den Lesepfad beendet.": "{0} завершил(а) путь чтения.",
   "{0} wählt aus": "{0} выделяет",
-  "gleicher Bibeltext": "тот же текст Библии"
+  "gleicher Bibeltext": "тот же текст Библии",
+  "Neue Nachrichten ↓": "Новые сообщения ↓",
+  "Chat": "Чат",
+  "Chats": "Чаты",
+  "Gespeicherter Chat mit {0} (nur auf diesem Gerät)": "Сохранённый чат с {0} (только на этом устройстве)",
+  "Chats von „Zusammen studieren“ auf diesem Gerät speichern": "Сохранять чаты «Изучать вместе» на этом устройстве",
+  "Bist du wieder mit derselben Person in einem Raum, siehst du euren bisherigen Chat. Gespeichert wird nur bei dir; jede Person speichert für sich.": "Когда ты снова окажешься в комнате с тем же человеком, ты увидишь ваш прежний чат. Он сохраняется только у тебя; каждый хранит свой.",
+  "Gespeicherte Chats leeren …": "Очистить сохранённые чаты …",
+  "Keine gespeicherten Chats.": "Нет сохранённых чатов.",
+  "{0} Nachrichten mit {1} Personen gespeichert.": "Сохранено сообщений: {0}, собеседников: {1}.",
+  "Chats leeren?": "Очистить чаты?",
+  "Alle gespeicherten Chats von „Zusammen studieren“ werden auf diesem Gerät gelöscht. Bei den anderen Personen bleiben ihre eigenen Kopien.": "Все сохранённые чаты «Изучать вместе» будут удалены на этом устройстве. У других людей останутся их собственные копии.",
+  "Übers Internet": "Через интернет",
+  "Verbindet euch über den Vermittler, auch an verschiedenen Orten, ohne Raum-Code. Ihr tippt beide hier auf „Übers Internet“.": "Соединяет вас через посредника, даже из разных мест и без кода комнаты. Вы оба нажимаете здесь «Через интернет».",
+  "Seid ihr an verschiedenen Orten, tippt ihr beide auf „Übers Internet“: Dann seid ihr ohne Raum-Code verbunden.": "Если вы в разных местах, нажмите оба «Через интернет» — и вы соединитесь без кода комнаты."
 }

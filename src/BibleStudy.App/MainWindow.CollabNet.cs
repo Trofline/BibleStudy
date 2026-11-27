@@ -145,6 +145,7 @@ public partial class MainWindow
         _friendsBox.Children.Clear();
         if (_settings.CollabFriends.Count == 0) return;
         _friendsBox.Children.Add(new TextBlock { Text = L("Freunde"), FontWeight = FontWeight.SemiBold });
+        _friendsBox.Children.Add(new TextBlock { Text = L("Seid ihr an verschiedenen Orten, tippt ihr beide auf „Übers Internet“: Dann seid ihr ohne Raum-Code verbunden."), Classes = { "caption" }, TextWrapping = TextWrapping.Wrap });
         foreach (var f in _settings.CollabFriends.ToList())
         {
             var friend = f;
@@ -158,8 +159,11 @@ public partial class MainWindow
             var remove = new Button { Content = "✕", Classes = { "tool" } };
             ToolTip.SetTip(remove, L("Nicht mehr als Freund merken"));
             remove.Click += (_, _) => { _settings.CollabFriends.Remove(friend); SaveSettings(); RefreshFriends(); RefreshNeighbors(); };
-            var state = new TextBlock { Text = seen is not null ? L("im Netzwerk") : L("zuletzt unter {0}", f.Address), Classes = { "caption" }, VerticalAlignment = VerticalAlignment.Center, Margin = new(0, 0, 8, 0) };
-            _friendsBox.Children.Add(new WrapPanel { Children = { connect, auto, state, remove } });
+            var state = new TextBlock { Text = seen is not null ? L("im Netzwerk") : f.Address.Length > 0 ? L("zuletzt unter {0}", f.Address) : "", Classes = { "caption" }, VerticalAlignment = VerticalAlignment.Center, Margin = new(0, 0, 8, 0) };
+            var internet = new Button { Content = L("Übers Internet"), IsEnabled = !inGroup && f.Token.Length > 0, Margin = new(0, 0, 8, 0) };
+            ToolTip.SetTip(internet, L("Verbindet euch über den Vermittler, auch an verschiedenen Orten, ohne Raum-Code. Ihr tippt beide hier auf „Übers Internet“."));
+            internet.Click += async (_, _) => await ConnectFriendRoomAsync(friend);
+            _friendsBox.Children.Add(new WrapPanel { Children = { connect, internet, auto, state, remove } });
         }
     }
 
@@ -219,7 +223,7 @@ public partial class MainWindow
             yes.Click += (_, _) => Done(true);
             no.Click += (_, _) => Done(false);
             // in a running group the question comes on top of the chat, where it is seen; else on the card of the network
-            if (CollabOpen) _collabLog.Children.Insert(0, card); else _netAsk.Children.Add(card);
+            if (CollabOpen) AddCollabItem(card, toEnd: true); else _netAsk.Children.Add(card);
             notice = Notify(L("Zusammen studieren"), text, true, L("Annehmen"), () => Done(true), TimeSpan.FromSeconds(30));
             DispatcherTimer.RunOnce(() => Done(false), TimeSpan.FromSeconds(30));
         });
@@ -235,12 +239,23 @@ public partial class MainWindow
 
     // ---- friends ----------------------------------------------------------------------------------------------------------
 
-    /// <summary>Remembers a person met directly in the network as a friend; both sides keep the same secret, so it cannot be faked by the name.</summary>
-    void MakeFriend(CollabPerson p, NetLink link)
+    /// <summary>
+    /// The connection over which a person can become a friend: only one that leads straight to them, so that the shared secret reaches
+    /// nobody else: a direct one in the network, or a room on the relay where only the two of them are.
+    /// </summary>
+    ICollabLink? CanBefriend(CollabPerson p) => p.Via switch
+    {
+        NetLink nl when nl.PeerId == p.Id => nl,
+        RelayLink rl when rl.Others == 1 && _people.Values.Count(x => x.Via == rl) == 1 => rl,
+        _ => null,
+    };
+
+    /// <summary>Remembers a person as a friend; both sides keep the same secret, so it cannot be faked by the name. It also makes their own room on the relay.</summary>
+    void MakeFriend(CollabPerson p, ICollabLink link)
     {
         var token = Convert.ToHexString(RandomNumberGenerator.GetBytes(24));
-        StoreFriend(p.Id, p.Name, link.RemoteAddress?.ToString() ?? "", 0, token);
-        Group().SendTo(link, new { t = "friend", token, port = _net?.Port ?? NetCollab.DataPort });
+        StoreFriend(p.Id, p.Name, (link as NetLink)?.RemoteAddress?.ToString() ?? "", 0, token);
+        Group().SendTo(link, new { t = "friend", token, port = _net?.Port ?? NetCollab.DataPort, to = p.Id });
         AddCollabLog(L("{0} ist jetzt als Freund gemerkt.", p.Name), system: true);
     }
 
@@ -255,18 +270,38 @@ public partial class MainWindow
         RefreshFriends();
     }
 
-    /// <summary>The other side of <see cref="MakeFriend"/>: only from a person connected directly in the network.</summary>
-    void OnFriendMessage(string type, string token, int port)
+    /// <summary>The other side of <see cref="MakeFriend"/>: only from a person connected straight to this program (see <see cref="CanBefriend"/>).</summary>
+    void OnFriendMessage(string type, string token, int port, string to)
     {
-        if (_from is not { } p || p.Via is not NetLink link || link.PeerId != p.Id) return;
+        if (_from is not { } p || CanBefriend(p) is not { } link) return;
+        if (to.Length > 0 && to != _settings.CollabId) return;
+        var address = (link as NetLink)?.RemoteAddress?.ToString() ?? "";
         if (type == "friend")
         {
             if (token.Length is < 16 or > 64) return;
-            StoreFriend(p.Id, p.Name, link.RemoteAddress?.ToString() ?? "", port, token);
-            Group().SendTo(link, new { t = "friendok", port = _net?.Port ?? NetCollab.DataPort });
+            StoreFriend(p.Id, p.Name, address, link is NetLink ? port : 0, token);
+            Group().SendTo(link, new { t = "friendok", port = _net?.Port ?? NetCollab.DataPort, to = p.Id });
             AddCollabLog(L("{0} hat dich als Freund gemerkt. Ihr seid jetzt gegenseitig Freunde.", p.Name), system: true);
             ShowPeople();
         }
-        else if (_settings.CollabFriends.FirstOrDefault(f => f.Id == p.Id) is { } f && port is > 0 and < 65536) { f.Port = port; SaveSettings(); }
+        else if (link is NetLink && _settings.CollabFriends.FirstOrDefault(f => f.Id == p.Id) is { } f && port is > 0 and < 65536) { f.Port = port; SaveSettings(); }
+    }
+
+    /// <summary>
+    /// Meets a friend in your own room on the relay, without a code: both tap it, and whoever is first waits for the other. It costs the relay
+    /// exactly as much as a room with a code, and nothing while nobody has it open.
+    /// </summary>
+    async Task ConnectFriendRoomAsync(CollabFriend f)
+    {
+        if (f.Token.Length == 0) return;
+        if (_settings.CollabName.Length == 0) { _netInfo.Text = L("Bitte gib zuerst deinen Namen ein."); return; }
+        _netInfo.Text = L("Verbinde …");
+        try
+        {
+            var room = NewRoom(RelayLink.FriendCode(f.Token));
+            await room.StartAsync();
+            await WaitRoomAsync(room, _netInfo, TimeSpan.FromMinutes(10));
+        }
+        catch (Exception ex) { _netInfo.Text = RoomFailed(ex); }
     }
 }

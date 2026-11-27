@@ -40,11 +40,12 @@ You can be as many as you like. Whoever is connected already adds someone under 
 
 ### Friends
 
-For a person in the same network, **Remember as friend** appears. Afterwards they are listed under **Friends**, and one tap connects you, even when they do not show up in the list (then by the address used last). With **Accept automatically** you are no longer asked for this friend. A friend is recognised by a shared secret swapped when remembering, not only by the name.
+For a person in the same network, **Remember as friend** appears, and also in a room where only the two of you are. Afterwards they are listed under **Friends**, and one tap connects you, even when they do not show up in the list (then by the address used last). When you are in different places, both of you tap **Over the internet**: you meet in your own room on the relay, without a room code. That uses exactly as much of the daily limit as a room with a code, and nothing while neither of you has it open. With **Accept automatically** you are no longer asked for this friend. A friend is recognised by a shared secret swapped when remembering, not only by the name.
 
 ## 10.2 What you can do
 
-- **Chat.** You see when the other person is typing. While the page is closed, a small notice shows new messages.
+- **Chat.** The chat is a tile of its own with a fixed height: new messages appear at the bottom and stay in view, the buttons around it do not move. If you scrolled up, **New messages ↓** takes you back down. You see when the other person is typing. While the page is closed, a small notice shows new messages.
+- **Chat saved.** The chat and shared verses are saved only on your device, separately for each person. When you are in a room with the same person again (recognised by their fixed ID, not by the name), your earlier chat is at the top; with someone else a new one begins. Turn it off or empty it: **Settings → My data → Chats**.
 - **Lead:** whoever taps **I lead** sets the passage. Everyone else jumps along automatically until they turn the page themselves; then **Follow again** appears.
 - **Questions about the text:** a shared list. Everyone can add questions and tick them when they have been discussed.
 - **Shared notepad:** one page everyone writes on (if two write at the same time, the version sent last counts). Can be saved as a document.

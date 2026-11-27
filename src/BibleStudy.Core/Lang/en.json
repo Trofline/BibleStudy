@@ -4000,5 +4000,19 @@
   "{0} führt": "{0} leads",
   "{0} hat den Lesepfad beendet.": "{0} ended the reading path.",
   "{0} wählt aus": "{0} is selecting",
-  "gleicher Bibeltext": "same Bible text"
+  "gleicher Bibeltext": "same Bible text",
+  "Neue Nachrichten ↓": "New messages ↓",
+  "Chat": "Chat",
+  "Chats": "Chats",
+  "Gespeicherter Chat mit {0} (nur auf diesem Gerät)": "Saved chat with {0} (only on this device)",
+  "Chats von „Zusammen studieren“ auf diesem Gerät speichern": "Save the chats of “Study together” on this device",
+  "Bist du wieder mit derselben Person in einem Raum, siehst du euren bisherigen Chat. Gespeichert wird nur bei dir; jede Person speichert für sich.": "When you are in a room with the same person again, you see your earlier chat. It is saved only on your side; each person saves their own.",
+  "Gespeicherte Chats leeren …": "Clear saved chats …",
+  "Keine gespeicherten Chats.": "No saved chats.",
+  "{0} Nachrichten mit {1} Personen gespeichert.": "{0} messages with {1} people saved.",
+  "Chats leeren?": "Clear chats?",
+  "Alle gespeicherten Chats von „Zusammen studieren“ werden auf diesem Gerät gelöscht. Bei den anderen Personen bleiben ihre eigenen Kopien.": "All saved chats of “Study together” are deleted on this device. The other people keep their own copies.",
+  "Übers Internet": "Over the internet",
+  "Verbindet euch über den Vermittler, auch an verschiedenen Orten, ohne Raum-Code. Ihr tippt beide hier auf „Übers Internet“.": "Connects you through the relay, even in different places, without a room code. Both of you tap “Over the internet” here.",
+  "Seid ihr an verschiedenen Orten, tippt ihr beide auf „Übers Internet“: Dann seid ihr ohne Raum-Code verbunden.": "If you are in different places, both of you tap “Over the internet”: then you are connected without a room code."
 }

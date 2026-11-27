@@ -4000,5 +4000,19 @@
   "{0} führt": "{0} guía",
   "{0} hat den Lesepfad beendet.": "{0} terminó la ruta de lectura.",
   "{0} wählt aus": "{0} selecciona",
-  "gleicher Bibeltext": "mismo texto bíblico"
+  "gleicher Bibeltext": "mismo texto bíblico",
+  "Neue Nachrichten ↓": "Mensajes nuevos ↓",
+  "Chat": "Chat",
+  "Chats": "Chats",
+  "Gespeicherter Chat mit {0} (nur auf diesem Gerät)": "Chat guardado con {0} (solo en este dispositivo)",
+  "Chats von „Zusammen studieren“ auf diesem Gerät speichern": "Guardar los chats de «Estudiar juntos» en este dispositivo",
+  "Bist du wieder mit derselben Person in einem Raum, siehst du euren bisherigen Chat. Gespeichert wird nur bei dir; jede Person speichert für sich.": "Cuando vuelvas a estar en una sala con la misma persona, verás vuestro chat anterior. Solo se guarda en tu dispositivo; cada persona guarda el suyo.",
+  "Gespeicherte Chats leeren …": "Vaciar chats guardados …",
+  "Keine gespeicherten Chats.": "No hay chats guardados.",
+  "{0} Nachrichten mit {1} Personen gespeichert.": "{0} mensajes con {1} personas guardados.",
+  "Chats leeren?": "¿Vaciar los chats?",
+  "Alle gespeicherten Chats von „Zusammen studieren“ werden auf diesem Gerät gelöscht. Bei den anderen Personen bleiben ihre eigenen Kopien.": "Se borrarán en este dispositivo todos los chats guardados de «Estudiar juntos». Las demás personas conservan sus propias copias.",
+  "Übers Internet": "Por internet",
+  "Verbindet euch über den Vermittler, auch an verschiedenen Orten, ohne Raum-Code. Ihr tippt beide hier auf „Übers Internet“.": "Os conecta a través del intermediario, también desde lugares distintos y sin código de sala. Los dos pulsáis aquí «Por internet».",
+  "Seid ihr an verschiedenen Orten, tippt ihr beide auf „Übers Internet“: Dann seid ihr ohne Raum-Code verbunden.": "Si estáis en lugares distintos, los dos pulsáis «Por internet» y quedáis conectados sin código de sala."
 }

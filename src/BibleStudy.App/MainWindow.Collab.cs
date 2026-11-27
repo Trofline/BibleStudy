@@ -331,29 +331,16 @@ public partial class MainWindow
         fileBtn.Click += async (_, _) => await PickAndSendFileAsync();
         foreach (var b in new[] { verse, come, react, marksBtn, notesBtn, pathsBtn, doc, fileBtn, vaultBtn }) actions.Children.Add(b);
         CollabPanel.Children.Add(actions);
+        CollabPanel.Children.Add(ChatTile());
+        var save = new Button { Content = L("Treffen als Dokument speichern"), Classes = { "tool" }, Width = double.NaN, Padding = new(10, 0), HorizontalAlignment = HorizontalAlignment.Left };
+        ToolTip.SetTip(save, L("Chat, geteilte Verse, Fragen und Notizblatt kommen als ein Dokument in deinen Vault."));
+        save.Click += (_, _) => SaveMeetingAsDocument();
+        CollabPanel.Children.Add(save);
         CollabPanel.Children.Add(BuildMediaBox());
 
         CollabPanel.Children.Add(new Expander { Header = L("Weitere Person dazuholen"), Content = BuildNetCard(), Margin = new(0, 2, 0, 0) });
         CollabPanel.Children.Add(BuildQuestionsBox());
         CollabPanel.Children.Add(BuildPadBox());
-
-        var input = new TextBox { PlaceholderText = L("Nachricht schreiben, Enter sendet"), MaxLength = 2000, AcceptsReturn = false };
-        input.KeyDown += (_, e) =>
-        {
-            if (e.Key != Key.Enter || string.IsNullOrWhiteSpace(input.Text)) return;
-            var text = input.Text.Trim(); input.Text = "";
-            var mid = CollabSend(new { t = "chat", text });
-            AddChat(_settings.CollabName, text, mid, mine: true, null);
-        };
-        input.TextChanged += (_, _) => { if (!string.IsNullOrWhiteSpace(input.Text)) CollabTyping(); };
-        Detach(_peerTyping);
-        CollabPanel.Children.Add(_peerTyping);
-        CollabPanel.Children.Add(input);
-        var save = new Button { Content = L("Treffen als Dokument speichern"), Classes = { "tool" }, Width = double.NaN, Padding = new(10, 0), HorizontalAlignment = HorizontalAlignment.Left };
-        ToolTip.SetTip(save, L("Chat, geteilte Verse, Fragen und Notizblatt kommen als ein Dokument in deinen Vault."));
-        save.Click += (_, _) => SaveMeetingAsDocument();
-        CollabPanel.Children.Add(save);
-        CollabPanel.Children.Add(_collabLog);
     }
 
     /// <summary>One line per person: color, name, where they read, whether they lead or read aloud, their highlights in your chapter.</summary>
@@ -389,17 +376,14 @@ public partial class MainWindow
                 take.Click += (_, _) => { TakeLiveMarks(person); take.IsEnabled = false; take.Content = L("Übernommen ✓"); };
                 buttons.Children.Add(take);
             }
-            if (p.Via is NetLink nl && nl.PeerId == p.Id)
+            if (CanBefriend(p) is { } direct && _settings.CollabFriends.All(f => f.Id != p.Id))
             {
-                if (_settings.CollabFriends.All(f => f.Id != p.Id))
-                {
-                    var friend = new Button { Content = L("Als Freund merken"), Classes = { "tool" }, Width = double.NaN, Padding = new(8, 0), Margin = new(0, 0, 6, 4) };
-                    ToolTip.SetTip(friend, L("Beim nächsten Mal genügt ein Tipp zum Verbinden, auf Wunsch ohne Nachfrage."));
-                    friend.Click += (_, _) => { MakeFriend(person, nl); friend.IsEnabled = false; friend.Content = L("Freund ✓"); };
-                    buttons.Children.Add(friend);
-                }
-                row.Children.Add(new TextBlock { Text = L("Prüfzahl: {0}", nl.CheckCode), Classes = { "caption" } });
+                var friend = new Button { Content = L("Als Freund merken"), Classes = { "tool" }, Width = double.NaN, Padding = new(8, 0), Margin = new(0, 0, 6, 4) };
+                ToolTip.SetTip(friend, L("Beim nächsten Mal genügt ein Tipp zum Verbinden, auf Wunsch ohne Nachfrage."));
+                friend.Click += (_, _) => { MakeFriend(person, direct); friend.IsEnabled = false; friend.Content = L("Freund ✓"); };
+                buttons.Children.Add(friend);
             }
+            if (p.Via is NetLink nl && nl.PeerId == p.Id) row.Children.Add(new TextBlock { Text = L("Prüfzahl: {0}", nl.CheckCode), Classes = { "caption" } });
             else if (p.Via is RelayLink rl) row.Children.Add(new TextBlock { Text = L("Prüfzahl: {0}", rl.CheckCode), Classes = { "caption" } });
             if (buttons.Children.Count > 0) row.Children.Add(buttons);
             _peopleBox.Children.Add(new Border { BorderBrush = new SolidColorBrush(p.Ink, 0.5), BorderThickness = new(3, 0, 0, 0), Padding = new(8, 2, 0, 2), Child = row });
@@ -411,15 +395,8 @@ public partial class MainWindow
         var bubble = new Border { Padding = new(10, 6), CornerRadius = new(10), HorizontalAlignment = mine ? HorizontalAlignment.Right : HorizontalAlignment.Left, MaxWidth = 340 };
         bubble.Bind(Border.BackgroundProperty, this.GetResourceObservable(mine ? "BsAccentSoft" : "BsSurface2"));
         bubble.Child = new TextBlock { Text = text, TextWrapping = TextWrapping.Wrap, Classes = { system ? "caption" : "" } };
-        AddCollabItem(bubble);
+        AddCollabItem(bubble, toEnd: mine);
         if (!system) _meeting.Add((DateTime.Now, mine ? _settings.CollabName : "", text));
-    }
-
-    void AddCollabItem(Control item)
-    {
-        _collabLog.Children.Insert(0, item);   // newest on top, so it is visible without scrolling
-        while (_collabLog.Children.Count > 120) _collabLog.Children.RemoveAt(_collabLog.Children.Count - 1);
-        AnimateIn(item, 0, -8);
     }
 
     // ---- sending ----------------------------------------------------------------------------------------------------------
@@ -529,7 +506,8 @@ public partial class MainWindow
         var translation = (TranslationBox.SelectedItem as TranslationInfo)?.ShortName ?? "";
         // text of a privately imported translation (private use only) is never sent: only the place, the other person reads it in their own Bible
         var isPrivate = TranslationBox.SelectedItem is TranslationInfo { Id: var tid } && (BibleStudy.Core.Import.LocalBibleStore.Owns(tid) || BibleStudy.Core.Plugins.PluginBibleProvider.Owns(tid));
-        CollabSend(new { t = "verse", book = r.Book, chapter = r.Chapter, verse = r.Verse, text = isPrivate ? "" : VerseTextOf(v).Trim(), translation = isPrivate ? "" : translation });
+        var mid = CollabSend(new { t = "verse", book = r.Book, chapter = r.Chapter, verse = r.Verse, text = isPrivate ? "" : VerseTextOf(v).Trim(), translation = isPrivate ? "" : translation });
+        KeepChat(new() { Kind = "verse", Mid = mid, Mine = true, Who = _settings.CollabName, Text = VerseTextOf(v).Trim(), Book = r.Book, Chapter = r.Chapter, Verse = r.Verse, Translation = translation });
         AddCollabLog(L("Du hast {0} geteilt.", Label(r)), mine: true, system: true);
     }
 
@@ -598,6 +576,7 @@ public partial class MainWindow
                     if (!p.Greeted)
                     {
                         p.Greeted = true;
+                        RestoreChat(p);
                         AddCollabLog(L("{0} ist verbunden.", PeerWho), system: true);
                         SendHello();   // so the newcomer learns about this person (each one answers once)
                     }
@@ -657,6 +636,7 @@ public partial class MainWindow
         if (_books.All(b => b.Id != book) || chapter < 1 || verse < 1) return;
         var who = PeerWho;
         _meeting.Add((DateTime.Now, who, $"{Label(new VerseRef(book, chapter, verse))}: {text}"));
+        KeepChat(new() { Kind = "verse", Who = who, Text = text, Book = book, Chapter = chapter, Verse = verse, Translation = translation });
         var r = new VerseRef(book, chapter, verse);
         var go = new Button { Content = L("Hingehen"), Classes = { "tool" }, Width = double.NaN, Padding = new(10, 0) };
         go.Click += async (_, _) => await GoToAsync(book, chapter, verse);

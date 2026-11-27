@@ -94,6 +94,18 @@ public sealed class RelayLink : ICollabLink
 
     public static string NewCode() => new(RandomNumberGenerator.GetItems(CodeAlphabet.AsSpan(), CodeLength));
 
+    /// <summary>
+    /// The lasting room of two friends: made from the secret only both of them keep (exchanged inside a sealed connection), so they meet
+    /// again without typing a code. It is an ordinary room on the relay, used only while both have it open.
+    /// </summary>
+    public static string FriendCode(string secret)
+    {
+        var h = SHA256.HashData(Encoding.UTF8.GetBytes("BibleStudy friend room v1|" + secret));
+        var c = new char[CodeLength];
+        for (var i = 0; i < CodeLength; i++) c[i] = CodeAlphabet[h[i] % CodeAlphabet.Length];
+        return new(c);
+    }
+
     /// <summary>A typed code as the program uses it: upper case, without dashes and spaces. Null when it cannot be a code.</summary>
     public static string? Normalize(string? typed)
     {

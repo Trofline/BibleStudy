@@ -233,6 +233,8 @@ public sealed class AppSettings
     public string CollabId { get; set; } = "";
     /// <summary>People remembered as friends: one tap connects, and with auto-accept their request is accepted at once.</summary>
     public List<CollabFriend> CollabFriends { get; set; } = [];
+    /// <summary>Studying together: the chats are kept on this device, per person, and come back when the same person is in the room again.</summary>
+    public bool CollabKeepChats { get; set; } = true;
     /// <summary>Studying together: the chosen microphone and camera (by name; empty = the standard one) and whether the others are heard.</summary>
     public string CollabMic { get; set; } = "";
     public string CollabCamera { get; set; } = "";
