@@ -23,6 +23,12 @@ public sealed class PathGutter : Control
     /// <summary>The box of a verse in the text (null when it is not shown).</summary>
     public Func<int, Control?> BoxOf { get; set; } = _ => null;
 
+    /// <summary>
+    /// Where the verses can be seen, in this control (null: everywhere). Side by side with columns that scroll on their own the main column
+    /// scrolls inside its own frame: circles and arrows of verses scrolled out of it must not be drawn over the header or the bar above.
+    /// </summary>
+    public Func<Rect?> Visible { get; set; } = () => null;
+
     public PathGutter() { IsHitTestVisible = false; ClipToBounds = false; }
 
     /// <summary>The room the margin needs: the circles and the lanes of the arrows; 0 when there is nothing to show.</summary>
@@ -49,6 +55,12 @@ public sealed class PathGutter : Control
     {
         _hits.Clear();
         if (_badges.Count == 0) return;
+        var visible = Visible();
+        using (visible is { } clip ? ctx.PushClip(clip) : (IDisposable?)null) Draw(ctx, visible);
+    }
+
+    void Draw(DrawingContext ctx, Rect? visible)
+    {
         double? edge = null;   // the left edge of the text (the same for every verse)
         foreach (var b in _badges) if (Place(b.Verse) is { } p) { edge = p.X; break; }
         if (edge is not { } left) return;
@@ -96,7 +108,7 @@ public sealed class PathGutter : Control
                 ctx.DrawEllipse(new SolidColorBrush(b.Color), new Pen(Brushes.White, i > 0 ? 1 : 0), new Point(cx, cy), BadgeSize / 2, BadgeSize / 2);
                 var text = new FormattedText(b.Number.ToString(CultureInfo.InvariantCulture), CultureInfo.InvariantCulture, FlowDirection.LeftToRight, new Typeface("Segoe UI, Inter, sans-serif", FontStyle.Normal, FontWeight.Bold), b.Number > 99 ? 8 : 10, Ink(b.Color));
                 ctx.DrawText(text, new Point(cx - text.Width / 2, cy - text.Height / 2));
-                _hits.Add((new Rect(cx - BadgeSize / 2, cy - BadgeSize / 2, BadgeSize, BadgeSize), b));
+                if (visible is not { } v || v.Contains(new Point(cx, cy))) _hits.Add((new Rect(cx - BadgeSize / 2, cy - BadgeSize / 2, BadgeSize, BadgeSize), b));
                 i++;
             }
         }
