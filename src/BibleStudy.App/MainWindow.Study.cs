@@ -80,9 +80,9 @@ public partial class MainWindow
         };
         cell.Bind(Border.BackgroundProperty, this.GetResourceObservable("BsSurface2"));
         ToolTip.SetTip(cell, string.IsNullOrEmpty(w.ParsingFull) ? w.Parsing : w.ParsingFull);
-        cell.OnPress(async (_, e) =>
+        cell.OnPress(async (_, e) =>   // a finger: on the lift, so scrolling past does not open a word
         {
-            if (!e.GetCurrentPoint(cell).Properties.IsLeftButtonPressed) return;
+            if (e.Pointer.Type != PointerType.Touch && !e.GetCurrentPoint(cell).Properties.IsLeftButtonPressed) return;
             foreach (var other in GrundtextPanel.Children.OfType<Border>()) other.ClearValue(Border.BorderBrushProperty);
             cell.BorderThickness = new(1.5);
             cell.Bind(Border.BorderBrushProperty, this.GetResourceObservable("BsAccent"));

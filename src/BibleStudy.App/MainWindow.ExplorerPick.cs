@@ -104,6 +104,13 @@ public partial class MainWindow
         ExShowSelection();
     }
 
+    /// <summary>
+    /// A finger ticks a row when it lifts without having moved: a finger that slides is scrolling the list. The lift is heard at the window,
+    /// because the list takes the finger as soon as it moves a little, and the row itself then never hears it lift (so only one row could be ticked).
+    /// </summary>
+    void ExPickOnLift(Control row, ExItem item, Avalonia.Input.PointerPressedEventArgs e) =>
+        TouchTap.Defer(row, e, () => ExPickToggle(item), maxMs: 4000);   // while choosing a slow tap ticks too
+
     void UpdateExPickBar()
     {
         if (_exPickBar is null) return;

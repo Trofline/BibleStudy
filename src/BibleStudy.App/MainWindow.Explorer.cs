@@ -687,7 +687,8 @@ public partial class MainWindow
         row.PointerExited += (_, _) => { if (!_exDragging) Paint(false); };
         if (item.Kind == ExKind.Folder) _exTargets.Add(new ExTarget(row, item.Id, on => { if (on) row.Background = Res("BsAccentSoft") ?? Brushes.Transparent; else Paint(false); }));
         ExDragSource(row, item);
-        row.ContextMenu = item.Kind == ExKind.Folder ? FolderContextMenu(item, row) : ItemContextMenu(item, row);
+        // while choosing, the bar below does it all: a slow tap must tick the row, not open its menu
+        if (!_exPick) row.ContextMenu = item.Kind == ExKind.Folder ? FolderContextMenu(item, row) : ItemContextMenu(item, row);
         return row;
     }
 
@@ -952,8 +953,8 @@ public partial class MainWindow
                 // A finger does nothing when it goes down: it may be the start of a scroll. Nothing is chosen, nothing is dragged and the
                 // finger is not taken from the list. Lifting it on the spot opens the row, or ticks it while choosing ("Auswählen" above);
                 // holding it opens the menu of the row (only if the list did not scroll meanwhile, see GuardHolding).
-                e.Handled = _exPick;
-                TouchTap.Defer(row, e, () => { if (_exPick) ExPickToggle(item); else ExOpen(item); });
+                if (_exPick) { e.Handled = true; ExPickOnLift(row, item, e); return; }   // while choosing a slow tap ticks too
+                TouchTap.Defer(row, e, () => ExOpen(item));
                 return;
             }
             if (_exPick) { e.Handled = true; ExPickToggle(item); return; }   // choosing: a click ticks, nothing opens or moves
