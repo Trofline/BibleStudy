@@ -3606,5 +3606,19 @@
   "Bildqualität: niedrig (für langsames Internet)": "Qualité d'image : basse (pour internet lent)",
   "Bildqualität: mittel": "Qualité d'image : moyenne",
   "Bildqualität: HD (720p)": "Qualité d'image : HD (720p)",
-  "Ruckelt das Bild oder kommt es spät an, wähle eine niedrigere Qualität: HD braucht bei jeder Person mit Kamera etwa 5 Mbit/s zum Senden und bei allen anderen ebenso viel zum Empfangen.": "Si l'image saccade ou arrive en retard, choisissez une qualité plus basse : la HD demande environ 5 Mbit/s en envoi pour chaque personne avec caméra, et autant en réception pour toutes les autres."
+  "Ruckelt das Bild oder kommt es spät an, wähle eine niedrigere Qualität: HD braucht bei jeder Person mit Kamera etwa 5 Mbit/s zum Senden und bei allen anderen ebenso viel zum Empfangen.": "Si l'image saccade ou arrive en retard, choisissez une qualité plus basse : la HD demande environ 5 Mbit/s en envoi pour chaque personne avec caméra, et autant en réception pour toutes les autres.",
+  "Kapitel {0} von {1} …": "Chapitre {0} sur {1} …",
+  "Zeile {0} der Datei lässt sich nicht lesen.": "La ligne {0} du fichier est illisible.",
+  "Aktuelle Übersetzung als TXT exportieren …": "Exporter la traduction actuelle en TXT …",
+  "Speichert die Übersetzung, die du gerade liest, vollständig als .txt: mit Strong-Nummern, Fußnoten, Überschriften und Worten Jesu. Der Import liest die Datei genau so wieder ein.": "Enregistre la traduction que tu lis en entier au format .txt : avec les numéros Strong, les notes, les titres et les paroles de Jésus. L'import relit le fichier exactement tel quel.",
+  "Übersetzung als TXT speichern": "Enregistrer la traduction en TXT",
+  "„{0}“ exportiert: {1} Verse, {2} Fußnoten. Gespeichert: {3}": "« {0} » exportée : {1} versets, {2} notes. Enregistré : {3}",
+  "Übersetzung senden": "Envoyer la traduction",
+  "Sendet die Übersetzung, die du gerade liest, als .txt mit allem, was dazugehört. Die andere Person übernimmt sie mit einem Klick. Sende nur Übersetzungen, die du weitergeben darfst.": "Envoie la traduction que tu lis en .txt avec tout ce qui va avec. L'autre personne la reprend en un clic. N'envoie que des traductions que tu as le droit de transmettre.",
+  "Übersetzung „{0}“ wird vorbereitet …": "Préparation de la traduction « {0} » …",
+  "Diese Übersetzung ist zu groß zum Senden.": "Cette traduction est trop volumineuse pour être envoyée.",
+  "Du hast die Übersetzung „{0}“ gesendet ({1}).": "Tu as envoyé la traduction « {0} » ({1}).",
+  "{0} sendet die Übersetzung „{1}“ ({2})": "{0} envoie la traduction « {1} » ({2})",
+  "Wird wie eine eigene .txt-Datei importiert und steht dann in der Übersetzungsliste.": "Importée comme ton propre fichier .txt, elle apparaît ensuite dans la liste des traductions.",
+  "Die Datei ist keine Übersetzung im Format von BibleStudy.": "Le fichier n'est pas une traduction au format de BibleStudy."
 }

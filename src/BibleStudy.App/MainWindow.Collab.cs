@@ -319,7 +319,7 @@ public partial class MainWindow
         var vaultBtn = new Button { Content = L("Vault senden ▾"), Margin = new(0, 0, 8, 6) };
         ToolTip.SetTip(vaultBtn, L("Sendet eine Kopie des ganzen Vaults. Die andere Person kann ihn als Gast ansehen oder als neuen Vault speichern."));
         vaultBtn.Click += (_, _) => ShowSendVaultMenu(vaultBtn);
-        foreach (var b in new[] { verse, come, react, marksBtn, notesBtn, doc, vaultBtn }) actions.Children.Add(b);
+        foreach (var b in new[] { verse, come, react, marksBtn, notesBtn, doc, vaultBtn, BuildSendTranslationButton() }) actions.Children.Add(b);
         CollabPanel.Children.Add(actions);
         CollabPanel.Children.Add(BuildMediaBox());
 
