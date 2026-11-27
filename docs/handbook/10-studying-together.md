@@ -21,7 +21,7 @@ Everybody sees a **check number**. If it is the same for all of you, nobody is i
 
 **How it works:** The programs do not connect to each other directly (that fails with many internet connections) but each one to a small **relay server** on the internet, the way a browser opens a website. The relay only passes the messages on. Everything is **end-to-end encrypted**: the key is made on your devices from the room code; the relay does not know the code (only a hash of it as the room name) and cannot read anything. It stores nothing. You need no account and nothing to set up.
 
-**Daily limit:** The relay runs on the free plan and therefore has a daily limit for all users together. When it is used up, connect **in the same network** (next section) until the next day. If you are in different places, all join the same free **ZeroTier** network (zerotier.com: one person creates a network, the others join with its network ID). Then you are “in the same network” for BibleStudy and connect without any relay.
+**Daily limit:** The relay runs on the free plan and therefore has a daily limit for all users together. When it is used up, connect **in the same network** (next section) until the next day. If you are in different places, all join the same free **ZeroTier** network (zerotier.com: one person creates a network, the others join with its network ID). Then you are “in the same network” for BibleStudy and connect without any relay. As a rough size: two people with camera, sound and pointer can spend about 25 hours a day together in a room; the picture quality hardly changes that. The limit starts again every day at midnight UTC.
 
 ### In the same network (no codes)
 
@@ -65,10 +65,10 @@ For a person in the same network, **Remember as friend** appears. Afterwards the
 Under **Talking and camera**:
 
 - **Hold to talk:** while you hold the button, the others hear you (like a walkie-talkie).
-- **Microphone on (call):** like a call, until you switch it off again. With headphones there is no echo.
+- **Microphone on (call):** like a call, until you switch it off again. With headphones there is no echo. The sound goes in full quality (48 kHz), not like a telephone; voice messages stay smaller (16 kHz).
 - **Voice message:** tap, speak, tap again; 2 minutes at most. The others play it with **▶ Play**.
 - **Camera on:** your picture appears as a small tile for everyone; **Large video** shows all pictures in a window of their own.
-- **Picture quality:** under **Choose microphone and camera**: low, medium or **HD (720p)** (default). If the picture stutters or arrives late, choose a lower level: HD needs about 5 Mbit/s for each person with a camera. When the picture cannot keep up, BibleStudy skips old pictures and always shows the newest, so the delay does not keep growing.
+- **Picture quality:** under **Choose microphone and camera**: low, medium, **HD (720p)** (default) or **Full HD (1080p)**, plus **30 or 60 frames per second**. The camera goes as a video stream (H.264): only what changes from picture to picture is sent. Per person with a camera, HD needs about 2.5 Mbit/s to send, Full HD about 5 Mbit/s, half as much again at 60 frames per second. If the picture stutters or arrives late, choose a lower level. When the picture cannot keep up, BibleStudy jumps to the next complete picture (at most two seconds), so the delay does not keep growing. Everyone needs the newest BibleStudy version for this. On the phone you see the others' pictures.
 - **Hear the others** switches the others' sound off and on. Under **Choose microphone and camera** you pick the devices.
 
 On Windows, talking works without anything extra. For the camera (and on Mac and Linux also for sound) BibleStudy needs the free program **FFmpeg**: on Windows in the download manager under **Camera and sound** (about 110 MB), on a Mac with `brew install ffmpeg`, on Linux with the package manager (`sudo apt install ffmpeg`). If FFmpeg is installed already, it is used. Talking and camera on the phone come later.

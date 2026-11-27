@@ -21,7 +21,7 @@ Alle sehen eine **Prüfzahl**. Ist sie bei allen gleich, sitzt niemand dazwische
 
 **Wie das funktioniert:** Die Programme verbinden sich nicht direkt miteinander (das scheitert bei vielen Anschlüssen), sondern jedes für sich mit einem kleinen **Vermittler-Server** im Internet, so wie ein Browser eine Webseite öffnet. Der Vermittler reicht die Nachrichten nur weiter. Alles ist **Ende-zu-Ende verschlüsselt**: Der Schlüssel entsteht auf euren Geräten aus dem Raum-Code; der Vermittler kennt den Code nicht (nur eine Prüfsumme davon als Raumname) und kann nichts lesen. Er speichert nichts. Ihr braucht kein Konto und müsst nichts einrichten.
 
-**Tageslimit:** Der Vermittler läuft im kostenlosen Tarif und hat deshalb ein Tageslimit für alle Nutzer zusammen. Ist es aufgebraucht, verbindet euch bis zum nächsten Tag **im selben Netzwerk** (nächster Abschnitt). Seid ihr an verschiedenen Orten, tretet alle demselben kostenlosen **ZeroTier**-Netzwerk bei (zerotier.com: eine Person erstellt ein Netzwerk, die anderen treten mit dessen Netzwerk-ID bei). Danach seid ihr für BibleStudy „im selben Netzwerk“ und verbindet euch ganz ohne Vermittler.
+**Tageslimit:** Der Vermittler läuft im kostenlosen Tarif und hat deshalb ein Tageslimit für alle Nutzer zusammen. Ist es aufgebraucht, verbindet euch bis zum nächsten Tag **im selben Netzwerk** (nächster Abschnitt). Seid ihr an verschiedenen Orten, tretet alle demselben kostenlosen **ZeroTier**-Netzwerk bei (zerotier.com: eine Person erstellt ein Netzwerk, die anderen treten mit dessen Netzwerk-ID bei). Danach seid ihr für BibleStudy „im selben Netzwerk“ und verbindet euch ganz ohne Vermittler. Zur Größe: Zwei Personen mit Kamera, Ton und Zeiger können zusammen rund 25 Stunden am Tag im Raum sein; die Bildqualität ändert daran kaum etwas. Das Limit beginnt jeden Tag um 1 Uhr nachts (deutsche Winterzeit) neu.
 
 ### Im selben Netzwerk (ohne Codes)
 
@@ -65,10 +65,10 @@ Bei einer Person im selben Netzwerk erscheint **Als Freund merken**. Danach steh
 Unter **Sprechen und Kamera**:
 
 - **Gedrückt halten zum Sprechen:** Solange du den Knopf drückst, hören dich die anderen (wie ein Funkgerät).
-- **Mikrofon an (Gespräch):** wie ein Anruf, bis du es wieder ausschaltest. Mit Kopfhörern gibt es kein Echo.
+- **Mikrofon an (Gespräch):** wie ein Anruf, bis du es wieder ausschaltest. Mit Kopfhörern gibt es kein Echo. Der Ton geht in voller Qualität (48 kHz) und nicht wie beim Telefon; Sprachnachrichten bleiben kleiner (16 kHz).
 - **Sprachnachricht:** antippen, sprechen, noch einmal antippen; höchstens 2 Minuten. Die anderen spielen sie mit **▶ Abspielen** ab.
 - **Kamera an:** Dein Bild erscheint bei allen als kleine Kachel; **Videos groß** zeigt alle Bilder in einem eigenen Fenster.
-- **Bildqualität:** unter **Mikrofon und Kamera wählen**: niedrig, mittel oder **HD (720p)** (Standard). Ruckelt das Bild oder kommt es spät an, wähle eine niedrigere Stufe: HD braucht für jede Person mit Kamera etwa 5 Mbit/s. Kommt das Bild nicht hinterher, lässt BibleStudy alte Bilder weg und zeigt immer das neueste, damit es nicht immer weiter verzögert.
+- **Bildqualität:** unter **Mikrofon und Kamera wählen**: niedrig, mittel, **HD (720p)** (Standard) oder **Full HD (1080p)**, dazu **30 oder 60 Bilder pro Sekunde**. Die Kamera geht als Videostrom (H.264): Gesendet wird nur, was sich von Bild zu Bild ändert. Pro Person mit Kamera braucht HD etwa 2,5 Mbit/s zum Senden, Full HD etwa 5 Mbit/s, mit 60 Bildern pro Sekunde die Hälfte mehr. Ruckelt das Bild oder kommt es spät an, wähle eine niedrigere Stufe. Kommt das Bild nicht hinterher, springt BibleStudy zum nächsten vollständigen Bild (höchstens zwei Sekunden), damit es nicht immer weiter verzögert. Alle brauchen dafür die neueste BibleStudy-Version. Auf dem Handy siehst du die Bilder der anderen.
 - **Die anderen hören** schaltet den Ton der anderen aus und an. Unter **Mikrofon und Kamera wählen** suchst du die Geräte aus.
 
 Unter Windows geht Sprechen ohne Zusatz. Für die Kamera (und unter Mac und Linux auch für den Ton) braucht BibleStudy das freie Programm **FFmpeg**: unter Windows im Download-Manager unter **Kamera und Ton** (rund 110 MB), am Mac mit `brew install ffmpeg`, unter Linux mit der Paketverwaltung (`sudo apt install ffmpeg`). Ist FFmpeg schon installiert, wird es benutzt. Auf dem Handy kommen Sprechen und Kamera später.

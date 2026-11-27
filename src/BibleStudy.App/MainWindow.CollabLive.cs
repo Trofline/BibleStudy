@@ -44,7 +44,7 @@ public partial class MainWindow
     void OnReaderPointer(PointerEventArgs e)
     {
         if (!CollabOpen || !_settings.CollabSendPointer || !ReaderHost.IsVisible) return;
-        if ((DateTime.UtcNow - _ptrSentAt).TotalMilliseconds < 50) return;
+        if ((DateTime.UtcNow - _ptrSentAt).TotalMilliseconds < 33) return;   // about 30 a second: they travel together, gathered per 100 ms
         foreach (var (n, box) in _verseBoxes)
         {
             var p = e.GetPosition(box);
@@ -55,6 +55,15 @@ public partial class MainWindow
         }
         if (_ptrInside) { _ptrInside = false; SendPointer(0, 0, 0); }
     }
+
+    bool _ptrGlide;
+    static readonly TimeSpan GlideTime = TimeSpan.FromMilliseconds(110);
+
+    static Avalonia.Animation.Transitions PointerGlide() =>
+    [
+        new Avalonia.Animation.DoubleTransition { Property = Canvas.LeftProperty, Duration = GlideTime },
+        new Avalonia.Animation.DoubleTransition { Property = Canvas.TopProperty, Duration = GlideTime },
+    ];
 
     void SendPointer(int verse, double x, double y)
     {
@@ -137,7 +146,8 @@ public partial class MainWindow
             {
                 var v = Int("v");
                 p.Ptr = place && v is > 0 and <= 200 ? (book, chapter, v, Num("x"), Num("y")) : null;
-                RenderPeerLayer();
+                _ptrGlide = true;   // the pointer glides to its new place instead of jumping (a new position comes about every 100 ms)
+                try { RenderPeerLayer(); } finally { _ptrGlide = false; }
                 return true;
             }
             case "mk":
@@ -261,8 +271,12 @@ public partial class MainWindow
                 && vbox.TranslatePoint(new Point(ptr.X * vbox.Bounds.Width, ptr.Y * vbox.Bounds.Height), _peerLayer) is { } pos)
             {
                 p.PointerName!.Text = p.Name;
+                // glide only between two positions of the pointer; scrolling, resizing and appearing move it at once
+                var glide = _ptrGlide && p.Pointer.IsVisible;
+                if (!glide) p.Pointer.Transitions = null;
                 Canvas.SetLeft(p.Pointer, pos.X); Canvas.SetTop(p.Pointer, pos.Y);
                 p.Pointer.IsVisible = true;
+                if (!glide) p.Pointer.Transitions = PointerGlide();
             }
             else p.Pointer.IsVisible = false;
             lane++;

@@ -3936,7 +3936,6 @@
   "Bildqualität: niedrig (für langsames Internet)": "Picture quality: low (for slow internet)",
   "Bildqualität: mittel": "Picture quality: medium",
   "Bildqualität: HD (720p)": "Picture quality: HD (720p)",
-  "Ruckelt das Bild oder kommt es spät an, wähle eine niedrigere Qualität: HD braucht bei jeder Person mit Kamera etwa 5 Mbit/s zum Senden und bei allen anderen ebenso viel zum Empfangen.": "If the picture stutters or arrives late, choose a lower quality: HD needs about 5 Mbit/s for sending from each person with a camera, and as much for receiving at everyone else.",
   "Aktiver Vault „{0}“. Neue Markierungen kommen direkt in den Ordner „{1}“. Klicken zum Wechseln.": "Active vault “{0}”. New highlights go straight into the folder “{1}”. Click to switch.",
   "Neue Markierungen kommen jetzt direkt in den Ordner „{0}“.": "New highlights now go straight into the folder “{0}”.",
   "Neue Markierungen kommen in keinen Ordner.": "New highlights go into no folder.",
@@ -3950,5 +3949,9 @@
   "Mehr Optionen, Suche bauen, Suchhilfe, gemerkte Suchen …": "More options, build a search, search help, saved searches …",
   "Tippe im Bibeltext auf einen Vers. Hier erscheint dann alles, was du und die Werkzeuge zu diesem Vers haben.": "Tap a verse in the Bible text. Everything you and the tools have on that verse then appears here.",
   "{0} Wörter · {1} Zeichen": "{0} words · {1} characters",
-  "Auto": "Auto"
+  "Auto": "Auto",
+  "Bildqualität: Full HD (1080p)": "Picture quality: Full HD (1080p)",
+  "30 Bilder pro Sekunde": "30 frames per second",
+  "60 Bilder pro Sekunde (flüssiger)": "60 frames per second (smoother)",
+  "Ruckelt das Bild oder kommt es spät an, wähle eine niedrigere Qualität. Jede Person mit Kamera braucht zum Senden etwa: HD 2,5 Mbit/s, Full HD 5 Mbit/s, mit 60 Bildern pro Sekunde die Hälfte mehr. Die anderen brauchen ebenso viel zum Empfangen.": "If the picture stutters or arrives late, choose a lower quality. Each person with a camera needs about this much to send: HD 2.5 Mbit/s, Full HD 5 Mbit/s, half as much again at 60 frames per second. The others need just as much to receive."
 }

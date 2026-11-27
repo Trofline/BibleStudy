@@ -81,6 +81,8 @@ public partial class MainWindow
             _group = new CollabGroup(_settings.CollabId);
             _group.Message += (link, fid, fn, raw) =>
             {
+                // the video stream goes straight to the person's decoder: each picture builds on the one before, none may be left out
+                if (raw.StartsWith("{\"t\":\"vc\"", StringComparison.Ordinal)) { OnVideoUnit(link, fid, fn, raw); return; }
                 // camera pictures: only the newest of each person waits for the screen, so a slow moment never builds up a delay
                 if (raw.StartsWith("{\"t\":\"vf\"", StringComparison.Ordinal))
                 {
@@ -550,6 +552,14 @@ public partial class MainWindow
 
     void OnGroupMessage(ICollabLink link, string fid, string fn, string raw)
     {
+        _from = TouchPerson(link, fid, fn);
+        try { HandleCollab(raw); }
+        finally { _from = null; }
+    }
+
+    /// <summary>The person who wrote (known from now on, with a color of their own), with the name and the way they are reached brought up to date.</summary>
+    CollabPerson TouchPerson(ICollabLink link, string fid, string fn)
+    {
         if (!_people.TryGetValue(fid, out var p))
         {
             if (!_inkOf.TryGetValue(fid, out var ink)) _inkOf[fid] = ink = Color.Parse(PeopleInks[_inkNext++ % PeopleInks.Length]);   // the same color again after a new connection
@@ -559,9 +569,7 @@ public partial class MainWindow
         }
         if (fn.Length > 0 && p.Name != fn) { p.Name = fn; ShowPeople(); }
         p.Via = link;
-        _from = p;
-        try { HandleCollab(raw); }
-        finally { _from = null; }
+        return p;
     }
 
     void HandleCollab(string json)

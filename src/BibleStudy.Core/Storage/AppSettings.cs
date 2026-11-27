@@ -236,8 +236,10 @@ public sealed class AppSettings
     /// <summary>Studying together: the chosen microphone and camera (by name; empty = the standard one) and whether the others are heard.</summary>
     public string CollabMic { get; set; } = "";
     public string CollabCamera { get; set; } = "";
-    /// <summary>How sharp the own camera is sent: 0 low, 1 medium, 2 HD (720p). See <see cref="BibleStudy.Core.Collab.Media.CameraQuality"/>.</summary>
+    /// <summary>How sharp the own camera is sent: 0 low, 1 medium, 2 HD (720p), 3 Full HD (1080p). See <see cref="BibleStudy.Core.Collab.Media.CameraQuality"/>.</summary>
     public int CollabCameraQuality { get; set; } = 2;
+    /// <summary>Pictures a second of the own camera: 30 or 60.</summary>
+    public int CollabCameraFps { get; set; } = 30;
     public bool CollabHear { get; set; } = true;
     public List<SavedSearch> SavedSearches { get; set; } = [];
     /// <summary>How the hits are shown: 0 verses, 1 aligned, 2 grid, 3 comparison, 4 analysis.</summary>

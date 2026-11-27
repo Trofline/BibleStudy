@@ -3936,7 +3936,6 @@
   "Bildqualität: niedrig (für langsames Internet)": "Qualité d'image : basse (pour internet lent)",
   "Bildqualität: mittel": "Qualité d'image : moyenne",
   "Bildqualität: HD (720p)": "Qualité d'image : HD (720p)",
-  "Ruckelt das Bild oder kommt es spät an, wähle eine niedrigere Qualität: HD braucht bei jeder Person mit Kamera etwa 5 Mbit/s zum Senden und bei allen anderen ebenso viel zum Empfangen.": "Si l'image saccade ou arrive en retard, choisissez une qualité plus basse : la HD demande environ 5 Mbit/s en envoi pour chaque personne avec caméra, et autant en réception pour toutes les autres.",
   "Aktiver Vault „{0}“. Neue Markierungen kommen direkt in den Ordner „{1}“. Klicken zum Wechseln.": "Vault actif « {0} ». Les nouveaux surlignages vont directement dans le dossier « {1} ». Cliquer pour changer.",
   "Neue Markierungen kommen jetzt direkt in den Ordner „{0}“.": "Les nouveaux surlignages vont maintenant directement dans le dossier « {0} ».",
   "Neue Markierungen kommen in keinen Ordner.": "Les nouveaux surlignages ne vont dans aucun dossier.",
@@ -3950,5 +3949,9 @@
   "Mehr Optionen, Suche bauen, Suchhilfe, gemerkte Suchen …": "Plus d’options, construire une recherche, aide, recherches enregistrées …",
   "Tippe im Bibeltext auf einen Vers. Hier erscheint dann alles, was du und die Werkzeuge zu diesem Vers haben.": "Touche un verset dans le texte biblique. Tout ce que toi et les outils avez sur ce verset apparaîtra ici.",
   "{0} Wörter · {1} Zeichen": "{0} mots · {1} caractères",
-  "Auto": "Auto"
+  "Auto": "Auto",
+  "Bildqualität: Full HD (1080p)": "Qualité d'image : Full HD (1080p)",
+  "30 Bilder pro Sekunde": "30 images par seconde",
+  "60 Bilder pro Sekunde (flüssiger)": "60 images par seconde (plus fluide)",
+  "Ruckelt das Bild oder kommt es spät an, wähle eine niedrigere Qualität. Jede Person mit Kamera braucht zum Senden etwa: HD 2,5 Mbit/s, Full HD 5 Mbit/s, mit 60 Bildern pro Sekunde die Hälfte mehr. Die anderen brauchen ebenso viel zum Empfangen.": "Si l'image saccade ou arrive en retard, choisis une qualité plus basse. Chaque personne avec caméra a besoin d'environ, pour envoyer : HD 2,5 Mbit/s, Full HD 5 Mbit/s, la moitié en plus à 60 images par seconde. Les autres ont besoin d'autant pour recevoir."
 }
