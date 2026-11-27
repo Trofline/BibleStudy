@@ -4047,5 +4047,9 @@
   "Geteilt: links der Text, rechts die Materialien und Live für die Handys.": "Dividido: el texto a la izquierda, los materiales y Live para los móviles a la derecha.",
   "Der Text mit „Zusammen studieren“ daneben: Chat, geteilte Verse, Mitlesen.": "El texto con «Estudiar juntos» al lado: chat, versículos compartidos, lectura conjunta.",
   "Text links, Bücher (Lexikon) und Notizen als eigene Fenster rechts daneben.": "El texto a la izquierda, libros (diccionario) y notas como ventanas propias a la derecha.",
-  "Fokus-Modus beenden (F11)": "Salir del modo de enfoque (F11)"
+  "Fokus-Modus beenden (F11)": "Salir del modo de enfoque (F11)",
+  "Importierte Übersetzungen mit übertragen": "Transferir también las traducciones importadas",
+  "Eine Übersetzung, die du selbst importiert hast, kommt ganz auf deine anderen Geräte (mit Strong-Nummern, Fußnoten und Überschriften), wenn sie dort fehlt. Übersetzungen aus dem Internet hat jedes Gerät ohnehin.": "Una traducción que importaste tú mismo pasa completa a tus otros dispositivos (con números Strong, notas al pie y títulos) cuando allí falta. Las traducciones de internet ya las tiene cada dispositivo.",
+  "Übersetzung „{0}“ vom anderen Gerät übernommen.": "Traducción «{0}» recibida del otro dispositivo.",
+  "{0} Übersetzungen vom anderen Gerät übernommen: {1}": "{0} traducciones recibidas del otro dispositivo: {1}"
 }

@@ -72,6 +72,8 @@ public partial class MainWindow
         SyncNameBox.Text = _syncCfg.DeviceName;
         SyncAutoCheck.IsChecked = _syncCfg.Auto;
         SyncAutoCheck.IsCheckedChanged += (_, _) => { _syncCfg.Auto = SyncAutoCheck.IsChecked == true; _syncCfg.Save(SyncPath); ShowSyncState(); };
+        SyncBiblesCheck.IsChecked = _syncCfg.Bibles;
+        SyncBiblesCheck.IsCheckedChanged += (_, _) => { _syncCfg.Bibles = SyncBiblesCheck.IsChecked == true; _syncCfg.Save(SyncPath); if (_syncCfg.Bibles) _lan?.Nudge(); };
         SyncWaitCheck.IsChecked = _settings.WaitForPhoneOnClose;
         SyncWaitCheck.IsCheckedChanged += (_, _) => { _settings.WaitForPhoneOnClose = SyncWaitCheck.IsChecked == true; SaveSettings(); };
         SyncNameBox.LostFocus += (_, _) =>
@@ -146,6 +148,8 @@ public partial class MainWindow
                 _lan.VaultsChanged += names => Dispatcher.UIThread.Post(() => OnSyncChanged(names));
                 _lan.Finished += r => Dispatcher.UIThread.Post(() => ShowSyncResult(r));
                 _lan.Contacted += name => Dispatcher.UIThread.Post(() => Greet(name));
+                _lan.Bibles = new LocalBibles(_local, id => Dispatcher.UIThread.Post(() => { _store.ForgetTranslation(id); _corpora.Remove(id); _strongIndexes.Remove(id); }));
+                _lan.BiblesReceived += names => Dispatcher.UIThread.Post(() => OnBiblesReceived(names));
                 _ = AttachCloudAsync();
             }
             _lan.Start();
@@ -350,8 +354,22 @@ public partial class MainWindow
             Greet(r.PeerName);
             if (r.Changed > 0) StatusText.Text = L("Synchronisiert mit {0}: Neues übernommen.", r.PeerName);
             // the end of a round that moved something (or the first one): it is all over, the app on the other device may be closed now
-            if (first || r.Changed + r.Sent > 0 || _syncAsked) ShowSynced(r.PeerName);
+            if (first || r.Changed + r.Sent + r.Bibles > 0 || _syncAsked) ShowSynced(r.PeerName);
         }
+    }
+
+    /// <summary>Whole translations came from another device: they are in the translation list now.</summary>
+    async void OnBiblesReceived(IReadOnlyList<string> names)
+    {
+        try
+        {
+            await RefreshLocalBibleBoxAsync();
+            await ReloadTranslationsAsync(null);
+            StatusText.Text = names.Count == 1
+                ? L("Übersetzung „{0}“ vom anderen Gerät übernommen.", names[0])
+                : L("{0} Übersetzungen vom anderen Gerät übernommen: {1}", names.Count, string.Join(", ", names));
+        }
+        catch (Exception ex) { ErrorLog.Write(ex); }
     }
 
     bool _syncAsked;   // "sync now" was pressed: its end is shown even when nothing had to move

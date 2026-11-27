@@ -19,6 +19,21 @@ public interface ISyncVaults
     DateTime Stamp(string name) => DateTime.MinValue;
 }
 
+/// <summary>
+/// The translations a person imported on this device (not those from the internet or a plugin: every device has those by itself).
+/// They go to the other devices when they are missing there, as the program's own .txt format (see <see cref="Import.BibleTextFile"/>), packed with gzip.
+/// A translation is known by its name; one that is on both sides is never overwritten.
+/// </summary>
+public interface ISyncBibles
+{
+    /// <summary>The names of the imported translations.</summary>
+    IReadOnlyList<string> Names();
+    /// <summary>The translation as packed .txt (null = not here any more).</summary>
+    Task<byte[]?> ExportAsync(string name);
+    /// <summary>Takes over a translation that came from another device. False when it was not taken (not this format, or one of that name is here by now).</summary>
+    Task<bool> ImportAsync(string name, byte[] packed);
+}
+
 /// <summary>The vaults in vaults/NAME/vault.db below a root folder. The program overrides <see cref="MergeAsync"/> to merge into the vault that is open.</summary>
 public class FolderVaults(string root, Func<string, bool>? skip = null, string copySuffix = "Sync") : ISyncVaults
 {

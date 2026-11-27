@@ -4047,5 +4047,9 @@
   "Geteilt: links der Text, rechts die Materialien und Live für die Handys.": "Split: the text on the left, the materials and Live for the phones on the right.",
   "Der Text mit „Zusammen studieren“ daneben: Chat, geteilte Verse, Mitlesen.": "The text with “Study together” beside it: chat, shared verses, reading along.",
   "Text links, Bücher (Lexikon) und Notizen als eigene Fenster rechts daneben.": "Text on the left, books (dictionary) and notes as separate windows to the right.",
-  "Fokus-Modus beenden (F11)": "Leave focus mode (F11)"
+  "Fokus-Modus beenden (F11)": "Leave focus mode (F11)",
+  "Importierte Übersetzungen mit übertragen": "Also transfer imported translations",
+  "Eine Übersetzung, die du selbst importiert hast, kommt ganz auf deine anderen Geräte (mit Strong-Nummern, Fußnoten und Überschriften), wenn sie dort fehlt. Übersetzungen aus dem Internet hat jedes Gerät ohnehin.": "A translation you imported yourself goes in full to your other devices (with Strong's numbers, footnotes and headings) when it is missing there. Every device has the translations from the internet anyway.",
+  "Übersetzung „{0}“ vom anderen Gerät übernommen.": "Translation “{0}” taken over from the other device.",
+  "{0} Übersetzungen vom anderen Gerät übernommen: {1}": "{0} translations taken over from the other device: {1}"
 }
