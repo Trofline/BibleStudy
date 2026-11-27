@@ -27,6 +27,7 @@ public partial class MainWindow
     readonly HashSet<string> _chatRestoredFor = [];
     readonly HashSet<string> _chatSessionMids = [];
     CollabChatHistory? _chatHistoryStore;
+    Action? _chatSettingsShow;   // brings the numbers in the settings up to date
 
     CollabChatHistory ChatHistory => _chatHistoryStore ??= CollabChatHistory.Load(Path.Combine(_root, "collab-chats.json"));
 
@@ -103,6 +104,7 @@ public partial class MainWindow
         if (!_settings.CollabKeepChats || _people.Count == 0) return;
         line.When = DateTime.Now;
         ChatHistory.Add(_people.Keys, line);
+        _chatSettingsShow?.Invoke();
     }
 
     /// <summary>
@@ -175,6 +177,7 @@ public partial class MainWindow
             Show();
         };
         keep.IsCheckedChanged += (_, _) => Show();
+        _chatSettingsShow = Show;
         Show();
         card.Children.Add(new TextBlock { Text = L("Chats"), FontWeight = FontWeight.SemiBold, Margin = new(0, 8, 0, 0) });
         card.Children.Add(keep);
