@@ -2,11 +2,40 @@ using System.Collections.Concurrent;
 
 namespace BibleStudy.Core.Collab.Media;
 
-/// <summary>The sound format of studying together: 16 kHz, mono, 16 bit; sent in pieces of 40 ms, packed with G.711 μ-law (half the size, plain and fast).</summary>
+/// <summary>
+/// The sound formats: voice messages and spoken notes are 16 kHz, mono, 16 bit, packed with G.711 μ-law (small, plain and fast). A call
+/// (talking live) is 48 kHz, 16 bit, unpacked: the full range of the voice, like a good microphone records it. Both go in pieces of 40 ms.
+/// The relay counts messages, not their size, and everything is gathered per 100 ms anyway, so the better sound costs no limit.
+/// </summary>
 public static class AudioFormat
 {
     public const int Rate = 16000;
-    public const int FrameSamples = 640;   // 40 ms
+    public const int FrameSamples = 640;        // 40 ms
+    public const int CallRate = 48000;
+    public const int CallFrameSamples = 1920;   // 40 ms
+
+    /// <summary>40 ms at a sample rate.</summary>
+    public static int FrameOf(int rate) => rate / 25;
+
+    /// <summary>48 kHz to 16 kHz (every three samples averaged: that also takes away what 16 kHz cannot hold).</summary>
+    public static short[] Down3(ReadOnlySpan<short> pcm)
+    {
+        var o = new short[pcm.Length / 3];
+        for (var i = 0; i < o.Length; i++) o[i] = (short)((pcm[3 * i] + pcm[3 * i + 1] + pcm[3 * i + 2]) / 3);
+        return o;
+    }
+
+    /// <summary>16 kHz to 48 kHz (two samples in between, on the straight line from one to the next).</summary>
+    public static short[] Up3(ReadOnlySpan<short> pcm)
+    {
+        var o = new short[pcm.Length * 3];
+        for (var i = 0; i < pcm.Length; i++)
+        {
+            int a = pcm[i], b = i + 1 < pcm.Length ? pcm[i + 1] : a;
+            o[3 * i] = (short)a; o[3 * i + 1] = (short)((2 * a + b) / 3); o[3 * i + 2] = (short)((a + 2 * b) / 3);
+        }
+        return o;
+    }
 }
 
 /// <summary>G.711 μ-law: 16-bit samples to 8 bits and back (the telephone codec; good enough for speech, no library needed).</summary>
@@ -114,15 +143,19 @@ public sealed class AudioMixer
 {
     sealed class Line { public readonly ConcurrentQueue<short[]> Q = new(); public bool Playing; public DateTime Last; }
     readonly ConcurrentDictionary<string, Line> _lines = new();
+    readonly int _frame;
     public double Volume { get; set; } = 1.0;
+
+    /// <summary>Pieces of <paramref name="frameSamples"/> samples (40 ms at the rate the sound plays).</summary>
+    public AudioMixer(int frameSamples = AudioFormat.FrameSamples) => _frame = frameSamples;
 
     /// <summary>A piece of sound of one source (a person, or a voice message being played).</summary>
     public void Add(string source, short[] pcm)
     {
         var line = _lines.GetOrAdd(source, _ => new Line());
         line.Last = DateTime.UtcNow;
-        for (var i = 0; i < pcm.Length; i += AudioFormat.FrameSamples)
-            line.Q.Enqueue(pcm.AsSpan(i, Math.Min(AudioFormat.FrameSamples, pcm.Length - i)).ToArray());
+        for (var i = 0; i < pcm.Length; i += _frame)
+            line.Q.Enqueue(pcm.AsSpan(i, Math.Min(_frame, pcm.Length - i)).ToArray());
         while (line.Q.Count > 50) line.Q.TryDequeue(out _);   // more than 2 s behind: drop the oldest, so it catches up
     }
 
@@ -134,7 +167,7 @@ public sealed class AudioMixer
     /// <summary>The next 40 ms: the sum of all sources that are playing (silence when none is).</summary>
     public short[] Next()
     {
-        var mix = new int[AudioFormat.FrameSamples];
+        var mix = new int[_frame];
         foreach (var line in _lines.Values)
         {
             if (!line.Playing && line.Q.Count >= 3) line.Playing = true;

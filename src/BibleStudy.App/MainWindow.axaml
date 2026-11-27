@@ -26,8 +26,9 @@
                     <TextBlock x:Name="AppTitleText" Text="BibleStudy" Classes="h2" FontSize="21" VerticalAlignment="Center" />
                 </StackPanel>
                 <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="2" Margin="0,0,10,0" VerticalAlignment="Center">
-                    <Button x:Name="BackBtn" Classes="tool" ToolTip.Tip="Zurück zur vorherigen Stelle (Alt+←)">
-                        <local:Icon Data="M19 12H5 M12 19l-7-7 7-7" />
+                    <Button x:Name="BackBtn" Classes="tool" ToolTip.Tip="Zurück, wo du vorher warst (Alt+←). Rechtsklick: die zuletzt besuchten Stellen">
+                        <!-- the clock with the arrow back, as on the phone: where you were before, not the chapter before -->
+                        <local:Icon Data="M3 12a9 9 0 1 0 3-6.7 M3 4v5h5 M12 7v5l3 2" />
                     </Button>
                     <Button x:Name="ForwardBtn" Classes="tool" ToolTip.Tip="Vorwärts zur nächsten Stelle (Alt+→)" IsEnabled="False">
                         <local:Icon Data="M5 12h14 M12 5l7 7-7 7" />
@@ -237,24 +238,26 @@
         <Border x:Name="StatusBar" DockPanel.Dock="Bottom" Padding="16,6" Height="32" Background="{DynamicResource BsSurface}"
                 BorderBrush="{DynamicResource BsBorder}" BorderThickness="0,1,0,0">
             <Border.Transitions><Transitions><DoubleTransition Property="Opacity" Duration="0:0:0.15" /></Transitions></Border.Transitions>
-            <Grid ColumnDefinitions="*,Auto,Auto,Auto,Auto,Auto,Auto">
-                <Button x:Name="ProjectorChip" Grid.Column="4" Classes="ghost" Padding="8,0" MinHeight="0" Height="22" Margin="4,0,0,0" IsVisible="False" ToolTip.Tip="Die Beamer-Ansicht ist offen. Klicken: weiter, zurück, schwarz oder beenden.">
+            <Grid ColumnDefinitions="*,Auto,Auto,Auto,Auto,Auto,Auto,Auto">
+                <Button x:Name="ProjectorChip" Grid.Column="5" Classes="ghost" Padding="8,0" MinHeight="0" Height="22" Margin="4,0,0,0" IsVisible="False" ToolTip.Tip="Die Beamer-Ansicht ist offen. Klicken: weiter, zurück, schwarz oder beenden.">
                     <TextBlock x:Name="ProjectorChipText" Classes="caption" FontWeight="SemiBold" VerticalAlignment="Center" />
                 </Button>
-                <Button x:Name="TimerChip" Grid.Column="5" Classes="ghost" Padding="8,0" MinHeight="0" Height="22" Margin="4,0,0,0" IsVisible="False" ToolTip.Tip="Laufender Timer. Klicken: anhalten, fortsetzen oder beenden.">
+                <Button x:Name="TimerChip" Grid.Column="6" Classes="ghost" Padding="8,0" MinHeight="0" Height="22" Margin="4,0,0,0" IsVisible="False" ToolTip.Tip="Laufender Timer. Klicken: anhalten, fortsetzen oder beenden.">
                     <TextBlock x:Name="TimerChipText" Classes="caption" FontWeight="SemiBold" VerticalAlignment="Center" />
                 </Button>
-                <Button x:Name="ClockChip" Grid.Column="6" Classes="ghost" Padding="8,0" MinHeight="0" Height="22" Margin="4,0,0,0" ToolTip.Tip="Uhrzeit. Klicken: Timer stellen.">
+                <Button x:Name="ClockChip" Grid.Column="7" Classes="ghost" Padding="8,0" MinHeight="0" Height="22" Margin="4,0,0,0" ToolTip.Tip="Uhrzeit. Klicken: Timer stellen.">
                     <TextBlock x:Name="ClockText" Classes="caption" FontWeight="SemiBold" VerticalAlignment="Center" />
                 </Button>
+                <!-- while studying together: microphone, camera and how long the room runs (MainWindow.CollabFooter.cs) -->
+                <StackPanel x:Name="CollabChips" Grid.Column="1" Orientation="Horizontal" Spacing="4" Margin="8,0,0,0" IsVisible="False" />
                 <TextBlock x:Name="StatusText" Classes="caption" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" ToolTip.Tip="{Binding #StatusText.Text}" />
-                <Button x:Name="UpdateChip" Grid.Column="1" Classes="ghost" Padding="8,0" MinHeight="0" Height="22" Margin="8,0,0,0" IsVisible="False" ToolTip.Tip="Stand der Updates. Klicken: jetzt nach Updates suchen.">
+                <Button x:Name="UpdateChip" Grid.Column="2" Classes="ghost" Padding="8,0" MinHeight="0" Height="22" Margin="8,0,0,0" IsVisible="False" ToolTip.Tip="Stand der Updates. Klicken: jetzt nach Updates suchen.">
                     <TextBlock x:Name="UpdateChipText" Classes="caption" VerticalAlignment="Center" />
                 </Button>
-                <Button x:Name="SyncChip" Grid.Column="2" Classes="ghost" Padding="8,0" MinHeight="0" Height="22" Margin="4,0,0,0" IsVisible="False" ToolTip.Tip="Jetzt mit deinen anderen Geräten synchronisieren (läuft sonst von selbst alle 20 Sekunden und nach jeder Änderung).">
+                <Button x:Name="SyncChip" Grid.Column="3" Classes="ghost" Padding="8,0" MinHeight="0" Height="22" Margin="4,0,0,0" IsVisible="False" ToolTip.Tip="Jetzt mit deinen anderen Geräten synchronisieren (läuft sonst von selbst alle 20 Sekunden und nach jeder Änderung).">
                     <TextBlock x:Name="SyncChipText" Classes="caption" Text="Synchronisieren" VerticalAlignment="Center" />
                 </Button>
-                <Button x:Name="VersionChip" Grid.Column="3" Classes="ghost" Padding="8,0" MinHeight="0" Height="22" Margin="4,0,0,0" ToolTip.Tip="Versionsnummer. Klicken: jetzt nach Updates suchen. Patch Notes stehen in den Einstellungen.">
+                <Button x:Name="VersionChip" Grid.Column="4" Classes="ghost" Padding="8,0" MinHeight="0" Height="22" Margin="4,0,0,0" ToolTip.Tip="Versionsnummer. Klicken: jetzt nach Updates suchen. Patch Notes stehen in den Einstellungen.">
                     <TextBlock x:Name="VersionChipText" Classes="caption" VerticalAlignment="Center" />
                 </Button>
             </Grid>
@@ -420,7 +423,7 @@
                 </TabItem>
                 <TabItem ToolTip.Tip="Notizen">
                     <TabItem.Header><local:Icon Data="M12 20h9 M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z" /></TabItem.Header>
-                    <DockPanel Margin="16,14,12,12">
+                    <DockPanel x:Name="NotesPanel" Margin="16,14,12,12">
                         <StackPanel DockPanel.Dock="Top" Spacing="8" Margin="0,0,0,8">
                             <TextBlock x:Name="NoteTarget" Classes="caption" Text="Vers anklicken, um eine Notiz zu schreiben" TextWrapping="Wrap" />
                             <TextBox x:Name="NoteEditor" AcceptsReturn="True" TextWrapping="Wrap" Height="96" PlaceholderText="Deine Notiz. Bibelstellen wie Joh 3,16 werden darunter zu Links." />
@@ -444,7 +447,7 @@
                         <TextBox x:Name="NewNoteFolderBox" DockPanel.Dock="Top" IsVisible="False" PlaceholderText="Name des neuen Ordners, Enter zum Anlegen" Margin="0,0,0,6" />
                         <TextBlock x:Name="NotesCount" DockPanel.Dock="Top" Classes="caption" Margin="2,0,0,4" />
                         <TextBlock x:Name="NotesEmpty" DockPanel.Dock="Top" Classes="caption" TextWrapping="Wrap" IsVisible="False" Margin="2,8" Text="Noch keine Notizen. Klicke im Text einen Vers an, schreibe oben deine Notiz und speichere sie." />
-                        <ScrollViewer HorizontalScrollBarVisibility="Disabled"><StackPanel x:Name="NotesTree" Spacing="2" /></ScrollViewer>
+                        <ScrollViewer x:Name="NotesScroll" HorizontalScrollBarVisibility="Disabled"><StackPanel x:Name="NotesTree" Spacing="2" /></ScrollViewer>
                     </DockPanel>
                 </TabItem>
                 <TabItem ToolTip.Tip="Wortstudie">
@@ -548,19 +551,19 @@
                     <TabItem.Header><local:Icon Data="M4 3h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H4z M8 3v18 M12 8h4 M12 12h4" /></TabItem.Header>
                     <Grid x:Name="DocHost">
                         <DockPanel x:Name="DocListPanel" Margin="16,14,12,12">
-                            <StackPanel DockPanel.Dock="Top" Spacing="10" Margin="0,0,0,8">
+                            <StackPanel x:Name="DocListHead" DockPanel.Dock="Top" Spacing="10" Margin="0,0,0,8">
                                 <DockPanel>
                                     <Button x:Name="DocNewBtn" DockPanel.Dock="Right" Content="＋ Neu ▾" Classes="primary" VerticalAlignment="Center" />
                                     <Button x:Name="DocTrashBtn" DockPanel.Dock="Right" Classes="ghost" Margin="0,0,8,0" VerticalAlignment="Center" ToolTip.Tip="Papierkorb: gelöschte Dokumente, Notizen, Markierungen und Ordner. Sie bleiben 30 Tage und lassen sich zurückholen." />
                                     <Button x:Name="DocFolderBtn" DockPanel.Dock="Right" Content="＋ Ordner" Margin="0,0,8,0" VerticalAlignment="Center" ToolTip.Tip="Neuen Ordner anlegen. Dokumente lassen sich per Ziehen in Ordner und auf Kategorien legen." />
                                     <StackPanel Spacing="2">
                                         <TextBlock Text="Deine Dokumente" FontSize="18" FontWeight="SemiBold" />
-                                        <TextBlock Classes="caption" TextWrapping="Wrap" Text="Gedanken, Studien und Predigten – geordnet nach Kategorien." />
+                                        <TextBlock x:Name="DocSubtitle" Classes="caption" TextWrapping="Wrap" Text="Gedanken, Studien und Predigten – geordnet nach Kategorien." />
                                     </StackPanel>
                                 </DockPanel>
                                 <TextBox x:Name="DocSearchBox" PlaceholderText="Dokumente durchsuchen (Titel, Text, Tags)" />
                                 <CheckBox x:Name="DocAllVaultsCheck" Content="Dokumente aller Vaults zeigen" ToolTip.Tip="Zeigt unter deinen Dokumenten auch die der anderen Vaults. Ein Klick darauf wechselt den Vault und öffnet es." />
-                                <TextBlock Classes="eyebrow" Text="KATEGORIEN" />
+                                <TextBlock x:Name="DocCatLabel" Classes="eyebrow" Text="KATEGORIEN" />
                                 <WrapPanel x:Name="DocCategoryChips" />
                                 <Expander Header="Mehr Filter und Graph" Padding="0">
                                     <StackPanel Spacing="8" Margin="0,6,0,0">
@@ -585,7 +588,7 @@
                                     </StackPanel>
                                 </Border>
                             </StackPanel>
-                            <ScrollViewer HorizontalScrollBarVisibility="Disabled">
+                            <ScrollViewer x:Name="DocTreeScroll" HorizontalScrollBarVisibility="Disabled">
                                 <StackPanel x:Name="DocTree" Spacing="3" Margin="0,0,8,0" />
                             </ScrollViewer>
                         </DockPanel>
@@ -881,6 +884,8 @@
                                     <Border Classes="pill"><ComboBox x:Name="LocalBibleBox" Width="200" PlaceholderText="Importierte Übersetzungen" /></Border>
                                     <Button x:Name="RemoveBibleBtn" Content="Entfernen" />
                                 </StackPanel>
+                                <Button x:Name="ExportBibleTxtBtn" Content="Aktuelle Übersetzung als TXT exportieren …" HorizontalAlignment="Left"
+                                        ToolTip.Tip="Speichert die Übersetzung, die du gerade liest, vollständig als .txt: mit Strong-Nummern, Fußnoten, Überschriften und Worten Jesu. Der Import liest die Datei genau so wieder ein." />
                                 <TextBlock x:Name="ImportBibleInfo" Classes="caption" TextWrapping="Wrap" />
                                 <Button x:Name="ImportAiBtn" Content="Mit KI korrigieren" IsVisible="False" Margin="0,0,6,6" ToolTip.Tip="Gibt die auffälligen Verse an Claude. Die Vorschläge siehst du vor dem Übernehmen Vers für Vers." />
 <Button x:Name="ImportCheckBtn" Content="Prüfbericht für KI speichern" IsVisible="False" HorizontalAlignment="Left" ToolTip.Tip="Speichert eine Markdown-Datei mit den Regeln und den gefundenen Fehlern. Gib sie mit der Quelldatei an eine KI; die korrigierte USFM-Datei importierst du dann hier." />
@@ -998,6 +1003,7 @@
                                     <Button x:Name="SyncCopyBtn" Content="Code kopieren" HorizontalAlignment="Left" ToolTip.Tip="Kopiert den Kopplungs-Link (mit der Adresse dieses Geräts): auf dem anderen Gerät ins Feld unten einfügen" />
                                 </StackPanel>
                                 <CheckBox x:Name="SyncAutoCheck" Content="Im selben Netzwerk automatisch synchronisieren" />
+                                <CheckBox x:Name="SyncBiblesCheck" Content="Importierte Übersetzungen mit übertragen" ToolTip.Tip="Eine Übersetzung, die du selbst importiert hast, kommt ganz auf deine anderen Geräte (mit Strong-Nummern, Fußnoten und Überschriften), wenn sie dort fehlt. Übersetzungen aus dem Internet hat jedes Gerät ohnehin." />
                                 <CheckBox x:Name="SyncWaitCheck" Content="Beim Schließen auf das Handy warten, wenn es den neuesten Stand noch nicht hat" ToolTip.Tip="Das Programm bleibt dann kurz offen und erinnert dich, BibleStudy auf dem Handy zu öffnen. „Jetzt schließen“ beendet es sofort." />
                                 <TextBox x:Name="SyncNameBox" PlaceholderText="Name dieses Geräts" />
                                 <WrapPanel>
@@ -1060,10 +1066,26 @@
                                     <Button x:Name="InstallUpdateFileBtn" Content="Update-Datei installieren …" Margin="0,0,6,6" IsVisible="False" ToolTip.Tip="Für Testversionen (Beta), die du als Datei (.bsupdate) bekommen hast. Vorher wird eine Sicherung deiner Daten angelegt." />
                                     <Button x:Name="PatchNotesBtn" Content="Patch Notes (was ist neu)" Margin="0,0,6,6" />
                                     <Button x:Name="GitHubBtn" Content="Projekt auf GitHub" Margin="0,0,6,6" />
+                                    <Button x:Name="MessagesBtn" Content="Mitteilungen und Vorschläge" Margin="0,0,6,6" ToolTip.Tip="Alle Vorschläge an- und ausschalten oder noch einmal ansehen, was ist neu, und die Mitteilungen seit dem Start." />
                                     <Button x:Name="RestartBtn" Content="Programm neu starten" Margin="0,0,6,6" ToolTip.Tip="Beendet BibleStudy und startet es sofort neu; du landest wieder hier in den Einstellungen." />
                                     <Button x:Name="RemoveAppBtn" Content="Programm entfernen …" Margin="0,0,6,6" IsVisible="False" />
                                 </WrapPanel>
                                 <TextBlock x:Name="UpdateStatus" Classes="caption" TextWrapping="Wrap" />
+                            </StackPanel></Border>
+
+                            <Border Classes="card"><StackPanel Spacing="8">
+                                <TextBlock Classes="eyebrow" Text="HILFE" />
+                                <TextBlock Classes="caption" TextWrapping="Wrap" Text="Rundgänge, das Quiz und Erklärungen zu jeder Funktion findest du im Hilfe-Bereich." />
+                                <WrapPanel>
+                                    <Button x:Name="SettingsHelpBtn" Content="Hilfe öffnen" Classes="primary" Margin="0,0,6,6" ToolTip.Tip="Öffnet den Hilfe-Bereich mit Rundgang, Tiefen-Rundgang, Quiz und Erklärungen." />
+                                    <Button x:Name="SettingsHandbookBtn" Content="Handbuch öffnen" Margin="0,0,6,6" />
+                                    <Button x:Name="SettingsDeepTourBtn" Content="Tiefen-Rundgang" Margin="0,0,6,6" />
+                                    <Button x:Name="SettingsQuizBtn" Content="Quiz" Margin="0,0,6,6" />
+                                </WrapPanel>
+                                <CheckBox x:Name="TabToursCheck" Content="Reiter-Rundgänge: Jeder Reiter erklärt sich beim ersten Öffnen kurz" ToolTip.Tip="Nur der Reiter, den du gerade öffnest, und nur einmal. Der Tiefen-Rundgang löst sie nicht aus." />
+                                <WrapPanel>
+                                    <Button x:Name="TabToursResetBtn" Content="Reiter-Rundgänge zurücksetzen" Margin="0,0,6,6" ToolTip.Tip="Jeder Reiter erklärt sich beim nächsten Öffnen wieder in einem kurzen Rundgang." />
+                                </WrapPanel>
                             </StackPanel></Border>
                         </StackPanel>
                     </ScrollViewer>
@@ -1075,6 +1097,10 @@
                     <ScrollViewer Margin="16,14,4,12">
                         <StackPanel Spacing="10" Margin="0,0,12,0">
                             <Button x:Name="TourBtn" Content="Rundgang starten: die wichtigsten Knöpfe in zwei Minuten" HorizontalAlignment="Left" Classes="primary" />
+                            <Button x:Name="HelpDeepTourBtn" Content="Tiefen-Rundgang: das Programm an einem Beispiel gründlich kennenlernen" HorizontalAlignment="Left" />
+                            <Button x:Name="HelpQuizBtn" Content="Quiz: Kennst du BibleStudy?" HorizontalAlignment="Left" />
+                            <Button x:Name="HelpMessagesBtn" Content="Mitteilungen und Vorschläge" HorizontalAlignment="Left" />
+                            <Button x:Name="HelpTabToursBtn" Content="Reiter-Rundgänge wieder zeigen" HorizontalAlignment="Left" ToolTip.Tip="Jeder Reiter erklärt sich beim nächsten Öffnen wieder in einem kurzen Rundgang." />
                             <TextBlock FontWeight="SemiBold" Text="Lesen und Navigieren" />
                             <TextBlock TextWrapping="Wrap" Text="Haus-Symbol: Startseite mit allen Büchern. Pfeil links: zurück zur vorherigen Stelle. Buch, Kapitel und Übersetzung wählst du oben; ◀ ▶ blättert Kapitel. Das Häkchen „Gelesen“ markiert ein Kapitel; auf der Startseite zeigt ein Balken den Fortschritt je Buch." />
                             <TextBlock FontWeight="SemiBold" Text="Schnell zu allem (Strg+K)" />
@@ -1239,7 +1265,10 @@
             </TabControl>
             </DockPanel>
         </Border>
-        <Border x:Name="SideSplitter" DockPanel.Dock="Right" Width="8" Background="Transparent" Cursor="SizeWestEast" />
+        <Border x:Name="SideSplitter" DockPanel.Dock="Right" Width="8" Background="Transparent" Cursor="SizeWestEast" ToolTip.Tip="Ziehen: Leiste breiter oder schmaler">
+            <!-- a small grip, so it can be seen that the side panel can be made wider or narrower here -->
+            <Border x:Name="SideGrip" Width="4" Height="44" CornerRadius="2" HorizontalAlignment="Center" VerticalAlignment="Center" Background="{DynamicResource BsBorder}" IsHitTestVisible="False" />
+        </Border>
 
         <!-- Reader; in the split view a second tab sits on the right, the line between them can be dragged -->
         <Grid x:Name="MainArea">

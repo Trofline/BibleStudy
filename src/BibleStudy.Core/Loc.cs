@@ -83,10 +83,12 @@ public static class Loc
         return Adapt(de);
     }
 
-    static readonly bool Mobile = OperatingSystem.IsAndroid() || OperatingSystem.IsIOS();
+    static readonly bool Mobile = OperatingSystem.IsAndroid() || OperatingSystem.IsIOS() || Environment.GetEnvironmentVariable("BIBLESTUDY_PHONE") == "1";   // (the variable: the phone layout tried on a PC)
     static readonly bool Mac = OperatingSystem.IsMacOS();
     static readonly System.Text.RegularExpressions.Regex KeyHint = new(@"\s*\([^()]*\b(?:Strg|Ctrl|Cmd)\+[^()]*\)", System.Text.RegularExpressions.RegexOptions.Compiled);
     static readonly System.Text.RegularExpressions.Regex KeyTail = new(@"\s·\s(?:Strg|Ctrl|Cmd)\+.*$", System.Text.RegularExpressions.RegexOptions.Compiled);
+    static readonly System.Text.RegularExpressions.Regex WheelHint = new(@"(?:Strg|Ctrl|Cmd)\s*\+\s*(?:Mausrad|mouse wheel|scroll)[^.]*\.\s*", System.Text.RegularExpressions.RegexOptions.Compiled | System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+    static readonly System.Text.RegularExpressions.Regex OrKey = new(@"\s(?:oder|or)\s(?:Strg|Ctrl|Cmd)\+\S+?(?=[;,.)]|\s|$)", System.Text.RegularExpressions.RegexOptions.Compiled);
     static readonly Dictionary<string, string> Adapted = [];
 
     /// <summary>
@@ -104,6 +106,12 @@ public static class Loc
             {
                 r = KeyHint.Replace(r, "");
                 r = KeyTail.Replace(r, "");
+                r = WheelHint.Replace(r, "");   // "Strg + Mausrad: zoomen." (a phone zooms with two fingers)
+                r = OrKey.Replace(r, "");       // "… oben oder Strg+D; …"
+                // a phone is tapped, not clicked
+                r = r.Replace("Doppelklick", "Doppeltippen").Replace("Klicken zum", "Tippen zum").Replace("Klicke ", "Tippe ").Replace("klicke ", "tippe ")
+                     .Replace("Ein Klick", "Ein Tippen").Replace("ein Klick", "ein Tippen").Replace("Klick springt", "Tippen springt").Replace("Klick öffnet", "Tippen öffnet")
+                     .Replace("Double-click", "Double-tap").Replace("double-click", "double-tap").Replace("Click ", "Tap ").Replace("click ", "tap ");
                 r = r.Replace("Rechtsklick", "langes Drücken").Replace("Rechtsklick", "langes Drücken").Replace("right-click", "long press").Replace("Right-click", "Long press").Replace("right click", "long press").Replace("Right click", "Long press");
             }
             else

@@ -14,6 +14,8 @@ public partial class MainWindow
     public static bool NoShell;
     bool _importing;
     string? _lastImportReport, _lastImportReportName, _lastImportId;
+    /// <summary>The id of the translation the last import saved (null when it saved nothing).</summary>
+    string? _lastSavedImportId;
     ParsedBible? _lastImportBible;
 
     void InitImport()
@@ -21,6 +23,7 @@ public partial class MainWindow
         ImportLangBox.Text = BibleStudy.Core.Loc.Code;   // the language of the program, not always German
         ImportBibleBtn.Click += async (_, _) => await ImportBibleAsync();
         RemoveBibleBtn.Click += async (_, _) => await RemoveImportedAsync();
+        ExportBibleTxtBtn.Click += async (_, _) => await ExportTranslationTxtAsync();
         ImportAiBtn.Click += async (_, _) => await CorrectWithAiAsync();
         ImportCheckBtn.Click += (_, _) =>
         {
@@ -116,6 +119,7 @@ public partial class MainWindow
                 bible = wanted;
             }
             var id = await Task.Run(() => _local.Save(bible, path));
+            _lastSavedImportId = id;
             if (existed) await RealignMarksAsync(id);   // the text may have moved by a letter: marks keep their words
             _store.ForgetTranslation(id); _corpora.Remove(id); _strongIndexes.Remove(id);   // text changed: rebuild search index and concordance on demand
             await RefreshLocalBibleBoxAsync();

@@ -1,3 +1,4 @@
+using BibleStudy.Core.Models;
 using BibleStudy.Core.Storage;
 
 namespace BibleStudy.Tests;
@@ -167,6 +168,28 @@ public class ReadingPathTests
         v.AddReadingPath("x", "", [S("GEN", 1, 1)]);
         v.Wipe();
         Assert.Empty(v.GetReadingPaths());
+    }
+
+    [Fact]
+    public void Paths_sent_by_someone_else_are_checked_before_they_are_kept()
+    {
+        var v = new VaultStore(Path.Combine(_dir, "sent.db"), "sent");
+        v.AddReadingPath("Gnade", "#3A8FE0", [S("ROM", 3, 23)]);
+        var sender = new VaultStore(Path.Combine(_dir, "sender.db"), "sender");
+        sender.AddReadingPath("Gnade", "#3A8FE0", [S("ROM", 5, 8), S("XXX", 1, 1), S("ROM", 999, 1)]);
+        sender.AddMark(Mark.AnyTranslation, new("ROM", 5, 8), -1, -1, "", "#FFCC00", "", null, []);
+        sender.AddMark(Mark.AnyTranslation, new("ROM", 5, 8), -1, -1, "", "rot; drop table", "", null, []);
+        sender.AddReadingPath("Leer", "", [S("XXX", 1, 1)]);
+        var json = ReadingPathFile.Write(sender, sender.GetReadingPaths(), withMarks: true);
+
+        var found = ReadingPathFile.Checked(ReadingPathFile.Read(json), book => book == "ROM");
+        var one = Assert.Single(found);   // a path with no step left is not offered at all
+        Assert.Equal(["ROM 5:8"], one.Path.Steps.Select(s => s.ToString()));
+        Assert.Equal("#FFCC00", Assert.Single(one.Marks).Color);
+
+        ReadingPathFile.KeepPaths(v, found.Select(f => f.Path));
+        Assert.Equal(["Gnade", "Gnade (2)"], v.GetReadingPaths().Select(p => p.Name).Order());   // the own path is not overwritten
+        Assert.Equal("ROM 3:23", v.GetReadingPaths().Single(p => p.Name == "Gnade").Steps[0].ToString());
     }
 }
 

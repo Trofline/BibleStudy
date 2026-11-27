@@ -135,13 +135,18 @@ public partial class MainWindow
     Task ApplyColorAsync(string hex)
     {
         if (InsideMarkedVerse()) hex = SubMarkColor();
+        var target = MarkTargetFolder();
+        var before = target is null ? null : MarkIdsHere();
         string what;
         if (_sel is { Parts.Count: > 0 } sel) what = ApplyTextColor(sel, hex);
         else if (_selVerses.Count > 0 || _selected is not null) what = ApplyVerseColor(hex);
         else { StatusText.Text = L("Erst Text auswählen oder einen Vers anklicken."); return Task.CompletedTask; }
         ClearTextSelection(false);
         RefreshCollection(); RefreshCells();
-        StatusText.Text = L("Markiert: {0} · Strg+Z macht es rückgängig", what);
+        StatusText.Text = target is not null && MarkTargetLabel() is { } into
+            ? L("Markiert: {0} · in „{1}“ · Strg+Z macht es rückgängig", what, into)
+            : L("Markiert: {0} · Strg+Z macht es rückgängig", what);
+        if (target is long f && before is not null) AfterMarkedIntoFolder(f, before);
         return Task.CompletedTask;
     }
 
@@ -158,7 +163,7 @@ public partial class MainWindow
             // marked right behind (or before, or over) a mark of the same colour: that mark grows, it does not get a neighbour; note, tags and folder stay
             var grown = MarkLogic.Extend(_chapterMarks, tid, hex, new MarkLogic.Pos(first.Verse, first.Start), new MarkLogic.Pos(last.Verse, last.End), v => RawVerse(tid, v));
             var (fv, fs, lv, le) = (first.Verse, first.Start, last.Verse, last.End);
-            string note = ""; long? folder = null; IEnumerable<string> tags = AutoTags(r);
+            string note = ""; long? folder = MarkTargetFolder(); IEnumerable<string> tags = AutoTags(r);
             if (grown is { } g)
             {
                 (fv, fs, lv, le) = (g.Start.Verse, g.Start.Offset, g.End.Verse, g.End.Offset);
@@ -220,7 +225,7 @@ public partial class MainWindow
         {
             if (wholes.Any(m => done.Contains(m.Id) && m.Ref.Verse == from && m.LastVerse == to)) continue;
             var r = new VerseRef(_curBook, _curChapter, from);
-            _vault.AddMark(Mark.AnyTranslation, r, -1, -1, VerseRangeText(from, to), hex, "", null, AutoTags(r), to);
+            _vault.AddMark(Mark.AnyTranslation, r, -1, -1, VerseRangeText(from, to), hex, "", MarkTargetFolder(), AutoTags(r), to);
         }
         return string.Join(", ", runs.Select(x => x.From == x.To ? $"{BookName(_curBook)} {_curChapter}:{x.From}" : $"{BookName(_curBook)} {_curChapter}:{x.From}–{x.To}"));
     }

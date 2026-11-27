@@ -57,6 +57,12 @@ public sealed class LayoutPreset
     public int SideTab { get; set; }
     public List<WindowBounds> Windows { get; set; } = [];   // W <= 0: docked as a tab in the main window
     public string? ActiveWork { get; set; }                 // work tab shown in the main window ("group:Dokumente"), null = reading
+    // null in the fields below: the layout leaves that part as it is (layouts saved by older versions)
+    public bool? Split { get; set; }                        // split view on or off
+    public List<string>? Panes { get; set; }                // the areas of the split view, left to right ("reader", "group:Studium")
+    public List<double>? PaneWidths { get; set; }           // their shares of the width
+    public bool? WordStudy { get; set; }                    // the switch "Wortstudie" over the text
+    public bool Focus { get; set; }                         // focus mode: only the text, full screen (like F11)
 }
 
 /// <summary>User settings, stored as JSON next to the data (exportable by copying the file).</summary>
@@ -81,6 +87,12 @@ public sealed class AppSettings
     public bool TodosAllVaults { get; set; }   // the to-do list shows the to-dos of all vaults, not only of the active one
     /// <summary>Shared vaults: their content shows in every other vault too (to look at; it is changed in the vault itself).</summary>
     public List<string> SharedVaults { get; set; } = [];
+    /// <summary>Per vault: the folder new marks go straight into (chosen with the vault in the top bar).</summary>
+    public Dictionary<string, long> MarkTargetFolders { get; set; } = [];
+    /// <summary>Reading paths ("vault\u001fid") whose folder got new verses and that were asked once whether they go onto the path.</summary>
+    public List<string> PathGrowAsked { get; set; } = [];
+    /// <summary>Of those, the ones answered "append": later new verses of the folder are appended to the path by themselves.</summary>
+    public List<string> PathGrowAppend { get; set; } = [];
     /// <summary>The clock at the bottom right of the status bar.</summary>
     public bool ShowClock { get; set; } = true;
     /// <summary>The length of the timer chosen last, in minutes.</summary>
@@ -227,11 +239,15 @@ public sealed class AppSettings
     public string CollabId { get; set; } = "";
     /// <summary>People remembered as friends: one tap connects, and with auto-accept their request is accepted at once.</summary>
     public List<CollabFriend> CollabFriends { get; set; } = [];
+    /// <summary>Studying together: the chats are kept on this device, per person, and come back when the same person is in the room again.</summary>
+    public bool CollabKeepChats { get; set; } = true;
     /// <summary>Studying together: the chosen microphone and camera (by name; empty = the standard one) and whether the others are heard.</summary>
     public string CollabMic { get; set; } = "";
     public string CollabCamera { get; set; } = "";
-    /// <summary>How sharp the own camera is sent: 0 low, 1 medium, 2 HD (720p). See <see cref="BibleStudy.Core.Collab.Media.CameraQuality"/>.</summary>
+    /// <summary>How sharp the own camera is sent: 0 low, 1 medium, 2 HD (720p), 3 Full HD (1080p). See <see cref="BibleStudy.Core.Collab.Media.CameraQuality"/>.</summary>
     public int CollabCameraQuality { get; set; } = 2;
+    /// <summary>Pictures a second of the own camera: 30 or 60.</summary>
+    public int CollabCameraFps { get; set; } = 30;
     public bool CollabHear { get; set; } = true;
     public List<SavedSearch> SavedSearches { get; set; } = [];
     /// <summary>How the hits are shown: 0 verses, 1 aligned, 2 grid, 3 comparison, 4 analysis.</summary>
@@ -351,6 +367,26 @@ public sealed class AppSettings
     public bool BackupAsked { get; set; }
     /// <summary>The last "new shortcuts" hint that was shown (so each one appears only once).</summary>
     public string? TipShown { get; set; }
+    /// <summary>Now and then a suggestion of the program in the corner (the message center): at most one a day, one per start.</summary>
+    public bool Suggestions { get; set; } = true;
+    /// <summary>The suggestions that were shown already (each one comes by itself only once; in the message center it can be shown again).</summary>
+    public List<string> SuggestionsSeen { get; set; } = [];
+    /// <summary>The suggestions the person turned off one by one.</summary>
+    public List<string> SuggestionsOff { get; set; } = [];
+    /// <summary>The day (yyyy-MM-dd) the last suggestion came by itself.</summary>
+    public string? LastSuggestionDay { get; set; }
+    /// <summary>The deep tour: the step where it was left, the steps seen, whether it was offered after the short tour and whether it was finished.</summary>
+    public int DeepTourStep { get; set; }
+    public List<string> DeepTourSeen { get; set; } = [];
+    public bool DeepTourOffered { get; set; }
+    public bool DeepTourDone { get; set; }
+    /// <summary>The best result in the quiz about the program (right answers).</summary>
+    public int QuizBest { get; set; }
+    /// <summary>The tabs (by index) whose short tour was seen, and whether these tours are off altogether.</summary>
+    public List<string> TabToursSeen { get; set; } = [];
+    public bool TabToursOff { get; set; }
+    /// <summary>The person was asked (on the first start, or once after the update that brought them) whether the tab tours should come.</summary>
+    public bool TabToursAsked { get; set; }
     public string? PlanId { get; set; }
     public string? PlanStart { get; set; }
     public List<string> PlanDoneDays { get; set; } = [];

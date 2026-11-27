@@ -38,16 +38,16 @@ public sealed class WinAudio : IDisposable
     [DllImport("winmm.dll")] static extern int waveOutClose(IntPtr h);
 
     static readonly int HdrSize = Marshal.SizeOf<WaveHdr>();
-    const int BufferBytes = AudioFormat.FrameSamples * 2;
+    readonly int _bufferBytes;
     readonly bool _input;
     IntPtr _h;
     readonly IntPtr[] _hdrs = new IntPtr[Buffers];
     readonly CancellationTokenSource _cts = new();
     Thread? _loop;
 
-    WinAudio(bool input) => _input = input;
+    WinAudio(bool input, int rate) { _input = input; _bufferBytes = AudioFormat.FrameOf(rate) * 2; }
 
-    static WaveFormat Format() => new() { Tag = 1, Channels = 1, SamplesPerSec = AudioFormat.Rate, BitsPerSample = 16, BlockAlign = 2, AvgBytesPerSec = AudioFormat.Rate * 2 };
+    static WaveFormat Format(int rate) => new() { Tag = 1, Channels = 1, SamplesPerSec = (uint)rate, BitsPerSample = 16, BlockAlign = 2, AvgBytesPerSec = (uint)rate * 2 };
 
     /// <summary>The microphones Windows knows (the names are cut to 31 letters by Windows).</summary>
     public static List<MediaDevice> Microphones()
@@ -62,15 +62,15 @@ public sealed class WinAudio : IDisposable
     }
 
     /// <summary>Starts the microphone; <paramref name="onPiece"/> gets every 40 ms of sound (on a background thread).</summary>
-    public static WinAudio StartMicrophone(MediaDevice? mic, Action<short[]> onPiece)
+    public static WinAudio StartMicrophone(MediaDevice? mic, Action<short[]> onPiece, int rate = AudioFormat.Rate)
     {
-        var a = new WinAudio(true);
-        var f = Format();
+        var a = new WinAudio(true, rate);
+        var f = Format(rate);
         var id = mic is not null && int.TryParse(mic.Id, out var n) ? n : WaveMapper;
         if (waveInOpen(out a._h, id, ref f, IntPtr.Zero, IntPtr.Zero, CallbackNull) != 0) throw new InvalidOperationException("microphone");
         for (var i = 0; i < Buffers; i++)
         {
-            a._hdrs[i] = NewHeader(AudioFormat.FrameSamples * 2);
+            a._hdrs[i] = NewHeader(a._bufferBytes);
             waveInPrepareHeader(a._h, a._hdrs[i], HdrSize);
             waveInAddBuffer(a._h, a._hdrs[i], HdrSize);
         }
@@ -81,12 +81,12 @@ public sealed class WinAudio : IDisposable
     }
 
     /// <summary>Starts the speaker; <paramref name="next"/> is asked for the next 40 ms whenever a buffer is free.</summary>
-    public static WinAudio StartSpeaker(Func<short[]> next)
+    public static WinAudio StartSpeaker(Func<short[]> next, int rate = AudioFormat.Rate)
     {
-        var a = new WinAudio(false);
-        var f = Format();
+        var a = new WinAudio(false, rate);
+        var f = Format(rate);
         if (waveOutOpen(out a._h, WaveMapper, ref f, IntPtr.Zero, IntPtr.Zero, CallbackNull) != 0) throw new InvalidOperationException("speaker");
-        for (var i = 0; i < Buffers; i++) a._hdrs[i] = NewHeader(AudioFormat.FrameSamples * 2);
+        for (var i = 0; i < Buffers; i++) a._hdrs[i] = NewHeader(a._bufferBytes);
         a._loop = new Thread(() => a.WriteLoop(next)) { IsBackground = true, Name = "speaker" };
         a._loop.Start();
         return a;
@@ -130,9 +130,9 @@ public sealed class WinAudio : IDisposable
                 if (used[i] && (hdr.Flags & WhdrDone) == 0) continue;   // still playing
                 if (used[i]) waveOutUnprepareHeader(_h, _hdrs[i], HdrSize);
                 short[] pcm;
-                try { pcm = next(); } catch { pcm = new short[AudioFormat.FrameSamples]; }   // an error on this thread would end the program: silence instead
+                try { pcm = next(); } catch { pcm = new short[_bufferBytes / 2]; }   // an error on this thread would end the program: silence instead
                 var bytes = MuLaw.ToBytes(pcm);
-                var length = Math.Min(bytes.Length, BufferBytes);   // never more than the buffer holds
+                var length = Math.Min(bytes.Length, _bufferBytes);   // never more than the buffer holds
                 Marshal.Copy(bytes, 0, hdr.Data, length);
                 hdr.BufferLength = (uint)length; hdr.Flags = 0;
                 Marshal.StructureToPtr(hdr, _hdrs[i], false);

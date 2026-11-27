@@ -94,6 +94,18 @@ public sealed class RelayLink : ICollabLink
 
     public static string NewCode() => new(RandomNumberGenerator.GetItems(CodeAlphabet.AsSpan(), CodeLength));
 
+    /// <summary>
+    /// The lasting room of two friends: made from the secret only both of them keep (exchanged inside a sealed connection), so they meet
+    /// again without typing a code. It is an ordinary room on the relay, used only while both have it open.
+    /// </summary>
+    public static string FriendCode(string secret)
+    {
+        var h = SHA256.HashData(Encoding.UTF8.GetBytes("BibleStudy friend room v1|" + secret));
+        var c = new char[CodeLength];
+        for (var i = 0; i < CodeLength; i++) c[i] = CodeAlphabet[h[i] % CodeAlphabet.Length];
+        return new(c);
+    }
+
     /// <summary>A typed code as the program uses it: upper case, without dashes and spaces. Null when it cannot be a code.</summary>
     public static string? Normalize(string? typed)
     {
@@ -106,6 +118,25 @@ public sealed class RelayLink : ICollabLink
             sb.Append(c);
         }
         return sb.Length == CodeLength ? sb.ToString() : null;
+    }
+
+    /// <summary>A code while it is typed: upper case, only letters and digits, a dash after the first four (as soon as a fifth follows, so that
+    /// deleting backwards never gets stuck at the dash). <paramref name="caret"/> moves along, so typing in the middle keeps its place.</summary>
+    public static string Typing(string? typed, ref int caret)
+    {
+        typed ??= "";
+        caret = Math.Clamp(caret, 0, typed.Length);
+        var sb = new StringBuilder();
+        var before = 0;   // letters and digits before the caret
+        for (var i = 0; i < typed.Length; i++)
+        {
+            if (!char.IsAsciiLetterOrDigit(typed[i])) continue;
+            if (i < caret) before++;
+            sb.Append(char.ToUpperInvariant(typed[i]));
+        }
+        if (sb.Length > 4) sb.Insert(4, '-');
+        caret = sb.Length > 4 && before > 4 ? before + 1 : before;
+        return sb.ToString();
     }
 
     public static string Pretty(string code) => code.Length == CodeLength ? code[..4] + "-" + code[4..] : code;
@@ -343,11 +374,15 @@ public sealed class RelayLink : ICollabLink
         if (!IsOpen) return;
         // a camera picture still waiting is worth nothing once a newer one of the same person is there: with a slow upload the pictures
         // are thinned out instead of falling further and further behind
-        var picture = text.StartsWith("{\"t\":\"vf\"", StringComparison.Ordinal) ? PictureOwner(text) : null;
+        var picture = text.StartsWith("{\"t\":\"vf\"", StringComparison.Ordinal) ? "f" + PictureOwner(text) : null;
+        // the video stream builds each picture on the ones before it: only a key picture makes the waiting older ones worthless
+        var video = text.StartsWith("{\"t\":\"vc\"", StringComparison.Ordinal) ? "v" + PictureOwner(text) : null;
+        var key = video is not null && text.StartsWith("{\"t\":\"vc\",\"k\":1", StringComparison.Ordinal);
         lock (_outbox)
         {
             if (picture is not null) _outbox.RemoveAll(o => o.Picture == picture);
-            _outbox.Add((Encoding.UTF8.GetBytes(text), picture));
+            if (key) _outbox.RemoveAll(o => o.Picture == video);
+            _outbox.Add((Encoding.UTF8.GetBytes(text), picture ?? video));
         }
         if (_signal.CurrentCount == 0) _signal.Release();
     }

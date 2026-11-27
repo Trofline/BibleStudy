@@ -37,11 +37,25 @@ sealed class ForceGraphView : Control
     readonly DispatcherTimer _timer = new() { Interval = TimeSpan.FromMilliseconds(16) };
     readonly Random _rng = new(7);
     string? _centerKey;
+    bool _autoFit = true;          // the view follows the network while it settles, until the user moves or zooms it
+    double _pinchBase = -1;
 
     public ForceGraphView()
     {
         ClipToBounds = true;
         _timer.Tick += (_, _) => Step();
+        // two fingers zoom (a phone has no mouse wheel)
+        GestureRecognizers.Add(new PinchGestureRecognizer());
+        AddHandler(PinchEvent, (_, e) =>
+        {
+            if (_pinchBase < 0) { _pinchBase = _scale; _drag = -1; _panFrom = null; }
+            _autoFit = false; _moved = true;
+            _scale = Math.Clamp(_pinchBase * e.Scale, 0.2, 4);
+            InvalidateVisual();
+            e.Handled = true;
+        });
+        AddHandler(PinchEndedEvent, (_, _) => _pinchBase = -1);
+        SizeChanged += (_, _) => { if (_autoFit) FitAll(); };
     }
 
     public NetNode? SelectedNode => _selected >= 0 ? _nodes[_selected] : null;
@@ -50,7 +64,7 @@ sealed class ForceGraphView : Control
     public void SetData(NetData data, string? centerKey)
     {
         _nodes.Clear(); _index.Clear(); _edges.Clear();
-        _pos = []; _vel = []; _selected = -1; _hover = -1; _cx = 0; _cy = 0; _scale = 1; _centerKey = centerKey;
+        _pos = []; _vel = []; _selected = -1; _hover = -1; _cx = 0; _cy = 0; _scale = 1; _centerKey = centerKey; _autoFit = true;
         Merge(data);
         Fit();
         Selected?.Invoke(null);
@@ -76,6 +90,7 @@ sealed class ForceGraphView : Control
             pos[i] = new Point(around.X + Math.Cos(angle) * radius, around.Y + Math.Sin(angle) * radius);
         }
         _pos = pos; _vel = vel;
+        _autoFit = true;   // new nodes: show all of them again
         _ticks = oldCount == 0 ? 0 : 150;   // a growing network settles briefly, a new one runs longer
         _timer.Start();
         InvalidateVisual();
@@ -128,9 +143,33 @@ sealed class ForceGraphView : Control
             energy += len;
         }
         _ticks++;
+        if (_autoFit) FitAll();
         if (_ticks > 600 || (_ticks > 60 && energy / n < 0.05)) _timer.Stop();
         InvalidateVisual();
     }
+
+    /// <summary>
+    /// The whole network in view, with its names: on a phone the network is wider than the screen, nodes and names stood outside of it
+    /// (a node of the authors' map above the top edge). Zooms out as far as needed, never in beyond 1.
+    /// </summary>
+    void FitAll()
+    {
+        if (_pos.Length == 0 || Bounds.Width <= 0 || Bounds.Height <= 0) return;
+        double minX = double.MaxValue, minY = double.MaxValue, maxX = double.MinValue, maxY = double.MinValue;
+        for (var i = 0; i < _pos.Length; i++)
+        {
+            var r = RadiusOf(i);
+            minX = Math.Min(minX, _pos[i].X - r); maxX = Math.Max(maxX, _pos[i].X + r + LabelRoom(i));
+            minY = Math.Min(minY, _pos[i].Y - r - 8); maxY = Math.Max(maxY, _pos[i].Y + r + 8);
+        }
+        const double pad = 12;
+        var w = Math.Max(1, maxX - minX); var h = Math.Max(1, maxY - minY);
+        _scale = Math.Clamp(Math.Min((Bounds.Width - pad * 2) / w, (Bounds.Height - pad * 2) / h), 0.2, 1);
+        _cx = (minX + maxX) / 2; _cy = (minY + maxY) / 2;
+    }
+
+    /// <summary>About how wide the name beside a node is (in the units of the network, which on a phone are shown smaller).</summary>
+    double LabelRoom(int i) => Math.Min(220, 6.5 * (_nodes[i].Label.Length + (_nodes[i].Sub?.Length ?? 0) + 2));
 
     Point ToScreen(Point p) => new((p.X - _cx) * _scale + Bounds.Width / 2, (p.Y - _cy) * _scale + Bounds.Height / 2);
     Point ToWorld(Point s) => new((s.X - Bounds.Width / 2) / _scale + _cx, (s.Y - Bounds.Height / 2) / _scale + _cy);
@@ -161,16 +200,32 @@ sealed class ForceGraphView : Control
             var p = ToScreen(_pos[i]);
             if (p.X < -40 || p.Y < -40 || p.X > Bounds.Width + 40 || p.Y > Bounds.Height + 40) continue;
             var lit = focus < 0 || near.Contains(i);
-            var r = RadiusOf(i) * Math.Clamp(_scale, 0.7, 1.6);
+            var r = RadiusOf(i) * Math.Clamp(_scale, 0.5, 1.6);
             var isCenter = _nodes[i].Key == _centerKey;
             dc.DrawEllipse(new SolidColorBrush(_nodes[i].Color, lit ? 1 : 0.25), new Pen(i == _selected ? text : Brushes.Black, i == _selected ? 2.5 : isCenter ? 2 : 1), p, r, r);
-            if (lit || _scale > 1.2)
-            {
-                var label = new FormattedText(_nodes[i].Label + (_nodes[i].Sub is { Length: > 0 } s ? "  " + s : ""), CultureInfo.CurrentUICulture, FlowDirection.LeftToRight,
-                    new Typeface(FontFamily.Default, FontStyle.Normal, i == focus || isCenter ? FontWeight.SemiBold : FontWeight.Normal), 12, lit ? text : muted);
-                dc.DrawRectangle(new SolidColorBrush(Color.Parse("#0d1b2a"), 0.55), null, new Rect(p.X + r + 2, p.Y - label.Height / 2 - 1, label.Width + 6, label.Height + 2));
-                dc.DrawText(label, new Point(p.X + r + 5, p.Y - label.Height / 2));
-            }
+        }
+        // The names after all the nodes, so no node covers one. A name that would lie on one already written is left out (on a phone the names
+        // stood on top of each other); the chosen node, its neighbours and the big nodes come first. Tap a node to read the name of a small one.
+        var fontSize = Bounds.Width < 500 ? 10.5 : 12;
+        var placed = new List<Rect>();
+        var order = Enumerable.Range(0, _nodes.Count).OrderByDescending(i => i == focus).ThenByDescending(i => near.Contains(i)).ThenByDescending(i => _nodes[i].Key == _centerKey).ThenByDescending(RadiusOf);
+        foreach (var i in order)
+        {
+            var p = ToScreen(_pos[i]);
+            if (p.X < -40 || p.Y < -40 || p.X > Bounds.Width + 40 || p.Y > Bounds.Height + 40) continue;
+            var lit = focus < 0 || near.Contains(i);
+            if (!lit && _scale <= 1.2) continue;
+            var r = RadiusOf(i) * Math.Clamp(_scale, 0.5, 1.6);
+            var isCenter = _nodes[i].Key == _centerKey;
+            var label = new FormattedText(_nodes[i].Label + (_nodes[i].Sub is { Length: > 0 } s ? "  " + s : ""), CultureInfo.CurrentUICulture, FlowDirection.LeftToRight,
+                new Typeface(FontFamily.Default, FontStyle.Normal, i == focus || isCenter ? FontWeight.SemiBold : FontWeight.Normal), fontSize, lit ? text : muted);
+            // beside the node on the right, or on the left where the right edge would cut it
+            var x = p.X + r + 5 + label.Width > Bounds.Width - 2 && p.X - r - 5 - label.Width >= 2 ? p.X - r - 5 - label.Width : p.X + r + 5;
+            var box = new Rect(x - 3, p.Y - label.Height / 2 - 1, label.Width + 6, label.Height + 2);
+            if (i != focus && placed.Any(b => b.Intersects(box))) continue;
+            placed.Add(box);
+            dc.DrawRectangle(new SolidColorBrush(Color.Parse("#0d1b2a"), 0.55), null, box);
+            dc.DrawText(label, new Point(x, p.Y - label.Height / 2));
         }
     }
 
@@ -179,7 +234,7 @@ sealed class ForceGraphView : Control
         for (var i = _nodes.Count - 1; i >= 0; i--)
         {
             var p = ToScreen(_pos[i]);
-            var r = Math.Max(9, RadiusOf(i) * Math.Clamp(_scale, 0.7, 1.6));
+            var r = Math.Max(14, RadiusOf(i) * Math.Clamp(_scale, 0.5, 1.6));   // a finger is wider than a mouse pointer
             if ((p.X - screen.X) * (p.X - screen.X) + (p.Y - screen.Y) * (p.Y - screen.Y) <= r * r) return i;
         }
         return -1;
@@ -204,14 +259,14 @@ sealed class ForceGraphView : Control
         var p = e.GetPosition(this);
         if (_drag >= 0)
         {
-            _moved = true; _pos[_drag] = ToWorld(p); _vel[_drag] = default;
+            _moved = true; _autoFit = false; _pos[_drag] = ToWorld(p); _vel[_drag] = default;
             if (!_timer.IsEnabled) { _ticks = 400; _timer.Start(); }
             InvalidateVisual();
             return;
         }
         if (_panFrom is { } from)
         {
-            if (Math.Abs(p.X - from.X) + Math.Abs(p.Y - from.Y) > 3) _moved = true;
+            if (Math.Abs(p.X - from.X) + Math.Abs(p.Y - from.Y) > 3) { _moved = true; _autoFit = false; }
             _cx = _panCenter.X - (p.X - from.X) / _scale; _cy = _panCenter.Y - (p.Y - from.Y) / _scale;
             InvalidateVisual();
             return;
@@ -238,7 +293,8 @@ sealed class ForceGraphView : Control
     {
         var p = e.GetPosition(this);
         var before = ToWorld(p);
-        _scale = Math.Clamp(_scale * (e.Delta.Y > 0 ? 1.15 : 1 / 1.15), 0.25, 4);
+        _autoFit = false;
+        _scale = Math.Clamp(_scale * (e.Delta.Y > 0 ? 1.15 : 1 / 1.15), 0.2, 4);
         _cx = before.X - (p.X - Bounds.Width / 2) / _scale; _cy = before.Y - (p.Y - Bounds.Height / 2) / _scale;
         InvalidateVisual();
         e.Handled = true;

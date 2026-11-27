@@ -59,7 +59,9 @@ public partial class MainWindow
             else { docs = []; DocInfo.Text = L("Erst einen Vers anklicken."); }
         }
         else DocInfo.Text = (docs.Count == 1 ? L("1 Dokument") : L("{0} Dokumente", docs.Count));
-        BuildDocTree(docs, flat: !string.IsNullOrEmpty(query) || DocFilterBox.SelectedIndex == 2);
+        var foreign = BuildDocTree(docs, flat: !string.IsNullOrEmpty(query) || DocFilterBox.SelectedIndex == 2);
+        // "all vaults": the documents of the others stand below the own ones; the count above says so (it said "0 Dokumente" before, as if nothing were there)
+        if (foreign > 0) { DocInfo.Text += "  ·  " + L("{0} aus anderen Vaults (unten)", foreign); DocWelcome.IsVisible = false; }
     }
 
     void BuildDocTagChips()

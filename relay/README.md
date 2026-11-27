@@ -50,8 +50,13 @@ See the comment at the top of `src/index.js`. In short: `GET /r/<64 hex letters>
 room and says `hello`, `join`, `left` and `full` in text; binary messages start with the number of the person they are for (0 = all),
 which the relay replaces with the number of the sender.
 
-## Free plan in numbers (late 2025)
+## Free plan in numbers (checked November 2026)
 
-Durable Objects on the free plan: 100,000 requests a day, where 20 WebSocket messages count as one request, so about 2 million messages
-a day. BibleStudy gathers what it sends for 100 ms into one message, so one person sends at most about 10 a second even while talking
-with camera on. Five people talking for an hour are about 180,000 messages.
+Durable Objects on the free plan: 100,000 requests a day (reset at 00:00 UTC). Incoming WebSocket messages count 20 to one request,
+**whatever their size**; outgoing messages and pings are free, and a room that waits between messages is not billed for time. So the relay
+manages about 2 million incoming messages a day, for all rooms together.
+
+BibleStudy gathers what it sends for 100 ms into one message (cut into pieces of 200 KB), so one person sends about 10 a second while
+active, camera included: the camera goes as a video stream (H.264), and even Full HD at 60 pictures a second fits in one message per
+100 ms. Two people with camera, voice and pointer are about 76,000 messages an hour, so the daily limit holds for about 25 hours of such
+a session. (Single JPEG pictures, as before, would split a Full HD batch into 4 or 5 pieces: about 6 hours.)

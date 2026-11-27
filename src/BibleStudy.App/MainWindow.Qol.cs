@@ -184,11 +184,11 @@ public partial class MainWindow
             };
             ToolTip.SetTip(dot, custom ? name : L(name));
             var captured = name;
-            dot.PointerPressed += (_, e) =>
+            dot.OnPress((_, e) =>
             {
                 if (e.GetCurrentPoint(dot).Properties.IsRightButtonPressed) return;
                 ApplyAccent(captured); BuildAccentPanel();
-            };
+            });
             if (custom)
             {
                 var remove = new MenuItem { Header = L("Entfernen") };

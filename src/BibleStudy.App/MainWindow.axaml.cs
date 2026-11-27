@@ -142,6 +142,7 @@ public partial class MainWindow : AppWindow
         HomeBtn.Click += (_, _) => ShowHome();
         BackBtn.Click += async (_, _) => await GoBackAsync();
         ForwardBtn.Click += async (_, _) => await GoForwardAsync();
+        InitHistoryMenu();
         AddHandler(PointerPressedEvent, OnMouseSideButtons, Avalonia.Interactivity.RoutingStrategies.Tunnel);
         ReadBtn.Click += (_, _) => SetRead(_curBook, [_curChapter], ReadBtn.IsChecked == true);
         Home.ChapterChosen += async (book, chapter) => await GoToAsync(book, chapter);
@@ -493,7 +494,7 @@ public partial class MainWindow : AppWindow
             var sameChapter = keepScroll && _curBook == b.Id && _curChapter == ch.Number;
             var keepOffset = ReaderScroll.Offset; var keepCols = _colScrolls.Select(s => s.Offset).ToList();
             // a text selection belongs to the chapter it was made in (kept, its offsets would mark the same verse number of the next chapter)
-            if (!sameChapter) RememberPlace();
+            if (!sameChapter) { RememberPlace(); _chapterShows++; }
             if (_curBook != b.Id || _curChapter != ch.Number) ClearTextSelection(false);
             _curBook = b.Id; _curChapter = ch.Number; _selected = null; _selVerses.Clear(); _anchorVerse = null;
             if (ReaderHost.IsVisible && !_switchingVault) { try { _vault.SetLastPosition(_curBook, _curChapter); } catch (Exception) { /* a convenience; never block reading */ } }
@@ -883,6 +884,7 @@ public partial class MainWindow : AppWindow
 
     async Task ShowStudyAsync(WordSpan span)
     {
+        _studyCount++;
         RevealSideTab(3);
         StudyPanel.Children.Clear();
         StudyPanel.Children.Add(new TextBlock { Text = Loc.Quote(span.Word.Trim()), FontSize = 20, FontWeight = FontWeight.SemiBold, TextWrapping = TextWrapping.Wrap });
@@ -1035,8 +1037,8 @@ public partial class MainWindow : AppWindow
     {
         ReaderPanel.HorizontalAlignment = _singleColumn ? Avalonia.Layout.HorizontalAlignment.Center : Avalonia.Layout.HorizontalAlignment.Stretch;
         ReaderScroll.VerticalScrollBarVisibility = _independent ? Avalonia.Controls.Primitives.ScrollBarVisibility.Disabled : Avalonia.Controls.Primitives.ScrollBarVisibility.Auto;
-        var reserve = _independent ? 0 : _pathGutterWidth;   // the margin for the arrows of the reading paths
-        ReaderPanel.Margin = _singleColumn && _phone ? new(reserve, 12, 0, 24) : _singleColumn ? new(reserve, 36, 0, 80) : _independent ? new(24, 12, 24, 16) : new(32 + reserve, 28, 32, 80);
+        var reserve = _pathGutterWidth;   // the margin for the arrows of the reading paths
+        ReaderPanel.Margin = _singleColumn && _phone ? new(reserve, 12, 0, 24) : _singleColumn ? new(reserve, 36, 0, 80) : _independent ? new(Math.Max(24, reserve), 12, 24, 16) : new(32 + reserve, 28, 32, 80);
         ReaderPanel.Height = _independent ? Math.Max(240, ReaderScroll.Bounds.Height - 28) : double.NaN;
         if (_indepGrid is not null) _indepGrid.Height = Math.Max(160, ReaderPanel.Height - 70);
         ReaderPanel.Width = _singleColumn ? (_phone ? Math.Max(200, ReaderScroll.Bounds.Width - 28 - reserve) : Math.Clamp(ReaderScroll.Bounds.Width - 64 - reserve, 320, _settings.ReaderWidth)) : double.NaN;
@@ -1066,6 +1068,7 @@ public partial class MainWindow : AppWindow
 
     void SelectVerse(int n)
     {
+        _selectCount++;
         _selected = n; _selVerses.Clear(); _selVerses.Add(n); _anchorVerse = n; _recolorGroup = false; Paint();
         ThreadPane.SelectedVerse = n;
         var r = new VerseRef(_curBook, _curChapter, n);

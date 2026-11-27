@@ -26,6 +26,7 @@ public partial class MainWindow
         // the work tabs scroll sideways on a computer too: with many of them the last one and the "+" ran off the right edge
         if (!AppPlatform.IsMobile && TabBar.Child == TabStrip) { TabBar.Child = null; TabBar.Child = MakeTabScroller(); }
         if (!AppPlatform.IsMobile) return;
+        MinWidth = MinHeight = 0;   // the smallest desktop window (850 wide) is wider than a phone
         // a phone has no window to minimize, maximize or close
         MinBtn.IsVisible = MaxBtn.IsVisible = CloseBtn.IsVisible = false;
         WrapDocumentBar();
@@ -33,6 +34,7 @@ public partial class MainWindow
         // what needs a computer: the Windows start menu, a Syncthing folder, opening a folder in the file manager
         StartMenuBtn.IsVisible = StartMenuInfo.IsVisible = BackupSyncBtn.IsVisible = SourcesCacheBtn.IsVisible = false;
         if (OperatingSystem.IsIOS()) RestartBtn.IsVisible = false;   // an iPhone app cannot start itself again
+        if (BibleStudy.Core.AppPaths.IsPortable) RemoveAppBtn.IsVisible = false;   // the portable folder of a PC (only the PC trial of the phone layout has one)
         // the list of sections beside the settings is longer than a low screen: it scrolls on its own
         if (SettingsScroll.Parent is Grid sg && sg.Children.FirstOrDefault(c => Grid.GetColumn(c) == 1) is Control toc and not ScrollViewer)
         {
@@ -44,12 +46,47 @@ public partial class MainWindow
             sg.SizeChanged += (_, _) => sv.IsVisible = sg.Bounds.Width >= 520 && !_phone;
         }
         SizeChanged += (_, _) => ApplyPhoneLayout();
+        GuardHolding();
 #if MOBILE
         BackHandler = OnPhoneBack;
 #endif
         ApplyPhoneLayout();
     }
 
+
+    Point _holdFrom;
+    bool _holdMoved;
+    long _holdDown, _holdScrolled;
+
+    /// <summary>
+    /// Holding a finger opens the menu of what is under it (Avalonia's Holding gesture). Avalonia measures the finger against the element it
+    /// went down on, and a list that scrolls carries that element along with the finger: so a menu (or a choice) came up in the middle of a
+    /// scroll and the app felt as if it acted on its own. Here the finger is measured against the window, and any scroll since it went down
+    /// counts too; then the hold is not a hold and nothing opens.
+    /// </summary>
+    void GuardHolding()
+    {
+        AddHandler(PointerPressedEvent, (object? _, PointerPressedEventArgs e) =>
+        {
+            if (e.Pointer.Type != PointerType.Touch) return;
+            _holdFrom = e.GetPosition(this); _holdMoved = false; _holdDown = Environment.TickCount64;
+        }, RoutingStrategies.Tunnel, handledEventsToo: true);
+        AddHandler(PointerMovedEvent, (object? _, PointerEventArgs e) =>
+        {
+            if (e.Pointer.Type != PointerType.Touch || _holdMoved) return;
+            var p = e.GetPosition(this);
+            if (Math.Abs(p.X - _holdFrom.X) > 10 || Math.Abs(p.Y - _holdFrom.Y) > 10) _holdMoved = true;
+        }, RoutingStrategies.Tunnel, handledEventsToo: true);
+        AddHandler(ScrollViewer.ScrollChangedEvent, (object? _, ScrollChangedEventArgs e) =>
+        {
+            if (Math.Abs(e.OffsetDelta.Y) + Math.Abs(e.OffsetDelta.X) > 0.5) _holdScrolled = Environment.TickCount64;
+        }, RoutingStrategies.Bubble, handledEventsToo: true);
+        AddHandler(HoldingEvent, (object? _, HoldingRoutedEventArgs e) =>
+        {
+            if (e.PointerType != PointerType.Touch || e.HoldingState != HoldingState.Started) return;
+            if (_holdMoved || _holdScrolled >= _holdDown) e.Handled = true;   // handled: Avalonia does not open the menu
+        }, RoutingStrategies.Bubble, handledEventsToo: true);
+    }
 
     /// <summary>Rows of buttons that are made for a wide window (the editor of a document) wrap onto a second line instead of being cut off.</summary>
     void WrapDocumentBar()
@@ -88,7 +125,9 @@ public partial class MainWindow
             SideSplitter.IsVisible = !phone && SidePanel.IsVisible;
             // the panel lies over the text and the tools: always on top, and what is below it never draws over it
             SidePanel.ZIndex = phone ? 10 : 0;
+            SidePanel.BorderThickness = phone ? default : new Thickness(1, 0, 0, 0);   // the line beside the panel of a desktop: on a phone it is the left edge of the screen
             FitExplorerToScreen();
+            ApplyPhoneLists(phone);
             // the work tabs: on a phone they do not fit side by side, the row scrolls sideways with the finger
             if (phone && TabBar.Child == TabStrip)
             {
@@ -173,7 +212,7 @@ public partial class MainWindow
         var start = e.GetPosition(this);
         var offset = ReaderScroll.Offset;
         var pointer = e.Pointer;
-        var timer = _longPress = new Avalonia.Threading.DispatcherTimer { Interval = TimeSpan.FromMilliseconds(550) };
+        var timer = _longPress = new Avalonia.Threading.DispatcherTimer { Interval = TimeSpan.FromMilliseconds(TouchTap.HoldMs) };
         void Cancel() { timer.Stop(); RemoveHandler(PointerReleasedEvent, OnUp); RemoveHandler(PointerMovedEvent, OnMove); }
         void OnUp(object? s, Avalonia.Input.PointerReleasedEventArgs a) { if (a.Pointer == pointer) Cancel(); }
         void OnMove(object? s, Avalonia.Input.PointerEventArgs a)
@@ -200,6 +239,9 @@ public partial class MainWindow
     /// A long press on a verse number chooses that verse; moving the finger down (or up) without lifting chooses all verses up to the one under it,
     /// lifting shows the colors for all of them. Lifting at once opens the verse menu, as before.
     /// </summary>
+    /// <summary>What scrolls under a cell: its own column when the columns scroll on their own, else the page.</summary>
+    ScrollViewer ScrollerOf(CellRef c) => _independent && c.Data.Col < _colScrolls.Count ? _colScrolls[c.Data.Col] : ReaderScroll;
+
     bool TryStartVerseDrag(Point at, Avalonia.Input.IPointer pointer, int verse, Border box)
     {
         var cref = _cells.FirstOrDefault(c => c.Data.Number == verse && !c.Data.Foreign && c.Data.Col == 0 && c.Tb.IsEffectivelyVisible);
@@ -210,7 +252,7 @@ public partial class MainWindow
         if (!onNumber) return false;
         ClearTextSelection(true);
         if (!_selVerses.Contains(verse) || _selVerses.Count > 1) SelectVerse(verse);
-        _drag = new DragState { Anchor = cref, Start = at, Last = at, Cells = ColCells(cref), Scroller = ReaderScroll, VerseRange = true, Verse = verse, Box = box };
+        _drag = new DragState { Anchor = cref, Start = at, Last = at, Cells = ColCells(cref), Scroller = ScrollerOf(cref), VerseRange = true, Verse = verse, Box = box };
         pointer.Capture(ReaderScroll);   // the finger now chooses verses; the page does not scroll under it
         return true;
     }
@@ -234,7 +276,7 @@ public partial class MainWindow
             while (en < t.Length && IsWordChar(t[en])) en++;
             ClearTextSelection(true);
             SetSelectionFrom(cref, s, cref, en, ColCells(cref));
-            _drag = new DragState { Anchor = cref, AnchorRaw = s, Start = at, Last = at, Cells = ColCells(cref), Scroller = ReaderScroll, TouchWord = true, Verse = verse, Box = box };
+            _drag = new DragState { Anchor = cref, AnchorRaw = s, Start = at, Last = at, Cells = ColCells(cref), Scroller = ScrollerOf(cref), TouchWord = true, Verse = verse, Box = box };
             pointer.Capture(ReaderScroll);   // the finger now selects; the page does not scroll under it
             return true;
         }

@@ -131,7 +131,11 @@ public partial class MainWindow
         var box = new Border { Child = content, Padding = new(10, 3), CornerRadius = new(8), BorderThickness = new(3, 0, 0, 0), BorderBrush = Brushes.Transparent, Classes = { "verse" } };
         box.AddHandler(PointerPressedEvent, (object? _, PointerPressedEventArgs e) => OnVersePressed(n, e, foreign), RoutingStrategies.Tunnel, handledEventsToo: true);
         if (!foreign) box.AddHandler(PointerPressedEvent, (object? _, PointerPressedEventArgs e) => StartLongPress(n, box, e), RoutingStrategies.Tunnel, handledEventsToo: true);
-        else box.AddHandler(PointerPressedEvent, (object? _, PointerPressedEventArgs e) => OnForeignVersePressed(col, n, box, e), RoutingStrategies.Tunnel, handledEventsToo: true);   // a column with a passage of its own: chosen, marked and read on its own
+        else
+        {
+            box.AddHandler(PointerPressedEvent, (object? _, PointerPressedEventArgs e) => OnForeignVersePressed(col, n, box, e), RoutingStrategies.Tunnel, handledEventsToo: true);   // a column with a passage of its own: chosen, marked and read on its own
+            box.AddHandler(PointerReleasedEvent, (object? _, PointerReleasedEventArgs e) => OnForeignVerseReleased(col, n, box, e), RoutingStrategies.Bubble, handledEventsToo: true);   // words selected there: the colors, as in the main text
+        }
         return box;
     }
 
@@ -152,8 +156,10 @@ public partial class MainWindow
             {
                 var num = v.Number;
                 var cell = VerseCell(v, num, cols[i].T, size, i == 0 && noted.Contains(num), notes[i], i, foreign);
-                var box = MakeVerseBox(i == 0 && XrefChips(num, primary.Id) is { } chips ? new StackPanel { Children = { cell, chips } } : cell, num, foreign, i);
-                if (i == 0 && !foreign) AddHeadings(panel, num);
+                var chips = i == 0 ? XrefChips(num, primary.Id) : foreign && _colOwn[i] is { } own ? ForeignPathChips(own.Book, own.Chapter, num) : null;
+                var box = MakeVerseBox(chips is not null ? new StackPanel { Children = { cell, chips } } : cell, num, foreign, i);
+                if (i == 0 || foreign) AddTranslationHeadings(panel, cols[i].C, num);   // the headings of the translation, as in the main text
+                if (i == 0) AddHeadings(panel, num);
                 boxes[num] = box; panel.Children.Add(box);
             }
             var scroll = new ScrollViewer { Content = panel };
@@ -162,7 +168,7 @@ public partial class MainWindow
             scroll.AddHandler(PointerPressedEvent, (object? _, PointerPressedEventArgs _) => _jumpCol = tapped, RoutingStrategies.Tunnel, handledEventsToo: true);   // a typed verse number goes to the column touched last
             _colIds.Add(cols[i].T.Id);
             var col = i;
-            scroll.ScrollChanged += (_, _) => MirrorScroll(col);
+            scroll.ScrollChanged += (_, _) => { MirrorScroll(col); if (col == 0 && PathMargin.HasContent) PathMargin.InvalidateVisual(); };   // the circles of the reading paths go with the main text
             var column = new Grid { RowDefinitions = new RowDefinitions("Auto,*") };
             var header = ColumnHeader(cols[i].T, cols[i].C, i);
             header.Margin = new(0);
@@ -178,6 +184,16 @@ public partial class MainWindow
         _indepGrid = grid;
         ReaderPanel.Children.Add(grid);
         FitReader();
+    }
+
+    /// <summary>Under a verse of a column with a passage of its own: the reading paths that have a step there (as under the main text).</summary>
+    Control? ForeignPathChips(string book, int chapter, int verse)
+    {
+        var paths = PathChips(book, chapter, verse).ToList();
+        if (paths.Count == 0) return null;
+        var wrap = new WrapPanel { Margin = new(_phone ? 6 : 30, 0, 0, 6) };
+        foreach (var p in paths) wrap.Children.Add(p);
+        return wrap;
     }
 
     // ---- selective sync: columns on their own, but the chosen ones follow each other verse by verse -------------------------

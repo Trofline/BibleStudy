@@ -48,6 +48,7 @@ public partial class MainWindow
     List<ExItem>? _exCut;                  // Ctrl+X: waits for Ctrl+V
     Grid _exHead = null!;
     Border _exToast = null!;
+    DockPanel? _exRoot;
     TextBlock _exToastText = null!;
     Button _exToastUndo = null!;
     Avalonia.Threading.DispatcherTimer? _exToastTimer;
@@ -125,9 +126,12 @@ public partial class MainWindow
             void ViewMark() => view.Classes.Set("primary", _exFlatBtn.IsChecked == true || _exAllVaultsBtn.IsChecked == true);   // something is switched on: the button says so
             _exFlatBtn.IsCheckedChanged += (_, _) => ViewMark(); _exAllVaultsBtn.IsCheckedChanged += (_, _) => ViewMark(); ViewMark();
             _exPickBtn.Margin = new(6, 0, 0, 0); _exPickBtn.Height = 34; _exPickBtn.Padding = new(10, 0); _exPickBtn.VerticalContentAlignment = VerticalAlignment.Center;
+            // above: back / up, the path, the view and the new folder; below: the search as wide as the screen and "Auswählen"
+            // (the search stood between six buttons and showed "Su …")
             DockPanel.SetDock(newFolder, Dock.Right); DockPanel.SetDock(view, Dock.Right); DockPanel.SetDock(_exPickBtn, Dock.Right);
-            pathBox.Margin = new(0, 0, 0, 6);
-            bar = new StackPanel { Margin = new(10, 8, 10, 6), Children = { pathBox, new DockPanel { Children = { nav, newFolder, view, _exPickBtn, _exSearch } } } };
+            pathBox.Margin = new(6, 0, 0, 0);
+            _exSearch.Margin = new(0);
+            bar = new StackPanel { Margin = new(8, 6, 8, 4), Spacing = 6, Children = { new DockPanel { Children = { nav, newFolder, view, pathBox } }, new DockPanel { Children = { _exPickBtn, _exSearch } } } };
         }
         else
         {
@@ -198,7 +202,7 @@ public partial class MainWindow
         };
         _exToast.Bind(Border.BackgroundProperty, this.GetResourceObservable("BsSurface2"));
         _exToast.Bind(Border.BorderBrushProperty, this.GetResourceObservable("BsAccent"));
-        var root = new DockPanel();
+        var root = _exRoot = new DockPanel();
         DockPanel.SetDock(bar, Dock.Top); DockPanel.SetDock(_exInfo, Dock.Bottom); DockPanel.SetDock(_exToast, Dock.Bottom); DockPanel.SetDock(_exPickBar, Dock.Bottom);
         root.Children.Add(bar); root.Children.Add(_exInfo); root.Children.Add(_exToast); root.Children.Add(_exPickBar); root.Children.Add(body);
 
@@ -464,6 +468,7 @@ public partial class MainWindow
     /// <summary>After a change here the other lists (Markierungen, Notizen, the text) show it too.</summary>
     void AfterExplorerChange()
     {
+        UpdateVaultTopText();   // the folder new marks go into may have been renamed or deleted
         RefreshExplorer();
         _exQuiet = true;
         try { RefreshCollection(); RefreshNotesTree(); } finally { _exQuiet = false; }
@@ -619,7 +624,7 @@ public partial class MainWindow
             var on = _exSort == sort;
             var b = new Button
             {
-                Classes = { "ghost" }, Padding = new(4, 2), HorizontalAlignment = HorizontalAlignment.Left, FontSize = 12, FontWeight = FontWeight.SemiBold,
+                Classes = { "ghost" }, Padding = new(4, 2), MinHeight = 0, HorizontalAlignment = HorizontalAlignment.Left, FontSize = 12, FontWeight = FontWeight.SemiBold,   // (a column head: not the 34 px of a phone button)
                 Content = text + (on ? (_exSortDesc ? "  ▼" : "  ▲") : ""), Opacity = on ? 1 : 0.75,
             };
             ToolTip.SetTip(b, L("Nach dieser Spalte sortieren"));
@@ -682,7 +687,8 @@ public partial class MainWindow
         row.PointerExited += (_, _) => { if (!_exDragging) Paint(false); };
         if (item.Kind == ExKind.Folder) _exTargets.Add(new ExTarget(row, item.Id, on => { if (on) row.Background = Res("BsAccentSoft") ?? Brushes.Transparent; else Paint(false); }));
         ExDragSource(row, item);
-        row.ContextMenu = item.Kind == ExKind.Folder ? FolderContextMenu(item, row) : ItemContextMenu(item, row);
+        // while choosing, the bar below does it all: a slow tap must tick the row, not open its menu
+        if (!_exPick) row.ContextMenu = item.Kind == ExKind.Folder ? FolderContextMenu(item, row) : ItemContextMenu(item, row);
         return row;
     }
 
@@ -869,6 +875,8 @@ public partial class MainWindow
         if (target is long t) _exOpen.Add(t);
         _exSel.Clear();
         AfterExplorerChange();
+        if (target is long into && moved > 0)   // verses that came into a folder with a reading path: the note may ask to append them
+            FolderGrew(into, items.Where(i => i.Kind is ExKind.Mark or ExKind.Note && i.FolderId != into).Select(ExStep).OfType<StudyPassage>());
         var where = target is long tf && FolderById(tf) is { } f ? f.Name : L("Alle Markierungen");
         var what = moved == 1 && firstMoved is not null ? "„" + Shorten(firstMoved.Title, 40) + "“" : L("{0} Einträge", moved);
         if (moved > 0)
@@ -940,8 +948,16 @@ public partial class MainWindow
             }
             if (!props.IsLeftButtonPressed) return;
             ExplorerHost.Focusable = true; ExplorerHost.Focus();
-            if (_exPick) { e.Handled = true; if (e.Pointer.Type == PointerType.Touch) ExPickOnLift(row, item, e); else ExPickToggle(item); return; }   // choosing: a tap ticks, nothing opens or moves
-            if (e.Pointer.Type == PointerType.Touch) ExLongPressToPick(row, item, e);
+            if (e.Pointer.Type == PointerType.Touch)
+            {
+                // A finger does nothing when it goes down: it may be the start of a scroll. Nothing is chosen, nothing is dragged and the
+                // finger is not taken from the list. Lifting it on the spot opens the row, or ticks it while choosing ("Auswählen" above);
+                // holding it opens the menu of the row (only if the list did not scroll meanwhile, see GuardHolding).
+                if (_exPick) { e.Handled = true; ExPickOnLift(row, item, e); return; }   // while choosing a slow tap ticks too
+                TouchTap.Defer(row, e, () => ExOpen(item));
+                return;
+            }
+            if (_exPick) { e.Handled = true; ExPickToggle(item); return; }   // choosing: a click ticks, nothing opens or moves
             if (e.ClickCount == 2) { e.Handled = true; ExOpen(item); return; }
             var ctrl = e.KeyModifiers.HasFlag(Mods.Ctrl);
             var chosen = _exSel.Any(s => s.Kind == item.Kind && s.Id == item.Id);

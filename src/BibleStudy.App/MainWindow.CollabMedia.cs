@@ -12,14 +12,15 @@ namespace BibleStudy.App;
 
 /// <summary>
 /// Studying together with voice and camera: hold a button to talk (push to talk), switch the microphone on for a call, send a voice message,
-/// switch the camera on. Sound goes as 40 ms pieces packed with μ-law, pictures as small JPEGs (about 8 a second); everything through the same
+/// switch the camera on. Sound goes as 40 ms pieces of 48 kHz (voice messages as 16 kHz μ-law), the camera as a video stream (H.264, see MainWindow.CollabVideo.cs;
+/// single JPEG pictures when the FFmpeg there cannot make H.264); everything through the same
 /// encrypted connections as the rest. Received sound is mixed and played only while "Hear the others" is on; nothing is recorded or saved,
 /// except a voice message the person sends on purpose.
 /// </summary>
 public partial class MainWindow
 {
     IDisposable? _mic, _speaker, _camera;
-    readonly AudioMixer _mixer = new();
+    readonly AudioMixer _mixer = new(AudioFormat.CallFrameSamples);   // plays at 48 kHz
     bool _callMic, _pttHeld, _recording, _camOn;
     readonly List<short> _voiceRec = [];
     DateTime _recStart;
@@ -60,18 +61,17 @@ public partial class MainWindow
 
         // switches as plain buttons: colored while on, so the state is seen at a glance
         static void Mark(Button b, bool on) => b.Classes.Set("primary", on);
-        var call = new Button { Content = _callMic ? L("Mikrofon aus") : L("Mikrofon an (Gespräch)"), Margin = new(0, 0, 8, 6) };
-        Mark(call, _callMic);
+        var call = _callBtn = new Button { Margin = new(0, 0, 8, 6) };
         ToolTip.SetTip(call, L("Wie ein Anruf: Die anderen hören dich, bis du es wieder ausschaltest. Mit Kopfhörern gibt es kein Echo."));
-        call.Click += (_, _) => { _callMic = !_callMic; call.Content = _callMic ? L("Mikrofon aus") : L("Mikrofon an (Gespräch)"); Mark(call, _callMic); UpdateMic(); };
+        call.Click += (_, _) => PanelCallClick();
 
         var voice = new Button { Content = _recording ? L("■ Senden") : L("Sprachnachricht"), Margin = new(0, 0, 8, 6) };
         ToolTip.SetTip(voice, L("Antippen zum Aufnehmen, noch einmal zum Senden (höchstens 2 Minuten)."));
         voice.Click += (_, _) => { if (_recording) StopVoiceMessage(true); else StartVoiceMessage(); voice.Content = _recording ? L("■ Senden") : L("Sprachnachricht"); Mark(voice, _recording); };
 
-        var cam = new Button { Content = _camOn ? L("Kamera aus") : L("Kamera an"), Margin = new(0, 0, 8, 6) };
-        Mark(cam, _camOn);
-        cam.Click += async (_, _) => { cam.IsEnabled = false; await SetCameraAsync(!_camOn); cam.IsEnabled = true; cam.Content = _camOn ? L("Kamera aus") : L("Kamera an"); Mark(cam, _camOn); };
+        var cam = _camBtn = new Button { Margin = new(0, 0, 8, 6) };
+        cam.Click += async (_, _) => { cam.IsEnabled = false; await PanelCameraClickAsync(); cam.IsEnabled = true; };
+        RefreshMediaButtons();
 
         var pin = new Button { Content = _dockWanted ? L("Video nicht festhalten") : L("Video festhalten"), Margin = new(0, 0, 8, 6) };
         Mark(pin, _dockWanted);
@@ -88,7 +88,7 @@ public partial class MainWindow
 
         return new Expander
         {
-            Header = L("Sprechen und Kamera"), IsExpanded = _callMic || _camOn || _tiles.Count > 0,
+            Header = L("Sprechen und Kamera"), IsExpanded = _callMic || _micMuted || _camOn || _camPaused || _tiles.Count > 0,
             Content = new StackPanel
             {
                 Spacing = 6, Margin = new(0, 6, 0, 0),
@@ -124,16 +124,26 @@ public partial class MainWindow
             to.Children.Add(Box(cams, _settings.CollabCamera, v => _settings.CollabCamera = v));
             var quality = new ComboBox
             {
-                ItemsSource = new[] { L("Bildqualität: niedrig (für langsames Internet)"), L("Bildqualität: mittel"), L("Bildqualität: HD (720p)") },
-                SelectedIndex = Math.Clamp(_settings.CollabCameraQuality, 0, 2), HorizontalAlignment = HorizontalAlignment.Stretch,
+                ItemsSource = new[] { L("Bildqualität: niedrig (für langsames Internet)"), L("Bildqualität: mittel"), L("Bildqualität: HD (720p)"), L("Bildqualität: Full HD (1080p)") },
+                SelectedIndex = Math.Clamp(_settings.CollabCameraQuality, 0, 3), HorizontalAlignment = HorizontalAlignment.Stretch,
             };
-            quality.SelectionChanged += async (_, _) =>
+            var fps = new ComboBox
             {
-                _settings.CollabCameraQuality = quality.SelectedIndex; SaveSettings();
-                if (_camOn && _camera is not null) { await SetCameraAsync(false); await SetCameraAsync(true); }   // takes effect at once
+                ItemsSource = new[] { L("30 Bilder pro Sekunde"), L("60 Bilder pro Sekunde (flüssiger)") },
+                SelectedIndex = _settings.CollabCameraFps >= 60 ? 1 : 0, HorizontalAlignment = HorizontalAlignment.Stretch,
             };
+            async Task Apply()
+            {
+                _settings.CollabCameraQuality = Math.Max(0, quality.SelectedIndex);
+                _settings.CollabCameraFps = fps.SelectedIndex == 1 ? 60 : 30;
+                SaveSettings();
+                if (_camOn && _camera is not null) { await SetCameraAsync(false); await SetCameraAsync(true); }   // takes effect at once
+            }
+            quality.SelectionChanged += async (_, _) => await Apply();
+            fps.SelectionChanged += async (_, _) => await Apply();
             to.Children.Add(quality);
-            to.Children.Add(new TextBlock { Text = L("Ruckelt das Bild oder kommt es spät an, wähle eine niedrigere Qualität: HD braucht bei jeder Person mit Kamera etwa 5 Mbit/s zum Senden und bei allen anderen ebenso viel zum Empfangen."), Classes = { "caption" }, TextWrapping = TextWrapping.Wrap });
+            to.Children.Add(fps);
+            to.Children.Add(new TextBlock { Text = L("Ruckelt das Bild oder kommt es spät an, wähle eine niedrigere Qualität. Jede Person mit Kamera braucht zum Senden etwa: HD 2,5 Mbit/s, Full HD 5 Mbit/s, mit 60 Bildern pro Sekunde die Hälfte mehr. Die anderen brauchen ebenso viel zum Empfangen."), Classes = { "caption" }, TextWrapping = TextWrapping.Wrap });
         }
         else to.Children.Add(new TextBlock { Text = Ffmpeg.Find() is null ? FfmpegHint() : L("Keine Kamera gefunden."), Classes = { "caption" }, TextWrapping = TextWrapping.Wrap });
     }
@@ -161,7 +171,7 @@ public partial class MainWindow
         if (need && _mic is null)
         {
             if (MediaIO.SoundNeedsFfmpeg && Ffmpeg.Find() is null) { _mediaInfo.Text = FfmpegHint(); return; }
-            try { var device = await PickAsync(false); _mic ??= MediaIO.StartMicrophone(device, OnMicPiece); _mediaInfo.Text = ""; }
+            try { var device = await PickAsync(false); _mic ??= MediaIO.StartMicrophone(device, OnMicPiece, AudioFormat.CallRate); _mediaInfo.Text = ""; }
             catch (Exception ex) { _mediaInfo.Text = L("Das Mikrofon ließ sich nicht öffnen: {0}", ex.Message); }
         }
         else if (!need && _mic is not null) { _mic.Dispose(); _mic = null; _myLevel = 0; }
@@ -172,9 +182,9 @@ public partial class MainWindow
     void OnMicPiece(short[] pcm)
     {
         _myLevel = MuLaw.Level(pcm);
-        if (_recording) lock (_voiceRec) { if (_voiceRec.Count < AudioFormat.Rate * 120) _voiceRec.AddRange(pcm); }
+        if (_recording) lock (_voiceRec) { if (_voiceRec.Count < AudioFormat.CallRate * 120) _voiceRec.AddRange(pcm); }
         if ((_pttHeld || _callMic) && _group is { Any: true } g)
-            try { g.Send(new { t = "au", d = Convert.ToBase64String(MuLaw.Encode(pcm)) }); } catch { }
+            try { g.Send(new { t = "a2", d = Convert.ToBase64String(MuLaw.ToBytes(pcm)) }); } catch { }   // 48 kHz, 16 bit: the full voice
     }
 
     void StartVoiceMessage()
@@ -190,6 +200,7 @@ public partial class MainWindow
         _recording = false;
         UpdateMic();
         short[] pcm; lock (_voiceRec) { pcm = _voiceRec.ToArray(); _voiceRec.Clear(); }
+        pcm = AudioFormat.Down3(pcm);   // a voice message stays 16 kHz μ-law, as every version plays it
         if (!send || pcm.Length < AudioFormat.Rate / 4) return;
         var data = MuLaw.Encode(pcm);
         var secs = (pcm.Length + AudioFormat.Rate / 2) / AudioFormat.Rate;
@@ -212,7 +223,7 @@ public partial class MainWindow
                 var wav = Path.Combine(Path.GetTempPath(), "bs_voice.wav");
                 try { Wav.Write(wav, MuLaw.Decode(mulaw)); (_voicePlayer ??= new AudioPlayer()).Play(wav); } catch (Exception ex) { _mediaInfo.Text = ex.Message; }
             }
-            else if (EnsureSpeaker()) _mixer.Add("vm" + Guid.NewGuid().ToString("N"), MuLaw.Decode(mulaw));
+            else if (EnsureSpeaker()) _mixer.Add("vm" + Guid.NewGuid().ToString("N"), AudioFormat.Up3(MuLaw.Decode(mulaw)));
         };
         var card = Card(new StackPanel
         {
@@ -231,11 +242,11 @@ public partial class MainWindow
     {
         if (_speaker is not null) return true;
         if (MediaIO.SoundNeedsFfmpeg && Ffmpeg.Find() is null) { _mediaInfo.Text = FfmpegHint(); return false; }
-        try { _speaker = MediaIO.StartSpeaker(_mixer.Next); return true; }
+        try { _speaker = MediaIO.StartSpeaker(_mixer.Next, AudioFormat.CallRate); return true; }
         catch (Exception ex) { _mediaInfo.Text = L("Der Lautsprecher ließ sich nicht öffnen: {0}", ex.Message); return false; }
     }
 
-    const int MaxPicture = 400_000;   // one camera picture; an HD picture is about 60 to 150 KB
+    const int MaxPicture = 400_000;   // one camera picture (the picture-by-picture way); an HD picture is about 60 to 150 KB
     volatile byte[]? _ownFrame;
     int _ownFramePosted;
 
@@ -251,18 +262,33 @@ public partial class MainWindow
         try
         {
             _camOn = true;   // while it opens: a second tap does not start it twice
-            _camera = await MediaIO.StartCameraAsync(cam, CameraQuality.Of(_settings.CollabCameraQuality), jpeg =>
-            {
-                if (jpeg.Length > MaxPicture) return;
-                if (_group is { Any: true } g) try { g.Send(new { t = "vf", d = Convert.ToBase64String(jpeg) }); } catch { }
-                _ownFrame = jpeg;
-                if (Interlocked.Exchange(ref _ownFramePosted, 1) == 0)   // only the newest picture is shown: a busy screen never falls behind
-                    OnUi(() => { Interlocked.Exchange(ref _ownFramePosted, 0); if (_ownFrame is { } f && _camOn) ShowFrame("me", L("Du"), PeopleInkOf(null), f); });
-            });
+            var quality = CameraQuality.Of(_settings.CollabCameraQuality, _settings.CollabCameraFps);
+            var h264 = await Task.Run(Ffmpeg.CanH264);
+            Action<byte[]> onPicture = h264 ? OnOwnVideoUnit : OnOwnJpeg;
+            _camera = await MediaIO.StartCameraAsync(cam, quality, onPicture, h264);
             if (!_camOn) { _camera.Dispose(); _camera = null; return; }   // switched off (or left) while it opened
             _mediaInfo.Text = "";
         }
         catch (Exception ex) { _camOn = false; _mediaInfo.Text = L("Die Kamera ließ sich nicht öffnen: {0}", ex.Message); }
+    }
+
+    /// <summary>A picture of the own video stream (on a background thread): to the others, and into the own preview (decoded small, so it shows what the others see).</summary>
+    void OnOwnVideoUnit(byte[] au)
+    {
+        if (au.Length > MaxVideoUnit || !_camOn) return;
+        var d = Convert.ToBase64String(au);
+        if (_group is { Any: true } g)
+            try { g.Send(H264.IsKeyframe(au) ? new { t = "vc", k = 1, d } : (object)new { t = "vc", d }); } catch { }
+        VideoInOf("me", 640).Decoder?.Push(au);
+    }
+
+    void OnOwnJpeg(byte[] jpeg)
+    {
+        if (jpeg.Length > MaxPicture) return;
+        if (_group is { Any: true } g) try { g.Send(new { t = "vf", d = Convert.ToBase64String(jpeg) }); } catch { }
+        _ownFrame = jpeg;
+        if (Interlocked.Exchange(ref _ownFramePosted, 1) == 0)   // only the newest picture is shown: a busy screen never falls behind
+            OnUi(() => { Interlocked.Exchange(ref _ownFramePosted, 0); if (_ownFrame is { } f && _camOn) ShowFrame("me", L("Du"), PeopleInkOf(null), f); });
     }
 
     Color PeopleInkOf(CollabPerson? p) => p?.Ink ?? Color.Parse("#30A46C");
@@ -271,6 +297,13 @@ public partial class MainWindow
     {
         Bitmap bmp;
         try { using var ms = new MemoryStream(jpeg); bmp = new Bitmap(ms); } catch { return; }
+        ShowPicture(id, name, ink, bmp);
+    }
+
+    /// <summary>Shows a picture in the person's tile, the field and the large window. A JPEG picture belongs to the tile (and goes with the next
+    /// one); the bitmaps of a video stream belong to its decoder (<see cref="VideoSurface"/>).</summary>
+    void ShowPicture(string id, string name, Color ink, Bitmap bmp)
+    {
         if (!_tiles.TryGetValue(id, out var t))
         {
             var image = new Image { Width = 160, Height = 120, Stretch = Stretch.UniformToFill };
@@ -288,14 +321,19 @@ public partial class MainWindow
         _tileInfo[id] = (name, ink);
         UpdateBigVideo(id, name, ink, bmp);
         UpdateDock(id, bmp);
-        old?.Dispose();
+        if (old is not null && old is not WriteableBitmap && old != bmp) old.Dispose();
     }
 
     void RemoveTile(string id)
     {
         if (_bigGrid?.Children.FirstOrDefault(c => c.Tag as string == id) is { } b) _bigGrid.Children.Remove(b);
         _tileInfo.Remove(id);
-        if (_tiles.Remove(id, out var t)) { _videoTiles.Children.Remove(t.Tile); RefreshDock(); (t.Image.Source as Bitmap)?.Dispose(); }   // the field no longer shows it before the picture goes
+        if (_tiles.Remove(id, out var t))
+        {
+            _videoTiles.Children.Remove(t.Tile); RefreshDock();   // the field no longer shows it before the picture goes
+            if (t.Image.Source is Bitmap shown and not WriteableBitmap) shown.Dispose();
+        }
+        StopVideoIn(id);
     }
 
     // ---- the line "who speaks" and old pictures ----------------------------------------------------------------------------
@@ -306,7 +344,7 @@ public partial class MainWindow
         if (_mic is not null && (_pttHeld || _callMic) && _myLevel > 0.03) names.Insert(0, L("Du"));
         _speaking.Text = names.Count > 0 ? L("Es spricht: {0}", string.Join(", ", names))
             : _recording ? L("Aufnahme läuft … {0}", Duration((int)(DateTime.UtcNow - _recStart).TotalSeconds))
-            : _callMic ? L("Dein Mikrofon ist an.") : "";
+            : _callMic ? L("Dein Mikrofon ist an.") : _micMuted ? L("Dein Mikrofon ist stummgeschaltet.") : "";
         foreach (var (id, t) in _tiles.ToList())
             if (id != "me" && (DateTime.UtcNow - t.Last).TotalSeconds > 5) RemoveTile(id);   // the camera of someone who left or stopped
         if (!CollabOpen && (_mic is not null || _camOn || _speaker is not null)) StopMedia();
@@ -314,13 +352,16 @@ public partial class MainWindow
 
     void StopMedia()
     {
-        _pttHeld = false; _callMic = false;
+        _pttHeld = false; _callMic = false; _micMuted = false; _camPaused = false;
         if (_recording) StopVoiceMessage(false);
         _mic?.Dispose(); _mic = null;
         _camera?.Dispose(); _camera = null; _camOn = false;
         _speaker?.Dispose(); _speaker = null;
         _mixer.ClearAll();
         foreach (var id in _tiles.Keys.ToList()) RemoveTile(id);
+        List<string> decoding;
+        lock (_videoIn) decoding = [.. _videoIn.Keys];
+        foreach (var id in decoding) StopVideoIn(id);
     }
 
     // ---- receiving --------------------------------------------------------------------------------------------------------
@@ -336,7 +377,16 @@ public partial class MainWindow
                 byte[] data;
                 try { data = Convert.FromBase64String(d.GetString()!); } catch (FormatException) { return true; }
                 if (data.Length is 0 or > 4 * AudioFormat.FrameSamples) return true;
-                if (EnsureSpeaker()) _mixer.Add(p.Id, MuLaw.Decode(data));
+                if (EnsureSpeaker()) _mixer.Add(p.Id, AudioFormat.Up3(MuLaw.Decode(data)));   // an older version: 16 kHz μ-law
+                return true;
+            }
+            case "a2":
+            {
+                if (AppPlatform.IsMobile || !_settings.CollabHear || !root.TryGetProperty("d", out var d) || d.ValueKind != JsonValueKind.String) return true;
+                byte[] data;
+                try { data = Convert.FromBase64String(d.GetString()!); } catch (FormatException) { return true; }
+                if (data.Length is < 2 or > 4 * AudioFormat.CallFrameSamples * 2) return true;
+                if (EnsureSpeaker()) _mixer.Add(p.Id, MuLaw.FromBytes(data));
                 return true;
             }
             case "vf":

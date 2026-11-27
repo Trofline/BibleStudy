@@ -50,6 +50,7 @@ public partial class MainWindow
     /// <summary>The line "Anna leads": while following, says so; after turning the page oneself, offers to follow again.</summary>
     void UpdateLeaderBar()
     {
+        UpdateTourBar();
         _leaderBar.Bind(Border.BackgroundProperty, this.GetResourceObservable("BsSurface2"));
         if (_leaderId is null || !_people.TryGetValue(_leaderId, out var leader)) { _leaderBar.IsVisible = false; return; }
         var text = new TextBlock { Text = _followLeader ? L("{0} leitet. Du folgst automatisch.", leader.Name) : L("{0} leitet. Du liest gerade woanders.", leader.Name), TextWrapping = TextWrapping.Wrap, VerticalAlignment = VerticalAlignment.Center };
@@ -71,6 +72,10 @@ public partial class MainWindow
     void CollabNavigatedByMe()
     {
         if (_collabSuppress || _leaderId is null || !_followLeader) return;
+        // arriving where the leader is (or where their scrolling or reading path is) is following, not leaving
+        if (_people.TryGetValue(_leaderId, out var leader) && leader.Place is { } lp && lp.Book == _curBook && lp.Chapter == _curChapter) return;
+        if (_leaderView == (_curBook, _curChapter) || _pendingView is { } pv && pv.Book == _curBook && pv.Chapter == _curChapter) return;
+        if (_tour is { } t && t.By == _leaderId && t.Index < t.Steps.Count && t.Steps[t.Index].Covers(_curBook, _curChapter)) return;
         _followLeader = false;
         UpdateLeaderBar();
     }
@@ -82,6 +87,7 @@ public partial class MainWindow
         if (_iLead) CollabSend(new { t = "lead", on = true });
         if (_questions.Count > 0) CollabSend(new { t = "qall", items = _questions.Select(q => new { id = q.Id, text = q.Text, by = q.By, done = q.Done }) });
         if ((_padBox.Text ?? "").Length > 0) CollabSend(new { t = "pad", text = _padBox.Text });
+        SendStudyState();
     }
 
     // ---- questions --------------------------------------------------------------------------------------------------------
@@ -167,10 +173,19 @@ public partial class MainWindow
     /// <summary>A chat line with the name in the person's color; a tap on it offers a reaction.</summary>
     void AddChat(string who, string text, string mid, bool mine, Color? ink)
     {
+        AddCollabItem(ChatBubble(who, text, mid, mine, ink, null), toEnd: mine);
+        _meeting.Add((DateTime.Now, mine ? _settings.CollabName : who, text));
+        KeepChat(new() { Mid = mid, Who = mine ? _settings.CollabName : who, Text = text, Mine = mine });
+    }
+
+    /// <summary>The bubble of a chat line; <paramref name="when"/> is given for a line of the saved chat (it shows its time).</summary>
+    Border ChatBubble(string who, string text, string mid, bool mine, Color? ink, DateTime? when)
+    {
         var reactions = new WrapPanel();
         var body = new StackPanel { Spacing = 2 };
         if (!mine) body.Children.Add(new TextBlock { Text = who, FontSize = 11, FontWeight = FontWeight.SemiBold, Foreground = ink is { } c ? new SolidColorBrush(c) : null });
         body.Children.Add(new TextBlock { Text = text, TextWrapping = TextWrapping.Wrap });
+        if (when is { } w) body.Children.Add(new TextBlock { Text = w.ToString("t"), FontSize = 10, Opacity = 0.6, HorizontalAlignment = HorizontalAlignment.Right });
         body.Children.Add(reactions);
         var bubble = new Border { Padding = new(10, 6), CornerRadius = new(10), HorizontalAlignment = mine ? HorizontalAlignment.Right : HorizontalAlignment.Left, MaxWidth = 340, Child = body, Cursor = new Cursor(StandardCursorType.Hand) };
         bubble.Bind(Border.BackgroundProperty, this.GetResourceObservable(mine ? "BsAccentSoft" : "BsSurface2"));
@@ -190,8 +205,7 @@ public partial class MainWindow
                 menu.ShowAt(bubble);
             };
         }
-        AddCollabItem(bubble);
-        _meeting.Add((DateTime.Now, mine ? _settings.CollabName : who, text));
+        return bubble;
     }
 
     static void AddReaction(WrapPanel to, string r, string who)
@@ -340,7 +354,7 @@ public partial class MainWindow
             }
             case "friend":
             case "friendok":
-                OnFriendMessage(type, Str("token", 64), Int("port"));
+                OnFriendMessage(type, Str("token", 64), Int("port"), Str("to", 32));
                 return true;
         }
         return false;

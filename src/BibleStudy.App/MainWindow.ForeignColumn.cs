@@ -9,6 +9,7 @@ using Avalonia.Media;
 using Avalonia.Threading;
 using BibleStudy.Core;
 using BibleStudy.Core.Models;
+using BibleStudy.Core.Search;
 using BibleStudy.Core.Storage;
 
 namespace BibleStudy.App;
@@ -89,10 +90,58 @@ public partial class MainWindow
         {
             e.Handled = true;
             ChooseForeign(col, verse);
-            ShowForeignVerseMenu(col, verse, box);
+            ShowForeignVerseMenu(col, verse, box, SpanUnder(e));   // the word under the pointer comes first, as in the main text
             return;
         }
         if (props.IsLeftButtonPressed) ChooseForeign(col, verse);
+    }
+
+    /// <summary>Words selected with the mouse in such a column: the colors show at once (as over a selection in the main text), when that is switched on.</summary>
+    void OnForeignVerseReleased(int col, int verse, Border box, PointerReleasedEventArgs e)
+    {
+        if (e.InitialPressMouseButton != MouseButton.Left || e.Pointer.Type == PointerType.Touch || !_settings.SelectionPopup) return;
+        Dispatcher.UIThread.Post(() =>
+        {
+            if (ForeignSelection(box) is { } words && ColRef(col, verse) is { } r && ColTranslation(col) is { } t) ShowForeignSelectionColors(col, r, t, words, box);
+        }, DispatcherPriority.Background);
+    }
+
+    /// <summary>A small bar of colors over the selected words of such a column: a click marks them in that color.</summary>
+    void ShowForeignSelectionColors(int col, VerseRef r, TranslationInfo t, (int Start, int End, string Text) words, Control anchor)
+    {
+        var fly = new Flyout { Placement = PlacementMode.Pointer };
+        var row = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 4 };
+        foreach (var hex in PresetColors)
+        {
+            var h = hex;
+            var sw = new Button { Width = 26, Height = 26, Padding = new(0), CornerRadius = new(13), Background = new SolidColorBrush(MarkColor(h)) };
+            ToolTip.SetTip(sw, ColorName(h) is { Length: > 0 } n ? n : h);
+            sw.Click += (_, _) => { fly.Hide(); MarkForeign(col, r, t, h, words); };
+            row.Children.Add(sw);
+        }
+        var copy = new Button { Classes = { "tool" }, Width = double.NaN, Height = 26, Padding = new(8, 0), Content = L("Markierten Text kopieren") };
+        copy.Click += async (_, _) => { fly.Hide(); if (TopLevel.GetTopLevel(this)?.Clipboard is { } cb) await cb.SetTextAsync(words.Text); };
+        fly.Content = new StackPanel { Spacing = 6, Children = { row, copy } };
+        fly.ShowAt(anchor, showAtPointer: true);
+    }
+
+    /// <summary>The word under a point of the window in such a column: it is selected (a finger cannot drag a selection), and its span for the word study.</summary>
+    WordSpan? SelectForeignWordAt(Border box, Point at)
+    {
+        var tb = box.GetLogicalDescendants().OfType<SelectableTextBlock>().FirstOrDefault();
+        if (tb?.Tag is not CellInfo info || this.TranslatePoint(at, tb) is not { } p || !new Rect(tb.Bounds.Size).Contains(p) || info.RawText.Length == 0) return null;
+        var pos = tb.TextLayout.HitTestPoint(p).TextPosition;
+        var t = info.RawText;
+        var i = Math.Clamp(RawAt(info, pos), 0, t.Length - 1);
+        if (!IsWordChar(t[i]) && i > 0 && IsWordChar(t[i - 1])) i--;
+        if (IsWordChar(t[i]))
+        {
+            int s = i, en = i + 1;
+            while (s > 0 && IsWordChar(t[s - 1])) s--;
+            while (en < t.Length && IsWordChar(t[en])) en++;
+            tb.SelectionStart = TbAt(info, s); tb.SelectionEnd = TbAt(info, en);
+        }
+        return info.Spans.FirstOrDefault(x => x.Note is null && x.Strongs.Length > 0 && pos >= x.Start && pos < x.End);
     }
 
     void ChooseForeign(int col, int verse)
@@ -107,7 +156,7 @@ public partial class MainWindow
         _fLongPress?.Stop();
         var start = e.GetPosition(this); var pointer = e.Pointer;
         var scroll = col < _colScrolls.Count ? _colScrolls[col] : null; var offset = scroll?.Offset.Y ?? 0;
-        var timer = _fLongPress = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(550) };
+        var timer = _fLongPress = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(TouchTap.HoldMs) };
         var moved = false;
         void Cancel() { timer.Stop(); RemoveHandler(PointerReleasedEvent, OnUp); RemoveHandler(PointerMovedEvent, OnMove); }
         void OnUp(object? s, PointerReleasedEventArgs a)
@@ -130,7 +179,8 @@ public partial class MainWindow
             Cancel();
             if (Math.Abs((scroll?.Offset.Y ?? 0) - offset) > 8) return;   // the column was scrolled
             ChooseForeign(col, verse);
-            ShowForeignVerseMenu(col, verse, box);
+            var word = SelectForeignWordAt(box, start);   // the word under the finger: "Markierten Text markieren" and the word study work on it
+            ShowForeignVerseMenu(col, verse, box, word);
         };
         timer.Start();
     }
@@ -146,7 +196,7 @@ public partial class MainWindow
         return b > a ? (a, b, info.RawText[a..b]) : null;
     }
 
-    void ShowForeignVerseMenu(int col, int verse, Border box)
+    void ShowForeignVerseMenu(int col, int verse, Border box, WordSpan? word = null)
     {
         if (ColRef(col, verse) is not { } r || ColTranslation(col) is not { } t) return;
         var picked = ForeignSelection(box);
@@ -169,6 +219,13 @@ public partial class MainWindow
         var state = ColState(col);
         var marksHere = state?.Marks.Where(m => m.Covers(verse) && (m.WholeVerse || m.TranslationId == t.Id)).ToList() ?? [];
 
+        // the word under the pointer comes first: pin it, or look it up (the word study works in every column)
+        if (word is { Strongs.Length: > 0 })
+        {
+            AddWordMenuItems(menu, word);
+            menu.Items.Add(new Separator());
+        }
+
         Item(L("{0} – Vers-Übersicht", Label(r)), () => { SetPanelOpen(true); SideTabs.SelectedIndex = GuideTab; _ = ShowGuideAsync(r); });
         Item(L("{0} als Haupttext öffnen", Label(r)), () => _ = GoToAsync(r.Book, r.Chapter, r.Verse));
         menu.Items.Add(new Separator());
@@ -180,6 +237,8 @@ public partial class MainWindow
         menu.Items.Add(Colors(L("Vers markieren"), hex => MarkForeign(col, r, t, hex, null)));
         if (marksHere.Count > 0) Item(L("Markierung entfernen"), () => UnmarkForeign(marksHere, r));
         Item(L("Notiz schreiben"), () => ShowForeignNote(r, box));
+        if (QuickPathItem(verse, r) is { } quickPath) menu.Items.Add(quickPath);
+        menu.Items.Add(PathMenu(verse, box, r));   // reading paths: this verse of this column as a step
         Item(_vault.GetBookmarkedVerses(r.Book, r.Chapter).Contains(verse) ? L("Nicht mehr merken") : L("Merken"), () =>
         {
             StatusText.Text = _vault.ToggleBookmark(r, ColVerseText(col, verse)) ? L("{0} gemerkt – zu finden unter „Lesezeichen“ rechts.", Label(r)) : L("{0} nicht mehr gemerkt.", Label(r));
@@ -194,18 +253,35 @@ public partial class MainWindow
             await cb.SetTextAsync($"{Loc.Quote(ColVerseText(col, verse).Trim())} – {Label(r)} ({t.ShortName}){license}");
             StatusText.Text = L("{0} kopiert.", Label(r));
         });
+        Item(L("Link zur Stelle kopieren (öffnet BibleStudy)"), async () =>
+        {
+            if (TopLevel.GetTopLevel(this)?.Clipboard is not { } cb) return;
+            var url = VerseLink.ToUrl(r.Book, r.Chapter, r.Verse, r.Verse);
+            await cb.SetTextAsync(url);
+            StatusText.Text = L("Link kopiert: {0}", url);
+        });
         Item(L("Vorlesen ab hier"), () => _ = SpeakForeignAsync(col, verse));
         menu.Items.Add(new Separator());
         menu.Items.Add(Group(L("Mehr mit diesem Vers"),
             Make(L("Auf dem Beamer zeigen"), () => _ = ProjectVersesAsync(r, r.Verse)),
             Make(L("Zum Auswendiglernen"), () => { Memory.Add(MemoryKey(r), DateTime.Now); StatusText.Text = L("{0} zum Auswendiglernen hinzugefügt.", Label(r)); }),
             Make(L("Zur Leseliste"), () => AddToQueue([r])),
-            Make(L("Zum To-do hinzufügen"), () => { _vault.AddTodo(L("{0} studieren", Label(r)), r); RefreshTodos(); StatusText.Text = L("To-do zu {0} angelegt.", Label(r)); })));
+            Make(L("Zum To-do hinzufügen"), () => { _vault.AddTodo(L("{0} studieren", Label(r)), r); RefreshTodos(); StatusText.Text = L("To-do zu {0} angelegt.", Label(r)); }),
+            new Separator(),
+            Make(L("Neues Dokument aus diesem Vers"), () =>
+            {
+                SetPanelOpen(true); SideTabs.SelectedIndex = KnowledgeTab;
+                OpenDocument(new Document(0, Label(r), $"## {Label(r)}\n\n> {ColVerseText(col, verse).Trim()}\n> ({t.ShortName})\n\n{L("Gedanken:")}\n\n", null, false, DateTime.Now, AutoTags(r).ToList()));
+            }),
+            Make(_doc is null ? L("In offenes Dokument einfügen (kein Dokument offen)") : L("In „{0}“ einfügen", Shorten(_doc.Title, 30)),
+                () => { SetPanelOpen(true); SideTabs.SelectedIndex = KnowledgeTab; InsertIntoDoc(L("> {0}\n> — {1}\n\n", ColVerseText(col, verse).Trim(), Label(r)), null); }, _doc is not null)));
         var study = new List<Control>
         {
             Make(L("Grundtext Wort für Wort"), () => { SetPanelOpen(true); SideTabs.SelectedIndex = GrundtextTab; _ = ShowGrundtextAsync(r); }),
             Make(L("Querverweise"), () => { SetPanelOpen(true); SideTabs.SelectedIndex = 4; _ = ShowXrefsAsync(r); }),
+            Make(L("Eigenen Querverweis setzen …"), () => ShowMyXrefEditor(r, box)),
         };
+        if (TextVariants.IsNewTestament(r.Book)) study.Add(Make(L("Lesarten der griechischen Ausgaben"), () => _ = ShowVariantsAsync(r)));
         if (CommentariesOn) study.Add(Make(L("Kommentar zu diesem Vers"), () => OpenCommentary(r)));
         menu.Items.Add(Group(L("Studium"), [.. study]));
         menu.ShowAt(box, showAtPointer: !AppPlatform.IsMobile);
@@ -214,16 +290,19 @@ public partial class MainWindow
     /// <summary>Marks the whole verse (or the selected words of it) of such a column, in its own place.</summary>
     void MarkForeign(int col, VerseRef r, TranslationInfo t, string hex, (int Start, int End, string Text)? words)
     {
-        if (words is { } w) _vault.AddMark(t.Id, r, w.Start, w.End, w.Text, hex, "", null, AutoTags(r), r.Verse);
+        var target = MarkTargetFolder();
+        var before = target is null ? null : MarkIdsHere();
+        if (words is { } w) _vault.AddMark(t.Id, r, w.Start, w.End, w.Text, hex, "", target, AutoTags(r), r.Verse);
         else
         {
             var same = ColState(col)?.Marks.FirstOrDefault(m => m.WholeVerse && m.Ref.Verse == r.Verse && m.LastVerse == r.Verse);
             if (same is not null) _vault.UpdateMark(same.Id, hex, same.Note, same.FolderId, same.Tags);   // marked again: only the color changes
-            else _vault.AddMark(Mark.AnyTranslation, r, -1, -1, ColVerseText(col, r.Verse).Trim(), hex, "", null, AutoTags(r), r.Verse);
+            else _vault.AddMark(Mark.AnyTranslation, r, -1, -1, ColVerseText(col, r.Verse).Trim(), hex, "", target, AutoTags(r), r.Verse);
         }
         RefreshCollection();
         AfterForeignChange();
         StatusText.Text = L("Markiert: {0}", words is { } ww ? Loc.Quote(Shorten(ww.Text, 40)) : Label(r));
+        if (target is long f && before is not null) AfterMarkedIntoFolder(f, before);
     }
 
     void UnmarkForeign(List<Mark> marks, VerseRef r)

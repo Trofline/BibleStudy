@@ -35,11 +35,12 @@ public partial class MainWindow
         {
             Text = L("Eine Perikope ist ein zusammenhängender Abschnitt der Bibel, zum Beispiel eine Erzählung, ein Gleichnis oder eine Rede. Wähle unten „Von Vers … bis …“ (oder „Ganzes Kapitel“) und klicke auf „Analysieren“. Du siehst den Abschnitt dann in Bildern: Wortarten, Verbformen, Schlüsselwörter und wo sie vorkommen, Rhythmus der Verse, Satzbau und wie die Sätze verbunden sind. Ausgewertet aus dem griechischen oder hebräischen Text."),
             Classes = { "caption" }, TextWrapping = TextWrapping.Wrap,
+            MaxLines = IsPhone ? 3 : 0, TextTrimming = IsPhone ? TextTrimming.WordEllipsis : TextTrimming.None,   // a phone: eight lines of it pushed the buttons down
         });
-        var go = new Button { Content = L("Analysieren"), Classes = { "primary" }, Padding = new(14, 0), Height = 32 };
-        var all = new Button { Content = L("Ganzes Kapitel"), Padding = new(12, 0), Height = 32 };
-        var save = new Button { Content = L("Als Bild speichern"), Padding = new(12, 0), Height = 32 };
-        var chiasm = new Button { Content = L("Chiasmus-Finder"), Padding = new(12, 0), Height = 32 };
+        var go = new Button { Content = L("Analysieren"), Classes = { "primary" }, Padding = new(14, 0), Height = 32, VerticalContentAlignment = VerticalAlignment.Center, VerticalAlignment = VerticalAlignment.Center };
+        var all = new Button { Content = L("Ganzes Kapitel"), Padding = new(12, 0), Height = 32, VerticalContentAlignment = VerticalAlignment.Center, VerticalAlignment = VerticalAlignment.Center };
+        var save = new Button { Content = L("Als Bild speichern"), Padding = new(12, 0), Height = 32, VerticalContentAlignment = VerticalAlignment.Center, VerticalAlignment = VerticalAlignment.Center };
+        var chiasm = new Button { Content = L("Chiasmus-Finder"), Padding = new(12, 0), Height = 32, VerticalContentAlignment = VerticalAlignment.Center, VerticalAlignment = VerticalAlignment.Center };
         ToolTip.SetTip(chiasm, L("Sucht Spiegelaufbauten (A B C … C B A) im Kapitel oder im ganzen Buch"));
         chiasm.Click += async (_, _) => await ShowChiasmFinderAsync();
         go.Click += async (_, _) => await RunPericopeAsync();

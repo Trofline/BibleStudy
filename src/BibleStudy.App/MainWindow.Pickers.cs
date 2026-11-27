@@ -273,9 +273,10 @@ public partial class MainWindow
             var content = new StackPanel
             {
                 Spacing = 1, HorizontalAlignment = HorizontalAlignment.Left,
-                Children = { new TextBlock { Text = t.Name, FontWeight = FontWeight.SemiBold, TextTrimming = TextTrimming.CharacterEllipsis }, new TextBlock { Text = $"{t.ShortName} · {Shorten(license, 40)}", Classes = { "caption" }, TextTrimming = TextTrimming.CharacterEllipsis } },
+                // one line each, cut with "…" (the phone style lets the text of a button wrap: a long name took both lines and hid the second)
+                Children = { new TextBlock { Text = t.Name, FontWeight = FontWeight.SemiBold, TextTrimming = TextTrimming.CharacterEllipsis, TextWrapping = TextWrapping.NoWrap }, new TextBlock { Text = $"{t.ShortName} · {Shorten(license, 40)}", Classes = { "caption" }, TextTrimming = TextTrimming.CharacterEllipsis, TextWrapping = TextWrapping.NoWrap } },
             };
-            var b = new Button { Content = content, Width = PW(340), Height = 52, Margin = new(0, 0, 6, 6), Padding = new(12, 0), CornerRadius = new(10), HorizontalContentAlignment = HorizontalAlignment.Left,
+            var b = new Button { Content = content, Width = PW(340), Height = 52, Margin = new(0, 0, 6, 6), Padding = new(12, 0, 38, 0), CornerRadius = new(10), HorizontalContentAlignment = HorizontalAlignment.Left,
                 Background = t.Id == current ? Res("BsAccentSoft") : Res("BsSurface2"), Foreground = Res("BsText") };
             b.Classes.Add("ghost");
             b.Click += (_, _) => { TranslationBox.SelectedItem = tr; flyout!.Hide(); };
@@ -291,14 +292,14 @@ public partial class MainWindow
             }
             b.ContextFlyout = menu;
             b.Margin = new(0);
-            var pen = new Button { Content = "✎", Classes = { "tool" }, Width = 28, Height = 28, Padding = new(0), HorizontalAlignment = HorizontalAlignment.Right, VerticalAlignment = VerticalAlignment.Top, Margin = new(0, 4, 4, 0) };
+            var pen = new Button { Content = "✎", Classes = { "tool" }, Width = _phone ? 36 : 28, Height = _phone ? 36 : 28, Padding = new(0), HorizontalAlignment = HorizontalAlignment.Right, VerticalAlignment = VerticalAlignment.Top, Margin = new(0, 4, 4, 0) };
             ToolTip.SetTip(pen, L("Umbenennen …"));
             pen.Click += (_, _) => { flyout!.Hide(); ShowRenameTranslation(tr); };
             var tile = new Grid { Width = PW(340), Height = 52, Margin = new(0, 0, 6, 6), Children = { b, pen }, Tag = SearchQuery.Fold($"{t.Name} {t.ShortName} {t.EnglishName}", true) };
             panel.Children.Add(tile);
         }
         // the hint belongs here (it used to stand under the books, where it meant nothing)
-        panel.Children.Add(new TextBlock { Text = L("Rechtsklick auf eine Übersetzung: eigenen Namen vergeben"), Classes = { "caption" }, Margin = new(2, 4, 0, 0), Width = PW(692), TextWrapping = TextWrapping.Wrap });
+        if (!_phone) panel.Children.Add(new TextBlock { Text = L("Rechtsklick auf eine Übersetzung: eigenen Namen vergeben"), Classes = { "caption" }, Margin = new(2, 4, 0, 0), Width = PW(692), TextWrapping = TextWrapping.Wrap });
         // a language with a hundred translations (English) needs a search, as the books and the languages have one
         var search = new TextBox { PlaceholderText = L("Übersetzung suchen …"), Margin = new(0, 0, 0, 10), Width = PW(692), HorizontalAlignment = HorizontalAlignment.Left };
         TapToType(search);

@@ -1,4 +1,5 @@
 using System.Net;
+using BibleStudy.Core.Import;
 using BibleStudy.Core.Models;
 using BibleStudy.Core.Storage;
 using BibleStudy.Core.Sync;
@@ -216,5 +217,99 @@ public class LanSyncTests : IDisposable
         var r = await b.Sync.SyncWithAsync(a.AsPeer());
         Assert.NotNull(r.Error);
         Assert.Empty(b.Vaults.Names());
+    }
+
+    static ParsedBible Bible(string name, string shortName, string word) => new(name, shortName, "de",
+        [
+            new ParsedVerse("GEN", 1, 1, [new Segment("Im Anfang", false, ["H7225"]), new Segment(" schuf Gott " + word), new Segment("", false, null, 0)]),
+            new ParsedVerse("JHN", 3, 16, [new Segment("Denn also hat Gott die Welt geliebt", true, ["G3779"])]),
+        ],
+        [("GEN", 1, new Footnote(0, 1, "Fußnote von " + name))],
+        [("GEN", 1, 1, "Die Schöpfung")]);
+
+    static string Canon(LocalBibleStore store, string name)
+    {
+        var id = store.GetTranslationsAsync().Result.Single(t => t.Name == name).Id;
+        return BibleTextFile.Write(store.Load(id)!);
+    }
+
+    [Fact]
+    public async Task WholeTranslations_GoToTheOtherDevice_AndADeletedOneDoesNotComeBack()
+    {
+        var key = SyncCode.NewKey();
+        using var a = new Device(Path.Combine(_dir, "a"), key, "PC");
+        using var b = new Device(Path.Combine(_dir, "b"), key, "Handy");
+        var la = new LocalBibleStore(Path.Combine(a.Root, "local.db"));
+        var lb = new LocalBibleStore(Path.Combine(b.Root, "local.db"));
+        var imported = new List<string>();
+        a.Sync.Bibles = new LocalBibles(la);
+        b.Sync.Bibles = new LocalBibles(lb, id => { lock (imported) imported.Add(id); });
+        la.Save(Bible("Schlachter 2000", "SCH2000", "Himmel"));
+        la.Save(Bible("Elberfelder", "ELB", "Erde"));
+        lb.Save(Bible("Luther 1912", "LUT", "Licht"));
+        lb.Save(Bible("Elberfelder", "ELB", "anders"));   // the same name on both sides: each keeps its own
+
+        var r = await a.Sync.SyncWithAsync(b.AsPeer());
+        Assert.Null(r.Error);
+        Assert.Equal(2, r.Bibles);   // one came, one went
+        foreach (var name in new[] { "Schlachter 2000", "Luther 1912" }) Assert.Equal(Canon(la, name), Canon(lb, name));
+        var sch = lb.Load(lb.GetTranslationsAsync().Result.Single(t => t.Name == "Schlachter 2000").Id)!;
+        Assert.Equal(["H7225"], sch.Verses[0].Segments[0].Strongs);
+        Assert.True(sch.Verses[1].Segments[0].WordsOfJesus);
+        Assert.Single(sch.Footnotes); Assert.Single(sch.Headings!);
+        Assert.Contains("anders", Canon(lb, "Elberfelder"));
+        Assert.Contains("Erde", Canon(la, "Elberfelder"));
+        Assert.Single(imported);
+
+        // nothing new: nothing goes over again
+        Assert.Equal(0, (await a.Sync.SyncWithAsync(b.AsPeer())).Bibles);
+        Assert.Equal(0, (await b.Sync.SyncWithAsync(a.AsPeer())).Bibles);
+
+        // deleted on the phone: the computer does not bring it back, the other way round neither
+        lb.Remove(lb.GetTranslationsAsync().Result.Single(t => t.Name == "Schlachter 2000").Id);
+        Assert.Equal(0, (await a.Sync.SyncWithAsync(b.AsPeer())).Bibles);
+        Assert.Equal(0, (await b.Sync.SyncWithAsync(a.AsPeer())).Bibles);
+        Assert.DoesNotContain(lb.GetTranslationsAsync().Result, t => t.Name == "Schlachter 2000");
+
+        // a new one later still goes over
+        lb.Save(Bible("Menge", "MEN", "Wasser"));
+        Assert.Equal(1, (await a.Sync.SyncWithAsync(b.AsPeer())).Bibles);
+        Assert.Equal(Canon(lb, "Menge"), Canon(la, "Menge"));
+    }
+
+    [Fact]
+    public async Task Translations_StayWhereTheyAre_WhenTheOtherDeviceSendsNone()
+    {
+        var key = SyncCode.NewKey();
+        using var a = new Device(Path.Combine(_dir, "a"), key, "PC");
+        using var b = new Device(Path.Combine(_dir, "b"), key, "Handy");   // like an older version: lists no translations
+        var la = new LocalBibleStore(Path.Combine(a.Root, "local.db"));
+        a.Sync.Bibles = new LocalBibles(la);
+        la.Save(Bible("Schlachter 2000", "SCH2000", "Himmel"));
+        a.Vault("Standard").SetNote(new VerseRef("Joh", 3, 16), "Notiz");
+
+        var r = await a.Sync.SyncWithAsync(b.AsPeer());
+        Assert.Null(r.Error);
+        Assert.Equal(0, r.Bibles);
+        Assert.Single(b.Vault("Standard").GetNotes());   // the notes went over as always
+
+        // switched off on the computer: nothing goes, even to a device that would take it
+        var lb = new LocalBibleStore(Path.Combine(b.Root, "local.db"));
+        b.Sync.Bibles = new LocalBibles(lb);
+        a.Cfg.Bibles = false;
+        Assert.Equal(0, (await a.Sync.SyncWithAsync(b.AsPeer())).Bibles);
+        Assert.Equal(0, (await b.Sync.SyncWithAsync(a.AsPeer())).Bibles);
+        Assert.Empty(await lb.GetTranslationsAsync());
+    }
+
+    [Fact]
+    public void PackedTranslation_IsCheckedBeforeItIsRead()
+    {
+        var packed = LocalBibles.Pack(Bible("Schlachter 2000", "SCH2000", "Himmel"));
+        Assert.StartsWith("#BIBLESTUDY-TXT", LocalBibles.Unpack(packed));
+        Assert.Null(LocalBibles.Unpack([1, 2, 3, 4]));
+        using var ms = new MemoryStream();
+        using (var gz = new System.IO.Compression.GZipStream(ms, System.IO.Compression.CompressionLevel.Fastest, true)) gz.Write("nur ein Text"u8);
+        Assert.Null(LocalBibles.Unpack(ms.ToArray()));
     }
 }

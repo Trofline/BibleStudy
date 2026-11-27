@@ -157,12 +157,8 @@ public partial class MainWindow
         VaultTopBtn.Click += (_, _) =>
         {
             var menu = new MenuFlyout();
-            foreach (var n in VaultNames())
-            {
-                var name2 = n; var item = new MenuItem { Header = (name2 == _vault.Name ? "✓  " : "     ") + name2 };
-                item.Click += async (_, _) => { if (name2 != _vault.Name) await SwitchVaultAsync(name2); };
-                menu.Items.Add(item);
-            }
+            // a vault with folders opens a list: the folder chosen there is the one new marks go straight into
+            foreach (var n in VaultNames()) menu.Items.Add(VaultMenuItem(n));
             menu.Items.Add(new Separator());
             var neu = new MenuItem { Header = L("＋  Neuer Vault …") }; neu.Click += (_, _) => flyout.ShowAt(Anchor(VaultTopBtn));
             menu.Items.Add(neu);
@@ -237,6 +233,7 @@ public partial class MainWindow
             else if (SideTabs.SelectedIndex is SentenceTab or PericopeTab) TabShown(SideTabs.SelectedIndex);
             else if (SideTabs.SelectedIndex == 2 && _notesStale) RefreshNotesTree();
             SyncNav();
+            MaybeTabTour(SideTabs.SelectedIndex);
         };
         if (GroupOf(SideTabs.SelectedIndex) is { Windowed: true }) SideTabs.SelectedIndex = 0;
         _lastSideIndex = SideTabs.SelectedIndex;

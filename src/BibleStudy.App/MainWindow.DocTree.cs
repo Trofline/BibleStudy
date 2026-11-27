@@ -56,14 +56,16 @@ public partial class MainWindow
     // ---- the tree ------------------------------------------------------------------------------------------------------
 
     /// <summary>With "all vaults" (or shared vaults): the documents of the other vaults under their own heading; a click opens the vault and the document.</summary>
-    void AddForeignDocs(string? query)
+    int AddForeignDocs(string? query)
     {
+        var shown = 0;
         foreach (var name in ShownVaults().Skip(1))
         {
             List<Document> docs;
             try { docs = StoreOf(name).GetDocuments(string.IsNullOrEmpty(query) ? null : query).Where(d => !d.IsTemplate).ToList(); }
             catch { continue; }
             if (docs.Count == 0) continue;
+            shown += docs.Count;
             DocTree.Children.Add(new TextBlock { Text = "◆ " + name + "   ·   " + docs.Count, FontWeight = FontWeight.SemiBold, Margin = new(4, 14, 0, 4) });
             foreach (var d in docs)
             {
@@ -87,6 +89,7 @@ public partial class MainWindow
                 DocTree.Children.Add(row);
             }
         }
+        return shown;
     }
 
     /// <summary>A document of another vault: that vault becomes the active one, then the document opens.</summary>
@@ -96,10 +99,11 @@ public partial class MainWindow
         if (_vault.Name == vault && _vault.GetDocuments().FirstOrDefault(x => x.Id == id) is { } fresh) OpenDocument(fresh);
     }
 
-    void BuildDocTree(List<Document> docs, bool flat)
+    /// <summary>The list; returns how many documents of other vaults are shown below the own ones.</summary>
+    int BuildDocTree(List<Document> docs, bool flat)
     {
         BuildOwnDocTree(docs, flat);
-        if (ShownVaults().Count > 1) AddForeignDocs(DocSearchBox.Text?.Trim());
+        return ShownVaults().Count > 1 ? AddForeignDocs(DocSearchBox.Text?.Trim()) : 0;
     }
 
     void BuildOwnDocTree(List<Document> docs, bool flat)
@@ -115,15 +119,38 @@ public partial class MainWindow
         }
         var known = folders.Select(f => f.Id).ToHashSet();
         var groups = folders.Select(f => (f.Id, f.Name, f.Depth, Docs: docs.Where(d => d.FolderId == f.Id).ToList())).ToList();
-        groups.Add((0, L("Ohne Ordner"), 0, docs.Where(d => d.FolderId is not long fid || !known.Contains(fid)).ToList()));
+        var loose = (0L, L("Ohne Ordner"), 0, docs.Where(d => d.FolderId is not long fid || !known.Contains(fid)).ToList());
+        if (IsPhone)
+        {
+            // phone: empty folders (also nothing further down) go below "Ohne Ordner", so the documents come first
+            var (filled, empty) = SplitEmptySubtrees(groups, g => g.Depth, g => g.Docs.Count > 0);
+            groups = [.. filled, loose, .. empty];
+        }
+        else groups.Add(loose);
         foreach (var (id, name, depth, inFolder) in groups)
         {
             var open = !_closedDocFolders.Contains(id);
             DocTree.Children.Add(FolderHeader(id, name, inFolder.Count, open, depth));
             if (!open) continue;
-            if (inFolder.Count == 0) DocTree.Children.Add(new TextBlock { Text = L("leer – hierher ziehen"), Classes = { "caption" }, Margin = new(30, 0, 0, 4), Opacity = 0.7 });
+            if (inFolder.Count == 0 && !IsPhone) DocTree.Children.Add(new TextBlock { Text = L("leer – hierher ziehen"), Classes = { "caption" }, Margin = new(30, 0, 0, 4), Opacity = 0.7 });
             foreach (var d in inFolder) DocTree.Children.Add(DocRow(d, 16));
         }
+    }
+
+    /// <summary>Splits a folder tree (in display order, with depths) into the top-level subtrees that hold something
+    /// and those where nothing is in the folder or below it; the order inside each part stays.</summary>
+    static (List<T> Filled, List<T> Empty) SplitEmptySubtrees<T>(List<T> items, Func<T, int> depth, Func<T, bool> hasOwn)
+    {
+        List<T> filled = [], empty = [];
+        for (var i = 0; i < items.Count;)
+        {
+            var end = i + 1;
+            while (end < items.Count && depth(items[end]) > depth(items[i])) end++;
+            var tree = items.GetRange(i, end - i);
+            (tree.Any(hasOwn) ? filled : empty).AddRange(tree);
+            i = end;
+        }
+        return (filled, empty);
     }
 
     Control FolderHeader(long id, string name, int count, bool open, int depth = 0)
@@ -185,9 +212,10 @@ public partial class MainWindow
         var date = new TextBlock { Text = d.Updated.ToLocalTime().ToString("M", Loc.Culture), Classes = { "caption" }, VerticalAlignment = VerticalAlignment.Center, Margin = new(8, 0, 0, 0) };
         DockPanel.SetDock(date, Dock.Right);
         head.Children.Add(date);
-        var left = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 8 };
+        // a dock, not a row: in a row the title is as wide as its text and ran over the date on a narrow screen; here it ends with "…"
+        var left = new DockPanel();
         if (cat is not null)
-            left.Children.Add(new Border { Width = 9, Height = 9, CornerRadius = new(5), VerticalAlignment = VerticalAlignment.Center, Background = new SolidColorBrush(Color.Parse(CategoryColors[Math.Clamp(cat.Color, 0, CategoryColors.Length - 1)].Hex)) });
+            left.Children.Add(new Border { Width = 9, Height = 9, CornerRadius = new(5), Margin = new(0, 0, 8, 0), VerticalAlignment = VerticalAlignment.Center, Background = new SolidColorBrush(Color.Parse(CategoryColors[Math.Clamp(cat.Color, 0, CategoryColors.Length - 1)].Hex)) });
         left.Children.Add(new TextBlock { Text = (d.IsTemplate ? "◇ " : "") + (d.Title.Length > 0 ? d.Title : L("(ohne Titel)")), FontWeight = FontWeight.SemiBold, TextTrimming = TextTrimming.CharacterEllipsis });
         head.Children.Add(left);
 
@@ -284,6 +312,8 @@ public partial class MainWindow
         row.PointerPressed += (_, e) =>
         {
             if (!e.GetCurrentPoint(row).Properties.IsLeftButtonPressed) return;
+            // a finger: no drag (moving it scrolls the list), a tap on the spot opens; the folder of a document is set in its editor or its menu
+            if (e.Pointer.Type == PointerType.Touch) { TouchTap.Defer(row, e, click); return; }
             _dragDoc = d; _dragFrom = e.GetPosition(DocHost); _dragging = false;
             e.Pointer.Capture(row);
         };

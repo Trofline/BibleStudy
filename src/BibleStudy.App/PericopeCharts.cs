@@ -189,7 +189,7 @@ public static class PericopeCharts
             Canvas.SetLeft(band, labelW); Canvas.SetTop(band, i * rowH + 2);
             canvas.Children.Add(band);
             var name = new TextBlock { Text = label(k), FontSize = 12.5, Width = labelW - 8, TextTrimming = TextTrimming.CharacterEllipsis, VerticalAlignment = VerticalAlignment.Center };
-            if (click is not null) { name.Cursor = new Cursor(StandardCursorType.Hand); name.PointerPressed += (_, e) => { if (e.GetCurrentPoint(name).Properties.IsLeftButtonPressed) click(k); }; }
+            if (click is not null) { name.Cursor = new Cursor(StandardCursorType.Hand); name.OnPress((_, e) => { if (e.Pointer.Type == PointerType.Touch || e.GetCurrentPoint(name).Properties.IsLeftButtonPressed) click(k); }); }
             Canvas.SetLeft(name, 0); Canvas.SetTop(name, i * rowH + 4);
             canvas.Children.Add(name);
             foreach (var v in k.Verses)
@@ -265,7 +265,7 @@ public static class PericopeCharts
             var bar = new Border { Width = colW * 0.72, Height = sh, CornerRadius = new(3), Background = new SolidColorBrush(Color.Parse(r.SubClauses > 0 ? "#4C78A8" : "#72B7B2")) };
             ToolTip.SetTip(bar, $"{verses(r)} · {r.Words} / {r.Clauses}");
             Canvas.SetLeft(bar, i * colW + colW * 0.14); Canvas.SetTop(bar, top + h - sh);
-            if (click is not null) { bar.Cursor = new Cursor(StandardCursorType.Hand); bar.PointerPressed += (_, e) => { if (e.GetCurrentPoint(bar).Properties.IsLeftButtonPressed) click(r); }; }
+            if (click is not null) { bar.Cursor = new Cursor(StandardCursorType.Hand); bar.OnPress((_, e) => { if (e.Pointer.Type == PointerType.Touch || e.GetCurrentPoint(bar).Properties.IsLeftButtonPressed) click(r); }); }
             canvas.Children.Add(bar);
             var clauses = Caption($"{r.Clauses}", 10.5, false, TextAlignment.Center); clauses.Width = colW;
             Canvas.SetLeft(clauses, i * colW); Canvas.SetTop(clauses, top + h - sh - 17);

@@ -91,6 +91,7 @@ public partial class MainWindow
         {
             if (!e.GetCurrentPoint(this).Properties.IsLeftButtonPressed) return;
             dragFrom = e.GetPosition(this).X; startWidth = SidePanel.Width;
+            _sideDragging = true; _sideDragAt = DateTime.UtcNow;
             e.Pointer.Capture(SideSplitter);
         };
         SideSplitter.PointerMoved += (_, e) =>
@@ -99,10 +100,21 @@ public partial class MainWindow
             SidePanel.Width = Math.Clamp(startWidth - (e.GetPosition(this).X - from), 300, Math.Max(300, Bounds.Width - 420));
             _settings.SideWidth = SidePanel.Width;
         };
-        SideSplitter.PointerReleased += (_, e) => { if (dragFrom is null) return; dragFrom = null; e.Pointer.Capture(null); SaveSettings(); };
-        SideSplitter.PointerEntered += (_, _) => SideSplitter.Background = Res("BsBorder") ?? Brushes.Gray;
-        SideSplitter.PointerExited += (_, _) => { if (dragFrom is null) SideSplitter.Background = Brushes.Transparent; };
+        SideSplitter.PointerReleased += (_, e) =>
+        {
+            if (dragFrom is null) return;
+            dragFrom = null; _sideDragging = false; e.Pointer.Capture(null); SaveSettings();
+            if (_afterSideDrag is { } after) { _afterSideDrag = null; DispatcherTimer.RunOnce(after, TimeSpan.FromMilliseconds(150)); }
+        };
+        SideSplitter.PointerCaptureLost += (_, _) => { dragFrom = null; _sideDragging = false; };
+        SideSplitter.PointerEntered += (_, _) => { SideSplitter.Background = Res("BsBorder") ?? Brushes.Gray; SideGrip.Bind(Border.BackgroundProperty, this.GetResourceObservable("BsAccent")); };
+        SideSplitter.PointerExited += (_, _) => { if (dragFrom is null) { SideSplitter.Background = Brushes.Transparent; SideGrip.Bind(Border.BackgroundProperty, this.GetResourceObservable("BsBorder")); } };
     }
+
+    /// <summary>The edge of the side panel is being dragged (and when it was pressed): the short tour shows its bubble again afterwards instead of ending.</summary>
+    bool _sideDragging;
+    DateTime _sideDragAt;
+    Action? _afterSideDrag;
 
     void SetPanelOpen(bool open)
     {

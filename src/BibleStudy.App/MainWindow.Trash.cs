@@ -158,7 +158,7 @@ public partial class MainWindow
         Paint(false);
         row.PointerEntered += (_, _) => Paint(true);
         row.PointerExited += (_, _) => Paint(false);
-        row.PointerPressed += (_, e) =>
+        row.OnPress((_, e) =>
         {
             var props = e.GetCurrentPoint(row).Properties;
             ExplorerHost.Focus();
@@ -170,7 +170,7 @@ public partial class MainWindow
             else if (e.KeyModifiers.HasFlag(Mods.Ctrl)) { if (!_trSel.Remove(t.Id)) _trSel.Add(t.Id); _trAnchor = t.Id; }
             else { _trSel.Clear(); _trSel.Add(t.Id); _trAnchor = t.Id; }
             FillTrashList();
-        };
+        });
         row.ContextMenu = new ContextMenu();
         row.ContextMenu.Opening += (_, _) =>
         {

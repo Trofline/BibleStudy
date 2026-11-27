@@ -21,7 +21,7 @@ Alle sehen eine **Prüfzahl**. Ist sie bei allen gleich, sitzt niemand dazwische
 
 **Wie das funktioniert:** Die Programme verbinden sich nicht direkt miteinander (das scheitert bei vielen Anschlüssen), sondern jedes für sich mit einem kleinen **Vermittler-Server** im Internet, so wie ein Browser eine Webseite öffnet. Der Vermittler reicht die Nachrichten nur weiter. Alles ist **Ende-zu-Ende verschlüsselt**: Der Schlüssel entsteht auf euren Geräten aus dem Raum-Code; der Vermittler kennt den Code nicht (nur eine Prüfsumme davon als Raumname) und kann nichts lesen. Er speichert nichts. Ihr braucht kein Konto und müsst nichts einrichten.
 
-**Tageslimit:** Der Vermittler läuft im kostenlosen Tarif und hat deshalb ein Tageslimit für alle Nutzer zusammen. Ist es aufgebraucht, verbindet euch bis zum nächsten Tag **im selben Netzwerk** (nächster Abschnitt). Seid ihr an verschiedenen Orten, tretet alle demselben kostenlosen **ZeroTier**-Netzwerk bei (zerotier.com: eine Person erstellt ein Netzwerk, die anderen treten mit dessen Netzwerk-ID bei). Danach seid ihr für BibleStudy „im selben Netzwerk“ und verbindet euch ganz ohne Vermittler.
+**Tageslimit:** Der Vermittler läuft im kostenlosen Tarif und hat deshalb ein Tageslimit für alle Nutzer zusammen. Ist es aufgebraucht, verbindet euch bis zum nächsten Tag **im selben Netzwerk** (nächster Abschnitt). Seid ihr an verschiedenen Orten, tretet alle demselben kostenlosen **ZeroTier**-Netzwerk bei (zerotier.com: eine Person erstellt ein Netzwerk, die anderen treten mit dessen Netzwerk-ID bei). Danach seid ihr für BibleStudy „im selben Netzwerk“ und verbindet euch ganz ohne Vermittler. Zur Größe: Zwei Personen mit Kamera, Ton und Zeiger können zusammen rund 25 Stunden am Tag im Raum sein; die Bildqualität ändert daran kaum etwas. Das Limit beginnt jeden Tag um 1 Uhr nachts (deutsche Winterzeit) neu.
 
 ### Im selben Netzwerk (ohne Codes)
 
@@ -40,12 +40,16 @@ Ihr könnt beliebig viele sein. Wer schon verbunden ist, holt unter **Weitere Pe
 
 ### Freunde
 
-Bei einer Person im selben Netzwerk erscheint **Als Freund merken**. Danach steht sie unter **Freunde**, und ein Tipp verbindet euch, auch wenn sie gerade nicht in der Liste auftaucht (dann über die zuletzt benutzte Adresse). Mit **Automatisch annehmen** wirst du bei diesem Freund nicht mehr gefragt. Erkannt wird ein Freund an einem gemeinsamen Geheimnis, das beim Merken ausgetauscht wird, nicht nur am Namen.
+Bei einer Person im selben Netzwerk erscheint **Als Freund merken**, ebenso in einem Raum, in dem nur ihr zwei seid. Danach steht sie unter **Freunde**, und ein Tipp verbindet euch, auch wenn sie gerade nicht in der Liste auftaucht (dann über die zuletzt benutzte Adresse). Seid ihr an verschiedenen Orten, tippt ihr beide auf **Übers Internet**: Ihr trefft euch in eurem eigenen Raum beim Vermittler, ohne Raum-Code. Das verbraucht vom Tageslimit genau so viel wie ein Raum mit Code und nichts, solange keiner von euch ihn offen hat. Mit **Automatisch annehmen** wirst du bei diesem Freund nicht mehr gefragt. Erkannt wird ein Freund an einem gemeinsamen Geheimnis, das beim Merken ausgetauscht wird, nicht nur am Namen.
 
 ## 10.2 Was ihr tun könnt
 
-- **Chatten.** Du siehst, wenn die andere Person schreibt. Ist die Seite zu, meldet ein kleiner Hinweis neue Nachrichten.
+- **Chatten.** Der Chat ist eine eigene Kachel mit fester Höhe: Neue Nachrichten erscheinen unten und bleiben im Blick, die Knöpfe drumherum verrutschen nicht. Hast du nach oben gescrollt, bringt dich **Neue Nachrichten ↓** wieder nach unten. Du siehst, wenn die andere Person schreibt. Ist die Seite zu, meldet ein kleiner Hinweis neue Nachrichten.
+- **Chat gespeichert.** Chat und geteilte Verse werden nur auf deinem Gerät gespeichert, für jede Person getrennt. Bist du wieder mit derselben Person im Raum (erkannt an ihrer festen Kennung, nicht am Namen), steht euer bisheriger Chat oben; mit jemand anderem beginnt ein neuer. Ausschalten oder leeren: **Einstellungen → Meine Daten → Chats**.
 - **Leiten:** Wer auf **Ich leite** tippt, gibt die Stelle vor. Alle anderen springen automatisch mit, bis sie selbst blättern; dann erscheint **Wieder folgen**.
+- **Mitscrollen:** Solange jemand leitet, wird auch das Scrollen übertragen. Der Vers in der Mitte des Leiter-Fensters steht bei allen anderen ebenfalls in der Mitte, auch wenn Fenster und Schriftgrößen verschieden sind. Scrollst du selbst (Mausrad, Finger), hat das für drei Sekunden Vorrang.
+- **Durch einen Lesepfad führen:** Wer leitet, wählt unter **Durch einen Lesepfad führen** einen seiner Lesepfade und geht mit **Weiter** und **Zurück** Schritt für Schritt hindurch. Alle sehen, welcher Schritt es ist; die Verse des Schritts sind in der Farbe des Lesepfads eingerahmt. Mit **Lesepfad behalten** speichern die anderen den Pfad in ihrem Vault.
+- **Gleicher Bibeltext:** Jede Seite bildet aus dem Text des offenen Kapitels einen kurzen Fingerabdruck. Stimmt er überein (in der Personenliste steht dann „gleicher Bibeltext“), seht ihr die Auswahl der anderen genau auf den Wörtern (blau hinterlegt, schon während sie ziehen) und ihre Markierungen auf den markierten Wörtern. Bei verschiedenen Übersetzungen bleibt es beim Rahmen um den Vers.
 - **Fragen zum Text:** eine gemeinsame Liste. Jeder kann Fragen hinzufügen und abhaken, wenn sie besprochen sind.
 - **Gemeinsames Notizblatt:** eine Seite, an der alle schreiben (schreiben zwei gleichzeitig, gilt die zuletzt gesendete Fassung). Lässt sich als Dokument speichern.
 - **Reagieren:** auf eine Chatnachricht tippen oder für einen Vers **Reagieren** wählen (♥, Amen, ✓, !, ?). Eine Reaktion auf einen Vers erscheint kurz über dem Vers.
@@ -65,10 +69,10 @@ Bei einer Person im selben Netzwerk erscheint **Als Freund merken**. Danach steh
 Unter **Sprechen und Kamera**:
 
 - **Gedrückt halten zum Sprechen:** Solange du den Knopf drückst, hören dich die anderen (wie ein Funkgerät).
-- **Mikrofon an (Gespräch):** wie ein Anruf, bis du es wieder ausschaltest. Mit Kopfhörern gibt es kein Echo.
+- **Mikrofon an (Gespräch):** wie ein Anruf, bis du es wieder ausschaltest. Mit Kopfhörern gibt es kein Echo. Der Ton geht in voller Qualität (48 kHz) und nicht wie beim Telefon; Sprachnachrichten bleiben kleiner (16 kHz).
 - **Sprachnachricht:** antippen, sprechen, noch einmal antippen; höchstens 2 Minuten. Die anderen spielen sie mit **▶ Abspielen** ab.
 - **Kamera an:** Dein Bild erscheint bei allen als kleine Kachel; **Videos groß** zeigt alle Bilder in einem eigenen Fenster.
-- **Bildqualität:** unter **Mikrofon und Kamera wählen**: niedrig, mittel oder **HD (720p)** (Standard). Ruckelt das Bild oder kommt es spät an, wähle eine niedrigere Stufe: HD braucht für jede Person mit Kamera etwa 5 Mbit/s. Kommt das Bild nicht hinterher, lässt BibleStudy alte Bilder weg und zeigt immer das neueste, damit es nicht immer weiter verzögert.
+- **Bildqualität:** unter **Mikrofon und Kamera wählen**: niedrig, mittel, **HD (720p)** (Standard) oder **Full HD (1080p)**, dazu **30 oder 60 Bilder pro Sekunde**. Die Kamera geht als Videostrom (H.264): Gesendet wird nur, was sich von Bild zu Bild ändert. Pro Person mit Kamera braucht HD etwa 2,5 Mbit/s zum Senden, Full HD etwa 5 Mbit/s, mit 60 Bildern pro Sekunde die Hälfte mehr. Ruckelt das Bild oder kommt es spät an, wähle eine niedrigere Stufe. Kommt das Bild nicht hinterher, springt BibleStudy zum nächsten vollständigen Bild (höchstens zwei Sekunden), damit es nicht immer weiter verzögert. Alle brauchen dafür die neueste BibleStudy-Version. Auf dem Handy siehst du die Bilder der anderen.
 - **Die anderen hören** schaltet den Ton der anderen aus und an. Unter **Mikrofon und Kamera wählen** suchst du die Geräte aus.
 
 Unter Windows geht Sprechen ohne Zusatz. Für die Kamera (und unter Mac und Linux auch für den Ton) braucht BibleStudy das freie Programm **FFmpeg**: unter Windows im Download-Manager unter **Kamera und Ton** (rund 110 MB), am Mac mit `brew install ffmpeg`, unter Linux mit der Paketverwaltung (`sudo apt install ffmpeg`). Ist FFmpeg schon installiert, wird es benutzt. Auf dem Handy kommen Sprechen und Kamera später.

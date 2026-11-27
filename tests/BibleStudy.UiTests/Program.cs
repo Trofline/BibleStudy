@@ -200,7 +200,10 @@ firstSettings.TourPending = false;
 Check("no update question by itself during the first start", !askDuringFirstStart);
 Check("looking for updates by hand still works", askByHand);
 Check("updates are offered again afterwards", (bool)Call("UpdateMayAsk", false)! == true);
+// the question about the tab tours (first start) would otherwise come up in between and be taken for the setup
+firstSettings.TabToursAsked = true;
 var setupWin = Dlg(() => { firstSettings.SetupDone = false; return Call("RunSetupWizardAsync"); }, out _);
+for (var i = 0; i < 40 && setupWin.Title != "Einrichtung"; i++) { Pump(2); Thread.Sleep(50); setupWin = win.OwnedWindows.FirstOrDefault(w => w.IsVisible && w.Title == "Einrichtung") ?? setupWin; }
 Check("the open setup does not count as done", !firstSettings.SetupDone);
 Press2(Plain(setupWin).First(b => (b.Content as string) == "Überspringen"));
 Check("the closed setup counts as done", firstSettings.SetupDone);
@@ -920,6 +923,39 @@ Check("no sign where the mark is shown", !RunsOf((Control)F<System.Collections.I
     settingsP.PathArrows = false; RunTask("RedrawChapterAsync"); Settle(400);
     Check("paths: switched off, the margin is gone again", ((System.Collections.IList)typeof(BibleStudy.App.PathGutter).GetField("_badges", All)!.GetValue(gutter)!).Count == 0 && C<StackPanel>("ReaderPanel").Margin.Left < 1);
     settingsP.PathArrows = true;
+
+    // side by side, each column scrolling on its own, the right one with a passage of its own: the numbers stay in the margin of the main text,
+    // and a step has its bar under the verse of that column too
+    {
+        var syncBefore = settingsP.ParallelSync;
+        settingsP.ParallelSync = false;
+        typeof(MainWindow).GetMethod("AddColumn", All)!.Invoke(win, [null]); Settle(400);
+        var extrasP = (System.Collections.IList)typeof(MainWindow).GetField("_extras", All)!.GetValue(win)!;
+        var addedP = extrasP[extrasP.Count - 1]!;
+        addedP.GetType().GetProperty("Own")!.SetValue(addedP, ((string, int)?)("GEN", 1));
+        RunTask("RedrawChapterAsync"); Settle(800);
+        Check("paths side by side: the columns scroll on their own", (bool)typeof(MainWindow).GetField("_independent", All)!.GetValue(win)!);
+        var badgesP = (System.Collections.IList)typeof(BibleStudy.App.PathGutter).GetField("_badges", All)!.GetValue(gutter)!;
+        Check("paths side by side: the numbers of the steps are in the margin of the main text", badgesP.Count == 4, badgesP.Count.ToString());
+        Check("paths side by side: the text makes room for them", C<StackPanel>("ReaderPanel").Margin.Left >= 24, C<StackPanel>("ReaderPanel").Margin.ToString());
+        var colBoxesP = (List<Dictionary<int, Border>>)typeof(MainWindow).GetField("_colBoxes", All)!.GetValue(win)!;
+        var barP = colBoxesP.Count > 0 && colBoxesP[0].TryGetValue(9, out var b19) ? b19.GetLogicalDescendants().OfType<TextBlock>().Select(t => t.Text ?? "").ToList() : [];
+        Check("paths side by side: under 1,9 in the column with its own passage the step of the path", barP.Any(t => t.Contains("Testpfad · 2/5")), string.Join(" | ", barP.Where(t => t.Length < 60)));
+        if (colBoxesP.Count > 0 && colBoxesP[0].TryGetValue(3, out var b23))
+        {
+            b23.BringIntoView(); Settle(300);
+            var tb23 = b23.GetLogicalDescendants().OfType<SelectableTextBlock>().First();
+            var at23 = tb23.TranslatePoint(new Point(tb23.Bounds.Width / 2, 6), win)!.Value;
+            Call("SelectForeignWordAt", b23, at23);
+            Check("a long press in that column selects the word under the finger", tb23.SelectionEnd > tb23.SelectionStart, $"{tb23.SelectionStart}-{tb23.SelectionEnd}");
+            var picked = typeof(MainWindow).GetMethod("ForeignSelection", All)!.Invoke(win, [b23]);
+            Check("and it can be marked from the menu", picked is not null, "no selection");
+            Shot(win, "paths-side-by-side");
+        }
+        extrasP.Remove(addedP);
+        settingsP.ParallelSync = syncBefore;
+        RunTask("RedrawChapterAsync"); Settle(400);
+    }
     vp.DeleteReadingPath(pid);
     RunTask("RedrawChapterAsync"); Settle(300);
 }
@@ -989,7 +1025,7 @@ Check("no sign where the mark is shown", !RunsOf((Control)F<System.Collections.I
     ve.RenameFolder(folder, "Der Engel"); Call("RefreshExplorer"); Settle(300);
     Check("explorer path: a renamed folder keeps its path", ExBadges() == 4);
     // the quick way: onto the path used last
-    Check("explorer path: the verse menu offers the path used last", typeof(MainWindow).GetMethod("QuickPathItem", All)!.Invoke(win, [1]) is MenuItem qi && (qi.Header as string ?? "").Contains("Engel des Herrn"));
+    Check("explorer path: the verse menu offers the path used last", typeof(MainWindow).GetMethod("QuickPathItem", All)!.Invoke(win, [1, null]) is MenuItem qi && (qi.Header as string ?? "").Contains("Engel des Herrn"));
     // at the top (no folder) nothing shows
     Call("ExNavigate", (long?)null); Settle(300);
     Check("explorer path: elsewhere no arrows and no bar", ExBadges() == 0 && !pathBar.IsVisible);

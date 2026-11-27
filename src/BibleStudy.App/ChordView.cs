@@ -33,7 +33,7 @@ sealed class ChordView : Control
 
     IBrush Res(string key, IBrush fallback) => this.TryFindResource(key, ActualThemeVariant, out var v) && v is IBrush b ? b : fallback;
 
-    double Radius => Math.Max(60, Math.Min(Bounds.Width, Bounds.Height) / 2 - 56);
+    double Radius => Math.Max(60, Math.Min(Bounds.Width, Bounds.Height) / 2 - (Math.Min(Bounds.Width, Bounds.Height) < 420 ? 40 : 56));   // a phone: a little less room for the names, more for the circle
     Point Center => new(Bounds.Width / 2, Bounds.Height / 2);
     Point OnCircle(double angle, double r) => new(Center.X + Math.Cos(angle) * r, Center.Y + Math.Sin(angle) * r);
 
@@ -98,13 +98,29 @@ sealed class ChordView : Control
                 ctx.EndFigure(false);
             }
             dc.DrawGeometry(null, new Pen(new SolidColorBrush(HomeView.ColorOf(book.Id)), active ? 10 : 6), g);
+        }
+        // The names: beside the circle, pointing outward (left of it on the left side, right of it on the right side), so that none lies
+        // over the ring. A name that would cover one already written is left out (on a phone "Rev Gen Exod Lev Num" stood in one blot);
+        // the long books are written first, the one under the finger always.
+        var font = r < 150 ? 9.5 : 11;
+        var placed = new List<Rect>();
+        foreach (var (id, arc) in _arcs.OrderByDescending(a => _hover == a.Key).ThenByDescending(a => a.Value.End - a.Value.Start))
+        {
+            var active = _hover == id;
+            if (arc.End - arc.Start < 0.035 && !active) continue;
+            var f = new FormattedText(Abbreviation(id), CultureInfo.CurrentUICulture, FlowDirection.LeftToRight, new Typeface(FontFamily.Default, FontStyle.Normal, active ? FontWeight.SemiBold : FontWeight.Normal), font, active ? text : muted);
             var mid = (arc.Start + arc.End) / 2;
-            if (arc.End - arc.Start > 0.07 || active)
-            {
-                var f = new FormattedText(Abbreviation(book.Id), CultureInfo.CurrentUICulture, FlowDirection.LeftToRight, new Typeface(FontFamily.Default, FontStyle.Normal, active ? FontWeight.SemiBold : FontWeight.Normal), 11, active ? text : muted);
-                var p = OnCircle(mid, r + 16);
-                dc.DrawText(f, new Point(p.X - f.Width / 2, p.Y - f.Height / 2));
-            }
+            var p = OnCircle(mid, r + 9);
+            var cos = Math.Cos(mid); var sin = Math.Sin(mid);
+            // left or right of the point by the side of the circle; at the top and the bottom centered and above or below
+            var x = Math.Abs(cos) < 0.25 ? p.X - f.Width / 2 : cos > 0 ? p.X : p.X - f.Width;
+            var y = Math.Abs(cos) < 0.25 ? (sin < 0 ? p.Y - f.Height : p.Y) : p.Y - f.Height / 2;
+            x = Math.Clamp(x, 2, Math.Max(2, Bounds.Width - f.Width - 2));
+            y = Math.Clamp(y, 0, Math.Max(0, Bounds.Height - f.Height));
+            var box = new Rect(x - 1, y, f.Width + 2, f.Height);
+            if (!active && placed.Any(b => b.Intersects(box))) continue;
+            placed.Add(box);
+            dc.DrawText(f, new Point(x, y));
         }
     }
 
