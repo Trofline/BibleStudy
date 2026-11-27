@@ -59,7 +59,7 @@ Fertige Layouts (ein Layout merkt sich auch die geteilte Ansicht und den Schalte
 - **Predigt:** links der Text, rechts der Predigt-Editor, ganz rechts die Vers-Übersicht.
 - **Bibelstunde:** links der Text, rechts Materialien und Live.
 - **Zusammen:** der Text mit *Zusammen studieren* in der Seitenleiste.
-- **Dashboard:** Text links, Kommentare und Notizen als eigene Fenster rechts daneben.
+- **Dashboard:** Text links, Bücher (Lexikon) und Notizen als eigene Fenster rechts daneben.
 
 Weitere Optionen:
 

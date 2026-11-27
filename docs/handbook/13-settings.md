@@ -59,7 +59,7 @@ Ready-made layouts (a layout also remembers the split view and the *Word study* 
 - **Sermon:** the text on the left, the sermon editor on the right, the verse overview at the far right.
 - **Bible study:** the text on the left, materials and Live on the right.
 - **Together:** the text with *Study together* in the sidebar.
-- **Dashboard:** text on the left, commentaries and notes as separate windows to the right.
+- **Dashboard:** text on the left, books (dictionary) and notes as separate windows to the right.
 
 More options:
 

@@ -670,7 +670,7 @@ public partial class MainWindow
         if (_settings.FocusMode) ToggleFocusMode();   // out of full screen first; the focus layout switches it on again at the end
         CloseAllDetached();
         if (name == "Dashboard") PlaceMainForDashboard();
-        if (l.Focus) { if (_settings.SplitView) SplitTopBtn.IsChecked = false; ShowWork(null); }
+        if (l.Focus) { if (_settings.SplitView) SplitTopBtn.IsChecked = false; ShowWork(null); if (!ReaderHost.IsVisible || Home.IsVisible) ShowReader(); }
         else if (l.Split is bool split) ApplySplit(split, l.Panes, l.PaneWidths);
         SidePanel.Width = Math.Clamp(l.SideWidth, 300, 900); _settings.SideWidth = SidePanel.Width;
         SetPanelOpen(l.SideOpen);
@@ -754,7 +754,7 @@ public partial class MainWindow
         "Predigt" => L("Geteilt: links der Text, rechts der Predigt-Editor, ganz rechts die Vers-Übersicht."),
         "Bibelstunde" => L("Geteilt: links der Text, rechts die Materialien und Live für die Handys."),
         "Zusammen" => L("Der Text mit „Zusammen studieren“ daneben: Chat, geteilte Verse, Mitlesen."),
-        "Dashboard" => L("Text links, Kommentare und Notizen als eigene Fenster rechts daneben."),
+        "Dashboard" => L("Text links, Bücher (Lexikon) und Notizen als eigene Fenster rechts daneben."),
         _ => "",
     };
 
@@ -766,13 +766,15 @@ public partial class MainWindow
         "Lesen" => new() { SideOpen = false, Focus = true, WordStudy = false },
         "Studium" => new() { SideOpen = true, SideWidth = 400, SideTab = GuideTab, Split = true, Panes = [ReaderPane, "group:Studium"], PaneWidths = [0.55, 0.45] },
         "Wortstudie" => new() { SideOpen = true, SideWidth = 430, SideTab = 3, Split = true, Panes = [ReaderPane, "group:Lernen"], PaneWidths = [0.6, 0.4], WordStudy = true },
-        "Schreiben" => new() { SideOpen = false, SideTab = GuideTab, Split = true, Panes = [ReaderPane, "group:Dokumente"] },
-        "Predigt" => new() { SideOpen = true, SideWidth = 380, SideTab = GuideTab, Split = true, Panes = [ReaderPane, "group:Predigt"] },
-        "Bibelstunde" => new() { SideOpen = false, Split = true, Panes = [ReaderPane, "group:Material"], PaneWidths = [0.5, 0.5] },
-        "Zusammen" => new() { SideOpen = true, SideWidth = 460, SideTab = CollabTab, Split = false },
-        "Dashboard" => DashboardLayout(),
+        "Schreiben" => new() { SideOpen = false, SideTab = GuideTab, Split = true, Panes = [ReaderPane, "group:Dokumente"], WordStudy = false },
+        "Predigt" => new() { SideOpen = true, SideWidth = 380, SideTab = GuideTab, Split = true, Panes = [ReaderPane, "group:Predigt"], WordStudy = false },
+        "Bibelstunde" => new() { SideOpen = false, Split = true, Panes = [ReaderPane, "group:Material"], PaneWidths = [0.5, 0.5], WordStudy = false },
+        "Zusammen" => new() { SideOpen = true, SideWidth = 460, SideTab = CollabTab, Split = false, WordStudy = false },
+        "Dashboard" => WithoutWordStudy(DashboardLayout()),
         _ => null,
     };
+
+    static LayoutPreset WithoutWordStudy(LayoutPreset l) { l.WordStudy = false; return l; }
 
     /// <summary>Bible text on the left, commentary and notes tiled on the right – each in its own window on the same screen.</summary>
     LayoutPreset DashboardLayout()
@@ -851,6 +853,7 @@ public partial class MainWindow
                     },
                 };
                 var load = new Button { Classes = { "seg" }, HorizontalAlignment = HorizontalAlignment.Stretch, HorizontalContentAlignment = HorizontalAlignment.Left, Content = content };
+                if (hint.Length > 0) { load.Height = double.NaN; load.MinHeight = 30; load.Padding = new(12, 6); }   // two lines: the hint must not be cut off
                 load.Classes.Set("active", n == _settings.ActiveLayout);
                 load.Click += (_, _) => { ApplyLayout(FindLayout(n)!, n); StatusText.Text = L("Layout „{0}“ geladen.", LayoutLabel(n)); Fill(); };
                 var row = new DockPanel();
