@@ -176,6 +176,21 @@ public class CollabTests
     [InlineData("", null)]
     public void A_typed_code_is_read_kindly(string typed, string? expected) => Assert.Equal(expected, RelayLink.Normalize(typed));
 
+    [Theory]
+    [InlineData("k", 1, "K", 1)]
+    [InlineData("k7f2", 4, "K7F2", 4)]                 // no dash yet: deleting backwards does not get stuck at it
+    [InlineData("k7f2q", 5, "K7F2-Q", 6)]              // the fifth letter brings the dash
+    [InlineData("K7F2-QXM9", 9, "K7F2-QXM9", 9)]
+    [InlineData("K7F2-", 5, "K7F2", 4)]                // the dash goes with the letter after it
+    [InlineData(" k7f2 qxm9 ", 11, "K7F2-QXM9", 9)]   // pasted with spaces
+    [InlineData("K7F2-QXM9", 2, "K7F2-QXM9", 2)]       // the caret stays where it was
+    [InlineData("K7F2x-QXM9", 5, "K7F2-XQXM9", 6)]     // typed in the middle
+    public void A_code_is_formatted_while_typing(string typed, int caret, string expected, int expectedCaret)
+    {
+        Assert.Equal(expected, RelayLink.Typing(typed, ref caret));
+        Assert.Equal(expectedCaret, caret);
+    }
+
     [Fact]
     public void New_codes_are_readable_and_differ()
     {

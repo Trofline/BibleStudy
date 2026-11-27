@@ -31,6 +31,7 @@ public partial class MainWindow
         _clockTimer.Tick += (_, _) => TickClock();
         _clockTimer.Start();
         TickClock();
+        InitCollabFooter();
     }
 
     void TickClock()

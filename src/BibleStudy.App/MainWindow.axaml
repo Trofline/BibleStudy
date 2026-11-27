@@ -237,24 +237,26 @@
         <Border x:Name="StatusBar" DockPanel.Dock="Bottom" Padding="16,6" Height="32" Background="{DynamicResource BsSurface}"
                 BorderBrush="{DynamicResource BsBorder}" BorderThickness="0,1,0,0">
             <Border.Transitions><Transitions><DoubleTransition Property="Opacity" Duration="0:0:0.15" /></Transitions></Border.Transitions>
-            <Grid ColumnDefinitions="*,Auto,Auto,Auto,Auto,Auto,Auto">
-                <Button x:Name="ProjectorChip" Grid.Column="4" Classes="ghost" Padding="8,0" MinHeight="0" Height="22" Margin="4,0,0,0" IsVisible="False" ToolTip.Tip="Die Beamer-Ansicht ist offen. Klicken: weiter, zurück, schwarz oder beenden.">
+            <Grid ColumnDefinitions="*,Auto,Auto,Auto,Auto,Auto,Auto,Auto">
+                <Button x:Name="ProjectorChip" Grid.Column="5" Classes="ghost" Padding="8,0" MinHeight="0" Height="22" Margin="4,0,0,0" IsVisible="False" ToolTip.Tip="Die Beamer-Ansicht ist offen. Klicken: weiter, zurück, schwarz oder beenden.">
                     <TextBlock x:Name="ProjectorChipText" Classes="caption" FontWeight="SemiBold" VerticalAlignment="Center" />
                 </Button>
-                <Button x:Name="TimerChip" Grid.Column="5" Classes="ghost" Padding="8,0" MinHeight="0" Height="22" Margin="4,0,0,0" IsVisible="False" ToolTip.Tip="Laufender Timer. Klicken: anhalten, fortsetzen oder beenden.">
+                <Button x:Name="TimerChip" Grid.Column="6" Classes="ghost" Padding="8,0" MinHeight="0" Height="22" Margin="4,0,0,0" IsVisible="False" ToolTip.Tip="Laufender Timer. Klicken: anhalten, fortsetzen oder beenden.">
                     <TextBlock x:Name="TimerChipText" Classes="caption" FontWeight="SemiBold" VerticalAlignment="Center" />
                 </Button>
-                <Button x:Name="ClockChip" Grid.Column="6" Classes="ghost" Padding="8,0" MinHeight="0" Height="22" Margin="4,0,0,0" ToolTip.Tip="Uhrzeit. Klicken: Timer stellen.">
+                <Button x:Name="ClockChip" Grid.Column="7" Classes="ghost" Padding="8,0" MinHeight="0" Height="22" Margin="4,0,0,0" ToolTip.Tip="Uhrzeit. Klicken: Timer stellen.">
                     <TextBlock x:Name="ClockText" Classes="caption" FontWeight="SemiBold" VerticalAlignment="Center" />
                 </Button>
+                <!-- while studying together: microphone, camera and how long the room runs (MainWindow.CollabFooter.cs) -->
+                <StackPanel x:Name="CollabChips" Grid.Column="1" Orientation="Horizontal" Spacing="4" Margin="8,0,0,0" IsVisible="False" />
                 <TextBlock x:Name="StatusText" Classes="caption" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" ToolTip.Tip="{Binding #StatusText.Text}" />
-                <Button x:Name="UpdateChip" Grid.Column="1" Classes="ghost" Padding="8,0" MinHeight="0" Height="22" Margin="8,0,0,0" IsVisible="False" ToolTip.Tip="Stand der Updates. Klicken: jetzt nach Updates suchen.">
+                <Button x:Name="UpdateChip" Grid.Column="2" Classes="ghost" Padding="8,0" MinHeight="0" Height="22" Margin="8,0,0,0" IsVisible="False" ToolTip.Tip="Stand der Updates. Klicken: jetzt nach Updates suchen.">
                     <TextBlock x:Name="UpdateChipText" Classes="caption" VerticalAlignment="Center" />
                 </Button>
-                <Button x:Name="SyncChip" Grid.Column="2" Classes="ghost" Padding="8,0" MinHeight="0" Height="22" Margin="4,0,0,0" IsVisible="False" ToolTip.Tip="Jetzt mit deinen anderen Geräten synchronisieren (läuft sonst von selbst alle 20 Sekunden und nach jeder Änderung).">
+                <Button x:Name="SyncChip" Grid.Column="3" Classes="ghost" Padding="8,0" MinHeight="0" Height="22" Margin="4,0,0,0" IsVisible="False" ToolTip.Tip="Jetzt mit deinen anderen Geräten synchronisieren (läuft sonst von selbst alle 20 Sekunden und nach jeder Änderung).">
                     <TextBlock x:Name="SyncChipText" Classes="caption" Text="Synchronisieren" VerticalAlignment="Center" />
                 </Button>
-                <Button x:Name="VersionChip" Grid.Column="3" Classes="ghost" Padding="8,0" MinHeight="0" Height="22" Margin="4,0,0,0" ToolTip.Tip="Versionsnummer. Klicken: jetzt nach Updates suchen. Patch Notes stehen in den Einstellungen.">
+                <Button x:Name="VersionChip" Grid.Column="4" Classes="ghost" Padding="8,0" MinHeight="0" Height="22" Margin="4,0,0,0" ToolTip.Tip="Versionsnummer. Klicken: jetzt nach Updates suchen. Patch Notes stehen in den Einstellungen.">
                     <TextBlock x:Name="VersionChipText" Classes="caption" VerticalAlignment="Center" />
                 </Button>
             </Grid>
