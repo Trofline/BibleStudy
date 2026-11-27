@@ -21,6 +21,8 @@ Alle sehen eine **Prüfzahl**. Ist sie bei allen gleich, sitzt niemand dazwische
 
 **Wie das funktioniert:** Die Programme verbinden sich nicht direkt miteinander (das scheitert bei vielen Anschlüssen), sondern jedes für sich mit einem kleinen **Vermittler-Server** im Internet, so wie ein Browser eine Webseite öffnet. Der Vermittler reicht die Nachrichten nur weiter. Alles ist **Ende-zu-Ende verschlüsselt**: Der Schlüssel entsteht auf euren Geräten aus dem Raum-Code; der Vermittler kennt den Code nicht (nur eine Prüfsumme davon als Raumname) und kann nichts lesen. Er speichert nichts. Ihr braucht kein Konto und müsst nichts einrichten.
 
+**ZeroTier brauchst du normalerweise nicht.** Raum erstellen, Code schicken, fertig. ZeroTier ist nur die Notlösung für den seltenen Fall, dass das Tageslimit aufgebraucht ist.
+
 **Tageslimit:** Der Vermittler läuft im kostenlosen Tarif und hat deshalb ein Tageslimit für alle Nutzer zusammen. Ist es aufgebraucht, verbindet euch bis zum nächsten Tag **im selben Netzwerk** (nächster Abschnitt). Seid ihr an verschiedenen Orten, tretet alle demselben kostenlosen **ZeroTier**-Netzwerk bei (zerotier.com: eine Person erstellt ein Netzwerk, die anderen treten mit dessen Netzwerk-ID bei). Danach seid ihr für BibleStudy „im selben Netzwerk“ und verbindet euch ganz ohne Vermittler. Zur Größe: Zwei Personen mit Kamera, Ton und Zeiger können zusammen rund 25 Stunden am Tag im Raum sein; die Bildqualität ändert daran kaum etwas. Das Limit beginnt jeden Tag um 1 Uhr nachts (deutsche Winterzeit) neu.
 
 ### Im selben Netzwerk (ohne Codes)

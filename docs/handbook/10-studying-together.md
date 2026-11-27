@@ -21,6 +21,8 @@ Everybody sees a **check number**. If it is the same for all of you, nobody is i
 
 **How it works:** The programs do not connect to each other directly (that fails with many internet connections) but each one to a small **relay server** on the internet, the way a browser opens a website. The relay only passes the messages on. Everything is **end-to-end encrypted**: the key is made on your devices from the room code; the relay does not know the code (only a hash of it as the room name) and cannot read anything. It stores nothing. You need no account and nothing to set up.
 
+**You normally do not need ZeroTier.** Create a room, send the code, done. ZeroTier is only the fallback for the rare case that the daily limit is used up.
+
 **Daily limit:** The relay runs on the free plan and therefore has a daily limit for all users together. When it is used up, connect **in the same network** (next section) until the next day. If you are in different places, all join the same free **ZeroTier** network (zerotier.com: one person creates a network, the others join with its network ID). Then you are “in the same network” for BibleStudy and connect without any relay. As a rough size: two people with camera, sound and pointer can spend about 25 hours a day together in a room; the picture quality hardly changes that. The limit starts again every day at midnight UTC.
 
 ### In the same network (no codes)

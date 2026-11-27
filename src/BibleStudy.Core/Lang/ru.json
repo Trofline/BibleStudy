@@ -3931,7 +3931,6 @@
   "Zieh die Leiste breiter oder schmaler.": "Сделайте панель шире или уже.",
   "Über das Internet (Raum-Code)": "Через интернет (код комнаты)",
   "Eine Person erstellt einen Raum und schickt den anderen den kurzen Raum-Code, zum Beispiel per Messenger. Die anderen tippen ihn ein, fertig. Das klappt von überall, auch wenn ihr in verschiedenen Netzwerken seid. Bis zu fünf Personen passen in einen Raum.": "Один человек создаёт комнату и отправляет остальным короткий код комнаты, например через мессенджер. Остальные вводят его, и всё готово. Это работает откуда угодно, даже если вы в разных сетях. В комнате помещается до пяти человек.",
-  "Der Vermittler ist kostenlos und hat deshalb ein Tageslimit. Ist es aufgebraucht, verbindet euch bis zum nächsten Tag im selben Netzwerk (unten). Seid ihr an verschiedenen Orten, geht das, wenn ihr beide demselben kostenlosen ZeroTier-Netzwerk beitretet (siehe Handbuch).": "Посредник бесплатный и поэтому имеет дневной лимит. Когда он исчерпан, подключайтесь до следующего дня в одной сети (ниже). Если вы в разных местах, это работает, когда вы все присоединяетесь к одной бесплатной сети ZeroTier (см. руководство).",
   "Klappt es auch dann nicht, ist vielleicht das Tageslimit des kostenlosen Vermittlers aufgebraucht. Dann verbindet euch bis morgen im selben Netzwerk, an verschiedenen Orten über ein gemeinsames ZeroTier-Netzwerk (siehe Handbuch).": "Если и так не получается, возможно, исчерпан дневной лимит бесплатного посредника. Тогда до завтра подключайтесь в одной сети, а из разных мест через общую сеть ZeroTier (см. руководство).",
   "Bildqualität: niedrig (für langsames Internet)": "Качество изображения: низкое (для медленного интернета)",
   "Bildqualität: mittel": "Качество изображения: среднее",
@@ -4061,5 +4060,7 @@
   "Feedback": "Отзывы",
   "Fehler melden, Ideen": "Сообщить об ошибке, идеи",
   "Rundgänge, Handbuch, Quiz": "Обзоры, руководство, викторина",
-  "{0} aus anderen Vaults (unten)": "{0} из других хранилищ (ниже)"
+  "{0} aus anderen Vaults (unten)": "{0} из других хранилищ (ниже)",
+  "Nur für den seltenen Notfall: Der Vermittler ist kostenlos und hat ein Tageslimit. Ist es einmal aufgebraucht, verbindet euch bis zum nächsten Tag im selben Netzwerk (unten), an verschiedenen Orten über ein gemeinsames ZeroTier-Netzwerk (siehe Handbuch). Sonst braucht ihr ZeroTier nicht.": "Только на редкий крайний случай: посредник бесплатный и имеет дневной лимит. Если он когда-нибудь исчерпан, соединяйтесь до следующего дня в одной сети (ниже), а из разных мест — через общую сеть ZeroTier (см. руководство). В остальных случаях ZeroTier не нужен.",
+  "Du brauchst nichts zu installieren oder einzurichten, auch kein ZeroTier: Raum erstellen, Code schicken, fertig.": "Ничего не нужно устанавливать или настраивать, и ZeroTier тоже: создай комнату, отправь код — готово."
 }

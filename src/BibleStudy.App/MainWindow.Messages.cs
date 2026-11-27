@@ -186,8 +186,13 @@ public partial class MainWindow
             text.Children.Add(new TextBlock { Text = n.At.ToString("t", Loc.Culture) + "  " + n.Title, FontWeight = FontWeight.SemiBold, TextWrapping = TextWrapping.Wrap });
             if (n.Text.Length > 0) text.Children.Add(Caption(n.Text));
             var row = new DockPanel();
+            var entry = n;
+            var remove = new Button { Content = "✕", Classes = { "tool" }, VerticalAlignment = VerticalAlignment.Top };
+            ToolTip.SetTip(remove, L("Entfernen"));
+            remove.Click += (_, _) => { _noticeLog.Remove(entry); stack.Children.Remove(row); };
             DockPanel.SetDock(dot, Dock.Left);
-            row.Children.Add(dot); row.Children.Add(text);
+            DockPanel.SetDock(remove, Dock.Right);
+            row.Children.Add(dot); row.Children.Add(remove); row.Children.Add(text);
             stack.Children.Add(row);
         }
 

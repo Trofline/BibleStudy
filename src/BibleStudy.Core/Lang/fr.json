@@ -3931,7 +3931,6 @@
   "Zieh die Leiste breiter oder schmaler.": "Rends le panneau plus large ou plus étroit.",
   "Über das Internet (Raum-Code)": "Par internet (code de salle)",
   "Eine Person erstellt einen Raum und schickt den anderen den kurzen Raum-Code, zum Beispiel per Messenger. Die anderen tippen ihn ein, fertig. Das klappt von überall, auch wenn ihr in verschiedenen Netzwerken seid. Bis zu fünf Personen passen in einen Raum.": "Une personne crée une salle et envoie aux autres le code court de la salle, par exemple par messagerie. Les autres le saisissent, c'est tout. Cela fonctionne de partout, même si vous êtes sur des réseaux différents. Une salle accueille jusqu'à cinq personnes.",
-  "Der Vermittler ist kostenlos und hat deshalb ein Tageslimit. Ist es aufgebraucht, verbindet euch bis zum nächsten Tag im selben Netzwerk (unten). Seid ihr an verschiedenen Orten, geht das, wenn ihr beide demselben kostenlosen ZeroTier-Netzwerk beitretet (siehe Handbuch).": "Le relais est gratuit et a donc une limite quotidienne. Lorsqu'elle est atteinte, connectez-vous sur le même réseau (ci-dessous) jusqu'au lendemain. Si vous êtes à des endroits différents, cela fonctionne si vous rejoignez tous le même réseau ZeroTier gratuit (voir le manuel).",
   "Klappt es auch dann nicht, ist vielleicht das Tageslimit des kostenlosen Vermittlers aufgebraucht. Dann verbindet euch bis morgen im selben Netzwerk, an verschiedenen Orten über ein gemeinsames ZeroTier-Netzwerk (siehe Handbuch).": "Si cela ne fonctionne toujours pas, la limite quotidienne du relais gratuit est peut-être atteinte. Connectez-vous alors jusqu'à demain sur le même réseau, ou depuis des endroits différents via un réseau ZeroTier commun (voir le manuel).",
   "Bildqualität: niedrig (für langsames Internet)": "Qualité d'image : basse (pour internet lent)",
   "Bildqualität: mittel": "Qualité d'image : moyenne",
@@ -4061,5 +4060,7 @@
   "Feedback": "Retours",
   "Fehler melden, Ideen": "Signaler des bugs, idées",
   "Rundgänge, Handbuch, Quiz": "Visites, manuel, quiz",
-  "{0} aus anderen Vaults (unten)": "{0} d’autres vaults (plus bas)"
+  "{0} aus anderen Vaults (unten)": "{0} d’autres vaults (plus bas)",
+  "Nur für den seltenen Notfall: Der Vermittler ist kostenlos und hat ein Tageslimit. Ist es einmal aufgebraucht, verbindet euch bis zum nächsten Tag im selben Netzwerk (unten), an verschiedenen Orten über ein gemeinsames ZeroTier-Netzwerk (siehe Handbuch). Sonst braucht ihr ZeroTier nicht.": "Seulement en cas d’urgence rare : le relais est gratuit et a une limite quotidienne. Si elle est un jour épuisée, connectez-vous jusqu’au lendemain dans le même réseau (ci-dessous) ou, depuis des lieux différents, via un réseau ZeroTier commun (voir le manuel). Sinon, vous n’avez pas besoin de ZeroTier.",
+  "Du brauchst nichts zu installieren oder einzurichten, auch kein ZeroTier: Raum erstellen, Code schicken, fertig.": "Tu n’as rien à installer ni à configurer, pas même ZeroTier : crée une salle, envoie le code, c’est tout."
 }
