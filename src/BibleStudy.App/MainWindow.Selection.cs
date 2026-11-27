@@ -372,6 +372,7 @@ public partial class MainWindow
             FillCell(c.Tb, c.Data, after is null ? null : (after.Start, after.End));
         }
         _hoverSpan = null;
+        if (_drag is not null) CollabSelectionMoved();   // the others see the selection grow while the mouse is dragged
     }
 
     /// <summary>Takes the selection away again (and the color bar over it).</summary>

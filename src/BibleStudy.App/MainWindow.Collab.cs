@@ -285,9 +285,10 @@ public partial class MainWindow
         var lead = new Button { Content = _iLead ? L("Leitung abgeben") : L("Ich leite"), Margin = new(0, 0, 8, 6) };
         ToolTip.SetTip(lead, L("Wer leitet, gibt die Stelle vor: Die anderen springen automatisch mit, bis sie selbst blättern."));
         lead.Click += (_, _) => { SetLeading(!_iLead); lead.Content = _iLead ? L("Leitung abgeben") : L("Ich leite"); };
-        Detach(_leaderBar);
+        Detach(_leaderBar); Detach(_tourBar);
         CollabPanel.Children.Add(new WrapPanel { Children = { lead } });
         CollabPanel.Children.Add(_leaderBar);
+        CollabPanel.Children.Add(_tourBar);
         UpdateLeaderBar();
 
         var send = new CheckBox { Content = L("Meine Bibelstelle mitsenden"), IsChecked = _settings.CollabSendLocation };
@@ -356,6 +357,7 @@ public partial class MainWindow
             var line = new List<string>();
             if (p.Place is { } at) line.Add(L("liest {0}", $"{BookName(at.Book)} {at.Chapter}" + (at.Verse is int pv ? "," + pv : "")));
             if (p.Leads) line.Add(L("leitet"));
+            if (SameTextAs(p)) line.Add(L("gleicher Bibeltext"));
             if (p.Reading is { } r) line.Add(L("liest gerade vor: {0}", $"{BookName(r.Book)} {r.Chapter},{r.Verse}"));
             if (p.Sel is { Words.Length: > 0 } s) line.Add($"»{Shorten(s.Words, 60)}«");
             var row = new StackPanel { Spacing = 2 };

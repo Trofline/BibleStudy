@@ -3606,5 +3606,21 @@
   "Bildqualität: niedrig (für langsames Internet)": "Qualité d'image : basse (pour internet lent)",
   "Bildqualität: mittel": "Qualité d'image : moyenne",
   "Bildqualität: HD (720p)": "Qualité d'image : HD (720p)",
-  "Ruckelt das Bild oder kommt es spät an, wähle eine niedrigere Qualität: HD braucht bei jeder Person mit Kamera etwa 5 Mbit/s zum Senden und bei allen anderen ebenso viel zum Empfangen.": "Si l'image saccade ou arrive en retard, choisissez une qualité plus basse : la HD demande environ 5 Mbit/s en envoi pour chaque personne avec caméra, et autant en réception pour toutes les autres."
+  "Ruckelt das Bild oder kommt es spät an, wähle eine niedrigere Qualität: HD braucht bei jeder Person mit Kamera etwa 5 Mbit/s zum Senden und bei allen anderen ebenso viel zum Empfangen.": "Si l'image saccade ou arrive en retard, choisissez une qualité plus basse : la HD demande environ 5 Mbit/s en envoi pour chaque personne avec caméra, et autant en réception pour toutes les autres.",
+  "Den Lesepfad beenden (du leitest weiter)": "Terminer le parcours de lecture (tu continues à guider)",
+  "Diesen Lesepfad als neuen Lesepfad in deinem Vault speichern": "Enregistrer ce parcours comme nouveau parcours de lecture dans ton coffre",
+  "Dorthin gehen, wo der Lesepfad gerade ist": "Aller là où se trouve le parcours de lecture",
+  "Du führst durch den Lesepfad „{0}“.": "Tu guides à travers le parcours de lecture « {0} ».",
+  "Du führst": "Tu guides",
+  "Du gehst Schritt für Schritt durch einen deiner Lesepfade. Alle sehen dieselbe Stelle und den Schritt.": "Tu parcours pas à pas l’un de tes parcours de lecture. Tout le monde voit le même passage et l’étape.",
+  "Durch einen Lesepfad führen ▾": "Guider à travers un parcours ▾",
+  "Lesepfad behalten": "Garder le parcours",
+  "Noch kein Lesepfad": "Pas encore de parcours de lecture",
+  "Schritt {0} von {1}": "Étape {0} sur {1}",
+  "Zur Stelle": "Y aller",
+  "{0} führt durch den Lesepfad „{1}“ ({2} Schritte).": "{0} guide à travers le parcours « {1} » ({2} étapes).",
+  "{0} führt": "{0} guide",
+  "{0} hat den Lesepfad beendet.": "{0} a terminé le parcours de lecture.",
+  "{0} wählt aus": "{0} sélectionne",
+  "gleicher Bibeltext": "même texte biblique"
 }

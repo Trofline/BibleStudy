@@ -3606,5 +3606,21 @@
   "Bildqualität: niedrig (für langsames Internet)": "Picture quality: low (for slow internet)",
   "Bildqualität: mittel": "Picture quality: medium",
   "Bildqualität: HD (720p)": "Picture quality: HD (720p)",
-  "Ruckelt das Bild oder kommt es spät an, wähle eine niedrigere Qualität: HD braucht bei jeder Person mit Kamera etwa 5 Mbit/s zum Senden und bei allen anderen ebenso viel zum Empfangen.": "If the picture stutters or arrives late, choose a lower quality: HD needs about 5 Mbit/s for sending from each person with a camera, and as much for receiving at everyone else."
+  "Ruckelt das Bild oder kommt es spät an, wähle eine niedrigere Qualität: HD braucht bei jeder Person mit Kamera etwa 5 Mbit/s zum Senden und bei allen anderen ebenso viel zum Empfangen.": "If the picture stutters or arrives late, choose a lower quality: HD needs about 5 Mbit/s for sending from each person with a camera, and as much for receiving at everyone else.",
+  "Den Lesepfad beenden (du leitest weiter)": "End the reading path (you keep leading)",
+  "Diesen Lesepfad als neuen Lesepfad in deinem Vault speichern": "Save this reading path as a new reading path in your vault",
+  "Dorthin gehen, wo der Lesepfad gerade ist": "Go to where the reading path is now",
+  "Du führst durch den Lesepfad „{0}“.": "You are leading through the reading path “{0}”.",
+  "Du führst": "You lead",
+  "Du gehst Schritt für Schritt durch einen deiner Lesepfade. Alle sehen dieselbe Stelle und den Schritt.": "You go step by step through one of your reading paths. Everyone sees the same passage and the step.",
+  "Durch einen Lesepfad führen ▾": "Lead through a reading path ▾",
+  "Lesepfad behalten": "Keep reading path",
+  "Noch kein Lesepfad": "No reading path yet",
+  "Schritt {0} von {1}": "Step {0} of {1}",
+  "Zur Stelle": "Go there",
+  "{0} führt durch den Lesepfad „{1}“ ({2} Schritte).": "{0} is leading through the reading path “{1}” ({2} steps).",
+  "{0} führt": "{0} leads",
+  "{0} hat den Lesepfad beendet.": "{0} ended the reading path.",
+  "{0} wählt aus": "{0} is selecting",
+  "gleicher Bibeltext": "same Bible text"
 }

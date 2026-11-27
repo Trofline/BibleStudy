@@ -50,6 +50,7 @@ public partial class MainWindow
     /// <summary>The line "Anna leads": while following, says so; after turning the page oneself, offers to follow again.</summary>
     void UpdateLeaderBar()
     {
+        UpdateTourBar();
         _leaderBar.Bind(Border.BackgroundProperty, this.GetResourceObservable("BsSurface2"));
         if (_leaderId is null || !_people.TryGetValue(_leaderId, out var leader)) { _leaderBar.IsVisible = false; return; }
         var text = new TextBlock { Text = _followLeader ? L("{0} leitet. Du folgst automatisch.", leader.Name) : L("{0} leitet. Du liest gerade woanders.", leader.Name), TextWrapping = TextWrapping.Wrap, VerticalAlignment = VerticalAlignment.Center };
@@ -82,6 +83,7 @@ public partial class MainWindow
         if (_iLead) CollabSend(new { t = "lead", on = true });
         if (_questions.Count > 0) CollabSend(new { t = "qall", items = _questions.Select(q => new { id = q.Id, text = q.Text, by = q.By, done = q.Done }) });
         if ((_padBox.Text ?? "").Length > 0) CollabSend(new { t = "pad", text = _padBox.Text });
+        SendStudyState();
     }
 
     // ---- questions --------------------------------------------------------------------------------------------------------
