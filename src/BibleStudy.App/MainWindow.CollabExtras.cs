@@ -167,10 +167,19 @@ public partial class MainWindow
     /// <summary>A chat line with the name in the person's color; a tap on it offers a reaction.</summary>
     void AddChat(string who, string text, string mid, bool mine, Color? ink)
     {
+        AddCollabItem(ChatBubble(who, text, mid, mine, ink, null), toEnd: mine);
+        _meeting.Add((DateTime.Now, mine ? _settings.CollabName : who, text));
+        KeepChat(new() { Mid = mid, Who = mine ? _settings.CollabName : who, Text = text, Mine = mine });
+    }
+
+    /// <summary>The bubble of a chat line; <paramref name="when"/> is given for a line of the saved chat (it shows its time).</summary>
+    Border ChatBubble(string who, string text, string mid, bool mine, Color? ink, DateTime? when)
+    {
         var reactions = new WrapPanel();
         var body = new StackPanel { Spacing = 2 };
         if (!mine) body.Children.Add(new TextBlock { Text = who, FontSize = 11, FontWeight = FontWeight.SemiBold, Foreground = ink is { } c ? new SolidColorBrush(c) : null });
         body.Children.Add(new TextBlock { Text = text, TextWrapping = TextWrapping.Wrap });
+        if (when is { } w) body.Children.Add(new TextBlock { Text = w.ToString("t"), FontSize = 10, Opacity = 0.6, HorizontalAlignment = HorizontalAlignment.Right });
         body.Children.Add(reactions);
         var bubble = new Border { Padding = new(10, 6), CornerRadius = new(10), HorizontalAlignment = mine ? HorizontalAlignment.Right : HorizontalAlignment.Left, MaxWidth = 340, Child = body, Cursor = new Cursor(StandardCursorType.Hand) };
         bubble.Bind(Border.BackgroundProperty, this.GetResourceObservable(mine ? "BsAccentSoft" : "BsSurface2"));
@@ -190,8 +199,7 @@ public partial class MainWindow
                 menu.ShowAt(bubble);
             };
         }
-        AddCollabItem(bubble);
-        _meeting.Add((DateTime.Now, mine ? _settings.CollabName : who, text));
+        return bubble;
     }
 
     static void AddReaction(WrapPanel to, string r, string who)
@@ -340,7 +348,7 @@ public partial class MainWindow
             }
             case "friend":
             case "friendok":
-                OnFriendMessage(type, Str("token", 64), Int("port"));
+                OnFriendMessage(type, Str("token", 64), Int("port"), Str("to", 32));
                 return true;
         }
         return false;

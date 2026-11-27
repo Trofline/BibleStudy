@@ -245,6 +245,7 @@ public partial class MainWindow
         RefreshVaultUi(); RefreshQueue(); RefreshTodos(); RefreshBookmarks();
         DeleteVaultBtn.Click += async (_, _) => await DeleteVaultAsync();
         RenameVaultBtn.Click += (_, _) => ShowRenameVault();
+        InitChatSettings();
     }
 
     // ---- highlights -------------------------------------------------------------------------------------------------

@@ -3606,5 +3606,19 @@
   "Bildqualität: niedrig (für langsames Internet)": "Calidad de imagen: baja (para internet lento)",
   "Bildqualität: mittel": "Calidad de imagen: media",
   "Bildqualität: HD (720p)": "Calidad de imagen: HD (720p)",
-  "Ruckelt das Bild oder kommt es spät an, wähle eine niedrigere Qualität: HD braucht bei jeder Person mit Kamera etwa 5 Mbit/s zum Senden und bei allen anderen ebenso viel zum Empfangen.": "Si la imagen se entrecorta o llega tarde, elige una calidad más baja: HD necesita unos 5 Mbit/s para enviar en cada persona con cámara, y lo mismo para recibir en todas las demás."
+  "Ruckelt das Bild oder kommt es spät an, wähle eine niedrigere Qualität: HD braucht bei jeder Person mit Kamera etwa 5 Mbit/s zum Senden und bei allen anderen ebenso viel zum Empfangen.": "Si la imagen se entrecorta o llega tarde, elige una calidad más baja: HD necesita unos 5 Mbit/s para enviar en cada persona con cámara, y lo mismo para recibir en todas las demás.",
+  "Neue Nachrichten ↓": "Mensajes nuevos ↓",
+  "Chat": "Chat",
+  "Chats": "Chats",
+  "Gespeicherter Chat mit {0} (nur auf diesem Gerät)": "Chat guardado con {0} (solo en este dispositivo)",
+  "Chats von „Zusammen studieren“ auf diesem Gerät speichern": "Guardar los chats de «Estudiar juntos» en este dispositivo",
+  "Bist du wieder mit derselben Person in einem Raum, siehst du euren bisherigen Chat. Gespeichert wird nur bei dir; jede Person speichert für sich.": "Cuando vuelvas a estar en una sala con la misma persona, verás vuestro chat anterior. Solo se guarda en tu dispositivo; cada persona guarda el suyo.",
+  "Gespeicherte Chats leeren …": "Vaciar chats guardados …",
+  "Keine gespeicherten Chats.": "No hay chats guardados.",
+  "{0} Nachrichten mit {1} Personen gespeichert.": "{0} mensajes con {1} personas guardados.",
+  "Chats leeren?": "¿Vaciar los chats?",
+  "Alle gespeicherten Chats von „Zusammen studieren“ werden auf diesem Gerät gelöscht. Bei den anderen Personen bleiben ihre eigenen Kopien.": "Se borrarán en este dispositivo todos los chats guardados de «Estudiar juntos». Las demás personas conservan sus propias copias.",
+  "Übers Internet": "Por internet",
+  "Verbindet euch über den Vermittler, auch an verschiedenen Orten, ohne Raum-Code. Ihr tippt beide hier auf „Übers Internet“.": "Os conecta a través del intermediario, también desde lugares distintos y sin código de sala. Los dos pulsáis aquí «Por internet».",
+  "Seid ihr an verschiedenen Orten, tippt ihr beide auf „Übers Internet“: Dann seid ihr ohne Raum-Code verbunden.": "Si estáis en lugares distintos, los dos pulsáis «Por internet» y quedáis conectados sin código de sala."
 }

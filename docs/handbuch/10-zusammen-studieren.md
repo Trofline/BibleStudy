@@ -40,11 +40,12 @@ Ihr könnt beliebig viele sein. Wer schon verbunden ist, holt unter **Weitere Pe
 
 ### Freunde
 
-Bei einer Person im selben Netzwerk erscheint **Als Freund merken**. Danach steht sie unter **Freunde**, und ein Tipp verbindet euch, auch wenn sie gerade nicht in der Liste auftaucht (dann über die zuletzt benutzte Adresse). Mit **Automatisch annehmen** wirst du bei diesem Freund nicht mehr gefragt. Erkannt wird ein Freund an einem gemeinsamen Geheimnis, das beim Merken ausgetauscht wird, nicht nur am Namen.
+Bei einer Person im selben Netzwerk erscheint **Als Freund merken**, ebenso in einem Raum, in dem nur ihr zwei seid. Danach steht sie unter **Freunde**, und ein Tipp verbindet euch, auch wenn sie gerade nicht in der Liste auftaucht (dann über die zuletzt benutzte Adresse). Seid ihr an verschiedenen Orten, tippt ihr beide auf **Übers Internet**: Ihr trefft euch in eurem eigenen Raum beim Vermittler, ohne Raum-Code. Das verbraucht vom Tageslimit genau so viel wie ein Raum mit Code und nichts, solange keiner von euch ihn offen hat. Mit **Automatisch annehmen** wirst du bei diesem Freund nicht mehr gefragt. Erkannt wird ein Freund an einem gemeinsamen Geheimnis, das beim Merken ausgetauscht wird, nicht nur am Namen.
 
 ## 10.2 Was ihr tun könnt
 
-- **Chatten.** Du siehst, wenn die andere Person schreibt. Ist die Seite zu, meldet ein kleiner Hinweis neue Nachrichten.
+- **Chatten.** Der Chat ist eine eigene Kachel mit fester Höhe: Neue Nachrichten erscheinen unten und bleiben im Blick, die Knöpfe drumherum verrutschen nicht. Hast du nach oben gescrollt, bringt dich **Neue Nachrichten ↓** wieder nach unten. Du siehst, wenn die andere Person schreibt. Ist die Seite zu, meldet ein kleiner Hinweis neue Nachrichten.
+- **Chat gespeichert.** Chat und geteilte Verse werden nur auf deinem Gerät gespeichert, für jede Person getrennt. Bist du wieder mit derselben Person im Raum (erkannt an ihrer festen Kennung, nicht am Namen), steht euer bisheriger Chat oben; mit jemand anderem beginnt ein neuer. Ausschalten oder leeren: **Einstellungen → Meine Daten → Chats**.
 - **Leiten:** Wer auf **Ich leite** tippt, gibt die Stelle vor. Alle anderen springen automatisch mit, bis sie selbst blättern; dann erscheint **Wieder folgen**.
 - **Fragen zum Text:** eine gemeinsame Liste. Jeder kann Fragen hinzufügen und abhaken, wenn sie besprochen sind.
 - **Gemeinsames Notizblatt:** eine Seite, an der alle schreiben (schreiben zwei gleichzeitig, gilt die zuletzt gesendete Fassung). Lässt sich als Dokument speichern.
