@@ -4038,5 +4038,14 @@
   "{0} sendet die Übersetzung „{1}“ ({2})": "{0} envía la traducción «{1}» ({2})",
   "Wird wie eine eigene .txt-Datei importiert und steht dann in der Übersetzungsliste.": "Se importa como un archivo .txt propio y aparece luego en la lista de traducciones.",
   "Die Datei ist keine Übersetzung im Format von BibleStudy.": "El archivo no es una traducción en el formato de BibleStudy.",
-  "Keine Übersetzung gewählt.": "No hay ninguna traducción seleccionada."
+  "Keine Übersetzung gewählt.": "No hay ninguna traducción seleccionada.",
+  "Nur der Bibeltext, bildschirmfüllend und ohne Ablenkung (wie F11). F11 oder ✕ unten beendet es.": "Solo el texto bíblico, a pantalla completa y sin distracciones (como F11). F11 o ✕ abajo lo termina.",
+  "Geteilt: links der Text, rechts die Studien-Werkzeuge, ganz rechts die Vers-Übersicht.": "Dividido: el texto a la izquierda, las herramientas de estudio a la derecha y el resumen del versículo en el extremo derecho.",
+  "Wortstudie an: Wörter im Text antippen, ganz rechts Grundtext und Bedeutung, daneben das Strong-Wörterbuch.": "Estudio de palabras activado: toca palabras del texto; texto original y significado en el extremo derecho, el diccionario Strong al lado.",
+  "Geteilt: links der Text, rechts deine Dokumente.": "Dividido: el texto a la izquierda, tus documentos a la derecha.",
+  "Geteilt: links der Text, rechts der Predigt-Editor, ganz rechts die Vers-Übersicht.": "Dividido: el texto a la izquierda, el editor de sermones a la derecha y el resumen del versículo en el extremo derecho.",
+  "Geteilt: links der Text, rechts die Materialien und Live für die Handys.": "Dividido: el texto a la izquierda, los materiales y Live para los móviles a la derecha.",
+  "Der Text mit „Zusammen studieren“ daneben: Chat, geteilte Verse, Mitlesen.": "El texto con «Estudiar juntos» al lado: chat, versículos compartidos, lectura conjunta.",
+  "Text links, Bücher (Lexikon) und Notizen als eigene Fenster rechts daneben.": "El texto a la izquierda, libros (diccionario) y notas como ventanas propias a la derecha.",
+  "Fokus-Modus beenden (F11)": "Salir del modo de enfoque (F11)"
 }

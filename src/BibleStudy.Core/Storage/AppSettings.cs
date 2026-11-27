@@ -57,6 +57,12 @@ public sealed class LayoutPreset
     public int SideTab { get; set; }
     public List<WindowBounds> Windows { get; set; } = [];   // W <= 0: docked as a tab in the main window
     public string? ActiveWork { get; set; }                 // work tab shown in the main window ("group:Dokumente"), null = reading
+    // null in the fields below: the layout leaves that part as it is (layouts saved by older versions)
+    public bool? Split { get; set; }                        // split view on or off
+    public List<string>? Panes { get; set; }                // the areas of the split view, left to right ("reader", "group:Studium")
+    public List<double>? PaneWidths { get; set; }           // their shares of the width
+    public bool? WordStudy { get; set; }                    // the switch "Wortstudie" over the text
+    public bool Focus { get; set; }                         // focus mode: only the text, full screen (like F11)
 }
 
 /// <summary>User settings, stored as JSON next to the data (exportable by copying the file).</summary>

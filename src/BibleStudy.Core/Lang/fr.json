@@ -4038,5 +4038,14 @@
   "{0} sendet die Übersetzung „{1}“ ({2})": "{0} envoie la traduction « {1} » ({2})",
   "Wird wie eine eigene .txt-Datei importiert und steht dann in der Übersetzungsliste.": "Importée comme ton propre fichier .txt, elle apparaît ensuite dans la liste des traductions.",
   "Die Datei ist keine Übersetzung im Format von BibleStudy.": "Le fichier n'est pas une traduction au format de BibleStudy.",
-  "Keine Übersetzung gewählt.": "Aucune traduction sélectionnée."
+  "Keine Übersetzung gewählt.": "Aucune traduction sélectionnée.",
+  "Nur der Bibeltext, bildschirmfüllend und ohne Ablenkung (wie F11). F11 oder ✕ unten beendet es.": "Uniquement le texte biblique, en plein écran et sans distraction (comme F11). F11 ou ✕ en bas pour quitter.",
+  "Geteilt: links der Text, rechts die Studien-Werkzeuge, ganz rechts die Vers-Übersicht.": "Partagé : le texte à gauche, les outils d’étude à droite, l’aperçu du verset tout à droite.",
+  "Wortstudie an: Wörter im Text antippen, ganz rechts Grundtext und Bedeutung, daneben das Strong-Wörterbuch.": "Étude de mots activée : touche les mots du texte, texte original et sens tout à droite, le dictionnaire Strong à côté.",
+  "Geteilt: links der Text, rechts deine Dokumente.": "Partagé : le texte à gauche, tes documents à droite.",
+  "Geteilt: links der Text, rechts der Predigt-Editor, ganz rechts die Vers-Übersicht.": "Partagé : le texte à gauche, l’éditeur de prédication à droite, l’aperçu du verset tout à droite.",
+  "Geteilt: links der Text, rechts die Materialien und Live für die Handys.": "Partagé : le texte à gauche, les documents et Live pour les téléphones à droite.",
+  "Der Text mit „Zusammen studieren“ daneben: Chat, geteilte Verse, Mitlesen.": "Le texte avec « Étudier ensemble » à côté : discussion, versets partagés, lecture commune.",
+  "Text links, Bücher (Lexikon) und Notizen als eigene Fenster rechts daneben.": "Le texte à gauche, livres (lexique) et notes dans leurs propres fenêtres à droite.",
+  "Fokus-Modus beenden (F11)": "Quitter le mode focus (F11)"
 }

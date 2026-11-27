@@ -4038,5 +4038,14 @@
   "{0} sendet die Übersetzung „{1}“ ({2})": "{0} отправляет перевод «{1}» ({2})",
   "Wird wie eine eigene .txt-Datei importiert und steht dann in der Übersetzungsliste.": "Импортируется как собственный файл .txt и затем появляется в списке переводов.",
   "Die Datei ist keine Übersetzung im Format von BibleStudy.": "Файл не является переводом в формате BibleStudy.",
-  "Keine Übersetzung gewählt.": "Перевод не выбран."
+  "Keine Übersetzung gewählt.": "Перевод не выбран.",
+  "Nur der Bibeltext, bildschirmfüllend und ohne Ablenkung (wie F11). F11 oder ✕ unten beendet es.": "Только текст Библии, на весь экран и без отвлечений (как F11). F11 или ✕ внизу завершает режим.",
+  "Geteilt: links der Text, rechts die Studien-Werkzeuge, ganz rechts die Vers-Übersicht.": "Разделено: слева текст, справа инструменты изучения, с самого края обзор стиха.",
+  "Wortstudie an: Wörter im Text antippen, ganz rechts Grundtext und Bedeutung, daneben das Strong-Wörterbuch.": "Изучение слов включено: нажимай на слова в тексте, справа с края оригинал и значение, рядом словарь Стронга.",
+  "Geteilt: links der Text, rechts deine Dokumente.": "Разделено: слева текст, справа твои документы.",
+  "Geteilt: links der Text, rechts der Predigt-Editor, ganz rechts die Vers-Übersicht.": "Разделено: слева текст, справа редактор проповеди, с самого края обзор стиха.",
+  "Geteilt: links der Text, rechts die Materialien und Live für die Handys.": "Разделено: слева текст, справа материалы и Live для телефонов.",
+  "Der Text mit „Zusammen studieren“ daneben: Chat, geteilte Verse, Mitlesen.": "Текст и рядом «Изучать вместе»: чат, общие стихи, совместное чтение.",
+  "Text links, Bücher (Lexikon) und Notizen als eigene Fenster rechts daneben.": "Текст слева, книги (словарь) и заметки в отдельных окнах справа.",
+  "Fokus-Modus beenden (F11)": "Выйти из режима фокуса (F11)"
 }

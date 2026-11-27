@@ -4038,5 +4038,14 @@
   "{0} sendet die Übersetzung „{1}“ ({2})": "{0} is sending the translation “{1}” ({2})",
   "Wird wie eine eigene .txt-Datei importiert und steht dann in der Übersetzungsliste.": "Imported like your own .txt file; it then appears in the translation list.",
   "Die Datei ist keine Übersetzung im Format von BibleStudy.": "The file is not a translation in BibleStudy's format.",
-  "Keine Übersetzung gewählt.": "No translation selected."
+  "Keine Übersetzung gewählt.": "No translation selected.",
+  "Nur der Bibeltext, bildschirmfüllend und ohne Ablenkung (wie F11). F11 oder ✕ unten beendet es.": "Only the Bible text, full screen and without distraction (like F11). F11 or ✕ at the bottom ends it.",
+  "Geteilt: links der Text, rechts die Studien-Werkzeuge, ganz rechts die Vers-Übersicht.": "Split: the text on the left, the study tools on the right, the verse overview at the far right.",
+  "Wortstudie an: Wörter im Text antippen, ganz rechts Grundtext und Bedeutung, daneben das Strong-Wörterbuch.": "Word study on: tap words in the text, original text and meaning at the far right, the Strong's dictionary beside it.",
+  "Geteilt: links der Text, rechts deine Dokumente.": "Split: the text on the left, your documents on the right.",
+  "Geteilt: links der Text, rechts der Predigt-Editor, ganz rechts die Vers-Übersicht.": "Split: the text on the left, the sermon editor on the right, the verse overview at the far right.",
+  "Geteilt: links der Text, rechts die Materialien und Live für die Handys.": "Split: the text on the left, the materials and Live for the phones on the right.",
+  "Der Text mit „Zusammen studieren“ daneben: Chat, geteilte Verse, Mitlesen.": "The text with “Study together” beside it: chat, shared verses, reading along.",
+  "Text links, Bücher (Lexikon) und Notizen als eigene Fenster rechts daneben.": "Text on the left, books (dictionary) and notes as separate windows to the right.",
+  "Fokus-Modus beenden (F11)": "Leave focus mode (F11)"
 }
