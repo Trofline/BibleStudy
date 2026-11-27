@@ -12,8 +12,9 @@ namespace BibleStudy.Core.Sync;
 /// <summary>Another device of the same group that was seen in the network.</summary>
 public sealed record SyncPeer(string Id, string Name, IPAddress Address, int Port, DateTime Seen);
 
-/// <summary>The outcome of one comparison. Peers = devices reached, Changed = vaults that got something new here, Sent = vaults handed over, Error = what went wrong (null = all well).</summary>
-public sealed record SyncReport(string PeerName, int Changed, int Sent, string? Error);
+/// <summary>The outcome of one comparison. Changed = vaults that got something new here, Sent = vaults handed over, Error = what went wrong (null = all well),
+/// Bibles = whole translations that came over or went over (see <see cref="ISyncBibles"/>).</summary>
+public sealed record SyncReport(string PeerName, int Changed, int Sent, string? Error, int Bibles = 0);
 
 /// <summary>
 /// Compares the vaults of the user's own devices in the same network, without an account and without a server in between.
@@ -29,7 +30,7 @@ public sealed class LanSync : IDisposable
     public const int DataPort = 47822;
     /// <summary>How often the devices in reach are asked even without a change here.</summary>
     public static TimeSpan PollEvery = TimeSpan.FromSeconds(20);
-    const byte MsgList = 1, MsgGet = 2, MsgData = 3, MsgPut = 4, MsgOk = 5, MsgNone = 6;
+    const byte MsgList = 1, MsgGet = 2, MsgData = 3, MsgPut = 4, MsgOk = 5, MsgNone = 6, MsgGetBible = 7, MsgBible = 8, MsgPutBible = 9;
     const int MaxFrame = 512 * 1024 * 1024;
 
     readonly ISyncVaults _vaults;
@@ -49,6 +50,14 @@ public sealed class LanSync : IDisposable
     {
         _vaults = vaults; _cfg = cfg; _cfgPath = configPath; _tmp = tempDir;
     }
+
+    /// <summary>The imported translations of this device (null = none go over). Only sent to a device that lists its own, so an older version is never asked.</summary>
+    public ISyncBibles? Bibles { get; set; }
+
+    /// <summary>Whole translations that came from another device (their names).</summary>
+    public event Action<IReadOnlyList<string>>? BiblesReceived;
+
+    ISyncBibles? ActiveBibles => _cfg.Bibles ? Bibles : null;
 
     public int Port { get; private set; }
     public bool Running => _cts is not null;
@@ -306,7 +315,8 @@ public sealed class LanSync : IDisposable
                 using var stream = c.GetStream();
                 using var ch = await Channel.Open(stream, _cfg.KeyBytes!, false, limit.Token);
                 var asker = ""; var askerName = "";
-                int got = 0, gave = 0;
+                int got = 0, gave = 0, bibles = 0;
+                var gotBibles = new List<string>();
                 while (await ch.Receive(limit.Token) is { } msg)
                 {
                     switch (msg.Type)
@@ -321,6 +331,9 @@ public sealed class LanSync : IDisposable
                                 foreach (var n in _vaults.Names())
                                     if (same.Vaults.TryGetValue(n, out var theirFp) && await Task.Run(() => _vaults.Fingerprint(n), limit.Token) is var fp && fp == theirFp)
                                         await Task.Run(() => EnsureBase(asker, n, fp), limit.Token);
+                            // translations both have: a deletion on one side later is not undone from the other
+                            if (asker.Length > 0 && ActiveBibles is { } here && ReadInfo(msg.Data) is { Bibles: { } theirBibles })
+                                foreach (var n in here.Names().Intersect(theirBibles, StringComparer.Ordinal)) MarkBible(asker, n);
                             if (ReadInfo(msg.Data) is { Name.Length: > 0 } caller)
                             {
                                 askerName = caller.Name;
@@ -336,6 +349,27 @@ public sealed class LanSync : IDisposable
                             if (!MarkLogic.IsValidVaultName(name) || !_vaults.Names().Contains(name, StringComparer.OrdinalIgnoreCase)) { await ch.Send(MsgNone, [], limit.Token); break; }
                             await ch.Send(MsgData, await Snapshot(name), limit.Token);
                             gave++;
+                            break;
+                        }
+                        case MsgGetBible:
+                        {
+                            var name = Encoding.UTF8.GetString(msg.Data);
+                            var packed = ActiveBibles is { } bs && bs.Names().Contains(name, StringComparer.Ordinal) ? await bs.ExportAsync(name) : null;
+                            if (packed is null) { await ch.Send(MsgNone, [], limit.Token); break; }
+                            await ch.Send(MsgBible, packed, limit.Token);
+                            if (asker.Length > 0) MarkBible(asker, name);
+                            bibles++;
+                            break;
+                        }
+                        case MsgPutBible:
+                        {
+                            var len = BitConverter.ToInt32(msg.Data, 0);
+                            var name = Encoding.UTF8.GetString(msg.Data, 4, len);
+                            if (ActiveBibles is not { } bs || name.Trim().Length == 0) { await ch.Send(MsgNone, [], limit.Token); break; }
+                            var took = !bs.Names().Contains(name, StringComparer.Ordinal) && await bs.ImportAsync(name, msg.Data[(4 + len)..]);
+                            if (asker.Length > 0) MarkBible(asker, name);
+                            if (took) { bibles++; gotBibles.Add(name); }
+                            await ch.Send(took ? MsgOk : MsgNone, [], limit.Token);
                             break;
                         }
                         case MsgPut:
@@ -358,7 +392,9 @@ public sealed class LanSync : IDisposable
                     }
                 }
                 // the other device closed the line: its round is over, here as well (an iPhone is only ever asked, so it learns of the end only this way)
-                if (askerName.Length > 0) Finished?.Invoke(new SyncReport(askerName, got, gave, null));
+                if (gotBibles.Count > 0) BiblesReceived?.Invoke(gotBibles);
+                if (bibles > 0) _cfg.Save(_cfgPath);
+                if (askerName.Length > 0) Finished?.Invoke(new SyncReport(askerName, got, gave, null, bibles));
             }
             catch (Exception ex) when (ex is IOException or CryptographicException or OperationCanceledException or SocketException or InvalidDataException or ObjectDisposedException or ArgumentException or UnauthorizedAccessException or Microsoft.Data.Sqlite.SqliteException)
             { /* a device with another code, or the line broke: nothing happens */ }
@@ -393,7 +429,7 @@ public sealed class LanSync : IDisposable
         SyncReport report;
         using var limit = new CancellationTokenSource(TimeSpan.FromMinutes(5));
         var ct = limit.Token;
-        int changed = 0, sent = 0;
+        int changed = 0, sent = 0, bibles = 0;
         try
         {
             using var tcp = new TcpClient();
@@ -469,18 +505,65 @@ public sealed class LanSync : IDisposable
                     if (peer.Id.Length > 0) await Task.Run(() => SaveBase(peer.Id, nowMine, fpNow), ct);
                 }
             }
+            // the notes first, then the translations (they are bigger, and a line that breaks there leaves the notes done)
+            if (ActiveBibles is { } here && info.Bibles is { } theirBibles && peer.Id.Length > 0)
+                bibles = await ExchangeBibles(ch, here, peer.Id, theirBibles, ct);
             _cfg.LastTime = DateTime.Now.ToString("yyyy-MM-dd HH:mm", System.Globalization.CultureInfo.InvariantCulture); _cfg.LastPeer = peer.Name;
             _cfg.Save(_cfgPath);
-            report = new SyncReport(peer.Name, changed, sent, null);
+            report = new SyncReport(peer.Name, changed, sent, null, bibles);
         }
         catch (Exception ex) when (ex is IOException or CryptographicException or OperationCanceledException or SocketException or InvalidDataException or ObjectDisposedException or ArgumentException or Microsoft.Data.Sqlite.SqliteException)
         {
-            report = new SyncReport(peer.Name, changed, sent, ex is CryptographicException ? "code" : ex.Message);
+            report = new SyncReport(peer.Name, changed, sent, ex is CryptographicException ? "code" : ex.Message, bibles);
         }
         if (report.Error is null) _failed.TryRemove(peer.Id, out _); else _failed[peer.Id] = DateTime.UtcNow;
         Finished?.Invoke(report);
         return report;
     }
+
+    // ---- whole translations -------------------------------------------------------------------------------------------------
+
+    /// <summary>
+    /// Translations that only one side has go to the other one: fetched or handed over as packed .txt. One that was on both sides once (or went over)
+    /// is not brought back after it was deleted on one of them; one of the same name on both sides is left as it is.
+    /// </summary>
+    async Task<int> ExchangeBibles(Channel ch, ISyncBibles here, string peerId, IReadOnlyList<string> theirs, CancellationToken ct)
+    {
+        var count = 0;
+        var mine = here.Names();
+        var got = new List<string>();
+        foreach (var n in mine.Intersect(theirs, StringComparer.Ordinal)) MarkBible(peerId, n);
+        foreach (var name in theirs.Except(mine, StringComparer.Ordinal).ToList())
+        {
+            if (name.Trim().Length == 0 || KnowsBible(peerId, name)) continue;
+            await ch.Send(MsgGetBible, Encoding.UTF8.GetBytes(name), ct);
+            var data = await ch.Receive(ct) ?? throw new InvalidDataException("no answer");
+            if (data.Type != MsgBible) continue;
+            if (!here.Names().Contains(name, StringComparer.Ordinal) && await here.ImportAsync(name, data.Data)) { count++; got.Add(name); }
+            MarkBible(peerId, name);
+        }
+        foreach (var name in mine.Except(theirs, StringComparer.Ordinal).ToList())
+        {
+            if (KnowsBible(peerId, name) || await here.ExportAsync(name) is not { } packed) continue;
+            var nameBytes = Encoding.UTF8.GetBytes(name);
+            var payload = new byte[4 + nameBytes.Length + packed.Length];
+            BitConverter.GetBytes(nameBytes.Length).CopyTo(payload, 0);
+            nameBytes.CopyTo(payload, 4);
+            packed.CopyTo(payload, 4 + nameBytes.Length);
+            await ch.Send(MsgPutBible, payload, ct);
+            var ok = await ch.Receive(ct) ?? throw new InvalidDataException("no answer");
+            if (ok.Type == MsgOk) count++;
+            MarkBible(peerId, name);
+        }
+        if (got.Count > 0) BiblesReceived?.Invoke(got);
+        return count;
+    }
+
+    static string BibleKey(string peerId, string name) => "bible|" + peerId + "|" + name;
+
+    void MarkBible(string peerId, string name) { lock (_cfg.Done) _cfg.Done[BibleKey(peerId, name)] = "1"; }
+
+    bool KnowsBible(string peerId, string name) { lock (_cfg.Done) return _cfg.Done.ContainsKey(BibleKey(peerId, name)); }
 
     // ---- small things ----------------------------------------------------------------------------------------------------
 
@@ -517,7 +600,7 @@ public sealed class LanSync : IDisposable
         lock (_cfg.Done)
             foreach (var (key, value) in _cfg.Done)
             {
-                if (key.StartsWith("cloud|", StringComparison.Ordinal) || !key.EndsWith("|" + vault, StringComparison.OrdinalIgnoreCase)) continue;
+                if (key.StartsWith("cloud|", StringComparison.Ordinal) || key.StartsWith("bible|", StringComparison.Ordinal) || !key.EndsWith("|" + vault, StringComparison.OrdinalIgnoreCase)) continue;
                 // "device|vault" holds "mine|theirs" of the last comparison, "base|device|vault" the state both had
                 if (key.StartsWith("base|", StringComparison.Ordinal) ? value == fingerprint : value.StartsWith(fingerprint + "|", StringComparison.Ordinal)) return true;
             }
@@ -690,12 +773,19 @@ public sealed class LanSync : IDisposable
             w.WriteStartArray("v");
             foreach (var n in _vaults.Names()) { w.WriteStartObject(); w.WriteString("n", n); w.WriteString("f", _vaults.Fingerprint(n)); w.WriteEndObject(); }
             w.WriteEndArray();
+            if (ActiveBibles is { } bibles)
+            {
+                w.WriteStartArray("b");
+                foreach (var n in bibles.Names()) w.WriteStringValue(n);
+                w.WriteEndArray();
+            }
             w.WriteEndObject();
         }
         return ms.ToArray();
     }
 
-    sealed record Info(string Id, string Name, int Port, Dictionary<string, string> Vaults);
+    /// <param name="Bibles">the imported translations of the other device; null = it sends none (an older version, or switched off)</param>
+    sealed record Info(string Id, string Name, int Port, Dictionary<string, string> Vaults, IReadOnlyList<string>? Bibles);
 
     static Info? ReadInfo(byte[] data)
     {
@@ -712,7 +802,10 @@ public sealed class LanSync : IDisposable
         if (doc.RootElement.TryGetProperty("v", out var v))
             foreach (var e in v.EnumerateArray())
                 if (e.TryGetProperty("n", out var n) && e.TryGetProperty("f", out var f) && n.GetString() is { } name && f.GetString() is { } fp) d[name] = fp;
-        return new Info(Str("id"), Str("name"), port, d);
+        List<string>? bibles = null;
+        if (root.TryGetProperty("b", out var b) && b.ValueKind == JsonValueKind.Array)
+            bibles = [.. b.EnumerateArray().Where(e => e.ValueKind == JsonValueKind.String).Select(e => e.GetString()!).Distinct(StringComparer.Ordinal)];
+        return new Info(Str("id"), Str("name"), port, d, bibles);
     }
 
     // ---- the encrypted line -----------------------------------------------------------------------------------------------

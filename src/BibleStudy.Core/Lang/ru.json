@@ -3621,5 +3621,9 @@
   "{0} sendet die Übersetzung „{1}“ ({2})": "{0} отправляет перевод «{1}» ({2})",
   "Wird wie eine eigene .txt-Datei importiert und steht dann in der Übersetzungsliste.": "Импортируется как собственный файл .txt и затем появляется в списке переводов.",
   "Die Datei ist keine Übersetzung im Format von BibleStudy.": "Файл не является переводом в формате BibleStudy.",
-  "Keine Übersetzung gewählt.": "Перевод не выбран."
+  "Keine Übersetzung gewählt.": "Перевод не выбран.",
+  "Importierte Übersetzungen mit übertragen": "Передавать также импортированные переводы",
+  "Eine Übersetzung, die du selbst importiert hast, kommt ganz auf deine anderen Geräte (mit Strong-Nummern, Fußnoten und Überschriften), wenn sie dort fehlt. Übersetzungen aus dem Internet hat jedes Gerät ohnehin.": "Перевод, который ты импортировал сам, целиком переходит на твои другие устройства (с номерами Стронга, сносками и заголовками), если его там нет. Переводы из интернета есть на каждом устройстве и так.",
+  "Übersetzung „{0}“ vom anderen Gerät übernommen.": "Перевод «{0}» получен с другого устройства.",
+  "{0} Übersetzungen vom anderen Gerät übernommen: {1}": "Получено переводов с другого устройства: {0} — {1}"
 }

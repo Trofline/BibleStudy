@@ -1000,6 +1000,7 @@
                                     <Button x:Name="SyncCopyBtn" Content="Code kopieren" HorizontalAlignment="Left" ToolTip.Tip="Kopiert den Kopplungs-Link (mit der Adresse dieses Geräts): auf dem anderen Gerät ins Feld unten einfügen" />
                                 </StackPanel>
                                 <CheckBox x:Name="SyncAutoCheck" Content="Im selben Netzwerk automatisch synchronisieren" />
+                                <CheckBox x:Name="SyncBiblesCheck" Content="Importierte Übersetzungen mit übertragen" ToolTip.Tip="Eine Übersetzung, die du selbst importiert hast, kommt ganz auf deine anderen Geräte (mit Strong-Nummern, Fußnoten und Überschriften), wenn sie dort fehlt. Übersetzungen aus dem Internet hat jedes Gerät ohnehin." />
                                 <CheckBox x:Name="SyncWaitCheck" Content="Beim Schließen auf das Handy warten, wenn es den neuesten Stand noch nicht hat" ToolTip.Tip="Das Programm bleibt dann kurz offen und erinnert dich, BibleStudy auf dem Handy zu öffnen. „Jetzt schließen“ beendet es sofort." />
                                 <TextBox x:Name="SyncNameBox" PlaceholderText="Name dieses Geräts" />
                                 <WrapPanel>

@@ -1,4 +1,3 @@
-using System.IO.Compression;
 using System.Text;
 using Avalonia.Controls;
 using Avalonia.Layout;
@@ -15,9 +14,6 @@ namespace BibleStudy.App;
 /// </summary>
 public partial class MainWindow
 {
-    /// <summary>A received translation may unpack to at most this much text (a whole Bible with Strong's numbers is around 15 MB).</summary>
-    const long MaxTranslationText = 200L * 1024 * 1024;
-
     /// <summary>The translation that is being read, with all it has: an imported one exactly as stored, another one chapter by chapter from its source.</summary>
     async Task<ParsedBible?> CurrentTranslationAsync(IProgress<string> progress)
     {
@@ -72,41 +68,15 @@ public partial class MainWindow
             AddCollabLog(L("Übersetzung „{0}“ wird vorbereitet …", t.Name), mine: true, system: true);
             var bible = await CurrentTranslationAsync(new Progress<string>(_ => { }));
             if (bible is null || bible.Verses.Count == 0) { AddCollabLog(L("Keine Verse gefunden."), system: true); return; }
-            var bytes = await Task.Run(() =>
-            {
-                using var packed = new MemoryStream();
-                using (var gz = new GZipStream(packed, CompressionLevel.Optimal, true))
-                {
-                    var text = new UTF8Encoding(false).GetBytes(BibleTextFile.Write(bible));
-                    gz.Write(text);
-                }
-                return packed.ToArray();
-            });
+            var bytes = await Task.Run(() => BibleStudy.Core.Sync.LocalBibles.Pack(bible));
             if (bytes.LongLength > MaxBlob) { AddCollabLog(L("Diese Übersetzung ist zu groß zum Senden."), system: true); return; }
             await SendBlobAsync("bible", bible.Name, bytes, L("Du hast die Übersetzung „{0}“ gesendet ({1}).", bible.Name, SizeText(bytes.LongLength)));
         }
         catch (Exception ex) { AddCollabLog(L("Fehler: ") + ex.Message, system: true); }
     }
 
-    /// <summary>Unpacks received text, never more than <see cref="MaxTranslationText"/>; null when it is not packed text of this format.</summary>
-    static string? UnpackTranslation(byte[] data)
-    {
-        try
-        {
-            using var gz = new GZipStream(new MemoryStream(data), CompressionMode.Decompress);
-            using var text = new MemoryStream();
-            var buffer = new byte[81920];
-            int n;
-            while ((n = gz.Read(buffer)) > 0)
-            {
-                if (text.Length + n > MaxTranslationText) return null;
-                text.Write(buffer, 0, n);
-            }
-            var result = new UTF8Encoding(false).GetString(text.GetBuffer(), 0, (int)text.Length);
-            return BibleTextFile.IsOwnFormat(result[..Math.Min(result.Length, 400)].Split('\n')) ? result : null;
-        }
-        catch (InvalidDataException) { return null; }
-    }
+    /// <summary>Unpacks received text, never more than <see cref="BibleStudy.Core.Sync.LocalBibles.MaxText"/>; null when it is not packed text of this format.</summary>
+    static string? UnpackTranslation(byte[] data) => BibleStudy.Core.Sync.LocalBibles.Unpack(data);
 
     /// <summary>A translation arrived: a card; "Übernehmen" imports it through the normal import (an existing one of the same name is only replaced after asking).</summary>
     void ShowReceivedTranslation(string name, byte[] data)

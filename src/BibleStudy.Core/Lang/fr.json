@@ -3621,5 +3621,9 @@
   "{0} sendet die Übersetzung „{1}“ ({2})": "{0} envoie la traduction « {1} » ({2})",
   "Wird wie eine eigene .txt-Datei importiert und steht dann in der Übersetzungsliste.": "Importée comme ton propre fichier .txt, elle apparaît ensuite dans la liste des traductions.",
   "Die Datei ist keine Übersetzung im Format von BibleStudy.": "Le fichier n'est pas une traduction au format de BibleStudy.",
-  "Keine Übersetzung gewählt.": "Aucune traduction sélectionnée."
+  "Keine Übersetzung gewählt.": "Aucune traduction sélectionnée.",
+  "Importierte Übersetzungen mit übertragen": "Transférer aussi les traductions importées",
+  "Eine Übersetzung, die du selbst importiert hast, kommt ganz auf deine anderen Geräte (mit Strong-Nummern, Fußnoten und Überschriften), wenn sie dort fehlt. Übersetzungen aus dem Internet hat jedes Gerät ohnehin.": "Une traduction que tu as importée toi-même est copiée en entier sur tes autres appareils (avec numéros Strong, notes et titres) quand elle y manque. Chaque appareil a déjà les traductions d'internet.",
+  "Übersetzung „{0}“ vom anderen Gerät übernommen.": "Traduction « {0} » reprise de l'autre appareil.",
+  "{0} Übersetzungen vom anderen Gerät übernommen: {1}": "{0} traductions reprises de l'autre appareil : {1}"
 }

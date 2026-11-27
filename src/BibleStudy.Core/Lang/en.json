@@ -3621,5 +3621,9 @@
   "{0} sendet die Übersetzung „{1}“ ({2})": "{0} is sending the translation “{1}” ({2})",
   "Wird wie eine eigene .txt-Datei importiert und steht dann in der Übersetzungsliste.": "Imported like your own .txt file; it then appears in the translation list.",
   "Die Datei ist keine Übersetzung im Format von BibleStudy.": "The file is not a translation in BibleStudy's format.",
-  "Keine Übersetzung gewählt.": "No translation selected."
+  "Keine Übersetzung gewählt.": "No translation selected.",
+  "Importierte Übersetzungen mit übertragen": "Also transfer imported translations",
+  "Eine Übersetzung, die du selbst importiert hast, kommt ganz auf deine anderen Geräte (mit Strong-Nummern, Fußnoten und Überschriften), wenn sie dort fehlt. Übersetzungen aus dem Internet hat jedes Gerät ohnehin.": "A translation you imported yourself goes in full to your other devices (with Strong's numbers, footnotes and headings) when it is missing there. Every device has the translations from the internet anyway.",
+  "Übersetzung „{0}“ vom anderen Gerät übernommen.": "Translation “{0}” taken over from the other device.",
+  "{0} Übersetzungen vom anderen Gerät übernommen: {1}": "{0} translations taken over from the other device: {1}"
 }

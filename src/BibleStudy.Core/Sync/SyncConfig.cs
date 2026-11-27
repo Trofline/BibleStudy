@@ -92,6 +92,8 @@ public sealed class SyncConfig
     public bool Auto { get; set; } = true;
     /// <summary>"device|vault" → "my fingerprint|their fingerprint" at the end of the last comparison.</summary>
     public Dictionary<string, string> Done { get; } = [];
+    /// <summary>Imported translations go to the other devices too (see <see cref="ISyncBibles"/>).</summary>
+    public bool Bibles { get; set; } = true;
     public string? LastTime { get; set; }
     public string? LastPeer { get; set; }
     /// <summary>Addresses (ip:port) of other devices of the group: the call-out may not reach them (an iPhone hears none), a direct connection does.</summary>
@@ -137,6 +139,7 @@ public sealed class SyncConfig
             if (S("name") is { Length: > 0 } name) c.DeviceName = name;
             c.Key = S("key");
             if (r.TryGetProperty("auto", out var a) && a.ValueKind is JsonValueKind.True or JsonValueKind.False) c.Auto = a.GetBoolean();
+            if (r.TryGetProperty("bibles", out var bb) && bb.ValueKind is JsonValueKind.True or JsonValueKind.False) c.Bibles = bb.GetBoolean();
             c.LastTime = S("lastTime"); c.LastPeer = S("lastPeer");
             c.CloudPath = S("cloud"); c.CloudBookmark = S("cloudBookmark");
             if (r.TryGetProperty("hosts", out var hs) && hs.ValueKind == JsonValueKind.Array)
@@ -163,6 +166,7 @@ public sealed class SyncConfig
                 w.WriteString("id", DeviceId); w.WriteString("name", DeviceName);
                 if (Key is not null) w.WriteString("key", Key);
                 w.WriteBoolean("auto", Auto);
+                w.WriteBoolean("bibles", Bibles);
                 if (LastTime is not null) w.WriteString("lastTime", LastTime);
                 if (LastPeer is not null) w.WriteString("lastPeer", LastPeer);
                 if (CloudPath is not null) w.WriteString("cloud", CloudPath);
