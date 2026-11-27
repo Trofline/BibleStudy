@@ -147,14 +147,15 @@ public class ImportFromOtherProgramsTests : IDisposable
     public void A_SWORD_Bible_is_read_with_headings_and_words_of_Jesus_and_a_commentary_zip_is_no_Bible()
     {
         var conf = "[TestBible]\nDataPath=./modules/texts/ztext/testbible/\nModDrv=zText\nSourceType=OSIS\nEncoding=UTF-8\nDescription=Test-Bibel\nLang=de\n";
-        var path = SwordZip("TestBible", conf, "modules/texts/ztext/testbible/", "bz", new()
-        {
-            [Matt1_1] = "<title type=\"section\">Der Stammbaum</title>Dies ist das Buch<note>Fußnote</note> vom Ursprung.",
-            [Matt1_2] = "Er sprach: <q who=\"Jesus\">Folgt mir nach.</q>",
-        });
+        // the importer wants at least ten verses: Matthew 1,1–12
+        var texts = Enumerable.Range(3, 10).ToDictionary(v => Matt1_1 + v - 1, v => $"Vers {v}.");
+        texts[Matt1_1] = "<title type=\"section\">Der Stammbaum</title>Dies ist das Buch<note>Fußnote</note> vom Ursprung.";
+        texts[Matt1_2] = "Er sprach: <q who=\"Jesus\">Folgt mir nach.</q>";
+        var path = SwordZip("TestBible", conf, "modules/texts/ztext/testbible/", "bz", texts);
         var b = BibleImporters.Read(path, "de");
         Assert.Equal("Test-Bibel", b.Name);
-        Assert.Equal(2, b.Verses.Count);
+        Assert.Equal(Enumerable.Range(1, 12).ToArray(), b.Verses.Select(v => v.Verse).ToArray());
+        Assert.Equal("Vers 12.", string.Concat(b.Verses[11].Segments.Select(s => s.Text)));
         Assert.Equal("Dies ist das Buch vom Ursprung.", string.Concat(b.Verses[0].Segments.Select(s => s.Text)));
         Assert.Contains(b.Verses[1].Segments, s => s.WordsOfJesus && s.Text.Contains("Folgt mir nach."));
         Assert.Contains(b.Headings!, h => h.Book == "MAT" && h.Chapter == 1 && h.Verse == 1 && h.Text == "Der Stammbaum");
@@ -257,21 +258,25 @@ public class ImportFromOtherProgramsTests : IDisposable
     [Fact]
     public void A_Bible_exported_from_Logos_with_big_chapter_numbers_is_read()
     {
-        var path = Docx("Bibel.docx", Heading("Genesis")
-            + $"<w:p><w:r><w:rPr><w:b/><w:sz w:val=\"48\"/></w:rPr><w:t>1</w:t></w:r><w:r><w:t xml:space=\"preserve\"> Im Anfang schuf Gott. </w:t></w:r>{Sup(2)}<w:r><w:t xml:space=\"preserve\"> Und die Erde war wüst.</w:t></w:r></w:p>"
-            + $"<w:p><w:r><w:rPr><w:b/><w:sz w:val=\"48\"/></w:rPr><w:t>2</w:t></w:r><w:r><w:t xml:space=\"preserve\"> So wurden vollendet Himmel und Erde. </w:t></w:r>{Sup(2)}<w:r><w:t xml:space=\"preserve\"> Und Gott ruhte.</w:t></w:r></w:p>");
+        // a chapter of a Logos export: the big chapter number, verse 1 without a number, then the verses 2–6 in superscript
+        static string Chapter(int n, string first) => $"<w:p><w:r><w:rPr><w:b/><w:sz w:val=\"48\"/></w:rPr><w:t>{n}</w:t></w:r><w:r><w:t xml:space=\"preserve\"> {first} </w:t></w:r>"
+            + string.Concat(Enumerable.Range(2, 5).Select(v => $"{Sup(v)}<w:r><w:t xml:space=\"preserve\"> Kapitel {n} Vers {v}. </w:t></w:r>")) + "</w:p>";
+        var path = Docx("Bibel.docx", Heading("Genesis") + Chapter(1, "Im Anfang schuf Gott.") + Chapter(2, "So wurden vollendet Himmel und Erde."));
         var b = BibleImporters.Read(path, "de");
-        Assert.Equal([("GEN", 1, 1), ("GEN", 1, 2), ("GEN", 2, 1), ("GEN", 2, 2)], b.Verses.Select(v => (v.Book, v.Chapter, v.Verse)).ToArray());
-        Assert.Equal("So wurden vollendet Himmel und Erde.", string.Concat(b.Verses[2].Segments.Select(s => s.Text)));
+        Assert.Equal(Enumerable.Range(1, 2).SelectMany(c => Enumerable.Range(1, 6).Select(v => ("GEN", c, v))).ToArray(), b.Verses.Select(v => (v.Book, v.Chapter, v.Verse)).ToArray());
+        Assert.Equal("So wurden vollendet Himmel und Erde.", string.Concat(b.Verses[6].Segments.Select(s => s.Text)));
+        Assert.Equal("Kapitel 2 Vers 6.", string.Concat(b.Verses[11].Segments.Select(s => s.Text)));
     }
 
     [Fact]
     public void Verses_copied_from_Logos_with_its_abbreviations_or_without_the_book_are_read()
     {
-        var b = BibleImporters.Read(Text("kopiert.txt", "Ge 1:1 Im Anfang.\nGe 1:2 Und die Erde.\nAc 2:1 Pfingsten.\n"), "de");
-        Assert.Equal([("GEN", 1, 1), ("GEN", 1, 2), ("ACT", 2, 1)], b.Verses.Select(v => (v.Book, v.Chapter, v.Verse)).ToArray());
-        var md = BibleImporters.Read(Text("kopiert.md", "# Johannes\n\n3:16 Denn also hat Gott.\n3:17 Denn Gott hat.\n"), "de");
-        Assert.Equal([("JHN", 3, 16), ("JHN", 3, 17)], md.Verses.Select(v => (v.Book, v.Chapter, v.Verse)).ToArray());
+        // the importer wants at least ten verses
+        var txt = string.Concat(Enumerable.Range(1, 10).Select(v => $"Ge 1:{v} Vers {v}.\n")) + "Ac 2:1 Pfingsten.\nRu 1:1 Rut.\n";
+        var b = BibleImporters.Read(Text("kopiert.txt", txt), "de");
+        Assert.Equal(Enumerable.Range(1, 10).Select(v => ("GEN", 1, v)).Append(("ACT", 2, 1)).Append(("RUT", 1, 1)).ToArray(), b.Verses.Select(v => (v.Book, v.Chapter, v.Verse)).ToArray());
+        var md = BibleImporters.Read(Text("kopiert.md", "# Johannes\n\n" + string.Concat(Enumerable.Range(16, 10).Select(v => $"3:{v} Vers {v}.\n"))), "de");
+        Assert.Equal(Enumerable.Range(16, 10).Select(v => ("JHN", 3, v)).ToArray(), md.Verses.Select(v => (v.Book, v.Chapter, v.Verse)).ToArray());
     }
 
     [Fact]
