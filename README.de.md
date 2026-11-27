@@ -253,9 +253,15 @@ Ohne ihn öffnet iOS keine selbst installierten Apps. iOS warnt dabei, dass die 
 > | Choose App Extensions | Erweiterungen einzeln auswählen. Nicht nötig. | |
 > | Cancel | Es wird nichts installiert. | |
 >
+> **Die Frage loswerden (einmal einstellen, dann nie wieder):** In SideStore unter **Settings → User Customizations** (ganz unten bei den erweiterten Einstellungen):
+> - **SideStore 0.6.4:** den Schalter **„Customize App Extensions“ ausschalten**. SideStore fragt dann nicht mehr und behält das Widget mit eigener ID, genau wie der zweite Knopf.
+> - **Neuere SideStore-Versionen (0.7, Nightly):** unter **„Customize Extensions“** statt *Prompt User* **„Keep All“** wählen. Das ist derselbe zweite Knopf, nur automatisch. *(„Use Main Profile“ dort nicht nehmen, sonst gibt es keine Widgets.)*
+>
+> Die App selbst kann die Frage nicht abschalten: SideStore stellt sie bei jeder App mit Erweiterung, solange diese Einstellung auf „fragen“ steht.
+>
 > **Nach der Installation:** BibleStudy einmal öffnen, damit das Widget etwas anzeigen kann. Dann den Finger auf dem Sperrbildschirm (oder Home-Bildschirm) halten → **Anpassen** / **Bearbeiten** → **Widgets hinzufügen** → **BibleStudy**. Steht BibleStudy noch nicht in der Liste, ein paar Minuten warten oder das iPhone neu starten: iOS bemerkt ein neues Widget manchmal erst nach einer Weile.
 >
-> <sub>**Zum Zählen:** Eine kostenlose Apple-ID erlaubt 3 aktive Apps, und die Widget-Erweiterung zählt als eine davon: SideStore + BibleStudy + Widgets = 3. Sagt SideStore, dass kein Platz frei ist, entferne entweder eine andere selbst signierte App oder wähle **Remove App Extensions** (BibleStudy läuft dann ohne Widgets). Bei Updates kann SideStore wieder fragen: dann denselben Knopf tippen. Die Knöpfe sind immer englisch, auch auf einem deutschen iPhone.</sub>
+> <sub>**Zum Zählen:** Eine kostenlose Apple-ID erlaubt 3 aktive Apps, und die Widget-Erweiterung zählt als eine davon: SideStore + BibleStudy + Widgets = 3. Sagt SideStore, dass kein Platz frei ist, entferne entweder eine andere selbst signierte App oder wähle **Remove App Extensions** (BibleStudy läuft dann ohne Widgets). Bei Updates kann SideStore wieder fragen: dann denselben Knopf tippen (oder die Frage wie oben abschalten). Die Knöpfe sind immer englisch, auch auf einem deutschen iPhone.</sub>
 
 </td></tr>
 <tr><td>
