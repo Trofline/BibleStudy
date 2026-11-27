@@ -105,7 +105,9 @@ public static partial class BibleImporters
         // OSIS ids and common English abbreviations
         const string extra = "Gen:GEN Exod:EXO Lev:LEV Num:NUM Deut:DEU Josh:JOS Judg:JDG Ruth:RUT 1Sam:1SA 2Sam:2SA 1Kgs:1KI 2Kgs:2KI 1Chr:1CH 2Chr:2CH Ezra:EZR Neh:NEH Esth:EST Job:JOB Ps:PSA Prov:PRO Eccl:ECC Song:SNG Isa:ISA Jer:JER Lam:LAM Ezek:EZK Dan:DAN Hos:HOS Joel:JOL Amos:AMO Obad:OBA Jonah:JON Mic:MIC Nah:NAM Hab:HAB Zeph:ZEP Hag:HAG Zech:ZEC Mal:MAL " +
             "Matt:MAT Mark:MRK Luke:LUK John:JHN Acts:ACT Rom:ROM 1Cor:1CO 2Cor:2CO Gal:GAL Eph:EPH Phil:PHP Col:COL 1Thess:1TH 2Thess:2TH 1Tim:1TI 2Tim:2TI Titus:TIT Phlm:PHM Heb:HEB Jas:JAS 1Pet:1PE 2Pet:2PE 1John:1JN 2John:2JN 3John:3JN Jude:JUD Rev:REV " +
-            "Ge:GEN Ex:EXO Le:LEV Nu:NUM Dt:DEU Jos:JOS Jdg:JDG 1Sa:1SA 2Sa:2SA 1Ki:1KI 2Ki:2KI 1Ch:1CH 2Ch:2CH Ne:NEH Es:EST Pr:PRO Ec:ECC So:SNG Is:ISA Eze:EZK Da:DAN Ho:HOS Jl:JOL Am:AMO Ob:OBA Jon:JON Mi:MIC Na:NAM Zep:ZEP Zec:ZEC Mt:MAT Mk:MRK Lk:LUK Jn:JHN Ro:ROM 1Co:1CO 2Co:2CO Ga:GAL Php:PHP 1Th:1TH 2Th:2TH 1Ti:1TI 2Ti:2TI Tit:TIT Phm:PHM He:HEB Jam:JAS 1Pe:1PE 2Pe:2PE 1Jn:1JN 2Jn:2JN 3Jn:3JN Re:REV Psalm:PSA Psalms:PSA";
+            "Ge:GEN Ex:EXO Le:LEV Nu:NUM Dt:DEU Jos:JOS Jdg:JDG 1Sa:1SA 2Sa:2SA 1Ki:1KI 2Ki:2KI 1Ch:1CH 2Ch:2CH Ne:NEH Es:EST Pr:PRO Ec:ECC So:SNG Is:ISA Eze:EZK Da:DAN Ho:HOS Jl:JOL Am:AMO Ob:OBA Jon:JON Mi:MIC Na:NAM Zep:ZEP Zec:ZEC Mt:MAT Mk:MRK Lk:LUK Jn:JHN Ro:ROM 1Co:1CO 2Co:2CO Ga:GAL Php:PHP 1Th:1TH 2Th:2TH 1Ti:1TI 2Ti:2TI Tit:TIT Phm:PHM He:HEB Jam:JAS 1Pe:1PE 2Pe:2PE 1Jn:1JN 2Jn:2JN 3Jn:3JN Re:REV Psalm:PSA Psalms:PSA " +
+            // the abbreviations of Logos that are not above
+            "Ru:RUT Ezr:EZR Je:JER La:LAM Joe:JOL Ac:ACT Jud:JUD Tt:TIT";
         foreach (var pair in extra.Split(' ')) { var p = pair.Split(':'); Put(p[0], p[1]); }
         // names as printed in German Bibles (running heads, titles)
         foreach (var (alias, id) in new[] { ("1. Chronik", "1CH"), ("2. Chronik", "2CH"), ("Hohelied", "SNG"), ("Das Hohelied", "SNG"), ("Das Hohelied Salomos", "SNG"), ("Klagelieder Jeremias", "LAM"), ("Die Klagelieder Jeremias", "LAM"), ("Die Klagelieder", "LAM"), ("Psalmen", "PSA"), ("Die Psalmen", "PSA"), ("Offenbarung des Johannes", "REV") }) Put(alias, id);
@@ -402,6 +404,7 @@ public static partial class BibleImporters
     [GeneratedRegex(@"^(?<b>.+?)\s+(?<c>\d+)$")] private static partial Regex MdBookChapter();
     [GeneratedRegex(@"^(?:Kapitel|Chapter|Capítulo|Chapitre|Глава|Kap\.?|Ch\.?)?\s*(?<c>\d+)\.?$", RegexOptions.IgnoreCase)] private static partial Regex MdChapter();
     [GeneratedRegex(@"^\W*(?<v>\d{1,3})(?:[\s.:)\]-]+)(?<t>\S.*)$")] private static partial Regex MdVerseLine();
+    [GeneratedRegex(@"^(?<c>\d{1,3})[:,](?<v>\d{1,3})\s+(?<t>\D.*)$")] private static partial Regex MdChapterVerseLine();
 
     /// <summary>
     /// Markdown: headings name the book ("# Genesis", "# 1. Mose") and the chapter ("## 1", "## Kapitel 1", "## Psalm 23");
@@ -432,6 +435,14 @@ public static partial class BibleImporters
             line = line.TrimStart('>', ' ');
             // marked verse numbers (<sup>1</sup>, **1**, ^1^): a paragraph may hold several verses
             var marks = MdVerseMark().Matches(line);
+            // a paragraph of a Logos export that begins a chapter: "3 Und die Schlange … <sup>2</sup> …"
+            if (marks.Count > 0 && book is not null && marks[0].Index > 0
+                && LogosChapterStart(line, chapter, Num(marks[0].Groups.Cast<Group>().Skip(1).First(g => g.Success).Value)) is { } started)
+            {
+                if (chapter == 0) { chapter = 1; lastVerse = 0; }
+                line = started;
+                marks = MdVerseMark().Matches(line);
+            }
             if (marks.Count > 0 && book is not null && chapter > 0)
             {
                 var before = Clean(line[..marks[0].Index]);
@@ -451,6 +462,14 @@ public static partial class BibleImporters
             {
                 book = bk; chapter = Num(full.Groups["c"].Value); lastVerse = Num(full.Groups["v"].Value);
                 c.Add(bk, chapter, lastVerse, full.Groups["t"].Value);
+                continue;
+            }
+            // "3:16 Denn also …" after a heading with the book (verses copied from Logos and other programs without the book name)
+            var cv = MdChapterVerseLine().Match(line);
+            if (cv.Success && book is not null)
+            {
+                chapter = Num(cv.Groups["c"].Value); lastVerse = Num(cv.Groups["v"].Value);
+                c.Add(book, chapter, lastVerse, cv.Groups["t"].Value);
                 continue;
             }
             // a line that starts with a number is a new verse only when the number fits the count ("12 Stämme …" inside a verse is text)

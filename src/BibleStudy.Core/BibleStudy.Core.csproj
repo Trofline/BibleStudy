@@ -19,6 +19,8 @@
     <EmbeddedResource Include="Data\available_translations.json" LogicalName="data/available_translations.json" />
     <!-- the gospel parallels for the synopsis -->
     <EmbeddedResource Include="Data\synopsis.txt" LogicalName="data/synopsis.txt" />
+    <!-- verse counts of the versifications of the SWORD project: where a verse stands in a SWORD module -->
+    <EmbeddedResource Include="Data\sword_versifications.txt" LogicalName="data/sword_versifications.txt" />
   </ItemGroup>
 
 </Project>

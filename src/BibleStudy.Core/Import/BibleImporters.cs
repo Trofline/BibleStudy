@@ -37,6 +37,8 @@ public static partial class BibleImporters
             ".bblx" or ".mybible" => ReadEsword(path, languageCode),
             ".xml" or ".osis" => XmlKind(path) switch { "osis" => ReadOsis(path, languageCode), "usx" => ReadUsx(path, languageCode), _ => ReadZefania(path, languageCode) },
             ".usx" => ReadUsx(path, languageCode),
+            ".zip" when SwordModule.IsSwordZip(path) => ReadSword(path, languageCode),
+            ".conf" => ReadSword(path, languageCode),
             ".usfm" or ".sfm" or ".zip" => ReadUsfm(path, languageCode),
             ".md" or ".markdown" => ReadMarkdown(path, languageCode),
             ".txt" or ".csv" or ".tsv" => ReadTextLines(path, languageCode),
@@ -48,8 +50,9 @@ public static partial class BibleImporters
             ".rtf" => ReadRtf(path, languageCode),
             ".fb2" => ReadFb2(path, languageCode),
             ".pdf" => ReadPdf(path, languageCode),
-            ".azw" or ".azw3" or ".mobi" or ".prc" or ".kfx" or ".lbxlls" or ".logos4" => throw ProtectedFormat(ext),
-            _ => throw new NotSupportedException(L("Dieses Dateiformat wird nicht unterstützt. Unterstützt sind: e-Sword und MySword, Zefania, OSIS, USX, USFM, EPUB, Word, OpenDocument, RTF, FictionBook, PDF, Markdown, Text, CSV, JSON und Webseiten (HTML).")),
+            ".lbxlls" or ".logos4" or ".lbslcr" or ".lbspbb" => throw LogosProtected(),
+            ".azw" or ".azw3" or ".mobi" or ".prc" or ".kfx" => throw ProtectedFormat(ext),
+            _ => throw new NotSupportedException(L("Dieses Dateiformat wird nicht unterstützt. Unterstützt sind: e-Sword und MySword, SWORD (Xiphos, BibleTime, AndBible), Zefania, OSIS, USX, USFM, EPUB, Word, OpenDocument, RTF, FictionBook, PDF, Markdown, Text, CSV, JSON und Webseiten (HTML).")),
         };
     }
 
