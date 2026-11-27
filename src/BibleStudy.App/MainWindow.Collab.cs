@@ -460,7 +460,7 @@ public partial class MainWindow
     void JoinRoomFlow(StackPanel area)
     {
         area.Children.Clear();
-        area.Children.Add(new TextBlock { Text = L("Gib den Raum-Code ein, den du bekommen hast:"), FontWeight = FontWeight.SemiBold });
+        area.Children.Add(new TextBlock { Text = L("Gib den Raum-Code ein, den du bekommen hast:"), FontWeight = FontWeight.SemiBold, TextWrapping = TextWrapping.Wrap });
         var code = new TextBox { PlaceholderText = "ABCD-EFGH", MaxLength = 20, FontSize = 18, HorizontalAlignment = HorizontalAlignment.Left, MinWidth = 200 };
         var formatting = false;
         code.TextChanged += (_, _) =>   // upper case and the dash come by themselves
